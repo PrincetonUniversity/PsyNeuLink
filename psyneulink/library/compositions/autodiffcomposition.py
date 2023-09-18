@@ -15,9 +15,15 @@ Contents
 
   * `AutodiffComposition_Overview`
   * `AutodiffComposition_Creation`
-  * `AutodiffComposition_Execution`
-      - `AutodiffComposition_LLVM`
+    - `AutodiffComposition_`
+      - `AutodiffComposition_Modulatory_Mechanisms`
+      - `AutodiffComposition_Bias_Parameters`
+      - `AutodiffComposition_Nesting`
+      - `AutodiffComposition_Post_Construction_Modification`
+    * `AutodiffComposition_Execution`
       - `AutodiffComposition_PyTorch`
+      - `AutodiffComposition_LLVM`
+      - `AutodiffComposition_Python`
       - `AutodiffComposition_Nested_Modulation`
       - `AutodiffComposition_Logging`
   * `AutodiffComposition_Examples`
@@ -50,43 +56,94 @@ the standard `Composition methods <Composition_Creation>` for doing so (e.g., `a
 `add_projection <Composition.add_projections>`,  `add_linear_processing_pathway
 <Composition.add_linear_processing_pathway>`, etc.).  The constructor also includes a number of parameters that are
 specific to the AutodiffComposition (see `AutodiffComposition_Class_Reference` for a list of these parameters,
-and `examples <AutodiffComposition_Examples>` below).  Note that all of the Components in an AutodiffComposition
-must be able to be subject to `learning <Composition_Learning>`, but cannot include any `learning components
-<Composition_Learning_Components>` themselves.  Specifically, it cannot include any `ModulatoryMechanisms
-<ModulatoryMechanism>`, `LearningProjections <LearningProjection>`, or the ObjectiveMechanism <OBJECTIVE_MECHANISM>`
-used to compute the loss for learning.
+and `examples <AutodiffComposition_Examples>` below). While an AutodiffComposition can generally be created using the
+same methods as a standard Composition, there are a few restrictions that apply to its construction.
 
-    .. _Autodiff_Learning_Components_Warning:
-    .. warning::
-        When an AutodiffComposition is constructed, it creates all of the learning Components
-        that are needed, and thus **cannot include** any that are prespecified.
+.. _AutodiffComposition_Restrictions:
+
+.. _AutodiffComposition_Modulatory_Mechanisms:
+
+*Modulatory Components*
+~~~~~~~~~~~~~~~~~~~~~~~
+
+All of the Components in an AutodiffComposition must be able to be subject to `learning <Composition_Learning>`, which
+means that no `ModulatoryMechanisms <ModulatoryMechanism>` can be included in an AutodiffComposition.  Specifically,
+this precludes the inclusion of any `learning components <Composition_Learning_Components>`, `ControlMechanisms
+<ControlMechanism>`, or a `controller <Composition_Controller>`.
+
+.. _Autodiff_Learning_Components_Warning:
+
+*Learning Components.*  An AutodiffComposition **cannot include any** `learning components
+<Composition_Learning_Components>` themselves (i.e., `LearningMechanisms <LearningMechanism>`, `LearningSignals
+<LearningSignal>`, or LearningProjections <LearningProjection>`, nor the `ComparatorMechanism <COMPARATOR_MECHANISM>`
+or `ObjectiveMechanism <OBJECTIVE_MECHANISM>` used to compute the loss for learning). these are constructed
+automatically when learning is executed in `Python mode <AutodiffComposition_Python>` or `LLVM mode
+<AutodiffComposition_LLVM>`, while PyTorch-compatible Components are constructed when it is executed in `PyTorch mode
+<AutodiffComposition_PyTorch>`.
 
 COMMENT:
-FIX: IS THIS STILL TRUE? SEEMS TO CONTRADICT STATEMENT BELOW:
+FIX: IS THE FOLLOWING STILL TRUE? SEEMS TO CONTRADICT STATEMENTS BELOW:
 This means that it cannot be used with a Composition that contains any `modulatory components
 <ModulatorySignal_Anatomy_Figure>` or ones that are subject to modulation, whether by ModulatoryMechanisms within or
 outside the Composition;
 ?MAYBE THE FOLLOWING IS BETTER:
 COMMENT
-This means that an AutodiffComposition also cannot itself include a `controller <Composition_Controller>` or any
-`ControlMechanisms <ControlMechanism>`.  However, it can include Mechanisms that are subject to modulatory control
+*Control Components.*  An AutodiffComposition also cannot include any `ControlMechanisms <ControlMechanism>` or a
+`controller <Composition_Controller>`.  However, it can include Mechanisms that are subject to modulatory control
 (see `Figure <ModulatorySignal_Anatomy_Figure>`, and `modulation <ModulatorySignal_Modulation>`) by ControlMechanisms
 *outside* the Composition, including the controller of a Composition within which the AutodiffComposition is nested.
 That is, an AutodiffComposition can be `nested in a Composition <Composition_Nested>` that has such other Components
 (see `AutodiffComposition_Nested_Modulation` below).
 
-A few other restrictions apply to the construction and modification of AutodiffCompositions:
+.. _AutodiffComposition_Bias_Parameters:
 
-    .. hint:: AutodiffComposition does not (currently) support the *automatic* construction of separate bias parameters.
-       Thus, when comparing a model constructed using an AutodiffComposition to a corresponding model in PyTorch, the
-       `bias <https://www.pytorch.org/docs/stable/nn.html#torch.nn.Module>` parameter of PyTorch modules should be set
-       to `False`.  Trainable biases *can* be specified explicitly in an AutodiffComposition by including a
-       TransferMechanism that projects to the relevant Mechanism (i.e., implementing that layer of the network to
-       receive the biases) using a `MappingProjection` with a `matrix <MappingProjection.matrix>` parameter that
-       implements a diagnoal matrix with values corresponding to the initial value of the biases.
+*Bias Parameters*
+~~~~~~~~~~~~~~~~~
 
-    .. warning:: Mechanisms or Projections should not be added to or deleted from an AutodiffComposition after it
-       has been executed. Unlike an ordinary Composition, AutodiffComposition does not support this functionality.
+AutodiffComposition does not (currently) support the *automatic* construction of separate bias parameters.
+Thus, when constructing a model using an AutodiffComposition that corresponds to one in PyTorch, the `bias
+<https://www.pytorch.org/docs/stable/nn.html#torch.nn.Module>` parameter of PyTorch modules should be set
+to `False`. Trainable biases *can* be specified explicitly in an AutodiffComposition by including a
+TransferMechanism that projects to the relevant Mechanism (i.e., implementing that layer of the network to
+receive the biases) using a `MappingProjection` with a `matrix <MappingProjection.matrix>` parameter that
+implements a diagnoal matrix with values corresponding to the initial value of the biases.
+
+.. _AutodiffComposition_Nesting:
+
+*Nesting*
+~~~~~~~~~
+
+An AutodiffComposition can be `nested <Composition_Nested>` inside another Composition for learning, and there can
+be any level of such nestings.  However, both the outermost and all of the nested Compositions must be
+AutodiffCompositions, subject to the same restrictions as described above.  Furthermore, at every level of nesting,
+the outer Composition must have an `INPUT` `Node <Composition_Nodes>`  for each of the inputs to the nested
+Composition and, similarly, an `OUTPUT` `Node <Composition_Nodes>` for each of the outputs from the nested Composition.
+That is, a nested Composition cannot directly receive an input to the outer Composition, nor can it directly provide
+an output of the outer Composition.  This is necessary for learning, as it is the Projections to and from the nested
+Composition that are subject to learning, and the INPUT and OUTPUT Nodes of the outer Composition are the sources and
+targets of those Projections, respectively.
+
+.. technical_note::
+   Projections from `Nodes <Composition_Nodes>` in an immediately enclosing outer Composition to the `input_CIM
+   <Composition.input_CIM>` of a nested Composition, and from its `output_CIM <Composition.output_CIM>` to Nodes
+   in the outer Composition are subject to learning;  however those within the nested Composition itself (i.e.,
+   from its input_CIM to its INPUT Nodes and from its OUTPUT Nodes to its output_CIM) are *not* subject to learning,
+   as they serve simply as conduits of information between the outer Composition and the nested one.
+
+.. warning::
+   Nested Compositions are supported for learning only in `PyTorch mode <AutodiffComposition_PyTorch>`, and will
+   cause an error if the `learn <AutodiffComposition.learn>` method of an AutodiffComposition is executed in
+   `Python mode <AutodiffComposition_Python>` or `LLVM mode <AutodiffComposition_LLVM>`.
+
+.. _AutodiffComposition_Post_Construction_Modification:
+
+*Post-construction Modification*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+COMMENT:
+IS THIS STILL TRUE?
+COMMENT
+Mechanisms or Projections should not be added to or deleted from an AutodiffComposition after it has
+been executed. Unlike an ordinary Composition, AutodiffComposition does not support this functionality.
 
 
 .. _AutodiffComposition_Execution:
@@ -100,6 +157,37 @@ method has different effects than for a standard Composition, that determine whe
 <AutodiffComposition_LLVM>` or `translation to PyTorch <AutodiffComposition_PyTorch>` to execute learning.
 These are each described in greater detail below, and summarized in this `table <Composition_Compilation_Table>`
 which provides a comparison of the different modes of execution for an AutodiffComposition and standard `Composition`.
+
+.. _AutodiffComposition_PyTorch:
+
+*PyTorch mode*
+~~~~~~~~~~~~~~
+
+This is the default for an AutodiffComposition, but, can be specified explicitly by setting **execution_mode =
+`ExecutionMode.PyTorch` in the `learn <Composition.learn>` method (see `example <BasicsAndPrimer_Rumelhart_Model>`
+in `BasicsAndPrimer`).  In this mode, the AutodiffComposition is automatically translated to a `PyTorch
+<https://pytorch.org>`_ model for learning.  This is comparable in speed to `LLVM compilation
+<_AutodiffComposition_LLVM>`, but provides greater flexiblity, including the ability to include nested
+AutoDiffCompositions in learning. Although it is best suited for use with `supervised learning
+<Composition_Learning_Supervised>`, it can also be used for some forms of `unsupervised learning
+<Composition_Learning_Unsupervised>` that are supported in PyTorch (e.g., `self-organized maps
+<https://github.com/giannisnik/som>`_).
+
+    .. _AutodiffComposition_PyTorch_Note:
+
+    .. note::
+       While specifying `ExecutionMode.PyTorch` in the `learn <Composition.learn>`  method of an AutodiffComposition
+       causes it to use PyTorch for training, specifying this in the `run <Compositon.run>` method causes it to be
+       executed using the *Python* interpreter (and not PyTorch);  this is so that any modulation can take effect
+       during execution (see `AutodiffComposition_Nested_Modulation` below), which is not supported by PyTorch.
+
+    .. warning::
+      * Specifying `ExecutionMode.LLVM` or `ExecutionMode.PyTorch` in the learn() method of a standard
+        `Composition` causes an error.
+
+COMMENT:
+FIX: ADD MENTION OF TARGET NODES AND PYTORCH WRAPPERS
+COMMENT
 
 .. _AutodiffComposition_LLVM:
 
@@ -119,37 +207,18 @@ the constructor (see `AutodiffComposition <AutodiffComposition_Class_Reference>`
        because LLVM compilation supports the use of modulation in PsyNeuLink models (as compared to `PyTorch mode
        <AutodiffComposition_PyTorch>`; see `note <AutodiffComposition_PyTorch_Note>` below).
 
-.. _AutodiffComposition_PyTorch:
-
-*PyTorch mode*
-~~~~~~~~~~~~~~
-
-This is specified by setting **execution_mode = `ExecutionMode.PyTorch` in the `learn <Composition.learn>` method of
-an AutodiffCompositon (see `example <BasicsAndPrimer_Rumelhart_Model>` in `BasicsAndPrimer`).  This automatically
-translates the AutodiffComposition to a `PyTorch <https://pytorch.org>`_ model and uses that for execution.  This is
-almost as fast as `LLVM compilation <_AutodiffComposition_LLVM>`, but provides greater flexiblity.  Although it too is
-best suited for use with `supervised learning <Composition_Learning_Supervised>`, it can also be used for some forms
-of `unsupervised learning <Composition_Learning_Unsupervised>` that are supported in PyTorch (e.g., `self-organized
-maps <https://github.com/giannisnik/som>`_).
-
-    .. _AutodiffComposition_PyTorch_Note:
-
-    .. note::
-       While specifying `ExecutionMode.PyTorch` in the `learn <Composition.learn>`  method of an AutodiffComposition
-       causes it to use PyTorch for training, specifying this in the `run <Compositon.run>` method causes it to be
-       executed using the *Python* interpreter (and not PyTorch);  this is so that any modulation can take effect
-       during execution (see `AutodiffComposition_Nested_Modulation` below), which is not supported by PyTorch.
-
-    .. warning::
-      * Specifying `ExecutionMode.LLVM` or `ExecutionMode.PyTorch` in the learn() method of a standard
-        `Composition` causes an error.
 
 COMMENT:
 FIX: 8/13/23 - COMPLETE DOCS HERE
+COMMENT
+
+.. _AutodiffComposition_Python:
+
 *Python mode*
 ~~~~~~~~~~~~~
-An AutodiffComposition can also be run using the standard PsyNeuLink learning components
-COMMENT
+An AutodiffComposition can also be run using the standard PsyNeuLink learning components.  However, this cannot
+be used if the AutodiffComposition has any nested Compositions, irrespective of whether they are ordinary
+Compositions or AutodiffCompositions.
 
 
 .. _AutodiffComposition_Nested_Modulation:
@@ -157,8 +226,9 @@ COMMENT
 *Nested Execution and Modulation*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+# FIX:
 Like any other `Composition`, an AutodiffComposition may be `nested <Composition_Nested>` inside another
-(see `example <AutodiffComposition_Nested_Example>` below).  However, learning, none of the internal
+(see `example <AutodiffComposition_Nested_Example>` below).  However, during learning, none of the internal
 Components of the AutodiffComposition (e.g., intermediate layers of a neural network model) are accessible to the
 other Components of the outer Composition, (e.g., as sources of information, or for `modulation
 <ModulatorySignal_Modulation>`).  However, when
@@ -247,6 +317,7 @@ import logging
 import os
 import warnings
 import numpy as np
+import collections
 from packaging import version
 from pathlib import Path, PosixPath
 
@@ -258,14 +329,16 @@ try:
 except ImportError:
     torch_available = False
 else:
-    from psyneulink.library.compositions.pytorchmodelcreator import PytorchModelCreator
+    from psyneulink.library.compositions.pytorchcomponents import PytorchCompositionWrapper
 
-from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
+from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
-from psyneulink.core.compositions.composition import Composition, NodeRole
-from psyneulink.core.compositions.composition import CompositionError
+from psyneulink.core.components.projections.projection import Projection_Base
+from psyneulink.core.compositions.composition import Composition, NodeRole, CompositionError, get_composition_for_node
 from psyneulink.core.compositions.report \
     import ReportOutput, ReportParams, ReportProgress, ReportSimulations, ReportDevices, \
     EXECUTE_REPORT, LEARN_REPORT, PROGRESS_REPORT
@@ -392,6 +465,7 @@ class AutodiffComposition(Composition):
         self._runtime_learning_rate = None
         self.last_saved_weights = None
         self.last_loaded_weights = None
+        self.target_output_map = {}
 
         # keeps track of average loss per epoch
         self.losses = []
@@ -410,6 +484,151 @@ class AutodiffComposition(Composition):
         # Set to True after first warning about failure to specify execution mode so warning is issued only once
         self.execution_mode_warned_about_default = False
 
+    def infer_backpropagation_learning_pathways(self, execution_mode, context=None):
+        """Create backpropapagation learning pathways for every Input Node --> Output Node pathway
+        Flattens nested compositions:
+          - only includes the Projections in outer Composition to/from the CIMs of the nested Composition
+            (i.e., to input_CIMs and from output_CIMs) -- the ones that should be learned;
+          - excludes Projections from/to CIMs in the nested Composition
+            (from input_CIMs and to output_CIMs), as those should remain identity Projections;
+          see `PytorchCompositionWrapper` for table of how Projections are handled and further details.
+        """
+
+        self._analyze_graph()
+
+        def _get_pytorch_backprop_pathway(input_node)->list:
+            """Breadth-first search from input_node to find all input -> output pathways
+            IMPLEMENTATION NOTE:  flattens nested Compositions
+            Return a list of all pathways from input_node -> output node
+            """
+            pathways = []
+            prev = {}
+            queue = collections.deque([(input_node, None, self)])
+
+            # FIX:  9/17/23 - THIS VERSION FLATTENS NESTED COMPOSITIONS;  MAY NOT STILL BE NEEDED
+            #                 SINCE EXECUTION SETS ARE NOW FLATTENED IN PytorchCompositionWrapper
+            #                 ?? REVERT TO OLD VERSION (IN PRE-"CLEAN_UP" VERSIONS, OR ON DEVEL?),
+            #                 THOUGH DOING SO PREVIOUSLY SEEMED TO LOSE TARGET NODE;
+            #                 MAYBE NOT NOW THAT THEY ARE CONSTRUCTED EXPLICITLY BELOW?
+
+            while len(queue) > 0:
+                node, input_port, current_comp = queue.popleft()
+
+                # node is output_CIM of nested Composition that projects directly to output_CIM of outer Composition
+                if isinstance(node, CompositionInterfaceMechanism):
+                    outer_comp = get_composition_for_node(node.composition)
+                    if node.composition in outer_comp.get_nodes_by_role(NodeRole.OUTPUT):
+                        _, source, _ = input_port.owner._get_source_info_from_output_CIM(input_port)
+                        raise AutodiffCompositionError(f"The output for '{source.name}' Node of nested Composition "
+                                                       f"'{node.composition.name}' must project to a node in the "
+                                                       f"outer composition ('{outer_comp.name}') to be learnable.")
+
+                # Handle OUTPUT Node of outer Composition
+                if current_comp == self and node in current_comp.get_nodes_by_role(NodeRole.OUTPUT):
+                    pathway = []
+                    entry = node
+                    while entry in prev:
+                        pathway.insert(0, entry)
+                        entry = prev[entry]
+                    pathway.insert(0, entry)
+                    # Only consider input -> projection -> ... -> output pathways
+                    # (since can't learn on only one mechanism)
+                    if len(pathway) >= 3:
+                        pathways.append(pathway)
+                    continue
+
+                # Consider all efferent Projections of node
+                for efferent_proj, rcvr in [(p, p.receiver.owner)
+                                            for p in node.efferents
+                                            if p in current_comp.projections]:
+
+                    # Ignore ones that are not learnable except to a CIM (deal with those next)
+                    if (((not hasattr(efferent_proj,'learnable')) or (efferent_proj.learnable is False))
+                            and not isinstance(rcvr, CompositionInterfaceMechanism)):
+                        continue
+
+                    # Deal with Projections to CIMs since nested comps can be learned in PyTorch mode
+                    if isinstance(rcvr, CompositionInterfaceMechanism):
+
+                        # Projection to input_CIM, possibly entering a nested Composition
+                        if rcvr == rcvr.composition.input_CIM:
+                            assert rcvr.composition is not current_comp
+                            rcvr_comp = rcvr.composition
+                            # FIX: 9/17/23:
+                            #FIX: NEED TO BRANCH NOT ON EFFERENTS FROM input_CIM BUT RATHER FROM ITS AFFERENT(S) NODE(S)
+                            # Get Node(s) in inner Composition to which Node projects (via input_CIM)
+                            receivers = rcvr._get_destination_info_from_input_CIM(efferent_proj.receiver)
+                            for _, rcvr, _ in [receivers] if isinstance(receivers, tuple) else receivers:
+                                assert rcvr in rcvr_comp.get_nodes_by_role(NodeRole.INPUT), \
+                                    f"PROGRAM ERROR: '{rcvr.name}' is not an INPUT Node of '{rcvr_comp.name}'"
+                                # Assign efferent_proj (Projection to input_CIM) since it should be learned in PyTorch mode
+                                prev[rcvr] = efferent_proj # <- OLD
+                                prev[efferent_proj] = node
+                                queue.append((rcvr, efferent_proj.receiver, rcvr_comp))
+
+                        # Projection is to output_CIM, possibly exiting from a nested Composition
+                        elif rcvr == current_comp.output_CIM:
+
+                            # Get output_CIM info for current efferent_proj
+                            output_CIM_input_port = efferent_proj.receiver
+                            output_CIM = output_CIM_input_port.owner
+                            output_CIM_output_port = output_CIM.port_map[efferent_proj.sender][1]
+
+                            # Get all Node(s) in outer Composition to which node projects (via output_CIM)
+                            receivers = rcvr._get_destination_info_for_output_CIM(output_CIM_output_port)
+                            # Replace efferent_proj(s) with one(s) from output_CIM to rcvr(s) in outer Composition,
+                            #   since that(those) is(are the one(s) that should be learned in PyTorch mode
+                            # Note:  _get_destination_info_for_output_CIM returns list of destinations
+                            #        in order of output_CIM.output_port.efferents
+                            for efferent_idx, receiver in enumerate(receivers):
+                                if receiver:
+                                    _, rcvr, rcvr_comp = receiver
+                                    assert rcvr_comp is not current_comp
+                                efferent_proj = output_CIM_output_port.efferents[efferent_idx]
+                                prev[rcvr] = efferent_proj
+                                prev[efferent_proj] = node
+                                queue.append((rcvr, efferent_proj.receiver, rcvr_comp))
+
+                        else:
+                            assert False, f"PROGRAM ERROR:  Unrecognized CompositionInterfaceMechanism: {rcvr}"
+
+                    else:
+                        prev[rcvr] = efferent_proj
+                        prev[efferent_proj] = node
+                        queue.append((rcvr, efferent_proj.receiver, current_comp))
+
+            return pathways
+
+        # Construct a pathway for each INPUT Node (except the TARGET Node)
+        pathways = [pathway for node in self.get_nodes_by_role(NodeRole.INPUT)
+                    if node not in self.get_nodes_by_role(NodeRole.TARGET)
+                    for pathway in _get_pytorch_backprop_pathway(node)]
+
+        if execution_mode == pnlvm.ExecutionMode.PyTorch:
+            # For PyTorch mode, only need to construct dummy TARGET Nodes, to allow targets to be:
+            #  - specified in the same way as for other execution_modes
+            #  - trial-by-trial values to kept aligned with inputs in batch / minibatch construction
+            #  - tracked for logging (as mechs of a Composition)
+            # IMPLEMENTATION NOTE: only add target nodes if not already present
+            #    (to avoid duplication in multiple calls, including from command line;
+            #     see test_xor_training_identicalness_standard_composition_vs_PyTorch_and_LLVM for example)
+            output_mechs = self.get_nodes_by_role(NodeRole.OUTPUT)
+            assert set([mech for mech in [pathway[-1] for pathway in pathways]]) == set(output_mechs)
+            target_mechs = [ProcessingMechanism(default_variable = np.zeros_like(mech.value),
+                                                name= 'TARGET for ' + mech.name)
+                            for mech in output_mechs if mech not in self.target_output_map.values()]
+            # Suppress warnings about role assignments
+            context = Context(source=ContextFlags.METHOD)
+            self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.LEARNING], context=context)
+            for target_mech in target_mechs:
+                self.exclude_node_roles(target_mech, NodeRole.OUTPUT, context)
+            self.target_output_map.update({target: output for target, output in zip(target_mechs, output_mechs)})
+        else:
+            # Construct entire PNL backpropagation learning pathways for each INPUT Node
+            for pathway in pathways:
+                self.add_backpropagation_learning_pathway(pathway=pathway,
+                                                          loss_spec=self.loss_spec)
+
     # CLEANUP: move some of what's done in the methods below to a "validate_params" type of method
     @handle_external_context()
     def _build_pytorch_representation(self, context=None, refresh=False):
@@ -417,9 +636,9 @@ class AutodiffComposition(Composition):
         if self.scheduler is None:
             self.scheduler = Scheduler(graph=self.graph_processing)
         if self.parameters.pytorch_representation._get(context=context) is None or refresh:
-            model = PytorchModelCreator(composition=self,
-                                        device=self.device,
-                                        context=context)
+            model = PytorchCompositionWrapper(composition=self,
+                                              device=self.device,
+                                              context=context)
 
             self.parameters.pytorch_representation._set(model, context, skip_history=True, skip_log=True)
 
@@ -505,12 +724,12 @@ class AutodiffComposition(Composition):
             curr_tensor_inputs[component] = torch.tensor(input, device=self.device).double()
         for component in targets.keys():
             target = targets[component][0]
-            curr_tensor_targets[component] = torch.tensor(target, device=self.device).double()
+            # curr_tensor_targets[component] = torch.tensor(target, device=self.device).double()
+            # Convert Node back to output Node for indexing by component below
+            curr_tensor_targets[self.target_output_map[component]] = torch.tensor(target, device=self.device).double()
 
         # do forward computation on current inputs
-        curr_tensor_outputs = self.parameters.pytorch_representation._get(context).forward(curr_tensor_inputs,
-                                                                                           context,
-                                                                                           )
+        curr_tensor_outputs = self.parameters.pytorch_representation._get(context).forward(curr_tensor_inputs, context)
 
         for component in curr_tensor_outputs.keys():
             # possibly add custom loss option, which is a loss function that takes many args
@@ -543,10 +762,7 @@ class AutodiffComposition(Composition):
         optimizer.zero_grad()
 
         tracked_loss = self.parameters.tracked_loss._get(context=context) / self.parameters.tracked_loss_count._get(context=context)
-        if self.force_no_retain_graph:
-            tracked_loss.backward(retain_graph=False)
-        else:
-            tracked_loss.backward(retain_graph=True)
+        tracked_loss.backward(retain_graph=not self.force_no_retain_graph)
         self.parameters.losses._get(context=context).append(tracked_loss.detach().cpu().numpy()[0])
         self.parameters.tracked_loss._set(torch.zeros(1, device=self.device).double(), context=context, skip_history=True, skip_log=True)
         self.parameters.tracked_loss_count._set(0, context=context, skip_history=True, skip_log=True)
@@ -564,29 +780,12 @@ class AutodiffComposition(Composition):
         return sum(self.parameters.trial_losses._get(context)[-num_trials:]) /num_trials
 
     def _infer_output_nodes(self, nodes: dict):
-        """
-        Maps targets onto target mechanisms (as needed by learning)
-
+        """Remove input Nodes, and return dict with values for target Nodes
         Returns
         ---------
         A dict mapping TargetMechanisms -> target values
         """
-        ret = {}
-        for node, values in nodes.items():
-            if NodeRole.TARGET in self.get_roles_by_node(node) and NodeRole.LEARNING in self.get_roles_by_node(node):
-                node_efferent_mechanisms = [x.receiver.owner for x in node.efferents]
-                comparators = [x for x in node_efferent_mechanisms if (isinstance(x, ComparatorMechanism) and NodeRole.LEARNING in self.get_roles_by_node(x))]
-                comparator_afferent_mechanisms = [x.sender.owner for c in comparators for x in c.afferents]
-                output_nodes = [t for t in comparator_afferent_mechanisms if (NodeRole.OUTPUT in self.get_roles_by_node(t) and NodeRole.LEARNING not in self.get_roles_by_node(t))]
-
-                if len(output_nodes) != 1:
-                    # Invalid specification! Either we have no valid target nodes, or there is ambiguity in which target node to choose
-                    raise Exception(f"Unable to infer learning target node from output node {node}!")
-
-                ret[output_nodes[0]] = values
-            elif NodeRole.OUTPUT in self.get_roles_by_node(node):
-                ret[node] = values
-        return ret
+        return {node:value for node,value in nodes.items() if node in self.target_output_map}
 
     def _infer_input_nodes(self, nodes: dict):
         """
@@ -607,12 +806,12 @@ class AutodiffComposition(Composition):
         execution_phase_at_entry = kwargs[CONTEXT].execution_phase
         kwargs[CONTEXT].execution_phase = ContextFlags.PREPARING
 
-        if self._built_pathways is False:
-            self.infer_backpropagation_learning_pathways()
-            self._built_pathways = True
-
         execution_mode = self._get_execution_mode(kwargs.pop('execution_mode', None))
         kwargs[CONTEXT].execution_phase = execution_phase_at_entry
+
+        if self._built_pathways is False:
+            self.infer_backpropagation_learning_pathways(execution_mode)
+            self._built_pathways = True
 
         return super().learn(*args, execution_mode=execution_mode, **kwargs)
 
@@ -622,7 +821,7 @@ class AutodiffComposition(Composition):
         """
         if execution_mode is None:
             if self.execution_mode_warned_about_default is False:
-                warnings.warn(f"The execution_mode argument was not specified in the learn() method of {self.name}; "
+                warnings.warn(f"The execution_mode argument was not specified in the learn() method of '{self.name}'; "
                               f"ExecutionMode.PyTorch will be used by default.")
                 self.execution_mode_warned_about_default = True
             execution_mode = pnlvm.ExecutionMode.PyTorch
@@ -659,6 +858,12 @@ class AutodiffComposition(Composition):
                 report=None,
                 report_num=None,
                 ):
+        """Override to execute autodiff_training() in learning mode if execute_mode is not Python"""
+
+        if (self._is_learning(context) and execution_mode is not pnlvm.ExecutionMode.PyTorch and
+                any([isinstance(node, Composition) for node in self.nodes])):
+            raise CompositionError(f"Must use execution_mode=ExecutionMode.PyTorch for learning "
+                                   f"that includes nested AutodiffComposition(s).")
 
         if execution_mode is not pnlvm.ExecutionMode.Python:
             self._assign_execution_ids(context)
@@ -675,6 +880,8 @@ class AutodiffComposition(Composition):
 
 
                 autodiff_inputs = self._infer_input_nodes(inputs)
+                # FIX: 9/16/23: SHOULD BE RENAMED AS _infer_target_nodes BUT CAN'T CONFLICT WITH EXISTING METHOD OF
+                #  THAT NAME
                 autodiff_targets = self._infer_output_nodes(inputs)
 
                 report(self,
@@ -685,7 +892,6 @@ class AutodiffComposition(Composition):
                        content='trial_start',
                        context=context)
 
-                # if execution_mode is not pnlvm.ExecutionMode.Python:
                 self._build_pytorch_representation(context)
                 output = self.autodiff_training(autodiff_inputs,
                                                 autodiff_targets,
@@ -709,8 +915,8 @@ class AutodiffComposition(Composition):
                 scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
                 return output
-        # MODIFIED NEW:
 
+        # Call Composition execute in Python mode
         return super(AutodiffComposition, self).execute(inputs=inputs,
                                                         scheduler=scheduler,
                                                         termination_processing=termination_processing,

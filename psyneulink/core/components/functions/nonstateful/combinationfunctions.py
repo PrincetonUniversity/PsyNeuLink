@@ -1256,12 +1256,16 @@ class LinearCombination(
                     old_length = 1
                 else:
                     old_length = len(variable[i - 1])
-                if isinstance(variable[i], numbers.Number):
+                if variable[i] is None:
+                    owner_str = f"'{self.owner.name}' " if self.owner else ''
+                    raise FunctionError(f"One of the elements of variable for {self.__class__.__name__} function "
+                                        f"of {owner_str}is None; variable: {variable}.")
+                elif isinstance(variable[i], numbers.Number):
                     new_length = 1
                 else:
                     new_length = len(variable[i])
                 if old_length != new_length:
-                    owner_str = f"'{self.owner.name }'" if self.owner else ''
+                    owner_str = f"'{self.owner.name }' " if self.owner else ''
                     raise FunctionError(f"Length of all arrays in variable for {self.__class__.__name__} function "
                                         f"of {owner_str}must be the same; variable: {variable}.")
         return variable

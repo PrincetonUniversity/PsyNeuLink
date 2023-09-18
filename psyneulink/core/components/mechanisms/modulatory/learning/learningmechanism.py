@@ -1154,9 +1154,17 @@ class LearningMechanism(ModulatoryMechanism_Base):
                                                 repr(LEARNING_TIMING)))
 
     def _parse_function_variable(self, variable, context=None):
+        # # MODIFIED 9/11/23 OLD:
         # Return values of ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, and first ERROR_SIGNAL_INDEX InputPorts
         #   in variable; remaining inputs (additional error signals and/or COVARITES) are passed in kwargs)
         return variable[range(min(len(self.input_ports),3))]
+        # MODIFIED 9/11/23 NEW:
+        # Return values of ACTIVATION_INPUT, ACTIVATION_OUTPUT, and ERROR_SIGNAL InputPorts in variable;
+        #   remaining inputs (additional error signals and/or COVARITES) are passed in kwargs)
+        # return np.array(self.input_values, dtype=object)
+        # FIX: SHOULD EXTRA ERROR_SIGNAL (AND ERROR_MATRIX) BE PUT IN params? CF WHAT HAPPENS WITH RUMELHART NETWORK
+        # return variable[range(2 + len(self.error_signal_input_ports))]
+        # MODIFIED 9/11/23 END
 
     def _validate_variable(self, variable, context=None):
         """Validate that variable has exactly three items: activation_input, activation_output and error_signal
@@ -1395,9 +1403,10 @@ class LearningMechanism(ModulatoryMechanism_Base):
             error_source = input_port.path_afferents[0].sender.owner
             self.error_matrices.append(error_source.primary_learned_projection.parameter_ports[MATRIX])
             if ERROR_SIGNAL in input_port.name:
-                # self._error_signal_input_ports.append(input_port)
                 self.error_signal_input_ports.append(input_port)
             instantiated_input_ports.append(input_port)
+
+        assert True
 
         # TODO: enable this. fails because LearningMechanism does not have a
         # consistent _parse_function_variable

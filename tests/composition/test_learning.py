@@ -383,14 +383,15 @@ class TestInputAndTargetSpecs:
         with pytest.raises(RunError) as error_text:
             comp.run(inputs={A: [1.0, 2.0, 3.0],
                              p.target: [[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]})
-        assert ("Input stimulus" in str(error_text.value) and
-                "for Target is incompatible with the shape of its external input" in str(error_text.value))
+        assert ("Input stimulus shape ((3, 2))" in str(error_text.value) and
+                "for 'Target' is incompatible with the shape of its external input" in str(error_text.value))
+
         # Elicit error with learn
         with pytest.raises(RunError) as error_text:
             comp.learn(inputs={A: [1.0, 2.0, 3.0],
                              p.target: [[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]})
-        assert ("Input stimulus" in str(error_text.value) and
-                "for Target is incompatible with the shape of its external input" in str(error_text.value))
+        assert ("Input stimulus shape ((3, 2))" in str(error_text.value) and
+                "for 'Target' is incompatible with the shape of its external input" in str(error_text.value))
 
     # The input sizes were picked because the lengths conflict in set:
     # >>> print({10, 2}, {2, 10})
@@ -2380,7 +2381,7 @@ class TestBackPropLearning:
 
         xor_autodiff.add_projection(sender=input_autodiff, projection=in_to_hidden_autodiff, receiver=hidden_autodiff)
         xor_autodiff.add_projection(sender=hidden_autodiff, projection=hidden_to_out_autodiff, receiver=output_autodiff)
-        xor_autodiff.infer_backpropagation_learning_pathways()
+        xor_autodiff.infer_backpropagation_learning_pathways(execution_mode=autodiff_mode)
 
         inputs_dict = {"inputs": {input_autodiff:xor_inputs},
                        "targets": {output_autodiff:xor_targets},

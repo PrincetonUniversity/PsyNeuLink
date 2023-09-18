@@ -5997,26 +5997,26 @@ class TestInputSpecifications:
              [1],
              [0]])
 
-        in_to_hidden_matrix = np.random.rand(2,10)
+        input_to_hidden_matrix = np.random.rand(2,10)
         hidden_to_out_matrix = np.random.rand(10,1)
 
-        input_comp = pnl.TransferMechanism(name='input_comp',
+        input_comp = pnl.TransferMechanism(name='input',
                                     default_variable=np.zeros(2))
 
-        hidden_comp = pnl.TransferMechanism(name='hidden_comp',
+        hidden_comp = pnl.TransferMechanism(name='hidden',
                                     default_variable=np.zeros(10),
                                     function=pnl.Logistic())
 
-        output_comp = pnl.TransferMechanism(name='output_comp',
+        output_comp = pnl.TransferMechanism(name='output',
                                     default_variable=np.zeros(1),
                                     function=pnl.Logistic())
 
-        in_to_hidden_comp = pnl.MappingProjection(name='in_to_hidden_comp',
-                                    matrix=in_to_hidden_matrix.copy(),
+        input_to_hidden_comp = pnl.MappingProjection(name='input_to_hidden',
+                                    matrix=input_to_hidden_matrix.copy(),
                                     sender=input_comp,
                                     receiver=hidden_comp)
 
-        hidden_to_out_comp = pnl.MappingProjection(name='hidden_to_out_comp',
+        hidden_to_out_comp = pnl.MappingProjection(name='hidden_to_output',
                                     matrix=hidden_to_out_matrix.copy(),
                                     sender=hidden_comp,
                                     receiver=output_comp)
@@ -6024,7 +6024,7 @@ class TestInputSpecifications:
         xor_comp = pnl.Composition()
 
         backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
-                                                                            in_to_hidden_comp,
+                                                                            input_to_hidden_comp,
                                                                             hidden_comp,
                                                                             hidden_to_out_comp,
                                                                             output_comp],
@@ -6920,15 +6920,19 @@ class TestNodeRoles:
 
     def test_input_labels_and_results_by_node_and_no_orphaning_of_nested_output_nodes(self):
         """
-        Test that nested Composition with two outputs, one of which Projects to a node in the outer Composition is,
-        by virtue of its other output, still assigned as an OUTPUT Node of the outer Composition
-        Also test get_input_format and get_results_by_nodes methods
+        Test get_input_format and get_results_by_nodes methods
+
+        Also test that  a nested Composition with two outputs, one of which projects to a another node in the outer
+        Composition is, by virtue of its other output (that projects only to the output_CIM of the outer Composition)
+        is still assigned as an OUTPUT Node of the outer Composition, and that that output that projects to the other
+        Node does *NOT* project to the output_CIM of the outer Composition (meaning it's value  is not included in
+        the output_values of the outer Composition)
         """
         input_labels_dict = {0:{'red':0, 'green':1}}
         output_labels_dict = {0:{'red':0, 'green':1}}
         A = ProcessingMechanism(name='A', input_labels=input_labels_dict)
         B = ProcessingMechanism(name='B')
-        C = ProcessingMechanism(name='C')
+        C = ProcessingMechanism(name='C', output_labels=output_labels_dict)
         icomp = Composition(pathways=[[A,B,C]], name='INNER COMP')
 
         X = ProcessingMechanism(name='X')
@@ -6940,9 +6944,9 @@ class TestNodeRoles:
         O = ProcessingMechanism(name='O', input_ports=[Z])
         ocomp = Composition(name='OUTER COMP', nodes=[O, mcomp,Q])
 
-        len(ocomp.output_values)==3
+        assert len(ocomp.output_values)==3
         result = ocomp.run(inputs={mcomp:[[0],[0]]})
-        assert len(result)==4
+        assert len(result)==3
 
         input_format = ocomp.get_input_format(form=pnl.TEXT)
         assert repr(input_format) == '\'{\\n\\tMIDDLE COMP: [[0.0],[0.0]],\\n\\tQ: [[0.0]]\\n}\''
@@ -6954,22 +6958,21 @@ class TestNodeRoles:
         assert input_format == "\nInputs to (nested) INPUT Nodes of OUTER COMP for 2 trials:\n\tMIDDLE COMP: \n\t\tX: [ [[0.0]], [[0.0]] ]\n\t\tINNER COMP: \n\t\t\tA: [ ['red'], ['green'] ]\n\tQ: [ ['red'], ['green'] \n\nFormat as follows for inputs to run():\n{\n\tMIDDLE COMP: [ [[0.0],[0.0]], [[0.0],[0.0]] ],\n\tQ: [ [[0.0]], [[0.0]] ]\n}"
 
         result = ocomp.run(inputs={mcomp:[[.2],['green']], Q:[4.6]})
-        assert result == [[0.2], [0.2], [1.],[4.6]]
+        assert result == [[0.2], [1.],[4.6]]
         results_by_node = ocomp.get_results_by_nodes()
         assert results_by_node[O] == [0.2]
-        assert results_by_node[Z] == [0.2]
         assert results_by_node[C] == [1.0]
         assert results_by_node[Q] == [4.6]
         results_by_node = ocomp.get_results_by_nodes(use_names=True)
-        assert repr(results_by_node) == '{\'O\': [0.2], \'Z\': [0.2], \'C\': [1.0], \'Q\': [4.6]}'
+        assert repr(results_by_node) == '{\'O\': [0.2], \'C\': [1.0], \'Q\': [4.6]}'
         results_by_node = ocomp.get_results_by_nodes(use_names=True, use_labels=True)
-        assert repr(results_by_node) == '{\'O\': [[0.2]], \'Z\': [\'red\'], \'C\': [[1.0]], \'Q\': [[4.6]]}'
-        results_by_node = ocomp.get_results_by_nodes(nodes=[Q, Z])
-        assert repr(results_by_node) == '{(ProcessingMechanism Z): [0.2], (ProcessingMechanism Q): [4.6]}'
+        assert repr(results_by_node) == '{\'O\': [[0.2]], \'C\': [\'red\'], \'Q\': [[4.6]]}'
+        results_by_node = ocomp.get_results_by_nodes(nodes=[Q, C])
+        assert repr(results_by_node) == '{(ProcessingMechanism C): [1.0], (ProcessingMechanism Q): [4.6]}'
         results_by_node = ocomp.get_results_by_nodes(nodes=Q, use_names=True)
         assert repr(results_by_node) == '{\'Q\': [4.6]}'
-        results_by_node = ocomp.get_results_by_nodes(nodes=Z, use_labels=True)
-        assert repr(results_by_node) == '{(ProcessingMechanism Z): [\'red\']}'
+        results_by_node = ocomp.get_results_by_nodes(nodes=C, use_labels=True)
+        assert repr(results_by_node) == '{(ProcessingMechanism C): [\'red\']}'
 
         label_not_in_dict_error_msg = 'Inappropriate use of \'purple\' as a stimulus for A in MIDDLE COMP: ' \
                                       'it is not a label in its input_labels_dict.'

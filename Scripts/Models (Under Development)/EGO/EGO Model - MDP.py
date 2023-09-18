@@ -9,6 +9,9 @@
 
 # FIX: TERMINATION CONDITION IS GETTING TRIGGED AFTER 1st TRIAL
 
+# FOR INPUT NODES: scheduler.add_condition(A, BeforeNCalls(A,1)
+# Termination: AfterNCalls(Ctl,2)
+
 """
 QUESTIONS:
 
@@ -104,6 +107,7 @@ Sequences of stimuli are constructed either using `SweetPea <https://sites.googl
     .. note::
        Use of SweetPea for stimulus generation requires it be installed::
        >> pip install sweetpea
+
 
 .. _EGO_training:
 

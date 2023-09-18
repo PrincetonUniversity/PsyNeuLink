@@ -274,12 +274,13 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         comp = comp or self.composition
         port_map = port.owner.port_map
         idx = 0 if isinstance(port, InputPort) else 1
-        output_port = [port_map[k][1] for k in port_map if port_map[k][idx] is port]
-        assert len(output_port)==1, f"PROGRAM ERROR: Expected exactly 1 output_port for {port.name} " \
-                                   f"in port_map for {port.owner}; found {len(output_port)}."
-        assert len(output_port[0].efferents)==1, f"PROGRAM ERROR: Port ({output_port.name}) expected to have " \
-                                                 f"just one efferent; has {len(output_port.efferents)}."
-        receiver = output_port[0].efferents[0].receiver
+        output_ports = [port_map[k][1] for k in port_map if port_map[k][idx] is port]
+        assert len(output_ports)==1, f"PROGRAM ERROR: Expected exactly 1 output_port for {port.name} " \
+                                   f"in port_map for {port.owner}; found {len(output_ports)}."
+        output_port = output_ports[0]
+        assert len(output_port.efferents)==1, f"PROGRAM ERROR: Port ({output_port.name}) expected to have " \
+                                              f"just one efferent; has {len(output_port.efferents)}."
+        receiver = output_port.efferents[0].receiver
         if not isinstance(receiver.owner, CompositionInterfaceMechanism):
             return receiver, receiver.owner, comp
         return self._get_destination_info_from_input_CIM(receiver, receiver.owner.composition)
@@ -347,15 +348,52 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         comp = comp or self.composition
         port_map = port.owner.port_map
         idx = 0 if isinstance(port, InputPort) else 1
-        input_port = [port_map[k][0] for k in port_map if port_map[k][idx] is port]
-        assert len(input_port)==1, f"PROGRAM ERROR: Expected exactly 1 input_port for {port.name} " \
-                                   f"in port_map for {port.owner}; found {len(input_port)}."
-        assert len(input_port[0].path_afferents)==1, f"PROGRAM ERROR: Port ({input_port.name}) expected to have " \
-                                                     f"just one path_afferent; has {len(input_port.path_afferents)}."
-        sender = input_port[0].path_afferents[0].sender
+        input_ports = [port_map[k][0] for k in port_map if port_map[k][idx] is port]
+        assert len(input_ports)==1, f"PROGRAM ERROR: Expected exactly 1 input_port for {port.name} " \
+                                   f"in port_map for {port.owner}; found {len(input_ports)}."
+        assert len(input_ports[0].path_afferents)==1, f"PROGRAM ERROR: Port ({input_ports[0].name}) expected to have " \
+                                                     f"just one path_afferent; has {len(input_ports.path_afferents)}."
+        sender = input_ports[0].path_afferents[0].sender
         if not isinstance(sender.owner, CompositionInterfaceMechanism):
             return sender, sender.owner, comp
         return self._get_source_info_from_output_CIM(sender, sender.owner.composition)
+
+    def _get_destination_info_for_output_CIM(self, port, comp=None)-> list:
+        """Return Port, Node and Composition for "ultimate" destination(s) of projection to **port**.
+        **port**: InputPort or OutputPort of the output_CIM to which the projection of interest projects;
+                  used to find source (key=SENDER PORT) of the projection to the output_CIM.
+        **comp**: Composition at which to begin the search (or continue it when called recursively);
+                 assumes the Composition for the output_CIM to which **port** belongs by default
+        If there is more than one destination, return list of tuples, one for each destination;
+        this occurs if the source of the projection to the output_CIM (SENDER PORT) is a Node in a nested Composition
+        that is specified to project to more than one Node in the outer Composition
+        """
+        from psyneulink.core.compositions.composition import get_composition_for_node
+
+        # Ensure method is being called on an output_CIM
+        assert self == self.composition.output_CIM
+        #  CIM MAP ENTRIES:  [SENDER PORT,  [output_CIM InputPort,  output_CIM OutputPort]]
+        # Get receiver of output_port of output_CIM
+        comp = comp or self.composition
+        port_map = port.owner.port_map
+        idx = 0 if isinstance(port, InputPort) else 1
+        output_ports = [port_map[k][1] for k in port_map if port_map[k][idx] is port]
+        assert len(output_ports)==1, f"PROGRAM ERROR: Expected exactly 1 output_port for {port.name} " \
+                                   f"in port_map for {port.owner}; found {len(output_ports)}."
+        output_port = output_ports[0]
+        receivers_info = []
+        if not output_port.efferents:
+            return None
+        for efferent in output_port.efferents:
+            receiver = efferent.receiver
+            if not isinstance(efferent.receiver.owner, CompositionInterfaceMechanism):
+                assert comp.is_nested
+                receiver_comp = get_composition_for_node(receiver.owner)
+                receivers_info.append((efferent.receiver, efferent.receiver.owner, receiver_comp))
+            else:
+                receivers_info.append(self._get_destination_info_for_output_CIM(efferent.receiver,
+                                                                                efferent.receiver.owner.composition))
+        return receivers_info
 
     def _sender_is_probe(self, output_port):
         """Return True if source of output_port is a PROBE Node of the Composition to which it belongs"""
