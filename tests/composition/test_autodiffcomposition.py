@@ -19,7 +19,6 @@ from psyneulink.core.compositions.report import ReportOutput
 
 logger = logging.getLogger(__name__)
 
-
 # All tests are set to run. If you need to skip certain tests,
 # see http://doc.pytest.org/en/latest/skipping.html
 
