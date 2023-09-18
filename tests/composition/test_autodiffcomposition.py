@@ -2063,26 +2063,26 @@ class TestNestedLearning:
 
         nested = AutodiffComposition([input_nodes[0], hidden_nodes[0]],name='nested')
 
-        error_msg = ("The input(s) for nested Composition 'nested' must all come from "
-                     "Nodes in its outer Composition ('autodiff_comp') to be learnable. ")
-
-        with pytest.raises(AutodiffCompositionError) as error_text:
-            autodiff_results = execute_learning(comp_type='autodiff',
-                                                execution_mode=pnl.ExecutionMode.PyTorch,
-                                                pathways=[nested, output_nodes[0]],
-                                                inputs=inputs)
-        assert error_msg in str(error_text.value)
-        # autodiff_results = execute_learning(comp_type='autodiff',
-        #                                     execution_mode=pnl.ExecutionMode.PyTorch,
-        #                                     pathways=[nested, output_nodes[0]],
-        #                                     inputs=inputs)
+        # error_msg = ("The input(s) for nested Composition 'nested' must all come from "
+        #              "Nodes in its outer Composition ('autodiff_comp') to be learnable. ")
+        #
+        # with pytest.raises(AutodiffCompositionError) as error_text:
+        #     autodiff_results = execute_learning(comp_type='autodiff',
+        #                                         execution_mode=pnl.ExecutionMode.PyTorch,
+        #                                         pathways=[nested, output_nodes[0]],
+        #                                         inputs=inputs)
+        # assert error_msg in str(error_text.value)
+        autodiff_results = execute_learning(comp_type='autodiff',
+                                            execution_mode=pnl.ExecutionMode.PyTorch,
+                                            pathways=[nested, output_nodes[0]],
+                                            inputs=inputs)
 
         comp_results = execute_learning(comp_type='composition',
                                         execution_mode=pnl.ExecutionMode.Python,
                                         pathways=[[input_nodes[0],hidden_nodes[0], output_nodes[0]]],
                                         inputs=inputs)
 
-        # np.testing.assert_allclose(comp_results, autodiff_results)
+        np.testing.assert_allclose(comp_results, autodiff_results)
 
     def test_2_direct_outputs_from_nested(self, nodes_for_testing_nested_comps, execute_learning):
         nodes = nodes_for_testing_nested_comps(1, 2, 0)

@@ -519,9 +519,10 @@ class AutodiffComposition(Composition):
                 if (isinstance(node, Composition) and node is not self
                         and any(isinstance(proj.sender.owner, CompositionInterfaceMechanism)
                                 for proj in node.afferents)):
-                    raise AutodiffCompositionError(f"The input(s) for nested Composition '{node.name}' must all "
-                                                   f"come from Nodes in its outer Composition ('{self.name}') "
-                                                   f"to be learnable. ")
+                    # raise AutodiffCompositionError(f"The input(s) for nested Composition '{node.name}' must all "
+                    #                                f"come from Nodes in its outer Composition ('{self.name}') "
+                    #                                f"to be learnable. ")
+                    continue
 
                 # node is output_CIM of nested Composition that projects directly to output_CIM of outer Composition
                 if isinstance(node, CompositionInterfaceMechanism):
