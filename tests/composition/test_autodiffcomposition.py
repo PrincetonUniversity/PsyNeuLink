@@ -1234,12 +1234,10 @@ class TestNestedLearning:
                         pnl.ProcessingMechanism(name='hidden_4', size=6)]
         output_nodes = [pnl.ProcessingMechanism(name='output_1', size=3),
                         pnl.ProcessingMechanism(name='output_2', size=5)]
-        hidden_with_2_inputs = pnl.ProcessingMechanism(name='hidden_x', size=(3,3), function=pnl.LinearCombination)
         def _get_nodes(num_input_nodes, num_hidden_nodes, num_output_nodes):
             return (input_nodes[0:num_input_nodes],
                     hidden_nodes[0:num_hidden_nodes],
-                    output_nodes[0:num_output_nodes],
-                    hidden_with_2_inputs)
+                    output_nodes[0:num_output_nodes])
         return _get_nodes
 
     @pytest.fixture
@@ -1266,7 +1264,7 @@ class TestNestedLearning:
 
     def test_1_nested_hidden(self, nodes_for_testing_nested_comps, execute_learning):
         nodes = nodes_for_testing_nested_comps(1, 1, 1)
-        input_nodes, hidden_nodes, output_nodes, _ = nodes
+        input_nodes, hidden_nodes, output_nodes = nodes
         inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
 
         nested_hidden_1 = AutodiffComposition(name='nested', nodes=[hidden_nodes[0]])
@@ -1284,7 +1282,7 @@ class TestNestedLearning:
 
     def test_2_sequential_nested_hidden(self, nodes_for_testing_nested_comps, execute_learning):
         nodes = nodes_for_testing_nested_comps(1, 2, 1)
-        input_nodes, hidden_nodes, output_nodes, _ = nodes
+        input_nodes, hidden_nodes, output_nodes = nodes
         inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
 
         nested_hiddens = AutodiffComposition(name='nested', pathways=[hidden_nodes[0],
@@ -1307,7 +1305,7 @@ class TestNestedLearning:
     def test_2_level_nested(self, nodes_for_testing_nested_comps, execute_learning):
 
         nodes = nodes_for_testing_nested_comps(1, 4, 1)
-        input_nodes, hidden_nodes, output_nodes, _ = nodes
+        input_nodes, hidden_nodes, output_nodes = nodes
         inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
 
         nested_b = AutodiffComposition(name='nested_b', pathways=[hidden_nodes[1],
@@ -1332,11 +1330,48 @@ class TestNestedLearning:
 
         np.testing.assert_allclose(comp_results, autodiff_results)
 
+    def test_1_input_to_1_nested_hidden_with_2_output_ports(self, nodes_for_testing_nested_comps, execute_learning):
+        # Note: inputs provided for only one of the INPUT Nodes; other uses default inputs
+
+        nodes = nodes_for_testing_nested_comps(1, 1, 2)
+        input_nodes, hidden_nodes, output_nodes = nodes
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
+        hidden_with_two_output_ports = pnl.ProcessingMechanism(size=3, output_ports=['FIRST','SECOND'])
+
+        nested = AutodiffComposition([hidden_nodes[0], hidden_with_two_output_ports], name='nested')
+        pathway_a = [input_nodes[0],
+                     nested,
+                     MappingProjection(hidden_with_two_output_ports.output_ports[0], output_nodes[0]),
+                     output_nodes[0]]
+        pathway_b = [input_nodes[0],
+                     nested,
+                     MappingProjection(hidden_with_two_output_ports.output_ports[1], output_nodes[1]),
+                     output_nodes[1]]
+        autodiff_results = execute_learning(comp_type='autodiff',
+                                            execution_mode=pnl.ExecutionMode.PyTorch,
+                                            pathways=[pathway_a, pathway_b],
+                                            inputs=inputs)
+
+        # Note:
+        #  the MappingProjections are not needed, as they were actualy implemented in the autodiff version
+        #  in infer_backpropagation_learning_pathways() (when flattening the nessted Composition)
+        pathway_a = [input_nodes[0], hidden_nodes[0], hidden_with_two_output_ports, output_nodes[0]]
+        pathway_b = [input_nodes[0], hidden_nodes[0], hidden_with_two_output_ports, output_nodes[1]]
+
+        comp_results = execute_learning(comp_type='composition',
+                                        execution_mode=pnl.ExecutionMode.Python,
+                                        pathways=[pathway_a, pathway_b],
+                                        inputs=inputs)
+
+        for i in range(len(autodiff_results)):
+            for j in range(len(autodiff_results[i])):
+                np.testing.assert_allclose(comp_results[i][j], autodiff_results[i][j])
+
     def test_1_input_to_1_nested_hidden_one_to_many_2_outputs(self, nodes_for_testing_nested_comps, execute_learning):
         # Note: inputs provided for only one of the INPUT Nodes; other uses default inputs
 
         nodes = nodes_for_testing_nested_comps(1, 1, 2)
-        input_nodes, hidden_nodes, output_nodes, hidden_with_2_inputs = nodes
+        input_nodes, hidden_nodes, output_nodes = nodes
         inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
 
         nested = AutodiffComposition([hidden_nodes[0]],name='nested')
@@ -1366,7 +1401,7 @@ class TestNestedLearning:
         # Note: inputs provided for only one of the INPUT Nodes; other uses default inputs
 
         nodes = nodes_for_testing_nested_comps(1, 2, 2)
-        input_nodes, hidden_nodes, output_nodes, hidden_with_2_inputs = nodes
+        input_nodes, hidden_nodes, output_nodes = nodes
         inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
 
         nested = AutodiffComposition(nodes=[hidden_nodes[0], hidden_nodes[1]], name='nested')
@@ -1404,7 +1439,9 @@ class TestNestedLearning:
         # Note: inputs provided for only one of the INPUT Nodes; other uses default inputs
 
         nodes = nodes_for_testing_nested_comps(2, 0, 1)
-        input_nodes, hidden_nodes, output_nodes, hidden_with_2_inputs = nodes
+        input_nodes, hidden_nodes, output_nodes = nodes
+        hidden_with_2_inputs = pnl.ProcessingMechanism(name='hidden_x', size=(3,3), function=pnl.LinearCombination)
+
         inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
 
         nested = AutodiffComposition([hidden_with_2_inputs],name='nested')
@@ -1444,7 +1481,7 @@ class TestNestedLearning:
         # Note: inputs provided for only one of the INPUT Nodes; other uses default inputs
 
         nodes = nodes_for_testing_nested_comps(2, 3, 1)
-        input_nodes, hidden_nodes, output_nodes, hidden_with_2_inputs = nodes
+        input_nodes, hidden_nodes, output_nodes = nodes
         inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
 
         nested = AutodiffComposition([[hidden_nodes[0], hidden_nodes[2]],
@@ -1473,7 +1510,7 @@ class TestNestedLearning:
         # Note: inputs provided for only one of the INPUT Nodes; other uses default inputs
 
         nodes = nodes_for_testing_nested_comps(2, 3, 1)
-        input_nodes, hidden_nodes, output_nodes, hidden_with_2_inputs = nodes
+        input_nodes, hidden_nodes, output_nodes = nodes
         inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
 
         nested = AutodiffComposition([[hidden_nodes[0], hidden_nodes[2]],
@@ -1504,7 +1541,7 @@ class TestNestedLearning:
         # Note: inputs provided for only one of the INPUT Nodes; other uses default inputs
 
         nodes = nodes_for_testing_nested_comps(2, 2, 2)
-        input_nodes, hidden_nodes, output_nodes, hidden_with_2_inputs = nodes
+        input_nodes, hidden_nodes, output_nodes = nodes
         inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
 
         nested = AutodiffComposition(nodes=[hidden_nodes[0], hidden_nodes[1]], name='nested')
