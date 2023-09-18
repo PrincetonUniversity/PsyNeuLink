@@ -174,7 +174,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             self.nodes_map[node] = pytorch_node
             self.node_wrappers.append(pytorch_node)
 
-        # Instantiate pytorch projections (ignoring any from/to CIMs in the same composition)
+        # Instantiate PyTorch ProjectionWrappers (ignoring any from/to CIMs in the same composition)
         for projection in composition._inner_projections:
             sndr_mech = projection.sender.owner
             rcvr_mech = projection.receiver.owner
@@ -185,7 +185,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 proj_rcvr = self.nodes_map[rcvr_mech]
                 pnl_proj = projection
 
-            # Ignore CIMs within the same Composition (they are not learnable;  see below)
+            # Ignore CIMs within the same Composition (they are not learnable; see figure in docstring)
             elif sndr_mech is composition.input_CIM or rcvr_mech is composition.output_CIM:
                 continue
 
@@ -205,8 +205,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 pnl_proj = projection.receiver.owner.port_map[nested_rcvr_port][1].efferents[0]
                 assert pnl_proj == nested_rcvr_port.path_afferents[0], \
                     (f"PROGRAM ERROR: First afferent Projection to '{nested_rcvr_port.owner.name}' "
-                     f"(from '{nested_rcvr_port.path_afferents[0].sender.owner.name}') is not the same as its "
-                     f"Projection from '{projection.receiver.owner.composition.name}.input_CIM'")
+                     f"(which should be from '{nested_rcvr_port.path_afferents[0].sender.owner.name}') is "
+                     f"not the same as its Projection from '{projection.receiver.owner.composition.name}.input_CIM'")
 
             # EXIT
             # Projection from output_CIM of a nested Composition: needed for learning, so create map for Projection

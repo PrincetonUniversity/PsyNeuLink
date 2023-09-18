@@ -1069,8 +1069,9 @@ exploiting the acceleration of optimized implementations of learning. This can b
 compilation (**execution_mode** = `ExecutionMode.LLVMRun`); or by automatically translating the model to `PyTorch
 <https://pytorch.org>`_ for training (**execution_mode** = `ExecutionMode.PyTorch`). The advantage of these modes is
 that they can provide up to three orders of magnitude speed-up in training a model. However, there are restrictions
-on the kinds of Compositions that be implemented in this way.  The features of the different ways to implement and
-execute learning are outlined in the following table, and described in more detail in `AutodiffComposition`.
+on the kinds of Compositions that be implemented in this way. Use of the `PyTorch` mode also supports learning of
+`nested Compositions <Composition_Nested>` (see `AutodiffComposition_PyTorch`. The features of the different ways to
+implement and execute learning are outlined in the table below, and described in more detail in `AutodiffComposition`.
 
 The `learning_rate <AutodiffComposition.learning_rate>` for an AutodiffComposition can be specified in its constructor
 (which assigns it as the default) or in its `learn <AutodiffComposition.learn>` method, in which case it applies to
@@ -1094,33 +1095,36 @@ that execution only.
 .. table::
    :widths: 5 34 33 33
 
-   +--------------------+------------------------------------+-----------------------------------------------+
-   |                    |**Composition**                     |**AutodiffComposition**                        |
-   +--------------------+------------------------------------+-----------------------+-----------------------+
-   |                    |*Python*                            |*Direct Compilation*   |*PyTorch*              |
-   +====================+====================================+=======================+=======================+
-   |execution_mode=     |`ExecutionMode.Python`              |`ExecutionMode.LLVMRun`|`ExecutionMode.LLVMRun`|
-   +--------------------+------------------------------------+-----------------------+-----------------------+
-   |`learn()            |                                    |                       |                       |
-   |<Composition.learn>`|Python interpreted                  |LLVM compiled          |PyTorch compiled       |
-   |                    |                                    |                       |                       |
-   |`run()              |                                    |                       |                       |
-   |<Composition.run>`  |Python interpreted                  |LLVM compiled          |Python interpreted     |
-   +--------------------+------------------------------------+-----------------------+-----------------------+
-   |*Speed:*            |slow                                |fastest                |fast                   |
-   +--------------------+------------------------------------+-----------------------+-----------------------+
-   |                    |`BackPropagation`                   |Backpropagation        |Backpropagation        |
-   |                    |                                    |                       |                       |
-   |                    |`Reinforcement` learning            |                       |RNN, inclduing LSTM    |
-   |                    |                                    |                       |                       |
-   |*Supports:*         |`Unspervised learning               |                       |Unsupervised learning  |
-   |                    |<Composition_Learning_Unsupervised>`|                       |                       |
-   |                    |                                    |                       |                       |
-   |                    |`Modulation                         |                       |                       |
-   |                    |<ModulatorySignal_Modulation>`      |                       |                       |
-   |                    |                                    |                       |                       |
-   |                    |Inspection                          |                       |                       |
-   +--------------------+------------------------------------+-----------------------+-----------------------+
+   +--------------------+------------------------------------+--------------------------------------------------------+
+   |                    |**Composition**                     |**AutodiffComposition**                                 |
+   +--------------------+------------------------------------+--------------------------+-----------------------------+
+   |                    |*Python*                            |`AutodiffComposition_LLVM`|`AutodiffComposition_PyTorch`|
+   |                    |                                    |(*Direct Compilation*)    |                             |
+   +====================+====================================+==========================+=============================+
+   |execution_mode=     |`ExecutionMode.Python`              |`ExecutionMode.LLVMRun`   |`ExecutionMode.PyTorch       |
+   +--------------------+------------------------------------+--------------------------+-----------------------------+
+   |`learn()            |                                    |                          |                             |
+   |<Composition.learn>`|Python interpreted                  |LLVM compiled             |PyTorch compiled             |
+   |                    |                                    |                          |                             |
+   |`run()              |                                    |                          |                             |
+   |<Composition.run>`  |Python interpreted                  |LLVM compiled             |Python interpreted           |
+   +--------------------+------------------------------------+--------------------------+------------------------------+
+   |*Speed:*            |slow                                |fastest                   |fast                          |
+   +--------------------+------------------------------------+--------------------------+------------------------------+
+   |                    |`BackPropagation`                   |Backpropagation           |Backpropagation               |
+   |                    |                                    |                          |                              |
+   |                    |`Reinforcement` learning            |                          |RNN, inclduing LSTM           |
+   |                    |                                    |                          |                              |
+   |*Supports:*         |`Unspervised learning               |                          |Unsupervised learning         |
+   |                    |<Composition_Learning_Unsupervised>`|                          |                              |
+   |                    |                                    |                          |                              |
+   |                    |                                    |                          |`Learning of                  |
+   |                    |                                    |                          |nested Compositions           |
+   |                    |`Modulation                         |                          |<AutodiffComposition_Nesting>`|
+   |                    |<ModulatorySignal_Modulation>`      |                          |                              |
+   |                    |                                    |                          |                              |
+   |                    |Inspection                          |                          |                              |
+   +--------------------+------------------------------------+--------------------------+------------------------------+
 
 .. _Composition_Learning_UDF:
 
@@ -8497,8 +8501,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Add error_signal projections to any learning_mechanisms that are now dependent on the new one
         for lm in learning_mechanisms:
             if lm.dependent_learning_mechanisms:
-                projections = self._add_error_projection_to_dependent_learning_mechs(lm, context)
-                self.add_projections(projections)
+                self._add_error_projection_to_dependent_learning_mechs(lm, context)
 
         # Suppress "no efferent connections" warning for:
         #    - error_signal OutputPort of last LearningMechanism in sequence
@@ -8673,7 +8676,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             covariates_sources = _get_covariate_info(output_source, learned_projection)
             # activation_output is always a single value since activation function is assumed to have only one output
             activation_output = [output_source.output_ports[0].value]
-            # insure that output_source.function.derivative can handle covariates
+            # ensure that output_source.function.derivative can handle covariates
             if covariates_sources:
                 try:
                     output_source.function.derivative(input=None, output=activation_output,
@@ -8696,152 +8699,90 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        and isinstance(lp.sender.owner.function, BackPropagation))),
                                   None)
 
-        # If learning_mechanism exists (due to overlapping or duplicative pathways):
+        # If learning_mechanism exists:
         #    error_sources will be empty (as they have been dealt with in self._get_back_prop_error_sources
         #    error_projections will contain list of any created to be added to the Composition below
         if learning_mechanism:
-            # This should only be reached for duplicate learning pathways or when and AutodiffComposition is being
-            #  trained (as it creates a duplicate of the learning pathways)
+            # This should only be reached for duplicate learning pathways
+            #  or when and AutodiffComposition is being trained (as it creates a duplicate of the learning pathways)
             error_sources, error_projections = self._get_back_prop_error_sources(output_source,
                                                                                  learning_mechanism,
                                                                                  context)
-            # # MODIFIED 9/12/23 NEW:
-            # # FIX: SHOULD CHECK input_ports for covariates and add them if found for processing below?
-            # covariates_sources = None
-            # MODIFIED 9/12/23 END
+            self.add_projections(error_projections)
+            return learning_mechanism
 
         # If learning_mechanism does not yet exist:
-        #    error_sources will contain ones needed to create learning_mechanism
-        #    error_projections will be empty since they can't be created until the learning_mechanism is created below;
-        #    they will be created (using error_sources) after learning_mechanism is created below
-        else:
-            error_sources, error_projections = self._get_back_prop_error_sources(output_source, context=context)
-            error_signal_template = [error_source.output_ports[ERROR_SIGNAL].value for error_source in error_sources]
+        #    get error_sources needed to create learning_mechanism
+        #    error_projections should be empty since there is not yet any learning_mechanism;
+        #    they will be created (using error_sources) after learning_mechanism is created below.
+        error_sources, _ = self._get_back_prop_error_sources(output_source, context=context)
+        assert not _, f"PROGRAM ERROR: there should not yet be error_projections: {_}"
 
-            activation_input, activation_output, covariates_sources = _get_acts_in_out_cov(input_source,
-                                                                                           output_source,
-                                                                                           learned_projection)
+        error_signal_template = [error_source.output_ports[ERROR_SIGNAL].value for error_source in error_sources]
 
-            # Use only one error_signal_template for learning_function, since it gets only one source of error at a time
-            learning_function = BackPropagation(default_variable=activation_input +
-                                                                 activation_output +
-                                                                 [error_signal_template[0]],
-                                                covariates=[source.value for source in covariates_sources],
-                                                loss_spec=None,
-                                                activation_derivative_fct=output_source.function.derivative)
+        activation_input, activation_output, covariates_sources = _get_acts_in_out_cov(input_source,
+                                                                                       output_source,
+                                                                                       learned_projection)
 
-            # Use all error_signal_templates since LearningMechanisms handles all sources of error
-            # Include any covariates_sources in default_variable so that it aligns with number of InputPorts
-            learning_mechanism = LearningMechanism(function=learning_function,
-                                                   default_variable=activation_input +
-                                                                    activation_output +
-                                                                    error_signal_template +
-                                                                    [source.value for source in covariates_sources],
-                                                   covariates_sources = covariates_sources,
-                                                   error_sources=error_sources,
-                                                   learning_enabled=learning_update,
-                                                   learning_rate=learning_rate,
-                                                   in_composition=True,
-                                                   name="Learning Mechanism for " + learned_projection.name)
+        # Use only one error_signal_template for learning_function, since it gets only one source of error at a time
+        learning_function = BackPropagation(default_variable=activation_input +
+                                                             activation_output +
+                                                             [error_signal_template[0]],
+                                            covariates=[source.value for source in covariates_sources],
+                                            loss_spec=None,
+                                            activation_derivative_fct=output_source.function.derivative)
 
-            # Create MappingProjections from ERROR_SIGNAL OutputPort of each error_source
-            #    to corresponding error_input_ports, including for an existing LearningMechanism
-            #    retrieved from call to _get_back_prop_error_sources() above
-            # FIX: 9/9/23  THIS SHOULD BE DONE IN _get_back_prop_error_sources()?? TO CHECK FOR EXISTING ONES?
-            for i, error_source in enumerate(error_sources):
-                # MODIFIED 9/12/23 OLD:
-                error_projection = MappingProjection(sender=error_source,
-                                                     receiver=learning_mechanism.error_signal_input_ports[i])
-                error_projections.append(error_projection)
-                # # MODIFIED 9/12/23 NEW:
-                # error_projections.append(MappingProjection(sender=error_source,
-                #                                            receiver=learning_mechanism.error_signal_input_ports[i]))
-                # MODIFIED 9/12/23 END
+        # Use all error_signal_templates since LearningMechanisms handles all sources of error
+        # Include any covariates_sources in default_variable so that it aligns with number of InputPorts
+        learning_mechanism = LearningMechanism(function=learning_function,
+                                               default_variable=activation_input +
+                                                                activation_output +
+                                                                error_signal_template +
+                                                                [source.value for source in covariates_sources],
+                                               covariates_sources = covariates_sources,
+                                               error_sources=error_sources,
+                                               learning_enabled=learning_update,
+                                               learning_rate=learning_rate,
+                                               in_composition=True,
+                                               name="Learning Mechanism for " + learned_projection.name)
 
-        # Use try here to be able to abort in case duplicates are found
-        try:
-            # Create MappingProjections for INPUT_SOURCE, OUTPUT_SOURCE and COVARIATES (if any)
-            # FIX: SHOULD CONSTRUCT THESE MAPPING PROJECTIONS ABOVE AND USE TO SEPCIFY INPUTPORTS FOR LEARNING MECHANISM
-            # FIX: NO NEED TO MAKE PROJECTIONS IF SPECIFIED ABOVE
-            #      STILL NEED ADD THEM TO COMPOSITION IF LEARNING MECHANISM IS ALREADY IN COMPOSITION?
-            #      IF SO, JUST ITERATE OVER PROJECTIONS TO INPUT PORTS TO PUT THEM IN COMPOSITION
+        # Create MappingProjections from ERROR_SIGNAL OutputPort of each error_source to corresponding error_input_ports
+        error_projections = [MappingProjection(sender=error_source,
+                                               receiver=learning_mechanism.error_signal_input_ports[i])
+                             for i, error_source in enumerate(error_sources)]
 
-            # Projection from input_source
-            act_in_projection = MappingProjection(sender=input_source.output_ports[0],
-                                                  receiver=learning_mechanism.input_ports[0],
-                                                  matrix=IDENTITY_MATRIX)
-        # # # MODIFIED 9/12/23 NEW:
-        #     # act_in_projection = [act_in_projection]
-        #
-        # except DuplicateProjectionError as e:
-        #     # Ignore duplicates since the corresponding LearningMechanism was identified and ignored above
-        #     input_source_projection = []
-        # except Exception as e:
-        #     raise e
-        #
-        # try:
-        # MODIFIED 9/12/23 END
-            # Projection from output_source
-            act_out_projection = MappingProjection(sender=output_source.output_ports[0],
-                                                   receiver=learning_mechanism.input_ports[1],
-                                                   matrix=IDENTITY_MATRIX)
-        # # MODIFIED 9/12/23 NEW:
-        #     act_out_projection = [act_out_projection]
-        # except DuplicateProjectionError as e:
-        #     # Ignore duplicates since the corresponding LearningMechanism was identified and ignored above
-        #     act_out_projection = []
-        # except Exception as e:
-        #     raise e
-        #
-        # # Projections to the InputPort for each covariate
-        # # FIX: COULD DO THIS ABOVE WHERE THE LearningMechanism IS CONSTRUCTED, AND USE TO CREATE InputPorts
-        # # IMPLEMENTATION NOTE:
-        # #   The following are for display purposes only (i.e., so they can be shown in show_graph);
-        # #   they can't be used by the LearningMechanism, since their values may not be the same as the
-        # #   actual projections they shadow (i.e., that project to output_source).  This is because:
-        # #   - the actual projections are subject to learning whereas the ones created here are not
-        # #   - can't create a Projection from the output_source's InputPort that has their actual values
-        # #   This can be averted by using a Mechanism to assign a different InputPort for each Projection
-        # if covariates_sources:
-        # MODIFIED 9/12/23 END
-            covariates_projections = []
-            for i, source in enumerate(covariates_sources):
-                # All of the afferents to the same InputPort of output_source
-                #   should go to the same (corresponding) *COVARIATES* InputPort of the LearningMechanism
-                for proj in source.path_afferents:
-                    covariates_projections.append(
-                        MappingProjection(sender=proj.sender,
-                                          receiver=learning_mechanism.covariates_input_ports[i]))
-            # Add Projections for covariates to aux_components since they may involve Nodes not yet in Composition
-            #   and do so before adding LearningMechanism to Composition so they are registered as in need of addition
-            learning_mechanism.aux_components.extend(covariates_projections)
+        # Create MappingProjections for INPUT_SOURCE, OUTPUT_SOURCE and COVARIATES (if any)
 
-        # MODIFIED 9/12/23 OLD:
-            # Create LearningProjection
-            learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
+        # Projection from input_source
+        act_in_projection = MappingProjection(sender=input_source.output_ports[0],
+                                              receiver=learning_mechanism.input_ports[0],
+                                              matrix=IDENTITY_MATRIX)
 
-            # Add LearningMechanism to Composition before adding Projections
-            self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING, context=context)
+        act_out_projection = MappingProjection(sender=output_source.output_ports[0],
+                                               receiver=learning_mechanism.input_ports[1],
+                                               matrix=IDENTITY_MATRIX)
 
-            # Add all the Projections to the Composition
-            self.add_projections([act_in_projection, act_out_projection] + error_projections)
-            self.add_projection(learning_projection, is_learning_projection=True, feedback=True)
+        covariates_projections = []
+        for i, source in enumerate(covariates_sources):
+            # All of the afferents to the same InputPort of output_source
+            #   should go to the same (corresponding) *COVARIATES* InputPort of the LearningMechanism
+            for proj in source.path_afferents:
+                covariates_projections.append(
+                    MappingProjection(sender=proj.sender,
+                                      receiver=learning_mechanism.covariates_input_ports[i]))
+        # Add Projections for covariates to aux_components since they may involve Nodes not yet in Composition,
+        #   and do so before adding LearningMechanism to Composition so they are registered as needing to be added
+        learning_mechanism.aux_components.extend(covariates_projections)
 
-        except DuplicateProjectionError as e:
-            # Ignore duplicates since the corresponding LearningMechanism was identified and ignored above
-            return learning_mechanism
-        except Exception as e:
-            raise e
+        # Create LearningProjection
+        learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
 
-        # # MODIFIED 9/12/23 NEW:
-        # # Create LearningProjection
-        # learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
-        # # Add LearningMechanism to Composition before adding Projections
-        # self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING, context=context)
-        # # Add all the Projections to the Composition
-        # self.add_projections(act_in_projection + act_out_projection + error_projections)
-        # self.add_projection(learning_projection, is_learning_projection=True, feedback=True)
-        # # MODIFIED 9/12/23 END
+        # Add LearningMechanism to Composition before adding Projections
+        self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING, context=context)
+
+        # Add all the Projections to the Composition
+        self.add_projections([act_in_projection, act_out_projection] + error_projections)
+        self.add_projection(learning_projection, is_learning_projection=True, feedback=True)
 
         return learning_mechanism
 
@@ -8866,7 +8807,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         error_sources = []
         error_projections = []
 
-        for efferent in [p for p in receiver_activity_mech.efferents]:
+        for efferent in [p for p in receiver_activity_mech.efferents if p in self.projections]:
 
             # FIX: 9/9/23 - ADD HANDLING OF MULTI-LEVEL NESTING
             # Deal with OUTPUT Node of a nested Composition (note: this currently only handles one level of nesting)
@@ -8879,14 +8820,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     continue
 
             # Only use efferents of receiver_activity_mech with a LearningProjection that are in current Composition
-            # or (if efferent is an output_CIM) in the outer Composition.
             if not (hasattr(efferent, 'has_learning_projection')
                     and efferent.has_learning_projection
                     and efferent in self.projections):
-                # and (efferent in self.projections or
-                #      # note: per handling above, efferent is now the Projection *from* the output_CIM
-                #      (isinstance(efferent.sender.owner, CompositionInterfaceMechanism) and
-                #       efferent.sender.owner == self.output_CIM))):
                 continue
 
             # Then get any LearningProjections to that efferent that are in current Composition
@@ -8914,103 +8850,41 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       context=context),
                             context=context)[0]
                         error_projections.append(error_signal_input_port.path_afferents[0])
-                    # Create Projection here so that don't have to worry about determining correct
-                    #    error_signal_input_port of learning_mech in _create_non_terminal_backprop_learning_components
-                    # FIX: 9/10/23 - THE FOLLOWING SEEMS TO DUPLICATE THE CREATION OF THE PROJECTION JUST ABOVE
-                    #                TRY GETTING RID OF IT? ZZZ
-                    # try:
-                    #     error_projections.append(MappingProjection(sender=error_source.output_ports[ERROR_SIGNAL],
-                    #                                                receiver=error_signal_input_port))
-                    # except DuplicateProjectionError:
-                    #     pass
-                    # except Exception as e:
-                    #     raise e
 
-        # Return error_sources so they can be used to create a new LearningMechanism if needed;
-        #   and return error_projections created here for existing learning_mech
-        #    so they can be added to the Composition by _create_non_terminal_backprop_learning_components
+        # Return:
+        # - error_sources, so they can be used to create a new LearningMechanism if needed
+        # - error_projections (for an existing learning_mechanism),
+        #     so they can be added to the Composition by _create_non_terminal_backprop_learning_components
         return error_sources, error_projections
 
-    def _get_backprop_error_projections(self, learning_mech, receiver_activity_mech, context):
-        error_sources = []
-        error_projections = []
-        # for error_source in learning_mech.error_sources:
-        #     if error_source in self.nodes:
-        #         error_sources.append(error_source)
-        # Add any LearningMechanisms associated with efferent projection from receiver_activity_mech
-        # First get all efferents of receiver_activity_mech with a LearningProjection that are in current Composition
-        for efferent in [p for p in receiver_activity_mech.efferents
-                         if (hasattr(p, 'has_learning_projection')
-                             and p.has_learning_projection
-                             and p in self.projections)]:
-            # Then any LearningProjections to that efferent that are in current Composition
-            for learning_projection in [mod_aff for mod_aff in efferent.parameter_ports[MATRIX].mod_afferents
-                                        if (isinstance(mod_aff, LearningProjection) and mod_aff in self.projections)]:
-                error_source = learning_projection.sender.owner
-                if (error_source in learning_mech.error_sources
-                        and error_source in self.nodes
-                        and learning_mech in [p.receiver.owner for p in error_source.efferents]):
-                    continue
-                error_sources.append(error_source)
-                # FIX: REPLACE WITH learning_mech._add_error_signal_input_port ONCE IMPLEMENTED
-                error_signal_input_port = next((e for e in learning_mech.error_signal_input_ports
-                                                 if not e.path_afferents), None)
-                if error_signal_input_port is None:
-                    error_signal_input_port = learning_mech.add_ports(
-                                                        InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
-                                                                  name=ERROR_SIGNAL,
-                                                                  context=context),
-                                                        context=context)
-                # DOES THE ABOVE GENERATE A PROJECTION?  IF SO, JUST GET AND RETURN THAT;  ELSE DO THE FOLLOWING:
-                error_projections.append(MappingProjection(sender=error_source.output_ports[ERROR_SIGNAL],
-                                                           receiver=error_signal_input_port))
-        return error_projections
-        #  2) For non-terminal sequences, determine # of error_signals coming from LearningMechanisms associated with
-        #     all efferentprojections of ProcessingMechanism that projects to ACTIVATION_OUTPUT of LearningMechanism
-        #     - check validity of existing error_signal projections with respect to those and, if possible,
-        #       their correspondence with error_matrices
-        #     - check if any ERROR_SIGNAL input_ports are empty (vacated by terminal sequence elements deleted in
-        #       add_projection)
-        #     - call add_ports method on LearningMechanism to add new ERROR_SIGNAL input_port to its input_ports
-        #       and error_matrix to its self.error_matrices attribute
-        #     - add new error_signal projection
-
     def _add_error_projection_to_dependent_learning_mechs(self, error_source, context=None):
-        projections = []
+
         # Get all afferents to receiver_activity_mech in Composition that have LearningProjections
         for afferent in [p for p in error_source.input_source.path_afferents
                          if (p in self.projections
                              and hasattr(p, 'has_learning_projection')
                              and p.has_learning_projection)]:
+
             # For each LearningProjection to that afferent, if its LearningMechanism doesn't already have a receiver
             for learning_projection in [lp for lp in afferent.parameter_ports[MATRIX].mod_afferents
                                         if (isinstance(lp, LearningProjection)
                                             and lp.sender.owner.error_sources
                                             and error_source not in lp.sender.owner.error_sources
                                             and lp.sender.owner.learning_type is LearningType.SUPERVISED)]:
+
                 dependent_learning_mech = learning_projection.sender.owner
-                # # MODIFIED 9/12/23 NEW:
-                # FIX: 9/12/23 - NEED CHECK FOR EXISTING ERROR_SIGNAL INPUT PORT ON dependent_learning_mech
-                # FIX: ALT - ADD TO self.projections WHERE THEY ARE CREATED RATHER THAN WAITING FOR HERE
-                # If dependent_learning_mech already has a Projection from the error_source,
-                # check for any that are not in self.projections (i.e., just created) and add them to projections
-                # so they can be added to the Composition in _create_backpropagation_learning_pathway()
+
+                # If dependent_learning_mech already has a Projection from the error_source, can skip
                 if any(dependent_learning_mech == efferent.receiver.owner
                        for efferent in error_source.output_ports[ERROR_SIGNAL].efferents):
-                    for efferent in error_source.output_ports[ERROR_SIGNAL].efferents:
-                        if efferent not in self.projections:
-                            projections.append(efferent)
                     continue
-                # MODIFIED 9/12/23 END
+
                 error_signal_input_port = dependent_learning_mech.add_ports(
                                                     InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
                                                               name=ERROR_SIGNAL,
                                                               context=context),
                                                     context=context)[0]
-                projections.append(error_signal_input_port.path_afferents[0])
-                # projections.append(MappingProjection(sender=error_source.output_ports[ERROR_SIGNAL],
-                #                                      receiver=error_signal_input_port[0]))
-        return projections
+                self.add_projections(error_signal_input_port.path_afferents[0])
 
     def _get_deeply_nested_aux_projections(self, node):
         deeply_nested_projections = {}
@@ -9643,7 +9517,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Returns true if the composition is currently preparing to execute (run or learn)"""
         return ContextFlags.PREPARING in context.execution_phase
 
-    def _infer_target_nodes(self, targets: dict):
+    def _infer_target_nodes(self, targets: dict, execution_mode):
         """
         Maps targets onto target mechanisms (as needed by learning)
 
@@ -9653,6 +9527,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         `dict`:
             Dict mapping TargetMechanisms -> target values
         """
+
+        # # MODIFIED 9/16/23 NEW:
+        if execution_mode is pnlvm.ExecutionMode.PyTorch:
+            # Reassign target inputs from output Nodes to target mechanisms constructed for PyTorch execution
+            return {target: value
+                    for target, value in zip(self.target_output_map.keys(), targets.values())}
+
         ret = {}
         for node, values in targets.items():
             if (NodeRole.TARGET not in self.get_roles_by_node(node)
@@ -9674,8 +9555,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 ret[node] = values
         return ret
+        # MODIFIED 9/16/23 END
 
-    def _parse_learning_spec(self, inputs, targets):
+    def _parse_learning_spec(self, inputs, targets, execution_mode):
         """
         Converts learning inputs and targets to a standardized form
 
@@ -9713,7 +9595,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return d
 
         if targets is not None:
-            targets = self._infer_target_nodes(targets)
+            targets = self._infer_target_nodes(targets, execution_mode)
             inputs = _recursive_update(inputs, targets)
 
         # 3) Resize inputs to be of the form [[[]]],
@@ -9860,7 +9742,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             _input = None
         return _input
 
-    def _parse_input_dict(self, inputs, context=None):
+    def _parse_input_dict(self, inputs):
         """
         Validate and parse a dict provided as input to a Composition into a standardized form to be used throughout
             its execution
@@ -10275,11 +10157,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # MODIFIED 3/12/22 NEW:
                     # FIX: MIS-REPORTS INCOMPATIBLITY AS BEING FOR SHAPE IF NUM TRIALS IS DIFFERENT FOR DIFF PORTS
                     #      SHOULD BE HANDLED SAME AS FOR DIFFERNCE ACROSS NODES (PER BELOW)
-                    receiver_shape = np.atleast_1d(np.squeeze(np.array(receiver_shape, dtype=object)))
+                    receiver_shape = np.atleast_1d(np.squeeze(np.array(receiver_shape, dtype=object))).shape
                     bad_stimulus = [stim for stim, _inp in zip(stimulus, _input) if _inp is None]
-                    bad_stimulus = np.atleast_1d(np.squeeze(np.array(bad_stimulus, dtype=object)))
-                    err_msg = f"Input stimulus ({bad_stimulus}) for {receiver_name} is incompatible with " \
-                              f"the shape of its external input ({receiver_shape})."
+                    bad_stimulus_shape = np.atleast_1d(np.squeeze(np.array(bad_stimulus, dtype=object))).shape
+                    err_msg = (f"Input stimulus shape ({bad_stimulus_shape}) for '{receiver_name}' is incompatible "
+                               f"with the shape of its external input ({receiver_shape}).")
                     # MODIFIED 3/12/22 END
                     # 8/3/17 CW: I admit the error message implementation here is very hacky;
                     # but it's at least not a hack for "functionality" but rather a hack for user clarity
