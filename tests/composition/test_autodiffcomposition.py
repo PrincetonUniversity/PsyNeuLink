@@ -1697,6 +1697,10 @@ class TestNestedNoLearning:
         parentComposition.run(inputs=no_training_input)
 
 
+@pytest.mark.pytorch
+@pytest.mark.acnested
+@pytest.mark.acidenticalness
+@pytest.mark.composition
 class TestNestedLearning:
     """Test learning with nested AutodiffCompositions benchmarked against unnested versions using Composition"""
 
