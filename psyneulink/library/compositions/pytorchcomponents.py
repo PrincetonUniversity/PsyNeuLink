@@ -538,7 +538,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         outputs = {}  # dict for storing values of terminal (output) nodes
         for current_exec_set in self.execution_sets:
             for node in current_exec_set:
-                # FIX: THIS IS NOT CURRENTLY BE USED SINCE EXECUTION SETS ARE GETTING FLATTENED IN __init__()
+                # FIX: THE FOLLOWING IS NOT CURRENTLY BEING USED SINCE EXECUTION SETS ARE FLATTENED IN __init__()
                 # If node is nested Composition (wrapped in PytorchCompositionWrapper),
                 #    calls its forward method recursively
                 if isinstance(node, PytorchCompositionWrapper):
