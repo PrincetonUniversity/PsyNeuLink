@@ -8696,7 +8696,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        and isinstance(lp.sender.owner.function, BackPropagation))),
                                   None)
 
-        # If learning_mechanism exists:
+        # If learning_mechanism exists (due to overlapping or duplicative pathways):
         #    error_sources will be empty (as they have been dealt with in self._get_back_prop_error_sources
         #    error_projections will contain list of any created to be added to the Composition below
         if learning_mechanism:
@@ -8713,7 +8713,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If learning_mechanism does not yet exist:
         #    error_sources will contain ones needed to create learning_mechanism
         #    error_projections will be empty since they can't be created until the learning_mechanism is created below;
-        #    they will be created (using error_sources) when, and determined after learning_mechanism is created below
+        #    they will be created (using error_sources) after learning_mechanism is created below
         else:
             error_sources, error_projections = self._get_back_prop_error_sources(output_source, context=context)
             error_signal_template = [error_source.output_ports[ERROR_SIGNAL].value for error_source in error_sources]
