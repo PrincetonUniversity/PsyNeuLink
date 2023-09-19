@@ -514,15 +514,21 @@ class AutodiffComposition(Composition):
             while len(queue) > 0:
                 node, input_port, current_comp = queue.popleft()
 
-                # if (node is not self and any(isinstance(proj.sender.owner, CompositionInterfaceMechanism)
-                #                              for proj in node.afferents)):
-                if (isinstance(node, Composition) and node is not self
-                        and any(isinstance(proj.sender.owner, CompositionInterfaceMechanism)
-                                for proj in node.afferents)):
-                    # raise AutodiffCompositionError(f"The input(s) for nested Composition '{node.name}' must all "
-                    #                                f"come from Nodes in its outer Composition ('{self.name}') "
-                    #                                f"to be learnable. ")
-                    continue
+                # MODIFIED 9/18/23 OLD:
+                # if (isinstance(node, Composition) and node is not self
+                #         and any(isinstance(proj.sender.owner, CompositionInterfaceMechanism)
+                #                 for proj in node.afferents)):
+                #     # raise AutodiffCompositionError(f"The input(s) for nested Composition '{node.name}' must all "
+                #     #                                f"come from Nodes in its outer Composition ('{self.name}') "
+                #     #                                f"to be learnable. ")
+                #     pass
+                # MODIFIED 9/18/23 NEW:
+                # Nested Composition is first node in pathway, so skip it
+                # and move on the INPUT Nodes to which it projects
+                if isinstance(node, Composition):
+                    node = node.input_CIM
+                    current_comp = node
+                # MODIFIED 9/18/23 END
 
                 # node is output_CIM of nested Composition that projects directly to output_CIM of outer Composition
                 if isinstance(node, CompositionInterfaceMechanism):
