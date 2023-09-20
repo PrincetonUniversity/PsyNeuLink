@@ -5600,22 +5600,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # FROM OUTPUT_CIM
         # Check for any errant / residual input_CIM.input_ports
         #   (these can result from order of construction and/or selective inputs to nodes within a nested Composition)
-        # Do this by checking if any intput_CIM.input_port has more than one afferent;
-        #  if it does, and the following are true:
-        #  - the Node is not a PROBE or a CYCLE Node in a cycle all of which are output NODES
-        #  - and the other efferents are NOT to ones allowed for an OUTPUT Node
-        #    (i.e., AutoassociativeProjections, or ones to OBJECTIVE, CONTROL, or LEARNING Nodes)
-        #  then the Node should NOT be considered an OUTPUT Node,
-        #  so remove the input_port for it on the OutputCIM and the corresponding Projection
-        defunct_input_ports = set()
-        for input_port in self.output_CIM.input_ports:
-            # First ensure that the input_port under consideration has only one afferent to it
-            assert len(input_port.path_afferents) == 1, \
-                (f"PROGRAM ERROR: '{input_port}' of '{self.name}.output_CIM' has more than one afferent"
-                 f"(that come from: {' ,'.join([proj.sender.owner.name for proj in input_port.path_afferents])}).")
+        # Do this by checking if any output_port of the current (outer) Composition projects directly to
+        #   the input_CIM of a nested Composition that itself already has a projection from the outer Composition
+        #   (note: two different Nodes of the outer Composition can project to a single input_port of the input_CIM
+        #   of nested Composition, but the input_CIM of the outer Composition should never project to the input_CIM
+        #   of a nested Composition thqt already has one or more afferent Projections).
+        #  If it does, then remove errant output_port (and corresponding input_port) of the input_CIM
+        #   on the outer Composition and its efferent Projection
+        defunct_output_ports = set()
+        for output_port in self.output_CIM.input_ports:
+            # First ensure that the output_port under consideration has only one afferent to it
+            assert len(output_port.efferents) == 1, \
+                (f"PROGRAM ERROR: '{output_port}' of '{self.name}.input_CIM' has more than one efferent"
+                 f"(that project to: {' ,'.join([proj.receiver.owner.name for proj in output_port.efferents])}).")
             # Then, get that Projection
-            proj = input_port.path_afferents[0]
-            node = proj.sender.owner
+            proj = output_port.efferents[0]
+            node = proj.receiver.owner
+            # ---------------
             if isinstance(node, CompositionInterfaceMechanism):
                 _, sender_mech, sender_comp = proj.sender.owner._get_source_info_from_output_CIM(proj.sender)
                 proj_sender_is_PROBE = sender_mech in sender_comp.get_nodes_by_role(NodeRole.PROBE)
