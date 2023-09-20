@@ -5491,6 +5491,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             - delete all of the above for any node Ports which were previously, but are no longer, classified as
               INPUT/OUTPUT
         """
+
+        # SET-UP -----------------------------------------------------------------------------------------------
+
         # temporarily change context source for scope of this method so
         # port calls are not believed to come directly from
         # script/command-line
@@ -5519,7 +5522,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # flag the CIM as connected to the Composition so we don't remove ports on future calls to this method
             self.parameter_CIM.connected_to_composition = True
 
-        # INPUT CIM
+        # INPUT CIM -----------------------------------------------------------------------------------------------
+
         current_input_node_input_ports = set()
 
         # we're going to set up ports on the input CIM for all input nodes in the Composition
@@ -5593,7 +5597,53 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # and from the dictionary of CIM OutputPort/InputPort pairs
             del self.input_CIM_ports[input_port]
 
-        # OUTPUT CIM
+        # FROM OUTPUT_CIM
+        # Check for any errant / residual input_CIM.input_ports
+        #   (these can result from order of construction and/or selective inputs to nodes within a nested Composition)
+        # Do this by checking if any intput_CIM.input_port has more than one afferent;
+        #  if it does, and the following are true:
+        #  - the Node is not a PROBE or a CYCLE Node in a cycle all of which are output NODES
+        #  - and the other efferents are NOT to ones allowed for an OUTPUT Node
+        #    (i.e., AutoassociativeProjections, or ones to OBJECTIVE, CONTROL, or LEARNING Nodes)
+        #  then the Node should NOT be considered an OUTPUT Node,
+        #  so remove the input_port for it on the OutputCIM and the corresponding Projection
+        defunct_input_ports = set()
+        for input_port in self.output_CIM.input_ports:
+            # First ensure that the input_port under consideration has only one afferent to it
+            assert len(input_port.path_afferents) == 1, \
+                (f"PROGRAM ERROR: '{input_port}' of '{self.name}.output_CIM' has more than one afferent"
+                 f"(that come from: {' ,'.join([proj.sender.owner.name for proj in input_port.path_afferents])}).")
+            # Then, get that Projection
+            proj = input_port.path_afferents[0]
+            node = proj.sender.owner
+            if isinstance(node, CompositionInterfaceMechanism):
+                _, sender_mech, sender_comp = proj.sender.owner._get_source_info_from_output_CIM(proj.sender)
+                proj_sender_is_PROBE = sender_mech in sender_comp.get_nodes_by_role(NodeRole.PROBE)
+            else:
+                proj_sender_is_PROBE = node in self.get_nodes_by_role(NodeRole.PROBE)
+            # And check the other efferents of its sender
+            # FIX: 9/1/23 - NEED TO CHECK THAT ALL NODES IN THE CYCLE ARE OUTPUT NODES, OTHERWISE THEY SHOULD BE PROBES
+            #               LEAVE PROJECTION FROM SENDER TO AN OUTPUT_CIM.INPUT_PORT THAT IS A PROBE TO
+            if (node not in self.get_nodes_by_role(NodeRole.PROBE) + self.get_nodes_by_role(NodeRole.CYCLE)
+                    and NodeRole.OUTPUT not in self.get_required_roles_by_node(node)
+                    and not proj_sender_is_PROBE
+                    and len([p for p in proj.sender.efferents
+                             if (p in self.projections
+                                 and p.receiver.owner in self.get_nodes_by_role(NodeRole.OUTPUT)
+                                 and not isinstance(p, AutoAssociativeProjection))]) != 0):
+                defunct_input_ports.add(input_port)
+        # Remove afferent to each defunct input_port and then the input_port itself
+        for input_port in defunct_input_ports:
+            proj = input_port.path_afferents[0]
+            self.remove_projection(proj)
+            # FIX: THIS MAY NOT BE CORRECT, AND FOR LOOP CONDITION MAY NOT BE ABLE TO LOOP ON output_CIM.input_ports
+            self.output_CIM.remove_ports(self.output_CIM_ports[proj.sender][0])
+            self.output_CIM.remove_ports(self.output_CIM_ports[proj.sender][1])
+            del self.output_CIM_ports[proj.sender]
+
+
+        # OUTPUT CIM ----------------------------------------------------------------------------------------------
+
         # loop over all OUTPUT nodes
         # Set up ports on the output CIM for all output nodes in the Composition
         current_output_node_output_ports = set()
@@ -5671,7 +5721,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # and from the dictionary of CIM OutputPort/InputPort pairs
             del self.output_CIM_ports[output_port]
 
-        # Check for any errant / residual output_CIM.input_ports (that can result from order of construction)
+        # Check for any errant / residual output_CIM.input_ports
+        #  (these can result from order of construction and/or selective outputs from nodes within a nested Composition)
         # Do this by checking if the source of the projection to each output_CIM.input_port has any other efferents;
         #  if it does, and the following are true:
         #  - the Node is not a PROBE or a CYCLE Node in a cycle all of which are output NODES
@@ -5713,9 +5764,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.output_CIM.remove_ports(self.output_CIM_ports[proj.sender][1])
             del self.output_CIM_ports[proj.sender]
 
-        # PARAMETER CIM
+        # PARAMETER CIM -------------------------------------------------------------------------------------------
 
-        # We get the projection that needs to be routed through the PCIM as well as the composition that owns it,
+        # Get the projection that needs to be routed through the PCIM as well as the composition that owns it,
         # because we will need to activate the new projections for the composition that owns the PCIM as well as the
         # referring composition
         for comp_projection, referring_composition in external_modulatory_projections:
@@ -5766,6 +5817,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # remove the original direct projection from the target ParameterPort
                 receiver.mod_afferents.remove(comp_projection)
                 comp_projection.sender._remove_projection_from_port(comp_projection)
+
+        # CLEAN-UP -------------------------------------------------------------------------------------------
 
         for cim, type in zip([self.input_CIM, self.output_CIM, self.parameter_CIM], [INPUT, OUTPUT, PARAMETER]):
 
@@ -7221,7 +7274,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 assert False, f"PROGRAM ERROR: failure to determine pathway_type in add_pathways for {self.name}."
 
-            added_pathways.append(new_pathway)
+                added_pathways.append(new_pathway)
 
         return added_pathways
 
