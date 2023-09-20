@@ -131,6 +131,10 @@
 #        - Generalize treatment of FEEDBACK specification:
       #        - FIX: ADD TESTS FOR FEEDBACK TUPLE SPECIFICATION OF Projection, DIRECT SPECIFICATION IN CONSTRUCTOR
 #              - FIX: why aren't FEEDBACK_SENDER and FEEDBACK_RECEIVER roles being assigned when feedback is specified?
+#        - add syntax to add_linear_processing_pathway:
+#          - dict can be used to specify node within a nested comp (i.e., using key to specify nesting of comp)
+#          - ?AND/OR: dict can be used to map outputs from a set to inputs of another set (including nested comps)
+#                     instead of having to do so using a different pathway for each
 #        - add property of Composition that lists it cycles
 #        - Add warning if termination_condition is trigged (and verbosePref is set)
 #        - Addition of projections to a ControlMechanism seems too dependent on the order in which the
@@ -159,8 +163,6 @@
 #           - Allow [None] as argument and treat as []
 #        - IF InputPort HAS default_input = DEFAULT_VARIABLE,
 #           THEN IT SHOULD BE IGNORED AS AN INPUT NODE IN A COMPOSITION
-#        - Add use of dict in pathways specification to map outputs from a set to inputs of another set
-#            (including nested comps)
 #
 #      - ShowGraph:  (show_graph)
 #        - don't show INPUT/OUTPUT Nodes for nested Comps in green/red
