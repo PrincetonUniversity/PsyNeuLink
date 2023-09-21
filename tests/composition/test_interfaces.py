@@ -560,7 +560,10 @@ class TestConnectCompositionsViaCIMS:
                       f"to another Mechanism in that pathway.  " \
                       f"If this is not the intended behavior, add 'control_mechanism' separately to 'ocomp'."
         with pytest.warns(UserWarning, match=warning_msg):
-            ocomp.add_linear_processing_pathway([cm, icomp])
+            # ocomp.add_linear_processing_pathway([cm, icomp])
+            ocomp.add_linear_processing_pathway([icomp])
+            ocomp.add_node(cm)
+            ocomp.show_graph(show_cim=True, show_node_structure=True)
         ocomp._analyze_graph()
         input_nodes = ocomp.get_nodes_by_role(NodeRole.INPUT)
         assert cm in input_nodes
