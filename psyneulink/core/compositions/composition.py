@@ -5655,6 +5655,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # If the input_port for that input_CIM has more than one afferent, the current one is superfluous
                 if len(rcvr.path_afferents) > 1:
                     # Ensure that one of the afferents is from a Node (and not the input_CIM) of the outer Composition
+                    # FIX: 9/21/23 - IF THE ADDITIONAL PROJECTION (I.E., *NOT* FROM THE OUTER input_CIM) IS FROM A
+                    # FIX:           CONTROL NODE IN THE OUTER COMPOSITION, JUST DELETE ITS PROJECTION
+                    # FIX:           ALTERNATIVELY, SUPPRESS CREATION OF PROJECTION FROM CONTROL MECH
+                    #                TO input_CIM OF NESTED COMPOSITION
                     assert [proj for proj in rcvr.path_afferents if
                             (not isinstance(proj.sender.owner, CompositionInterfaceMechanism)
                              and proj.sender.owner in self.nodes) or
