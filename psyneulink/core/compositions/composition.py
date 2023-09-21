@@ -4752,7 +4752,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                              comp=None,
                              type:Union[PORT,NODE]=PORT,
                              comp_as_node:Union[bool,ALL]=False):
-        """Return all INPUT Nodes [or their InputPorts] of comp, [including those for any nested Compositions].
+        """Return all INPUT Nodes [or their InputPorts] of comp, including those for any nested Compositions.
         If type is PORT, return all InputPorts for all INPUT Nodes, including for nested Compositions.
         If type is NODE, return all INPUT Nodes, including for nested Compositions as determined by comp_as_node:
             if an INPUT Node is a Composition, and comp_as_node is:
@@ -4764,8 +4764,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
 
         # FIX: 3/16/22 - CAN THIS BE REPLACED BY:
+        # FIX: 9/20/23 - TRY AGAIN! BUT NEED TO MODIFY IT TO HANDLE type AND comp_as_node ARGS
         # return [self._get_destination(output_port.efferents[0])[0]
         #         for _,output_port in self.input_CIM.port_map.values()]
+
+        def afferent_is_via_internal_only_cim_input_port(input_port):
+            for proj in input_port.path_afferents:
+                if isinstance(proj.sender.owner, CompositionInterfaceMechanism):
+                    sender_output_port = proj.sender
+                    input_cim = proj.sender.owner
+                    return input_cim.port_map[input_port][0].internal_only
+            return False
 
         assert not (type == PORT and comp_as_node), f"PROGRAM ERROR: _get_input_receivers() can't be called " \
                                                     f"for 'ports' and 'nodes' at the same time."
@@ -4786,7 +4795,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # Exclude internal_only and shadowers of input (since the latter get inputs for the shadowed item)
                     input_items.extend([input_port for input_port in node.input_ports
                                         if not (input_port.internal_only or input_port.shadow_inputs
-                                                or afferent_is_via_internal_only_cim_input_port())])
+                                                or afferent_is_via_internal_only_cim_input_port(input_port))])
                 # Ensure correct number of InputPorts have been identified
                 #    (i.e., number of InputPorts on comp's input_CIM)
                 if _update_cim:
@@ -4795,7 +4804,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._determine_pathway_roles(context)
                     self._create_CIM_ports(context)
                 _update_cim = False
-                assert len(input_items) == len([input_port for input_port in comp.input_CIM_ports
+                assert len(input_items) == len([input_port for input_port in comp.input_CIM.input_ports
                                                 if not input_port.internal_only])
         else:
             # Return all INPUT Nodes
@@ -5617,7 +5626,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Check for any errant / residual input_CIM.output_ports
         #   (these can result from order of construction and/or selective inputs to nodes within a nested Composition)
-        # MODIFIED 9/20/23 RECENT:
         # Do this by checking if any output_port of the current (outer) Composition projects directly to the
         #   input_CIM of a nested Composition that itself already has a Projection from a Node in the outer Composition
         #   (note: two different Nodes of the outer Composition can project to a single input_port of the input_CIM
@@ -5628,22 +5636,32 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    and mark the input_port of the input_CIM of the nested Composition as internal_only.
         defunct_output_ports = set()
         for output_port in self.input_CIM.output_ports:
-            # First ensure that the output_port under consideration has only one afferent to it
-            assert len(output_port.efferents) == 1, \
-                (f"PROGRAM ERROR: '{output_port}' of '{self.name}.input_CIM' has more than one efferent"
-                 f"(that project to: {' ,'.join([proj.receiver.owner.name for proj in output_port.efferents])}).")
+            # First ensure that the output_port under consideration has only one (non-shadowing) efferent from it
+            non_shadowing_efferents = [proj for proj in output_port.efferents if not proj.receiver.shadow_inputs]
+            # Don't care about output_ports that have only shadowing efferents,
+            #    as they will be consolidated with the output_ports of the projections they shadow
+            if not non_shadowing_efferents:
+                continue
+            assert len(non_shadowing_efferents) == 1, \
+                (f"PROGRAM ERROR: '{output_port}' of '{self.name}.input_CIM' has more than one (non-shadowing) efferent"
+                 f"(that project to: {' ,'.join([proj.receiver.owner.name for proj in non_shadowing_efferents])}).")
             # Then, get that Projection
-            proj = output_port.efferents[0]
+            proj = non_shadowing_efferents[0]
             rcvr = proj.receiver
             node = rcvr.owner
             # and check if it is to an input_CIM of a nested Composition
             if isinstance(node, CompositionInterfaceMechanism):
-                # _, sender_mech, sender_comp = proj.sender.owner._get_source_info_from_output_CIM(proj.sender)
-                # proj_sender_is_PROBE = sender_mech in sender_comp.get_nodes_by_role(NodeRole.PROBE)
                 assert node == node.composition.input_CIM
+                # If the input_port for that input_CIM has more than one afferent, the current one is superfluous
                 if len(rcvr.path_afferents) > 1:
+                    # Ensure that one of the afferents is from a Node (and not the input_CIM) of the outer Composition
+                    assert [proj for proj in rcvr.path_afferents if
+                            (not isinstance(proj.sender.owner, CompositionInterfaceMechanism)
+                             and proj.sender.owner in self.nodes) or
+                            (isinstance(proj.sender.owner, CompositionInterfaceMechanism) and
+                             proj.sender.owner.composition in self.nodes)]
                     defunct_output_ports.add(output_port)
-                    # FIX: 9/20/23
+                    # Mark the input_port of the input_CIM of the nested Composition as internal_only
                     rcvr.internal_only = True
         # Remove efferent from each defunct output_port and then the output_port and its corresponding input_port
         for output_port in defunct_output_ports:
@@ -5651,32 +5669,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.remove_projection(proj)
             self.input_CIM.remove_ports(self.input_CIM_ports[proj.receiver][0])
             self.input_CIM.remove_ports(self.input_CIM_ports[proj.receiver][1])
-        # # MODIFIED 9/20/23 NEW:
-        # # Do this by checking if any output_port of the input_CIM projects directly to the input_CIM of a nested
-        # #   Composition that is marked as internal_only (meaning that it gets a Projection from a Node
-        # #   of the outer Composition, rather than directly from the input_CIM of the outer Composition)
-        # #   (note: two different Nodes of the outer Composition can project to a single input_port of the input_CIM
-        # #   of a nested Composition, but the input_CIM of the outer Composition should never project to the input_port
-        # #   of the input_CIM of a nested Composition thqt already has one or more afferent Projections).
-        # #  If it does, then remove errant Projection, the output_port of the input_CIM on the outer Composition
-        # #    that sends it, and the corresponding input_port of the input_CIM of the outer Composition.
-        # defunct_output_ports = set()
-        # for output_port in self.input_CIM.output_ports:
-        #     # First ensure that the output_port under consideration has only one afferent to it
-        #     assert len(output_port.efferents) == 1, \
-        #         (f"PROGRAM ERROR: '{output_port}' of '{self.name}.input_CIM' has more than one efferent"
-        #          f"(that project to: {' ,'.join([proj.receiver.owner.name for proj in output_port.efferents])}).")
-        #     # Then, get that Projection
-        #     proj = output_port.efferents[0]
-        #     if proj.receiver.internal_only:
-        #         defunct_output_ports.add(output_port)
-        # # Remove efferent from each defunct output_port and then the output_port and its corresponding input_port
-        # for output_port in defunct_output_ports:
-        #     proj = output_port.efferents[0]
-        #     self.remove_projection(proj)
-        #     self.input_CIM.remove_ports(self.input_CIM_ports[proj.receiver][0])
-        #     self.input_CIM.remove_ports(self.input_CIM_ports[proj.receiver][1])
-        # MODIFIED 9/20/23 END
+
 
 
         # OUTPUT CIM ----------------------------------------------------------------------------------------------
@@ -5951,7 +5944,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         for input_port in input_node.input_CIM.input_ports:
                             num_INPUT_Node_input_ports += \
                                 len([proj for proj in input_port.path_afferents
-                                     if not isinstance(proj.sender.owner, CompositionInterfaceMechanism)])
+                                     if isinstance(proj.sender.owner, CompositionInterfaceMechanism)])
                 assert num_input_CIM_output_ports == num_INPUT_Node_input_ports, \
                     (f"PROGRAM ERROR: Number of OutputPorts on {self.input_CIM.name} "
                      f"({num_input_CIM_output_ports}) does not match the number of external_input_ports "
@@ -10132,8 +10125,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # - move ports to outer axis for processing below
             node_input = np.swapaxes(np.atleast_3d(np.array(node_input, dtype=object)),0,1).tolist()
 
-            # Assign specs to ports of INPUT_Node, using ones in input_port_entries or defaults
-            for i, port in enumerate(INPUT_input_ports):
+            # Assign specs to ports of INPUT_Node, using the ones in input_port_entries or defaults
+            for i, port in enumerate([input_port for input_port in INPUT_input_ports
+                                      if input_port.internal_only is False]):
                 if port in input_port_entries:
                     # Assume input is for all trials
                     port_spec = np.atleast_2d(input_port_entries[port]).tolist()
@@ -12479,24 +12473,28 @@ _
 
         build_CIM_input = []
 
+
         for input_port in self.input_CIM.input_ports:
             # "input_port" is an InputPort on the input CIM
+            if input_port.internal_only:
+                continue
 
             for key in self.input_CIM_ports:
-                # "key" is an InputPort on an origin Node of the Composition
+                # "key" is an InputPort on an INPUT Node of the Composition
                 if self.input_CIM_ports[key][0] == input_port:
-                    origin_input_port = key
-                    origin_node = key.owner
-                    index = origin_node.input_ports.index(origin_input_port)
+                    INPUT_input_port = key
+                    INPUT_node = key.owner
+                    # index = INPUT_node.input_ports.index(INPUT_input_port)
+                    index = [input_port for input_port in INPUT_node.input_ports
+                             if not input_port.internal_only].index(INPUT_input_port)
 
-                    if isinstance(origin_node, CompositionInterfaceMechanism):
-                        index = origin_node.input_ports.index(origin_input_port)
-                        origin_node = origin_node.composition
+                    if isinstance(INPUT_node, CompositionInterfaceMechanism):
+                        INPUT_node = INPUT_node.composition
 
-                    if origin_node in inputs:
-                        value = inputs[origin_node][index]
+                    if INPUT_node in inputs:
+                        value = inputs[INPUT_node][index]
                     else:
-                        value = origin_node.defaults.variable[index]
+                        value = INPUT_node.defaults.variable[index]
 
             build_CIM_input.append(value)
 
