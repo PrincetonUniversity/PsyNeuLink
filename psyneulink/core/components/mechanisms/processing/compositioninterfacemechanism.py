@@ -211,14 +211,17 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     def add_ports(self, ports, context=None):
         ports = super(CompositionInterfaceMechanism, self).add_ports(ports, context=context)
         if context.source == ContextFlags.COMMAND_LINE:
-            warnings.warn(
-                'You are attempting to add custom ports to a CIM, which can result in unpredictable behavior and '
-                'is therefore recommended against. If suitable, you should instead add ports to the mechanism(s) '
-                'that project to or are projected to from the CIM.')
-            if ports[INPUT_PORTS]:
-                self.user_added_ports[INPUT_PORTS].update([port for port in ports[INPUT_PORTS].data])
-            if ports[OUTPUT_PORTS]:
-                self.user_added_ports[OUTPUT_PORTS].update([port for port in ports[OUTPUT_PORTS].data])
+            # warnings.warn(
+            #     'You are attempting to add custom ports to a CIM, which can result in unpredictable behavior and '
+            #     'is therefore recommended against. If suitable, you should instead add ports to the mechanism(s) '
+            #     'that project to or are projected to from the CIM.')
+            # if ports[INPUT_PORTS]:
+            #     self.user_added_ports[INPUT_PORTS].update([port for port in ports[INPUT_PORTS].data])
+            # if ports[OUTPUT_PORTS]:
+            #     self.user_added_ports[OUTPUT_PORTS].update([port for port in ports[OUTPUT_PORTS].data])
+            from psyneulink.core.compositions.composition import CompositionError
+            raise CompositionError(f"Adding ports to a {self.__class__.__name__} is not supported at this time; "
+                                   f"these are handled automatically when a Composition is created.")
         return ports
 
     @handle_external_context()

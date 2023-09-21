@@ -472,25 +472,25 @@ class TestConnectCompositionsViaCIMS:
         # level_2 output = 2.0 * (1.0 + 2.0 + 14.0) = 34.0
         np.testing.assert_allclose(level_2.get_output_values(level_2), [[34.0]])
 
-    def test_warning_on_custom_cim_ports(self):
+    def test_error_on_custom_cim_ports(self):
 
         comp = Composition()
         mech = ProcessingMechanism()
         comp.add_node(mech)
-        warning_text = ('You are attempting to add custom ports to a CIM, which can result in unpredictable behavior '
-                        'and is therefore recommended against. If suitable, you should instead add ports to the '
-                       r'mechanism\(s\) that project to or are projected to from the CIM.')
-        with pytest.warns(UserWarning, match=warning_text):
-            # KDM 7/22/20: previously was OutputPort, but that produces
-            # an invalid CIM state that cannot be executed, and will
-            # throw an error due to new _update_default_variable call
+        # warning_msg = ('You are attempting to add custom ports to a CIM, which can result in unpredictable behavior '
+        #                 'and is therefore recommended against. If suitable, you should instead add ports to the '
+        #                r'mechanism\(s\) that project to or are projected to from the CIM.')
+        error_msg = ('Adding ports to a CompositionInterfaceMechanism is not supported at this time; '
+                     'these are handled automatically when a Composition is created.')
+        with pytest.raises(CompositionError) as error_text:
             comp.input_CIM.add_ports(InputPort())
+        assert error_msg in str(error_text.value)
 
-        with pytest.warns(None) as w:
-            comp._analyze_graph()
-            comp.run({mech: [[1]]})
-
-        assert len(w) == 0
+        # with pytest.warns(None) as w:
+        #     comp._analyze_graph()
+        #     comp.run({mech: [[1]]})
+        #
+        # assert len(w) == 0
 
     def test_user_added_ports(self):
 
