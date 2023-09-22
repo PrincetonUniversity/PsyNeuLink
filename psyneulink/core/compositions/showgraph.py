@@ -1724,7 +1724,10 @@ class ShowGraph():
         for control_signal in controller.control_signals:
             for ctl_proj in control_signal.efferents:
 
-                ctl_proj_arrowhead = self.control_projection_arrow
+                if isinstance(ctl_proj, ControlProjection):
+                    ctl_proj_arrowhead = self.control_projection_arrow
+                else:
+                    ctl_proj_arrowhead = self.default_projection_arrow
 
                 # Skip ControlProjections not in the Composition
                 if ctl_proj not in composition.projections:
