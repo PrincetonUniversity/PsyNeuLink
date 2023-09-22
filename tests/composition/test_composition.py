@@ -7366,10 +7366,12 @@ class TestNodeRoles:
         mech = ProcessingMechanism(name='my_mech')
         ctl_mech_A = ControlMechanism(monitor_for_control=mech,
                                       control_signals=ControlSignal(modulates=(INTERCEPT,mech),
-                                                                    cost_options=CostFunctions.INTENSITY))
+                                                                    cost_options=CostFunctions.INTENSITY),
+                                      name='ctl-mech_A')
         ctl_mech_B = ControlMechanism(monitor_for_control=mech,
                                       control_signals=ControlSignal(modulates=ctl_mech_A.control_signals[0],
-                                                                    modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM))
+                                                                    modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM),
+                                      name='ctl-mech_B')
         comp = Composition(pathways=[mech, (ctl_mech_A, NodeRole.OUTPUT), (ctl_mech_B, NodeRole.OUTPUT)])
         assert {mech, ctl_mech_A, ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.OUTPUT))
         # Current instantiation always assigns ctl_mech_B as TERMINAL in this case;

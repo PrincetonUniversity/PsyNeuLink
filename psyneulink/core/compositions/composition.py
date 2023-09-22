@@ -5948,7 +5948,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         for input_port in input_node.input_CIM.input_ports:
                             num_INPUT_Node_input_ports += \
                                 len([proj for proj in input_port.path_afferents
-                                     if isinstance(proj.sender.owner, CompositionInterfaceMechanism)])
+                                     if proj in self.projections and isinstance(proj.sender.owner,
+                                     CompositionInterfaceMechanism)])
                 assert num_input_CIM_output_ports == num_INPUT_Node_input_ports, \
                     (f"PROGRAM ERROR: Number of OutputPorts on {self.input_CIM.name} "
                      f"({num_input_CIM_output_ports}) does not match the number of external_input_ports "
