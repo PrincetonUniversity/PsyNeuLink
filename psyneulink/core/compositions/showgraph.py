@@ -1726,7 +1726,7 @@ class ShowGraph():
 
                 if isinstance(ctl_proj, ControlProjection):
                     ctl_proj_arrowhead = self.control_projection_arrow
-                else:
+                else:  # This is to expose an errant MappingProjection if one slips in
                     ctl_proj_arrowhead = self.default_projection_arrow
 
                 # Skip ControlProjections not in the Composition
@@ -2323,7 +2323,11 @@ class ShowGraph():
                             or (not show_cim and
                                 (show_nested is not NESTED)
                                 or (show_nested is False))):
-                        proj_arrowhead = self.control_projection_arrow
+                        if isinstance(proj, ControlProjection):
+                            proj_arrowhead = self.control_projection_arrow
+                        else:  # This is to expose an errant MappingProjection if one slips in
+                            proj_arrowhead = self.default_projection_arrow
+                            proj_color = self.default_node_color
                 # Check if Projection or its receiver is active
                 if any(item in active_items for item in {proj, proj.receiver.owner}):
                     if self.active_color == BOLD:
@@ -2452,7 +2456,11 @@ class ShowGraph():
                                     continue
                                 if sender is composition.parameter_CIM:
                                     proj_color = self.control_color
-                                    proj_arrowhead = self.control_projection_arrow
+                                    if isinstance(proj, ControlProjection):
+                                        proj_arrowhead = self.control_projection_arrow
+                                    else:   # This is to expose an errant MappingProjection if one slips in
+                                        proj_arrowhead = self.default_projection_arrow
+                                        proj_color = proj_color=self.default_node_color
                                 assign_proj_to_enclosing_comp = True
                                 assign_sender_edge(sndr, proj, proj_color, proj_arrowhead)
                             continue

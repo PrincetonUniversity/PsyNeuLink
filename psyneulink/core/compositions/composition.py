@@ -5653,12 +5653,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if isinstance(node, CompositionInterfaceMechanism):
                 assert node == node.composition.input_CIM
                 # If the input_port for that input_CIM has more than one afferent, the current one is superfluous
-                if len(rcvr.path_afferents) > 1:
+                # MODIFIED 9/22/23 OLD:
+                # if len(rcvr.path_afferents) > 1:
+                # MODIFIED 9/22/23 NEW:
+                if len([p for p in rcvr.path_afferents if p in self.projections]) > 1:
+                # MODIFIED 9/22/23 END
                     # Ensure that one of the afferents is from a Node (and not the input_CIM) of the outer Composition
-                    # FIX: 9/21/23 - IF THE ADDITIONAL PROJECTION (I.E., *NOT* FROM THE OUTER input_CIM) IS FROM A
-                    # FIX:           CONTROL NODE IN THE OUTER COMPOSITION, JUST DELETE ITS PROJECTION
-                    # FIX:           ALTERNATIVELY, SUPPRESS CREATION OF PROJECTION FROM CONTROL MECH
-                    #                TO input_CIM OF NESTED COMPOSITION
                     assert [proj for proj in rcvr.path_afferents if
                             (not isinstance(proj.sender.owner, CompositionInterfaceMechanism)
                              and proj.sender.owner in self.nodes) or
@@ -7489,14 +7489,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     projs = {self.add_projection(sender=s, receiver=r,
                                                  default_matrix=default_projection_matrix,
                                                  allow_duplicates=False,
-                                                 context=context)
-                            for r in receivers for s in senders}
-                    # Warn about assignment of MappingProjections from ControlMechanisms
+                                                 context=context) for r in receivers for s in senders
+                             # Exclude implementing MappingProjection from ControlMechanism to next node
+                             if not isinstance(s, ControlMechanism)}
+                    # # Warn about inclusion of ControlMechanism in pathway
                     for ctl_mech in [s for s in senders if isinstance(s, ControlMechanism)]:
-                        warnings.warn(f"A {MappingProjection.__name__} has been created from a "
-                                      f"{ControlSignal.__name__} of '{ctl_mech.name}' -- specified {pathway_arg_str} "
-                                      f"-- to another {Mechanism.__name__} in that pathway.  If this is not the "
-                                      f"intended behavior, add '{ctl_mech.name}' separately to '{self.name}'.")
+                        warnings.warn(f"The Node following the {ControlMechanism.__name__} ({ctl_mech.name}) "
+                                      f"specified in the {pathway_arg_str} will be dependent on it, but not receive "
+                                      f"any Projections unless these are otherwise specified.")
                     if all(projs):
                         # If it is a singleton, append on its own;  if it is set or list, need to keep that intact
                         projs = projs.pop() if len(projs) == 1 else projs

@@ -2151,6 +2151,7 @@ class TestGraphCycles:
         output = comp.run(inputs={R1: [1.0]}, num_trials=3)
         np.testing.assert_allclose(output, [np.array([22.])])
 
+
 @pytest.mark.pathways
 class TestExecutionOrder:
     def test_2_node_loop(self):
@@ -2848,6 +2849,7 @@ class TestExecutionOrder:
         assert comp.scheduler.execution_list[comp.default_execution_id] == [{A, B}]
         assert comp.scheduler.execution_timestamps[comp.default_execution_id][0].absolute == 1 * pnl._unit_registry.ms
 
+
 @pytest.mark.pathways
 class TestGetMechanismsByRole:
 
@@ -2875,6 +2877,7 @@ class TestGetMechanismsByRole:
     def test_nonexistent_role(self):
         comp = Composition()
         comp.get_nodes_by_role(None)
+
 
 
 class TestInputPortSpecifications:
@@ -3020,6 +3023,7 @@ class TestInputPortSpecifications:
         np.testing.assert_allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
         np.testing.assert_allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
         np.testing.assert_allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
+
 
 
 class TestRunInputSpecifications:
@@ -4097,6 +4101,7 @@ class TestRun:
         with pytest.warns(warning_type) as warning:
             comp.run()
         assert repr(warning[0].message.args[0]) == warning_msg
+
 
 
 class TestCallBeforeAfterTimescale:
@@ -5245,6 +5250,7 @@ class TestImportComposition:
         assert all(entry in c.required_node_roles for entry in em.required_node_roles)
 
         c.run(execution_mode=comp_mode)
+
 
 class TestOverloadedCompositions:
     def test_mechanism_different_inputs(self):
