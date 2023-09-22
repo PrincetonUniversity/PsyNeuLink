@@ -477,6 +477,8 @@ class TestConnectCompositionsViaCIMS:
         comp = Composition()
         mech = ProcessingMechanism()
         comp.add_node(mech)
+
+        # NOTE: Adding ports to CIM from command line is currenlty disallowed
         # warning_msg = ('You are attempting to add custom ports to a CIM, which can result in unpredictable behavior '
         #                 'and is therefore recommended against. If suitable, you should instead add ports to the '
         #                r'mechanism\(s\) that project to or are projected to from the CIM.')
@@ -500,18 +502,27 @@ class TestConnectCompositionsViaCIMS:
         # instantiate custom input and output ports
         inp = InputPort(size=2)
         out = OutputPort(size=2)
-        # add custom input and output ports to CIM
-        comp.input_CIM.add_ports([inp, out])
-        # verify the ports have been added to the user_added_ports set
-        # and that no extra ports were added
-        assert inp in comp.input_CIM.user_added_ports['input_ports']
-        assert len(comp.input_CIM.user_added_ports['input_ports']) == 1
-        assert out in comp.input_CIM.user_added_ports['output_ports']
-        assert len(comp.input_CIM.user_added_ports['output_ports']) == 1
-        comp.input_CIM.remove_ports([inp, out])
-        # verify that call to remove ports succesfully removed the ports from user_added_ports
-        assert len(comp.input_CIM.user_added_ports['input_ports']) == 0
-        assert len(comp.input_CIM.user_added_ports['output_ports']) == 0
+
+        # NOTE: Adding ports to CIM from command line is currenlty disallowed
+        # # add custom input and output ports to CIM
+        # comp.input_CIM.add_ports([inp, out])
+        # # verify the ports have been added to the user_added_ports set
+        # # and that no extra ports were added
+        # assert inp in comp.input_CIM.user_added_ports['input_ports']
+        # assert len(comp.input_CIM.user_added_ports['input_ports']) == 1
+        # assert out in comp.input_CIM.user_added_ports['output_ports']
+        # assert len(comp.input_CIM.user_added_ports['output_ports']) == 1
+        # comp.input_CIM.remove_ports([inp, out])
+        # # verify that call to remove ports succesfully removed the ports from user_added_ports
+        # assert len(comp.input_CIM.user_added_ports['input_ports']) == 0
+        # assert len(comp.input_CIM.user_added_ports['output_ports']) == 0
+
+        error_msg =  ('Adding ports to a CompositionInterfaceMechanism is not supported at this time; '
+                      'these are handled automatically when a Composition is created.')
+        with pytest.raises(CompositionError) as error_text:
+            comp.input_CIM.add_ports([inp, out])
+        assert error_msg in str(error_text.value)
+
 
     def test_parameter_CIM_port_order(self) -> object:
         # Note:  CIM_port order is also tested in TestNodes and test_simplified_necker_cube()
