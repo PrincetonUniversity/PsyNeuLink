@@ -1724,13 +1724,15 @@ class ShowGraph():
         for control_signal in controller.control_signals:
             for ctl_proj in control_signal.efferents:
 
-                # Allow MappingProjections to iconified rep of nested Composition to show as ControlProjection
-                if (isinstance(ctl_proj, ControlProjection)
-                        or (isinstance(ctl_proj.receiver.owner, CompositionInterfaceMechanism) and not show_cim)):
-                    ctl_proj_arrowhead = self.control_projection_arrow
-                else:  # This is to expose an errant MappingProjection if one slips in
-                    ctl_proj_arrowhead = self.default_projection_arrow
-                    ctl_proj_color = self.default_node_color
+                # # Allow MappingProjections to iconified rep of nested Composition to show as ControlProjection
+                # if (isinstance(ctl_proj, ControlProjection)
+                #         or (isinstance(ctl_proj.receiver.owner, CompositionInterfaceMechanism)
+                #             and (not show_cim or not show_nested))):
+                #     ctl_proj_arrowhead = self.control_projection_arrow
+                # else:  # This is to expose an errant MappingProjection if one slips in
+                #     ctl_proj_arrowhead = self.default_projection_arrow
+                #     ctl_proj_color = self.default_node_color
+                ctl_proj_arrowhead = self.control_projection_arrow
 
                 # Skip ControlProjections not in the Composition
                 if ctl_proj not in composition.projections:
@@ -2327,13 +2329,15 @@ class ShowGraph():
                             or (not show_cim and
                                 (show_nested is not NESTED)
                                 or (show_nested is False))):
-                        # Allow MappingProjections to iconified rep of nested Composition to show as ControlProjection
-                        if (isinstance(proj, ControlProjection)
-                                or (isinstance(proj.receiver.owner, CompositionInterfaceMechanism) and not show_cim)):
-                            proj_arrowhead = self.control_projection_arrow
-                        else:  # This is to expose an errant MappingProjection if one slips in
-                            proj_arrowhead = self.default_projection_arrow
-                            proj_color = self.default_node_color
+                        # # Allow MappingProjections to iconified rep of nested Composition to show as ControlProjection
+                        # if (isinstance(proj, ControlProjection)
+                        #         or (isinstance(proj.receiver.owner, CompositionInterfaceMechanism)
+                        #             and (not show_cim or not show_nested))):
+                        #     proj_arrowhead = self.control_projection_arrow
+                        # else:  # This is to expose an errant MappingProjection if one slips in
+                        #     proj_arrowhead = self.default_projection_arrow
+                        #     proj_color = self.default_node_color
+                        proj_arrowhead = self.control_projection_arrow
                 # Check if Projection or its receiver is active
                 if any(item in active_items for item in {proj, proj.receiver.owner}):
                     if self.active_color == BOLD:
@@ -2459,16 +2463,18 @@ class ShowGraph():
                                         or self._is_composition_controller(sndr, enclosing_comp)):
                                     continue
                                 if sender is composition.parameter_CIM:
+                                    # # Allow MappingProjections to iconified rep of nested Composition
+                                    # # to show as ControlProjection
+                                    # if (isinstance(proj, ControlProjection)
+                                    #         or (isinstance(proj.receiver.owner, CompositionInterfaceMechanism)
+                                    #             and (not show_cim or not show_nested))):
+                                    #     proj_arrowhead = self.control_projection_arrow
+                                    #     proj_color = self.control_color
+                                    # else:   # This is to expose an errant MappingProjection if one slips in
+                                    #     proj_arrowhead = self.default_projection_arrow
+                                    #     proj_color = proj_color=self.default_node_color
                                     proj_color = self.control_color
-                                    # Allow MappingProjections to iconified rep of nested Composition
-                                    # to show as ControlProjection
-                                    if (isinstance(proj, ControlProjection)
-                                            or (isinstance(proj.receiver.owner, CompositionInterfaceMechanism)
-                                                and not show_cim)):
-                                        proj_arrowhead = self.control_projection_arrow
-                                    else:   # This is to expose an errant MappingProjection if one slips in
-                                        proj_arrowhead = self.default_projection_arrow
-                                        proj_color = proj_color=self.default_node_color
+                                    proj_arrowhead = self.control_projection_arrow
                                 assign_proj_to_enclosing_comp = True
                                 assign_sender_edge(sndr, proj, proj_color, proj_arrowhead)
                             continue

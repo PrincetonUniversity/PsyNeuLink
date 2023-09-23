@@ -517,8 +517,8 @@ class TestConnectCompositionsViaCIMS:
         # assert len(comp.input_CIM.user_added_ports['input_ports']) == 0
         # assert len(comp.input_CIM.user_added_ports['output_ports']) == 0
 
-        error_msg =  ('Adding ports to a CompositionInterfaceMechanism is not supported at this time; '
-                      'these are handled automatically when a Composition is created.')
+        error_msg = ('Adding ports to a CompositionInterfaceMechanism is not supported at this time; '
+                     'these are handled automatically when a Composition is created.')
         with pytest.raises(CompositionError) as error_text:
             comp.input_CIM.add_ports([inp, out])
         assert error_msg in str(error_text.value)
