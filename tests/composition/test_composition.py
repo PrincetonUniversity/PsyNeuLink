@@ -2617,13 +2617,6 @@ class TestExecutionOrder:
 
         # [ia, ctl_mech, ib]
         if position == 1:
-            # FIX 9/23/23: REPLACE OR REMOVE WARNING:
-            # If ib follows ctl_mech, it should not get any MappingProjection (orphaned) which elicits warning
-            # warning = (f"The Node ('ia') in the in 'pathway' arg for add_linear_processing_pathway method of 'comp' "
-            #            f"will not receive a MappingProjection from the Node it follows in that pathway "
-            #            f"('control_mechanism') since that is a ControlMechanism, however it will still be dependent "
-            #            f"on it for (i.e. follow it in) execution.")
-            # with pytest.warns(UserWarning, match=warning):
             comp = Composition(pathway,name='comp')
             assert ia in comp.get_nodes_by_role(NodeRole.INPUT)
             assert ib in comp.get_nodes_by_role(NodeRole.INPUT)
