@@ -2597,8 +2597,8 @@ class TestExecutionOrder:
         for i in range(len(comp.scheduler.consideration_queue)):
             assert comp.scheduler.consideration_queue[i] == expected_consideration_sets[i]
 
-    # @pytest.mark.parametrize('position', range(2), ids=range(2))
-    @pytest.mark.parametrize('position', [1])
+    @pytest.mark.parametrize('position', range(2), ids=range(2))
+    # @pytest.mark.parametrize('position',d [1])
     def test_order_of_ctl_mech_in_pathway(self, position):
         ia = TransferMechanism(name='ia')
         ib = TransferMechanism(name='ib')
@@ -2627,7 +2627,7 @@ class TestExecutionOrder:
                 assert not ib.path_afferents
                 assert ia in comp.get_nodes_by_role(NodeRole.INPUT)
                 assert ib in comp.get_nodes_by_role(NodeRole.OUTPUT)
-                # comp.show_graph(show_cim=True, show_node_structure=True)
+                comp.show_graph(show_cim=True, show_node_structure=True)
 
         # [ia, ib, clt_mech]
         if position == 2:
