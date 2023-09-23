@@ -1753,14 +1753,14 @@ class TestControlMechanisms:
         Note: Even though both mech and control_mech don't receive pathway inputs, since control_mech projects to mech,
         control_mech is assigned as NodeRole.INPUT (can be overridden with assignments in add_nodes)
         """
-        mech = pnl.ProcessingMechanism(input_ports=['A','B','C'])
-        control_mech = pnl.ControlMechanism(control=mech.input_ports[0])
+        mech = pnl.ProcessingMechanism(input_ports=['A','B','C'], name='mech')
+        control_mech = pnl.ControlMechanism(control=mech.input_ports[0], name='ctl_mech')
         comp = pnl.Composition()
         comp.add_nodes([mech, control_mech])
         result = comp.run(inputs={control_mech:[2]}, num_trials=3)
         # np.testing.assert_allclose(result, [[2],[2],[2]])
-        assert pnl.NodeRole.INPUT not in comp.get_roles_by_node(mech)
-        assert pnl.NodeRole.INPUT in comp.get_roles_by_node(control_mech)
+        assert mech in comp.get_nodes_by_role(pnl.NodeRole.INPUT)
+        assert control_mech in comp.get_nodes_by_role(pnl.NodeRole.INPUT)
 
         # Should produce same result as above
         mech = pnl.ProcessingMechanism(input_ports=['A','B','C'])
@@ -1768,8 +1768,8 @@ class TestControlMechanisms:
         comp = pnl.Composition()
         comp.add_nodes([mech, control_mech])
         comp.run(inputs={control_mech:[2]}, num_trials=3)
-        assert pnl.NodeRole.INPUT not in comp.get_roles_by_node(mech)
-        assert pnl.NodeRole.INPUT in comp.get_roles_by_node(control_mech)
+        assert mech in comp.get_nodes_by_role(pnl.NodeRole.INPUT)
+        assert control_mech in comp.get_nodes_by_role(pnl.NodeRole.INPUT)
 
     def test_modulation_of_control_signal_intensity_cost_function_ADDITIVE(self):
         # tests additive modulation of default intensity_cost_function (Exponential) of

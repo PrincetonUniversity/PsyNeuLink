@@ -5253,71 +5253,42 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # INPUT
         origin_nodes = self.get_nodes_by_role(NodeRole.ORIGIN)
-        # MODIFIED 9/23/23 OLD:
-        for node in origin_nodes:
-            # Don't allow INTERNAL Nodes to be INPUTS
-            if NodeRole.INTERNAL in self.get_roles_by_node(node):
-                continue
-            self._add_node_role(node, NodeRole.INPUT)
+        for node in self.nodes:
+            if node in origin_nodes:
+                # Don't allow INTERNAL Nodes to be INPUTS
+                if NodeRole.INTERNAL in self.get_roles_by_node(node):
+                    continue
+                self._add_node_role(node, NodeRole.INPUT)
 
-            # special case, ControlMechanisms create MappingProjections
-            # to inner composition parameter CIMs, which may or may not
-            # create scheduler dependencies (determined by user action).
-            # If an inner composition is not ORIGIN because of this
-            # condition, add it as INPUT anyway.
-            if isinstance(node, ControlMechanism):
-                for child in self.graph_processing.comp_to_vertex[node].children:
-                    for parent in child.parents:
-                        # MappingProjections from non-ControlMechanisms
-                        # always obey standard scheduling behavior
-                        if (
-                            not isinstance(parent.component, ControlMechanism)
-                            or parent.component not in origin_nodes
-                        ):
-                            continue
-
-                        for proj in child.component.get_afferents(parent.component):
+                # special case, ControlMechanisms create MappingProjections
+                # to inner composition parameter CIMs, which may or may not
+                # create scheduler dependencies (determined by user action).
+                # If an inner composition is not ORIGIN because of this
+                # condition, add it as INPUT anyway.
+                if isinstance(node, ControlMechanism):
+                    for child in self.graph_processing.comp_to_vertex[node].children:
+                        for parent in child.parents:
+                            # MappingProjections from non-ControlMechanisms
+                            # always obey standard scheduling behavior
                             if (
-                                isinstance(proj, PathwayProjection_Base)
-                                and proj._creates_scheduling_dependency
+                                not isinstance(parent.component, ControlMechanism)
+                                or parent.component not in origin_nodes
                             ):
-                                self._add_node_role(child.component, NodeRole.INPUT)
-                                break
-        # MODIFIED 9/23/23 NEW:
-        # for node in self.nodes:
-        #     if node in origin_nodes:
-        #         # Don't allow INTERNAL Nodes to be INPUTS
-        #         if NodeRole.INTERNAL in self.get_roles_by_node(node):
-        #             continue
-        #         self._add_node_role(node, NodeRole.INPUT)
-        #
-        #         # special case, ControlMechanisms create MappingProjections
-        #         # to inner composition parameter CIMs, which may or may not
-        #         # create scheduler dependencies (determined by user action).
-        #         # If an inner composition is not ORIGIN because of this
-        #         # condition, add it as INPUT anyway.
-        #         if isinstance(node, ControlMechanism):
-        #             for child in self.graph_processing.comp_to_vertex[node].children:
-        #                 for parent in child.parents:
-        #                     # MappingProjections from non-ControlMechanisms
-        #                     # always obey standard scheduling behavior
-        #                     if (
-        #                         not isinstance(parent.component, ControlMechanism)
-        #                         or parent.component not in origin_nodes
-        #                     ):
-        #                         continue
-        #
-        #                     for proj in child.component.get_afferents(parent.component):
-        #                         if (
-        #                             isinstance(proj, PathwayProjection_Base)
-        #                             and proj._creates_scheduling_dependency
-        #                         ):
-        #                             self._add_node_role(child.component, NodeRole.INPUT)
-        #                             break
-        #
-        #     elif not isinstance(node, (Composition, ModulatoryMechanism_Base)) and not node.path_afferents:
-        #         self._add_node_role(node, NodeRole.INPUT)
-        # MODIFIED 9/23/23 END
+                                continue
+
+                            for proj in child.component.get_afferents(parent.component):
+                                if (
+                                    isinstance(proj, PathwayProjection_Base)
+                                    and proj._creates_scheduling_dependency
+                                ):
+                                    self._add_node_role(child.component, NodeRole.INPUT)
+                                    break
+
+            # Node does not receive any path_afferents (except possibly from input_CIM)
+            elif (not isinstance(node, (Composition, ModulatoryMechanism_Base))
+                  and (not node.path_afferents
+                       or all(p.sender.owner is self.input_CIM for p in node.path_afferents))):
+                self._add_node_role(node, NodeRole.INPUT)
 
         # CYCLE
         for node in self.graph_processing.cycle_vertices:

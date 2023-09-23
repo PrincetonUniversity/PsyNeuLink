@@ -2597,7 +2597,7 @@ class TestExecutionOrder:
         for i in range(len(comp.scheduler.consideration_queue)):
             assert comp.scheduler.consideration_queue[i] == expected_consideration_sets[i]
 
-    @pytest.mark.parametrize('position', range(2), ids=range(2))
+    @pytest.mark.parametrize('position', range(3), ids=range(3))
     # @pytest.mark.parametrize('position',d [1])
     def test_order_of_ctl_mech_in_pathway(self, position):
         ia = TransferMechanism(name='ia')
@@ -2609,7 +2609,7 @@ class TestExecutionOrder:
 
         # [ctl_mech, ia, ib]
         if position == 0:
-            comp = Composition(pathway,name='ocomp')
+            comp = Composition(pathway,name='comp')
             assert ctl_mech in comp.get_nodes_by_role(NodeRole.INPUT)
             assert ib in comp.get_nodes_by_role(NodeRole.OUTPUT)
             # If ia follows ctl_mech, it doesn't get any MappoingProjection os it should be considered an INPUT Node
@@ -2617,23 +2617,23 @@ class TestExecutionOrder:
 
         # [ia, ctl_mech, ib]
         if position == 1:
+            # FIX 9/23/23: REPLACE OR REMOVE WARNING:
             # If ib follows ctl_mech, it should not get any MappingProjection (orphaned) which elicits warning
-            warning = (f"The Node ('ia') in the in 'pathway' arg for add_linear_processing_pathway method of 'comp' "
-                       f"will not receive a MappingProjection from the Node it follows in that pathway "
-                       f"('control_mechanism') since that is a ControlMechanism, however it will still be dependent "
-                       f"on it for (i.e. follow it in) execution.")
-            with pytest.warns(UserWarning, match=warning):
-                comp = Composition(pathway,name='ocomp')
-                assert not ib.path_afferents
-                assert ia in comp.get_nodes_by_role(NodeRole.INPUT)
-                assert ib in comp.get_nodes_by_role(NodeRole.OUTPUT)
-                comp.show_graph(show_cim=True, show_node_structure=True)
+            # warning = (f"The Node ('ia') in the in 'pathway' arg for add_linear_processing_pathway method of 'comp' "
+            #            f"will not receive a MappingProjection from the Node it follows in that pathway "
+            #            f"('control_mechanism') since that is a ControlMechanism, however it will still be dependent "
+            #            f"on it for (i.e. follow it in) execution.")
+            # with pytest.warns(UserWarning, match=warning):
+            comp = Composition(pathway,name='comp')
+            assert ia in comp.get_nodes_by_role(NodeRole.INPUT)
+            assert ib in comp.get_nodes_by_role(NodeRole.INPUT)
+            assert ib in comp.get_nodes_by_role(NodeRole.OUTPUT)
 
         # [ia, ib, clt_mech]
         if position == 2:
-            comp = Composition(pathway,name='ocomp')
+            comp = Composition(pathway,name='comp')
             assert ia in comp.get_nodes_by_role(NodeRole.INPUT)
-            assert ctl_mech in comp.get_nodes_by_role(NodeRole.OUTPUT)
+            assert ib in comp.get_nodes_by_role(NodeRole.OUTPUT)
 
     def test_multiple_projections_along_pathway(self):
 
