@@ -5253,7 +5253,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # INPUT
         origin_nodes = self.get_nodes_by_role(NodeRole.ORIGIN)
-        MODIFIED 9/23/23 OLD:
+        # MODIFIED 9/23/23 OLD:
         for node in origin_nodes:
             # Don't allow INTERNAL Nodes to be INPUTS
             if NodeRole.INTERNAL in self.get_roles_by_node(node):
