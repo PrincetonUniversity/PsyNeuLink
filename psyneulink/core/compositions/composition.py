@@ -2949,7 +2949,7 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, _
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import ContentAddressableList, call_with_pruned_args, convert_to_list, \
     nesting_depth, convert_to_np_array, is_numeric, is_matrix, is_matrix_keyword, parse_valid_identifier
-from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, Condition, Never
+from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, Condition, Never, AtNCalls, BeforeNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import \
@@ -7487,17 +7487,42 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    else {pathway[c - 1]})
                 if all(_is_node_spec(sender) for sender in preceding_entry):
                     senders = _get_node_specs_for_entry(preceding_entry, NodeRole.OUTPUT)
-                    projs = {self.add_projection(sender=s, receiver=r,
-                                                 default_matrix=default_projection_matrix,
-                                                 allow_duplicates=False,
-                                                 context=context) for r in receivers for s in senders
-                             # Exclude implementing MappingProjection from ControlMechanism to next node
-                             if not isinstance(s, ControlMechanism)}
-                    # # Warn about inclusion of ControlMechanism in pathway
-                    for ctl_mech in [s for s in senders if isinstance(s, ControlMechanism)]:
-                        warnings.warn(f"The Node following the {ControlMechanism.__name__} ({ctl_mech.name}) "
-                                      f"specified in the {pathway_arg_str} will be dependent on it, but not receive "
-                                      f"any Projections unless these are otherwise specified.")
+                    # # MODIFIED 9/23/23 NEW:
+                    # projs = {self.add_projection(sender=s, receiver=r,
+                    #                              default_matrix=default_projection_matrix,
+                    #                              allow_duplicates=False,
+                    #                              context=context) for r in receivers for s in senders
+                    #          # Exclude implementing MappingProjection from ControlMechanism to next node
+                    #          if not isinstance(s, ControlMechanism)}
+                    # # # Warn about inclusion of ControlMechanism in pathway
+                    # for ctl_mech in [s for s in senders if isinstance(s, ControlMechanism)]:
+                    #     warnings.warn(f"The Node following the {ControlMechanism.__name__} ('{ctl_mech.name}') "
+                    #                   f"specified in the {pathway_arg_str} will be dependent on it, but not receive "
+                    #                   f"any Projections unless these are otherwise specified.")
+                    # MODIFIED 9/23/23 NEWER:
+                    # FIX: EXPLICITLY ADD DEPENDENCY FOR CONTROL MECHANISM IF MAPPING PROJECION IS REMOVED
+                    projs = set()
+                    for r in receivers:
+                        for s in senders:
+                            if not isinstance(s, ControlMechanism):
+                                projs.add(self.add_projection(sender=s, receiver=r,
+                                                              default_matrix=default_projection_matrix,
+                                                              allow_duplicates=False,
+                                                              context=context))
+                            # If sender is ControlMechanism, don't add MappingProjection
+                            #   (since ControlMechanisms can only have ControlProjections as efferents)
+                            #   but implement dependency implied by placement in pathway
+                            else:
+                                # FIX: NEED TO MODIFY WARNING IF r IS NOW THE INPUT NODE
+                                # self.scheduler.add_condition(r, AtNCalls(s, 1, TimeScale.TRIAL))
+                                # self.scheduler.add_condition(r, AtNCalls(s, 1, TimeScale.PASS))
+                                self.scheduler.add_condition(r, BeforeNCalls(s, 1, TimeScale.TRIAL))
+                                # Warn about inclusion of ControlMechanism in pathway
+                                warnings.warn(f"The Node ('{r.name}') in the {pathway_arg_str} will not receive a "
+                                              f"MappingProjection from the Node it follows in that pathway "
+                                              f"('{s.name}') since that is a {ControlMechanism.__name__}, however it "
+                                              f"will still be dependent on it for (i.e. follow it in) execution.")
+                    # MODIFIED 9/23/23 END
                     if all(projs):
                         # If it is a singleton, append on its own;  if it is set or list, need to keep that intact
                         projs = projs.pop() if len(projs) == 1 else projs
@@ -11702,6 +11727,7 @@ _
                 for i in range(scheduler.get_clock(context).time.time_step):
                     execution_sets.__next__()
 
+
             for next_execution_set in execution_sets:
 
                 # SETUP EXECUTION ----------------------------------------------------------------------------
@@ -11712,6 +11738,7 @@ _
                 # know a PASS has ended in retrospect after the scheduler has changed the clock to indicate it. So, we
                 # have to run call_after_pass before the next PASS (here) or after this code block (see call to
                 # call_after_pass below)
+                # IMPLEMENTATION NOTE: GOOD PLACE FOR BREAKPOINT WHEN EXAMINING / DEBUGGING execution_sets
                 curr_pass = execution_scheduler.get_clock(context).get_total_times_relative(TimeScale.PASS,
                                                                                             TimeScale.TRIAL)
                 new_pass = False
