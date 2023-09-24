@@ -508,7 +508,7 @@ class AutodiffComposition(Composition):
             # FIX:  9/17/23 - THIS VERSION FLATTENS NESTED COMPOSITIONS;  MAY NOT STILL BE NEEDED
             #                 SINCE EXECUTION SETS ARE NOW FLATTENED IN PytorchCompositionWrapper
             #                 ?? REVERT TO OLD VERSION (IN PRE-"CLEAN_UP" VERSIONS, OR ON DEVEL?),
-            #                 THOUGH DOING SO PREVIOUSLY SEEMED TO LOSE TARGET NODE;
+            #                 THOUGH DOING SO PREVIOUSLY SEEMED TO LOSE TARGET NODE.
             #                 MAYBE NOT NOW THAT THEY ARE CONSTRUCTED EXPLICITLY BELOW?
 
             while len(queue) > 0:
