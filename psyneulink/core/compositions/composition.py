@@ -7524,7 +7524,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 # FIX: NEED TO MODIFY WARNING IF r IS NOW THE INPUT NODE
                                 # self.scheduler.add_condition(r, AtNCalls(s, 1, TimeScale.TRIAL))
                                 # self.scheduler.add_condition(r, AtNCalls(s, 1, TimeScale.PASS))
-                                self.scheduler.add_condition(r, BeforeNCalls(s, 1, TimeScale.TRIAL))
+                                # self.scheduler.add_condition(r, BeforeNCalls(s, 1, TimeScale.TRIAL))
+                                self.graph.connect_components(s, r)
+
                                 # Warn about inclusion of ControlMechanism in pathway
                                 warnings.warn(f"The Node ('{r.name}') in the {pathway_arg_str} will not receive a "
                                               f"MappingProjection from the Node it follows in that pathway "
