@@ -188,6 +188,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # Ignore CIMs within the same Composition (they are not learnable; see figure in docstring)
             elif sndr_mech is composition.input_CIM or rcvr_mech is composition.output_CIM:
                 continue
+                # MODIFIED 9/24/23 NEW:
+                # FIX: MARK THIS NODE (PYTORCHMECHWRAPPER, OR ONE FOR NESTED COMP?) AS AN INPUT:  node._is_input
+                #      IF PROJECTION TO IT IS FROM INPUT_CIM OF OUTER COMP RATHER THAN A NODE IN THE OUTER COMP??
+                # MODIFIED 9/24/23 END
 
             # See figure in docstring above for explanation of the following:
 

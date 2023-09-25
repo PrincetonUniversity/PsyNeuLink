@@ -498,6 +498,7 @@ class AutodiffComposition(Composition):
 
         def _get_pytorch_backprop_pathway(input_node)->list:
             """Breadth-first search from input_node to find all input -> output pathways
+            Uses queue(node, input_port, composition) to traverse all nodes in the graph
             IMPLEMENTATION NOTE:  flattens nested Compositions
             Return a list of all pathways from input_node -> output node
             """
@@ -514,17 +515,23 @@ class AutodiffComposition(Composition):
             while len(queue) > 0:
                 node, input_port, current_comp = queue.popleft()
 
-                # if (node is not self and any(isinstance(proj.sender.owner, CompositionInterfaceMechanism)
-                #                              for proj in node.afferents)):
                 if (isinstance(node, Composition) and node is not self
                         and any(isinstance(proj.sender.owner, CompositionInterfaceMechanism)
                                 for proj in node.afferents)):
-                    raise AutodiffCompositionError(f"The input(s) for nested Composition '{node.name}' must all "
-                                                   f"come from Nodes in its outer Composition ('{self.name}') "
-                                                   f"to be learnable. ")
+                    # MODIFIED 9/24/23 OLD:
+                    # raise AutodiffCompositionError(f"The input(s) for nested Composition '{node.name}' must all "
+                    #                                f"come from Nodes in its outer Composition ('{self.name}') "
+                    #                                f"to be learnable. ")
+                    # MODIFIED 9/24/23 NEW:
+                    current_comp = node
+                    for output_port in node.input_CIM.output_ports:
+                        for proj in output_port.efferents:
+                            queue.append((proj.receiver.owner, proj.receiver, node))
+                    continue
+                    # MODIFIED 9/24/23 END
 
                 # node is output_CIM of nested Composition that projects directly to output_CIM of outer Composition
-                if isinstance(node, CompositionInterfaceMechanism):
+                if isinstance(node, CompositionInterfaceMechanism) and node is self.output_CIM:
                     outer_comp = get_composition_for_node(node.composition)
                     if node.composition in outer_comp.get_nodes_by_role(NodeRole.OUTPUT):
                         _, source, _ = input_port.owner._get_source_info_from_output_CIM(input_port)
