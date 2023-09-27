@@ -21,7 +21,7 @@ from psyneulink.core.compositions.composition import NodeRole, CompositionInterf
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
 from psyneulink.library.compositions.compiledloss import MSELoss, CROSS_ENTROPYLoss
-from psyneulink.core.globals.keywords import TARGET_MECHANISM, Loss
+from psyneulink.core.globals.keywords import NODE, TARGET_MECHANISM, Loss
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared
 from psyneulink.core.globals.log import LogCondition
@@ -167,12 +167,23 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                        self._composition._get_node_index(node),
                                                        device,
                                                        context=context)
-                # Mark INPUT Nodes of outer Composition for use in forward()
-                pytorch_node._is_input = (node in composition.get_nodes_by_role(NodeRole.INPUT)
-                                          and not composition.is_nested)
-
             self.nodes_map[node] = pytorch_node
             self.node_wrappers.append(pytorch_node)
+
+        # Assign INPUT Nodes for outermost Composition (including any that are nested within it at any level)
+        # Note: Pytorch representation is "flattened" (i.e., any nested Compositions are replaced by their Nodes)
+            #   so if any nested Compositions are INPUT Nodes of the outermost Composition,
+            #   *their* INPUT Nodes are assigned as INPUT Nodes of the outermost Composition
+        if not composition.is_nested:
+            # FIX: 9/25/23 - HIDDEN 1 SHOULD NOT BE MAKRED AS _is_input BELOW
+            def _assign_input_nodes(nodes):
+                for pytorch_node in nodes:
+                    if isinstance(pytorch_node, PytorchMechanismWrapper):
+                        pytorch_node._is_input = pytorch_node._mechanism in composition._get_input_receivers(type=NODE)
+                    else:
+                        _assign_input_nodes(pytorch_node.node_wrappers)
+            _assign_input_nodes(self.node_wrappers)
+
 
         # Instantiate PyTorch ProjectionWrappers (ignoring any from/to CIMs in the same composition)
         for projection in composition._inner_projections:
@@ -217,7 +228,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             elif (isinstance(sndr_mech, CompositionInterfaceMechanism)
                   and sndr_mech is not self._composition.input_CIM):
                 proj_rcvr = self.nodes_map[rcvr_mech]
-                # Replace sndr_mech (output_CIM_ with the node in the nested Composition that sends the projection
+                # Replace sndr_mech (output_CIM) with the node in the nested Composition that sends the projection
                 nested_sndr_port, nested_sndr_mech, _ = \
                     sndr_mech._get_source_info_from_output_CIM(projection.sender)
                 nested_pytorch_comp = self.nodes_map[sndr_mech.composition]

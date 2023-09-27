@@ -239,7 +239,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         self.user_added_ports[OUTPUT_PORTS] = self.user_added_ports[OUTPUT_PORTS] - output_ports_marked_for_deletion
 
     # def _get_source_node_for_input_CIM(self, port, start_comp=None, end_comp=None):
-    def _get_source_node_for_input_CIM(self, port, comp=None):
+    def _get_source_node_for_input_CIM(self, port, start_comp=None):
         """Return Port, Node and Composition  for source of projection to input_CIM from (possibly nested) outer comp
         **port** InputPort or OutputPort of the input_CIM from which the local projection projects;
         **comp** Composition at which to begin the search (or continue it when called recursively;
@@ -255,9 +255,13 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         input_port = [port_map[k][0] for k in port_map if port_map[k][idx] is port]
         assert len(input_port)==1, f"PROGRAM ERROR: Expected exactly 1 input_port for {port.name} " \
                                    f"in port_map for {port.owner}; found {len(input_port)}."
-        assert len(input_port[0].path_afferents)==1, f"PROGRAM ERROR: Port ({input_port.name}) expected to have " \
-                                                     f"just one path_afferent; has {len(input_port.path_afferents)}."
-
+        # # MODIFIED 9/25/23 OLD:
+        # assert len(input_port[0].path_afferents)==1, f"PROGRAM ERROR: Port ({input_port.name}) expected to have " \
+        #                                              f"just one path_afferent; has {len(input_port.path_afferents)}."
+        # MODIFIED 9/25/23 NEW:
+        if not len(input_port[0].path_afferents):
+            return None
+        # MODIFIED 9/25/23 END
         sender = input_port[0].path_afferents[0].sender
         if not isinstance(sender.owner, CompositionInterfaceMechanism):
             return sender, sender.owner, comp

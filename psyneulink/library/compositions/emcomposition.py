@@ -111,6 +111,7 @@
 #        - CHECK FOR EXISTING LM ASSERT IN pytests
 #
 #      - AutodiffComposition:
+#         - replace handling / flattening of nested compositions with Pytorch.add_module (which adds "child" modules)
 #         - Check that error occurs for adding a controller to an AutodiffComposition
 #         - Check that if "epochs" is not in input_dict for Autodiff, then:
 #           - set to num_trials as default,
@@ -131,6 +132,7 @@
 #        - Generalize treatment of FEEDBACK specification:
       #        - FIX: ADD TESTS FOR FEEDBACK TUPLE SPECIFICATION OF Projection, DIRECT SPECIFICATION IN CONSTRUCTOR
 #              - FIX: why aren't FEEDBACK_SENDER and FEEDBACK_RECEIVER roles being assigned when feedback is specified?
+#        - add property that keeps track of warnings that have been issued, and suppresses repeats if specified
 #        - add property of Composition that lists it cycles
 #        - Add warning if termination_condition is trigged (and verbosePref is set)
 #        - Addition of projections to a ControlMechanism seems too dependent on the order in which the

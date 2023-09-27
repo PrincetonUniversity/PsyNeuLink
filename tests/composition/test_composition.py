@@ -2597,36 +2597,50 @@ class TestExecutionOrder:
         for i in range(len(comp.scheduler.consideration_queue)):
             assert comp.scheduler.consideration_queue[i] == expected_consideration_sets[i]
 
-    @pytest.mark.parametrize('position', range(3), ids=range(3))
+    @pytest.mark.parametrize('position', range(4), ids=range(4))
     # @pytest.mark.parametrize('position',d [1])
     def test_order_of_ctl_mech_in_pathway(self, position):
         ia = TransferMechanism(name='ia')
         ib = TransferMechanism(name='ib')
         ctl_mech = ControlMechanism(name='control_mechanism',
                               control_signals=ControlSignal(projections=[(SLOPE, ib)]))
-        pathway = [ia, ib]
-        pathway.insert(position, ctl_mech)
+        if position < 3:
+            pathway = [ia, ib]
+            pathway.insert(position, ctl_mech)
+        else:
+            pathway = [ia, ctl_mech, MappingProjection(sender=ia, receiver=ib), ib]
 
         # [ctl_mech, ia, ib]
         if position == 0:
             comp = Composition(pathway,name='comp')
             assert ctl_mech in comp.get_nodes_by_role(NodeRole.INPUT)
             assert ib in comp.get_nodes_by_role(NodeRole.OUTPUT)
-            # If ia follows ctl_mech, it doesn't get any MappoingProjection os it should be considered an INPUT Node
+            # Since ia follows ctl_mech, it doesn't get any MappingProjection so it should be considered an INPUT Node
             assert ia.path_afferents[0].sender.owner == comp.input_CIM
+            assert [ib] == comp.get_nodes_by_role(NodeRole.TERMINAL)
 
         # [ia, ctl_mech, ib]
-        if position == 1:
+        elif position == 1:
             comp = Composition(pathway,name='comp')
             assert ia in comp.get_nodes_by_role(NodeRole.INPUT)
+            # Since ib doesn't get a MappingProjection, it too should be considered an INPUT Node
             assert ib in comp.get_nodes_by_role(NodeRole.INPUT)
             assert ib in comp.get_nodes_by_role(NodeRole.OUTPUT)
+            assert [ib] == comp.get_nodes_by_role(NodeRole.TERMINAL)
 
         # [ia, ib, clt_mech]
-        if position == 2:
+        elif position == 2:
             comp = Composition(pathway,name='comp')
             assert ia in comp.get_nodes_by_role(NodeRole.INPUT)
             assert ib in comp.get_nodes_by_role(NodeRole.OUTPUT)
+            assert [ctl_mech] == comp.get_nodes_by_role(NodeRole.TERMINAL)
+
+        # [ia, clt_mech, MappingProjection(ia,ib), ib]
+        elif position == 3:
+            comp = Composition(pathway,name='comp')
+            assert ia in comp.get_nodes_by_role(NodeRole.INPUT)
+            assert ib in comp.get_nodes_by_role(NodeRole.OUTPUT)
+            assert [ib] == comp.get_nodes_by_role(NodeRole.TERMINAL)
 
     def test_multiple_projections_along_pathway(self):
 
@@ -7406,11 +7420,9 @@ class TestNodeRoles:
         comp = Composition(pathways=[mech, (ctl_mech_A, NodeRole.OUTPUT), (ctl_mech_B, NodeRole.OUTPUT)])
         assert {mech, ctl_mech_A, ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.OUTPUT))
         assert {mech} == set(comp.get_nodes_by_role(NodeRole.ORIGIN))
-        # # Current instantiation always assigns ctl_mech_B as TERMINAL in this case;
-        # # this is here to flag any violation of this in the future, in case that is not intended
-        # assert {ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.TERMINAL))
-        # Now it is stochastic whether ctl_mech_B is included as TERMINAL or not, but seems ctl_mech_A always is
-        assert ctl_mech_A in set(comp.get_nodes_by_role(NodeRole.TERMINAL))
+        # Current instantiation always assigns ctl_mech_B as TERMINAL in this case;
+        # this is here to flag any violation of this in the future, in case that is not intended
+        assert {ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.TERMINAL))
 
     def test_LEARNING_hebbian(self):
         A = RecurrentTransferMechanism(name='A', size=2, enable_learning=True)
