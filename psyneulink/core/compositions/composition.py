@@ -7479,7 +7479,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if not node:
                         raise CompositionError(f"A nested Composition ('{list(entry)[0].name}') "
                                                f"included in {pathway_arg_str} is empty; "
-                                               f"(i.e., does not have any nodes assigned to it yet).")
+                                               f"(i.e., doex`s not have any nodes assigned to it yet).")
                     nodes.extend(node)
                 return nodes
 
@@ -7495,20 +7495,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    else {pathway[c - 1]})
                 if all(_is_node_spec(sender) for sender in preceding_entry):
                     senders = _get_node_specs_for_entry(preceding_entry, NodeRole.OUTPUT)
-                    # # MODIFIED 9/23/23 NEW:
-                    # projs = {self.add_projection(sender=s, receiver=r,
-                    #                              default_matrix=default_projection_matrix,
-                    #                              allow_duplicates=False,
-                    #                              context=context) for r in receivers for s in senders
-                    #          # Exclude implementing MappingProjection from ControlMechanism to next node
-                    #          if not isinstance(s, ControlMechanism)}
-                    # # # Warn about inclusion of ControlMechanism in pathway
-                    # for ctl_mech in [s for s in senders if isinstance(s, ControlMechanism)]:
-                    #     warnings.warn(f"The Node following the {ControlMechanism.__name__} ('{ctl_mech.name}') "
-                    #                   f"specified in the {pathway_arg_str} will be dependent on it, but not receive "
-                    #                   f"any Projections unless these are otherwise specified.")
-                    # MODIFIED 9/23/23 NEWER:
-                    # FIX: EXPLICITLY ADD DEPENDENCY FOR CONTROL MECHANISM IF MAPPING PROJECION IS REMOVED
                     projs = set()
                     for r in receivers:
                         for s in senders:
@@ -7522,15 +7508,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             #   but implement dependency implied by placement in pathway
                             else:
                                 # FIX: NEED TO MODIFY WARNING IF r IS NOW THE INPUT NODE
-                                # self.scheduler.add_condition(r, AtNCalls(s, 1, TimeScale.TRIAL))
-                                # self.scheduler.add_condition(r, AtNCalls(s, 1, TimeScale.PASS))
-                                self.scheduler.add_condition(r, BeforeNCalls(s, 1, TimeScale.TRIAL))
+                                #      9/25/23: CONSIDER ADDING MappingProjection FROM s TO r (TO PRESERVE "LINEARITY")
+                                # If r is a Node in a nested Composition, then assign depenency of the Composition on s
+                                nested_comp = [e for e in current_entry if isinstance(e, Composition) and r in e.nodes]
+                                r = nested_comp[0] if nested_comp else r
+                                self.graph.connect_components(s, r)
                                 # Warn about inclusion of ControlMechanism in pathway
                                 warnings.warn(f"The Node ('{r.name}') in the {pathway_arg_str} will not receive a "
                                               f"MappingProjection from the Node it follows in that pathway "
                                               f"('{s.name}') since that is a {ControlMechanism.__name__}, however it "
                                               f"will still be dependent on it for (i.e. follow it in) execution.")
-                    # MODIFIED 9/23/23 END
                     if all(projs):
                         # If it is a singleton, append on its own;  if it is set or list, need to keep that intact
                         projs = projs.pop() if len(projs) == 1 else projs
@@ -10423,6 +10410,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             _inputs[node] = inp
         return _inputs
 
+    def _check_nested_target_mechs(self):
+        # Temporary check to ensure that nested compositions don't have stranded target Mechanisms.
+        # This should be taken out once we automatically instantiate Mechs to project to nested target Mechs.
+        nc = self._get_nested_compositions()
+        for comp in nc:
+            nc_targets = [path.target for path in comp.pathways if path.target]
+            for target in nc_targets:
+                target_mech_input_cim_input_port = comp.input_CIM.port_map.get(target.input_port)[0]
+                if not target_mech_input_cim_input_port.path_afferents:
+                    raise CompositionError(
+                        f'Target mechanism {target.name} of nested Composition {comp.name} is not being projected to '
+                        f'from its enclosing Composition {self.name}. For a call to {self.name}.learn, {target.name} '
+                        f'must have an afferent projection with a target value so that an error term may be computed. '
+                        f'A reference to {target.name}, with which you can create the needed projection, can be found '
+                        f'as the target attribute of the relevant pathway in {comp.name}.pathways. '
+                    )
+
     # ******************************************************************************************************************
     #                                           EXECUTION
     # ******************************************************************************************************************
@@ -11176,6 +11180,9 @@ _
         if execution_mode is not pnlvm.ExecutionMode.Python and not isinstance(self, AutodiffComposition):
             raise CompositionError(f"ExecutionMode.{execution_mode.name} cannot be used in the learn() method of "
                                    f"'{self.name}' because it is not an {AutodiffComposition.componentCategory}")
+        elif execution_mode is pnlvm.ExecutionMode.Python and not self.learning_components:
+            warnings.warn(f"learn() method called on '{self.name}', but it has no learning components; "
+                          f"it will be run but no learning will occur.")
 
         context.add_flag(ContextFlags.LEARNING_MODE)
 
@@ -11183,22 +11190,7 @@ _
         context.execution_phase=ContextFlags.PREPARING
 
         self._analyze_graph()
-
-        # Temporary check to ensure that nested compositions don't have stranded target Mechanisms.
-        # This should be taken out once we automatically instantiate Mechs to project to nested target Mechs.
-        nc = self._get_nested_compositions()
-        for comp in nc:
-            nc_targets = [path.target for path in comp.pathways if path.target]
-            for target in nc_targets:
-                target_mech_input_cim_input_port = comp.input_CIM.port_map.get(target.input_port)[0]
-                if not target_mech_input_cim_input_port.path_afferents:
-                    raise CompositionError(
-                        f'Target mechanism {target.name} of nested Composition {comp.name} is not being projected to '
-                        f'from its enclosing Composition {self.name}. For a call to {self.name}.learn, {target.name} '
-                        f'must have an afferent projection with a target value so that an error term may be computed. '
-                        f'A reference to {target.name}, with which you can create the needed projection, can be found '
-                        f'as the target attribute of the relevant pathway in {comp.name}.pathways. '
-                    )
+        self._check_nested_target_mechs()
 
         context.execution_phase = execution_phase_at_entry
 

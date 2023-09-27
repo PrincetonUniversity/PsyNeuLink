@@ -518,17 +518,17 @@ class AutodiffComposition(Composition):
                 if (isinstance(node, Composition) and node is not self
                         and any(isinstance(proj.sender.owner, CompositionInterfaceMechanism)
                                 for proj in node.afferents)):
-                    # MODIFIED 9/24/23 OLD:
+                    # MODIFIED 9/25/23 OLD:
                     # raise AutodiffCompositionError(f"The input(s) for nested Composition '{node.name}' must all "
                     #                                f"come from Nodes in its outer Composition ('{self.name}') "
                     #                                f"to be learnable. ")
-                    # MODIFIED 9/24/23 NEW:
+                    # MODIFIED 9/25/23 NEW:
                     current_comp = node
                     for output_port in node.input_CIM.output_ports:
                         for proj in output_port.efferents:
                             queue.append((proj.receiver.owner, proj.receiver, node))
                     continue
-                    # MODIFIED 9/24/23 END
+                    # MODIFIED 9/25/23 END
 
                 # node is output_CIM of nested Composition that projects directly to output_CIM of outer Composition
                 if isinstance(node, CompositionInterfaceMechanism) and node is self.output_CIM:
@@ -638,6 +638,8 @@ class AutodiffComposition(Composition):
             self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.LEARNING], context=context)
             for target_mech in target_mechs:
                 self.exclude_node_roles(target_mech, NodeRole.OUTPUT, context)
+                for output_port in target_mech.output_ports:
+                    output_port.parameters.require_projection_in_composition.set(False, override=True)
             self.target_output_map.update({target: output for target, output in zip(target_mechs, output_mechs)})
         else:
             # Construct entire PNL backpropagation learning pathways for each INPUT Node
@@ -796,27 +798,34 @@ class AutodiffComposition(Composition):
         return sum(self.parameters.trial_losses._get(context)[-num_trials:]) /num_trials
 
     def _infer_output_nodes(self, nodes: dict):
-        """Remove input Nodes, and return dict with values for target Nodes
+        """Remove INPUT Nodes, and return dict with values for TARGET Nodes
+
         Returns
         ---------
-        A dict mapping TargetMechanisms -> target values
+        A dict mapping TARGET Nodes -> target values
         """
         return {node:value for node,value in nodes.items() if node in self.target_output_map}
 
     def _infer_input_nodes(self, nodes: dict):
-        """
-        Maps targets onto target mechanisms (as needed by learning)
+        """Remove TARGET Nodes, and return dict with values of INPUT Nodes
 
         Returns
         ---------
-        A dict mapping TargetMechanisms -> target values
+        A dict mapping INPUT Nodes -> input values
         """
-        ret = {}
+        input_nodes = {}
         for node, values in nodes.items():
             if NodeRole.INPUT in self.get_roles_by_node(node) and NodeRole.TARGET not in self.get_roles_by_node(node):
-                ret[node] = values
-        return ret
+                if isinstance(node, Composition):
+                    for output_port in node.input_CIM.output_ports:
+                        for proj in output_port.efferents:
+                            input_nodes[proj.receiver.owner] = values
+                else:
+                    input_nodes[node] = values
+        return input_nodes
 
+    def _check_nested_target_mechs(self):
+        pass
     @handle_external_context()
     def learn(self, *args, **kwargs):
         execution_phase_at_entry = kwargs[CONTEXT].execution_phase
@@ -896,7 +905,7 @@ class AutodiffComposition(Composition):
 
 
                 autodiff_inputs = self._infer_input_nodes(inputs)
-                # FIX: 9/16/23: SHOULD BE RENAMED AS _infer_target_nodes BUT CAN'T CONFLICT WITH EXISTING METHOD OF
+                # FIX: 9/25/23: SHOULD BE RENAMED AS _infer_target_nodes BUT CAN'T CONFLICT WITH EXISTING METHOD OF
                 #  THAT NAME
                 autodiff_targets = self._infer_output_nodes(inputs)
 
