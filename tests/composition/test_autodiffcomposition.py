@@ -2106,10 +2106,9 @@ class TestNestedLearning:
                                         execution_mode=pnl.ExecutionMode.Python,
                                         pathways=[[input_nodes[0],hidden_nodes[0], output_nodes[0]],
                                                   [hidden_nodes[1], output_nodes[1]]],
-                                        inputs=inputs)
+                                        inputs=comp_inputs)
 
         np.testing.assert_allclose(comp_results, autodiff_results)
-
 
     def test_2_direct_outputs_from_nested(self, nodes_for_testing_nested_comps, execute_learning):
         nodes = nodes_for_testing_nested_comps(1, 2, 0)

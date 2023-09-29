@@ -813,7 +813,6 @@ class AutodiffComposition(Composition):
         ---------
         A dict mapping INPUT Nodes -> input values
         """
-        assert True
         input_nodes = {}
         for node, values in nodes.items():
             if NodeRole.INPUT in self.get_roles_by_node(node) and NodeRole.TARGET not in self.get_roles_by_node(node):
