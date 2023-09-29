@@ -828,6 +828,25 @@ class AutodiffComposition(Composition):
                     input_nodes[node] = values
         return input_nodes
 
+    # FIX: 9/25/23 - MOVE THIS TO OR INTEGRATE INTO OVERRIDE OF _instantiate_input_dict?
+    def _parse_learning_spec(self, inputs, targets, execution_mode):
+        stim_input, num_input_trials = super()._parse_learning_spec(inputs, targets, execution_mode)
+        input_ports_for_INPUT_Nodes = self._get_input_receivers()
+        nested_inputs = {}
+        stim_input_copy = stim_input.copy()
+        # Replace input to nested Composition with inputs to its INPUT Nodes (to accomodate flattened version)
+        for node in stim_input_copy:
+            # If node is a nested Composition
+            if isinstance(node, Composition):
+                # If owner of input_port is a Node in the nested Composition
+                for elem, input_port in enumerate([p for p in input_ports_for_INPUT_Nodes if p.owner in node.nodes]):
+                    # FIX:  9/25/23 - THE FOLLOWING SHOULD BE REINSTATED ONCE THAT IS SUPPORTED FOR AUTODIFF
+                    # nested_inputs[input_port] = [entry[elem] for entry in stim_input_copy[node]]
+                    nested_inputs[input_port.owner] = [entry[elem] for entry in stim_input_copy[node]]
+                stim_input.pop(node)
+                stim_input.update(nested_inputs)
+        return stim_input, num_input_trials
+
     def _check_nested_target_mechs(self):
         pass
     @handle_external_context()
