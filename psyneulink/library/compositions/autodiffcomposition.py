@@ -838,11 +838,10 @@ class AutodiffComposition(Composition):
         for node in stim_input_copy:
             # If node is a nested Composition
             if isinstance(node, Composition):
-                # If owner of input_port is a Node in the nested Composition
+                # If owner of input_port is a Node in the nested Composition, replace entry for nested Composition
+                #   in stim_input with entries for the input_ports of its INPUT Nodes
                 for elem, input_port in enumerate([p for p in input_ports_for_INPUT_Nodes if p.owner in node.nodes]):
-                    # FIX:  9/25/23 - THE FOLLOWING SHOULD BE REINSTATED ONCE THAT IS SUPPORTED FOR AUTODIFF
-                    # nested_inputs[input_port] = [entry[elem] for entry in stim_input_copy[node]]
-                    nested_inputs[input_port.owner] = [entry[elem] for entry in stim_input_copy[node]]
+                    nested_inputs[input_port] = [entry[elem] for entry in stim_input_copy[node]]
                 stim_input.pop(node)
                 stim_input.update(nested_inputs)
         return stim_input, num_input_trials

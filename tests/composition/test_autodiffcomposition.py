@@ -2093,10 +2093,6 @@ class TestNestedLearning:
                   MappingProjection(hidden_nodes[1], output_nodes[1]),
                   output_nodes[1]]
 
-        # a = AutodiffComposition([direct, indirect], name='autodiff_comp')
-        # a.show_graph(show_cim=True, show_node_structure=True)
-        # assert True
-
         autodiff_results = execute_learning(comp_type='autodiff',
                                             execution_mode=pnl.ExecutionMode.PyTorch,
                                             pathways=[indirect, direct],
@@ -2106,9 +2102,11 @@ class TestNestedLearning:
                                         execution_mode=pnl.ExecutionMode.Python,
                                         pathways=[[input_nodes[0],hidden_nodes[0], output_nodes[0]],
                                                   [hidden_nodes[1], output_nodes[1]]],
-                                        inputs=comp_inputs)
+                                        inputs=inputs)
 
-        np.testing.assert_allclose(comp_results, autodiff_results)
+        for i in range(len(autodiff_results)):
+            for j in range(len(autodiff_results[i])):
+                np.testing.assert_allclose(comp_results[i][j], autodiff_results[i][j])
 
     def test_2_direct_outputs_from_nested(self, nodes_for_testing_nested_comps, execute_learning):
         nodes = nodes_for_testing_nested_comps(1, 2, 0)
