@@ -2114,10 +2114,17 @@ class TestNestedLearning:
         nodes = nodes_for_testing_nested_comps(2, 1, 2)
         input_nodes, hidden_nodes, output_nodes = nodes
         hidden_node_x = pnl.ComparatorMechanism(name='hidden_node_x')
-        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]]),
-                  hidden_node_x.input_ports[0]:np.array([[1], [1], [0], [0]])}
 
         nested = AutodiffComposition(nodes=[hidden_nodes[0],hidden_node_x],name='nested')
+
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]]),
+                  hidden_node_x.input_ports[0]:[[1], [1], [0], [0]]
+                  # hidden_node_x.input_ports[0]:np.array([[[1]], [[1]], [[0]], [[0]]])
+                  # nested:np.array([[[1]], [[1]], [[0]], [[0]]])
+                  # nested:[[[1,1,1],[1]], [[0,0,0],[1]], [[1,2,3],[0]], [[4,5,6],[0]]]
+                  # nested:[[[1,1,1],[1]]]
+                  }
+
         direct_1 = [(nested, pnl.NodeRole.INPUT),
                   MappingProjection(hidden_nodes[0], output_nodes[0]),
                   output_nodes[0]]
@@ -2127,6 +2134,10 @@ class TestNestedLearning:
         indirect = [input_nodes[0],
                       MappingProjection(input_nodes[0], hidden_node_x.input_ports[1]),
                       nested]
+
+        # autodiff_comp = AutodiffComposition(pathways=[indirect, direct_1, direct_2], name='a')
+        comp = Composition(pathways=[indirect, direct_1, direct_2], name='a')
+        comp.run(inputs=inputs)
 
         autodiff_results = execute_learning(comp_type='autodiff',
                                             execution_mode=pnl.ExecutionMode.PyTorch,

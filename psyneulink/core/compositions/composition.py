@@ -10174,11 +10174,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #                             # list(np.array(mech.external_input_shape, dtype='object').shape)),
             #                       dtype='object').tolist()
             # MODIFIED 9/25/23 NEW:
-            node_input = np.empty_like(np.array([mech.external_input_shape] * max_num_trials, dtype='object')).tolist()
+            _node_input = np.empty_like(np.array([mech.external_input_shape] * max_num_trials, dtype='object')).tolist()
+            # _node_input = np.empty_like(np.array([[mech.external_input_shape]] * max_num_trials,
+            #                                     dtype='object')).tolist()
             # MODIFIED 9/25/23 END
 
             # - move ports to outer axis for processing below
-            node_input = np.swapaxes(np.atleast_3d(np.array(node_input, dtype=object)),0,1).tolist()
+            node_input = np.swapaxes(np.atleast_3d(np.array(_node_input, dtype=object)),0,1).tolist()
+            assert True # 9/25/23
 
             # Assign specs to ports of INPUT_Node, using the ones in input_port_entries or defaults
             for i, port in enumerate([input_port for input_port in INPUT_input_ports
@@ -10283,8 +10286,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         inputs_to_duplicate = []
         # loop through input dict
         for receiver, stimulus in inputs.items():
-            # see if the entire stimulus set provided is a valid input for the receiver (i.e. in the case of a call with a
-            # single trial of provided input)
+            # see if the entire stimulus set provided is a valid input for the receiver
+            # (i.e. in the case of a call with a single trial of provided input)
             _input = self._validate_single_input(receiver, stimulus)
             if _input is not None:
                 _input = [_input]
@@ -10295,13 +10298,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Look for any bad ones (for which _validate_single_input() returned None) and report if found
                 if any(i is None for i in _input):
                     if isinstance(receiver, InputPort):
-                        receiver_shape = receiver.default_input_shape
+                        receiver_template = receiver.default_input_shape
                         receiver_name = receiver.full_name
                     elif isinstance(receiver, Mechanism):
-                        receiver_shape = receiver.external_input_shape
+                        receiver_template = receiver.external_input_shape
                         receiver_name = receiver.name
                     elif isinstance(receiver, Composition):
-                        receiver_shape = receiver.input_CIM.external_input_shape
+                        receiver_template = receiver.input_CIM.external_input_shape
                         receiver_name = receiver.name
                     # # MODIFIED 3/12/22 OLD:
                     # bad_stimulus = np.atleast_1d(np.squeeze(np.array(stimulus[_input.index(None)], dtype=object)))
@@ -10311,11 +10314,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # MODIFIED 3/12/22 NEW:
                     # FIX: MIS-REPORTS INCOMPATIBLITY AS BEING FOR SHAPE IF NUM TRIALS IS DIFFERENT FOR DIFF PORTS
                     #      SHOULD BE HANDLED SAME AS FOR DIFFERNCE ACROSS NODES (PER BELOW)
-                    receiver_shape = np.atleast_1d(np.squeeze(np.array(receiver_shape, dtype=object))).shape
-                    bad_stimulus = [stim for stim, _inp in zip(stimulus, _input) if _inp is None]
-                    bad_stimulus_shape = np.atleast_1d(np.squeeze(np.array(bad_stimulus, dtype=object))).shape
-                    err_msg = (f"Input stimulus shape ({bad_stimulus_shape}) for '{receiver_name}' is incompatible "
-                               f"with the shape of its external input ({receiver_shape}).")
+                    # receiver_shape = np.atleast_1d(np.squeeze(np.array(receiver_template, dtype=object))).shape
+                    bad_stimulus_template = [stim for stim, _inp in zip(stimulus, _input) if _inp is None]
+                    # bad_stimulus_shape = np.atleast_1d(np.squeeze(np.array(bad_stimulus_template,dtype=object))).shape
+                    err_msg = (f"Input stimulus shape ({bad_stimulus_template}) for '{receiver_name}' is incompatible "
+                               f"with the shape of its external input ({receiver_template}).")
                     # MODIFIED 3/12/22 END
                     # 8/3/17 CW: I admit the error message implementation here is very hacky;
                     # but it's at least not a hack for "functionality" but rather a hack for user clarity
@@ -12518,7 +12521,9 @@ _
         # input_value ports have different lengths
         elif len(var_shape) == 1 and isinstance(var[0], (list, np.ndarray)):
             # # MODIFIED 9/25/23 NEW:
+            # FIX: WORKS FOR test...whole_magilla (GETS RID OF 4th DIMENSION), BUT NOT FOR test_get_input_format
             # input_value = np.array(input_value,dtype=object).squeeze().tolist()
+            # squeezed = np.array(input_value,dtype=object).squeeze().tolist()
             # MODIFIED 9/25/23 END
             for i in range(len(input_value)):
                 if len(input_value[i]) != len(var[i]):
