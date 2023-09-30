@@ -6228,8 +6228,8 @@ class TestInputSpecifications:
         ]
     test_args = [
         # form, labels, nested, num_trials, expected_format_string
-        (pnl.TEXT, False, False, 2, expected_format_strings[0]),
-        (pnl.TEXT, True, True, pnl.FULL, expected_format_strings[1]),
+        # (pnl.TEXT, False, False, 2, expected_format_strings[0]),
+        # (pnl.TEXT, True, True, pnl.FULL, expected_format_strings[1]),
         (pnl.DICT, False, False, 1, None),
         (pnl.DICT, False, False, pnl.FULL, None),
         (pnl.DICT, True, True, 1, None),

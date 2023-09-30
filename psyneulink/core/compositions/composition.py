@@ -4830,15 +4830,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #         (all(isinstance(p.sender.owner, CompositionInterfaceMechanism) and
                 #              p.sender.owner._get_source_node_for_input_CIM(p.sender) for p in node.afferents
                 #              if isinstance(node, Composition)))):
-                if (isinstance(node, Mechanism) and
+                # FIX: 9/25/23 - ONLY ALLOW Node THROUGH IF comp_as_node!=True
+                if (isinstance(node, Mechanism) and comp_as_node is not True and
                      any(isinstance(p.sender.owner, CompositionInterfaceMechanism) and
                          not p.sender.owner._get_source_node_for_input_CIM(p.sender) for p in node.path_afferents)):
                      outer_input_nodes.append(node)
-                elif (isinstance(node, Composition) and
-                         (all(isinstance(p.sender.owner, CompositionInterfaceMechanism) and
+                # FIX: 9/25/23 - ONLY ALLOW COMP THROUGH IF comp_as_node!=False
+                elif (isinstance(node, Composition) and comp_as_node is not False and
+                         (any(isinstance(p.sender.owner, CompositionInterfaceMechanism) and
                               not p.sender.owner._get_source_node_for_input_CIM(p.sender) for p in node.afferents))):
                      outer_input_nodes.append(node)
-                input_items = outer_input_nodes
+            input_items = outer_input_nodes
             # MODIFIED 9/25/23 END
 
         return input_items
@@ -10166,9 +10168,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Construct node_input_shape based on max_num_trials across all input_ports for mech
             # - shape as 3d by adding outer dim = max_num trials to accommodate potential trial-series input
-            node_input = np.empty(tuple([max_num_trials] +
-                                        list(np.array(mech.external_input_shape).shape)),
-                                  dtype='object').tolist()
+            # MODIFIED 9/25/23 OLD:
+            # node_input = np.empty(tuple([max_num_trials] +
+            #                             list(np.array(mech.external_input_shape).shape)),
+            #                             # list(np.array(mech.external_input_shape, dtype='object').shape)),
+            #                       dtype='object').tolist()
+            # MODIFIED 9/25/23 NEW:
+            node_input = np.empty_like(np.array([mech.external_input_shape] * max_num_trials, dtype='object')).tolist()
+            # MODIFIED 9/25/23 END
+
             # - move ports to outer axis for processing below
             node_input = np.swapaxes(np.atleast_3d(np.array(node_input, dtype=object)),0,1).tolist()
 
@@ -12509,6 +12517,9 @@ _
             return "homogeneous"
         # input_value ports have different lengths
         elif len(var_shape) == 1 and isinstance(var[0], (list, np.ndarray)):
+            # # MODIFIED 9/25/23 NEW:
+            # input_value = np.array(input_value,dtype=object).squeeze().tolist()
+            # MODIFIED 9/25/23 END
             for i in range(len(input_value)):
                 if len(input_value[i]) != len(var[i]):
                     return False
