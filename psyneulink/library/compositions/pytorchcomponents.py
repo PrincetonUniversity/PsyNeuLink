@@ -12,6 +12,7 @@
 import graph_scheduler
 import torch
 import torch.nn as nn
+import numpy as np
 
 from psyneulink.core.components.component import Component, ComponentsMeta
 from psyneulink.core.components.functions.nonstateful.transferfunctions import \
@@ -560,19 +561,27 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     node.forward(inputs=None)
                     continue
                 # FIX: 10/1/23 - REFACTOR BELOW TO INTEGRATE GETTING EXTERNAL INPUT WITH COLLATING AFFERENTS
+                #                HANDLE DIRECT INPUT TO INPUT Node OF NESTED COMPOSITION (CURRENTLY ADDING EXTRA DIM)
                 elif node._is_input:
                     # # MODIFIED 10/1/23 OLD:
                     #     node.execute(inputs[node._mechanism])
                     # MODIFIED 10/1/23 NEW:
+                    # If node's input is expliclity specified, use that
                     if node._mechanism in inputs:
                         variable = inputs[node._mechanism]
+                    # Node's iput in *not* explicitly specified, but its input_port(s) may have been
                     else:
+                        # Get input for each input_port of the node
                         variable = []
                         for i, input_port in enumerate(node._mechanism.input_ports):
+                            # If input to the node's input_port(s) is explicitly specified, use that
                             if input_port in inputs:
                                 variable.append(inputs[input_port].detach().cpu().numpy())
+                            # Otherwise, use the node's input_port's afferents
                             else:
                                 variable.append(node.collate_afferents(i).detach().cpu().numpy())
+                        if len(variable) == 1:
+                            variable = np.array(variable).squeeze()
                         variable = torch.tensor(variable, device=self.device).double()
                     # MODIFIED 10/1/23 END
                 else:
