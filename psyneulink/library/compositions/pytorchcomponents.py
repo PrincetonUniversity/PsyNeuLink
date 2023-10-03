@@ -559,11 +559,25 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 if isinstance(node, PytorchCompositionWrapper):
                     node.forward(inputs=None)
                     continue
+                # FIX: 10/1/23 - REFACTOR BELOW TO INTEGRATE GETTING EXTERNAL INPUT WITH COLLATING AFFERENTS
                 elif node._is_input:
-                    node.execute(inputs[node._mechanism])
+                    # # MODIFIED 10/1/23 OLD:
+                    #     node.execute(inputs[node._mechanism])
+                    # MODIFIED 10/1/23 NEW:
+                    if node._mechanism in inputs:
+                        variable = inputs[node._mechanism]
+                    else:
+                        variable = []
+                        for i, input_port in enumerate(node._mechanism.input_ports):
+                            if input_port in inputs:
+                                variable.append(inputs[input_port].detach().cpu().numpy())
+                            else:
+                                variable.append(node.collate_afferents(i).detach().cpu().numpy())
+                        variable = torch.tensor(variable, device=self.device).double()
+                    # MODIFIED 10/1/23 END
                 else:
                     variable = node.collate_afferents()
-                    node.execute(variable)
+                node.execute(variable)
                 # save value in output list if we're at a node in the last execution set
                 # FIX: 9/1/23: TEST
                 # if NodeRole.OUTPUT in self._composition.get_roles_by_node(node._mechanism):
@@ -632,15 +646,23 @@ class PytorchMechanismWrapper():
         self.afferents.append(afferent)
 
 
-    def collate_afferents(self):
-        """Return weight-multiplied sum of all afferent projections for each input_port of the Mechanism
+    def collate_afferents(self, port=None):
+        """Return weight-multiplied sum of afferent projections for input_port(s) of the Mechanism
+        If there is only one input_port or the number of ports
         If there are multiple input_ports, return an array with the sum for each input_port
         """
         assert self.afferents,\
             f"PROGRAM ERROR: No afferents found for '{self._mechanism.name}' in AutodiffComposition"
         # FIX: AUGMENT THIS TO SUPPORT InputPort's function
+        # MODIFIED 10/1/23 NEW:
+        # Specific port is specified
+        if port is not None:
+            return sum(proj_wrapper.execute(proj_wrapper.sender.value)
+                       for proj_wrapper in self.afferents if proj_wrapper._pnl_proj
+                       in self._mechanism.input_ports[port].path_afferents)
+        # MODIFIED 10/1/23 END
         # Has only one input_port
-        if len(self._mechanism.input_ports) == 1:
+        elif len(self._mechanism.input_ports) == 1:
             return sum((proj_wrapper.execute(proj_wrapper.sender.value) for proj_wrapper in self.afferents))
         # Has multiple input_ports
         else:
@@ -650,8 +672,8 @@ class PytorchMechanismWrapper():
                         in input_port.path_afferents) for input_port in self._mechanism.input_ports]
 
     def execute(self, variable):
+        # FIX: 10/1/23 - WHY DOES VALUE HAVE EXTRA DIMENSION IF PROJECTION TO NESTED NODE WAS DIRECT?
         self.value = self.function(variable)
-
         return self.value
 
     def _gen_llvm_execute(self, ctx, builder, state, params, mech_input, data):

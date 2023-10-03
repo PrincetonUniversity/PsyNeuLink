@@ -5681,31 +5681,43 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             proj = non_shadowing_efferents[0]
             rcvr = proj.receiver
             node = rcvr.owner
-            # and check if it is to an input_CIM of a nested Composition
-            if isinstance(node, CompositionInterfaceMechanism):
-                assert node == node.composition.input_CIM
-                # If the input_port for that input_CIM has more than one afferent, the current one is superfluous
-                # MODIFIED 9/22/23 OLD:
-                # if len(rcvr.path_afferents) > 1:
-                # MODIFIED 9/22/23 NEW:
-                if len([p for p in rcvr.path_afferents if p in self.projections]) > 1:
-                # MODIFIED 9/22/23 END
-                    # Ensure that one of the afferents is from a Node (and not the input_CIM) of the outer Composition
-                    assert [proj for proj in rcvr.path_afferents if
-                            (not isinstance(proj.sender.owner, CompositionInterfaceMechanism)
-                             and proj.sender.owner in self.nodes) or
-                            (isinstance(proj.sender.owner, CompositionInterfaceMechanism) and
-                             proj.sender.owner.composition in self.nodes)]
-                    defunct_output_ports.add(output_port)
-                    # Mark the input_port of the input_CIM of the nested Composition as internal_only
-                    rcvr.internal_only = True
+            # # MODIFIED 10/1/23 OLD:
+            # # and check if it is to an input_CIM of a nested Composition
+            # if isinstance(node, CompositionInterfaceMechanism):
+            #     assert node == node.composition.input_CIM
+            #     # If the input_port for that input_CIM has more than one afferent, the current one is superfluous
+            #     # MODIFIED 9/22/23 OLD:
+            #     # if len(rcvr.path_afferents) > 1:
+            #     # MODIFIED 9/22/23 NEW:
+            #     if len([p for p in rcvr.path_afferents if p in self.projections]) > 1:
+            #     # MODIFIED 9/22/23 END
+            #         # Ensure that one of the afferents is from a Node (and not the input_CIM) of the outer Composition
+            #         assert [proj for proj in rcvr.path_afferents if
+            #                 (not isinstance(proj.sender.owner, CompositionInterfaceMechanism)
+            #                  and proj.sender.owner in self.nodes) or
+            #                 (isinstance(proj.sender.owner, CompositionInterfaceMechanism) and
+            #                  proj.sender.owner.composition in self.nodes)]
+            #         defunct_output_ports.add(output_port)
+            #         # Mark the input_port of the input_CIM of the nested Composition as internal_only
+            #         rcvr.internal_only = True
+            # MODIFIED 10/1/23 NEW:
+            if len([p for p in rcvr.path_afferents if p in self.projections]) > 1:
+                # Ensure that one of the afferents is from a Node (and not the input_CIM) of the outer Composition
+                assert [proj for proj in rcvr.path_afferents if
+                        (not isinstance(proj.sender.owner, CompositionInterfaceMechanism)
+                         and proj.sender.owner in self.nodes) or
+                        (isinstance(proj.sender.owner, CompositionInterfaceMechanism) and
+                         proj.sender.owner.composition in self.nodes)]
+                defunct_output_ports.add(output_port)
+                # Mark the input_port of the input_CIM of the nested Composition as internal_only
+                rcvr.internal_only = True
+            # MODIFIED 10/1/23 END
         # Remove efferent from each defunct output_port and then the output_port and its corresponding input_port
         for output_port in defunct_output_ports:
             proj = output_port.efferents[0]
             self.remove_projection(proj)
             self.input_CIM.remove_ports(self.input_CIM_ports[proj.receiver][0])
             self.input_CIM.remove_ports(self.input_CIM_ports[proj.receiver][1])
-
 
 
         # OUTPUT CIM ----------------------------------------------------------------------------------------------
@@ -8502,6 +8514,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         def _get_nodes_if_nested(input_source, output_source):
 
+            # Get mech if pathway entry is tuple spec
+            input_source = input_source[0] if isinstance(input_source, tuple) else input_source
+            output_source = output_source[0] if isinstance(output_source, tuple) else output_source
+
             from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
             if (any([isinstance(source, Composition) or source not in self.nodes
                  for source in {input_source, output_source}])
@@ -10149,8 +10165,30 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         assert input_CIM_input_port.owner == mech, \
                             f"PROGRAM ERROR: Unexpected input_CIM_input_port retrieved for entry ({input_recvr}) " \
                             f"in inputs to '{self.name}'."
-                        # Assign spec for InputPort to entry for corresponding InputPort on input_CIM of INPUT_Node
-                        input_port_entries[input_CIM_input_port] = port_inputs[i]
+                        # Assign input to each InputPort of input_CIM for Composition INPUT_Node
+                        # # MODIFIED 9/25/23 OLD:
+                        # input_port_entries[input_CIM_input_port] = port_inputs[i]
+                        # MODIFIED 9/25/23 NEW:
+                        port_inputs = np.array(port_inputs, dtype='object')
+                        if port_inputs.ndim < 2:
+                            raise CompositionError(f"Improper specification of input to '{input_recvr.name}' "
+                                                   f"in '{INPUT_Node.name}' (nested in '{self.name}'): {port_inputs}; "
+                                                   f"use `{self.name}.get_input_format()' to show proper format.")
+                        # Specification is for one trial's worth of data for each port
+                        elif port_inputs.ndim == 2 and not isinstance(port_inputs[0][0], list):
+                            # For Port, outer dimension should be inputs to Port for multiple trials
+                            if isinstance(input_recvr, Port):
+                                input_port_entries[input_CIM_input_port] = port_inputs
+                            # For Mechanism, outer dimension should be inputs to different Ports, all for a single trial
+                            elif isinstance(input_recvr, Mechanism):
+                                input_port_entries[input_CIM_input_port] = port_inputs[i]
+                            else:
+                                assert False, f"PROGRAM ERROR: Unexpected receiver of input: {input_recvr.name}"
+                        # Specification is for several trial's worth of data for each port
+                        else:
+                            input_port_entries[input_CIM_input_port] = [port_inputs[j][i] for
+                                                                        j in range(len(port_inputs))]
+                        # MODIFIED 9/25/23 END
                     inputs_to_remove.add(input_recvr)
 
             # Get max number of trials across specified input_ports of INPUT_Node
@@ -10181,7 +10219,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # - move ports to outer axis for processing below
             node_input = np.swapaxes(np.atleast_3d(np.array(_node_input, dtype=object)),0,1).tolist()
-            assert True # 9/25/23
 
             # Assign specs to ports of INPUT_Node, using the ones in input_port_entries or defaults
             for i, port in enumerate([input_port for input_port in INPUT_input_ports
@@ -10202,7 +10239,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 node_input[i] = port_spec
 
             # Put trials back in outer axis
-            input_dict[INPUT_Node] = np.swapaxes(np.atleast_3d(np.array(node_input, dtype=object)),0,1).tolist()
+            # MODIFIED 10/1/23 OLD:
+            # FIX: 9/25/23 - ADDS EXTRA AXIS HERE IF TIME SERIES IS SPECIFIED (e.g., ...whole_magilla)
+            # input_dict[INPUT_Node] = np.swapaxes(np.atleast_3d(np.array(node_input, dtype=object)),0,1).tolist()
+            # MODIFIED 10/1/23 NEW:
+            input_dict[INPUT_Node] = np.swapaxes(np.atleast_2d(np.array(node_input, dtype=object)),0,1).tolist()
+            # MODIFIED 10/1/23 END
             remaining_inputs = remaining_inputs - inputs_to_remove
 
         if remaining_inputs:

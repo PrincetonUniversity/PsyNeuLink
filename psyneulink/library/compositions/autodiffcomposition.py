@@ -331,6 +331,7 @@ except ImportError:
 else:
     from psyneulink.library.compositions.pytorchcomponents import PytorchCompositionWrapper
 
+from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
@@ -738,7 +739,12 @@ class AutodiffComposition(Composition):
         curr_tensor_inputs = {}
         curr_tensor_targets = {}
         for component in inputs.keys():
-            input = inputs[component][0]
+            if isinstance(component, Mechanism_Base):
+                # FIX 10/1/23: SHOULD REALLY CYCLE THROUGH INPUT PORTS FOR A MECHANISM
+                #  RATHER THAN JUST ASSUMING ONE INPUT AND USING [0]
+                input = inputs[component][0]
+            else:
+                input = inputs[component]
             curr_tensor_inputs[component] = torch.tensor(input, device=self.device).double()
         for component in targets.keys():
             target = targets[component][0]
@@ -807,23 +813,31 @@ class AutodiffComposition(Composition):
         return {node:value for node,value in nodes.items() if node in self.target_output_map}
 
     def _infer_input_nodes(self, nodes: dict):
-        """Remove TARGET Nodes, and return dict with values of INPUT Nodes
+        """Remove TARGET Nodes, and return dict with values of INPUT Nodes for single trial
 
         Returns
         ---------
-        A dict mapping INPUT Nodes -> input values
+        A dict mapping INPUT Nodes -> input values for a single trial
         """
         input_nodes = {}
         for node, values in nodes.items():
             if NodeRole.INPUT in self.get_roles_by_node(node) and NodeRole.TARGET not in self.get_roles_by_node(node):
                 if isinstance(node, Composition):
-                    # Check whether it is an INPUT Node for the outermost Composition
+                    i = 0
                     for output_port in node.input_CIM.output_ports:
                         # If node has input from a Node in an outer Composition, no need for input here
                         if node.input_CIM._get_source_node_for_input_CIM(output_port):
                             continue
-                        for proj in output_port.efferents:
-                            input_nodes[proj.receiver.owner] = values
+                        assert len(output_port.efferents) == 1, \
+                            (f"PROGRAM ERROR: {output_port.name} of ouput_CIM for '{node.name}' "
+                             f"has more than one efferent.")
+                        # MODIFIED 10/1/23 OLD:
+                        # for proj in output_port.efferents:
+                        #     input_nodes[proj.receiver.owner] = values[i]
+                        # MODIFIED 10/1/23 NEW:
+                        input_nodes[output_port.efferents[0].receiver] = values[i]
+                        i += 1
+                        # MODIFIED 10/1/23 END
                 else:
                     input_nodes[node] = values
         return input_nodes

@@ -2146,13 +2146,17 @@ class TestNestedLearning:
 
         comp_results = execute_learning(comp_type='composition',
                                         execution_mode=pnl.ExecutionMode.Python,
-                                        pathways=[[input_nodes[0],hidden_nodes[0], output_nodes[0]],
-                                                  [hidden_nodes[1], output_nodes[1]]],
+                                        pathways=[[hidden_nodes[0], output_nodes[0]],
+                                                  [input_nodes[0],
+                                                   # MappingProjection(input_nodes[0], hidden_node_x.input_ports[1]),
+                                                   (hidden_node_x, pnl.NodeRole.INPUT),
+                                                   output_nodes[1]]],
                                         inputs=inputs)
 
         for i in range(len(autodiff_results)):
             for j in range(len(autodiff_results[i])):
                 np.testing.assert_allclose(comp_results[i][j], autodiff_results[i][j])
+
     def test_2_direct_outputs_from_nested(self, nodes_for_testing_nested_comps, execute_learning):
         nodes = nodes_for_testing_nested_comps(1, 2, 0)
         input_nodes, hidden_nodes, output_nodes = nodes
