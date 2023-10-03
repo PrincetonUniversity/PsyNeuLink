@@ -1741,7 +1741,7 @@ class TestNestedLearning:
                        learning_rate = learning_rate,
                        num_trials=num_trials,
                        execution_mode=execution_mode)
-            return comp.results
+            return comp, comp.results
         return _execute_learning
 
     def test_1_nested_hidden(self, nodes_for_testing_nested_comps, execute_learning):
@@ -2135,16 +2135,12 @@ class TestNestedLearning:
                       MappingProjection(input_nodes[0], hidden_node_x.input_ports[1]),
                       nested]
 
-        # autodiff_comp = AutodiffComposition(pathways=[indirect, direct_1, direct_2], name='a')
-        comp = Composition(pathways=[indirect, direct_1, direct_2], name='a')
-        comp.run(inputs=inputs)
-
-        autodiff_results = execute_learning(comp_type='autodiff',
+        autodiff, autodiff_results = execute_learning(comp_type='autodiff',
                                             execution_mode=pnl.ExecutionMode.PyTorch,
                                             pathways=[indirect, direct_1, direct_2],
                                             inputs=inputs)
 
-        comp_results = execute_learning(comp_type='composition',
+        comp, comp_results = execute_learning(comp_type='composition',
                                         execution_mode=pnl.ExecutionMode.Python,
                                         pathways=[[hidden_nodes[0], output_nodes[0]],
                                                   [input_nodes[0],
