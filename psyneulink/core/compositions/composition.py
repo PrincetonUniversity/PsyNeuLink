@@ -4852,14 +4852,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #              if isinstance(node, Composition)))):
                 # FIX: 9/25/23 - ONLY ALLOW Node THROUGH IF comp_as_node!=True
                 if (isinstance(node, Mechanism) and comp_as_node is not True and
-                     any(isinstance(p.sender.owner, CompositionInterfaceMechanism) and
-                         not p.sender.owner._get_source_node_for_input_CIM(p.sender) for p in node.path_afferents)):
-                     outer_input_nodes.append(node)
+                        any(isinstance(p.sender.owner, CompositionInterfaceMechanism) and
+                            not p.sender.owner._get_source_node_for_input_CIM(p.sender) for p in node.path_afferents)):
+                    outer_input_nodes.append(node)
                 # FIX: 9/25/23 - ONLY ALLOW COMP THROUGH IF comp_as_node!=False
                 elif (isinstance(node, Composition) and comp_as_node is not False and
-                         (any(isinstance(p.sender.owner, CompositionInterfaceMechanism) and
-                              not p.sender.owner._get_source_node_for_input_CIM(p.sender) for p in node.afferents))):
-                     outer_input_nodes.append(node)
+                      (any(isinstance(p.sender.owner, CompositionInterfaceMechanism) and
+                           not p.sender.owner._get_source_node_for_input_CIM(p.sender) for p in node.afferents))):
+                    outer_input_nodes.append(node)
             input_items = outer_input_nodes
             # MODIFIED 9/25/23 END
 
@@ -5720,8 +5720,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #         defunct_output_ports.add(output_port)
             #         # Mark the input_port of the input_CIM of the nested Composition as internal_only
             #         rcvr.internal_only = True
-            # MODIFIED 10/1/23 NEW:
-            if len([p for p in rcvr.path_afferents if p in self.projections]) > 1:
+            # # MODIFIED 10/1/23 NEW:
+            # If node has > 1 afferent from a Node (other than recurrent one), should not be considered an INPUT Node
+            # if len([p for p in rcvr.path_afferents if (p in self.projections and p.sender.owner is not node)]) > 1:
+            # if (len([p for p in rcvr.path_afferents if p in self.projections]) > 1
+            #         and node not in self.get_nodes_by_role(NodeRole.CYCLE)):
+            if (len([p for p in rcvr.path_afferents
+                     if (p in self.projections
+                         and p.sender.owner not in self.get_nodes_by_role(NodeRole.CYCLE) and
+                         not (p.sender.owner not in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER)
+                              and node in self.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER)))])) > 1:
                 # Ensure that one of the afferents is from a Node (and not the input_CIM) of the outer Composition
                 assert [proj for proj in rcvr.path_afferents if
                         (not isinstance(proj.sender.owner, CompositionInterfaceMechanism)

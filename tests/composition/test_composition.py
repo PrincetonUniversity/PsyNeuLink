@@ -7152,6 +7152,8 @@ class TestNodeRoles:
         assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER)) == {C}
         assert set(comp.get_nodes_by_role(NodeRole.INTERNAL)) == {B}
         assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER)) == {A}
+        result = comp.run(inputs={A:[3]})
+        assert result == [3]
 
     def test_branch(self):
         a = TransferMechanism(default_variable=[0, 0])
@@ -7255,20 +7257,6 @@ class TestNodeRoles:
         comp._analyze_graph()
         assert set(comp.get_nodes_by_role(NodeRole.CYCLE)) == {A,B,C}
         assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))
-        result = comp.run(inputs={A:[3]})
-        assert True
-
-    def test_three_node_cycle_with_FEEDBACK(self):
-        A = TransferMechanism()
-        B = TransferMechanism()
-        C = TransferMechanism()
-        comp = Composition(pathways=[A, B, C])
-        comp.add_projection(sender=C, receiver=A, feedback=True)
-        comp._analyze_graph()
-        assert not set(comp.get_nodes_by_role(NodeRole.CYCLE))
-        assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER)) == {C}
-        assert set(comp.get_nodes_by_role(NodeRole.INTERNAL)) == {B}
-        assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER)) == {A}
         result = comp.run(inputs={A:[3]})
         assert True
 
