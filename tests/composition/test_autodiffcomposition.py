@@ -2108,7 +2108,6 @@ class TestNestedLearning:
             for j in range(len(autodiff_results[i])):
                 np.testing.assert_allclose(comp_results[i][j], autodiff_results[i][j])
 
-    # FIX: FINISH IMPLEMENTING
     def test_asymmetric_inputs_to_nested_the_whole_magilla(self, nodes_for_testing_nested_comps, execute_learning):
         """Test asymmetric inputs to INPUT Nodes as well as inupt_ports of an INPUT Node of a nested Composition"""
         nodes = nodes_for_testing_nested_comps(2, 1, 2)
@@ -2216,6 +2215,7 @@ class TestNestedLearning:
         # np.testing.assert_allclose(comp_results, autodiff_results)
 
     def test_nested_autodiff_learning_with_input_func(self):
+        """Note: this uses the same Composition and results as test_learning/test_identicalness_of_input_types"""
         xor_in_func = TransferMechanism(name='xor_in',
                                         default_variable=np.zeros(2))
 
