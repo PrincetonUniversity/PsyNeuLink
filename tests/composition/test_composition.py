@@ -7408,8 +7408,6 @@ class TestNodeRoles:
         comp = Composition(pathways=[mech, (ctl_mech_A, NodeRole.OUTPUT), (ctl_mech_B, NodeRole.OUTPUT)])
         assert {mech, ctl_mech_A, ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.OUTPUT))
         assert {mech} == set(comp.get_nodes_by_role(NodeRole.ORIGIN))
-        # Current instantiation always assigns ctl_mech_B as TERMINAL in this case;
-        # this is here to flag any violation of this in the future, in case that is not intended
         assert {ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.TERMINAL))
 
     def test_LEARNING_hebbian(self):

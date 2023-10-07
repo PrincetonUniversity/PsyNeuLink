@@ -7,7 +7,7 @@
 
 # ********************************************* PytorchComponent *************************************************
 
-"""PyTorch wrappers for Composition, Mechanism and Projection and Functions for use in AutodiffComposition"""
+"""PyTorch wrappers for Composition, Mechanism, Projection, and Functions for use in AutodiffComposition"""
 
 import graph_scheduler
 import torch
@@ -32,10 +32,10 @@ __all__ = ['PytorchCompositionWrapper', 'PytorchMechanismWrapper', 'PytorchProje
 
 
 def pytorch_function_creator(function, device, context=None):
-    """
-    Converts a PsyNeuLink function into an equivalent PyTorch lambda function.
+    """Convert a PsyNeuLink function into an equivalent PyTorch lambda function.
     NOTE: This is needed due to PyTorch limitations
     (see: https://github.com/PrincetonUniversity/PsyNeuLink/pull/1657#discussion_r437489990)
+    Returns a lamba function that takes a torch.tensor as input and returns a torch.tensor as output.
     """
 
     def get_fct_param_value(param_name):
@@ -98,7 +98,7 @@ def pytorch_function_creator(function, device, context=None):
 
 
 class PytorchCompositionWrapper(torch.nn.Module):
-    """Wrap a Composition in a Pytorch Module
+    """Wrapper for a Composition as a Pytorch Module
     Set up parameters of PyTorch model & information required for forward computation
 
     Handle nested compositions (flattened in infer_backpropagation_learning_pathways):
@@ -612,9 +612,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
 
 class PytorchMechanismWrapper():
-    """
-    An interpretation of a mechanism as an equivalent pytorch object
-    """
+    """Wrapper for a Mechanism in a PytorchCompositionWrapper"""
     def __init__(self, mechanism, component_idx, device, context=None):
         self._mechanism = mechanism
         self.name = f"PytorchMechanismWrapper[{mechanism.name}]"
@@ -730,7 +728,7 @@ class PytorchMechanismWrapper():
 
 
 class PytorchProjectionWrapper():
-    """Wrapper of Projection to be learned by Pytorch
+    """Wrapper for Projection in a PytorchCompositionWrapper
 
     The matrix of the wrapped `_projection <PytorchProjectionWrapper._projection>` corresponds to the parameters
     (connection weights) of the PyTorch Module that is the `function <Mechanism_Base.function>` of the
