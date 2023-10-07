@@ -4302,13 +4302,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._handle_allow_probes_for_control(node)
 
         self._need_check_for_unused_projections = True
-
-        # # MODIFIED 1/27/22 NEW - FIX - BREAKS test_learning_output_shape() in ExecuteMode.LLVM
-        #                                [3/25/22] STILL NEEDED (e.g., FOR test_inputs_key_errors()
-        # if context.source != ContextFlags.METHOD:
-        #     # Call _analyze_graph with ContextFlags.METHOD to avoid recursion
-        #     self._analyze_graph(context=Context(source=ContextFlags.METHOD))
-        # MODIFIED 1/27/22 END
         self.needs_determine_node_roles = True
 
     def add_nodes(self, nodes, required_roles=None, context=None):
@@ -10316,20 +10309,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     elif isinstance(receiver, Composition):
                         receiver_template = receiver.input_CIM.external_input_shape
                         receiver_name = receiver.name
-                    # # MODIFIED 3/12/22 OLD:
-                    # bad_stimulus = np.atleast_1d(np.squeeze(np.array(stimulus[_input.index(None)], dtype=object)))
-                    # correct_stimulus = np.atleast_1d(np.array(receiver_shape[_input.index(None)], dtype=object))
-                    # err_msg = f"Input stimulus ({bad_stimulus}) for {receiver_name} is incompatible with " \
-                    #           f"the shape of its external input ({correct_stimulus})."
-                    # MODIFIED 3/12/22 NEW:
-                    # FIX: MIS-REPORTS INCOMPATIBLITY AS BEING FOR SHAPE IF NUM TRIALS IS DIFFERENT FOR DIFF PORTS
-                    #      SHOULD BE HANDLED SAME AS FOR DIFFERNCE ACROSS NODES (PER BELOW)
-                    # receiver_shape = np.atleast_1d(np.squeeze(np.array(receiver_template, dtype=object))).shape
                     bad_stimulus_template = [stim for stim, _inp in zip(stimulus, _input) if _inp is None]
-                    # bad_stimulus_shape = np.atleast_1d(np.squeeze(np.array(bad_stimulus_template,dtype=object))).shape
                     err_msg = (f"Input stimulus shape ({bad_stimulus_template}) for '{receiver_name}' is incompatible "
                                f"with the shape of its external input ({receiver_template}).")
-                    # MODIFIED 3/12/22 END
                     # 8/3/17 CW: I admit the error message implementation here is very hacky;
                     # but it's at least not a hack for "functionality" but rather a hack for user clarity
                     if "KWTA" in str(type(receiver)):
@@ -11633,16 +11615,6 @@ _
                 assert not self.is_nested or len(self.parameter_CIM.afferents) == 0
 
             elif self.is_nested:
-
-                # [JDC 12/2/22]: FIX NONE OF THIS SEEMS TO BE NEEDED ANY LONGER (AT LEAST TO PASS TESTS)
-                # MODIFIED 3/28/22 CURRENT:
-                # # IMPLEMENTATION NOTE: context.string set in Mechanism.execute
-                # executed_from_command_line = (f"{context.source.name} EXECUTING" not in context.string)
-                # # MODIFIED 3/28/22 NEW:  CALL OF NESTED COMPOSITION
-                # executed_from_command_line = (context.source == ContextFlags.COMMAND_LINE)
-                # # MODIFIED 12/3/22 NEWER:
-                # executed_from_command_line = self._executed_from_command_line
-                # MODIFIED 3/28/22 END
                 simulation = ContextFlags.SIMULATION_MODE in context.runmode
                 # if simulation or executed_from_command_line:
                 if simulation or self._executed_from_command_line:
