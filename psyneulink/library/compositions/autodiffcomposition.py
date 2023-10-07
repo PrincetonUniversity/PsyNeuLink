@@ -66,9 +66,9 @@ same methods as a standard Composition, there are a few restrictions that apply 
 *Modulatory Components*
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-All of the Components in an AutodiffComposition must be able to be subject to `learning <Composition_Learning>`, which
-means that no `ModulatoryMechanisms <ModulatoryMechanism>` can be included in an AutodiffComposition.  Specifically,
-this precludes the inclusion of any `learning components <Composition_Learning_Components>`, `ControlMechanisms
+All of the Components in an AutodiffComposition must be able to be subjected to `learning <Composition_Learning>`,
+which means that no `ModulatoryMechanisms <ModulatoryMechanism>` can be included in an AutodiffComposition.
+Specifically, this precludes any `learning components <Composition_Learning_Components>`, `ControlMechanisms
 <ControlMechanism>`, or a `controller <Composition_Controller>`.
 
 .. _Autodiff_Learning_Components_Warning:
@@ -76,9 +76,9 @@ this precludes the inclusion of any `learning components <Composition_Learning_C
 *Learning Components.*  An AutodiffComposition **cannot include any** `learning components
 <Composition_Learning_Components>` themselves (i.e., `LearningMechanisms <LearningMechanism>`, `LearningSignals
 <LearningSignal>`, or LearningProjections <LearningProjection>`, nor the `ComparatorMechanism <COMPARATOR_MECHANISM>`
-or `ObjectiveMechanism <OBJECTIVE_MECHANISM>` used to compute the loss for learning). these are constructed
+or `ObjectiveMechanism <OBJECTIVE_MECHANISM>` used to compute the loss for learning). These are constructed
 automatically when learning is executed in `Python mode <AutodiffComposition_Python>` or `LLVM mode
-<AutodiffComposition_LLVM>`, while PyTorch-compatible Components are constructed when it is executed in `PyTorch mode
+<AutodiffComposition_LLVM>`, and PyTorch-compatible Components are constructed when it is executed in `PyTorch mode
 <AutodiffComposition_PyTorch>`.
 
 COMMENT:
@@ -89,7 +89,7 @@ outside the Composition;
 ?MAYBE THE FOLLOWING IS BETTER:
 COMMENT
 *Control Components.*  An AutodiffComposition also cannot include any `ControlMechanisms <ControlMechanism>` or a
-`controller <Composition_Controller>`.  However, it can include Mechanisms that are subject to modulatory control
+`controller <Composition_Controller>`.  However, it *can* include Mechanisms that are subject to modulatory control
 (see `Figure <ModulatorySignal_Anatomy_Figure>`, and `modulation <ModulatorySignal_Modulation>`) by ControlMechanisms
 *outside* the Composition, including the controller of a Composition within which the AutodiffComposition is nested.
 That is, an AutodiffComposition can be `nested in a Composition <Composition_Nested>` that has such other Components
@@ -115,13 +115,7 @@ implements a diagnoal matrix with values corresponding to the initial value of t
 
 An AutodiffComposition can be `nested <Composition_Nested>` inside another Composition for learning, and there can
 be any level of such nestings.  However, both the outermost and all of the nested Compositions must be
-AutodiffCompositions, subject to the same restrictions as described above.  Furthermore, at every level of nesting,
-the outer Composition must have an `INPUT` `Node <Composition_Nodes>`  for each of the inputs to the nested
-Composition and, similarly, an `OUTPUT` `Node <Composition_Nodes>` for each of the outputs from the nested Composition.
-That is, a nested Composition cannot directly receive an input to the outer Composition, nor can it directly provide
-an output of the outer Composition.  This is necessary for learning, as it is the Projections to and from the nested
-Composition that are subject to learning, and the INPUT and OUTPUT Nodes of the outer Composition are the sources and
-targets of those Projections, respectively.
+AutodiffCompositions, subject to the same restrictions as described `above <AutodiffComposition_Restrictions>`.
 
 .. technical_note::
    Projections from `Nodes <Composition_Nodes>` in an immediately enclosing outer Composition to the `input_CIM
@@ -519,30 +513,15 @@ class AutodiffComposition(Composition):
                 if (isinstance(node, Composition) and node is not self
                         and any(isinstance(proj.sender.owner, CompositionInterfaceMechanism)
                                 for proj in node.afferents)):
-                    # MODIFIED 9/25/23 OLD:
-                    # raise AutodiffCompositionError(f"The input(s) for nested Composition '{node.name}' must all "
-                    #                                f"come from Nodes in its outer Composition ('{self.name}') "
-                    #                                f"to be learnable. ")
-                    # MODIFIED 9/25/23 NEW:
-                    current_comp = node
                     for output_port in node.input_CIM.output_ports:
                         for proj in output_port.efferents:
                             queue.append((proj.receiver.owner, proj.receiver, node))
                     continue
-                    # MODIFIED 9/25/23 END
 
                 # node is output_CIM of outer Composition (i.e., end of pathway)
-                # FIX: 10/3/23 - SHOULD THIS BE TREATED AS END OF PATHWAY FOR DIRECT PROJECTION FROM NESTED COMP
-                #                TO output_CIM OF OUTER COMP (VS. HANDLING IT FURTHER BELOW?)
                 if isinstance(node, CompositionInterfaceMechanism) and node is self.output_CIM:
                     assert False, (f"PROGRAM ERROR: 'Got to output_CIM of outermost Composition '({self.name})' "
                                    f"without detecting OUTPUT NODE at end of pathway")
-                    # outer_comp = get_composition_for_node(node.composition)
-                    # if node.composition in outer_comp.get_nodes_by_role(NodeRole.OUTPUT):
-                    #     _, source, _ = input_port.owner._get_source_info_from_output_CIM(input_port)
-                    #     raise AutodiffCompositionError(f"The output for '{source.name}' Node of nested Composition "
-                    #                                    f"'{node.composition.name}' must project to a node in the "
-                    #                                    f"outer composition ('{outer_comp.name}') to be learnable.")
 
                 # End of pathway: OUTPUT Node of outer Composition
                 if current_comp == self and node in current_comp.get_nodes_by_role(NodeRole.OUTPUT):
@@ -607,15 +586,6 @@ class AutodiffComposition(Composition):
                             #   since that(those) is(are the one(s) that should be learned in PyTorch mode
                             # Note:  _get_destination_info_for_output_CIM returns list of destinations
                             #        in order of output_CIM.output_port.efferents
-                            # # MODIFIED 10/6/23 OLD:
-                            # for efferent_idx, receiver in enumerate(receivers):
-                            #     if receiver:
-                            #         _, rcvr, rcvr_comp = receiver
-                            #         assert rcvr_comp is not current_comp
-                            #     efferent_proj = output_CIM_output_port.efferents[efferent_idx]
-                            #     prev[rcvr] = efferent_proj
-                            #     prev[efferent_proj] = node
-                            #     queue.append((rcvr, efferent_proj.receiver, rcvr_comp))
                             # # MODIFIED 10/6/23 NEW:
                             if receivers:
                                 for efferent_idx, receiver in enumerate(receivers):
@@ -687,13 +657,7 @@ class AutodiffComposition(Composition):
             # IMPLEMENTATION NOTE: only add target nodes if not already present
             #    (to avoid duplication in multiple calls, including from command line;
             #     see test_xor_training_identicalness_standard_composition_vs_PyTorch_and_LLVM for example)
-            # # MODIFIED 10/1/23 OLD:
-            # output_mechs = self.get_nodes_by_role(NodeRole.OUTPUT)
-            # # MODIFIED 10/1/23 NEW:
-            # # output_mechs = self.get_nested_nodes_by_roles_at_any_level(self, include_roles=NodeRole.OUTPUT)
-            # MODIFIED 10/1/23 NEWER:
             output_mechs = self.get_nested_nodes_output_nodes_at_levels()
-            # MODIFIED 10/1/23 END
             assert set([mech for mech in [pathway[-1] for pathway in pathways]]) == set(output_mechs)
             target_mechs = [ProcessingMechanism(default_variable = np.zeros_like(mech.value),
                                                 name= 'TARGET for ' + mech.name)
@@ -826,23 +790,11 @@ class AutodiffComposition(Composition):
             tracked_loss += new_loss
 
         outputs = []
-        # FIX: 10/1/23 - WHY NOT DIRECTLY USE OUTPUT NODES OF PYTORCH_REP HERE, RATHER THAN PYTHON COMPOSITION??
-        #                I.E. - WHY NOT JUST RETURN VALUES IN curr_tensor_outputs??
-        # # # MODIFIED 10/1/23 OLD:
-        # for input_port in self.output_CIM.input_ports:
-        #     assert (len(input_port.all_afferents) == 1)  # CW 12/05/18, this assert may eventually be outdated
-        #     component = input_port.all_afferents[0].sender.owner
-        #     outputs.append(curr_tensor_outputs[component].detach().cpu().numpy().copy())
-        # MODIFIED 10/1/23 NEW:
-        # FIX: NEED TO INSURE ORDER RESPECTS ONE OF ouput_CIM.input_ports
-        # outputs = [value.detach().cpu().numpy().copy() for value in curr_tensor_outputs.values()]
-        # MODIFIED 10/2/23 NEWER:
         for input_port in self.output_CIM.input_ports:
             assert (len(input_port.all_afferents) == 1), \
                 f"PROGRAM ERROR: {input_port.name} of ouput_CIM for '{self.name}' has more than one afferent."
             _, component, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
             outputs.append(curr_tensor_outputs[component].detach().cpu().numpy().copy())
-        # MODIFIED 10/1/23 END
 
         self.parameters.tracked_loss_count._set(self.parameters.tracked_loss_count._get(context=context) + 1,
                                                 context=context,
@@ -908,18 +860,12 @@ class AutodiffComposition(Composition):
                         assert len(output_port.efferents) == 1, \
                             (f"PROGRAM ERROR: {output_port.name} of ouput_CIM for '{node.name}' "
                              f"has more than one efferent.")
-                        # MODIFIED 10/1/23 OLD:
-                        # for proj in output_port.efferents:
-                        #     input_nodes[proj.receiver.owner] = values[i]
-                        # MODIFIED 10/1/23 NEW:
                         input_nodes[output_port.efferents[0].receiver] = values[i]
                         i += 1
-                        # MODIFIED 10/1/23 END
                 else:
                     input_nodes[node] = values
         return input_nodes
 
-    # FIX: 9/25/23 - MOVE THIS TO OR INTEGRATE INTO OVERRIDE OF _instantiate_input_dict?
     def _parse_learning_spec(self, inputs, targets, execution_mode):
         stim_input, num_input_trials = super()._parse_learning_spec(inputs, targets, execution_mode)
 
@@ -1021,8 +967,6 @@ class AutodiffComposition(Composition):
 
 
                 autodiff_inputs = self._infer_input_nodes(inputs)
-                # FIX: 9/25/23: SHOULD BE RENAMED AS _infer_target_nodes BUT CAN'T CONFLICT WITH EXISTING METHOD OF
-                #  THAT NAME
                 autodiff_targets = self._infer_output_nodes(inputs)
 
                 report(self,

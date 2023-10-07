@@ -1055,23 +1055,23 @@ COMMENT
 `AutodiffCompositions <AutodiffComposition>` provide the ability to execute backpropagation learning much more
 efficiently than using a standard Composition.  An AutodiffComposition is constructed in the same way, but there
 is no need to specify any `learning components <Composition_Learning_Components>`>` or use any `learning methods
-<Composition_Learning_Methods>` -- in fact, they should *not* be specified (see `warning
-<Autodiff_Learning_Components_Warning>`) -- an AutodiffComposition automatically creates backpropagation
-`learning pathways <Composition_Learning_Pathway>` from all input to all output `Nodes <Composition_Nodes>`.
-While learning in an AutodiffComposition is restricted to the `BackPropagation` learning algorithm, its `loss
-function <Loss>` can be specified (using the **loss_spec** parameter of its constructor), which implements different
-kinds of `supervised learning <Composition_Learning_Supervised>` (for example, `Loss.MSE` can be used for regression,
-or `Loss.CROSS_ENTROPY` for classification).
+<Composition_Learning_Methods>` -- in fact, they *cannot* be specified (see `warning
+<Autodiff_Learning_Components_Warning>`) -- an AutodiffComposition automatically constructs all of the components
+needed for learning While learning in an AutodiffComposition is currently restricted to the `BackPropagation` learning
+algorithm, its `loss function <Loss>` can be specified (using the **loss_spec** parameter of its constructor),
+which implements different kinds of `supervised learning <Composition_Learning_Supervised>` (for example, `Loss.MSE`
+can be used for regression, or `Loss.CROSS_ENTROPY` for classification).
 
 The advantage of using an AutodiffComposition is that it allows a model to be implemented in PsyNeuLink, while
 exploiting the acceleration of optimized implementations of learning. This can be achieved by executing the `learn
 <Composition.learn>` method in one of two modes (specified using its **execution_mode** argument):  using direct
 compilation (**execution_mode** = `ExecutionMode.LLVMRun`); or by automatically translating the model to `PyTorch
 <https://pytorch.org>`_ for training (**execution_mode** = `ExecutionMode.PyTorch`). The advantage of these modes is
-that they can provide up to three orders of magnitude speed-up in training a model. However, there are restrictions
-on the kinds of Compositions that be implemented in this way. Use of the `PyTorch` mode also supports learning of
-`nested Compositions <Composition_Nested>` (see `AutodiffComposition_PyTorch`. The features of the different ways to
-implement and execute learning are outlined in the table below, and described in more detail in `AutodiffComposition`.
+that they can provide up to three orders of magnitude speed-up in training a model. Use of the `PyTorch` mode also
+supports learning of `nested Compositions <Composition_Nested>` (see `AutodiffComposition_PyTorch`. However, there
+are restrictions on the kinds of Compositions that be implemented in this way. The table below summarizes the different
+way to implement and execute learning and features specific to each;  these are described in more detail in
+`AutodiffComposition`.
 
 The `learning_rate <AutodiffComposition.learning_rate>` for an AutodiffComposition can be specified in its constructor
 (which assigns it as the default) or in its `learn <AutodiffComposition.learn>` method, in which case it applies to
@@ -4742,11 +4742,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     nested_nodes.extend(node.get_nested_nodes_by_roles_at_any_level(node, include_roles, exclude_roles))
                 else:
                     nested_nodes.append(node)
-        # # MODIFIED 10/6/23 OLD:
-        # return nested_nodes or None
-        # MODIFIED 10/6/23 NEW:
         return nested_nodes if any(nested_nodes) else None
-        # MODIFIED 10/6/23 END
 
     def get_nested_nodes_input_nodes_at_levels(self)->list or None:
         """Return all Nodes from nested Compositions that receive input from the environment."""
@@ -4838,30 +4834,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         input_items.extend(self._get_input_receivers(comp=node, type=type, comp_as_node=comp_as_node))
                 else:
                     input_items.append(node)
-            # MODIFIED 9/25/23 NEW:
             # Filter to include only Nodes that have at least one input_port that receives an "environment" input
             outer_input_nodes = []
             for node in input_items:
-                # assert True
-                # if (all(isinstance(p.sender.owner, CompositionInterfaceMechanism) and
-                #         p.sender.owner._get_source_node_for_input_CIM(p.sender) for p in node.path_afferents
-                #         if isinstance(node, Mechanism))
-                #         or
-                #         (all(isinstance(p.sender.owner, CompositionInterfaceMechanism) and
-                #              p.sender.owner._get_source_node_for_input_CIM(p.sender) for p in node.afferents
-                #              if isinstance(node, Composition)))):
-                # FIX: 9/25/23 - ONLY ALLOW Node THROUGH IF comp_as_node!=True
                 if (isinstance(node, Mechanism) and comp_as_node is not True and
                         any(isinstance(p.sender.owner, CompositionInterfaceMechanism) and
                             not p.sender.owner._get_source_node_for_input_CIM(p.sender) for p in node.path_afferents)):
                     outer_input_nodes.append(node)
-                # FIX: 9/25/23 - ONLY ALLOW COMP THROUGH IF comp_as_node!=False
                 elif (isinstance(node, Composition) and comp_as_node is not False and
                       (any(isinstance(p.sender.owner, CompositionInterfaceMechanism) and
                            not p.sender.owner._get_source_node_for_input_CIM(p.sender) for p in node.afferents))):
                     outer_input_nodes.append(node)
             input_items = outer_input_nodes
-            # MODIFIED 9/25/23 END
 
         return input_items
 
@@ -5425,12 +5409,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #       Composition *and* legit OUTPUT Nodes (i.e., ones that project only to the outer Composition's
                 #       output_CIM), the latter qualify to still make the nested Comp an OUTPUT Node
                 if isinstance(node, Composition):
-                    # for port in node.output_CIM.output_ports:
-                    #     if (not port.efferents
-                    #             or any(proj.receiver.owner is self.output_CIM for proj in port.efferents)):
-                    #         self._add_node_role(node, NodeRole.OUTPUT)
-                    #         break
-                    if any(not port.efferents or # <- FIX 9/1/23 - SHOULD ONLY INCLUDE THIS AT RUNTIME
+                    if any(not port.efferents or
                            any(proj.receiver.owner is self.output_CIM for proj in port.efferents)
                            for port in node.output_CIM.output_ports):
                         self._add_node_role(node, NodeRole.OUTPUT)
@@ -5701,30 +5680,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             proj = non_shadowing_efferents[0]
             rcvr = proj.receiver
             node = rcvr.owner
-            # # MODIFIED 10/1/23 OLD:
-            # # and check if it is to an input_CIM of a nested Composition
-            # if isinstance(node, CompositionInterfaceMechanism):
-            #     assert node == node.composition.input_CIM
-            #     # If the input_port for that input_CIM has more than one afferent, the current one is superfluous
-            #     # MODIFIED 9/22/23 OLD:
-            #     # if len(rcvr.path_afferents) > 1:
-            #     # MODIFIED 9/22/23 NEW:
-            #     if len([p for p in rcvr.path_afferents if p in self.projections]) > 1:
-            #     # MODIFIED 9/22/23 END
-            #         # Ensure that one of the afferents is from a Node (and not the input_CIM) of the outer Composition
-            #         assert [proj for proj in rcvr.path_afferents if
-            #                 (not isinstance(proj.sender.owner, CompositionInterfaceMechanism)
-            #                  and proj.sender.owner in self.nodes) or
-            #                 (isinstance(proj.sender.owner, CompositionInterfaceMechanism) and
-            #                  proj.sender.owner.composition in self.nodes)]
-            #         defunct_output_ports.add(output_port)
-            #         # Mark the input_port of the input_CIM of the nested Composition as internal_only
-            #         rcvr.internal_only = True
-            # # MODIFIED 10/1/23 NEW:
             # If node has > 1 afferent from a Node (other than recurrent one), should not be considered an INPUT Node
-            # if len([p for p in rcvr.path_afferents if (p in self.projections and p.sender.owner is not node)]) > 1:
-            # if (len([p for p in rcvr.path_afferents if p in self.projections]) > 1
-            #         and node not in self.get_nodes_by_role(NodeRole.CYCLE)):
             if (len([p for p in rcvr.path_afferents
                      if (p in self.projections
                          and p.sender.owner not in self.get_nodes_by_role(NodeRole.CYCLE) and
@@ -5739,7 +5695,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 defunct_output_ports.add(output_port)
                 # Mark the input_port of the input_CIM of the nested Composition as internal_only
                 rcvr.internal_only = True
-            # MODIFIED 10/1/23 END
         # Remove efferent from each defunct output_port and then the output_port and its corresponding input_port
         for output_port in defunct_output_ports:
             proj = output_port.efferents[0]
@@ -7573,7 +7528,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             else:
                                 # FIX: NEED TO MODIFY WARNING IF r IS NOW THE INPUT NODE
                                 #      9/25/23: CONSIDER ADDING MappingProjection FROM s TO r (TO PRESERVE "LINEARITY")
-                                # If r is a Node in a nested Composition, then assign depenency of the Composition on s
+                                # If r is a Node in a nested Composition, then assign dependency of the Composition on s
                                 nested_comp = [e for e in current_entry if isinstance(e, Composition) and r in e.nodes]
                                 r = nested_comp[0] if nested_comp else r
                                 self.graph.connect_components(s, r)
@@ -9719,7 +9674,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Dict mapping TargetMechanisms -> target values
         """
 
-        # # MODIFIED 9/16/23 NEW:
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
             # Reassign target inputs from output Nodes to target mechanisms constructed for PyTorch execution
             return {target: value
@@ -9746,7 +9700,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 ret[node] = values
         return ret
-        # MODIFIED 9/16/23 END
 
     def _parse_learning_spec(self, inputs, targets, execution_mode):
         """
@@ -10194,9 +10147,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             f"PROGRAM ERROR: Unexpected input_CIM_input_port retrieved for entry ({input_recvr}) " \
                             f"in inputs to '{self.name}'."
                         # Assign input to each InputPort of input_CIM for Composition INPUT_Node
-                        # # MODIFIED 9/25/23 OLD:
-                        # input_port_entries[input_CIM_input_port] = port_inputs[i]
-                        # MODIFIED 9/25/23 NEW:
                         port_inputs = np.array(port_inputs, dtype='object')
                         if port_inputs.ndim < 2:
                             raise CompositionError(f"Improper specification of input to '{input_recvr.name}' "
@@ -10216,7 +10166,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         else:
                             input_port_entries[input_CIM_input_port] = [port_inputs[j][i] for
                                                                         j in range(len(port_inputs))]
-                        # MODIFIED 9/25/23 END
                     inputs_to_remove.add(input_recvr)
 
             # Get max number of trials across specified input_ports of INPUT_Node
@@ -10234,16 +10183,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Construct node_input_shape based on max_num_trials across all input_ports for mech
             # - shape as 3d by adding outer dim = max_num trials to accommodate potential trial-series input
-            # MODIFIED 9/25/23 OLD:
-            # node_input = np.empty(tuple([max_num_trials] +
-            #                             list(np.array(mech.external_input_shape).shape)),
-            #                             # list(np.array(mech.external_input_shape, dtype='object').shape)),
-            #                       dtype='object').tolist()
-            # MODIFIED 9/25/23 NEW:
             _node_input = np.empty_like(np.array([mech.external_input_shape] * max_num_trials, dtype='object')).tolist()
-            # _node_input = np.empty_like(np.array([[mech.external_input_shape]] * max_num_trials,
-            #                                     dtype='object')).tolist()
-            # MODIFIED 9/25/23 END
 
             # - move ports to outer axis for processing below
             node_input = np.swapaxes(np.atleast_3d(np.array(_node_input, dtype=object)),0,1).tolist()
@@ -10267,12 +10207,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 node_input[i] = port_spec
 
             # Put trials back in outer axis
-            # MODIFIED 10/1/23 OLD:
-            # FIX: 9/25/23 - ADDS EXTRA AXIS HERE IF TIME SERIES IS SPECIFIED (e.g., ...whole_magilla)
-            # input_dict[INPUT_Node] = np.swapaxes(np.atleast_3d(np.array(node_input, dtype=object)),0,1).tolist()
-            # MODIFIED 10/1/23 NEW:
-            input_dict[INPUT_Node] = np.swapaxes(np.atleast_2d(np.array(node_input, dtype=object)),0,1).tolist()
-            # MODIFIED 10/1/23 END
+            input_dict[INPUT_Node] = np.swapaxes(np.atleast_2d(np.array(node_input, dtype=object)),
+                                                 0,
+                                                 1).tolist()
             remaining_inputs = remaining_inputs - inputs_to_remove
 
         if remaining_inputs:
@@ -12590,11 +12527,6 @@ _
             return "homogeneous"
         # input_value ports have different lengths
         elif len(var_shape) == 1 and isinstance(var[0], (list, np.ndarray)):
-            # # MODIFIED 9/25/23 NEW:
-            # FIX: WORKS FOR test...whole_magilla (GETS RID OF 4th DIMENSION), BUT NOT FOR test_get_input_format
-            # input_value = np.array(input_value,dtype=object).squeeze().tolist()
-            # squeezed = np.array(input_value,dtype=object).squeeze().tolist()
-            # MODIFIED 9/25/23 END
             for i in range(len(input_value)):
                 if len(input_value[i]) != len(var[i]):
                     return False

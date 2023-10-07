@@ -256,13 +256,8 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         input_port = [port_map[k][0] for k in port_map if port_map[k][idx] is port]
         assert len(input_port)==1, f"PROGRAM ERROR: Expected exactly 1 input_port for {port.name} " \
                                    f"in port_map for {port.owner}; found {len(input_port)}."
-        # # MODIFIED 9/25/23 OLD:
-        # assert len(input_port[0].path_afferents)==1, f"PROGRAM ERROR: Port ({input_port.name}) expected to have " \
-        #                                              f"just one path_afferent; has {len(input_port.path_afferents)}."
-        # MODIFIED 9/25/23 NEW:
         if not len(input_port[0].path_afferents):
             return None
-        # MODIFIED 9/25/23 END
         sender = input_port[0].path_afferents[0].sender
         if not isinstance(sender.owner, CompositionInterfaceMechanism):
             return sender, sender.owner, comp
@@ -402,11 +397,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
             else:
                 receivers_info.append(self._get_destination_info_for_output_CIM(efferent.receiver,
                                                                                 efferent.receiver.owner.composition))
-        # # MODIFIED 10/6/23 OLD:
-        # return receivers_info
-        # MODIFIED 10/6/23 NEW:
         return receivers_info if any(receivers_info) else None
-        # MODIFIED 10/6/23 END
 
     def _sender_is_probe(self, output_port):
         """Return True if source of output_port is a PROBE Node of the Composition to which it belongs"""

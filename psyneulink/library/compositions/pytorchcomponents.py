@@ -54,29 +54,6 @@ def pytorch_function_creator(function, device, context=None):
         return lambda x: x * slope + intercept
 
     elif isinstance(function, LinearCombination):
-        # MODIFIED 10/1/23 OLD:
-        # def linear_combination_sum(x):
-        #     # if function.weights is not None:
-        #     #     weights = torch.tensor(function.weights, device=device).double()
-        #     #     x = torch.matmul(x, weights)
-        #     result = torch.tensor([0] * len(x[0]), device=device).double()
-        #     for t in x:
-        #         result += t
-        #     return result
-        # def linear_combination_product(x):
-        #     result = torch.tensor([1] * len(x[0]), device=device).double()
-        #     for t in x:
-        #         result *= t
-        #     return result
-        # if function.operation == SUM:
-        #     return linear_combination_sum
-        # elif function.operation == PRODUCT:
-        #     return linear_combination_product
-        # else:
-        #     from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
-        #     raise AutodiffCompositionError(f"The 'operation' parameter of {function.componentName} is not supported "
-        #                                    f"by AutodiffComposition; use 'SUM' or 'PRODUCT' if possible.")
-        # MODIFIED 10/1/23 NEW:
         weights = function.parameters.weights.get(context)
         if weights is not None:
             weights = torch.tensor(weights, device=device).double()
@@ -86,22 +63,14 @@ def pytorch_function_creator(function, device, context=None):
             else:
                 return lambda x: torch.sum(x,0)
         elif function.operation == PRODUCT:
-            # MODIFIED 10/3/23 OLD:
-            # if weights is not None:
-            #     return lambda x: torch.prod(torch.stack(x) * weights,0)
-            # else:
-            #     return lambda x: torch.prod(torch.stack(x),0)
-            # MODIFIED 10/3/23 NEW:
             if weights is not None:
                 return lambda x: torch.prod(x * weights,0)
             else:
                 return lambda x: torch.prod(x,0)
-            # MODIFIED 10/3/23 END
         else:
             from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
             raise AutodiffCompositionError(f"The 'operation' parameter of {function.componentName} is not supported "
                                            f"by AutodiffComposition; use 'SUM' or 'PRODUCT' if possible.")
-        # MODIFIED 10/1/23 END
 
     elif isinstance(function, Logistic):
         gain = get_fct_param_value('gain')
@@ -178,7 +147,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         # Instantiate pytorch Mechanisms
         nodes = list(set(composition.nodes) - set(composition.get_nodes_by_role(NodeRole.LEARNING)))
-        # FIX: 9/1/23 - THIS IS REQUIRED DUE TO FLATTENING IN infer_backpropagation_learning_pathways; IS THAT NEEDED?
         # Remove nested nodes from nodes list (put there in flattening by infer_backpropagation_learning_pathways)
         #   so that they don't interfere with construction of execution_sets by scheduler
         # Will re-flatten execution sets below
@@ -206,7 +174,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
             #   so if any nested Compositions are INPUT Nodes of the outermost Composition,
             #   *their* INPUT Nodes are assigned as INPUT Nodes of the outermost Composition
         if not composition.is_nested:
-            # FIX: 9/25/23 - HIDDEN 1 SHOULD NOT BE MAKRED AS _is_input BELOW
             def _assign_input_nodes(nodes):
                 for pytorch_node in nodes:
                     if isinstance(pytorch_node, PytorchMechanismWrapper):
@@ -230,10 +197,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # Ignore CIMs within the same Composition (they are not learnable; see figure in docstring)
             elif sndr_mech is composition.input_CIM or rcvr_mech is composition.output_CIM:
                 continue
-                # MODIFIED 9/24/23 NEW:
-                # FIX: MARK THIS NODE (PYTORCHMECHWRAPPER, OR ONE FOR NESTED COMP?) AS AN INPUT:  node._is_input
-                #      IF PROJECTION TO IT IS FROM INPUT_CIM OF OUTER COMP RATHER THAN A NODE IN THE OUTER COMP??
-                # MODIFIED 9/24/23 END
 
             # See figure in docstring above for explanation of the following:
 
@@ -274,8 +237,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 pnl_proj = projection
 
             else:
-                # FIX: 9/1/23 Check, as this seems to be True for Target nodes
-                # assert False, f"Unrecognized projection {projection} in {composition.name}"
                 continue
 
             port_idx = projection.sender.owner.output_ports.index(projection.sender) # used by LLVM
@@ -309,10 +270,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # 3) Remove empty execution sets
         self.execution_sets = [x for x in self.execution_sets if len(x) > 0]
 
-
-        # FIX: 9/1/23 - THESE NEED TO BE TESTED FOR RECURSION WITH MULTIPLE LEVELS OF NESTING
-        #               ??COULD ALL BE AVOIDED BY JUST USING FLATTENED REPS FROM THE OUTSET??
-        #                 (BUT THEN HOW WOULD SCHEDULER KNOW HOW TO PRESERVE NESTED EXECUTION SETS?)
 
         # Flattening for forward() and AutodiffComposition._update_learning_parameters
 
@@ -593,30 +550,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     node.forward(inputs=None)
                     continue
                 # FIX: 10/1/23 - REFACTOR BELOW TO INTEGRATE GETTING EXTERNAL INPUT WITH COLLATING AFFERENTS
-                #                HANDLE DIRECT INPUT TO INPUT Node OF NESTED COMPOSITION (CURRENTLY ADDING EXTRA DIM)
                 elif node._is_input:
-                    # # MODIFIED 10/1/23 OLD:
-                    #     node.execute(inputs[node._mechanism])
-                    # MODIFIED 10/1/23 NEW:
                     # If node's input is explicitly specified, use that
                     if node._mechanism in inputs:
                         variable = inputs[node._mechanism]
                     # Node's iput in *not* explicitly specified, but its input_port(s) may have been
                     else:
-                        # # MODIFIED 10/3/23 OLD:
-                        # # Get input for each input_port of the node
-                        # variable = []
-                        # for i, input_port in enumerate(node._mechanism.input_ports):
-                        #     # If input to the node's input_port(s) is explicitly specified, use that
-                        #     if input_port in inputs:
-                        #         variable.append(inputs[input_port].detach().cpu().numpy())
-                        #     # Otherwise, use the node's input_port's afferents
-                        #     else:
-                        #         variable.append(node.collate_afferents(i).detach().cpu().numpy())
-                        # if len(variable) == 1:
-                        #     variable = np.array(variable).squeeze()
-                        # variable = torch.tensor(variable, device=self.device).double()
-                        # MODIFIED 10/3/23 NEW:
                         # Get input for each input_port of the node
                         variable = []
                         for i, input_port in enumerate(node._mechanism.input_ports):
@@ -630,8 +569,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                             variable = variable[0]
                         else:
                             variable = torch.stack(variable)
-                        # MODIFIED 10/3/23 END
-                    # MODIFIED 10/1/23 END
                 else:
                     variable = node.collate_afferents()
                 node.execute(variable)
@@ -710,13 +647,11 @@ class PytorchMechanismWrapper():
         assert self.afferents,\
             f"PROGRAM ERROR: No afferents found for '{self._mechanism.name}' in AutodiffComposition"
         # FIX: AUGMENT THIS TO SUPPORT InputPort's function
-        # MODIFIED 10/1/23 NEW:
         # Specific port is specified
         if port is not None:
             return sum(proj_wrapper.execute(proj_wrapper.sender.value)
                        for proj_wrapper in self.afferents if proj_wrapper._pnl_proj
                        in self._mechanism.input_ports[port].path_afferents)
-        # MODIFIED 10/1/23 END
         # Has only one input_port
         elif len(self._mechanism.input_ports) == 1:
             return sum((proj_wrapper.execute(proj_wrapper.sender.value) for proj_wrapper in self.afferents))
@@ -728,7 +663,6 @@ class PytorchMechanismWrapper():
                                     in input_port.path_afferents) for input_port in self._mechanism.input_ports])
 
     def execute(self, variable):
-        # FIX: 10/1/23 - WHY DOES VALUE HAVE EXTRA DIMENSION IF PROJECTION TO NESTED NODE WAS DIRECT?
         self.value = self.function(variable)
         return self.value
 
