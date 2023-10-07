@@ -2215,6 +2215,46 @@ class TestNestedLearning:
 
         # np.testing.assert_allclose(comp_results, autodiff_results)
 
+    def test_nested_autodiff_learning_with_input_func(self):
+        xor_in_func = TransferMechanism(name='xor_in',
+                                        default_variable=np.zeros(2))
+
+        xor_hid_func = TransferMechanism(name='xor_hid',
+                                         default_variable=np.zeros(10),
+                                         function=Logistic())
+
+        xor_out_func = TransferMechanism(name='xor_out',
+                                         default_variable=np.zeros(1),
+                                         function=Logistic())
+
+        nested = AutodiffComposition([xor_hid_func], learning_rate=.001)
+        xor_func = AutodiffComposition([xor_in_func,
+                                        MappingProjection(sender=xor_in_func,
+                                                          matrix=np.full((2, 10),.1),
+                                                          receiver=xor_hid_func),
+                                        nested,
+                                        MappingProjection(sender=xor_hid_func,
+                                                          matrix=np.full((10, 1),.1),
+                                                          receiver=xor_out_func),
+                                        # out_map_func,
+                                        xor_out_func],
+                                       learning_rate=.001)
+
+        xor_inputs_func = np.array([[0, 0],[0, 1],[1, 0],[1, 1]])
+        xor_targets_func = np.array([[0],[1],[1],[0]])
+
+        def get_inputs_auto_diff(idx):
+            return {"inputs": {xor_in_func: xor_inputs_func[idx]},
+                    "targets": {xor_out_func: xor_targets_func[idx]}}
+        def get_inputs_comp(idx):
+            return {xor_in_func: xor_inputs_func[idx]}
+        def get_targets_comp(idx):
+            return {xor_out_func: xor_targets_func[idx]}
+
+        xor_func.learn(inputs=get_inputs_auto_diff)
+
+        results = xor_func.results
+        np.testing.assert_allclose(results, [[[0.62245933]],[[0.62813197]],[[0.6282438]],[[0.6341436]]])
 
 @pytest.mark.pytorch
 @pytest.mark.acmisc
