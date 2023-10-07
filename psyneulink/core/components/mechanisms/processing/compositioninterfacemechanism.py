@@ -239,8 +239,9 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         self.user_added_ports[OUTPUT_PORTS] = self.user_added_ports[OUTPUT_PORTS] - output_ports_marked_for_deletion
 
     # def _get_source_node_for_input_CIM(self, port, start_comp=None, end_comp=None):
-    def _get_source_node_for_input_CIM(self, port, start_comp=None):
+    def _get_source_node_for_input_CIM(self, port, start_comp=None)->tuple or None:
         """Return Port, Node and Composition  for source of projection to input_CIM from (possibly nested) outer comp
+        Return None if there is no source Node (i.e., port receives input from environment)
         **port** InputPort or OutputPort of the input_CIM from which the local projection projects;
         **comp** Composition at which to begin the search (or continue it when called recursively;
                  assumes the current CompositionInterfaceMechanism's Composition by default
@@ -340,7 +341,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
             return sender, sender.owner, comp
         return self._get_source_of_modulation_for_parameter_CIM(sender, sender.owner.composition)
 
-    def _get_source_info_from_output_CIM(self, port, comp=None):
+    def _get_source_info_from_output_CIM(self, port, comp=None)->tuple:
         """Return Port, Node and Composition for "original" source of projection from **port**.
         **port** InputPort or OutputPort of the output_CIM from which the projection of interest projects;
                  used to find source (key) in output_CIM's port_map.
@@ -365,15 +366,16 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
             return sender, sender.owner, comp
         return self._get_source_info_from_output_CIM(sender, sender.owner.composition)
 
-    def _get_destination_info_for_output_CIM(self, port, comp=None)-> list:
+    def _get_destination_info_for_output_CIM(self, port, comp=None)-> list or None:
         """Return Port, Node and Composition for "ultimate" destination(s) of projection to **port**.
         **port**: InputPort or OutputPort of the output_CIM to which the projection of interest projects;
                   used to find source (key=SENDER PORT) of the projection to the output_CIM.
         **comp**: Composition at which to begin the search (or continue it when called recursively);
                  assumes the Composition for the output_CIM to which **port** belongs by default
-        If there is more than one destination, return list of tuples, one for each destination;
-        this occurs if the source of the projection to the output_CIM (SENDER PORT) is a Node in a nested Composition
-        that is specified to project to more than one Node in the outer Composition
+        Return list of tuples, one for each destination, if there is more than one destination;
+          this occurs if the source of the projection to the output_CIM (SENDER PORT) is a Node in a nested Composition
+          that is specified to project to more than one Node in the outer Composition
+        Return None if there are no destination Nodes (i.e., source is output of outermost Composition
         """
         from psyneulink.core.compositions.composition import get_composition_for_node
 
@@ -400,7 +402,11 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
             else:
                 receivers_info.append(self._get_destination_info_for_output_CIM(efferent.receiver,
                                                                                 efferent.receiver.owner.composition))
-        return receivers_info
+        # # MODIFIED 10/6/23 OLD:
+        # return receivers_info
+        # MODIFIED 10/6/23 NEW:
+        return receivers_info if any(receivers_info) else None
+        # MODIFIED 10/6/23 END
 
     def _sender_is_probe(self, output_port):
         """Return True if source of output_port is a PROBE Node of the Composition to which it belongs"""

@@ -4714,9 +4714,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         except KeyError as e:
             raise CompositionError('Node missing from {0}.nodes_to_roles: {1}'.format(self, e))
 
-    def _get_nested_nodes_with_same_roles_at_all_levels(self, comp, include_roles, exclude_roles=None):
+    def get_nested_nodes_by_roles_at_any_level(self, comp, include_roles, exclude_roles=None)->list or None:
         """Return all Nodes from nested Compositions that have *include_roles* but not *exclude_roles at all levels*.
-        Note:  need to do this recursively, checking roles on the "way down," since a Node may have a role in a
+        Returns Nodes that have or don't have the specified roles at *any* level of nesting,
+            irrespective of their status at other levels of nesting.
+        To get nodes that are either INPUT or OUTPUT Nodes at *all* levels of nesting, use either
+            get_nested_input_nodes_at_all_levels() or get_nested_output_nodes_at_all_levels()
+        Note:  do this recursively, checking roles on the "way down," as a Node may have a role in a
                deeply nested Composition, but that Composition itself may not have the same role in the Composition
                within which *it* is nested (e.g., a Node might be an INPUT Node of a nested Composition, but that
                nested Composition may not be an INPUT Node of the Composition in which it is nested).
@@ -4735,11 +4739,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                and not any(n in comp.get_nodes_by_role(exclude)
                                            for exclude in exclude_roles))]:
                 if isinstance(node, Composition):
-                    nested_nodes.extend(node._get_nested_nodes_with_same_roles_at_all_levels(node, include_roles,
-                                                                                             exclude_roles))
+                    nested_nodes.extend(node.get_nested_nodes_by_roles_at_any_level(node, include_roles, exclude_roles))
                 else:
                     nested_nodes.append(node)
-        return nested_nodes or None
+        # # MODIFIED 10/6/23 OLD:
+        # return nested_nodes or None
+        # MODIFIED 10/6/23 NEW:
+        return nested_nodes if any(nested_nodes) else None
+        # MODIFIED 10/6/23 END
+
+    def get_nested_nodes_input_nodes_at_levels(self)->list or None:
+        """Return all Nodes from nested Compositions that receive input from the environment."""
+        input_nodes = self.get_nested_nodes_by_roles_at_any_level(self, include_roles=NodeRole.INPUT)
+        return [input_node for input_node in input_nodes
+                if not all(proj.sender.owner._get_source_node_for_input_CIM(proj.sender)
+                           for proj in input_port.path_afferents for input_port in input_node)] or None
+
+    def get_nested_nodes_output_nodes_at_levels(self)->list or None:
+        """Return all Nodes from nested Compositions that receive input from the environment."""
+        output_nodes = self.get_nested_nodes_by_roles_at_any_level(self, include_roles=NodeRole.OUTPUT)
+        return [output_node for output_node in output_nodes
+                if not all(proj.receiver.owner._get_destination_info_for_output_CIM(proj.receiver)
+                           for output_port in output_node.output_ports for proj in output_port.efferents)] or None
 
     def _get_input_nodes_by_CIM_input_order(self):
         """Return a list with the `INPUT` `Nodes <Composition_Nodes>` of the Composition in the same order as their
@@ -4789,8 +4810,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if type==PORT:
             # Return all InputPorts of all INPUT Nodes
-            _input_nodes = comp._get_nested_nodes_with_same_roles_at_all_levels(comp=comp,
-                                                                                include_roles=NodeRole.INPUT)
+            _input_nodes = comp.get_nested_nodes_by_roles_at_any_level(comp=comp, include_roles=NodeRole.INPUT)
             if _input_nodes:
                 for node in _input_nodes:
                     # Exclude internal_only and shadowers of input (since the latter get inputs for the shadowed item)
@@ -7510,7 +7530,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # Extract Nodes from any tuple specs
                     node = _get_spec_if_tuple(node)
                     # Replace any nested Compositions with their INPUT Nodes
-                    node = (self._get_nested_nodes_with_same_roles_at_all_levels(node, include_roles, exclude_roles)
+                    node = (self.get_nested_nodes_by_roles_at_any_level(node, include_roles, exclude_roles)
                                 if isinstance(node, Composition) else [node])
                     if not node:
                         raise CompositionError(f"A nested Composition ('{list(entry)[0].name}') "
@@ -9982,7 +10002,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # Call _parse_labels for any Nodes with input_labels_dicts in nested Composition(s)
                     if (isinstance(k, Composition)
                             and any(n.input_labels_dict
-                                    for n in k._get_nested_nodes_with_same_roles_at_all_levels(k,NodeRole.INPUT))):
+                                    for n in k.get_nested_nodes_by_roles_at_any_level(k,NodeRole.INPUT))):
                         if nesting_depth(v) == 2:
                             # Enforce that even single trial specs user outer trial dimension (for consistency below)
                             v = [v]
@@ -10150,7 +10170,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #    if so, get the input_port(s) of mech.input_CIM to which its inputs correspond
                 elif (isinstance(INPUT_Node, Composition)
                       and ((input_recvr.owner if isinstance(input_recvr, Port) else input_recvr) in
-                           INPUT_Node._get_nested_nodes_with_same_roles_at_all_levels(INPUT_Node, NodeRole.INPUT))):
+                           INPUT_Node.get_nested_nodes_by_roles_at_any_level(INPUT_Node, NodeRole.INPUT))):
                     if isinstance(input_recvr, Port):
                         # Spec is for Port so assign to entry for corresponding input_CIM_input_port of INPUT_Node
                         input_ports = [input_recvr]
@@ -12309,7 +12329,7 @@ _
                         # Mechanism(s) with labels in nested Compositions
                         elif (use_labels and isinstance(node, Composition)
                               and any(n.input_labels_dict for n
-                                      in node._get_nested_nodes_with_same_roles_at_all_levels(node, NodeRole.INPUT))):
+                                      in node.get_nested_nodes_by_roles_at_any_level(node, NodeRole.INPUT))):
 
                             for port in node.input_CIM.input_ports:
                                 input_port, mech, __ = node.input_CIM._get_destination_info_from_input_CIM(port)
@@ -12349,7 +12369,7 @@ _
         if num_trials == FULL:
             num_trials = 1
             # Get number of labels in largest list of any input_labels_dict in an INPUT Mechanism
-            for node in self._get_nested_nodes_with_same_roles_at_all_levels(self, NodeRole.INPUT):
+            for node in self.get_nested_nodes_by_roles_at_any_level(self, NodeRole.INPUT):
                 if node.input_labels_dict:
                     labels_dict = node.input_labels_dict
                     num_trials = max(num_trials, max([len(labels) for labels in labels_dict.values()]))

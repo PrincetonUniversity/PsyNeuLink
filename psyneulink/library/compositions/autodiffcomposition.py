@@ -531,16 +531,20 @@ class AutodiffComposition(Composition):
                     continue
                     # MODIFIED 9/25/23 END
 
-                # node is output_CIM of nested Composition that projects directly to output_CIM of outer Composition
+                # node is output_CIM of outer Composition (i.e., end of pathway)
+                # FIX: 10/3/23 - SHOULD THIS BE TREATED AS END OF PATHWAY FOR DIRECT PROJECTION FROM NESTED COMP
+                #                TO output_CIM OF OUTER COMP (VS. HANDLING IT FURTHER BELOW?)
                 if isinstance(node, CompositionInterfaceMechanism) and node is self.output_CIM:
-                    outer_comp = get_composition_for_node(node.composition)
-                    if node.composition in outer_comp.get_nodes_by_role(NodeRole.OUTPUT):
-                        _, source, _ = input_port.owner._get_source_info_from_output_CIM(input_port)
-                        raise AutodiffCompositionError(f"The output for '{source.name}' Node of nested Composition "
-                                                       f"'{node.composition.name}' must project to a node in the "
-                                                       f"outer composition ('{outer_comp.name}') to be learnable.")
+                    assert False, (f"PROGRAM ERROR: 'Got to output_CIM of outermost Composition '({self.name})' "
+                                   f"without detecting OUTPUT NODE at end of pathway")
+                    # outer_comp = get_composition_for_node(node.composition)
+                    # if node.composition in outer_comp.get_nodes_by_role(NodeRole.OUTPUT):
+                    #     _, source, _ = input_port.owner._get_source_info_from_output_CIM(input_port)
+                    #     raise AutodiffCompositionError(f"The output for '{source.name}' Node of nested Composition "
+                    #                                    f"'{node.composition.name}' must project to a node in the "
+                    #                                    f"outer composition ('{outer_comp.name}') to be learnable.")
 
-                # Handle OUTPUT Node of outer Composition
+                # End of pathway: OUTPUT Node of outer Composition
                 if current_comp == self and node in current_comp.get_nodes_by_role(NodeRole.OUTPUT):
                     pathway = []
                     entry = node
@@ -553,6 +557,10 @@ class AutodiffComposition(Composition):
                     if len(pathway) >= 3:
                         pathways.append(pathway)
                     continue
+
+                # MODIFIED 10/1/23 NEW:
+                exit = False
+                # MODIFIED 10/1/23 END
 
                 # Consider all efferent Projections of node
                 for efferent_proj, rcvr in [(p, p.receiver.owner)
@@ -583,8 +591,10 @@ class AutodiffComposition(Composition):
                                 prev[efferent_proj] = node
                                 queue.append((rcvr, efferent_proj.receiver, rcvr_comp))
 
+                        # rcvr is Nested Composition output_CIM:
                         # Projection is to output_CIM, possibly exiting from a nested Composition
-                        elif rcvr == current_comp.output_CIM:
+                        # FIX: 10/1/23 - REVERSE THIS AND NEXT elif?
+                        elif rcvr == current_comp.output_CIM and current_comp is not self:
 
                             # Get output_CIM info for current efferent_proj
                             output_CIM_input_port = efferent_proj.receiver
@@ -597,15 +607,57 @@ class AutodiffComposition(Composition):
                             #   since that(those) is(are the one(s) that should be learned in PyTorch mode
                             # Note:  _get_destination_info_for_output_CIM returns list of destinations
                             #        in order of output_CIM.output_port.efferents
-                            for efferent_idx, receiver in enumerate(receivers):
-                                if receiver:
-                                    _, rcvr, rcvr_comp = receiver
-                                    assert rcvr_comp is not current_comp
-                                efferent_proj = output_CIM_output_port.efferents[efferent_idx]
-                                prev[rcvr] = efferent_proj
-                                prev[efferent_proj] = node
-                                queue.append((rcvr, efferent_proj.receiver, rcvr_comp))
+                            # # MODIFIED 10/6/23 OLD:
+                            # for efferent_idx, receiver in enumerate(receivers):
+                            #     if receiver:
+                            #         _, rcvr, rcvr_comp = receiver
+                            #         assert rcvr_comp is not current_comp
+                            #     efferent_proj = output_CIM_output_port.efferents[efferent_idx]
+                            #     prev[rcvr] = efferent_proj
+                            #     prev[efferent_proj] = node
+                            #     queue.append((rcvr, efferent_proj.receiver, rcvr_comp))
+                            # # MODIFIED 10/6/23 NEW:
+                            if receivers:
+                                for efferent_idx, receiver in enumerate(receivers):
+                                    if receiver:
+                                        _, rcvr, rcvr_comp = receiver
+                                        assert rcvr_comp is not current_comp
+                                    efferent_proj = output_CIM_output_port.efferents[efferent_idx]
+                                    prev[rcvr] = efferent_proj
+                                    prev[efferent_proj] = node
+                                    queue.append((rcvr, efferent_proj.receiver, rcvr_comp))
+                            else:
+                                pathway = []
+                                entry = node
+                                while entry in prev:
+                                    pathway.insert(0, entry)
+                                    entry = prev[entry]
+                                pathway.insert(0, entry)
+                                # Only consider input -> projection -> ... -> output pathways
+                                # (since can't learn on only one mechanism)
+                                if len(pathway) >= 3:
+                                    pathways.append(pathway)
+                            # MODIFIED 10/6/23 END
 
+                        # rcvr is Outermost Composition output_CIM:
+                        # End of pathway: Direct projection from output_CIM of nested comp to outer comp's output_CIM
+                        elif rcvr is self.output_CIM:
+                            # Assign node that projects to current node as OUTPUT Node for pathway
+                            node_output_port = efferent_proj.sender
+                            _, sender, _ = node._get_source_info_from_output_CIM(node_output_port)
+                            pathway = []
+                            entry = sender
+                            while entry in prev:
+                                pathway.insert(0, entry)
+                                entry = prev[entry]
+                            pathway.insert(0, entry)
+                            # Only consider input -> projection -> ... -> output pathways
+                            # (since can't learn on only one mechanism)
+                            if len(pathway) >= 3:
+                                pathways.append(pathway)
+                                # MODIFIED 10/1/23 NEW:
+                                exit = True
+                                # MODIFIED 10/1/23 END
                         else:
                             assert False, f"PROGRAM ERROR:  Unrecognized CompositionInterfaceMechanism: {rcvr}"
 
@@ -613,6 +665,12 @@ class AutodiffComposition(Composition):
                         prev[rcvr] = efferent_proj
                         prev[efferent_proj] = node
                         queue.append((rcvr, efferent_proj.receiver, current_comp))
+                        continue
+
+                # MODIFIED 10/1/23 NEW:
+                if exit:
+                    queue.popleft()
+                # MODIFIED 10/1/23 END
 
             return pathways
 
@@ -629,7 +687,13 @@ class AutodiffComposition(Composition):
             # IMPLEMENTATION NOTE: only add target nodes if not already present
             #    (to avoid duplication in multiple calls, including from command line;
             #     see test_xor_training_identicalness_standard_composition_vs_PyTorch_and_LLVM for example)
-            output_mechs = self.get_nodes_by_role(NodeRole.OUTPUT)
+            # # MODIFIED 10/1/23 OLD:
+            # output_mechs = self.get_nodes_by_role(NodeRole.OUTPUT)
+            # # MODIFIED 10/1/23 NEW:
+            # # output_mechs = self.get_nested_nodes_by_roles_at_any_level(self, include_roles=NodeRole.OUTPUT)
+            # MODIFIED 10/1/23 NEWER:
+            output_mechs = self.get_nested_nodes_output_nodes_at_levels()
+            # MODIFIED 10/1/23 END
             assert set([mech for mech in [pathway[-1] for pathway in pathways]]) == set(output_mechs)
             target_mechs = [ProcessingMechanism(default_variable = np.zeros_like(mech.value),
                                                 name= 'TARGET for ' + mech.name)
@@ -762,10 +826,23 @@ class AutodiffComposition(Composition):
             tracked_loss += new_loss
 
         outputs = []
+        # FIX: 10/1/23 - WHY NOT DIRECTLY USE OUTPUT NODES OF PYTORCH_REP HERE, RATHER THAN PYTHON COMPOSITION??
+        #                I.E. - WHY NOT JUST RETURN VALUES IN curr_tensor_outputs??
+        # # # MODIFIED 10/1/23 OLD:
+        # for input_port in self.output_CIM.input_ports:
+        #     assert (len(input_port.all_afferents) == 1)  # CW 12/05/18, this assert may eventually be outdated
+        #     component = input_port.all_afferents[0].sender.owner
+        #     outputs.append(curr_tensor_outputs[component].detach().cpu().numpy().copy())
+        # MODIFIED 10/1/23 NEW:
+        # FIX: NEED TO INSURE ORDER RESPECTS ONE OF ouput_CIM.input_ports
+        # outputs = [value.detach().cpu().numpy().copy() for value in curr_tensor_outputs.values()]
+        # MODIFIED 10/2/23 NEWER:
         for input_port in self.output_CIM.input_ports:
-            assert (len(input_port.all_afferents) == 1)  # CW 12/05/18, this assert may eventually be outdated
-            component = input_port.all_afferents[0].sender.owner
+            assert (len(input_port.all_afferents) == 1), \
+                f"PROGRAM ERROR: {input_port.name} of ouput_CIM for '{self.name}' has more than one afferent."
+            _, component, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
             outputs.append(curr_tensor_outputs[component].detach().cpu().numpy().copy())
+        # MODIFIED 10/1/23 END
 
         self.parameters.tracked_loss_count._set(self.parameters.tracked_loss_count._get(context=context) + 1,
                                                 context=context,

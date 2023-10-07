@@ -54,24 +54,54 @@ def pytorch_function_creator(function, device, context=None):
         return lambda x: x * slope + intercept
 
     elif isinstance(function, LinearCombination):
-        def linear_combination_sum(x):
-            result = torch.tensor([0] * len(x[0]), device=device).double()
-            for t in x:
-                result += t
-            return result
-        def linear_combination_product(x):
-            result = torch.tensor([1] * len(x[0]), device=device).double()
-            for t in x:
-                result *= t
-            return result
+        # MODIFIED 10/1/23 OLD:
+        # def linear_combination_sum(x):
+        #     # if function.weights is not None:
+        #     #     weights = torch.tensor(function.weights, device=device).double()
+        #     #     x = torch.matmul(x, weights)
+        #     result = torch.tensor([0] * len(x[0]), device=device).double()
+        #     for t in x:
+        #         result += t
+        #     return result
+        # def linear_combination_product(x):
+        #     result = torch.tensor([1] * len(x[0]), device=device).double()
+        #     for t in x:
+        #         result *= t
+        #     return result
+        # if function.operation == SUM:
+        #     return linear_combination_sum
+        # elif function.operation == PRODUCT:
+        #     return linear_combination_product
+        # else:
+        #     from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
+        #     raise AutodiffCompositionError(f"The 'operation' parameter of {function.componentName} is not supported "
+        #                                    f"by AutodiffComposition; use 'SUM' or 'PRODUCT' if possible.")
+        # MODIFIED 10/1/23 NEW:
+        weights = function.parameters.weights.get(context)
+        if weights is not None:
+            weights = torch.tensor(weights, device=device).double()
         if function.operation == SUM:
-            return linear_combination_sum
+            if weights is not None:
+                return lambda x: torch.sum(x * weights, 0)
+            else:
+                return lambda x: torch.sum(x,0)
         elif function.operation == PRODUCT:
-            return linear_combination_product
+            # MODIFIED 10/3/23 OLD:
+            # if weights is not None:
+            #     return lambda x: torch.prod(torch.stack(x) * weights,0)
+            # else:
+            #     return lambda x: torch.prod(torch.stack(x),0)
+            # MODIFIED 10/3/23 NEW:
+            if weights is not None:
+                return lambda x: torch.prod(x * weights,0)
+            else:
+                return lambda x: torch.prod(x,0)
+            # MODIFIED 10/3/23 END
         else:
             from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
             raise AutodiffCompositionError(f"The 'operation' parameter of {function.componentName} is not supported "
                                            f"by AutodiffComposition; use 'SUM' or 'PRODUCT' if possible.")
+        # MODIFIED 10/1/23 END
 
     elif isinstance(function, Logistic):
         gain = get_fct_param_value('gain')
@@ -549,8 +579,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     # performs forward computation for the model
     @handle_external_context()
-    def forward(self, inputs, context=None):
-        """Forward method of the model for PyTorch and LLVM modes"""
+    def forward(self, inputs, context=None)->dict:
+        """Forward method of the model for PyTorch and LLVM modes
+        Returns a dictionary {output_node:value} of output values for the model """
         outputs = {}  # dict for storing values of terminal (output) nodes
         for current_exec_set in self.execution_sets:
             for node in current_exec_set:
@@ -566,31 +597,46 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     # # MODIFIED 10/1/23 OLD:
                     #     node.execute(inputs[node._mechanism])
                     # MODIFIED 10/1/23 NEW:
-                    # If node's input is expliclity specified, use that
+                    # If node's input is explicitly specified, use that
                     if node._mechanism in inputs:
                         variable = inputs[node._mechanism]
                     # Node's iput in *not* explicitly specified, but its input_port(s) may have been
                     else:
+                        # # MODIFIED 10/3/23 OLD:
+                        # # Get input for each input_port of the node
+                        # variable = []
+                        # for i, input_port in enumerate(node._mechanism.input_ports):
+                        #     # If input to the node's input_port(s) is explicitly specified, use that
+                        #     if input_port in inputs:
+                        #         variable.append(inputs[input_port].detach().cpu().numpy())
+                        #     # Otherwise, use the node's input_port's afferents
+                        #     else:
+                        #         variable.append(node.collate_afferents(i).detach().cpu().numpy())
+                        # if len(variable) == 1:
+                        #     variable = np.array(variable).squeeze()
+                        # variable = torch.tensor(variable, device=self.device).double()
+                        # MODIFIED 10/3/23 NEW:
                         # Get input for each input_port of the node
                         variable = []
                         for i, input_port in enumerate(node._mechanism.input_ports):
                             # If input to the node's input_port(s) is explicitly specified, use that
                             if input_port in inputs:
-                                variable.append(inputs[input_port].detach().cpu().numpy())
+                                variable.append(inputs[input_port])
                             # Otherwise, use the node's input_port's afferents
                             else:
-                                variable.append(node.collate_afferents(i).detach().cpu().numpy())
+                                variable.append(node.collate_afferents(i))
                         if len(variable) == 1:
-                            variable = np.array(variable).squeeze()
-                        variable = torch.tensor(variable, device=self.device).double()
+                            variable = variable[0]
+                        else:
+                            variable = torch.stack(variable)
+                        # MODIFIED 10/3/23 END
                     # MODIFIED 10/1/23 END
                 else:
                     variable = node.collate_afferents()
                 node.execute(variable)
-                # save value in output list if we're at a node in the last execution set
-                # FIX: 9/1/23: TEST
-                # if NodeRole.OUTPUT in self._composition.get_roles_by_node(node._mechanism):
-                if node._mechanism in self._composition.get_nodes_by_role(NodeRole.OUTPUT):
+                # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
+                #  note: these may be different than for actual Composition, as they are flattened
+                if (node._mechanism in self._composition.get_nested_nodes_output_nodes_at_levels()):
                     outputs[node._mechanism] = node.value
                 assert True
 
@@ -676,9 +722,9 @@ class PytorchMechanismWrapper():
         # Has multiple input_ports
         else:
             # # Sum projections to each input_port of the Mechanism and return array with the sums
-            return [sum(proj_wrapper.execute(proj_wrapper.sender.value)
-                        for proj_wrapper in self.afferents if proj_wrapper._pnl_proj
-                        in input_port.path_afferents) for input_port in self._mechanism.input_ports]
+            return torch.stack([sum(proj_wrapper.execute(proj_wrapper.sender.value)
+                                    for proj_wrapper in self.afferents if proj_wrapper._pnl_proj
+                                    in input_port.path_afferents) for input_port in self._mechanism.input_ports])
 
     def execute(self, variable):
         # FIX: 10/1/23 - WHY DOES VALUE HAVE EXTRA DIMENSION IF PROJECTION TO NESTED NODE WAS DIRECT?

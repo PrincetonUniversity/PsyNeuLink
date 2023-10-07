@@ -1741,7 +1741,7 @@ class TestNestedLearning:
                        learning_rate = learning_rate,
                        num_trials=num_trials,
                        execution_mode=execution_mode)
-            return comp, comp.results
+            return comp.results
         return _execute_learning
 
     def test_1_nested_hidden(self, nodes_for_testing_nested_comps, execute_learning):
@@ -2135,12 +2135,12 @@ class TestNestedLearning:
                       MappingProjection(input_nodes[0], hidden_node_x.input_ports[1]),
                       nested]
 
-        autodiff, autodiff_results = execute_learning(comp_type='autodiff',
+        autodiff_results = execute_learning(comp_type='autodiff',
                                             execution_mode=pnl.ExecutionMode.PyTorch,
                                             pathways=[indirect, direct_1, direct_2],
                                             inputs=inputs)
 
-        comp, comp_results = execute_learning(comp_type='composition',
+        comp_results = execute_learning(comp_type='composition',
                                         execution_mode=pnl.ExecutionMode.Python,
                                         pathways=[[hidden_nodes[0], output_nodes[0]],
                                                   [input_nodes[0],
@@ -2162,20 +2162,10 @@ class TestNestedLearning:
         pathway_a = [input_nodes[0], MappingProjection(input_nodes[0], hidden_nodes[0]), nested]
         pathway_b = [input_nodes[0], MappingProjection(input_nodes[0], hidden_nodes[1]), nested]
 
-        error_msg = ("The output for 'hidden_1' Node of nested Composition 'nested' must project "
-                     "to a node in the outer composition ('autodiff_comp') to be learnable.")
-
-        with pytest.raises(AutodiffCompositionError) as error_text:
-            autodiff_results = execute_learning(comp_type='autodiff',
-                                                execution_mode=pnl.ExecutionMode.PyTorch,
-                                                pathways=[pathway_a, pathway_b],
-                                                inputs=inputs)
-        assert error_msg in str(error_text.value)
-        # autodiff_results = execute_learning(comp_type='autodiff',
-        #                                     execution_mode=pnl.ExecutionMode.PyTorch,
-        #                                     pathways=[pathway_a, pathway_b],
-        #                                     inputs=inputs)
-        #
+        autodiff_results = execute_learning(comp_type='autodiff',
+                                            execution_mode=pnl.ExecutionMode.PyTorch,
+                                            pathways=[pathway_a, pathway_b],
+                                            inputs=inputs)
 
         pathway_a = [input_nodes[0], hidden_nodes[0]]
         pathway_b = [input_nodes[0], hidden_nodes[1]]
@@ -2184,7 +2174,9 @@ class TestNestedLearning:
                                         pathways=[pathway_a, pathway_b],
                                         inputs=inputs)
 
-        # np.testing.assert_allclose(comp_results, autodiff_results)
+        for i in range(len(autodiff_results)):
+            for j in range(len(autodiff_results[i])):
+                np.testing.assert_allclose(comp_results[i][j], autodiff_results[i][j])
 
     def test_1_direct_and_1_ordinary_output_from_nested(self, nodes_for_testing_nested_comps, execute_learning):
         nodes = nodes_for_testing_nested_comps(1, 2, 1)
@@ -2199,19 +2191,20 @@ class TestNestedLearning:
                      MappingProjection(hidden_nodes[1]),
                      output_nodes[0]]
 
-        error_msg = ("The output for 'hidden_2' Node of nested Composition 'nested' must project "
-                     "to a node in the outer composition ('autodiff_comp') to be learnable.")
+        # error_msg = ("The output for 'hidden_2' Node of nested Composition 'nested' must project "
+        #              "to a node in the outer composition ('autodiff_comp') to be learnable.")
+        #
+        # with pytest.raises(AutodiffCompositionError) as error_text:
+        #     autodiff_results = execute_learning(comp_type='autodiff',
+        #                                         execution_mode=pnl.ExecutionMode.PyTorch,
+        #                                         pathways=[pathway_a, pathway_b],
+        #                                         inputs=inputs)
+        # assert error_msg in str(error_text.value)
 
-        with pytest.raises(AutodiffCompositionError) as error_text:
-            autodiff_results = execute_learning(comp_type='autodiff',
-                                                execution_mode=pnl.ExecutionMode.PyTorch,
-                                                pathways=[pathway_a, pathway_b],
-                                                inputs=inputs)
-        assert error_msg in str(error_text.value)
-        # autodiff_results = execute_learning(comp_type='autodiff',
-        #                                     execution_mode=pnl.ExecutionMode.PyTorch,
-        #                                     pathways=[pathway_a, pathway_b],
-        #                                     inputs=inputs)
+        autodiff_results = execute_learning(comp_type='autodiff',
+                                            execution_mode=pnl.ExecutionMode.PyTorch,
+                                            pathways=[pathway_a, pathway_b],
+                                            inputs=inputs)
 
         pathway_a = [input_nodes[0], hidden_nodes[0]]
         pathway_b = [input_nodes[0], hidden_nodes[1], output_nodes[0]]
