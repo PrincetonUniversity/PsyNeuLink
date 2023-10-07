@@ -689,7 +689,7 @@ Learning is used to modify the `Projections <Projection>` between Mechanisms in 
 it modifies the `matrix <MappingProjection.matrix>` parameter of the `MappingProjections <MappingProjection>` within a
 `learning Pathway <Composition_Learning_Pathway>`, which implements the conection weights (i.e., strengths of
 associations between representations in the Mechanisms) within a `Pathway`.  If learning is implemented for a
-Composition, it can be executed calling the Composition's `learn <Composition.learn>` method (see
+Composition, it can be executed by calling the Composition's `learn <Composition.learn>` method (see
 `Composition_Learning_Execution` and `Composition_Execution` for additional details). The rate at which learning
 occurs is determined by the learning_rate parameter, which can be assigned in various ways and is described under
 `Composition_Learning_Rate` at the end of this section.
@@ -702,9 +702,12 @@ occurs is determined by the learning_rate parameter, which can be assigned in va
 There are three ways of configuring learning in a Composition, using:
 
 i) `standard PsyNeuLink Components <Composition_Learning_Standard>`, for presentational and/or instructional purposes;
+   supports both `Composition_Learning_Supervised` and `Composition_Learning_Unsupervised`, but executes slowly
+   and does not support learning that spans `nested compositions <Composition_Nested>`.
 
-ii) an `AutodiffComposition <Composition_Learning_AutodiffComposition>`, a subclass of Composition
-    that executes learning efficiently;
+ii) an `AutodiffComposition <Composition_Learning_AutodiffComposition>`, a subclass of Composition that executes
+    learning substantially more efficiently, and supports learning that spans `nested compositions
+    <Composition_Nested>`, but is currently restricted to `Composition_Learning_Supervised`.
 
 iii) `UserDefinedFunctions <Composition_Learning_UDF>`, that provide full flexiblity.
 
