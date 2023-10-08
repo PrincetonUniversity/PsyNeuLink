@@ -7534,6 +7534,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                               f"MappingProjection from the Node it follows in that pathway "
                                               f"('{s.name}') since that is a {ControlMechanism.__name__}, however it "
                                               f"will still be dependent on it for (i.e. follow it in) execution.")
+                                # Add projection from Node before ControlMechanism to current_entry,
+                                #   to preserve linear structure of pathway, while skipping ControlMechanism
+                                if node_entries.index(s):
+                                    entry_before_ctl_mech = node_entries[node_entries.index(s) - 1]
+                                    projs.add(self.add_projection(sender=entry_before_ctl_mech, receiver=r,
+                                                                  default_matrix=default_projection_matrix,
+                                                                  allow_duplicates=False,
+                                                                  context=context))
+                                    warnings.warn(f"'{r.name}' now receives a MappingProjection from "
+                                                  f"'{entry_before_ctl_mech.name}' in the {pathway_arg_str} "
+                                                  f"(since it followed a {ControlMechanism.__name__} ('{s.name}').")
+                                else:
+                                    warnings.warn(f"'{r.name}' is now the first Node in the {pathway_arg_str} "
+                                                  f"(since it followed a {ControlMechanism.__name__} ('{s.name}').")
                     if all(projs):
                         # If it is a singleton, append on its own;  if it is set or list, need to keep that intact
                         projs = projs.pop() if len(projs) == 1 else projs
