@@ -4017,6 +4017,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.needs_update_controller = True # Tracks if controller needs to update its state_input_ports
         self.needs_determine_node_roles = False # Set in add_node and add_projection to insure update of NodeRoles
         self._need_check_for_unused_projections = True
+        self.warned_about_run_with_no_inputs = False
 
         self.nodes_to_roles = collections.OrderedDict()
         self.cycle_vertices = set()
@@ -10372,8 +10373,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 f"Provided inputs {inputs} is in a disallowed format. Inputs must be provided in the form of "
                 f"a dict, list, function, or generator. "
                 f"See https://princetonuniversity.github.io/PsyNeuLink/Composition.html#composition-run "
-                f"for details and formatting instructions for each input type."
-            )
+                f"for details and formatting instructions for each input type.")
+
+        if inputs is None and self.warned_about_run_with_no_inputs == False:
+            warnings.warn(f"No inputs provided in call to {self.name}.run(). The following defaults will be used "
+                          f"for each INPUT Node:{dict((k,np.array(v).tolist()) for k,v in _inputs.items())}")
+            self.warned_about_run_with_no_inputs = True
+
         return _inputs, num_inputs_sets
 
     def _parse_trial_inputs(self, inputs, trial_num):
