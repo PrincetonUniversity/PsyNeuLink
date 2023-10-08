@@ -1,6 +1,7 @@
 import collections
 import functools
 import logging
+import warnings
 from timeit import timeit
 
 import numpy as np
@@ -3827,7 +3828,6 @@ class TestRun:
         output = benchmark(comp.run, inputs={A: [[1.0]]}, scheduler=sched, execution_mode=comp_mode)
         np.testing.assert_allclose(25, output)
 
-
     @pytest.mark.skip
     @pytest.mark.composition
     @pytest.mark.benchmark(group="LinearComposition")
@@ -3934,7 +3934,6 @@ class TestRun:
         output = benchmark(comp.run, inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
         np.testing.assert_allclose([[150], [200]], output)
 
-
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Merge composition scalar MIMO")
     def test_3_mechanisms_2_origins_1_terminal_mimo_parallel(self, benchmark, comp_mode):
@@ -3962,7 +3961,6 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = benchmark(comp.run, inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
         np.testing.assert_allclose([[300], [350]], output)
-
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Merge composition scalar MIMO")
@@ -4156,7 +4154,22 @@ class TestRun:
             comp.run()
         assert repr(warning[0].message.args[0]) == warning_msg
 
+    def test_one_time_warning_for_run_with_no_inputs(self):
+        mech_1 = ProcessingMechanism()
+        mech_2 = ProcessingMechanism()
+        comp = Composition([mech_1,mech_2])
 
+        # Should get warning on first run
+        warning_msg = ('No inputs provided in call to Composition-0.run(). The following defaults will be used for '
+                       'each INPUT Node:{(ProcessingMechanism ProcessingMechanism-0): [[[0.0]]]}')
+        with pytest.warns(UserWarning) as warning:
+            comp.run()
+        assert warning_msg in warning[0].message.args[0]
+
+        # Should *NOT* get a warning on the second
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            comp.run()
 
 class TestCallBeforeAfterTimescale:
 
