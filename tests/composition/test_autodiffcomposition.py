@@ -2227,7 +2227,7 @@ class TestNestedLearning:
                                          default_variable=np.zeros(1),
                                          function=Logistic())
 
-        nested = AutodiffComposition([xor_hid_func], learning_rate=.001)
+        nested = AutodiffComposition([xor_hid_func], learning_rate=.001, name='nested')
         xor_func = AutodiffComposition([xor_in_func,
                                         MappingProjection(sender=xor_in_func,
                                                           matrix=np.full((2, 10),.1),
@@ -2238,7 +2238,8 @@ class TestNestedLearning:
                                                           receiver=xor_out_func),
                                         # out_map_func,
                                         xor_out_func],
-                                       learning_rate=.001)
+                                       learning_rate=.001,
+                                       name='outer')
 
         xor_inputs_func = np.array([[0, 0],[0, 1],[1, 0],[1, 1]])
         xor_targets_func = np.array([[0],[1],[1],[0]])

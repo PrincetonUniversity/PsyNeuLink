@@ -592,9 +592,18 @@ comp.add_node(B)
         comp2 = Composition(name='COMP_2', pathways=[C, D])
         with pytest.warns(UserWarning) as warning:
             ocomp = Composition(name='OUTER COMPOSITION',pathways=[comp1, comp2])
+            icomp.verbosePref = PreferenceEntry(True, PreferenceLevel.INSTANCE)
+            comp1.verbosePref = PreferenceEntry(True, PreferenceLevel.INSTANCE)
+            comp2.verbosePref = PreferenceEntry(True, PreferenceLevel.INSTANCE)
             ocomp.run()
-        assert repr(warning[0].message.args[0]) == '"\\nThe following Projections were specified but are not being used by Nodes in \'iCOMP\':\\n\\tMappingProjection from A[OutputPort-0] to C[InputPort-0] (from \'A\' to \'C\')."'
-        assert repr(warning[1].message.args[0]) == '"\\nThe following Projections were specified but are not being used by Nodes in \'COMP_2\':\\n\\tMappingProjection from A[OutputPort-0] to C[InputPort-0] (to \'C\' from \'A\')."'
+        error_msg_1 = ('"\\nThe following Projections were specified but are not being used by Nodes '
+                       'in \'iCOMP\':\\n\\tMappingProjection from A[OutputPort-0] to C[InputPort-0] '
+                       '(from \'A\' to \'C\')."')
+        error_msg_2 = ('"\\nThe following Projections were specified but are not being used by Nodes '
+                       'in \'COMP_2\':\\n\\tMappingProjection from A[OutputPort-0] to C[InputPort-0] '
+                       '(to \'C\' from \'A\')."')
+        assert error_msg_1 in repr(warning[0].message.args[0])
+        assert error_msg_2 in repr(warning[1].message.args[0])
 
 
 @pytest.mark.pathways

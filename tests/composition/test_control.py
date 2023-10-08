@@ -2391,6 +2391,7 @@ class TestControlMechanisms:
         with pytest.warns(UserWarning) as warning:
             comp = pnl.Composition(name='COMPOSITION', pathways=[ctl])
             comp.add_node(mech)
+            comp.verbosePref = pnl.PreferenceEntry(True, pnl.PreferenceLevel.INSTANCE)
             comp.run()
         assert all(msg in [repr(w.message.args[0]) for w in warning]
                    for msg in {warning_msg_1, warning_msg_2, warning_msg_3})

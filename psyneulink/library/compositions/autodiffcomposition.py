@@ -506,6 +506,21 @@ class AutodiffComposition(Composition):
             #                 ?? REVERT TO OLD VERSION (IN PRE-"CLEAN_UP" VERSIONS, OR ON DEVEL?),
             #                 THOUGH DOING SO PREVIOUSLY SEEMED TO LOSE TARGET NODE.
             #                 MAYBE NOT NOW THAT THEY ARE CONSTRUCTED EXPLICITLY BELOW?
+            # MODIFIED 10/8/23 NEW:
+            def create_pathway(node):
+                pathway = []
+                entry = node
+                while entry in prev:
+                    pathway.insert(0, entry)
+                    entry = prev[entry]
+                pathway.insert(0, entry)
+                # Only consider input -> projection -> ... -> output pathways
+                # (since can't learn on only one mechanism)
+                if len(pathway) >= 3:
+                    return pathway
+                else:
+                    return []
+            # MODIFIED 10/8/23 END
 
             while len(queue) > 0:
                 node, input_port, current_comp = queue.popleft()
@@ -525,16 +540,20 @@ class AutodiffComposition(Composition):
 
                 # End of pathway: OUTPUT Node of outer Composition
                 if current_comp == self and node in current_comp.get_nodes_by_role(NodeRole.OUTPUT):
-                    pathway = []
-                    entry = node
-                    while entry in prev:
-                        pathway.insert(0, entry)
-                        entry = prev[entry]
-                    pathway.insert(0, entry)
-                    # Only consider input -> projection -> ... -> output pathways
-                    # (since can't learn on only one mechanism)
-                    if len(pathway) >= 3:
-                        pathways.append(pathway)
+                    # # MODIFIED 10/8/23 OLD:
+                    # pathway = []
+                    # entry = node
+                    # while entry in prev:
+                    #     pathway.insert(0, entry)
+                    #     entry = prev[entry]
+                    # pathway.insert(0, entry)
+                    # # Only consider input -> projection -> ... -> output pathways
+                    # # (since can't learn on only one mechanism)
+                    # if len(pathway) >= 3:
+                    #     pathways.append(pathway)
+                    # MODIFIED 10/8/23 NEW:
+                    pathways.append(create_pathway(node))
+                    # MODIFIED 10/8/23 END
                     continue
 
                 # MODIFIED 10/1/23 NEW:
@@ -597,16 +616,20 @@ class AutodiffComposition(Composition):
                                     prev[efferent_proj] = node
                                     queue.append((rcvr, efferent_proj.receiver, rcvr_comp))
                             else:
-                                pathway = []
-                                entry = node
-                                while entry in prev:
-                                    pathway.insert(0, entry)
-                                    entry = prev[entry]
-                                pathway.insert(0, entry)
-                                # Only consider input -> projection -> ... -> output pathways
-                                # (since can't learn on only one mechanism)
-                                if len(pathway) >= 3:
-                                    pathways.append(pathway)
+                                # # MODIFIED 10/8/23 OLD:
+                                # pathway = []
+                                # entry = node
+                                # while entry in prev:
+                                #     pathway.insert(0, entry)
+                                #     entry = prev[entry]
+                                # pathway.insert(0, entry)
+                                # # Only consider input -> projection -> ... -> output pathways
+                                # # (since can't learn on only one mechanism)
+                                # if len(pathway) >= 3:
+                                #     pathways.append(pathway)
+                                # MODIFIED 10/8/23 NEW:
+                                pathways.append(create_pathway(node))
+                                # MODIFIED 10/8/23 END
                             # MODIFIED 10/6/23 END
 
                         # rcvr is Outermost Composition output_CIM:
@@ -615,19 +638,27 @@ class AutodiffComposition(Composition):
                             # Assign node that projects to current node as OUTPUT Node for pathway
                             node_output_port = efferent_proj.sender
                             _, sender, _ = node._get_source_info_from_output_CIM(node_output_port)
-                            pathway = []
-                            entry = sender
-                            while entry in prev:
-                                pathway.insert(0, entry)
-                                entry = prev[entry]
-                            pathway.insert(0, entry)
-                            # Only consider input -> projection -> ... -> output pathways
-                            # (since can't learn on only one mechanism)
-                            if len(pathway) >= 3:
-                                pathways.append(pathway)
-                                # MODIFIED 10/1/23 NEW:
+                            # # MODIFIED 10/8/23 OLD:
+                            # pathway = []
+                            # entry = sender
+                            # while entry in prev:
+                            #     pathway.insert(0, entry)
+                            #     entry = prev[entry]
+                            # pathway.insert(0, entry)
+                            # # Only consider input -> projection -> ... -> output pathways
+                            # # (since can't learn on only one mechanism)
+                            # if len(pathway) >= 3:
+                            #     pathways.append(pathway)
+                            #     # MODIFIED 10/1/23 NEW:
+                            #     exit = True
+                            #     # MODIFIED 10/1/23 END
+                            # MODIFIED 10/8/23 NEW:
+                            pathway = create_pathway(node)
+                            if pathway:
                                 exit = True
-                                # MODIFIED 10/1/23 END
+                                pathways.append(pathway)
+                            # MODIFIED 10/8/23 END
+
                         else:
                             assert False, f"PROGRAM ERROR:  Unrecognized CompositionInterfaceMechanism: {rcvr}"
 

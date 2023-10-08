@@ -6851,7 +6851,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         first_item = '' if proj_deferred else f" (from '{node.name}'"
                         second_item = '' if proj_deferred else f" to '{proj.receiver.owner.name}')."
                     unused_projections.append(f"{proj_name}{first_item}{second_item}")
-        if unused_projections:
+        if unused_projections and self.verbosePref:
             warning = f"\nThe following Projections were specified but are not being used by Nodes in '{self.name}':"
             warnings.warn(warning + "\n\t" + "\n\t".join(unused_projections))
         self._need_check_for_unused_projections = False
