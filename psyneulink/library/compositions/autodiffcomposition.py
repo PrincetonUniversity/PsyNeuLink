@@ -520,6 +520,7 @@ class AutodiffComposition(Composition):
                 else:
                     return []
 
+            # breadth-first search starting with input node
             while len(queue) > 0:
                 node, input_port, current_comp = queue.popleft()
 
@@ -540,10 +541,6 @@ class AutodiffComposition(Composition):
                 if current_comp == self and node in current_comp.get_nodes_by_role(NodeRole.OUTPUT):
                     pathways.append(create_pathway(node))
                     continue
-
-                # MODIFIED 10/1/23 NEW:
-                exit = False
-                # MODIFIED 10/1/23 END
 
                 # Consider all efferent Projections of node
                 for efferent_proj, rcvr in [(p, p.receiver.owner)
@@ -590,7 +587,6 @@ class AutodiffComposition(Composition):
                             #   since that(those) is(are the one(s) that should be learned in PyTorch mode
                             # Note:  _get_destination_info_for_output_CIM returns list of destinations
                             #        in order of output_CIM.output_port.efferents
-                            # # MODIFIED 10/6/23 NEW:
                             if receivers:
                                 for efferent_idx, receiver in enumerate(receivers):
                                     if receiver:
@@ -602,7 +598,6 @@ class AutodiffComposition(Composition):
                                     queue.append((rcvr, efferent_proj.receiver, rcvr_comp))
                             else:
                                 pathways.append(create_pathway(node))
-                            # MODIFIED 10/6/23 END
 
                         # rcvr is Outermost Composition output_CIM:
                         # End of pathway: Direct projection from output_CIM of nested comp to outer comp's output_CIM
@@ -612,9 +607,7 @@ class AutodiffComposition(Composition):
                             _, sender, _ = node._get_source_info_from_output_CIM(node_output_port)
                             pathway = create_pathway(node)
                             if pathway:
-                                # MODIFIED 10/1/23 NEW:
-                                exit = True
-                                # MODIFIED 10/1/23 END
+                                queue.popleft()
                                 pathways.append(pathway)
 
                         else:
@@ -625,11 +618,6 @@ class AutodiffComposition(Composition):
                         prev[efferent_proj] = node
                         queue.append((rcvr, efferent_proj.receiver, current_comp))
                         continue
-
-                # MODIFIED 10/1/23 NEW:
-                if exit:
-                    queue.popleft()
-                # MODIFIED 10/1/23 END
 
             return pathways
 
