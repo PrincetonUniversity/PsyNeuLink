@@ -54,10 +54,10 @@ Creating an AutodiffComposition
 An AutodiffComposition can be created by calling its constructor, and then adding `Components <Component>` using
 the standard `Composition methods <Composition_Creation>` for doing so (e.g., `add_node <Composition.add_node>`,
 `add_projection <Composition.add_projections>`,  `add_linear_processing_pathway
-<Composition.add_linear_processing_pathway>`, etc.).  The constructor also includes a number of parameters that are
+<Composition.add_linear_processing_pathway>`, etc.). The constructor also includes a number of parameters that are
 specific to the AutodiffComposition (see `AutodiffComposition_Class_Reference` for a list of these parameters,
 and `examples <AutodiffComposition_Examples>` below). While an AutodiffComposition can generally be created using the
-same methods as a standard Composition, there are a few restrictions that apply to its construction.
+same methods as a standard Composition, there are a few restrictions that apply to its construction, summarized below.
 
 .. _AutodiffComposition_Restrictions:
 
@@ -123,7 +123,7 @@ An AutodiffComposition can be `nested <Composition_Nested>` inside another Compo
 be any level of such nestings.  However, all of the nested Compositions must be AutodiffCompositions. Furthermore, all
 nested Compositions use the `learning_rate <AutodiffComposition.learning_rate>` specified for the outermost Composition,
 whether this is specified in the call to its `learn <AutodiffComposition.learn>` method, its constructor, or its
-default value is being used.
+default value is being used (see `learning_rate <AutodiffComposition.learning_rate>` below for additional details).
 
 .. technical_note::
    Projections from `Nodes <Composition_Nodes>` in an immediately enclosing outer Composition to the `input_CIM
@@ -380,15 +380,8 @@ class AutodiffComposition(Composition):
 
     learning_rate : float : default 0.001
         specifies the learning rate passed to the optimizer if none is specified in the `learn
-        <AutdodiffComposition.learn>` method of the AutodiffComposition.
-
-        .. note::
-           At present, the same learning rate is applied to all Components of an AutodiffComposition, irrespective
-           of the `learning_rate <`learning_rate <LearningMechanism.learning_rate>` that may be specified for any
-           individual Mechanisms or any `nested Compositions <AutodiffComposition_Nesting>`; in the case of the
-           latter, the `learning_rate <AutodiffComposition.learning_rate>` of the outermost AutodiffComposition is
-           used, whether this is specified in the call to its `learn <AutodiffComposition.learn>` method, its
-           constructor, or its default value is being used.
+        <AutdodiffComposition.learn>` method of the AutodiffComposition
+        (see `learning_rate <AutodiffComposition.learning_rate>` for additional details).
 
     disable_learning : bool: default False
         specifies whether the AutodiffComposition should disable learning when run in `learning mode
@@ -411,7 +404,21 @@ class AutodiffComposition(Composition):
         arguments from initialization.
 
     learning_rate : float
-        determines the learning_rate passed the optimizer.
+        determines the learning_rate passed the optimizer, and is applied to all `Projection`\\s in the
+        AutodiffComposition that are `learnable <MappingProjection.learnable>`.
+
+        .. note::
+           At present, the same learning rate is applied to all Components of an AutodiffComposition, irrespective
+           of the `learning_rate <`learning_rate <LearningMechanism.learning_rate>` that may be specified for any
+           individual Mechanisms or any `nested Compositions <AutodiffComposition_Nesting>`; in the case of the
+           latter, the `learning_rate <AutodiffComposition.learning_rate>` of the outermost AutodiffComposition is
+           used, whether this is specified in the call to its `learn <AutodiffComposition.learn>` method, its
+           constructor, or its default value is being used.
+
+        .. hint::
+           To disable updating of a particular `MappingProjection` in an AutodiffComposition, specify the
+           **learnable** parameter of its constructor as `False`; this applies to MappingProjections at any
+           level of `nesting <AutodiffComposition_Nesting>`.
 
     loss : PyTorch loss function
         the loss function used for training. Depends on the **loss_spec** argument from initialization.

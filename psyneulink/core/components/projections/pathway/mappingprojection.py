@@ -117,6 +117,9 @@ A MappingProjection is specified for learning in any of the following ways:
     * in the **matrix** argument of the MappingProjection's constructor, using the `tuple format
       <MappingProjection_Tuple_Specification>` described above;
     ..
+    * specifying a MappingProjection in the `learning method <Composition_Learning_Methods>` of a `Composition`,
+      using the `tuple format <MappingProjection_Learning_Tuple_Specification>` to include a learning specification;
+
     * specifying the MappingProjection (or its *MATRIX* `ParameterPort`) as the `receiver
       <LearningProjection.receiver>` of a `LearningProjection`;
     ..
@@ -125,17 +128,15 @@ A MappingProjection is specified for learning in any of the following ways:
     ..
     * specifying the MappingProjection (or its *MATRIX* `ParameterPort`) in the **learning_signals** argument of
       the constructor for a `LearningMechanism <LearningSignal_Specification>`
-    ..
-    * specifying a MappingProjection in the `pathway <Process.pathway>`  for a `Process`,
-      using the `tuple format <MappingProjection_Learning_Tuple_Specification>` to include a learning specification;
-    ..
-    * `specifying learning <Process_Learning_Sequence>` for a `Process`, which assigns `LearningProjections
-      <LearningProjection>` to all of the  MappingProjections in the Process' `pathway <Process.pathway>`;
 
-See `LearningMechanism` documentation for an overview of `learning components <LearningMechanism_Overview>` and a
-detailed description of `LearningMechanism_Learning_Configurations`;  see `MappingProjection_Learning` below for a
-description of how learning modifies a MappingProjection.
+Learning can be disabled for a MappingProjection by specifying its **learnable** argument as `False` in its
+constructor.  This can be useful for disabling specific MappingProjections in the `learning pathway
+`learning pathway <Composition_Learning_Pathway>` of a `Composition`.
 
+See `LearningMechanism` for an overview of `learning components <LearningMechanism_Overview>` and a detailed
+description of `LearningMechanism_Learning_Configurations`; `Composition_Learning` for a description of how learning
+is implemented within a `Composition`;  `MappingProjection_Learning` below for a description of how learning
+modifies a MappingProjection.
 
 .. _MappingProjection_Learning_Tuple_Specification:
 
@@ -155,10 +156,10 @@ the second item of the tuple must be a learning specification, which can be any 
 Specifying Learning for AutodiffCompositions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-By default, all MappingProjections in an `AutodiffComposition` are treated as trainable PyTorch Parameters whose
-matrices are updated during backwards passes through the network. Optionally, users can specify during
-instantiation that a projection should not be updated. To do so, set the `learnable` argument to False in the
-constructor of the projection.
+By default, all MappingProjections in an `AutodiffComposition` are treated as trainable PyTorch parameters that
+are updated during backwards passes through the network, and then used to update the MappingProjection's
+`matrix <MappingProjection.matrix>` after each batch of train. However, this can be disabled for an individual
+MappingProjection by specifying the **learnable** argument as False in its constructor.
 
 .. _MappingProjection_Deferred_Initialization:
 
@@ -334,7 +335,8 @@ class MappingProjection(PathwayProjection_Base):
     MappingProjection(         \
         sender=None,           \
         receiver=None,         \
-        matrix=DEFAULT_MATRIX)
+        matrix=DEFAULT_MATRIX, \
+        learnable)             \
 
     Subclass of `Projection` that transmits the `value <OutputPort.value>` of the `OutputPort` of one `Mechanism
     <Mechanism>` to the `InputPort` of another (or possibly itself).  See `Projection <Projection_Class_Reference>`
@@ -360,6 +362,11 @@ class MappingProjection(PathwayProjection_Base):
         transform the `value <Projection_Base.value>` of the `sender <MappingProjection.sender>` into a form suitable
         for the `variable <InputPort.variable>` of its `receiver <MappingProjection.receiver>` `InputPort`
         (see `MappingProjection_Matrix_Specification` for additional details).
+
+    learnable : bool : default True
+        specifies whether the MappingProjection's `matrix <MappingProjection.matrix>` parameter can be modified by
+        `learning <LearningMechanism>` (see `MappingProjection_Learning` for additional details).
+
 
     Attributes
     ----------
