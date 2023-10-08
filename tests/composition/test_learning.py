@@ -1862,9 +1862,9 @@ class TestNestedLearning:
             )
 
     def test_no_learning_of_spanning_nested_compositions(self):
-        input_mech = pnl.TransferMechanism(name='input_mech', size=2)
-        hidden_mech = pnl.TransferMechanism(name='hidden_mech', size=2)
-        output_mech = pnl.TransferMechanism(name='output_mech', size=2)
+        input_mech = pnl.ProcessingMechanism(name='input_mech', size=2)
+        hidden_mech = pnl.ProcessingMechanism(name='hidden_mech', size=2)
+        output_mech = pnl.ProcessingMechanism(name='output_mech', size=2)
         nested = pnl.Composition(name='nested', nodes=[hidden_mech])
         error_msg = ('Learning in Python mode does not currently support nested Compositions;  '
                      'try using an AutodiffComposition with ExecutionMode.PyTorch.')

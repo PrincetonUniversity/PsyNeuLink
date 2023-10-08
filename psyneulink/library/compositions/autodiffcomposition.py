@@ -896,6 +896,20 @@ class AutodiffComposition(Composition):
         execution_mode = self._get_execution_mode(kwargs.pop('execution_mode', None))
         kwargs[CONTEXT].execution_phase = execution_phase_at_entry
 
+        any_nested_comps = [node for node in self.nodes if isinstance(node, Composition)]
+        if any_nested_comps:
+            # Can't learn in Python mode if any nested Compositions
+            if execution_mode is not pnlvm.ExecutionMode.PyTorch:
+                raise AutodiffCompositionError(f"Unable to execute learning in {pnlvm.ExecutionMode.Python.name} for "
+                                               f" {self.name} because it contains one or more nested Compositions: "
+                                               f"{' ,'.join([node.name for node in any_nested_comps])}.")
+
+            # Can't learn if any nested comps that are not AutodiffCompositions
+            nested_comps = [comp.name for comp in any_nested_comps if not isinstance(comp, AutodiffComposition)]
+            if nested_comps:
+                raise AutodiffCompositionError(f"Unable to learn {self.name} because it contains nested Composition(s) "
+                                               f"that are not AutodiffCompositions: ({' ,'.join(nested_comps)}).")
+
         if self._built_pathways is False:
             self.infer_backpropagation_learning_pathways(execution_mode)
             self._built_pathways = True

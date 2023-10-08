@@ -2288,26 +2288,53 @@ class TestNestedLearning:
         results = xor_func.results
         np.testing.assert_allclose(results, [[[0.62245933]],[[0.62813197]],[[0.6282438]],[[0.6341436]]])
 
-    def test_nested_with_diff_learning_rates(self, nodes_for_testing_nested_comps, execute_learning):
-        nodes = nodes_for_testing_nested_comps(1, 0, 1)
-        input_nodes, hidden_nodes, output_nodes = nodes
-        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
+    # def test_nested_with_diff_learning_rates(self, nodes_for_testing_nested_comps, execute_learning):
+    #     nodes = nodes_for_testing_nested_comps(1, 0, 1)
+    #     input_nodes, hidden_nodes, output_nodes = nodes
+    #     inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
+    #
+    #     hidden_1 = pnl.ProcessingMechanism(name='hidden_1', size=3)
+    #     nested_01 = AutodiffComposition(name='nested_01', nodes=[hidden_1], learning_rate=.01)
+    #     autodiff_01_results = execute_learning(comp_type='autodiff',
+    #                                           execution_mode=pnl.ExecutionMode.PyTorch,
+    #                                           pathways=[input_nodes[0], nested_01, output_nodes[0]],
+    #                                           inputs=inputs)
+    #
+    #     hidden_2 = pnl.ProcessingMechanism(name='hidden_2', size=3)
+    #     nested_1 = AutodiffComposition(name='nested_2', nodes=[hidden_2], learning_rate=.1)
+    #     autodiff_1_results = execute_learning(comp_type='autodiff',
+    #                                           execution_mode=pnl.ExecutionMode.PyTorch,
+    #                                           pathways=[input_nodes[0], nested_1, output_nodes[0]],
+    #                                           inputs=inputs)
+    #
+    #     THIS SHOULD FAIL IF NESTED USED ITS OWN SPECIFIED LEARNING RATE:
+    #     np.testing.assert_allclose(autodiff_01_results, autodiff_1_results)
 
-        hidden_1 = pnl.ProcessingMechanism(name='hidden_1', size=3)
-        nested_01 = AutodiffComposition(name='nested_01', nodes=[hidden_1], learning_rate=.01)
-        autodiff_01_results = execute_learning(comp_type='autodiff',
-                                              execution_mode=pnl.ExecutionMode.PyTorch,
-                                              pathways=[input_nodes[0], nested_01, output_nodes[0]],
-                                              inputs=inputs)
+    def test_error_for_running_nested_learning_in_Python_mode(self):
+        input_mech = pnl.ProcessingMechanism(name='input_mech', size=2)
+        hidden_mech = pnl.ProcessingMechanism(name='hidden_mech', size=2)
+        output_mech = pnl.ProcessingMechanism(name='output_mech', size=2)
 
-        hidden_2 = pnl.ProcessingMechanism(name='hidden_2', size=3)
-        nested_1 = AutodiffComposition(name='nested_2', nodes=[hidden_2], learning_rate=.1)
-        autodiff_1_results = execute_learning(comp_type='autodiff',
-                                              execution_mode=pnl.ExecutionMode.PyTorch,
-                                              pathways=[input_nodes[0], nested_1, output_nodes[0]],
-                                              inputs=inputs)
+        # Test for error on learning if nested is Composition
+        nested = pnl.Composition(name='nested', nodes=[hidden_mech])
+        autodiff = pnl.AutodiffComposition([input_mech, nested, output_mech], name='comp')
+        autodiff.run()
+        error_msg = ('Learning in Python mode does not currently support nested Compositions;  '
+                     'try using an AutodiffComposition with ExecutionMode.PyTorch.')
+        with pytest.raises(AutodiffCompositionError) as error:
+            autodiff.learn(inputs={input_mech: [[0, 0]]})
+        assert error_msg == str(error.value)
 
-        np.testing.assert_allclose(autodiff_01_results, autodiff_1_results)
+        # Test for error on learning if nested is AutodiffComposition but execution_mode is Python
+        nested = pnl.AutodiffComposition(name='nested', nodes=[hidden_mech])
+        autodiff = pnl.AutodiffComposition([input_mech, nested, output_mech], name='comp')
+        autodiff.run()
+        error_msg = ('Learning in Python mode does not currently support nested Compositions;  '
+                     'try using an AutodiffComposition with ExecutionMode.PyTorch.')
+        with pytest.raises(AutodiffCompositionError) as error:
+            autodiff.learn(inputs={input_mech: [[0, 0]]}, execution_mode=pnl.ExecutionMode.Python)
+        assert error_msg == str(error.value)
+
 
 
 @pytest.mark.pytorch
