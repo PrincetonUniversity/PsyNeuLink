@@ -2319,21 +2319,21 @@ class TestNestedLearning:
         nested = pnl.Composition(name='nested', nodes=[hidden_mech])
         autodiff = pnl.AutodiffComposition([input_mech, nested, output_mech], name='comp')
         autodiff.run()
-        error_msg = ('Learning in Python mode does not currently support nested Compositions;  '
-                     'try using an AutodiffComposition with ExecutionMode.PyTorch.')
+        error_msg = (f"Unable execute learning for 'comp' because it contains nested Composition(s) "
+                     f"that are not AutodiffCompositions: 'nested'.")
         with pytest.raises(AutodiffCompositionError) as error:
             autodiff.learn(inputs={input_mech: [[0, 0]]})
-        assert error_msg == str(error.value)
+        assert error_msg in str(error.value)
 
         # Test for error on learning if nested is AutodiffComposition but execution_mode is Python
         nested = pnl.AutodiffComposition(name='nested', nodes=[hidden_mech])
         autodiff = pnl.AutodiffComposition([input_mech, nested, output_mech], name='comp')
         autodiff.run()
-        error_msg = ('Learning in Python mode does not currently support nested Compositions;  '
-                     'try using an AutodiffComposition with ExecutionMode.PyTorch.')
+        error_msg = ("Unable to execute learning in Python mode for 'comp-1' "
+                     "because it contains one or more nested Compositions: 'nested-1'.")
         with pytest.raises(AutodiffCompositionError) as error:
             autodiff.learn(inputs={input_mech: [[0, 0]]}, execution_mode=pnl.ExecutionMode.Python)
-        assert error_msg == str(error.value)
+        assert error_msg in str(error.value)
 
 
 
