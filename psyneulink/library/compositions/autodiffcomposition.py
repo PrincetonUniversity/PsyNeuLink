@@ -63,6 +63,12 @@ same methods as a standard Composition, there are a few restrictions that apply 
 
 .. _AutodiffComposition_Modulatory_Mechanisms:
 
+*OUTPUT Nodes*
+~~~~~~~~~~~~~~
+
+The `OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>` of an AutodiffComposition currently can have only one
+`OutputPort`. This applies any `nested <AutodiffComposition_Nesting>` AutodiffCompositions as well the outermost one.
+
 *Modulatory Components*
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -114,8 +120,10 @@ implements a diagnoal matrix with values corresponding to the initial value of t
 ~~~~~~~~~
 
 An AutodiffComposition can be `nested <Composition_Nested>` inside another Composition for learning, and there can
-be any level of such nestings.  However, both the outermost and all of the nested Compositions must be
-AutodiffCompositions, subject to the same restrictions as described `above <AutodiffComposition_Restrictions>`.
+be any level of such nestings.  However, all of the nested Compositions must be AutodiffCompositions. Furthermore, all
+nested Compositions use the `learning_rate <AutodiffComposition.learning_rate>` specified for the outermost Composition,
+whether this is specified in the call to its `learn <AutodiffComposition.learn>` method, its constructor, or its
+default value is being used.
 
 .. technical_note::
    Projections from `Nodes <Composition_Nodes>` in an immediately enclosing outer Composition to the `input_CIM
@@ -371,8 +379,16 @@ class AutodiffComposition(Composition):
     ---------
 
     learning_rate : float : default 0.001
-        specified the learning rate passed to the optimizer if none is specified in the learn method of the
-        AutodiffComposition.
+        specifies the learning rate passed to the optimizer if none is specified in the `learn
+        <AutdodiffComposition.learn>` method of the AutodiffComposition.
+
+        .. note::
+           At present, the same learning rate is applied to all Components of an AutodiffComposition, irrespective
+           of the `learning_rate <`learning_rate <LearningMechanism.learning_rate>` that may be specified for any
+           individual Mechanisms or any `nested Compositions <AutodiffComposition_Nesting>`; in the case of the
+           latter, the `learning_rate <AutodiffComposition.learning_rate>` of the outermost AutodiffComposition is
+           used, whether this is specified in the call to its `learn <AutodiffComposition.learn>` method, its
+           constructor, or its default value is being used.
 
     disable_learning : bool: default False
         specifies whether the AutodiffComposition should disable learning when run in `learning mode
@@ -395,7 +411,7 @@ class AutodiffComposition(Composition):
         arguments from initialization.
 
     learning_rate : float
-        the learning rate passed to the optimizer if none is specified in the learn method of the AutodiffComposition.
+        determines the learning_rate passed the optimizer.
 
     loss : PyTorch loss function
         the loss function used for training. Depends on the **loss_spec** argument from initialization.

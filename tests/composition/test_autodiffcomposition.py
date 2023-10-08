@@ -2108,8 +2108,12 @@ class TestNestedLearning:
             for j in range(len(autodiff_results[i])):
                 np.testing.assert_allclose(comp_results[i][j], autodiff_results[i][j])
 
-    def test_asymmetric_inputs_to_nested_the_whole_magilla(self, nodes_for_testing_nested_comps, execute_learning):
-        """Test asymmetric inputs to INPUT Nodes as well as inupt_ports of an INPUT Node of a nested Composition"""
+    def test_inputs_to_multiple_input_ports_and_INPUT_nodes(self, nodes_for_testing_nested_comps, execute_learning):
+        """Test asymmetric inputs to INPUT Nodes of a nested Composition
+        One direct input to one input_port of an INPUT Node of nested Composition,
+        One indirect (via Node in outer Composition) input to the other input_port of the nested INPUT Node
+        One direct input to a different INPUT Node of the nested Composition
+        """
         nodes = nodes_for_testing_nested_comps(2, 1, 2)
         input_nodes, hidden_nodes, output_nodes = nodes
         hidden_node_x = pnl.ComparatorMechanism(name='hidden_node_x')
@@ -2117,12 +2121,7 @@ class TestNestedLearning:
         nested = AutodiffComposition(nodes=[hidden_nodes[0],hidden_node_x],name='nested')
 
         inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]]),
-                  hidden_node_x.input_ports[0]:[[1], [1], [0], [0]]
-                  # hidden_node_x.input_ports[0]:np.array([[[1]], [[1]], [[0]], [[0]]])
-                  # nested:np.array([[[1]], [[1]], [[0]], [[0]]])
-                  # nested:[[[1,1,1],[1]], [[0,0,0],[1]], [[1,2,3],[0]], [[4,5,6],[0]]]
-                  # nested:[[[1,1,1],[1]]]
-                  }
+                  hidden_node_x.input_ports[0]:[[1], [1], [0], [0]]}
 
         direct_1 = [(nested, pnl.NodeRole.INPUT),
                   MappingProjection(hidden_nodes[0], output_nodes[0]),
@@ -2152,7 +2151,39 @@ class TestNestedLearning:
             for j in range(len(autodiff_results[i])):
                 np.testing.assert_allclose(comp_results[i][j], autodiff_results[i][j])
 
-    def test_2_direct_outputs_from_nested(self, nodes_for_testing_nested_comps, execute_learning):
+    # def test_output_from_multiple_output_ports_and_OUTPUT_nodes(self, nodes_for_testing_nested_comps, execute_learning):
+    #     nodes = nodes_for_testing_nested_comps(1, 1, 2)
+    #     input_nodes, hidden_nodes, output_nodes = nodes
+    #     inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
+    #
+    #     hidden_2d = pnl.ProcessingMechanism(name='2d', size=(2,2))
+    #     nested = AutodiffComposition(nodes = [hidden_nodes[0], hidden_2d], name='nested')
+    #     pathway_a = [input_nodes[0],
+    #                  MappingProjection(input_nodes[0], hidden_2d),
+    #                  nested,
+    #                  MappingProjection(hidden_2d.output_ports[0], output_nodes[0]),
+    #                  output_nodes[0]]
+    #     pathway_b = [input_nodes[0], MappingProjection(input_nodes[0], hidden_nodes[0]), nested, output_nodes[1]]
+    #     # pathway_c = [nested,
+    #     #              MappingProjection(hidden_2d.output_ports[1], output_nodes[1]),
+    #     #              output_nodes[1]]
+    #
+    #     autodiff_results = execute_learning(comp_type='autodiff',
+    #                                         execution_mode=pnl.ExecutionMode.PyTorch,
+    #                                         pathways=[pathway_a, pathway_b],
+    #                                         inputs=inputs)
+    #
+    #     pathway_a = [input_nodes[0], hidden_nodes[0]]
+    #     pathway_b = [input_nodes[0], hidden_nodes[1]]
+    #     comp_results = execute_learning(comp_type='composition',
+    #                                     execution_mode=pnl.ExecutionMode.Python,
+    #                                     pathways=[pathway_a, pathway_b],
+    #                                     inputs=inputs)
+    #
+    #     for i in range(len(autodiff_results)):
+    #         for j in range(len(autodiff_results[i])):
+    #             np.testing.assert_allclose(comp_results[i][j], autodiff_results[i][j])
+    def test_2_direct_output_nodes_from_nested(self, nodes_for_testing_nested_comps, execute_learning):
         nodes = nodes_for_testing_nested_comps(1, 2, 0)
         input_nodes, hidden_nodes, output_nodes = nodes
         inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
@@ -2256,6 +2287,28 @@ class TestNestedLearning:
 
         results = xor_func.results
         np.testing.assert_allclose(results, [[[0.62245933]],[[0.62813197]],[[0.6282438]],[[0.6341436]]])
+
+    def test_nested_with_diff_learning_rates(self, nodes_for_testing_nested_comps, execute_learning):
+        nodes = nodes_for_testing_nested_comps(1, 0, 1)
+        input_nodes, hidden_nodes, output_nodes = nodes
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
+
+        hidden_1 = pnl.ProcessingMechanism(name='hidden_1', size=3)
+        nested_01 = AutodiffComposition(name='nested_01', nodes=[hidden_1], learning_rate=.01)
+        autodiff_01_results = execute_learning(comp_type='autodiff',
+                                              execution_mode=pnl.ExecutionMode.PyTorch,
+                                              pathways=[input_nodes[0], nested_01, output_nodes[0]],
+                                              inputs=inputs)
+
+        hidden_2 = pnl.ProcessingMechanism(name='hidden_2', size=3)
+        nested_1 = AutodiffComposition(name='nested_2', nodes=[hidden_2], learning_rate=.1)
+        autodiff_1_results = execute_learning(comp_type='autodiff',
+                                              execution_mode=pnl.ExecutionMode.PyTorch,
+                                              pathways=[input_nodes[0], nested_1, output_nodes[0]],
+                                              inputs=inputs)
+
+        np.testing.assert_allclose(autodiff_01_results, autodiff_1_results)
+
 
 @pytest.mark.pytorch
 @pytest.mark.acmisc
