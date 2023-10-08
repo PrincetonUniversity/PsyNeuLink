@@ -7139,7 +7139,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._analyze_graph()
 
     @handle_external_context()
-    def add_pathways(self, pathways, context=None):
+    def add_pathways(self, pathways, context=None)->list:
         """Add pathways to the Composition.
 
         Arguments
@@ -7348,7 +7348,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 assert False, f"PROGRAM ERROR: failure to determine pathway_type in add_pathways for {self.name}."
 
-                added_pathways.append(new_pathway)
+            added_pathways.append(new_pathway)
 
         return added_pathways
 
