@@ -10375,7 +10375,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 f"See https://princetonuniversity.github.io/PsyNeuLink/Composition.html#composition-run "
                 f"for details and formatting instructions for each input type.")
 
-        if inputs is None and self.warned_about_run_with_no_inputs == False:
+        if inputs is None and self.warned_about_run_with_no_inputs is False:
             warnings.warn(f"No inputs provided in call to {self.name}.run(). The following defaults will be used "
                           f"for each INPUT Node:{dict((k,np.array(v).tolist()) for k,v in _inputs.items())}")
             self.warned_about_run_with_no_inputs = True
