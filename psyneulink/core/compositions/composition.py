@@ -5343,14 +5343,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Assign OUTPUT if node is TERMINAL...
             if NodeRole.TERMINAL in self.get_roles_by_node(node):
                 # unless it is a ModulatoryMechanism
-                if (isinstance(node, ModulatoryMechanism_Base)
-                    # # FIX: WHY WOULD SUCH AN ObjectiveMechanism BE TERMINAL IF IT PROJECTS TO A MODULATORY_MECHANISM
-                    # #      (IS THIS BECAUSE MODULATORY MECH GETS DISCOUNTED FROM BEING TERMINAL IN graph_processing?)
-                    # # or an ObjectiveMechanism associated with ControlMechanism or LearningMechanism
-                    #     or any(role in self.get_roles_by_node(node) for role in {NodeRole.CONTROL_OBJECTIVE,
-                    #                                                              NodeRole.CONTROLLER_OBJECTIVE,
-                    #                                                              NodeRole.LEARNING_OBJECTIVE})
-                ):
+                if isinstance(node, ModulatoryMechanism_Base):
                     continue
                 else:
                     self._add_node_role(node, NodeRole.OUTPUT)
@@ -5387,6 +5380,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #  - an ObjectiveMechanism designated as CONTROL_OBJECTIVE, CONTROLLER_OBJECTIVE or LEARNING_OBJECTIVE
                 #  - and/or directly to a ControlMechanism but is not an ObjectiveMechanism
                 #  - and/or (already projects) to output_CIM
+                #  - and/or projects to another node in a CYCLE but otherwise meets the above criteria <- FIX 10/9/23 ADD THIS
                 if NodeRole.TARGET in self.get_roles_by_node(node):
                     continue
                 if isinstance(node, ModulatoryMechanism_Base):
