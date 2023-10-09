@@ -1071,10 +1071,10 @@ exploiting the acceleration of optimized implementations of learning. This can b
 compilation (**execution_mode** = `ExecutionMode.LLVMRun`); or by automatically translating the model to `PyTorch
 <https://pytorch.org>`_ for training (**execution_mode** = `ExecutionMode.PyTorch`). The advantage of these modes is
 that they can provide up to three orders of magnitude speed-up in training a model. Use of the `PyTorch` mode also
-supports learning of `nested Compositions <Composition_Nested>` (see `AutodiffComposition_PyTorch`. However, there
-are restrictions on the kinds of Compositions that be implemented in this way. The table below summarizes the different
-way to implement and execute learning and features specific to each;  these are described in more detail in
-`AutodiffComposition`.
+supports learning of `nested Compositions <Composition_Nested>` (see `AutodiffComposition_Nesting`). However, there
+are restrictions on the kinds of Compositions that be implemented in this way (see `AutodiffComposition_Restrictions`).
+The table below summarizes the different ways to implement and execute learning, and features specific to each;
+these are described in more detail in `AutodiffComposition`.
 
 The `learning_rate <AutodiffComposition.learning_rate>` for an AutodiffComposition can be specified in its constructor
 (which assigns it as the default) or in its `learn <AutodiffComposition.learn>` method, in which case it applies to
