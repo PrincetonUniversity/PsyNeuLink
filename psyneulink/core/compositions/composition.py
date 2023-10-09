@@ -7536,8 +7536,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                   f"on it for (i.e. follow it in) execution.")
                                 # Add projection from Node before ControlMechanism to current_entry,
                                 #   to preserve linear structure of pathway, while skipping ControlMechanism
-                                if node_entries.index(s):
-                                    entry_before_ctl_mech = node_entries[node_entries.index(s) - 1]
+                                just_nodes_in_pathway = _get_node_specs_for_entry(node_entries)
+                                if just_nodes_in_pathway.index(s):
+                                    entry_before_ctl_mech = just_nodes_in_pathway[just_nodes_in_pathway.index(s) - 1]
                                     projs.add(self.add_projection(sender=entry_before_ctl_mech, receiver=r,
                                                                   default_matrix=default_projection_matrix,
                                                                   allow_duplicates=False,
