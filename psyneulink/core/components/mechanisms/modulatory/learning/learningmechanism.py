@@ -157,7 +157,7 @@ names and roles (shown in the `figure <LearningMechanism_Single_Layer_Learning_F
   that receives its input from a ComparatorMechanism. If the `primary_learned_projection` is part of a `multilayer
   learning pathway <LearningMechanism_Multilayer_Learning>`, then the LearningMechanism will have one or more
   *ERROR_SIGNAL* InputPorts, that receive their input from the next LearningMechanism(s) in the sequence;  that is,
-  the one(s) associated with the `efferents <Port.efferents>` (outgoing Projections) of its `output_source`,
+  the one(s) associated with the `efferents <Port_Base.efferents>` (outgoing Projections) of its `output_source`,
   with one *ERROR_SIGNAL* InputPort for each of those Projections.  The `value <InputPort.value>`\\s of the
   *ERROR_SIGNAL* InputPorts are summed by the LearningMechanism's `function <LearningMechanism.function>` to
   calculate the `learning_signal <LearningMechanism.learning_signal>` (see `below <LearningMechanism_Function>`);
@@ -349,7 +349,7 @@ refer to the Components being learned and/or its operation:
 ..
 * `error_matrices` - the `matrix <MappingProjection.matrix>` parameters of the Projections associated with the
   `error_sources <LearningMechanism.error_sources>`;  that is, of any of the `output_source
-  <LearningMechanism.output_source>`'s `efferents <OutputPorts.efferents>` that are also being learned.
+  <LearningMechanism.output_source>`'s `efferents <Port_Base.efferents>` that are also being learned.
 ..
 * `covariates_sources` - the `InputPort`s of `Mechanism`(s) that provide covariates used in calculating the derivative
   of the `output_source <LearningMechanism.output_source>`'s `function <Mechanism_Base.function>` (see `above

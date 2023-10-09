@@ -63,14 +63,15 @@ same methods as a standard Composition, there are a few restrictions that apply 
 
 .. _AutodiffComposition_Modulatory_Mechanisms:
 
-*OUTPUT Nodes*
-~~~~~~~~~~~~~~
+*Only one OutputPort per Node*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The `OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>` of an AutodiffComposition currently can have only one
-`OutputPort`. This applies any `nested <AutodiffComposition_Nesting>` AutodiffCompositions as well the outermost one.
+The `Nodes <Composition_Nodes>` of an AutodiffComposition currently can have only *one* `OutputPort`, though that
+can have more than one `efferent <Port_Base.efferents>` `MappingProjection`.  Nodes can also have more than one
+`InputPort`, that can receive more than one `afferent `path_afferent <Port_Base.path_afferents>` Projections.
 
-*Modulatory Components*
-~~~~~~~~~~~~~~~~~~~~~~~
+*No Modulatory Components*
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 All of the Components in an AutodiffComposition must be able to be subjected to `learning <Composition_Learning>`,
 which means that no `ModulatoryMechanisms <ModulatoryMechanism>` can be included in an AutodiffComposition.
@@ -103,8 +104,8 @@ That is, an AutodiffComposition can be `nested in a Composition <Composition_Nes
 
 .. _AutodiffComposition_Bias_Parameters:
 
-*Bias Parameters*
-~~~~~~~~~~~~~~~~~
+*No Bias Parameters*
+~~~~~~~~~~~~~~~~~~~~
 
 AutodiffComposition does not (currently) support the *automatic* construction of separate bias parameters.
 Thus, when constructing a model using an AutodiffComposition that corresponds to one in PyTorch, the `bias
@@ -139,8 +140,8 @@ default value is being used (see `learning_rate <AutodiffComposition.learning_ra
 
 .. _AutodiffComposition_Post_Construction_Modification:
 
-*Post-construction Modification*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*No Post-construction Modification*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 COMMENT:
 IS THIS STILL TRUE?
 COMMENT

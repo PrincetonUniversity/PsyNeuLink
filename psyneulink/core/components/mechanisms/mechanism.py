@@ -556,7 +556,7 @@ any specifications in the Mechanism's `input_ports <Mechanism_Base.input_ports>`
 associated with an instantiated OutputPort at the time the Mechanism is executed are ignored.
 
 The `PathwayProjections <PathwayProjection>` (e.g., `MappingProjections <MappingProjection>`) it receives are listed
-in its `path_afferents <Port.path_afferents>` attribute.  If the Mechanism is an `ORIGIN` Mechanism of a
+in its `path_afferents <Port_Base.path_afferents>` attribute.  If the Mechanism is an `ORIGIN` Mechanism of a
 `Composition`, this includes a Projection from the Composition's `input_CIM <Composition.input_CIM>`.  Any
 `ControlProjections <ControlProjection>` or `GatingProjections <GatingProjection>` it receives are listed in its
 `mod_afferents <Port.mod_afferents>` attribute.
@@ -1412,20 +1412,20 @@ class Mechanism_Base(Mechanism):
 
     projections : ContentAddressableList
         a list of all of the Mechanism's `Projections <Projection>`, composed from the
-        `path_afferents <Port.path_afferents>` of all of its `input_ports <Mechanism_Base.input_ports>`,
+        `path_afferents <Port_Base.path_afferents>` of all of its `input_ports <Mechanism_Base.input_ports>`,
         the `mod_afferents` of all of its `input_ports <Mechanism_Base.input_ports>`,
         `parameter_ports <Mechanism)Base.parameter_ports>`, and `output_ports <Mechanism_Base.output_ports>`,
-        and the `efferents <Port.efferents>` of all of its `output_ports <Mechanism_Base.output_ports>`.
+        and the `efferents <Port_Base.efferents>` of all of its `output_ports <Mechanism_Base.output_ports>`.
 
     afferents : ContentAddressableList
         a list of all of the Mechanism's afferent `Projections <Projection>`, composed from the
-        `path_afferents <Port.path_afferents>` of all of its `input_ports <Mechanism_Base.input_ports>`,
+        `path_afferents <Port_Base.path_afferents>` of all of its `input_ports <Mechanism_Base.input_ports>`,
         and the `mod_afferents` of all of its `input_ports <Mechanism_Base.input_ports>`,
         `parameter_ports <Mechanism)Base.parameter_ports>`, and `output_ports <Mechanism_Base.output_ports>`.,
 
     path_afferents : ContentAddressableList
         a list of all of the Mechanism's afferent `PathwayProjections <PathwayProjection>`, composed from the
-        `path_afferents <Port.path_afferents>` attributes of all of its `input_ports
+        `path_afferents <Port_Base.path_afferents>` attributes of all of its `input_ports
         <Mechanism_Base.input_ports>`.
 
     mod_afferents : ContentAddressableList
@@ -1435,7 +1435,7 @@ class Mechanism_Base(Mechanism):
 
     efferents : ContentAddressableList
         a list of all of the Mechanism's efferent `Projections <Projection>`, composed from the `efferents
-        <Port.efferents>` attributes of all of its `output_ports <Mechanism_Base.output_ports>`.
+        <Port_Base.efferents>` attributes of all of its `output_ports <Mechanism_Base.output_ports>`.
 
     senders : ContentAddressableList
         a list of all of the Mechanisms that send `Projections <Projection>` to the Mechanism (i.e., the senders of
@@ -2646,9 +2646,15 @@ class Mechanism_Base(Mechanism):
                 else:
                     input_port.parameters.value._set(value, context)
             else:
-                raise MechanismError(f"Length ({len(input_item)}) of input ({input_item}) does not match "
-                                     f"required length ({input_port.default_input_shape.size}) for input "
+                # # MODIFIED 10/8/23 OLD:
+                # raise MechanismError(f"Length ({len(input_item)}) of input ({input_item}) does not match "
+                #                      f"required length ({input_port.default_input_shape.size}) for input "
+                #                      f"to {InputPort.__name__} {repr(input_port.name)} of {self.name}.")
+                # MODIFIED 10/8/23 NEW:
+                raise MechanismError(f"Shape ({input_item.shape}) of input ({input_item}) does not match "
+                                     f"required shape ({input_port.default_input_shape.shape}) for input "
                                      f"to {InputPort.__name__} {repr(input_port.name)} of {self.name}.")
+                # MODIFIED 10/8/23 END
 
         # Return values of input_ports for use as variable of Mechanism
         return convert_to_np_array(self.get_input_values(context))
