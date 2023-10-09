@@ -34,9 +34,9 @@ from psyneulink.core.compositions.composition import Composition, NodeRole, Comp
 from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, ALLOCATION_SAMPLES, BEFORE, DEFAULT, DISABLE, INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS,\
+    (ADDITIVE, ALLOCATION_SAMPLES, BEFORE, DEFAULT, DISABLE, INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS,\
     LEARNED_PROJECTIONS, RANDOM_CONNECTIVITY_MATRIX, CONTROL, \
-    NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OUTPUT_MECHANISM, OVERRIDE, SLOPE, TARGET_MECHANISM, VARIANCE
+    NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OUTPUT_MECHANISM, OVERRIDE, SLOPE, TARGET_MECHANISM, VARIANCE)
 from psyneulink.core.scheduling.condition import AtTimeStep, AtTrial, Never, TimeInterval
 from psyneulink.core.scheduling.condition import EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
@@ -1240,7 +1240,6 @@ class TestDuplicatePathwayWarnings:
             # Test for suppression of warning if verbosePref is not set
             with pytest.warns(None):
                 comp.add_backpropagation_learning_pathway(pathway=[A,B])
-
 
     def test_add_processing_pathway_non_contiguous_subset_is_OK(self):
         A = TransferMechanism()
@@ -2622,21 +2621,38 @@ class TestExecutionOrder:
 
         # [ctl_mech, ia, ib]
         if position == 0:
-            comp = Composition(pathway,name='comp')
-            assert ctl_mech in comp.get_nodes_by_role(NodeRole.INPUT)
-            assert ib in comp.get_nodes_by_role(NodeRole.OUTPUT)
-            # Since ia follows ctl_mech, it doesn't get any MappingProjection so it should be considered an INPUT Node
+            warning_msg = ("'ia' may be an INPUT Node, since it followed a ControlMechanism "
+                           "('control_mechanism') that was the first Node in 'pathway' arg "
+                           "for add_linear_processing_pathway method of 'comp'.")
+            with pytest.warns(UserWarning) as warning:
+                comp = Composition(pathway,name='comp')
+            assert warning_msg in str(warning[0].message)
+            # Since ia follows ctl_mech, it doesn't get any MappingProjection
+            #  so it should be considered an INPUT Node along with ctl_mech
+            assert {ia,ctl_mech} == set(comp.get_nodes_by_role(NodeRole.INPUT))
             assert ia.path_afferents[0].sender.owner == comp.input_CIM
-            assert [ib] == comp.get_nodes_by_role(NodeRole.TERMINAL)
+            assert comp.get_roles_by_node(ib) == {NodeRole.OUTPUT, NodeRole.TERMINAL}
 
         # [ia, ctl_mech, ib]
         elif position == 1:
-            comp = Composition(pathway,name='comp')
-            assert ia in comp.get_nodes_by_role(NodeRole.INPUT)
-            # Since ib doesn't get a MappingProjection, it too should be considered an INPUT Node
-            assert ib in comp.get_nodes_by_role(NodeRole.INPUT)
-            assert ib in comp.get_nodes_by_role(NodeRole.OUTPUT)
-            assert [ib] == comp.get_nodes_by_role(NodeRole.TERMINAL)
+            warning_msg_1 = ("'ib' will not receive a MappingProjection from 'control_mechanism' (the entry that "
+                             "follows it in 'pathway' arg for add_linear_processing_pathway method of 'comp') "
+                             "since that is a  ControlMechanism, however it will still be dependent on it for "
+                             "(i.e. follow it in) execution.")
+            warning_msg_2 = ("'A MappingProjection has been created from 'ia' to ib' since the latter "
+                           "followed a ControlMechanism ('control_mechanism') in 'pathway' arg for "
+                           "add_linear_processing_pathway method of 'comp'.")
+            with pytest.warns(UserWarning) as warning:
+                comp = Composition(pathway,name='comp',
+                                   prefs={pnl.VERBOSE_PREF: PreferenceEntry(True, PreferenceLevel.INSTANCE)})
+            assert warning_msg_1 in str(warning[2].message)
+            assert warning_msg_2 in str(warning[3].message)
+            assert comp.get_roles_by_node(ia) == {NodeRole.INPUT, NodeRole.ORIGIN}
+            # A MappingProjection should have been added from ia to ib
+            assert ib.input_port.path_afferents[0].sender.owner == ia
+            assert ib not in comp.get_nodes_by_role(NodeRole.INPUT)
+            assert comp.get_roles_by_node(ib) == {NodeRole.OUTPUT, NodeRole.TERMINAL}
+            assert comp.get_roles_by_node(ctl_mech) == {NodeRole.INTERNAL}
 
         # [ia, ib, clt_mech]
         elif position == 2:

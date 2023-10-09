@@ -7529,11 +7529,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 nested_comp = [e for e in current_entry if isinstance(e, Composition) and r in e.nodes]
                                 r = nested_comp[0] if nested_comp else r
                                 self.graph.connect_components(s, r)
-                                # Warn about inclusion of ControlMechanism in pathway
-                                warnings.warn(f"The Node ('{r.name}') in the {pathway_arg_str} will not receive a "
-                                              f"MappingProjection from the Node it follows in that pathway "
-                                              f"('{s.name}') since that is a {ControlMechanism.__name__}, however it "
-                                              f"will still be dependent on it for (i.e. follow it in) execution.")
+                                if self.verbosePref:
+                                    warnings.warn(f"'{r.name}' will not receive a MappingProjection from '{s.name}' "
+                                                  f"(the entry that follows it {pathway_arg_str}) since that is a "
+                                                  f" {ControlMechanism.__name__}, however it will still be dependent "
+                                                  f"on it for (i.e. follow it in) execution.")
                                 # Add projection from Node before ControlMechanism to current_entry,
                                 #   to preserve linear structure of pathway, while skipping ControlMechanism
                                 if node_entries.index(s):
@@ -7542,12 +7542,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                   default_matrix=default_projection_matrix,
                                                                   allow_duplicates=False,
                                                                   context=context))
-                                    warnings.warn(f"'{r.name}' now receives a MappingProjection from "
-                                                  f"'{entry_before_ctl_mech.name}' in the {pathway_arg_str} "
-                                                  f"(since it followed a {ControlMechanism.__name__} ('{s.name}').")
+                                    warnings.warn(f"'A MappingProjection has been created from "
+                                                  f"'{entry_before_ctl_mech.name}' to {r.name}' since the latter "
+                                                  f"followed a {ControlMechanism.__name__} ('{s.name}') "
+                                                  f"{pathway_arg_str}.")
                                 else:
-                                    warnings.warn(f"'{r.name}' is now the first Node in the {pathway_arg_str} "
-                                                  f"(since it followed a {ControlMechanism.__name__} ('{s.name}').")
+                                    warnings.warn(f"'{r.name}' may be an INPUT Node, since it followed a "
+                                                  f"{ControlMechanism.__name__} ('{s.name}') that w"
+                                                  f"as the first Node {pathway_arg_str}.")
                     if all(projs):
                         # If it is a singleton, append on its own;  if it is set or list, need to keep that intact
                         projs = projs.pop() if len(projs) == 1 else projs
