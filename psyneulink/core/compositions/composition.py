@@ -5373,6 +5373,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._add_node_role(node, NodeRole.OUTPUT)
                     continue
 
+                # Assign OUTPUT for all members of a CYCLE if they *all* project only to members of the CYCLE or:
+                #  - an ObjectiveMechanism designated as CONTROL_OBJECTIVE, CONTROLLER_OBJECTIVE or LEARNING_OBJECTIVE
+                #  - and/or directly to a ControlMechanism but is not an ObjectiveMechanism
+                #  - and/or projects to another node in a CYCLE but otherwise meets the above criteria <- FIX 10/9/23 ADD THIS
+
+                # MODIFIED 10/9/23 NEW:
+                def is_output_node(node, allow_cycle=False):
+                    return all((any(p.receiver.owner in self.get_nodes_by_role(role)
+                                    for role in {NodeRole.CONTROL_OBJECTIVE,
+                                                 NodeRole.CONTROLLER_OBJECTIVE,
+                                                 NodeRole.LEARNING_OBJECTIVE})
+                                or p.receiver.owner is self.output_CIM
+                                or (isinstance(p.receiver.owner, ControlMechanism)
+                                    and not isinstance(node, ObjectiveMechanism))
+                                or (allow_cycle and p.receiver.owner in self.get_nodes_by_role(NodeRole.CYCLE))
+                               for p in node.efferents))
+                # MODIFIED 10/9/23 END
+
                 # Assign OUTPUT only if the node is not:
                 #  - the TARGET_MECHANISM of a `learning Pathway <Composition_Learning_Pathway>`
                 #  - a ModulatoryMechanism
@@ -5380,26 +5398,54 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #  - an ObjectiveMechanism designated as CONTROL_OBJECTIVE, CONTROLLER_OBJECTIVE or LEARNING_OBJECTIVE
                 #  - and/or directly to a ControlMechanism but is not an ObjectiveMechanism
                 #  - and/or (already projects) to output_CIM
-                #  - and/or projects to another node in a CYCLE but otherwise meets the above criteria <- FIX 10/9/23 ADD THIS
                 if NodeRole.TARGET in self.get_roles_by_node(node):
                     continue
                 if isinstance(node, ModulatoryMechanism_Base):
                     continue
-                if all((any(p.receiver.owner in self.get_nodes_by_role(role)
-                           for role in {NodeRole.CONTROL_OBJECTIVE,
-                                        NodeRole.CONTROLLER_OBJECTIVE,
-                                        NodeRole.LEARNING_OBJECTIVE})
-                        or p.receiver.owner is self.output_CIM
-                       or (isinstance(p.receiver.owner, ControlMechanism) and not isinstance(node, ObjectiveMechanism)))
-                       for p in node.efferents):
+                # # MODIFIED 10/9/23 OLD:
+                # if all((any(p.receiver.owner in self.get_nodes_by_role(role)
+                #            for role in {NodeRole.CONTROL_OBJECTIVE,
+                #                         NodeRole.CONTROLLER_OBJECTIVE,
+                #                         NodeRole.LEARNING_OBJECTIVE})
+                #         or p.receiver.owner is self.output_CIM
+                #        or (isinstance(p.receiver.owner, ControlMechanism) and not isinstance(node, ObjectiveMechanism)))
+                #        for p in node.efferents):
+                #     self._add_node_role(node, NodeRole.OUTPUT)
+                # MODIFIED 10/9/23 NEW:
+                if is_output_node(node, allow_cycle=False):
                     self._add_node_role(node, NodeRole.OUTPUT)
+                # Check for OUTPUT CYCLE (i.e., one in which all Nodes are OUTPUTS)
+                # Note:  assign OUTPUT to all members of CYCLE once detected, to avoid re-checking for each
+                elif (node in self.get_nodes_by_role(NodeRole.CYCLE)
+                      and not node in self.get_nodes_by_role(NodeRole.OUTPUT)):
+                    # # Get Nodes in the CYCLE:
+                    cycle_nodes = [node]
+                    # FIX: 10/9/23 - WRITE TEST FOR DETECTING ALL AND ONLY NODES IN CYCLE, INCLUDING OVERLAPPING CYCLES
+                    queue = collections.deque([node])
+                    i = 0
+                    while queue:
+                        curr_node = queue.popleft()
+                        for next_node in [proj.receiver.owner for proj in curr_node.efferents
+                                          if proj.receiver.owner in self.get_nodes_by_role(NodeRole.CYCLE)]:
+                            if next_node is node:
+                                continue
+                            cycle_nodes.append(next_node)
+                            queue.append(next_node)
+                        i += 1
+                        assert i < 1000, f"PROGRAM ERROR:  CYCLE DETECTION FAILED FOR {node} IN {self.name}."
+                    # Ensure they are all satisfy criterial for OUTPUT Node
+                    if all(is_output_node(cycle_node, allow_cycle=True) for cycle_node in cycle_nodes):
+                        for cycle_node in cycle_nodes:
+                            self._add_node_role(cycle_node, NodeRole.OUTPUT)
+                # MODIFIED 10/9/23 END
+
 
                 # If node is a Composition and its output_CIM has OutputPorts that either have no Projections
                 #     or projections to self.output_CIM, then assign as OUTPUT Node
                 # Note: this ensures that if a nested Comp has both Nodes that project to others in the outer
                 #       Composition *and* legit OUTPUT Nodes (i.e., ones that project only to the outer Composition's
                 #       output_CIM), the latter qualify to still make the nested Comp an OUTPUT Node
-                if isinstance(node, Composition):
+                elif isinstance(node, Composition):
                     if any(not port.efferents or
                            any(proj.receiver.owner is self.output_CIM for proj in port.efferents)
                            for port in node.output_CIM.output_ports):
