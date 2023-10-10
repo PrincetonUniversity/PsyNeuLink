@@ -4723,11 +4723,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                nested Composition may not be an INPUT Node of the Composition in which it is nested).
         """
         nested_nodes = []
-        include_roles = convert_to_list(include_roles)
-        if exclude_roles:
-            exclude_roles = convert_to_list(exclude_roles)
-        else:
-            exclude_roles = []
+        include_roles = [] if include_roles is None else convert_to_list(include_roles)
+        exclude_roles = [] if exclude_roles is None else convert_to_list(exclude_roles)
         if isinstance(comp, Composition):
             # Get all nested nodes in comp that have include_roles and not exclude_roles:
             for node in [n for n in comp.nodes
@@ -5427,14 +5424,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         curr_node = queue.popleft()
                         for next_node in [proj.receiver.owner for proj in curr_node.efferents
                                           if proj.receiver.owner in self.get_nodes_by_role(NodeRole.CYCLE)]:
-                            if next_node is node:
+                            if next_node in cycle_nodes:
                                 continue
                             cycle_nodes.append(next_node)
                             queue.append(next_node)
                         i += 1
-                        assert i < 1000, f"PROGRAM ERROR:  CYCLE DETECTION FAILED FOR {node} IN {self.name}."
+                        assert i < 1000, f"PROGRAM ERROR: CYCLE DETECTION FAILED FOR {node} IN {self.name}."
                     # Ensure they are all satisfy criterial for OUTPUT Node
-                    if all(is_output_node(cycle_node, allow_cycle=True) for cycle_node in cycle_nodes):
+                    if (all(is_output_node(cycle_node, allow_cycle=True)
+                            and not cycle_node not in self.get_nodes_by_role(NodeRole.OUTPUT)
+                            for cycle_node in cycle_nodes)):
                         for cycle_node in cycle_nodes:
                             self._add_node_role(cycle_node, NodeRole.OUTPUT)
                 # MODIFIED 10/9/23 END
@@ -7533,9 +7532,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     node = (self.get_nested_nodes_by_roles_at_any_level(node, include_roles, exclude_roles)
                                 if isinstance(node, Composition) else [node])
                     if not node:
-                        raise CompositionError(f"A nested Composition ('{list(entry)[0].name}') "
-                                               f"included in {pathway_arg_str} is empty; "
-                                               f"(i.e., doex`s not have any nodes assigned to it yet).")
+                        raise CompositionError(f"A nested Composition ('{list(entry)[0].name}') included in "
+                                               f"{pathway_arg_str} is empty; (i.e., does not have any nodes "
+                                               f"with the specified NodeRole(s) assigned to it yet).")
                     nodes.extend(node)
                 return nodes
 
@@ -7576,9 +7575,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                   f"on it for (i.e. follow it in) execution.")
                                 # Add projection from Node before ControlMechanism to current_entry,
                                 #   to preserve linear structure of pathway, while skipping ControlMechanism
-                                just_nodes_in_pathway = _get_node_specs_for_entry(node_entries)
-                                if just_nodes_in_pathway.index(s):
-                                    entry_before_ctl_mech = just_nodes_in_pathway[just_nodes_in_pathway.index(s) - 1]
+                                # just_nodes_in_pathway = _get_node_specs_for_entry(node_entries)
+                                nodes_in_pathway = [node for node in _get_spec_if_tuple(node_entries)
+                                                    if isinstance(node, (Mechanism, Composition))]
+                                # FIX: 10/9/23 - NEED TO GENERALIZE THIS TO CONSECUTIVE SEQUENCE(S) OF CONTROLMECHANISMS
+                                if nodes_in_pathway.index(s):
+                                    entry_before_ctl_mech = nodes_in_pathway[nodes_in_pathway.index(s) - 1]
                                     projs.add(self.add_projection(sender=entry_before_ctl_mech, receiver=r,
                                                                   default_matrix=default_projection_matrix,
                                                                   allow_duplicates=False,

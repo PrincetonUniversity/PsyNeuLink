@@ -2138,11 +2138,11 @@ class TestGraph:
 class TestGraphCycles:
 
     def test_recurrent_transfer_mechanisms(self):
-        R1 = RecurrentTransferMechanism(auto=1.0)
-        R2 = RecurrentTransferMechanism(auto=1.0,
-                                        function=Linear(slope=2.0))
+        R1 = RecurrentTransferMechanism(auto=1.0, name='R1')
+        R2 = RecurrentTransferMechanism(auto=1.0, function=Linear(slope=2.0), name='R2')
         comp = Composition()
         comp.add_linear_processing_pathway(pathway=[R1, R2])
+        assert comp.get_nodes_by_role(NodeRole.OUTPUT) == [R2]
 
         # Trial 0:
         # input to R1 = 1.0, output from R1 = 1.0
@@ -2155,7 +2155,6 @@ class TestGraphCycles:
         # Trial 2:
         # input to R1 = 1.0 + 2.0, output from R1 = 3.0
         # input to R2 = 3.0 + 8.0, output from R2 = 22.0
-
 
         output = comp.run(inputs={R1: [1.0]}, num_trials=3)
         np.testing.assert_allclose(output, [np.array([22.])])
