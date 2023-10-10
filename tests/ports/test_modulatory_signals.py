@@ -57,4 +57,5 @@ class TestGatingSignals:
         comp2.add_nodes([Tx2, Ty2, G2])
         comp2.add_linear_processing_pathway([Tx2, Ty2, G2, Tx2])
         comp2.run(inputs={Tx2: inputs})
+
         assert comp1.results == comp2.results

@@ -7573,26 +7573,47 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                   f"(the entry that follows it {pathway_arg_str}) since that is a "
                                                   f" {ControlMechanism.__name__}, however it will still be dependent "
                                                   f"on it for (i.e. follow it in) execution.")
-                                # Add projection from Node before ControlMechanism to current_entry,
-                                #   to preserve linear structure of pathway, while skipping ControlMechanism
-                                # just_nodes_in_pathway = _get_node_specs_for_entry(node_entries)
-                                nodes_in_pathway = [node for node in _get_spec_if_tuple(node_entries)
+                                # Add projection from Node just before ControlMechanism(s) to current_entry,
+                                #   to preserve linear structure of pathway, while skipping ControlMechanism(s)
+                                # # MODIFIED 10/9/23 OLD:
+                                # nodes_in_pathway = [node for node in [_get_spec_if_tuple(n) for n in node_entries]
+                                #                     if isinstance(node, (Mechanism, Composition))]
+                                # if nodes_in_pathway.index(s):
+                                #     entry_before_ctl_mech = nodes_in_pathway[nodes_in_pathway.index(s) - 1]
+                                #     projs.add(self.add_projection(sender=entry_before_ctl_mech, receiver=r,
+                                #                                   default_matrix=default_projection_matrix,
+                                #                                   allow_duplicates=False,
+                                #                                   context=context))
+                                #     warnings.warn(f"'A MappingProjection has been created from "
+                                #                   f"'{entry_before_ctl_mech.name}' to {r.name}' since the latter "
+                                #                   f"followed a {ControlMechanism.__name__} ('{s.name}') "
+                                #                   f"{pathway_arg_str}.")
+                                # else:
+                                #     warnings.warn(f"'{r.name}' may be an INPUT Node, since it followed a "
+                                #                   f"{ControlMechanism.__name__} ('{s.name}') that w"
+                                #                   f"as the first Node {pathway_arg_str}.")
+                                # MODIFIED 10/9/23 NEW:
+                                nodes_in_pathway = [node for node in [_get_spec_if_tuple(n) for n in node_entries]
                                                     if isinstance(node, (Mechanism, Composition))]
-                                # FIX: 10/9/23 - NEED TO GENERALIZE THIS TO CONSECUTIVE SEQUENCE(S) OF CONTROLMECHANISMS
+                                # ControlMechanism is *not* 1st node in pathway
                                 if nodes_in_pathway.index(s):
-                                    entry_before_ctl_mech = nodes_in_pathway[nodes_in_pathway.index(s) - 1]
-                                    projs.add(self.add_projection(sender=entry_before_ctl_mech, receiver=r,
-                                                                  default_matrix=default_projection_matrix,
-                                                                  allow_duplicates=False,
-                                                                  context=context))
-                                    warnings.warn(f"'A MappingProjection has been created from "
-                                                  f"'{entry_before_ctl_mech.name}' to {r.name}' since the latter "
-                                                  f"followed a {ControlMechanism.__name__} ('{s.name}') "
-                                                  f"{pathway_arg_str}.")
+                                    preceding_non_ctl_node = [node for node in nodes_in_pathway[:nodes_in_pathway.index(s)]
+                                                              if not isinstance(node, ControlMechanism)][::-1][0]
+                                    if preceding_non_ctl_node:
+                                        projs.add(self.add_projection(sender=preceding_non_ctl_node, receiver=r,
+                                                                      default_matrix=default_projection_matrix,
+                                                                      allow_duplicates=False,
+                                                                      context=context))
+                                        warnings.warn(f"'A MappingProjection has been created from "
+                                                      f"'{preceding_non_ctl_node.name}' to {r.name}' since the latter "
+                                                      f"followed a {ControlMechanism.__name__} ('{s.name}') "
+                                                      f"{pathway_arg_str}.")
+                                # ControlMechanism *is* 1st Node in Pathway, so receiver may become an INPUT Node
                                 else:
                                     warnings.warn(f"'{r.name}' may be an INPUT Node, since it followed a "
                                                   f"{ControlMechanism.__name__} ('{s.name}') that w"
                                                   f"as the first Node {pathway_arg_str}.")
+                                # MODIFIED 10/9/23 END
                     if all(projs):
                         # If it is a singleton, append on its own;  if it is set or list, need to keep that intact
                         projs = projs.pop() if len(projs) == 1 else projs

@@ -7432,6 +7432,40 @@ class TestNodeRoles:
         # However, ctl_mech_B might also be;  depends on where feedback was assigned?
         assert ctl_mech_A in set(comp.get_nodes_by_role(NodeRole.TERMINAL))
 
+    def test_span_two_control_mechanisms_in_row(self):
+        mech_first = ProcessingMechanism(name='mech_first')
+        mech_last = ProcessingMechanism(name='mech_last')
+        ctl_mech_A = ControlMechanism(monitor_for_control=mech_first,
+                                      control_signals=ControlSignal(modulates=(INTERCEPT,mech_first),
+                                                                    cost_options=CostFunctions.INTENSITY),
+                                      name='ctl-mech_A')
+        ctl_mech_B = ControlMechanism(monitor_for_control=mech_first,
+                                      control_signals=ControlSignal(modulates=ctl_mech_A.control_signals[0],
+                                                                    modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM),
+                                      name='ctl-mech_B')
+        # comp = Composition(pathways=[mech, (ctl_mech_A, NodeRole.OUTPUT), (ctl_mech_B, NodeRole.OUTPUT)])
+        comp = Composition(pathways=[mech_first, ctl_mech_A, ctl_mech_B, mech_last])
+        assert all(role in comp.get_roles_by_node(mech_first) for role in {NodeRole.ORIGIN, NodeRole.INPUT})
+        assert all(role in comp.get_roles_by_node(mech_last) for role in {NodeRole.TERMINAL, NodeRole.OUTPUT})
+        assert mech_last.input_port.path_afferents[0].sender.owner is mech_first
+        assert not any(ctl_mech in comp.get_nodes_by_role(NodeRole.OUTPUT) for ctl_mech in {ctl_mech_A, ctl_mech_B})
+
+    def test_two_control_mechanisms_in_a_row_not_output(self):
+        mech = ProcessingMechanism(name='my_mech')
+        ctl_mech_A = ControlMechanism(monitor_for_control=mech,
+                                      control_signals=ControlSignal(modulates=(INTERCEPT,mech),
+                                                                    cost_options=CostFunctions.INTENSITY),
+                                      name='ctl-mech_A')
+        ctl_mech_B = ControlMechanism(monitor_for_control=mech,
+                                      control_signals=ControlSignal(modulates=ctl_mech_A.control_signals[0],
+                                                                    modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM),
+                                      name='ctl-mech_B')
+        # comp = Composition(pathways=[mech, (ctl_mech_A, NodeRole.OUTPUT), (ctl_mech_B, NodeRole.OUTPUT)])
+        comp = Composition(pathways=[mech, ctl_mech_A, ctl_mech_B])
+        assert all(role in comp.get_roles_by_node(mech) for role in {NodeRole.ORIGIN, NodeRole.INPUT, NodeRole.OUTPUT})
+        assert not any(ctl_mech in comp.get_nodes_by_role(NodeRole.OUTPUT) for ctl_mech in {ctl_mech_A, ctl_mech_B})
+        assert any(ctl_mech in comp.get_nodes_by_role(NodeRole.TERMINAL) for ctl_mech in {ctl_mech_A, ctl_mech_B})
+
     def test_force_two_control_mechanisms_as_OUTPUT(self):
         mech = ProcessingMechanism(name='my_mech')
         ctl_mech_A = ControlMechanism(monitor_for_control=mech,
@@ -7442,6 +7476,7 @@ class TestNodeRoles:
                                       control_signals=ControlSignal(modulates=ctl_mech_A.control_signals[0],
                                                                     modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM),
                                       name='ctl-mech_B')
+        # comp = Composition(pathways=[mech, (ctl_mech_A, NodeRole.OUTPUT), (ctl_mech_B, NodeRole.OUTPUT)])
         comp = Composition(pathways=[mech, (ctl_mech_A, NodeRole.OUTPUT), (ctl_mech_B, NodeRole.OUTPUT)])
         assert {mech, ctl_mech_A, ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.OUTPUT))
         assert {mech} == set(comp.get_nodes_by_role(NodeRole.ORIGIN))
