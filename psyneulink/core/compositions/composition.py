@@ -5414,7 +5414,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Check for OUTPUT CYCLE (i.e., one in which all Nodes are OUTPUTS)
                 # Note:  assign OUTPUT to all members of CYCLE once detected, to avoid re-checking for each
                 elif (node in self.get_nodes_by_role(NodeRole.CYCLE)
-                      and not node in self.get_nodes_by_role(NodeRole.OUTPUT)):
+                      and node not in self.get_nodes_by_role(NodeRole.OUTPUT)):
                     # # Get Nodes in the CYCLE:
                     cycle_nodes = [node]
                     # FIX: 10/9/23 - WRITE TEST FOR DETECTING ALL AND ONLY NODES IN CYCLE, INCLUDING OVERLAPPING CYCLES
@@ -5424,7 +5424,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         curr_node = queue.popleft()
                         for next_node in [proj.receiver.owner for proj in curr_node.efferents
                                           if proj.receiver.owner in self.get_nodes_by_role(NodeRole.CYCLE)]:
-                            if next_node in cycle_nodes:
+                            if next_node in cycle_nodes: # Cycle closed
                                 continue
                             cycle_nodes.append(next_node)
                             queue.append(next_node)
@@ -5432,7 +5432,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         assert i < 1000, f"PROGRAM ERROR: CYCLE DETECTION FAILED FOR {node} IN {self.name}."
                     # Ensure they are all satisfy criterial for OUTPUT Node
                     if (all(is_output_node(cycle_node, allow_cycle=True)
-                            and not cycle_node not in self.get_nodes_by_role(NodeRole.OUTPUT)
+                            # and cycle_node not in self.get_nodes_by_role(NodeRole.OUTPUT)
+                            and not any(role in self.get_roles_by_node(cycle_node)
+                                        for role in {NodeRole.OUTPUT,NodeRole.TERMINAL})
                             for cycle_node in cycle_nodes)):
                         for cycle_node in cycle_nodes:
                             self._add_node_role(cycle_node, NodeRole.OUTPUT)
