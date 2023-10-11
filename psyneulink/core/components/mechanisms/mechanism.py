@@ -2646,15 +2646,9 @@ class Mechanism_Base(Mechanism):
                 else:
                     input_port.parameters.value._set(value, context)
             else:
-                # # MODIFIED 10/8/23 OLD:
-                # raise MechanismError(f"Length ({len(input_item)}) of input ({input_item}) does not match "
-                #                      f"required length ({input_port.default_input_shape.size}) for input "
-                #                      f"to {InputPort.__name__} {repr(input_port.name)} of {self.name}.")
-                # MODIFIED 10/8/23 NEW:
                 raise MechanismError(f"Shape ({input_item.shape}) of input ({input_item}) does not match "
                                      f"required shape ({input_port.default_input_shape.shape}) for input "
                                      f"to {InputPort.__name__} {repr(input_port.name)} of {self.name}.")
-                # MODIFIED 10/8/23 END
 
         # Return values of input_ports for use as variable of Mechanism
         return convert_to_np_array(self.get_input_values(context))

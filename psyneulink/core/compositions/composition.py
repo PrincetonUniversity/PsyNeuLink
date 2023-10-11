@@ -5373,9 +5373,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Assign OUTPUT for all members of a CYCLE if they *all* project only to members of the CYCLE or:
                 #  - an ObjectiveMechanism designated as CONTROL_OBJECTIVE, CONTROLLER_OBJECTIVE or LEARNING_OBJECTIVE
                 #  - and/or directly to a ControlMechanism but is not an ObjectiveMechanism
-                #  - and/or projects to another node in a CYCLE but otherwise meets the above criteria <- FIX 10/9/23 ADD THIS
+                #  - and/or projects to another node in a CYCLE but otherwise meets the above criteria
 
-                # MODIFIED 10/9/23 NEW:
                 def is_output_node(node, allow_cycle=False):
                     return all((any(p.receiver.owner in self.get_nodes_by_role(role)
                                     for role in {NodeRole.CONTROL_OBJECTIVE,
@@ -5386,7 +5385,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     and not isinstance(node, ObjectiveMechanism))
                                 or (allow_cycle and p.receiver.owner in self.get_nodes_by_role(NodeRole.CYCLE))
                                for p in node.efferents))
-                # MODIFIED 10/9/23 END
 
                 # Assign OUTPUT only if the node is not:
                 #  - the TARGET_MECHANISM of a `learning Pathway <Composition_Learning_Pathway>`
@@ -5399,16 +5397,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     continue
                 if isinstance(node, ModulatoryMechanism_Base):
                     continue
-                # # MODIFIED 10/9/23 OLD:
-                # if all((any(p.receiver.owner in self.get_nodes_by_role(role)
-                #            for role in {NodeRole.CONTROL_OBJECTIVE,
-                #                         NodeRole.CONTROLLER_OBJECTIVE,
-                #                         NodeRole.LEARNING_OBJECTIVE})
-                #         or p.receiver.owner is self.output_CIM
-                #        or (isinstance(p.receiver.owner, ControlMechanism) and not isinstance(node, ObjectiveMechanism)))
-                #        for p in node.efferents):
-                #     self._add_node_role(node, NodeRole.OUTPUT)
-                # MODIFIED 10/9/23 NEW:
                 if is_output_node(node, allow_cycle=False):
                     self._add_node_role(node, NodeRole.OUTPUT)
                 # Check for OUTPUT CYCLE (i.e., one in which all Nodes are OUTPUTS)
@@ -5417,7 +5405,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                       and node not in self.get_nodes_by_role(NodeRole.OUTPUT)):
                     # # Get Nodes in the CYCLE:
                     cycle_nodes = [node]
-                    # FIX: 10/9/23 - WRITE TEST FOR DETECTING ALL AND ONLY NODES IN CYCLE, INCLUDING OVERLAPPING CYCLES
                     queue = collections.deque([node])
                     i = 0
                     while queue:
@@ -5438,8 +5425,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             for cycle_node in cycle_nodes)):
                         for cycle_node in cycle_nodes:
                             self._add_node_role(cycle_node, NodeRole.OUTPUT)
-                # MODIFIED 10/9/23 END
-
 
                 # If node is a Composition and its output_CIM has OutputPorts that either have no Projections
                 #     or projections to self.output_CIM, then assign as OUTPUT Node
@@ -7577,24 +7562,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                   f"on it for (i.e. follow it in) execution.")
                                 # Add projection from Node just before ControlMechanism(s) to current_entry,
                                 #   to preserve linear structure of pathway, while skipping ControlMechanism(s)
-                                # # MODIFIED 10/9/23 OLD:
-                                # nodes_in_pathway = [node for node in [_get_spec_if_tuple(n) for n in node_entries]
-                                #                     if isinstance(node, (Mechanism, Composition))]
-                                # if nodes_in_pathway.index(s):
-                                #     entry_before_ctl_mech = nodes_in_pathway[nodes_in_pathway.index(s) - 1]
-                                #     projs.add(self.add_projection(sender=entry_before_ctl_mech, receiver=r,
-                                #                                   default_matrix=default_projection_matrix,
-                                #                                   allow_duplicates=False,
-                                #                                   context=context))
-                                #     warnings.warn(f"'A MappingProjection has been created from "
-                                #                   f"'{entry_before_ctl_mech.name}' to {r.name}' since the latter "
-                                #                   f"followed a {ControlMechanism.__name__} ('{s.name}') "
-                                #                   f"{pathway_arg_str}.")
-                                # else:
-                                #     warnings.warn(f"'{r.name}' may be an INPUT Node, since it followed a "
-                                #                   f"{ControlMechanism.__name__} ('{s.name}') that w"
-                                #                   f"as the first Node {pathway_arg_str}.")
-                                # MODIFIED 10/9/23 NEW:
                                 nodes_in_pathway = [node for node in [_get_spec_if_tuple(n) for n in node_entries]
                                                     if isinstance(node, (Mechanism, Composition))]
                                 # ControlMechanism is *not* 1st node in pathway
@@ -7615,7 +7582,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     warnings.warn(f"'{r.name}' may be an INPUT Node, since it followed a "
                                                   f"{ControlMechanism.__name__} ('{s.name}') that w"
                                                   f"as the first Node {pathway_arg_str}.")
-                                # MODIFIED 10/9/23 END
                     if all(projs):
                         # If it is a singleton, append on its own;  if it is set or list, need to keep that intact
                         projs = projs.pop() if len(projs) == 1 else projs
