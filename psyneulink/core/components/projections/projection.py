@@ -271,16 +271,16 @@ of a Port are listed in its `projections <Port_Base.projections>` attribute.
     |                      |   *(attribute)*                       |  *(attribute)*                                   |
     +======================+=======================================+==================================================+
     | `MappingProjection`  | `OutputPort`                          | `InputPort`                                      |
-    |                      | (`efferents <Port.efferents>`)        | (`path_afferents <Port.path_afferents>`)         |
+    |                      | (`efferents <Port_Base.efferents>`)   | (`path_afferents <Port_Base.path_afferents>`)    |
     +----------------------+---------------------------------------+--------------------------------------------------+
     | `LearningProjection` | `LearningSignal`                      | `ParameterPort`                                  |
-    |                      | (`efferents <Port.efferents>`)        | (`mod_afferents <ParameterPort.mod_afferents>`)  |
+    |                      | (`efferents <Port_Base.efferents>`)   | (`mod_afferents <ParameterPort.mod_afferents>`)  |
     +----------------------+---------------------------------------+--------------------------------------------------+
     | `ControlProjection`  | `ControlSignal`                       | `InputPort`, `ParameterPort` or `OutputPort`     |
-    |                      | (`efferents <Port.efferents>`)        | (`mod_afferents <ParameterPort.mod_afferents>`)  |
+    |                      | (`efferents <Port_Base.efferents>`)   | (`mod_afferents <ParameterPort.mod_afferents>`)  |
     +----------------------+---------------------------------------+--------------------------------------------------+
     | `GatingProjection`   | `GatingSignal`                        | `InputPort` or `OutputPort`                      |
-    |                      | (`efferents <Port.efferents>`)        | (`mod_afferents <Port_Base.mod_afferents>`)      |
+    |                      | (`efferents <Port_Base.efferents>`)   | (`mod_afferents <Port_Base.mod_afferents>`)      |
     +----------------------+---------------------------------------+--------------------------------------------------+
 
 .. _Projection_Sender:
@@ -321,8 +321,8 @@ The `receiver <Projection_Base.receiver>` required by a Projection depends on it
     * GatingProjection: `InputPort` or OutputPort`
 
 A `MappingProjection` (as a `PathwayProjection <PathwayProjection>`) is assigned to the `path_afferents
-<Port.path_afferents>` attribute of its `receiver <Projection_Base.receiver>`.  The ModulatoryProjections are assigned
-to the `mod_afferents <Port.mod_afferents>` attribute of their `receiver <Projection_Base.receiver>`.
+<Port_Base.path_afferents>` attribute of its `receiver <Projection_Base.receiver>`.  The ModulatoryProjections are
+assigned to the `mod_afferents <Port.mod_afferents>` attribute of their `receiver <Projection_Base.receiver>`.
 
 A `receiver <Projection_Base.receiver>` can be specified as:
 

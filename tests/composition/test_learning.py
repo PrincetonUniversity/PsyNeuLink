@@ -383,15 +383,17 @@ class TestInputAndTargetSpecs:
         with pytest.raises(RunError) as error_text:
             comp.run(inputs={A: [1.0, 2.0, 3.0],
                              p.target: [[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]})
-        assert ("Input stimulus shape ((3, 2))" in str(error_text.value) and
-                "for 'Target' is incompatible with the shape of its external input" in str(error_text.value))
+        error_msg = (f"Input stimulus shape ([[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]) for 'Target' "
+                     f"is incompatible with the shape of its external input ([array([0., 0.])]).")
+        assert error_msg in str(error_text.value)
 
         # Elicit error with learn
         with pytest.raises(RunError) as error_text:
             comp.learn(inputs={A: [1.0, 2.0, 3.0],
                              p.target: [[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]})
-        assert ("Input stimulus shape ((3, 2))" in str(error_text.value) and
-                "for 'Target' is incompatible with the shape of its external input" in str(error_text.value))
+        error_msg = (f"Input stimulus shape ([[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]) for 'Target' "
+                     f"is incompatible with the shape of its external input ([array([0., 0.])]).")
+        assert error_msg in str(error_text.value)
 
     # The input sizes were picked because the lengths conflict in set:
     # >>> print({10, 2}, {2, 10})
@@ -1859,6 +1861,16 @@ class TestNestedLearning:
                     f'as the target attribute of the relevant pathway in {inner_comp.name}.pathways. '
             )
 
+    def test_no_learning_of_spanning_nested_compositions(self):
+        input_mech = pnl.ProcessingMechanism(name='input_mech', size=2)
+        hidden_mech = pnl.ProcessingMechanism(name='hidden_mech', size=2)
+        output_mech = pnl.ProcessingMechanism(name='output_mech', size=2)
+        nested = pnl.Composition(name='nested', nodes=[hidden_mech])
+        error_msg = ('Learning in Python mode does not currently support nested Compositions;  '
+                     'try using an AutodiffComposition with ExecutionMode.PyTorch.')
+        with pytest.raises(CompositionError) as error:
+            pnl.Composition(([input_mech, nested, output_mech],BackPropagation), name='comp')
+        assert error_msg == str(error.value)
 
 class TestBackPropLearning:
 

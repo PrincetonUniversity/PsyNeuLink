@@ -1095,10 +1095,10 @@ class TestControlMechanisms:
         # 4
         f"The '{pnl.STATE_FEATURES}' argument has been specified for 'OptimizationControlMechanism-0' that is using "
         f"a Composition ('OUTER COMP') as its agent_rep, but some of the specifications are not compatible with the "
-        f"inputs required by its 'agent_rep': 'Input stimulus shape ((1,)) for 'OB' is incompatible with the shape of "
-        f"its external input ((3,)).' Use the get_inputs_format() method of 'OUTER COMP' to see the required format, "
-        f"or remove the specification of 'state_features' from the constructor for OptimizationControlMechanism-0 to "
-        f"have them automatically assigned.",
+        f"inputs required by its 'agent_rep': 'Input stimulus shape ([[[0.0]]]) for 'OB' is incompatible with the "
+        f"shape of its external input ([array([0., 0., 0.])]).' Use the get_inputs_format() method of 'OUTER COMP' to "
+        f"see the required format, or remove the specification of 'state_features' from the constructor for "
+        f"OptimizationControlMechanism-0 to have them automatically assigned.",
 
         # 5
         f"The '{pnl.STATE_FEATURES}' specified for OptimizationControlMechanism-0 is associated with a number of "
@@ -1753,14 +1753,14 @@ class TestControlMechanisms:
         Note: Even though both mech and control_mech don't receive pathway inputs, since control_mech projects to mech,
         control_mech is assigned as NodeRole.INPUT (can be overridden with assignments in add_nodes)
         """
-        mech = pnl.ProcessingMechanism(input_ports=['A','B','C'])
-        control_mech = pnl.ControlMechanism(control=mech.input_ports[0])
+        mech = pnl.ProcessingMechanism(input_ports=['A','B','C'], name='mech')
+        control_mech = pnl.ControlMechanism(control=mech.input_ports[0], name='ctl_mech')
         comp = pnl.Composition()
         comp.add_nodes([mech, control_mech])
         result = comp.run(inputs={control_mech:[2]}, num_trials=3)
         # np.testing.assert_allclose(result, [[2],[2],[2]])
-        assert pnl.NodeRole.INPUT not in comp.get_roles_by_node(mech)
-        assert pnl.NodeRole.INPUT in comp.get_roles_by_node(control_mech)
+        assert mech in comp.get_nodes_by_role(pnl.NodeRole.INPUT)
+        assert control_mech in comp.get_nodes_by_role(pnl.NodeRole.INPUT)
 
         # Should produce same result as above
         mech = pnl.ProcessingMechanism(input_ports=['A','B','C'])
@@ -1768,8 +1768,8 @@ class TestControlMechanisms:
         comp = pnl.Composition()
         comp.add_nodes([mech, control_mech])
         comp.run(inputs={control_mech:[2]}, num_trials=3)
-        assert pnl.NodeRole.INPUT not in comp.get_roles_by_node(mech)
-        assert pnl.NodeRole.INPUT in comp.get_roles_by_node(control_mech)
+        assert mech in comp.get_nodes_by_role(pnl.NodeRole.INPUT)
+        assert control_mech in comp.get_nodes_by_role(pnl.NodeRole.INPUT)
 
     def test_modulation_of_control_signal_intensity_cost_function_ADDITIVE(self):
         # tests additive modulation of default intensity_cost_function (Exponential) of
@@ -2391,6 +2391,7 @@ class TestControlMechanisms:
         with pytest.warns(UserWarning) as warning:
             comp = pnl.Composition(name='COMPOSITION', pathways=[ctl])
             comp.add_node(mech)
+            comp.verbosePref = pnl.PreferenceEntry(True, pnl.PreferenceLevel.INSTANCE)
             comp.run()
         assert all(msg in [repr(w.message.args[0]) for w in warning]
                    for msg in {warning_msg_1, warning_msg_2, warning_msg_3})

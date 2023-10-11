@@ -76,7 +76,8 @@ class TestKWTAInputs:
                 size=4
             )
             K.execute([1, 2, 3, 4, 5])
-        assert ("does not match required length" in str(error_text.value))
+        assert ("Shape ((5,)) of input ([1 2 3 4 5]) does not match required shape ((4,)) "
+                "for input to InputPort 'InputPort-0' of K." in str(error_text.value))
 
     def test_recurrent_mech_inputs_mismatched_with_default_shorter(self):
         with pytest.raises(MechanismError) as error_text:
@@ -85,7 +86,8 @@ class TestKWTAInputs:
                 size=6
             )
             K.execute([1, 2, 3, 4, 5])
-        assert ("does not match required length" in str(error_text.value))
+        assert ("Shape ((5,)) of input ([1 2 3 4 5]) does not match required shape ((6,)) "
+                "for input to InputPort 'InputPort-0' of K." in str(error_text.value))
 
 
 class TestKWTAFunction:

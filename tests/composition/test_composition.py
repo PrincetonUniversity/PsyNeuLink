@@ -1,6 +1,7 @@
 import collections
 import functools
 import logging
+import warnings
 from timeit import timeit
 
 import numpy as np
@@ -33,9 +34,9 @@ from psyneulink.core.compositions.composition import Composition, NodeRole, Comp
 from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, ALLOCATION_SAMPLES, BEFORE, DEFAULT, DISABLE, INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS,\
-    LEARNED_PROJECTIONS, RANDOM_CONNECTIVITY_MATRIX, CONTROL, \
-    NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OUTPUT_MECHANISM, OVERRIDE, SLOPE, TARGET_MECHANISM, VARIANCE
+    (ADDITIVE, ALLOCATION_SAMPLES, BEFORE, DEFAULT, DISABLE, INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS,
+    LEARNED_PROJECTIONS, RANDOM_CONNECTIVITY_MATRIX, CONTROL,
+    NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OUTPUT_MECHANISM, OVERRIDE, SLOPE, TARGET_MECHANISM, VARIANCE)
 from psyneulink.core.scheduling.condition import AtTimeStep, AtTrial, Never, TimeInterval
 from psyneulink.core.scheduling.condition import EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
@@ -592,9 +593,18 @@ comp.add_node(B)
         comp2 = Composition(name='COMP_2', pathways=[C, D])
         with pytest.warns(UserWarning) as warning:
             ocomp = Composition(name='OUTER COMPOSITION',pathways=[comp1, comp2])
+            icomp.verbosePref = PreferenceEntry(True, PreferenceLevel.INSTANCE)
+            comp1.verbosePref = PreferenceEntry(True, PreferenceLevel.INSTANCE)
+            comp2.verbosePref = PreferenceEntry(True, PreferenceLevel.INSTANCE)
             ocomp.run()
-        assert repr(warning[0].message.args[0]) == '"\\nThe following Projections were specified but are not being used by Nodes in \'iCOMP\':\\n\\tMappingProjection from A[OutputPort-0] to C[InputPort-0] (from \'A\' to \'C\')."'
-        assert repr(warning[1].message.args[0]) == '"\\nThe following Projections were specified but are not being used by Nodes in \'COMP_2\':\\n\\tMappingProjection from A[OutputPort-0] to C[InputPort-0] (to \'C\' from \'A\')."'
+        error_msg_1 = ('"\\nThe following Projections were specified but are not being used by Nodes '
+                       'in \'iCOMP\':\\n\\tMappingProjection from A[OutputPort-0] to C[InputPort-0] '
+                       '(from \'A\' to \'C\')."')
+        error_msg_2 = ('"\\nThe following Projections were specified but are not being used by Nodes '
+                       'in \'COMP_2\':\\n\\tMappingProjection from A[OutputPort-0] to C[InputPort-0] '
+                       '(to \'C\' from \'A\')."')
+        assert error_msg_1 in repr(warning[0].message.args[0])
+        assert error_msg_2 in repr(warning[1].message.args[0])
 
 
 @pytest.mark.pathways
@@ -1230,7 +1240,6 @@ class TestDuplicatePathwayWarnings:
             # Test for suppression of warning if verbosePref is not set
             with pytest.warns(None):
                 comp.add_backpropagation_learning_pathway(pathway=[A,B])
-
 
     def test_add_processing_pathway_non_contiguous_subset_is_OK(self):
         A = TransferMechanism()
@@ -2129,11 +2138,11 @@ class TestGraph:
 class TestGraphCycles:
 
     def test_recurrent_transfer_mechanisms(self):
-        R1 = RecurrentTransferMechanism(auto=1.0)
-        R2 = RecurrentTransferMechanism(auto=1.0,
-                                        function=Linear(slope=2.0))
+        R1 = RecurrentTransferMechanism(auto=1.0, name='R1')
+        R2 = RecurrentTransferMechanism(auto=1.0, function=Linear(slope=2.0), name='R2')
         comp = Composition()
         comp.add_linear_processing_pathway(pathway=[R1, R2])
+        assert comp.get_nodes_by_role(NodeRole.OUTPUT) == [R2]
 
         # Trial 0:
         # input to R1 = 1.0, output from R1 = 1.0
@@ -2147,9 +2156,9 @@ class TestGraphCycles:
         # input to R1 = 1.0 + 2.0, output from R1 = 3.0
         # input to R2 = 3.0 + 8.0, output from R2 = 22.0
 
-
         output = comp.run(inputs={R1: [1.0]}, num_trials=3)
         np.testing.assert_allclose(output, [np.array([22.])])
+
 
 @pytest.mark.pathways
 class TestExecutionOrder:
@@ -2596,6 +2605,68 @@ class TestExecutionOrder:
         for i in range(len(comp.scheduler.consideration_queue)):
             assert comp.scheduler.consideration_queue[i] == expected_consideration_sets[i]
 
+    @pytest.mark.parametrize('position', range(4), ids=range(4))
+    # @pytest.mark.parametrize('position',d [1])
+    def test_order_of_ctl_mech_in_pathway(self, position):
+        ia = TransferMechanism(name='ia')
+        ib = TransferMechanism(name='ib')
+        ctl_mech = ControlMechanism(name='control_mechanism',
+                              control_signals=ControlSignal(projections=[(SLOPE, ib)]))
+        if position < 3:
+            pathway = [ia, ib]
+            pathway.insert(position, ctl_mech)
+        else:
+            pathway = [ia, ctl_mech, MappingProjection(sender=ia, receiver=ib), ib]
+
+        # [ctl_mech, ia, ib]
+        if position == 0:
+            warning_msg = ("'ia' may be an INPUT Node, since it followed a ControlMechanism "
+                           "('control_mechanism') that was the first Node in 'pathway' arg "
+                           "for add_linear_processing_pathway method of 'comp'.")
+            with pytest.warns(UserWarning) as warning:
+                comp = Composition(pathway,name='comp')
+            assert warning_msg in str(warning[0].message)
+            # Since ia follows ctl_mech, it doesn't get any MappingProjection
+            #  so it should be considered an INPUT Node along with ctl_mech
+            assert {ia,ctl_mech} == set(comp.get_nodes_by_role(NodeRole.INPUT))
+            assert ia.path_afferents[0].sender.owner == comp.input_CIM
+            assert comp.get_roles_by_node(ib) == {NodeRole.OUTPUT, NodeRole.TERMINAL}
+
+        # [ia, ctl_mech, ib]
+        elif position == 1:
+            warning_msg_1 = ("'ib' will not receive a MappingProjection from 'control_mechanism' (the entry that "
+                             "follows it in 'pathway' arg for add_linear_processing_pathway method of 'comp') "
+                             "since that is a  ControlMechanism, however it will still be dependent on it for "
+                             "(i.e. follow it in) execution.")
+            warning_msg_2 = ("'A MappingProjection has been created from 'ia' to ib' since the latter "
+                           "followed a ControlMechanism ('control_mechanism') in 'pathway' arg for "
+                           "add_linear_processing_pathway method of 'comp'.")
+            with pytest.warns(UserWarning) as warning:
+                comp = Composition(pathway,name='comp',
+                                   prefs={pnl.VERBOSE_PREF: PreferenceEntry(True, PreferenceLevel.INSTANCE)})
+            assert warning_msg_1 in str(warning[2].message)
+            assert warning_msg_2 in str(warning[3].message)
+            assert comp.get_roles_by_node(ia) == {NodeRole.INPUT, NodeRole.ORIGIN}
+            # A MappingProjection should have been added from ia to ib
+            assert ib.input_port.path_afferents[0].sender.owner == ia
+            assert ib not in comp.get_nodes_by_role(NodeRole.INPUT)
+            assert comp.get_roles_by_node(ib) == {NodeRole.OUTPUT, NodeRole.TERMINAL}
+            assert comp.get_roles_by_node(ctl_mech) == {NodeRole.INTERNAL}
+
+        # [ia, ib, clt_mech]
+        elif position == 2:
+            comp = Composition(pathway,name='comp')
+            assert ia in comp.get_nodes_by_role(NodeRole.INPUT)
+            assert ib in comp.get_nodes_by_role(NodeRole.OUTPUT)
+            assert [ctl_mech] == comp.get_nodes_by_role(NodeRole.TERMINAL)
+
+        # [ia, clt_mech, MappingProjection(ia,ib), ib]
+        elif position == 3:
+            comp = Composition(pathway,name='comp')
+            assert ia in comp.get_nodes_by_role(NodeRole.INPUT)
+            assert ib in comp.get_nodes_by_role(NodeRole.OUTPUT)
+            assert [ib] == comp.get_nodes_by_role(NodeRole.TERMINAL)
+
     def test_multiple_projections_along_pathway(self):
 
         comp = Composition()
@@ -2848,6 +2919,7 @@ class TestExecutionOrder:
         assert comp.scheduler.execution_list[comp.default_execution_id] == [{A, B}]
         assert comp.scheduler.execution_timestamps[comp.default_execution_id][0].absolute == 1 * pnl._unit_registry.ms
 
+
 @pytest.mark.pathways
 class TestGetMechanismsByRole:
 
@@ -2875,6 +2947,7 @@ class TestGetMechanismsByRole:
     def test_nonexistent_role(self):
         comp = Composition()
         comp.get_nodes_by_role(None)
+
 
 
 class TestInputPortSpecifications:
@@ -3020,6 +3093,7 @@ class TestInputPortSpecifications:
         np.testing.assert_allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
         np.testing.assert_allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
         np.testing.assert_allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
+
 
 
 class TestRunInputSpecifications:
@@ -3769,7 +3843,6 @@ class TestRun:
         output = benchmark(comp.run, inputs={A: [[1.0]]}, scheduler=sched, execution_mode=comp_mode)
         np.testing.assert_allclose(25, output)
 
-
     @pytest.mark.skip
     @pytest.mark.composition
     @pytest.mark.benchmark(group="LinearComposition")
@@ -3876,7 +3949,6 @@ class TestRun:
         output = benchmark(comp.run, inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
         np.testing.assert_allclose([[150], [200]], output)
 
-
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Merge composition scalar MIMO")
     def test_3_mechanisms_2_origins_1_terminal_mimo_parallel(self, benchmark, comp_mode):
@@ -3904,7 +3976,6 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = benchmark(comp.run, inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
         np.testing.assert_allclose([[300], [350]], output)
-
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Merge composition scalar MIMO")
@@ -4098,6 +4169,22 @@ class TestRun:
             comp.run()
         assert repr(warning[0].message.args[0]) == warning_msg
 
+    def test_one_time_warning_for_run_with_no_inputs(self):
+        mech_1 = ProcessingMechanism()
+        mech_2 = ProcessingMechanism()
+        comp = Composition([mech_1,mech_2])
+
+        # Should get warning on first run
+        warning_msg = ('No inputs provided in call to Composition-0.run(). The following defaults will be used for '
+                       'each INPUT Node:{(ProcessingMechanism ProcessingMechanism-0): [[[0.0]]]}')
+        with pytest.warns(UserWarning) as warning:
+            comp.run()
+        assert warning_msg in warning[0].message.args[0]
+
+        # Should *NOT* get a warning on the second
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            comp.run()
 
 class TestCallBeforeAfterTimescale:
 
@@ -5245,6 +5332,7 @@ class TestImportComposition:
         assert all(entry in c.required_node_roles for entry in em.required_node_roles)
 
         c.run(execution_mode=comp_mode)
+
 
 class TestOverloadedCompositions:
     def test_mechanism_different_inputs(self):
@@ -7101,6 +7189,8 @@ class TestNodeRoles:
         assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER)) == {C}
         assert set(comp.get_nodes_by_role(NodeRole.INTERNAL)) == {B}
         assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER)) == {A}
+        result = comp.run(inputs={A:[3]})
+        assert result == [3]
 
     def test_branch(self):
         a = TransferMechanism(default_variable=[0, 0])
@@ -7204,20 +7294,6 @@ class TestNodeRoles:
         comp._analyze_graph()
         assert set(comp.get_nodes_by_role(NodeRole.CYCLE)) == {A,B,C}
         assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))
-        result = comp.run(inputs={A:[3]})
-        assert True
-
-    def test_three_node_cycle_with_FEEDBACK(self):
-        A = TransferMechanism()
-        B = TransferMechanism()
-        C = TransferMechanism()
-        comp = Composition(pathways=[A, B, C])
-        comp.add_projection(sender=C, receiver=A, feedback=True)
-        comp._analyze_graph()
-        assert not set(comp.get_nodes_by_role(NodeRole.CYCLE))
-        assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER)) == {C}
-        assert set(comp.get_nodes_by_role(NodeRole.INTERNAL)) == {B}
-        assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER)) == {A}
         result = comp.run(inputs={A:[3]})
         assert True
 
@@ -7356,22 +7432,55 @@ class TestNodeRoles:
         # However, ctl_mech_B might also be;  depends on where feedback was assigned?
         assert ctl_mech_A in set(comp.get_nodes_by_role(NodeRole.TERMINAL))
 
+    def test_span_two_control_mechanisms_in_row(self):
+        mech_first = ProcessingMechanism(name='mech_first')
+        mech_last = ProcessingMechanism(name='mech_last')
+        ctl_mech_A = ControlMechanism(monitor_for_control=mech_first,
+                                      control_signals=ControlSignal(modulates=(INTERCEPT,mech_first),
+                                                                    cost_options=CostFunctions.INTENSITY),
+                                      name='ctl-mech_A')
+        ctl_mech_B = ControlMechanism(monitor_for_control=mech_first,
+                                      control_signals=ControlSignal(modulates=ctl_mech_A.control_signals[0],
+                                                                    modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM),
+                                      name='ctl-mech_B')
+        # comp = Composition(pathways=[mech, (ctl_mech_A, NodeRole.OUTPUT), (ctl_mech_B, NodeRole.OUTPUT)])
+        comp = Composition(pathways=[mech_first, ctl_mech_A, ctl_mech_B, mech_last])
+        assert all(role in comp.get_roles_by_node(mech_first) for role in {NodeRole.ORIGIN, NodeRole.INPUT})
+        assert all(role in comp.get_roles_by_node(mech_last) for role in {NodeRole.TERMINAL, NodeRole.OUTPUT})
+        assert mech_last.input_port.path_afferents[0].sender.owner is mech_first
+        assert not any(ctl_mech in comp.get_nodes_by_role(NodeRole.OUTPUT) for ctl_mech in {ctl_mech_A, ctl_mech_B})
+
+    def test_two_control_mechanisms_in_a_row_not_output(self):
+        mech = ProcessingMechanism(name='my_mech')
+        ctl_mech_A = ControlMechanism(monitor_for_control=mech,
+                                      control_signals=ControlSignal(modulates=(INTERCEPT,mech),
+                                                                    cost_options=CostFunctions.INTENSITY),
+                                      name='ctl-mech_A')
+        ctl_mech_B = ControlMechanism(monitor_for_control=mech,
+                                      control_signals=ControlSignal(modulates=ctl_mech_A.control_signals[0],
+                                                                    modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM),
+                                      name='ctl-mech_B')
+        # comp = Composition(pathways=[mech, (ctl_mech_A, NodeRole.OUTPUT), (ctl_mech_B, NodeRole.OUTPUT)])
+        comp = Composition(pathways=[mech, ctl_mech_A, ctl_mech_B])
+        assert all(role in comp.get_roles_by_node(mech) for role in {NodeRole.ORIGIN, NodeRole.INPUT, NodeRole.OUTPUT})
+        assert not any(ctl_mech in comp.get_nodes_by_role(NodeRole.OUTPUT) for ctl_mech in {ctl_mech_A, ctl_mech_B})
+        assert any(ctl_mech in comp.get_nodes_by_role(NodeRole.TERMINAL) for ctl_mech in {ctl_mech_A, ctl_mech_B})
+
     def test_force_two_control_mechanisms_as_OUTPUT(self):
         mech = ProcessingMechanism(name='my_mech')
         ctl_mech_A = ControlMechanism(monitor_for_control=mech,
                                       control_signals=ControlSignal(modulates=(INTERCEPT,mech),
-                                                                    cost_options=CostFunctions.INTENSITY))
+                                                                    cost_options=CostFunctions.INTENSITY),
+                                      name='ctl-mech_A')
         ctl_mech_B = ControlMechanism(monitor_for_control=mech,
                                       control_signals=ControlSignal(modulates=ctl_mech_A.control_signals[0],
-                                                                    modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM))
+                                                                    modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM),
+                                      name='ctl-mech_B')
+        # comp = Composition(pathways=[mech, (ctl_mech_A, NodeRole.OUTPUT), (ctl_mech_B, NodeRole.OUTPUT)])
         comp = Composition(pathways=[mech, (ctl_mech_A, NodeRole.OUTPUT), (ctl_mech_B, NodeRole.OUTPUT)])
         assert {mech, ctl_mech_A, ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.OUTPUT))
-        # Current instantiation always assigns ctl_mech_B as TERMINAL in this case;
-        # this is here to flag any violation of this in the future, in case that is not intended
         assert {mech} == set(comp.get_nodes_by_role(NodeRole.ORIGIN))
-        # assert {ctl_mech_A, ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.TERMINAL))
         assert {ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.TERMINAL))
-        assert {mech, ctl_mech_A, ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.OUTPUT))
 
     def test_LEARNING_hebbian(self):
         A = RecurrentTransferMechanism(name='A', size=2, enable_learning=True)

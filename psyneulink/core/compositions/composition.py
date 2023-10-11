@@ -689,7 +689,7 @@ Learning is used to modify the `Projections <Projection>` between Mechanisms in 
 it modifies the `matrix <MappingProjection.matrix>` parameter of the `MappingProjections <MappingProjection>` within a
 `learning Pathway <Composition_Learning_Pathway>`, which implements the conection weights (i.e., strengths of
 associations between representations in the Mechanisms) within a `Pathway`.  If learning is implemented for a
-Composition, it can be executed calling the Composition's `learn <Composition.learn>` method (see
+Composition, it can be executed by calling the Composition's `learn <Composition.learn>` method (see
 `Composition_Learning_Execution` and `Composition_Execution` for additional details). The rate at which learning
 occurs is determined by the learning_rate parameter, which can be assigned in various ways and is described under
 `Composition_Learning_Rate` at the end of this section.
@@ -702,9 +702,12 @@ occurs is determined by the learning_rate parameter, which can be assigned in va
 There are three ways of configuring learning in a Composition, using:
 
 i) `standard PsyNeuLink Components <Composition_Learning_Standard>`, for presentational and/or instructional purposes;
+   supports both `Composition_Learning_Supervised` and `Composition_Learning_Unsupervised`, but executes slowly
+   and does not support learning that spans `nested compositions <Composition_Nested>`.
 
-ii) an `AutodiffComposition <Composition_Learning_AutodiffComposition>`, a subclass of Composition
-    that executes learning efficiently;
+ii) an `AutodiffComposition <Composition_Learning_AutodiffComposition>`, a subclass of Composition that executes
+    learning substantially more efficiently, and supports learning that spans `nested compositions
+    <Composition_Nested>`, but is currently restricted to `Composition_Learning_Supervised`.
 
 iii) `UserDefinedFunctions <Composition_Learning_UDF>`, that provide full flexiblity.
 
@@ -1055,23 +1058,23 @@ COMMENT
 `AutodiffCompositions <AutodiffComposition>` provide the ability to execute backpropagation learning much more
 efficiently than using a standard Composition.  An AutodiffComposition is constructed in the same way, but there
 is no need to specify any `learning components <Composition_Learning_Components>`>` or use any `learning methods
-<Composition_Learning_Methods>` -- in fact, they should *not* be specified (see `warning
-<Autodiff_Learning_Components_Warning>`) -- an AutodiffComposition automatically creates backpropagation
-`learning pathways <Composition_Learning_Pathway>` from all input to all output `Nodes <Composition_Nodes>`.
-While learning in an AutodiffComposition is restricted to the `BackPropagation` learning algorithm, its `loss
-function <Loss>` can be specified (using the **loss_spec** parameter of its constructor), which implements different
-kinds of `supervised learning <Composition_Learning_Supervised>` (for example, `Loss.MSE` can be used for regression,
-or `Loss.CROSS_ENTROPY` for classification).
+<Composition_Learning_Methods>` -- in fact, they *cannot* be specified (see `warning
+<Autodiff_Learning_Components_Warning>`) -- an AutodiffComposition automatically constructs all of the components
+needed for learning While learning in an AutodiffComposition is currently restricted to the `BackPropagation` learning
+algorithm, its `loss function <Loss>` can be specified (using the **loss_spec** parameter of its constructor),
+which implements different kinds of `supervised learning <Composition_Learning_Supervised>` (for example, `Loss.MSE`
+can be used for regression, or `Loss.CROSS_ENTROPY` for classification).
 
 The advantage of using an AutodiffComposition is that it allows a model to be implemented in PsyNeuLink, while
 exploiting the acceleration of optimized implementations of learning. This can be achieved by executing the `learn
 <Composition.learn>` method in one of two modes (specified using its **execution_mode** argument):  using direct
 compilation (**execution_mode** = `ExecutionMode.LLVMRun`); or by automatically translating the model to `PyTorch
 <https://pytorch.org>`_ for training (**execution_mode** = `ExecutionMode.PyTorch`). The advantage of these modes is
-that they can provide up to three orders of magnitude speed-up in training a model. However, there are restrictions
-on the kinds of Compositions that be implemented in this way. Use of the `PyTorch` mode also supports learning of
-`nested Compositions <Composition_Nested>` (see `AutodiffComposition_PyTorch`. The features of the different ways to
-implement and execute learning are outlined in the table below, and described in more detail in `AutodiffComposition`.
+that they can provide up to three orders of magnitude speed-up in training a model. Use of the `PyTorch` mode also
+supports learning of `nested Compositions <Composition_Nested>` (see `AutodiffComposition_Nesting`). However, there
+are restrictions on the kinds of Compositions that be implemented in this way (see `AutodiffComposition_Restrictions`).
+The table below summarizes the different ways to implement and execute learning, and features specific to each;
+these are described in more detail in `AutodiffComposition`.
 
 The `learning_rate <AutodiffComposition.learning_rate>` for an AutodiffComposition can be specified in its constructor
 (which assigns it as the default) or in its `learn <AutodiffComposition.learn>` method, in which case it applies to
@@ -2902,6 +2905,7 @@ from psyneulink.core.components.functions.nonstateful.learningfunctions import \
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity, Logistic, SoftMax
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError, MechanismList
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP, \
     OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
@@ -2949,7 +2953,7 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, _
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import ContentAddressableList, call_with_pruned_args, convert_to_list, \
     nesting_depth, convert_to_np_array, is_numeric, is_matrix, is_matrix_keyword, parse_valid_identifier
-from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, Condition, Never
+from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, Condition, Never, AtNCalls, BeforeNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import \
@@ -4013,6 +4017,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.needs_update_controller = True # Tracks if controller needs to update its state_input_ports
         self.needs_determine_node_roles = False # Set in add_node and add_projection to insure update of NodeRoles
         self._need_check_for_unused_projections = True
+        self.warned_about_run_with_no_inputs = False
 
         self.nodes_to_roles = collections.OrderedDict()
         self.cycle_vertices = set()
@@ -4298,13 +4303,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._handle_allow_probes_for_control(node)
 
         self._need_check_for_unused_projections = True
-
-        # # MODIFIED 1/27/22 NEW - FIX - BREAKS test_learning_output_shape() in ExecuteMode.LLVM
-        #                                [3/25/22] STILL NEEDED (e.g., FOR test_inputs_key_errors()
-        # if context.source != ContextFlags.METHOD:
-        #     # Call _analyze_graph with ContextFlags.METHOD to avoid recursion
-        #     self._analyze_graph(context=Context(source=ContextFlags.METHOD))
-        # MODIFIED 1/27/22 END
         self.needs_determine_node_roles = True
 
     def add_nodes(self, nodes, required_roles=None, context=None):
@@ -4713,19 +4711,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         except KeyError as e:
             raise CompositionError('Node missing from {0}.nodes_to_roles: {1}'.format(self, e))
 
-    def _get_nested_nodes_with_same_roles_at_all_levels(self, comp, include_roles, exclude_roles=None):
+    def get_nested_nodes_by_roles_at_any_level(self, comp, include_roles, exclude_roles=None)->list or None:
         """Return all Nodes from nested Compositions that have *include_roles* but not *exclude_roles at all levels*.
-        Note:  need to do this recursively, checking roles on the "way down," since a Node may have a role in a
+        Returns Nodes that have or don't have the specified roles at *any* level of nesting,
+            irrespective of their status at other levels of nesting.
+        To get nodes that are either INPUT or OUTPUT Nodes at *all* levels of nesting, use either
+            get_nested_input_nodes_at_all_levels() or get_nested_output_nodes_at_all_levels()
+        Note:  do this recursively, checking roles on the "way down," as a Node may have a role in a
                deeply nested Composition, but that Composition itself may not have the same role in the Composition
                within which *it* is nested (e.g., a Node might be an INPUT Node of a nested Composition, but that
                nested Composition may not be an INPUT Node of the Composition in which it is nested).
         """
         nested_nodes = []
-        include_roles = convert_to_list(include_roles)
-        if exclude_roles:
-            exclude_roles = convert_to_list(exclude_roles)
-        else:
-            exclude_roles = []
+        include_roles = [] if include_roles is None else convert_to_list(include_roles)
+        exclude_roles = [] if exclude_roles is None else convert_to_list(exclude_roles)
         if isinstance(comp, Composition):
             # Get all nested nodes in comp that have include_roles and not exclude_roles:
             for node in [n for n in comp.nodes
@@ -4734,11 +4733,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                and not any(n in comp.get_nodes_by_role(exclude)
                                            for exclude in exclude_roles))]:
                 if isinstance(node, Composition):
-                    nested_nodes.extend(node._get_nested_nodes_with_same_roles_at_all_levels(node, include_roles,
-                                                                                             exclude_roles))
+                    nested_nodes.extend(node.get_nested_nodes_by_roles_at_any_level(node, include_roles, exclude_roles))
                 else:
                     nested_nodes.append(node)
-        return nested_nodes or None
+        return nested_nodes if any(nested_nodes) else None
+
+    def get_nested_nodes_input_nodes_at_levels(self)->list or None:
+        """Return all Nodes from nested Compositions that receive input from the environment."""
+        input_nodes = self.get_nested_nodes_by_roles_at_any_level(self, include_roles=NodeRole.INPUT)
+        return [input_node for input_node in input_nodes
+                if not all(proj.sender.owner._get_source_node_for_input_CIM(proj.sender)
+                           for proj in input_port.path_afferents for input_port in input_node)] or None
+
+    def get_nested_nodes_output_nodes_at_levels(self)->list or None:
+        """Return all Nodes from nested Compositions that receive input from the environment."""
+        output_nodes = self.get_nested_nodes_by_roles_at_any_level(self, include_roles=NodeRole.OUTPUT)
+        return [output_node for output_node in output_nodes
+                if not all(proj.receiver.owner._get_destination_info_for_output_CIM(proj.receiver)
+                           for output_port in output_node.output_ports for proj in output_port.efferents)] or None
 
     def _get_input_nodes_by_CIM_input_order(self):
         """Return a list with the `INPUT` `Nodes <Composition_Nodes>` of the Composition in the same order as their
@@ -4752,18 +4764,29 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                              comp=None,
                              type:Union[PORT,NODE]=PORT,
                              comp_as_node:Union[bool,ALL]=False):
-        """Return all INPUT Nodes [or their InputPorts] of comp, [including those for any nested Compositions].
+        """Return all INPUT Nodes [or their InputPorts] of comp, including those for any nested Compositions.
         If type is PORT, return all InputPorts for all INPUT Nodes, including for nested Compositions.
         If type is NODE, return all INPUT Nodes, including for nested Compositions as determined by comp_as_node:
             if an INPUT Node is a Composition, and comp_as_node is:
             - False, include the nested Composition's INPUT Nodes, but not the Composition
             - True, include the nested Composition but not its INPUT Nodes
             - ALL, include the nested Composition AND its INPUT Nodes
+        Exclude input_port(s) of Node(s) in a nested Composition if their input comes from a Node in the enclosing
+           Composition rather than its input_CIM (as those will be accounted for by the input_CIM of the outer Comp)
         """
 
         # FIX: 3/16/22 - CAN THIS BE REPLACED BY:
+        # FIX: 9/20/23 - TRY AGAIN! BUT NEED TO MODIFY IT TO HANDLE type AND comp_as_node ARGS
         # return [self._get_destination(output_port.efferents[0])[0]
         #         for _,output_port in self.input_CIM.port_map.values()]
+
+        def afferent_is_via_internal_only_cim_input_port(input_port):
+            for proj in input_port.path_afferents:
+                if isinstance(proj.sender.owner, CompositionInterfaceMechanism):
+                    sender_output_port = proj.sender
+                    input_cim = proj.sender.owner
+                    return input_cim.port_map[input_port][0].internal_only
+            return False
 
         assert not (type == PORT and comp_as_node), f"PROGRAM ERROR: _get_input_receivers() can't be called " \
                                                     f"for 'ports' and 'nodes' at the same time."
@@ -4777,13 +4800,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if type==PORT:
             # Return all InputPorts of all INPUT Nodes
-            _input_nodes = comp._get_nested_nodes_with_same_roles_at_all_levels(comp=comp,
-                                                                                include_roles=NodeRole.INPUT)
+            _input_nodes = comp.get_nested_nodes_by_roles_at_any_level(comp=comp, include_roles=NodeRole.INPUT)
             if _input_nodes:
                 for node in _input_nodes:
                     # Exclude internal_only and shadowers of input (since the latter get inputs for the shadowed item)
                     input_items.extend([input_port for input_port in node.input_ports
-                                        if not (input_port.internal_only or input_port.shadow_inputs)])
+                                        if not (input_port.internal_only or input_port.shadow_inputs
+                                                or afferent_is_via_internal_only_cim_input_port(input_port))])
                 # Ensure correct number of InputPorts have been identified
                 #    (i.e., number of InputPorts on comp's input_CIM)
                 if _update_cim:
@@ -4792,7 +4815,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._determine_pathway_roles(context)
                     self._create_CIM_ports(context)
                 _update_cim = False
-                assert len(input_items) == len(comp.input_CIM_ports)
+                assert len(input_items) == len([input_port for input_port in comp.input_CIM.input_ports
+                                                if not input_port.internal_only])
         else:
             # Return all INPUT Nodes
             _input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
@@ -4804,6 +4828,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         input_items.extend(self._get_input_receivers(comp=node, type=type, comp_as_node=comp_as_node))
                 else:
                     input_items.append(node)
+            # Filter to include only Nodes that have at least one input_port that receives an "environment" input
+            outer_input_nodes = []
+            for node in input_items:
+                if (isinstance(node, Mechanism) and comp_as_node is not True and
+                        any(isinstance(p.sender.owner, CompositionInterfaceMechanism) and
+                            not p.sender.owner._get_source_node_for_input_CIM(p.sender) for p in node.path_afferents)):
+                    outer_input_nodes.append(node)
+                elif (isinstance(node, Composition) and comp_as_node is not False and
+                      (any(isinstance(p.sender.owner, CompositionInterfaceMechanism) and
+                           not p.sender.owner._get_source_node_for_input_CIM(p.sender) for p in node.afferents))):
+                    outer_input_nodes.append(node)
+            input_items = outer_input_nodes
 
         return input_items
 
@@ -5239,35 +5275,42 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # INPUT
         origin_nodes = self.get_nodes_by_role(NodeRole.ORIGIN)
-        for node in origin_nodes:
-            # Don't allow INTERNAL Nodes to be INPUTS
-            if NodeRole.INTERNAL in self.get_roles_by_node(node):
-                continue
-            self._add_node_role(node, NodeRole.INPUT)
+        for node in self.nodes:
+            if node in origin_nodes:
+                # Don't allow INTERNAL Nodes to be INPUTS
+                if NodeRole.INTERNAL in self.get_roles_by_node(node):
+                    continue
+                self._add_node_role(node, NodeRole.INPUT)
 
-            # special case, ControlMechanisms create MappingProjections
-            # to inner composition parameter CIMs, which may or may not
-            # create scheduler dependencies (determined by user action).
-            # If an inner composition is not ORIGIN because of this
-            # condition, add it as INPUT anyway.
-            if isinstance(node, ControlMechanism):
-                for child in self.graph_processing.comp_to_vertex[node].children:
-                    for parent in child.parents:
-                        # MappingProjections from non-ControlMechanisms
-                        # always obey standard scheduling behavior
-                        if (
-                            not isinstance(parent.component, ControlMechanism)
-                            or parent.component not in origin_nodes
-                        ):
-                            continue
-
-                        for proj in child.component.get_afferents(parent.component):
+                # special case, ControlMechanisms create MappingProjections
+                # to inner composition parameter CIMs, which may or may not
+                # create scheduler dependencies (determined by user action).
+                # If an inner composition is not ORIGIN because of this
+                # condition, add it as INPUT anyway.
+                if isinstance(node, ControlMechanism):
+                    for child in self.graph_processing.comp_to_vertex[node].children:
+                        for parent in child.parents:
+                            # MappingProjections from non-ControlMechanisms
+                            # always obey standard scheduling behavior
                             if (
-                                isinstance(proj, PathwayProjection_Base)
-                                and proj._creates_scheduling_dependency
+                                not isinstance(parent.component, ControlMechanism)
+                                or parent.component not in origin_nodes
                             ):
-                                self._add_node_role(child.component, NodeRole.INPUT)
-                                break
+                                continue
+
+                            for proj in child.component.get_afferents(parent.component):
+                                if (
+                                    isinstance(proj, PathwayProjection_Base)
+                                    and proj._creates_scheduling_dependency
+                                ):
+                                    self._add_node_role(child.component, NodeRole.INPUT)
+                                    break
+
+            # Node does not receive any path_afferents (except possibly from input_CIM)
+            elif (not isinstance(node, (Composition, ModulatoryMechanism_Base))
+                  and (not node.path_afferents
+                       or all(p.sender.owner is self.input_CIM for p in node.path_afferents))):
+                self._add_node_role(node, NodeRole.INPUT)
 
         # CYCLE
         for node in self.graph_processing.cycle_vertices:
@@ -5297,14 +5340,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Assign OUTPUT if node is TERMINAL...
             if NodeRole.TERMINAL in self.get_roles_by_node(node):
                 # unless it is a ModulatoryMechanism
-                if (isinstance(node, ModulatoryMechanism_Base)
-                    # # FIX: WHY WOULD SUCH AN ObjectiveMechanism BE TERMINAL IF IT PROJECTS TO A MODULATORY_MECHANISM
-                    # #      (IS THIS BECAUSE MODULATORY MECH GETS DISCOUNTED FROM BEING TERMINAL IN graph_processing?)
-                    # # or an ObjectiveMechanism associated with ControlMechanism or LearningMechanism
-                    #     or any(role in self.get_roles_by_node(node) for role in {NodeRole.CONTROL_OBJECTIVE,
-                    #                                                              NodeRole.CONTROLLER_OBJECTIVE,
-                    #                                                              NodeRole.LEARNING_OBJECTIVE})
-                ):
+                if isinstance(node, ModulatoryMechanism_Base):
                     continue
                 else:
                     self._add_node_role(node, NodeRole.OUTPUT)
@@ -5334,6 +5370,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._add_node_role(node, NodeRole.OUTPUT)
                     continue
 
+                # Assign OUTPUT for all members of a CYCLE if they *all* project only to members of the CYCLE or:
+                #  - an ObjectiveMechanism designated as CONTROL_OBJECTIVE, CONTROLLER_OBJECTIVE or LEARNING_OBJECTIVE
+                #  - and/or directly to a ControlMechanism but is not an ObjectiveMechanism
+                #  - and/or projects to another node in a CYCLE but otherwise meets the above criteria
+
+                def is_output_node(node, allow_cycle=False):
+                    return all((any(p.receiver.owner in self.get_nodes_by_role(role)
+                                    for role in {NodeRole.CONTROL_OBJECTIVE,
+                                                 NodeRole.CONTROLLER_OBJECTIVE,
+                                                 NodeRole.LEARNING_OBJECTIVE})
+                                or p.receiver.owner is self.output_CIM
+                                or (isinstance(p.receiver.owner, ControlMechanism)
+                                    and not isinstance(node, ObjectiveMechanism))
+                                or (allow_cycle and p.receiver.owner in self.get_nodes_by_role(NodeRole.CYCLE))
+                               for p in node.efferents))
+
                 # Assign OUTPUT only if the node is not:
                 #  - the TARGET_MECHANISM of a `learning Pathway <Composition_Learning_Pathway>`
                 #  - a ModulatoryMechanism
@@ -5345,27 +5397,42 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     continue
                 if isinstance(node, ModulatoryMechanism_Base):
                     continue
-                if all((any(p.receiver.owner in self.get_nodes_by_role(role)
-                           for role in {NodeRole.CONTROL_OBJECTIVE,
-                                        NodeRole.CONTROLLER_OBJECTIVE,
-                                        NodeRole.LEARNING_OBJECTIVE})
-                        or p.receiver.owner is self.output_CIM
-                       or (isinstance(p.receiver.owner, ControlMechanism) and not isinstance(node, ObjectiveMechanism)))
-                       for p in node.efferents):
+                if is_output_node(node, allow_cycle=False):
                     self._add_node_role(node, NodeRole.OUTPUT)
+                # Check for OUTPUT CYCLE (i.e., one in which all Nodes are OUTPUTS)
+                # Note:  assign OUTPUT to all members of CYCLE once detected, to avoid re-checking for each
+                elif (node in self.get_nodes_by_role(NodeRole.CYCLE)
+                      and node not in self.get_nodes_by_role(NodeRole.OUTPUT)):
+                    # # Get Nodes in the CYCLE:
+                    cycle_nodes = [node]
+                    queue = collections.deque([node])
+                    i = 0
+                    while queue:
+                        curr_node = queue.popleft()
+                        for next_node in [proj.receiver.owner for proj in curr_node.efferents
+                                          if proj.receiver.owner in self.get_nodes_by_role(NodeRole.CYCLE)]:
+                            if next_node in cycle_nodes: # Cycle closed
+                                continue
+                            cycle_nodes.append(next_node)
+                            queue.append(next_node)
+                        i += 1
+                        assert i < 1000, f"PROGRAM ERROR: CYCLE DETECTION FAILED FOR {node} IN {self.name}."
+                    # Ensure they are all satisfy criterial for OUTPUT Node
+                    if (all(is_output_node(cycle_node, allow_cycle=True)
+                            # and cycle_node not in self.get_nodes_by_role(NodeRole.OUTPUT)
+                            and not any(role in self.get_roles_by_node(cycle_node)
+                                        for role in {NodeRole.OUTPUT,NodeRole.TERMINAL})
+                            for cycle_node in cycle_nodes)):
+                        for cycle_node in cycle_nodes:
+                            self._add_node_role(cycle_node, NodeRole.OUTPUT)
 
                 # If node is a Composition and its output_CIM has OutputPorts that either have no Projections
                 #     or projections to self.output_CIM, then assign as OUTPUT Node
                 # Note: this ensures that if a nested Comp has both Nodes that project to others in the outer
                 #       Composition *and* legit OUTPUT Nodes (i.e., ones that project only to the outer Composition's
                 #       output_CIM), the latter qualify to still make the nested Comp an OUTPUT Node
-                if isinstance(node, Composition):
-                    # for port in node.output_CIM.output_ports:
-                    #     if (not port.efferents
-                    #             or any(proj.receiver.owner is self.output_CIM for proj in port.efferents)):
-                    #         self._add_node_role(node, NodeRole.OUTPUT)
-                    #         break
-                    if any(not port.efferents or # <- FIX 9/1/23 - SHOULD ONLY INCLUDE THIS AT RUNTIME
+                elif isinstance(node, Composition):
+                    if any(not port.efferents or
                            any(proj.receiver.owner is self.output_CIM for proj in port.efferents)
                            for port in node.output_CIM.output_ports):
                         self._add_node_role(node, NodeRole.OUTPUT)
@@ -5468,9 +5535,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
               InputPort of each INPUT node. Connect the OutputPort on the input_CIM to the INPUT node's corresponding
               InputPort via a standard MappingProjection.
 
+              .. note::
+                    The InputPort on the input_CIM is named using the following convention:
+                    INPUT_CIM_NAME + "_" + node.name + "_" + node.input_port.name
+
+              .. note::
+                 If the input_CIM is for a nested Composition, any of its input_ports that receive Projection(s)
+                 from Nodes in the enclosing (outer) Composition (rather than its input_CIM) are marked as
+                 `internal_only <InputPort_Internal_Only>`, since they do not receive input directly from the external
+                 environment of the enclosing Composition
+
             - create a corresponding InputPort and OutputPort on the `output_CIM <Composition.output_CIM>` for each
               OutputPort of each OUTPUT node. Connect the OUTPUT node's OutputPort to the output_CIM's corresponding
               InputPort via a standard MappingProjection.
+
+              .. note::
+                    The OutputPort on the output_CIM is named using the following convention:
+                    OUTPUT_CIM_NAME + "_" + node.name + "_" + node.output_port.name
 
             - create a corresponding InputPort and ControlSignal on the `parameter_CIM <Composition.parameter_CIM>` for
               each InputPort of each node in the Composition that receives a modulatory projection from an enclosing
@@ -5491,6 +5572,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             - delete all of the above for any node Ports which were previously, but are no longer, classified as
               INPUT/OUTPUT
         """
+
+        # SET-UP -----------------------------------------------------------------------------------------------
+
         # temporarily change context source for scope of this method so
         # port calls are not believed to come directly from
         # script/command-line
@@ -5519,7 +5603,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # flag the CIM as connected to the Composition so we don't remove ports on future calls to this method
             self.parameter_CIM.connected_to_composition = True
 
-        # INPUT CIM
+        # INPUT CIM -----------------------------------------------------------------------------------------------
+
         current_input_node_input_ports = set()
 
         # we're going to set up ports on the input CIM for all input nodes in the Composition
@@ -5593,7 +5678,56 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # and from the dictionary of CIM OutputPort/InputPort pairs
             del self.input_CIM_ports[input_port]
 
-        # OUTPUT CIM
+        # Check for any errant / residual input_CIM.output_ports
+        #   (these can result from order of construction and/or selective inputs to nodes within a nested Composition)
+        # Do this by checking if any output_port of the current (outer) Composition projects directly to the
+        #   input_CIM of a nested Composition that itself already has a Projection from a Node in the outer Composition
+        #   (note: two different Nodes of the outer Composition can project to a single input_port of the input_CIM
+        #   of a nested Composition, but the input_CIM of the outer Composition should never project to the input_port
+        #   of the input_CIM of a nested Composition thqt already has one or more afferent Projections).
+        #  If it does, then remove errant Projection, the output_port of the input_CIM on the outer Composition
+        #    that sends it, and the corresponding input_port of the input_CIM of the outer Composition,
+        #    and mark the input_port of the input_CIM of the nested Composition as internal_only.
+        defunct_output_ports = set()
+        for output_port in self.input_CIM.output_ports:
+            # First ensure that the output_port under consideration has only one (non-shadowing) efferent from it
+            non_shadowing_efferents = [proj for proj in output_port.efferents if not proj.receiver.shadow_inputs]
+            # Don't care about output_ports that have only shadowing efferents,
+            #    as they will be consolidated with the output_ports of the projections they shadow
+            if not non_shadowing_efferents:
+                continue
+            assert len(non_shadowing_efferents) == 1, \
+                (f"PROGRAM ERROR: '{output_port}' of '{self.name}.input_CIM' has more than one (non-shadowing) efferent"
+                 f"(that project to: {' ,'.join([proj.receiver.owner.name for proj in non_shadowing_efferents])}).")
+            # Then, get that Projection
+            proj = non_shadowing_efferents[0]
+            rcvr = proj.receiver
+            node = rcvr.owner
+            # If node has > 1 afferent from a Node (other than recurrent one), should not be considered an INPUT Node
+            if (len([p for p in rcvr.path_afferents
+                     if (p in self.projections
+                         and p.sender.owner not in self.get_nodes_by_role(NodeRole.CYCLE) and
+                         not (p.sender.owner not in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER)
+                              and node in self.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER)))])) > 1:
+                # Ensure that one of the afferents is from a Node (and not the input_CIM) of the outer Composition
+                assert [proj for proj in rcvr.path_afferents if
+                        (not isinstance(proj.sender.owner, CompositionInterfaceMechanism)
+                         and proj.sender.owner in self.nodes) or
+                        (isinstance(proj.sender.owner, CompositionInterfaceMechanism) and
+                         proj.sender.owner.composition in self.nodes)]
+                defunct_output_ports.add(output_port)
+                # Mark the input_port of the input_CIM of the nested Composition as internal_only
+                rcvr.internal_only = True
+        # Remove efferent from each defunct output_port and then the output_port and its corresponding input_port
+        for output_port in defunct_output_ports:
+            proj = output_port.efferents[0]
+            self.remove_projection(proj)
+            self.input_CIM.remove_ports(self.input_CIM_ports[proj.receiver][0])
+            self.input_CIM.remove_ports(self.input_CIM_ports[proj.receiver][1])
+
+
+        # OUTPUT CIM ----------------------------------------------------------------------------------------------
+
         # loop over all OUTPUT nodes
         # Set up ports on the output CIM for all output nodes in the Composition
         current_output_node_output_ports = set()
@@ -5671,7 +5805,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # and from the dictionary of CIM OutputPort/InputPort pairs
             del self.output_CIM_ports[output_port]
 
-        # Check for any errant / residual output_CIM.input_ports (that can result from order of construction)
+        # Check for any errant / residual output_CIM.input_ports
+        #  (these can result from order of construction and/or selective outputs from nodes within a nested Composition)
         # Do this by checking if the source of the projection to each output_CIM.input_port has any other efferents;
         #  if it does, and the following are true:
         #  - the Node is not a PROBE or a CYCLE Node in a cycle all of which are output NODES
@@ -5704,7 +5839,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                  and p.receiver.owner in self.get_nodes_by_role(NodeRole.OUTPUT)
                                  and not isinstance(p, AutoAssociativeProjection))]) != 0):
                 defunct_input_ports.add(input_port)
-        # Remove afferent to each defunct input_port and then the input_port itself
+        # Remove afferent to each defunct input_port and then the input_port and its corresponding output_port
         for input_port in defunct_input_ports:
             proj = input_port.path_afferents[0]
             self.remove_projection(proj)
@@ -5713,9 +5848,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.output_CIM.remove_ports(self.output_CIM_ports[proj.sender][1])
             del self.output_CIM_ports[proj.sender]
 
-        # PARAMETER CIM
+        # PARAMETER CIM -------------------------------------------------------------------------------------------
 
-        # We get the projection that needs to be routed through the PCIM as well as the composition that owns it,
+        # Get the projection that needs to be routed through the PCIM as well as the composition that owns it,
         # because we will need to activate the new projections for the composition that owns the PCIM as well as the
         # referring composition
         for comp_projection, referring_composition in external_modulatory_projections:
@@ -5766,6 +5901,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # remove the original direct projection from the target ParameterPort
                 receiver.mod_afferents.remove(comp_projection)
                 comp_projection.sender._remove_projection_from_port(comp_projection)
+
+        # CLEAN-UP -------------------------------------------------------------------------------------------
 
         for cim, type in zip([self.input_CIM, self.output_CIM, self.parameter_CIM], [INPUT, OUTPUT, PARAMETER]):
 
@@ -5837,24 +5974,38 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             context.execution_id = orig_eid
             context.string = context_string
 
-            # verify there is exactly one automatically instantiated input port for each automatically instantiated
-            # output port
+            # validate there is exactly one automatically created input port for each automatically created output port
             num_auto_input_ports = len(cim.input_ports) - len(cim.user_added_ports[INPUT_PORTS])
             num_auto_output_ports = len(cim.output_ports) - len(cim.user_added_ports[OUTPUT_PORTS])
             assert num_auto_input_ports == num_auto_output_ports
+
+            # validate that the number of input_CIM output_ports matches the number of INPUT Node input_ports
             if type==INPUT:
                 # FIX 4/4/20 [JDC]: NEED TO ADD ASSERTION FOR NUMBER OF SHADOW PROJECTIONS
                 num_input_CIM_output_ports = len(cim.output_ports) - len(cim.user_added_ports[OUTPUT_PORTS])
-                num_INPUT_Node_input_ports = sum([len(n.external_input_ports)
-                                                  for n in self.get_nodes_by_role(NodeRole.INPUT)])
+                # num_INPUT_Node_input_ports = sum([len(n.external_input_ports)
+                #                                   for n in self.get_nodes_by_role(NodeRole.INPUT)])
+                # Get number of external_input_ports for all INPUT Nodes that are Mechanisms + input_ports of
+                #   input_CIMs for nested Compositions that receive direct inputs from the outer Composition
+                num_INPUT_Node_input_ports = 0
+                for input_node in self.get_nodes_by_role(NodeRole.INPUT):
+                    # Get all external_input_ports for INPUT Nodes that are Mechanisms
+                    if isinstance(input_node, Mechanism):
+                        num_INPUT_Node_input_ports += len(input_node.external_input_ports)
+                    # Get all input_ports of input_CIMs for nested Compositions that don't receive inputs from Nodes
+                    # in outer Composition (i.e. that should receive *direct* inputs from cim)
+                    elif isinstance(input_node, Composition):
+                        for input_port in input_node.input_CIM.input_ports:
+                            num_INPUT_Node_input_ports += \
+                                len([proj for proj in input_port.path_afferents
+                                     if proj in self.projections and isinstance(proj.sender.owner,
+                                     CompositionInterfaceMechanism)])
                 assert num_input_CIM_output_ports == num_INPUT_Node_input_ports, \
                     (f"PROGRAM ERROR: Number of OutputPorts on {self.input_CIM.name} "
                      f"({num_input_CIM_output_ports}) does not match the number of external_input_ports "
-                     f"over all INPUT nodes of {self.name} ({num_INPUT_Node_input_ports}).")
-                # FIX 4/4/20 [JDC]: THIS FAILS FOR NESTED COMPS (AND OTHER PLACES?):
-                # p = len([p for p in self.projections if (INPUT_CIM_NAME in p.name and SHADOW_INPUT_NAME not in p.name )])
-                # assert p == n, f"PROGRAM ERROR:  Number of Projections associated with {self.input_CIM.name})" \
-                #                f"({p} does not match the number of its OutputPorts ({n})."
+                     f"({num_INPUT_Node_input_ports}) for all INPUT nodes of {self.name} to which it projects.")
+
+            # validate that the number of output_CIM input_ports matches the number of OUTPUT Node output_ports
             elif type==OUTPUT:
                 num_output_CIM_input_ports = len(cim.input_ports) - len(cim.user_added_ports[INPUT_PORTS])
                 # Get total number of output_ports for all OUTPUT and PROBE nodes
@@ -5880,6 +6031,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # p = len([p for p in self.projections if OUTPUT_CIM_NAME in p.name])
                 # assert p == n, f"PROGRAM ERROR:  Number of Projections associated with {self.output_CIM.name} " \
                 #                f"({p}) does not match the number of its InputPorts ({n})."
+
+            # validate that the number of parameter_CIM output_ports matches the number of modulatory projections
             elif type==PARAMETER:
                 # _get_external_control_projections finds all projections which currently need to be routed through the
                 # PCIM, so the length of the returned array should be 0
@@ -6725,7 +6878,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         first_item = '' if proj_deferred else f" (from '{node.name}'"
                         second_item = '' if proj_deferred else f" to '{proj.receiver.owner.name}')."
                     unused_projections.append(f"{proj_name}{first_item}{second_item}")
-        if unused_projections:
+        if unused_projections and self.verbosePref:
             warning = f"\nThe following Projections were specified but are not being used by Nodes in '{self.name}':"
             warnings.warn(warning + "\n\t" + "\n\t".join(unused_projections))
         self._need_check_for_unused_projections = False
@@ -7012,7 +7165,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._analyze_graph()
 
     @handle_external_context()
-    def add_pathways(self, pathways, context=None):
+    def add_pathways(self, pathways, context=None)->list:
         """Add pathways to the Composition.
 
         Arguments
@@ -7363,12 +7516,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # Extract Nodes from any tuple specs
                     node = _get_spec_if_tuple(node)
                     # Replace any nested Compositions with their INPUT Nodes
-                    node = (self._get_nested_nodes_with_same_roles_at_all_levels(node, include_roles, exclude_roles)
+                    node = (self.get_nested_nodes_by_roles_at_any_level(node, include_roles, exclude_roles)
                                 if isinstance(node, Composition) else [node])
                     if not node:
-                        raise CompositionError(f"A nested Composition ('{list(entry)[0].name}') "
-                                               f"included in {pathway_arg_str} is empty; "
-                                               f"(i.e., does not have any nodes assigned to it yet).")
+                        raise CompositionError(f"A nested Composition ('{list(entry)[0].name}') included in "
+                                               f"{pathway_arg_str} is empty; (i.e., does not have any nodes "
+                                               f"with the specified NodeRole(s) assigned to it yet).")
                     nodes.extend(node)
                 return nodes
 
@@ -7384,17 +7537,51 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    else {pathway[c - 1]})
                 if all(_is_node_spec(sender) for sender in preceding_entry):
                     senders = _get_node_specs_for_entry(preceding_entry, NodeRole.OUTPUT)
-                    projs = {self.add_projection(sender=s, receiver=r,
-                                                 default_matrix=default_projection_matrix,
-                                                 allow_duplicates=False,
-                                                 context=context)
-                            for r in receivers for s in senders}
-                    # Warn about assignment of MappingProjections from ControlMechanisms
-                    for ctl_mech in [s for s in senders if isinstance(s, ControlMechanism)]:
-                        warnings.warn(f"A {MappingProjection.__name__} has been created from a "
-                                      f"{ControlSignal.__name__} of '{ctl_mech.name}' -- specified {pathway_arg_str} "
-                                      f"-- to another {Mechanism.__name__} in that pathway.  If this is not the "
-                                      f"intended behavior, add '{ctl_mech.name}' separately to '{self.name}'.")
+                    projs = set()
+                    for r in receivers:
+                        for s in senders:
+                            if not isinstance(s, ControlMechanism):
+                                projs.add(self.add_projection(sender=s, receiver=r,
+                                                              default_matrix=default_projection_matrix,
+                                                              allow_duplicates=False,
+                                                              context=context))
+                            # If sender is ControlMechanism, don't add MappingProjection
+                            #   (since ControlMechanisms can only have ControlProjections as efferents)
+                            #   but implement dependency implied by placement in pathway
+                            else:
+                                # FIX: NEED TO MODIFY WARNING IF r IS NOW THE INPUT NODE
+                                #      9/25/23: CONSIDER ADDING MappingProjection FROM s TO r (TO PRESERVE "LINEARITY")
+                                # If r is a Node in a nested Composition, then assign dependency of the Composition on s
+                                nested_comp = [e for e in current_entry if isinstance(e, Composition) and r in e.nodes]
+                                r = nested_comp[0] if nested_comp else r
+                                self.graph.connect_components(s, r)
+                                if self.verbosePref:
+                                    warnings.warn(f"'{r.name}' will not receive a MappingProjection from '{s.name}' "
+                                                  f"(the entry that follows it {pathway_arg_str}) since that is a "
+                                                  f" {ControlMechanism.__name__}, however it will still be dependent "
+                                                  f"on it for (i.e. follow it in) execution.")
+                                # Add projection from Node just before ControlMechanism(s) to current_entry,
+                                #   to preserve linear structure of pathway, while skipping ControlMechanism(s)
+                                nodes_in_pathway = [node for node in [_get_spec_if_tuple(n) for n in node_entries]
+                                                    if isinstance(node, (Mechanism, Composition))]
+                                # ControlMechanism is *not* 1st node in pathway
+                                if nodes_in_pathway.index(s):
+                                    preceding_non_ctl_node = [node for node in nodes_in_pathway[:nodes_in_pathway.index(s)]
+                                                              if not isinstance(node, ControlMechanism)][::-1][0]
+                                    if preceding_non_ctl_node:
+                                        projs.add(self.add_projection(sender=preceding_non_ctl_node, receiver=r,
+                                                                      default_matrix=default_projection_matrix,
+                                                                      allow_duplicates=False,
+                                                                      context=context))
+                                        warnings.warn(f"'A MappingProjection has been created from "
+                                                      f"'{preceding_non_ctl_node.name}' to {r.name}' since the latter "
+                                                      f"followed a {ControlMechanism.__name__} ('{s.name}') "
+                                                      f"{pathway_arg_str}.")
+                                # ControlMechanism *is* 1st Node in Pathway, so receiver may become an INPUT Node
+                                else:
+                                    warnings.warn(f"'{r.name}' may be an INPUT Node, since it followed a "
+                                                  f"{ControlMechanism.__name__} ('{s.name}') that w"
+                                                  f"as the first Node {pathway_arg_str}.")
                     if all(projs):
                         # If it is a singleton, append on its own;  if it is set or list, need to keep that intact
                         projs = projs.pop() if len(projs) == 1 else projs
@@ -8354,6 +8541,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         path_length = len(processing_pathway)
 
         def _get_nodes_if_nested(input_source, output_source):
+
+            # Get mech if pathway entry is tuple spec
+            input_source = input_source[0] if isinstance(input_source, tuple) else input_source
+            output_source = output_source[0] if isinstance(output_source, tuple) else output_source
 
             from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
             if (any([isinstance(source, Composition) or source not in self.nodes
@@ -9528,7 +9719,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Dict mapping TargetMechanisms -> target values
         """
 
-        # # MODIFIED 9/16/23 NEW:
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
             # Reassign target inputs from output Nodes to target mechanisms constructed for PyTorch execution
             return {target: value
@@ -9555,7 +9745,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 ret[node] = values
         return ret
-        # MODIFIED 9/16/23 END
 
     def _parse_learning_spec(self, inputs, targets, execution_mode):
         """
@@ -9819,7 +10008,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # Call _parse_labels for any Nodes with input_labels_dicts in nested Composition(s)
                     if (isinstance(k, Composition)
                             and any(n.input_labels_dict
-                                    for n in k._get_nested_nodes_with_same_roles_at_all_levels(k,NodeRole.INPUT))):
+                                    for n in k.get_nested_nodes_by_roles_at_any_level(k,NodeRole.INPUT))):
                         if nesting_depth(v) == 2:
                             # Enforce that even single trial specs user outer trial dimension (for consistency below)
                             v = [v]
@@ -9987,7 +10176,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #    if so, get the input_port(s) of mech.input_CIM to which its inputs correspond
                 elif (isinstance(INPUT_Node, Composition)
                       and ((input_recvr.owner if isinstance(input_recvr, Port) else input_recvr) in
-                           INPUT_Node._get_nested_nodes_with_same_roles_at_all_levels(INPUT_Node, NodeRole.INPUT))):
+                           INPUT_Node.get_nested_nodes_by_roles_at_any_level(INPUT_Node, NodeRole.INPUT))):
                     if isinstance(input_recvr, Port):
                         # Spec is for Port so assign to entry for corresponding input_CIM_input_port of INPUT_Node
                         input_ports = [input_recvr]
@@ -10002,8 +10191,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         assert input_CIM_input_port.owner == mech, \
                             f"PROGRAM ERROR: Unexpected input_CIM_input_port retrieved for entry ({input_recvr}) " \
                             f"in inputs to '{self.name}'."
-                        # Assign spec for InputPort to entry for corresponding InputPort on input_CIM of INPUT_Node
-                        input_port_entries[input_CIM_input_port] = port_inputs[i]
+                        # Assign input to each InputPort of input_CIM for Composition INPUT_Node
+                        port_inputs = np.array(port_inputs, dtype='object')
+                        if port_inputs.ndim < 2:
+                            raise CompositionError(f"Improper specification of input to '{input_recvr.name}' "
+                                                   f"in '{INPUT_Node.name}' (nested in '{self.name}'): {port_inputs}; "
+                                                   f"use `{self.name}.get_input_format()' to show proper format.")
+                        # Specification is for one trial's worth of data for each port
+                        elif port_inputs.ndim == 2 and not isinstance(port_inputs[0][0], list):
+                            # For Port, outer dimension should be inputs to Port for multiple trials
+                            if isinstance(input_recvr, Port):
+                                input_port_entries[input_CIM_input_port] = port_inputs
+                            # For Mechanism, outer dimension should be inputs to different Ports, all for a single trial
+                            elif isinstance(input_recvr, Mechanism):
+                                input_port_entries[input_CIM_input_port] = port_inputs[i]
+                            else:
+                                assert False, f"PROGRAM ERROR: Unexpected receiver of input: {input_recvr.name}"
+                        # Specification is for several trial's worth of data for each port
+                        else:
+                            input_port_entries[input_CIM_input_port] = [port_inputs[j][i] for
+                                                                        j in range(len(port_inputs))]
                     inputs_to_remove.add(input_recvr)
 
             # Get max number of trials across specified input_ports of INPUT_Node
@@ -10021,14 +10228,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Construct node_input_shape based on max_num_trials across all input_ports for mech
             # - shape as 3d by adding outer dim = max_num trials to accommodate potential trial-series input
-            node_input = np.empty(tuple([max_num_trials] +
-                                        list(np.array(mech.external_input_shape).shape)),
-                                  dtype='object').tolist()
-            # - move ports to outer axis for processing below
-            node_input = np.swapaxes(np.atleast_3d(np.array(node_input, dtype=object)),0,1).tolist()
+            _node_input = np.empty_like(np.array([mech.external_input_shape] * max_num_trials, dtype='object')).tolist()
 
-            # Assign specs to ports of INPUT_Node, using ones in input_port_entries or defaults
-            for i, port in enumerate(INPUT_input_ports):
+            # - move ports to outer axis for processing below
+            node_input = np.swapaxes(np.atleast_3d(np.array(_node_input, dtype=object)),0,1).tolist()
+
+            # Assign specs to ports of INPUT_Node, using the ones in input_port_entries or defaults
+            for i, port in enumerate([input_port for input_port in INPUT_input_ports
+                                      if input_port.internal_only is False]):
                 if port in input_port_entries:
                     # Assume input is for all trials
                     port_spec = np.atleast_2d(input_port_entries[port]).tolist()
@@ -10045,7 +10252,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 node_input[i] = port_spec
 
             # Put trials back in outer axis
-            input_dict[INPUT_Node] = np.swapaxes(np.atleast_3d(np.array(node_input, dtype=object)),0,1).tolist()
+            input_dict[INPUT_Node] = np.swapaxes(np.atleast_2d(np.array(node_input, dtype=object)),
+                                                 0,
+                                                 1).tolist()
             remaining_inputs = remaining_inputs - inputs_to_remove
 
         if remaining_inputs:
@@ -10129,8 +10338,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         inputs_to_duplicate = []
         # loop through input dict
         for receiver, stimulus in inputs.items():
-            # see if the entire stimulus set provided is a valid input for the receiver (i.e. in the case of a call with a
-            # single trial of provided input)
+            # see if the entire stimulus set provided is a valid input for the receiver
+            # (i.e. in the case of a call with a single trial of provided input)
             _input = self._validate_single_input(receiver, stimulus)
             if _input is not None:
                 _input = [_input]
@@ -10141,28 +10350,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Look for any bad ones (for which _validate_single_input() returned None) and report if found
                 if any(i is None for i in _input):
                     if isinstance(receiver, InputPort):
-                        receiver_shape = receiver.default_input_shape
+                        receiver_template = receiver.default_input_shape
                         receiver_name = receiver.full_name
                     elif isinstance(receiver, Mechanism):
-                        receiver_shape = receiver.external_input_shape
+                        receiver_template = receiver.external_input_shape
                         receiver_name = receiver.name
                     elif isinstance(receiver, Composition):
-                        receiver_shape = receiver.input_CIM.external_input_shape
+                        receiver_template = receiver.input_CIM.external_input_shape
                         receiver_name = receiver.name
-                    # # MODIFIED 3/12/22 OLD:
-                    # bad_stimulus = np.atleast_1d(np.squeeze(np.array(stimulus[_input.index(None)], dtype=object)))
-                    # correct_stimulus = np.atleast_1d(np.array(receiver_shape[_input.index(None)], dtype=object))
-                    # err_msg = f"Input stimulus ({bad_stimulus}) for {receiver_name} is incompatible with " \
-                    #           f"the shape of its external input ({correct_stimulus})."
-                    # MODIFIED 3/12/22 NEW:
-                    # FIX: MIS-REPORTS INCOMPATIBLITY AS BEING FOR SHAPE IF NUM TRIALS IS DIFFERENT FOR DIFF PORTS
-                    #      SHOULD BE HANDLED SAME AS FOR DIFFERNCE ACROSS NODES (PER BELOW)
-                    receiver_shape = np.atleast_1d(np.squeeze(np.array(receiver_shape, dtype=object))).shape
-                    bad_stimulus = [stim for stim, _inp in zip(stimulus, _input) if _inp is None]
-                    bad_stimulus_shape = np.atleast_1d(np.squeeze(np.array(bad_stimulus, dtype=object))).shape
-                    err_msg = (f"Input stimulus shape ({bad_stimulus_shape}) for '{receiver_name}' is incompatible "
-                               f"with the shape of its external input ({receiver_shape}).")
-                    # MODIFIED 3/12/22 END
+                    bad_stimulus_template = [stim for stim, _inp in zip(stimulus, _input) if _inp is None]
+                    err_msg = (f"Input stimulus shape ({bad_stimulus_template}) for '{receiver_name}' is incompatible "
+                               f"with the shape of its external input ({receiver_template}).")
                     # 8/3/17 CW: I admit the error message implementation here is very hacky;
                     # but it's at least not a hack for "functionality" but rather a hack for user clarity
                     if "KWTA" in str(type(receiver)):
@@ -10223,8 +10421,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 f"Provided inputs {inputs} is in a disallowed format. Inputs must be provided in the form of "
                 f"a dict, list, function, or generator. "
                 f"See https://princetonuniversity.github.io/PsyNeuLink/Composition.html#composition-run "
-                f"for details and formatting instructions for each input type."
-            )
+                f"for details and formatting instructions for each input type.")
+
+        if inputs is None and self.warned_about_run_with_no_inputs is False:
+            warnings.warn(f"No inputs provided in call to {self.name}.run(). The following defaults will be used "
+                          f"for each INPUT Node:{dict((k,np.array(v).tolist()) for k,v in _inputs.items())}")
+            self.warned_about_run_with_no_inputs = True
+
         return _inputs, num_inputs_sets
 
     def _parse_trial_inputs(self, inputs, trial_num):
@@ -10285,6 +10488,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        f"with its variable ({node.external_input_shape}).")
             _inputs[node] = inp
         return _inputs
+
+    def _check_nested_target_mechs(self):
+        # Temporary check to ensure that nested compositions don't have stranded target Mechanisms.
+        # This should be taken out once we automatically instantiate Mechs to project to nested target Mechs.
+        nc = self._get_nested_compositions()
+        for comp in nc:
+            nc_targets = [path.target for path in comp.pathways if path.target]
+            for target in nc_targets:
+                target_mech_input_cim_input_port = comp.input_CIM.port_map.get(target.input_port)[0]
+                if not target_mech_input_cim_input_port.path_afferents:
+                    raise CompositionError(
+                        f'Target mechanism {target.name} of nested Composition {comp.name} is not being projected to '
+                        f'from its enclosing Composition {self.name}. For a call to {self.name}.learn, {target.name} '
+                        f'must have an afferent projection with a target value so that an error term may be computed. '
+                        f'A reference to {target.name}, with which you can create the needed projection, can be found '
+                        f'as the target attribute of the relevant pathway in {comp.name}.pathways. '
+                    )
 
     # ******************************************************************************************************************
     #                                           EXECUTION
@@ -11039,6 +11259,9 @@ _
         if execution_mode is not pnlvm.ExecutionMode.Python and not isinstance(self, AutodiffComposition):
             raise CompositionError(f"ExecutionMode.{execution_mode.name} cannot be used in the learn() method of "
                                    f"'{self.name}' because it is not an {AutodiffComposition.componentCategory}")
+        elif execution_mode is pnlvm.ExecutionMode.Python and not self.learning_components:
+            warnings.warn(f"learn() method called on '{self.name}', but it has no learning components; "
+                          f"it will be run but no learning will occur.")
 
         context.add_flag(ContextFlags.LEARNING_MODE)
 
@@ -11046,22 +11269,7 @@ _
         context.execution_phase=ContextFlags.PREPARING
 
         self._analyze_graph()
-
-        # Temporary check to ensure that nested compositions don't have stranded target Mechanisms.
-        # This should be taken out once we automatically instantiate Mechs to project to nested target Mechs.
-        nc = self._get_nested_compositions()
-        for comp in nc:
-            nc_targets = [path.target for path in comp.pathways if path.target]
-            for target in nc_targets:
-                target_mech_input_cim_input_port = comp.input_CIM.port_map.get(target.input_port)[0]
-                if not target_mech_input_cim_input_port.path_afferents:
-                    raise CompositionError(
-                        f'Target mechanism {target.name} of nested Composition {comp.name} is not being projected to '
-                        f'from its enclosing Composition {self.name}. For a call to {self.name}.learn, {target.name} '
-                        f'must have an afferent projection with a target value so that an error term may be computed. '
-                        f'A reference to {target.name}, with which you can create the needed projection, can be found '
-                        f'as the target attribute of the relevant pathway in {comp.name}.pathways. '
-                    )
+        self._check_nested_target_mechs()
 
         context.execution_phase = execution_phase_at_entry
 
@@ -11461,16 +11669,6 @@ _
                 assert not self.is_nested or len(self.parameter_CIM.afferents) == 0
 
             elif self.is_nested:
-
-                # [JDC 12/2/22]: FIX NONE OF THIS SEEMS TO BE NEEDED ANY LONGER (AT LEAST TO PASS TESTS)
-                # MODIFIED 3/28/22 CURRENT:
-                # # IMPLEMENTATION NOTE: context.string set in Mechanism.execute
-                # executed_from_command_line = (f"{context.source.name} EXECUTING" not in context.string)
-                # # MODIFIED 3/28/22 NEW:  CALL OF NESTED COMPOSITION
-                # executed_from_command_line = (context.source == ContextFlags.COMMAND_LINE)
-                # # MODIFIED 12/3/22 NEWER:
-                # executed_from_command_line = self._executed_from_command_line
-                # MODIFIED 3/28/22 END
                 simulation = ContextFlags.SIMULATION_MODE in context.runmode
                 # if simulation or executed_from_command_line:
                 if simulation or self._executed_from_command_line:
@@ -11598,6 +11796,7 @@ _
                 for i in range(scheduler.get_clock(context).time.time_step):
                     execution_sets.__next__()
 
+
             for next_execution_set in execution_sets:
 
                 # SETUP EXECUTION ----------------------------------------------------------------------------
@@ -11608,6 +11807,7 @@ _
                 # know a PASS has ended in retrospect after the scheduler has changed the clock to indicate it. So, we
                 # have to run call_after_pass before the next PASS (here) or after this code block (see call to
                 # call_after_pass below)
+                # IMPLEMENTATION NOTE: GOOD PLACE FOR BREAKPOINT WHEN EXAMINING / DEBUGGING execution_sets
                 curr_pass = execution_scheduler.get_clock(context).get_total_times_relative(TimeScale.PASS,
                                                                                             TimeScale.TRIAL)
                 new_pass = False
@@ -12103,7 +12303,7 @@ _
                         # Mechanism(s) with labels in nested Compositions
                         elif (use_labels and isinstance(node, Composition)
                               and any(n.input_labels_dict for n
-                                      in node._get_nested_nodes_with_same_roles_at_all_levels(node, NodeRole.INPUT))):
+                                      in node.get_nested_nodes_by_roles_at_any_level(node, NodeRole.INPUT))):
 
                             for port in node.input_CIM.input_ports:
                                 input_port, mech, __ = node.input_CIM._get_destination_info_from_input_CIM(port)
@@ -12143,7 +12343,7 @@ _
         if num_trials == FULL:
             num_trials = 1
             # Get number of labels in largest list of any input_labels_dict in an INPUT Mechanism
-            for node in self._get_nested_nodes_with_same_roles_at_all_levels(self, NodeRole.INPUT):
+            for node in self.get_nested_nodes_by_roles_at_any_level(self, NodeRole.INPUT):
                 if node.input_labels_dict:
                     labels_dict = node.input_labels_dict
                     num_trials = max(num_trials, max([len(labels) for labels in labels_dict.values()]))
@@ -12374,24 +12574,28 @@ _
 
         build_CIM_input = []
 
+
         for input_port in self.input_CIM.input_ports:
             # "input_port" is an InputPort on the input CIM
+            if input_port.internal_only:
+                continue
 
             for key in self.input_CIM_ports:
-                # "key" is an InputPort on an origin Node of the Composition
+                # "key" is an InputPort on an INPUT Node of the Composition
                 if self.input_CIM_ports[key][0] == input_port:
-                    origin_input_port = key
-                    origin_node = key.owner
-                    index = origin_node.input_ports.index(origin_input_port)
+                    INPUT_input_port = key
+                    INPUT_node = key.owner
+                    # index = INPUT_node.input_ports.index(INPUT_input_port)
+                    index = [input_port for input_port in INPUT_node.input_ports
+                             if not input_port.internal_only].index(INPUT_input_port)
 
-                    if isinstance(origin_node, CompositionInterfaceMechanism):
-                        index = origin_node.input_ports.index(origin_input_port)
-                        origin_node = origin_node.composition
+                    if isinstance(INPUT_node, CompositionInterfaceMechanism):
+                        INPUT_node = INPUT_node.composition
 
-                    if origin_node in inputs:
-                        value = inputs[origin_node][index]
+                    if INPUT_node in inputs:
+                        value = inputs[INPUT_node][index]
                     else:
-                        value = origin_node.defaults.variable[index]
+                        value = INPUT_node.defaults.variable[index]
 
             build_CIM_input.append(value)
 
@@ -12809,7 +13013,6 @@ _
         """Return default_input_shape of all external InputPorts that belong to Input CompositionInterfaceMechanism"""
         try:
             return [input_port.default_input_shape for input_port in self.input_CIM.input_ports
-                    # FIX: 2/4/22 - IS THIS NEEDED (HERE OR BELOW -- DO input_CIM.input_ports EVER GET ASSIGNED THIS?
                     if not input_port.internal_only]
         except (TypeError, AttributeError):
             return None

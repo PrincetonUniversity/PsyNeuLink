@@ -222,8 +222,8 @@ class TestOutputPorts:
         )
         with pytest.raises(MechanismError) as error:
             action_selection.execute([1.0])
-        assert 'Length (1) of input ([1.]) does not match required length (2) ' \
-               'for input to InputPort \'ARRAY\' of DDM.' in str(error.value)
+        assert ("Shape ((1,)) of input ([1.]) does not match required shape ((1, 2)) "
+                "for input to InputPort 'ARRAY' of DDM.") in str(error.value)
         action_selection.execute([1.0, 0.0])
 
     def test_decision_outcome_integrator(self):

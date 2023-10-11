@@ -7,11 +7,12 @@
 
 # ********************************************* PytorchComponent *************************************************
 
-"""PyTorch wrappers for Composition, Mechanism and Projection and Functions for use in AutodiffComposition"""
+"""PyTorch wrappers for Composition, Mechanism, Projection, and Functions for use in AutodiffComposition"""
 
 import graph_scheduler
 import torch
 import torch.nn as nn
+import numpy as np
 
 from psyneulink.core.components.component import Component, ComponentsMeta
 from psyneulink.core.components.functions.nonstateful.transferfunctions import \
@@ -21,7 +22,7 @@ from psyneulink.core.compositions.composition import NodeRole, CompositionInterf
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
 from psyneulink.library.compositions.compiledloss import MSELoss, CROSS_ENTROPYLoss
-from psyneulink.core.globals.keywords import TARGET_MECHANISM, Loss
+from psyneulink.core.globals.keywords import NODE, TARGET_MECHANISM, Loss
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared
 from psyneulink.core.globals.log import LogCondition
@@ -31,10 +32,10 @@ __all__ = ['PytorchCompositionWrapper', 'PytorchMechanismWrapper', 'PytorchProje
 
 
 def pytorch_function_creator(function, device, context=None):
-    """
-    Converts a PsyNeuLink function into an equivalent PyTorch lambda function.
+    """Convert a PsyNeuLink function into an equivalent PyTorch lambda function.
     NOTE: This is needed due to PyTorch limitations
     (see: https://github.com/PrincetonUniversity/PsyNeuLink/pull/1657#discussion_r437489990)
+    Returns a lamba function that takes a torch.tensor as input and returns a torch.tensor as output.
     """
 
     def get_fct_param_value(param_name):
@@ -53,20 +54,19 @@ def pytorch_function_creator(function, device, context=None):
         return lambda x: x * slope + intercept
 
     elif isinstance(function, LinearCombination):
-        def linear_combination_sum(x):
-            result = torch.tensor([0] * len(x[0]), device=device).double()
-            for t in x:
-                result += t
-            return result
-        def linear_combination_product(x):
-            result = torch.tensor([1] * len(x[0]), device=device).double()
-            for t in x:
-                result *= t
-            return result
+        weights = function.parameters.weights.get(context)
+        if weights is not None:
+            weights = torch.tensor(weights, device=device).double()
         if function.operation == SUM:
-            return linear_combination_sum
+            if weights is not None:
+                return lambda x: torch.sum(x * weights, 0)
+            else:
+                return lambda x: torch.sum(x,0)
         elif function.operation == PRODUCT:
-            return linear_combination_product
+            if weights is not None:
+                return lambda x: torch.prod(x * weights,0)
+            else:
+                return lambda x: torch.prod(x,0)
         else:
             from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
             raise AutodiffCompositionError(f"The 'operation' parameter of {function.componentName} is not supported "
@@ -98,7 +98,7 @@ def pytorch_function_creator(function, device, context=None):
 
 
 class PytorchCompositionWrapper(torch.nn.Module):
-    """Wrap a Composition in a Pytorch Module
+    """Wrapper for a Composition as a Pytorch Module
     Set up parameters of PyTorch model & information required for forward computation
 
     Handle nested compositions (flattened in infer_backpropagation_learning_pathways):
@@ -147,7 +147,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         # Instantiate pytorch Mechanisms
         nodes = list(set(composition.nodes) - set(composition.get_nodes_by_role(NodeRole.LEARNING)))
-        # FIX: 9/1/23 - THIS IS REQUIRED DUE TO FLATTENING IN infer_backpropagation_learning_pathways; IS THAT NEEDED?
         # Remove nested nodes from nodes list (put there in flattening by infer_backpropagation_learning_pathways)
         #   so that they don't interfere with construction of execution_sets by scheduler
         # Will re-flatten execution sets below
@@ -167,12 +166,22 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                        self._composition._get_node_index(node),
                                                        device,
                                                        context=context)
-                # Mark INPUT Nodes of outer Composition for use in forward()
-                pytorch_node._is_input = (node in composition.get_nodes_by_role(NodeRole.INPUT)
-                                          and not composition.is_nested)
-
             self.nodes_map[node] = pytorch_node
             self.node_wrappers.append(pytorch_node)
+
+        # Assign INPUT Nodes for outermost Composition (including any that are nested within it at any level)
+        # Note: Pytorch representation is "flattened" (i.e., any nested Compositions are replaced by their Nodes)
+            #   so if any nested Compositions are INPUT Nodes of the outermost Composition,
+            #   *their* INPUT Nodes are assigned as INPUT Nodes of the outermost Composition
+        if not composition.is_nested:
+            def _assign_input_nodes(nodes):
+                for pytorch_node in nodes:
+                    if isinstance(pytorch_node, PytorchMechanismWrapper):
+                        pytorch_node._is_input = pytorch_node._mechanism in composition._get_input_receivers(type=NODE)
+                    else:
+                        _assign_input_nodes(pytorch_node.node_wrappers)
+            _assign_input_nodes(self.node_wrappers)
+
 
         # Instantiate PyTorch ProjectionWrappers (ignoring any from/to CIMs in the same composition)
         for projection in composition._inner_projections:
@@ -213,7 +222,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             elif (isinstance(sndr_mech, CompositionInterfaceMechanism)
                   and sndr_mech is not self._composition.input_CIM):
                 proj_rcvr = self.nodes_map[rcvr_mech]
-                # Replace sndr_mech (output_CIM_ with the node in the nested Composition that sends the projection
+                # Replace sndr_mech (output_CIM) with the node in the nested Composition that sends the projection
                 nested_sndr_port, nested_sndr_mech, _ = \
                     sndr_mech._get_source_info_from_output_CIM(projection.sender)
                 nested_pytorch_comp = self.nodes_map[sndr_mech.composition]
@@ -228,8 +237,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 pnl_proj = projection
 
             else:
-                # FIX: 9/1/23 Check, as this seems to be True for Target nodes
-                # assert False, f"Unrecognized projection {projection} in {composition.name}"
                 continue
 
             port_idx = projection.sender.owner.output_ports.index(projection.sender) # used by LLVM
@@ -263,10 +270,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # 3) Remove empty execution sets
         self.execution_sets = [x for x in self.execution_sets if len(x) > 0]
 
-
-        # FIX: 9/1/23 - THESE NEED TO BE TESTED FOR RECURSION WITH MULTIPLE LEVELS OF NESTING
-        #               ??COULD ALL BE AVOIDED BY JUST USING FLATTENED REPS FROM THE OUTSET??
-        #                 (BUT THEN HOW WOULD SCHEDULER KNOW HOW TO PRESERVE NESTED EXECUTION SETS?)
 
         # Flattening for forward() and AutodiffComposition._update_learning_parameters
 
@@ -533,8 +536,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     # performs forward computation for the model
     @handle_external_context()
-    def forward(self, inputs, context=None):
-        """Forward method of the model for PyTorch and LLVM modes"""
+    def forward(self, inputs, context=None)->dict:
+        """Forward method of the model for PyTorch and LLVM modes
+        Returns a dictionary {output_node:value} of output values for the model
+        """
         outputs = {}  # dict for storing values of terminal (output) nodes
         for current_exec_set in self.execution_sets:
             for node in current_exec_set:
@@ -544,15 +549,32 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 if isinstance(node, PytorchCompositionWrapper):
                     node.forward(inputs=None)
                     continue
+                # FIX: 10/1/23 - REFACTOR BELOW TO INTEGRATE GETTING EXTERNAL INPUT WITH COLLATING AFFERENTS
                 elif node._is_input:
-                    node.execute(inputs[node._mechanism])
+                    # If node's input is explicitly specified, use that
+                    if node._mechanism in inputs:
+                        variable = inputs[node._mechanism]
+                    # Node's iput in *not* explicitly specified, but its input_port(s) may have been
+                    else:
+                        # Get input for each input_port of the node
+                        variable = []
+                        for i, input_port in enumerate(node._mechanism.input_ports):
+                            # If input to the node's input_port(s) is explicitly specified, use that
+                            if input_port in inputs:
+                                variable.append(inputs[input_port])
+                            # Otherwise, use the node's input_port's afferents
+                            else:
+                                variable.append(node.collate_afferents(i))
+                        if len(variable) == 1:
+                            variable = variable[0]
+                        else:
+                            variable = torch.stack(variable)
                 else:
                     variable = node.collate_afferents()
-                    node.execute(variable)
-                # save value in output list if we're at a node in the last execution set
-                # FIX: 9/1/23: TEST
-                # if NodeRole.OUTPUT in self._composition.get_roles_by_node(node._mechanism):
-                if node._mechanism in self._composition.get_nodes_by_role(NodeRole.OUTPUT):
+                node.execute(variable)
+                # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
+                #  note: these may be different than for actual Composition, as they are flattened
+                if (node._mechanism in self._composition.get_nested_nodes_output_nodes_at_levels()):
                     outputs[node._mechanism] = node.value
                 assert True
 
@@ -590,9 +612,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
 
 class PytorchMechanismWrapper():
-    """
-    An interpretation of a mechanism as an equivalent pytorch object
-    """
+    """Wrapper for a Mechanism in a PytorchCompositionWrapper"""
     def __init__(self, mechanism, component_idx, device, context=None):
         self._mechanism = mechanism
         self.name = f"PytorchMechanismWrapper[{mechanism.name}]"
@@ -617,26 +637,31 @@ class PytorchMechanismWrapper():
         self.afferents.append(afferent)
 
 
-    def collate_afferents(self):
-        """Return weight-multiplied sum of all afferent projections for each input_port of the Mechanism
+    def collate_afferents(self, port=None):
+        """Return weight-multiplied sum of afferent projections for input_port(s) of the Mechanism
+        If there is only one input_port or the number of ports
         If there are multiple input_ports, return an array with the sum for each input_port
         """
         assert self.afferents,\
             f"PROGRAM ERROR: No afferents found for '{self._mechanism.name}' in AutodiffComposition"
         # FIX: AUGMENT THIS TO SUPPORT InputPort's function
+        # Specific port is specified
+        if port is not None:
+            return sum(proj_wrapper.execute(proj_wrapper.sender.value)
+                       for proj_wrapper in self.afferents if proj_wrapper._pnl_proj
+                       in self._mechanism.input_ports[port].path_afferents)
         # Has only one input_port
-        if len(self._mechanism.input_ports) == 1:
+        elif len(self._mechanism.input_ports) == 1:
             return sum((proj_wrapper.execute(proj_wrapper.sender.value) for proj_wrapper in self.afferents))
         # Has multiple input_ports
         else:
             # # Sum projections to each input_port of the Mechanism and return array with the sums
-            return [sum(proj_wrapper.execute(proj_wrapper.sender.value)
-                        for proj_wrapper in self.afferents if proj_wrapper._pnl_proj
-                        in input_port.path_afferents) for input_port in self._mechanism.input_ports]
+            return torch.stack([sum(proj_wrapper.execute(proj_wrapper.sender.value)
+                                    for proj_wrapper in self.afferents if proj_wrapper._pnl_proj
+                                    in input_port.path_afferents) for input_port in self._mechanism.input_ports])
 
     def execute(self, variable):
         self.value = self.function(variable)
-
         return self.value
 
     def _gen_llvm_execute(self, ctx, builder, state, params, mech_input, data):
@@ -703,7 +728,7 @@ class PytorchMechanismWrapper():
 
 
 class PytorchProjectionWrapper():
-    """Wrapper of Projection to be learned by Pytorch
+    """Wrapper for Projection in a PytorchCompositionWrapper
 
     The matrix of the wrapped `_projection <PytorchProjectionWrapper._projection>` corresponds to the parameters
     (connection weights) of the PyTorch Module that is the `function <Mechanism_Base.function>` of the

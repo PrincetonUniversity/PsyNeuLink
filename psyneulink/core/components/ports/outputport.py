@@ -41,7 +41,7 @@ that represent its mean, variance or other derived values.  In contrast, the `fu
 of a `DDM` Mechanism generates several results (such as decision accuracy and response time), each of which can be
 assigned as the `value <OutputPort.value>` of a different OutputPort.  The OutputPort(s) of a Mechanism can serve
 as the input to other  Mechanisms (by way of `projections <Projections>`), or as the output of a Process and/or
-System.  The OutputPort's `efferents <Port.efferents>` attribute lists all of its outgoing
+System.  The OutputPort's `efferents <Port_Base.efferents>` attribute lists all of its outgoing
 projections.
 
 .. _OutputPort_Creation:
@@ -249,7 +249,7 @@ which it should project. Each of these is described below:
     When an OutputPort is created, it can be assigned one or more `Projections <Projection>`, using either the
     **projections** argument of its constructor, or in an entry of a dictionary assigned to the **params** argument with
     the key *PROJECTIONS*.  An OutputPort can be assigned either `MappingProjection(s) <MappingProjection>` or
-    `GatingProjection(s) <GatingProjection>`.  MappingProjections are assigned to its `efferents <Port.efferents>`
+    `GatingProjection(s) <GatingProjection>`.  MappingProjections are assigned to its `efferents <Port_Base.efferents>`
     attribute and GatingProjections to its `mod_afferents <OutputPort.mod_afferents>` attribute.  See
     `Port Projections <Port_Projections>` for additional details concerning the specification of Projections when
     creating a Port.
@@ -259,7 +259,7 @@ which it should project. Each of these is described below:
     An OutputPort can also be specified by specifying one or more Components to or from which it should be assigned
     Projection(s). Specifying an OutputPort in this way creates both the OutputPort and any of the specified or
     implied Projection(s) (if they don't already exist). `MappingProjections <MappingProjection>`
-    are assigned to the OutputPort's `efferents <Port.efferents>` attribute, while `ControlProjections
+    are assigned to the OutputPort's `efferents <Port_Base.efferents>` attribute, while `ControlProjections
     <ControlProjection>` and `GatingProjections <GatingProjection>` are assigned to its `mod_afferents
     <Port.mod_afferents>` attribute. Any of the following can be used to specify an InputPort by the Components that
     projection to it (see `below <OutputPort_Compatibility_and_Constraints>` for an explanation of the relationship
@@ -576,7 +576,7 @@ COMMENT
 
 .. _OutputPort_Efferent_Projections:
 
-* `efferents <Port.efferents>` -- `MappingProjections <MappingProjection>` that project from the OutputPort.
+* `efferents <Port_Base.efferents>` -- `MappingProjections <MappingProjection>` that project from the OutputPort.
 
 .. _OutputPort_Modulatory_Projections:
 
@@ -814,7 +814,7 @@ class OutputPort(Port_Base):
     projections : list of Projection specifications
         specifies the `MappingProjection(s) <MappingProjection>` to be sent by the OutputPort, and/or
         `ControlProjections <ControlProjection>` and/or `GatingProjections(s) <GatingProjection>` to be received (see
-        `OutputPort_Projections` for additional details); these are listed in its `efferents <Port.efferents>` and
+        `OutputPort_Projections` for additional details); these are listed in its `efferents <Port_Base.efferents>` and
         `mod_afferents <Port.mod_afferents>` attributes, respectively (see `OutputPort_Projections` for additional
         details).
 
