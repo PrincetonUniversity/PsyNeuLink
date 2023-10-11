@@ -5062,11 +5062,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     )
                 del node.aux_components[node.aux_components.index(proj_spec)]
 
-            # MODIFIED 12/29/21 NEW:
             # # Finally, check for any deferred_init Projections
             invalid_aux_components.extend([p for p in node.projections
                                            if p._initialization_status & ContextFlags.DEFERRED_INIT])
-            # MODIFIED 12/29/21 END
 
         return invalid_aux_components
 
@@ -7276,21 +7274,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     pway = [pway]
                 return pway_type, pway, None, None
             elif isinstance(pway, tuple):
-                # FIX: ADD SUPPORT FOR 3-ITEM TUPLE AND SPECIFCATION OF DEFAULT MATRIX HERE 10/29/22
-                # # MODIFIED 10/29/22 OLD:
-                # pway_type = LEARNING_PATHWAY
-                # if len(pway)!=2:
-                #     raise CompositionError(f"A tuple specified in the {pathways_arg_str}"
-                #                            f" has more than two items: {pway}")
-                # pway, learning_function = pway
-                # if not (_is_node_spec(pway) or isinstance(pway, (list, Pathway))):
-                #     raise CompositionError(f"The 1st item in {tuple_or_dict_str} specified in the "
-                #                            f" {pathways_arg_str} must be a node or a list: {pway}")
-                # if not (isinstance(learning_function, type) and issubclass(learning_function, LearningFunction)):
-                #     raise CompositionError(f"The 2nd item in {tuple_or_dict_str} specified in the "
-                #                            f"{pathways_arg_str} must be a LearningFunction: {learning_function}")
-                # return pway_type, pway, learning_function
-                # MODIFIED 10/29/22 NEW:
                 if len(pway) not in {2,3}:
                     raise CompositionError(f"A tuple specified in the {pathways_arg_str}"
                                            f" must have either two or three items: {pway}")
@@ -7314,7 +7297,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                f"specified for the {pathways_arg_str}: {item}; "
                                                f"its item(s) must be a matrix specification and/or a LearningFunction")
                 return pway_type, pathway_item, matrix_item, learning_function_item
-                # MODIFIED 10/29/22 END
             else:
                 assert False, f"PROGRAM ERROR: arg to identify_pway_type_and_parse_tuple_prn in {self.name}" \
                               f"is not a Node, list or tuple: {pway}"
@@ -8414,7 +8396,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         except DuplicateProjectionError:
             target_projection = [p for p in target.efferents
                                  if p in comparator.input_ports[TARGET].path_afferents]
-        # MODIFIED 9/1/23 NEW:
         # FIX: THIS CURRENTLY ONLY SUPPORTS A SINGLE PROJECTION TO/FROM A NESTED COMPOSITION USING PRIMARY CIM PORTS
         #      NEED TO AUGMENT TO SUPPORT MULTIPLE PROJECTIONS TO/FROM (E.G., FOR EMComposition)
         if isinstance(input_source, Composition):
@@ -8423,7 +8404,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if isinstance(output_source, Composition):
             _, output_source ,_ = \
                 output_source.output_CIM._get_destination_info_from_input_CIM(output_source.input_CIM.input_port)
-        # MODIFIED 9/1/23 END
         act_in_projection = MappingProjection(sender=input_source.output_ports[0],
                                               receiver=learning_mechanism.input_ports[ACTIVATION_INPUT_INDEX])
         act_out_projection = MappingProjection(sender=output_source.output_ports[0],
