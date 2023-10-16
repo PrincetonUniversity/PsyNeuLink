@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OutputPort &mdash; PsyNeuLink 0.14.0.0+55.gca2a82e6a documentation</title>
+  <title>OutputPort &mdash; PsyNeuLink 0.14.0.0+57.g3490214e2 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.14.0.0+55
+                  0.14.0.0+57
                 </div>
               
             
@@ -246,7 +246,7 @@ that represent its mean, variance or other derived values.  In contrast, the <co
 of a <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a> Mechanism generates several results (such as decision accuracy and response time), each of which can be
 assigned as the <a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of a different OutputPort.  The OutputPort(s) of a Mechanism can serve
 as the input to other  Mechanisms (by way of <a class="reference internal" href="Projections.html"><span class="doc">projections</span></a>), or as the output of a Process and/or
-System.  The OutputPort’s <code class="xref any docutils literal notranslate"><span class="pre">efferents</span></code> attribute lists all of its outgoing
+System.  The OutputPort’s <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.efferents" title="psyneulink.core.components.ports.port.Port_Base.efferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">efferents</span></code></a> attribute lists all of its outgoing
 projections.</p>
 </section>
 <section id="creating-an-outputport">
@@ -399,7 +399,7 @@ used for compatibility with future versions.</p></li>
 <p>An OutputPort can also be specified by specifying one or more Components to or from which it should be assigned
 Projection(s). Specifying an OutputPort in this way creates both the OutputPort and any of the specified or
 implied Projection(s) (if they don’t already exist). <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>
-are assigned to the OutputPort’s <code class="xref any docutils literal notranslate"><span class="pre">efferents</span></code> attribute, while <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> and <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> are assigned to its <code class="xref any docutils literal notranslate"><span class="pre">mod_afferents</span></code> attribute. Any of the following can be used to specify an InputPort by the Components that
+are assigned to the OutputPort’s <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.efferents" title="psyneulink.core.components.ports.port.Port_Base.efferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">efferents</span></code></a> attribute, while <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> and <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> are assigned to its <code class="xref any docutils literal notranslate"><span class="pre">mod_afferents</span></code> attribute. Any of the following can be used to specify an InputPort by the Components that
 projection to it (see <a class="reference internal" href="#outputport-compatibility-and-constraints"><span class="std std-ref">below</span></a> for an explanation of the relationship
 between the <a class="reference internal" href="ControlProjection.html#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.variable" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> of these Components and the OutputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>):</p>
 <ul class="simple">
@@ -622,7 +622,7 @@ take as its input a value that is compatible with the OutputPort’s <a class="r
 <li><p><code class="xref any docutils literal notranslate"><span class="pre">projections</span></code> – all of the <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> sent and received by the OutputPort;</p></li>
 </ul>
 <ul class="simple" id="outputport-efferent-projections">
-<li><p><code class="xref any docutils literal notranslate"><span class="pre">efferents</span></code> – <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> that project from the OutputPort.</p></li>
+<li><p><a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.efferents" title="psyneulink.core.components.ports.port.Port_Base.efferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">efferents</span></code></a> – <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> that project from the OutputPort.</p></li>
 </ul>
 <ul class="simple" id="outputport-modulatory-projections">
 <li><p><code class="xref any docutils literal notranslate"><span class="pre">mod_afferents</span></code> – <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> or <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> that project to the OutputPort, the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of which can modify the
@@ -663,7 +663,7 @@ OutputPort’s <a class="reference internal" href="#psyneulink.core.components.p
 <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> received by the OutputPort.</p></li>
 <li><p><strong>projections</strong> (<em>list of Projection specifications</em>) – specifies the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection(s)</span></a> to be sent by the OutputPort, and/or
 <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> and/or <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections(s)</span></a> to be received (see
-<code class="xref any docutils literal notranslate"><span class="pre">OutputPort_Projections</span></code> for additional details); these are listed in its <code class="xref any docutils literal notranslate"><span class="pre">efferents</span></code> and
+<code class="xref any docutils literal notranslate"><span class="pre">OutputPort_Projections</span></code> for additional details); these are listed in its <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.efferents" title="psyneulink.core.components.ports.port.Port_Base.efferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">efferents</span></code></a> and
 <code class="xref any docutils literal notranslate"><span class="pre">mod_afferents</span></code> attributes, respectively (see <code class="xref any docutils literal notranslate"><span class="pre">OutputPort_Projections</span></code> for additional
 details).</p></li>
 </ul>

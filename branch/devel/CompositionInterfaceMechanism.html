@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>CompositionInterfaceMechanism &mdash; PsyNeuLink 0.14.0.0+55.gca2a82e6a documentation</title>
+  <title>CompositionInterfaceMechanism &mdash; PsyNeuLink 0.14.0.0+57.g3490214e2 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.14.0.0+55
+                  0.14.0.0+57
                 </div>
               
             
@@ -389,13 +389,19 @@ Port specification(s) can be an Port object or the name of one.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_source_node_for_input_CIM">
-<span class="sig-name descname"><span class="pre">_get_source_node_for_input_CIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_source_node_for_input_CIM" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_get_source_node_for_input_CIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_comp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_source_node_for_input_CIM" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return Port, Node and Composition  for source of projection to input_CIM from (possibly nested) outer comp
+Return None if there is no source Node (i.e., port receives input from environment)
 <strong>port</strong> InputPort or OutputPort of the input_CIM from which the local projection projects;
 <strong>comp</strong> Composition at which to begin the search (or continue it when called recursively;</p>
 <blockquote>
 <div><p>assumes the current CompositionInterfaceMechanism’s Composition by default</p>
 </div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -452,6 +458,11 @@ Port specification(s) can be an Port object or the name of one.</p>
 <dt><strong>comp</strong> Composition at which to begin the search (or continue it when called recursively);</dt><dd><p>assumes the current CompositionInterfaceMechanism’s Composition by default.</p>
 </dd>
 </dl>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -465,10 +476,11 @@ Port specification(s) can be an Port object or the name of one.</p>
 <dl class="simple">
 <dt><strong>comp</strong>: Composition at which to begin the search (or continue it when called recursively);</dt><dd><p>assumes the Composition for the output_CIM to which <strong>port</strong> belongs by default</p>
 </dd>
-</dl>
-<p>If there is more than one destination, return list of tuples, one for each destination;
-this occurs if the source of the projection to the output_CIM (SENDER PORT) is a Node in a nested Composition
+<dt>Return list of tuples, one for each destination, if there is more than one destination;</dt><dd><p>this occurs if the source of the projection to the output_CIM (SENDER PORT) is a Node in a nested Composition
 that is specified to project to more than one Node in the outer Composition</p>
+</dd>
+</dl>
+<p>Return None if there are no destination Nodes (i.e., source is output of outermost Composition</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>

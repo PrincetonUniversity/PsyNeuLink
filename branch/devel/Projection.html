@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Projection &mdash; PsyNeuLink 0.14.0.0+55.gca2a82e6a documentation</title>
+  <title>Projection &mdash; PsyNeuLink 0.14.0.0+57.g3490214e2 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.14.0.0+55
+                  0.14.0.0+57
                 </div>
               
             
@@ -457,25 +457,25 @@ of a Port are listed in its <a class="reference internal" href="Port.html#psyneu
 <tbody>
 <tr class="row-even"><td><p><a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a></p></td>
 <td><p><a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>
-(<code class="xref any docutils literal notranslate"><span class="pre">efferents</span></code>)</p></td>
+(<a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.efferents" title="psyneulink.core.components.ports.port.Port_Base.efferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">efferents</span></code></a>)</p></td>
 <td><p><a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>
-(<code class="xref any docutils literal notranslate"><span class="pre">path_afferents</span></code>)</p></td>
+(<a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.path_afferents" title="psyneulink.core.components.ports.port.Port_Base.path_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">path_afferents</span></code></a>)</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a></p></td>
 <td><p><a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a>
-(<code class="xref any docutils literal notranslate"><span class="pre">efferents</span></code>)</p></td>
+(<a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.efferents" title="psyneulink.core.components.ports.port.Port_Base.efferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">efferents</span></code></a>)</p></td>
 <td><p><a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a>
 (<a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents" title="psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mod_afferents</span></code></a>)</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a></p></td>
 <td><p><a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a>
-(<code class="xref any docutils literal notranslate"><span class="pre">efferents</span></code>)</p></td>
+(<a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.efferents" title="psyneulink.core.components.ports.port.Port_Base.efferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">efferents</span></code></a>)</p></td>
 <td><p><a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>, <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> or <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>
 (<a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents" title="psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mod_afferents</span></code></a>)</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a></p></td>
 <td><p><a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a>
-(<code class="xref any docutils literal notranslate"><span class="pre">efferents</span></code>)</p></td>
+(<a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.efferents" title="psyneulink.core.components.ports.port.Port_Base.efferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">efferents</span></code></a>)</p></td>
 <td><p><a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> or <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>
 (<a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.mod_afferents" title="psyneulink.core.components.ports.port.Port_Base.mod_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mod_afferents</span></code></a>)</p></td>
 </tr>
@@ -514,8 +514,8 @@ Projection is <a class="reference internal" href="#projection-deferred-initializ
 <li><p>GatingProjection: <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> or OutputPort`</p></li>
 </ul>
 </div></blockquote>
-<p>A <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> (as a <a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjection</span></a>) is assigned to the <code class="xref any docutils literal notranslate"><span class="pre">path_afferents</span></code> attribute of its <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a>.  The ModulatoryProjections are assigned
-to the <code class="xref any docutils literal notranslate"><span class="pre">mod_afferents</span></code> attribute of their <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a>.</p>
+<p>A <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> (as a <a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjection</span></a>) is assigned to the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.path_afferents" title="psyneulink.core.components.ports.port.Port_Base.path_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">path_afferents</span></code></a> attribute of its <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a>.  The ModulatoryProjections are
+assigned to the <code class="xref any docutils literal notranslate"><span class="pre">mod_afferents</span></code> attribute of their <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a>.</p>
 <p>A <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a> can be specified as:</p>
 <blockquote>
 <div><ul class="simple">

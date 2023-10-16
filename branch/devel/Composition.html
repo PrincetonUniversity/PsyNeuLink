@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.14.0.0+55.gca2a82e6a documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.14.0.0+57.g3490214e2 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.14.0.0+55
+                  0.14.0.0+57
                 </div>
               
             
@@ -860,7 +860,7 @@ constructed by assigning the desired value to the corresponding attribute.</p>
 it modifies the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter of the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> within a
 <a class="reference internal" href="#composition-learning-pathway"><span class="std std-ref">learning Pathway</span></a>, which implements the conection weights (i.e., strengths of
 associations between representations in the Mechanisms) within a <a class="reference internal" href="Pathway.html"><span class="doc">Pathway</span></a>.  If learning is implemented for a
-Composition, it can be executed calling the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method (see
+Composition, it can be executed by calling the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method (see
 <a class="reference internal" href="#composition-learning-execution"><span class="std std-ref">Execution of Supervised Learning</span></a> and <a class="reference internal" href="#composition-execution"><span class="std std-ref">Executing a Composition</span></a> for additional details). The rate at which learning
 occurs is determined by the learning_rate parameter, which can be assigned in various ways and is described under
 <a class="reference internal" href="#composition-learning-rate"><span class="std std-ref">Learning Rate</span></a> at the end of this section.</p>
@@ -868,9 +868,11 @@ occurs is determined by the learning_rate parameter, which can be assigned in va
 <span id="composition-learning-configurations"></span><h3><em>Configuring Learning in a Composition</em><a class="headerlink" href="#configuring-learning-in-a-composition" title="Permalink to this headline">¶</a></h3>
 <p>There are three ways of configuring learning in a Composition, using:</p>
 <ol class="lowerroman simple">
-<li><p><a class="reference internal" href="#composition-learning-standard"><span class="std std-ref">standard PsyNeuLink Components</span></a>, for presentational and/or instructional purposes;</p></li>
-<li><p>an <a class="reference internal" href="#composition-learning-autodiffcomposition"><span class="std std-ref">AutodiffComposition</span></a>, a subclass of Composition
-that executes learning efficiently;</p></li>
+<li><p><a class="reference internal" href="#composition-learning-standard"><span class="std std-ref">standard PsyNeuLink Components</span></a>, for presentational and/or instructional purposes;
+supports both <a class="reference internal" href="#composition-learning-supervised"><span class="std std-ref">Supervised Learning</span></a> and <a class="reference internal" href="#composition-learning-unsupervised"><span class="std std-ref">Unsupervised Learning</span></a>, but executes slowly
+and does not support learning that spans <a class="reference internal" href="#composition-nested"><span class="std std-ref">nested compositions</span></a>.</p></li>
+<li><p>an <a class="reference internal" href="#composition-learning-autodiffcomposition"><span class="std std-ref">AutodiffComposition</span></a>, a subclass of Composition that executes
+learning substantially more efficiently, and supports learning that spans <a class="reference internal" href="#composition-nested"><span class="std std-ref">nested compositions</span></a>, but is currently restricted to <a class="reference internal" href="#composition-learning-supervised"><span class="std std-ref">Supervised Learning</span></a>.</p></li>
 <li><p><a class="reference internal" href="#composition-learning-udf"><span class="std std-ref">UserDefinedFunctions</span></a>, that provide full flexiblity.</p></li>
 </ol>
 <p>Implementing learning using PsyNeuLink compoments is meant as a complement to more standard implementations of
@@ -1171,19 +1173,19 @@ learning_rates.  The table below shows the precedence for the specificadtion of 
 <span id="composition-learning-autodiffcomposition"></span><h3><em>Learning Using AutodiffCompositon</em><a class="headerlink" href="#learning-using-autodiffcompositon" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffCompositions</span></a> provide the ability to execute backpropagation learning much more
 efficiently than using a standard Composition.  An AutodiffComposition is constructed in the same way, but there
-is no need to specify any <a class="reference internal" href="#composition-learning-components"><span class="std std-ref">learning components</span></a>&gt;` or use any <a class="reference internal" href="#composition-learning-methods"><span class="std std-ref">learning methods</span></a> – in fact, they should <em>not</em> be specified (see <a class="reference internal" href="AutodiffComposition.html#autodiff-learning-components-warning"><span class="std std-ref">warning</span></a>) – an AutodiffComposition automatically creates backpropagation
-<a class="reference internal" href="#composition-learning-pathway"><span class="std std-ref">learning pathways</span></a> from all input to all output <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a>.
-While learning in an AutodiffComposition is restricted to the <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.BackPropagation" title="psyneulink.core.components.functions.learningfunctions.BackPropagation"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BackPropagation</span></code></a> learning algorithm, its <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.Loss" title="psyneulink.core.globals.keywords.Loss"><code class="xref any py py-class docutils literal notranslate"><span class="pre">loss</span>
-<span class="pre">function</span></code></a> can be specified (using the <strong>loss_spec</strong> parameter of its constructor), which implements different
-kinds of <a class="reference internal" href="#composition-learning-supervised"><span class="std std-ref">supervised learning</span></a> (for example, <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.Loss.MSE" title="psyneulink.core.globals.keywords.Loss.MSE"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">Loss.MSE</span></code></a> can be used for regression,
-or <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.Loss.CROSS_ENTROPY" title="psyneulink.core.globals.keywords.Loss.CROSS_ENTROPY"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">Loss.CROSS_ENTROPY</span></code></a> for classification).</p>
+is no need to specify any <a class="reference internal" href="#composition-learning-components"><span class="std std-ref">learning components</span></a>&gt;` or use any <a class="reference internal" href="#composition-learning-methods"><span class="std std-ref">learning methods</span></a> – in fact, they <em>cannot</em> be specified (see <a class="reference internal" href="AutodiffComposition.html#autodiff-learning-components-warning"><span class="std std-ref">warning</span></a>) – an AutodiffComposition automatically constructs all of the components
+needed for learning While learning in an AutodiffComposition is currently restricted to the <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.BackPropagation" title="psyneulink.core.components.functions.learningfunctions.BackPropagation"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BackPropagation</span></code></a> learning
+algorithm, its <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.Loss" title="psyneulink.core.globals.keywords.Loss"><code class="xref any py py-class docutils literal notranslate"><span class="pre">loss</span> <span class="pre">function</span></code></a> can be specified (using the <strong>loss_spec</strong> parameter of its constructor),
+which implements different kinds of <a class="reference internal" href="#composition-learning-supervised"><span class="std std-ref">supervised learning</span></a> (for example, <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.Loss.MSE" title="psyneulink.core.globals.keywords.Loss.MSE"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">Loss.MSE</span></code></a>
+can be used for regression, or <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.Loss.CROSS_ENTROPY" title="psyneulink.core.globals.keywords.Loss.CROSS_ENTROPY"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">Loss.CROSS_ENTROPY</span></code></a> for classification).</p>
 <p>The advantage of using an AutodiffComposition is that it allows a model to be implemented in PsyNeuLink, while
 exploiting the acceleration of optimized implementations of learning. This can be achieved by executing the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method in one of two modes (specified using its <strong>execution_mode</strong> argument):  using direct
 compilation (<strong>execution_mode</strong> = <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.LLVMRun" title="psyneulink.core.llvm.__init__.ExecutionMode.LLVMRun"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.LLVMRun</span></code></a>); or by automatically translating the model to <a class="reference external" href="https://pytorch.org">PyTorch</a> for training (<strong>execution_mode</strong> = <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="psyneulink.core.llvm.__init__.ExecutionMode.PyTorch"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.PyTorch</span></code></a>). The advantage of these modes is
-that they can provide up to three orders of magnitude speed-up in training a model. However, there are restrictions
-on the kinds of Compositions that be implemented in this way. Use of the <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="psyneulink.core.llvm.__init__.ExecutionMode.PyTorch"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PyTorch</span></code></a> mode also supports learning of
-<a class="reference internal" href="#composition-nested"><span class="std std-ref">nested Compositions</span></a> (see <a class="reference internal" href="AutodiffComposition.html#autodiffcomposition-pytorch"><span class="std std-ref">PyTorch mode</span></a>. The features of the different ways to
-implement and execute learning are outlined in the table below, and described in more detail in <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a>.</p>
+that they can provide up to three orders of magnitude speed-up in training a model. Use of the <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="psyneulink.core.llvm.__init__.ExecutionMode.PyTorch"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PyTorch</span></code></a> mode also
+supports learning of <a class="reference internal" href="#composition-nested"><span class="std std-ref">nested Compositions</span></a> (see <a class="reference internal" href="AutodiffComposition.html#autodiffcomposition-nesting"><span class="std std-ref">Nesting</span></a>). However, there
+are restrictions on the kinds of Compositions that be implemented in this way (see <a class="reference internal" href="AutodiffComposition.html#autodiffcomposition-restrictions"><span class="std std-ref">Only one OutputPort per Node</span></a>).
+The table below summarizes the different ways to implement and execute learning, and features specific to each;
+these are described in more detail in <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a>.</p>
 <p>The <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learning_rate" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for an AutodiffComposition can be specified in its constructor
 (which assigns it as the default) or in its <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method, in which case it applies to
 that execution only.</p>
@@ -3658,15 +3660,48 @@ specified in <strong>role</strong>.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._get_nested_nodes_with_same_roles_at_all_levels">
-<span class="sig-name descname"><span class="pre">_get_nested_nodes_with_same_roles_at_all_levels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_roles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_roles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._get_nested_nodes_with_same_roles_at_all_levels" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition.get_nested_nodes_by_roles_at_any_level">
+<span class="sig-name descname"><span class="pre">get_nested_nodes_by_roles_at_any_level</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_roles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_roles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.get_nested_nodes_by_roles_at_any_level" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return all Nodes from nested Compositions that have <em>include_roles</em> but not <em>exclude_roles at all levels</em>.
-Note:  need to do this recursively, checking roles on the “way down,” since a Node may have a role in a</p>
+Returns Nodes that have or don’t have the specified roles at <em>any</em> level of nesting,</p>
 <blockquote>
-<div><p>deeply nested Composition, but that Composition itself may not have the same role in the Composition
+<div><p>irrespective of their status at other levels of nesting.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>To get nodes that are either INPUT or OUTPUT Nodes at <em>all</em> levels of nesting, use either</dt><dd><p>get_nested_input_nodes_at_all_levels() or get_nested_output_nodes_at_all_levels()</p>
+</dd>
+<dt>Note:  do this recursively, checking roles on the “way down,” as a Node may have a role in a</dt><dd><p>deeply nested Composition, but that Composition itself may not have the same role in the Composition
 within which <em>it</em> is nested (e.g., a Node might be an INPUT Node of a nested Composition, but that
 nested Composition may not be an INPUT Node of the Composition in which it is nested).</p>
-</div></blockquote>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition.get_nested_nodes_input_nodes_at_levels">
+<span class="sig-name descname"><span class="pre">get_nested_nodes_input_nodes_at_levels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.get_nested_nodes_input_nodes_at_levels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return all Nodes from nested Compositions that receive input from the environment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition.get_nested_nodes_output_nodes_at_levels">
+<span class="sig-name descname"><span class="pre">get_nested_nodes_output_nodes_at_levels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.get_nested_nodes_output_nodes_at_levels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return all Nodes from nested Compositions that receive input from the environment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -3679,7 +3714,7 @@ corresponding InputPorts on Composition’s <a class="reference internal" href="
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._get_input_receivers">
 <span class="sig-name descname"><span class="pre">_get_input_receivers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Port'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comp_as_node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._get_input_receivers" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return all INPUT Nodes [or their InputPorts] of comp, [including those for any nested Compositions].
+<dd><p>Return all INPUT Nodes [or their InputPorts] of comp, including those for any nested Compositions.
 If type is PORT, return all InputPorts for all INPUT Nodes, including for nested Compositions.
 If type is NODE, return all INPUT Nodes, including for nested Compositions as determined by comp_as_node:</p>
 <blockquote>
@@ -3688,6 +3723,10 @@ If type is NODE, return all INPUT Nodes, including for nested Compositions as de
 - True, include the nested Composition but not its INPUT Nodes
 - ALL, include the nested Composition AND its INPUT Nodes</p>
 </div></blockquote>
+<dl class="simple">
+<dt>Exclude input_port(s) of Node(s) in a nested Composition if their input comes from a Node in the enclosing</dt><dd><p>Composition rather than its input_CIM (as those will be accounted for by the input_CIM of the outer Comp)</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -3934,10 +3973,29 @@ therefore, might be worth allowing TARGET_MECHANISM to be assigned as OUTPUT</p>
 InputPorts and OutputPorts are being added to the CIMs</p></li>
 <li><p>create a corresponding InputPort and OutputPort on the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.input_CIM" title="psyneulink.core.compositions.composition.Composition.input_CIM"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_CIM</span></code></a> for each
 InputPort of each INPUT node. Connect the OutputPort on the input_CIM to the INPUT node’s corresponding
-InputPort via a standard MappingProjection.</p></li>
+InputPort via a standard MappingProjection.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The InputPort on the input_CIM is named using the following convention:
+INPUT_CIM_NAME + “_” + node.name + “_” + node.input_port.name</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If the input_CIM is for a nested Composition, any of its input_ports that receive Projection(s)
+from Nodes in the enclosing (outer) Composition (rather than its input_CIM) are marked as
+<a class="reference internal" href="InputPort.html#inputport-internal-only"><span class="std std-ref">internal_only</span></a>, since they do not receive input directly from the external
+environment of the enclosing Composition</p>
+</div>
+</li>
 <li><p>create a corresponding InputPort and OutputPort on the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.output_CIM" title="psyneulink.core.compositions.composition.Composition.output_CIM"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_CIM</span></code></a> for each
 OutputPort of each OUTPUT node. Connect the OUTPUT node’s OutputPort to the output_CIM’s corresponding
-InputPort via a standard MappingProjection.</p></li>
+InputPort via a standard MappingProjection.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The OutputPort on the output_CIM is named using the following convention:
+OUTPUT_CIM_NAME + “_” + node.name + “_” + node.output_port.name</p>
+</div>
+</li>
 <li><p>create a corresponding InputPort and ControlSignal on the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.parameter_CIM" title="psyneulink.core.compositions.composition.Composition.parameter_CIM"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameter_CIM</span></code></a> for
 each InputPort of each node in the Composition that receives a modulatory projection from an enclosing
 Composition. Connect the original ControlSignal to the parameter_CIM’s corresponding InputPort via a
@@ -4213,7 +4271,7 @@ be used, however if a 2-item (Pathway, LearningFunction) tuple is used, the <a c
 learning-related specifications are ignored, as are its <a class="reference internal" href="Pathway.html#psyneulink.core.compositions.pathway.Pathway.name" title="psyneulink.core.compositions.pathway.Pathway.name"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">name</span></code></a> if the <strong>name</strong> argument
 of add_linear_processing_pathway is specified.</p></li>
 <li><p><strong>default_projection_matrix</strong> (list, array, function, <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.RandomMatrix" title="psyneulink.core.components.functions.function.RandomMatrix"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RandomMatrix</span></code></a> or MATRIX_KEYWORD : default None) – specifies matrix to use for any unspecified Projections (overrides default matrix for <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>)
-if a default projection is not otherwise specified (see <a class="reference internal" href="Pathway.html#pathway-specification-projections"><span class="std std-ref">Pathway Projection Specifications</span></a>;
+if a default projection is not otherwise specified (see <a class="reference internal" href="Pathway.html#pathway-specification-projections"><span class="std std-ref">Projection Specifications</span></a>;
 see <a class="reference internal" href="MappingProjection.html#mappingprojection-matrix-specification"><span class="std std-ref">Specifying the Matrix Parameter</span></a> for details of specification)</p></li>
 <li><p><strong>name</strong> (<em>str</em>) – species the name used for <a class="reference internal" href="Pathway.html"><span class="doc">Pathway</span></a>; supersedes <a class="reference internal" href="Pathway.html#psyneulink.core.compositions.pathway.Pathway.name" title="psyneulink.core.compositions.pathway.Pathway.name"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">name</span></code></a> of <a class="reference internal" href="Pathway.html"><span class="doc">Pathway</span></a> object if it is has one.</p></li>
 </ul>
@@ -4282,7 +4340,7 @@ However, some learning algorithms may use a different Mechanism (e.g., for <code
 in each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> when the Composition executes;  it is assigned as the default value for
 the <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_enabled" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_enabled"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_enabled</span></code></a> attribute of the <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a> in the pathway, and its <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> (see <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_enabled" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_enabled"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_enabled</span></code></a> for meaning of values).</p></li>
 <li><p><strong>default_projection_matrix</strong> (list, array, function, <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.RandomMatrix" title="psyneulink.core.components.functions.function.RandomMatrix"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RandomMatrix</span></code></a> or MATRIX_KEYWORD : default None) – specifies matrix to use for any unspecified Projections (overrides default matrix for <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>)
-if a default projection is not otherwise specified (see <a class="reference internal" href="Pathway.html#pathway-specification-projections"><span class="std std-ref">Pathway Projection Specifications</span></a>;
+if a default projection is not otherwise specified (see <a class="reference internal" href="Pathway.html#pathway-specification-projections"><span class="std std-ref">Projection Specifications</span></a>;
 see <a class="reference internal" href="MappingProjection.html#mappingprojection-matrix-specification"><span class="std std-ref">Specifying the Matrix Parameter</span></a> for details of specification)</p></li>
 <li><p><strong>name</strong> (<em>str :</em>) – species the name used for <a class="reference internal" href="Pathway.html"><span class="doc">Pathway</span></a>; supersedes <a class="reference internal" href="Pathway.html#psyneulink.core.compositions.pathway.Pathway.name" title="psyneulink.core.compositions.pathway.Pathway.name"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">name</span></code></a> of <a class="reference internal" href="Pathway.html"><span class="doc">Pathway</span></a> object if it is has one.</p></li>
 </ul>
@@ -4307,7 +4365,7 @@ see <a class="reference internal" href="MappingProjection.html#mappingprojection
 specified, that projection is the learned projection. Otherwise, a default MappingProjection is
 automatically generated for the learned projection.</p></li>
 <li><p><strong>default_projection_matrix</strong> (list, array, function, <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.RandomMatrix" title="psyneulink.core.components.functions.function.RandomMatrix"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RandomMatrix</span></code></a> or MATRIX_KEYWORD : default None) – specifies matrix to use for any unspecified Projections (overrides default matrix for <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>)
-if a default projection is not otherwise specified (see <a class="reference internal" href="Pathway.html#pathway-specification-projections"><span class="std std-ref">Pathway Projection Specifications</span></a>;
+if a default projection is not otherwise specified (see <a class="reference internal" href="Pathway.html#pathway-specification-projections"><span class="std std-ref">Projection Specifications</span></a>;
 see <a class="reference internal" href="MappingProjection.html#mappingprojection-matrix-specification"><span class="std std-ref">Specifying the Matrix Parameter</span></a> for details of specification)</p></li>
 <li><p><strong>learning_rate</strong> (<em>float : default 0.05</em>) – specifies the <code class="xref any docutils literal notranslate"><span class="pre">learning_rate</span></code> used for the <code class="xref any docutils literal notranslate"><span class="pre">ReinforcementLearning</span></code>
 function of the <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a> in the <strong>pathway</strong> (see <a class="reference internal" href="#composition-learning-rate"><span class="std std-ref">Learning Rate</span></a> for additional
@@ -4347,7 +4405,7 @@ the output (<a class="reference internal" href="Mechanism.html#psyneulink.core.c
 in each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> when the Composition executes;  it is assigned as the default value for
 the <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_enabled" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_enabled"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_enabled</span></code></a> attribute of the <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a> in the pathway, and its <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> (see <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_enabled" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_enabled"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_enabled</span></code></a> for meaning of values).</p></li>
 <li><p><strong>default_projection_matrix</strong> (list, array, function, <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.RandomMatrix" title="psyneulink.core.components.functions.function.RandomMatrix"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RandomMatrix</span></code></a> or MATRIX_KEYWORD : default None) – specifies matrix to use for any unspecified Projections (overrides default matrix for <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>)
-if a default projection is not otherwise specified (see <a class="reference internal" href="Pathway.html#pathway-specification-projections"><span class="std std-ref">Pathway Projection Specifications</span></a>;
+if a default projection is not otherwise specified (see <a class="reference internal" href="Pathway.html#pathway-specification-projections"><span class="std std-ref">Projection Specifications</span></a>;
 see <a class="reference internal" href="MappingProjection.html#mappingprojection-matrix-specification"><span class="std std-ref">Specifying the Matrix Parameter</span></a> for details of specification)</p></li>
 <li><p><strong>name</strong> (<em>str :</em>) – species the name used for <a class="reference internal" href="Pathway.html"><span class="doc">Pathway</span></a>; supersedes <a class="reference internal" href="Pathway.html#psyneulink.core.compositions.pathway.Pathway.name" title="psyneulink.core.compositions.pathway.Pathway.name"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">name</span></code></a> of <a class="reference internal" href="Pathway.html"><span class="doc">Pathway</span></a> object if it is has one.</p></li>
 </ul>
@@ -4381,7 +4439,7 @@ in each <a class="reference internal" href="Time.html#psyneulink.core.scheduling
 the <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_enabled" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_enabled"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_enabled</span></code></a> attribute of the <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a> in the pathway, and their <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a>
 (see <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_enabled" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_enabled"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_enabled</span></code></a> for meaning of values).</p></li>
 <li><p><strong>default_projection_matrix</strong> (list, array, function, <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.RandomMatrix" title="psyneulink.core.components.functions.function.RandomMatrix"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RandomMatrix</span></code></a> or MATRIX_KEYWORD : default None) – specifies matrix to use for any unspecified Projections (overrides default matrix for <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>)
-if a default projection is not otherwise specified (see <a class="reference internal" href="Pathway.html#pathway-specification-projections"><span class="std std-ref">Pathway Projection Specifications</span></a>;
+if a default projection is not otherwise specified (see <a class="reference internal" href="Pathway.html#pathway-specification-projections"><span class="std std-ref">Projection Specifications</span></a>;
 see <a class="reference internal" href="MappingProjection.html#mappingprojection-matrix-specification"><span class="std std-ref">Specifying the Matrix Parameter</span></a> for details of specification)</p></li>
 <li><p><strong>name</strong> (<em>str :</em>) – species the name used for <a class="reference internal" href="Pathway.html"><span class="doc">Pathway</span></a>; supersedes <a class="reference internal" href="Pathway.html#psyneulink.core.compositions.pathway.Pathway.name" title="psyneulink.core.compositions.pathway.Pathway.name"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">name</span></code></a> of <a class="reference internal" href="Pathway.html"><span class="doc">Pathway</span></a> object if it is has one.</p></li>
 </ul>
