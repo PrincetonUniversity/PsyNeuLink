@@ -1516,11 +1516,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
         return [lp.receiver.owner for ls in self.learning_signals for lp in ls.efferents]
 
     @property
-    def dependent_learning_mechanisms(self):
-        return [p.parameter_ports[MATRIX].mod_afferents[0].sender.owner for p in self.input_source.path_afferents
-                if p.has_learning_projection]
-
-    @property
     def validate_error_signal_and_covariate_sources(self):
         # FIX: 8/1/23 - NEEDS ERROR MESSAGES, AND TO BE CALLED SOMEWHERE
         #               (MAYBE BY COMPOSITION ONCE ALL NODES AND PROJECTIONS HAVE BEEN INSTANTIATED)

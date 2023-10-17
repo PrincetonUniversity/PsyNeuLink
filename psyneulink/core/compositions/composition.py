@@ -8406,6 +8406,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if isinstance(output_source, Composition):
             _, output_source ,_ = \
                 output_source.output_CIM._get_destination_info_from_input_CIM(output_source.input_CIM.input_port)
+
         act_in_projection = MappingProjection(sender=input_source.output_ports[0],
                                               receiver=learning_mechanism.input_ports[ACTIVATION_INPUT_INDEX])
         act_out_projection = MappingProjection(sender=output_source.output_ports[0],
@@ -8672,9 +8673,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learned_projections.append(learned_projection)
 
         # Add error_signal projections to any learning_mechanisms that are now dependent on the new one
+
         for lm in learning_mechanisms:
-            if lm.dependent_learning_mechanisms:
-                self._add_error_projection_to_dependent_learning_mechs(lm, context)
+
+            # if isinstance(input_source.function, TransferFunction):
+            #     # Get output_port corresonding to index of input_port that receives learned_projection
+            #     output_source_input_port_idx = output_source.input_ports.index(learned_projection.receiver)
+            # else:
+            #     output_source_input_port_idx = 0
+            # efferents = [p for p in output_source.output_ports[output_source_input_port_idx].efferents
+            #              if p in self.projections]
+            for input_port in lm.input_source.input_ports:
+                dependent_learning_mechanisms = [p.parameter_ports[MATRIX].mod_afferents[0].sender.owner
+                                                 for p in (input_port.path_afferents) if p.has_learning_projection]
+                if dependent_learning_mechanisms:
+                    self._add_error_projection_to_dependent_learning_mechs(lm, context)
 
         # Suppress "no efferent connections" warning for:
         #    - error_signal OutputPort of last LearningMechanism in sequence
@@ -10748,7 +10761,7 @@ _
         Examples
         --------
 
-        This figure shows an animation of the Composition in the XXX example script, with
+        This figure shows an animation of the Composition in the ge_ example script, with
         the `show_graph <ShowGraph.show_graph>` **show_learning** argument specified as *ALL*:
 
         .. _Composition_XXX_movie:
