@@ -436,7 +436,8 @@ def printf(builder, fmt, *args, override_debug=False):
     global_fmt.initializer = fmt_ty(fmt_data)
 
     fmt_ptr = builder.gep(global_fmt, [ir.IntType(32)(0), ir.IntType(32)(0)])
-    builder.call(printf, [fmt_ptr] + list(args))
+    conv_args = [builder.fpext(a, ir.DoubleType()) if is_floating_point(a) else a for a in args]
+    builder.call(printf, [fmt_ptr] + conv_args)
 
 
 def printf_float_array(builder, array, prefix="", suffix="\n", override_debug=False):
