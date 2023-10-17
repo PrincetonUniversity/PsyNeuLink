@@ -2,7 +2,7 @@ name: "CodeQL"
 
 on:
   push:
-    branches: [ "master", "devel" ]
+    branches: [ "master", "devel", "codeql" ]
     paths-ignore:
       - 'docs/**'
   pull_request:
@@ -34,6 +34,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 100
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
@@ -43,6 +45,12 @@ jobs:
 
       - name: Autobuild
         uses: github/codeql-action/autobuild@v2
+
+      - name: Cache cleanup
+        shell: bash
+        run: |
+          $CODEQL_PYTHON -m pip cache info
+          $CODEQL_PYTHON -m pip cache purge
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
