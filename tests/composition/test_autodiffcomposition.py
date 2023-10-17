@@ -3206,10 +3206,10 @@ class TestACLogging:
         out_map.set_log_conditions('matrix', pnl.LogCondition.TRIAL)
 
         xor_inputs = np.array(  # the inputs we will provide to the model
-            [[0, 0],
-             [0, 1],
-             [1, 0],
-             [1, 1]])
+            [[[0, 0]],
+             [[0, 1]],
+             [[1, 0]],
+             [[1, 1]]])
 
         xor_targets = np.array(  # the outputs we wish to see from the model
             [[0],
@@ -3243,17 +3243,17 @@ class TestACLogging:
 
         np.testing.assert_equal(in_np_dict_vals[0:4], xor_inputs)
         np.testing.assert_equal(in_np_vals, in_np_dict_vals)
-        assert in_np_dict_vals.shape == (expected_length, xor_in.size)
+        assert in_np_dict_vals.shape == (expected_length, 1, xor_in.size)
 
         assert hid_map_np_dict_mats.shape == (expected_length, xor_in.size, xor_hid.size)
         np.testing.assert_equal(hid_map_np_mats, hid_map_np_dict_mats)
 
-        assert hid_np_dict_vals.shape == (expected_length, xor_hid.size)
+        assert hid_np_dict_vals.shape == (expected_length, 1, xor_hid.size)
 
         assert out_map_np_dict_mats.shape == (expected_length, xor_hid.size, xor_out.size)
         np.testing.assert_equal(out_map_np_mats, out_map_np_dict_mats)
 
-        assert out_np_dict_vals.shape == (expected_length, xor_out.size)
+        assert out_np_dict_vals.shape == (expected_length, 1, xor_out.size)
 
         xor_out.log.print_entries()
 

@@ -239,12 +239,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
             else:
                 continue
 
-            port_idx = projection.sender.owner.output_ports.index(projection.sender) # used by LLVM
+            port_idx = projection.sender.owner.output_ports.index(projection.sender)
             pytorch_proj_wrapper = PytorchProjectionWrapper(
                 projection,
                 pnl_proj,
                 list(self._composition._inner_projections).index(projection),
-                port_idx, device,
+                port_idx,
+                device,
                 sender=proj_sndr,
                 receiver=proj_rcvr,
                 context=context)
@@ -564,7 +565,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                 variable.append(inputs[input_port])
                             # Otherwise, use the node's input_port's afferents
                             else:
-                                variable.append(node.collate_afferents(i))
+                                variable.append(node.collate_afferents(i).squeeze(0))
                         if len(variable) == 1:
                             variable = variable[0]
                         else:
@@ -646,22 +647,48 @@ class PytorchMechanismWrapper():
             f"PROGRAM ERROR: No afferents found for '{self._mechanism.name}' in AutodiffComposition"
         # FIX: AUGMENT THIS TO SUPPORT InputPort's function
         # Specific port is specified
+        # # MODIFIED 10/11/23 OLD:
+        # if port is not None:
+        #     return sum(proj_wrapper.execute(proj_wrapper.sender.value)
+        #                for proj_wrapper in self.afferents if proj_wrapper._pnl_proj
+        #                in self._mechanism.input_ports[port].path_afferents)
+        # # Has only one input_port
+        # elif len(self._mechanism.input_ports) == 1:
+        #     return sum((proj_wrapper.execute(proj_wrapper.sender.value) for proj_wrapper in self.afferents))
+        # # Has multiple input_ports
+        # else:
+        #     # # Sum projections to each input_port of the Mechanism and return array with the sums
+        #     return torch.stack([sum(proj_wrapper.execute(proj_wrapper.sender.value)
+        #                             for proj_wrapper in self.afferents if proj_wrapper._pnl_proj
+        #                             in input_port.path_afferents) for input_port in self._mechanism.input_ports])
+        # MODIFIED 10/11/23 NEW:
+        # FIX: USING _port_idx TO INDEX INTO sender.value GETS IT WRONG IF THE MECHANISM HAS AN OUTPUT PORT
+        #      USED BY A PROJECTION NOT IN THE CURRENT COMPOSITION
         if port is not None:
-            return sum(proj_wrapper.execute(proj_wrapper.sender.value)
-                       for proj_wrapper in self.afferents if proj_wrapper._pnl_proj
-                       in self._mechanism.input_ports[port].path_afferents)
+            return sum(proj_wrapper.execute(proj_wrapper.sender.value[proj_wrapper._value_idx]).unsqueeze(0)
+                                            for proj_wrapper in self.afferents
+                                            if proj_wrapper._pnl_proj
+                                            in self._mechanism.input_ports[port].path_afferents)
         # Has only one input_port
         elif len(self._mechanism.input_ports) == 1:
-            return sum((proj_wrapper.execute(proj_wrapper.sender.value) for proj_wrapper in self.afferents))
+            # Get value corresponding to port from which each afferent projects
+            return sum((proj_wrapper.execute(proj_wrapper.sender.value[proj_wrapper._value_idx]).unsqueeze(0)
+                        for proj_wrapper in self.afferents))
         # Has multiple input_ports
         else:
             # # Sum projections to each input_port of the Mechanism and return array with the sums
-            return torch.stack([sum(proj_wrapper.execute(proj_wrapper.sender.value)
-                                    for proj_wrapper in self.afferents if proj_wrapper._pnl_proj
-                                    in input_port.path_afferents) for input_port in self._mechanism.input_ports])
+            return torch.stack([sum(proj_wrapper.execute(proj_wrapper.sender.value[proj_wrapper._value_idx]).unsqueeze(0)
+                                    for proj_wrapper in self.afferents
+                                    if proj_wrapper._pnl_proj in input_port.path_afferents)
+                                for input_port in self._mechanism.input_ports])
+        # MODIFIED 10/11/23 END
 
     def execute(self, variable):
         self.value = self.function(variable)
+        # # MODIFIED 10/11/23 NEW:
+        if len(self.value.shape) == 1:
+            self.value = self.value.unsqueeze(0)
+        # MODIFIED 10/11/23 END
         return self.value
 
     def _gen_llvm_execute(self, ctx, builder, state, params, mech_input, data):
@@ -757,10 +784,25 @@ class PytorchProjectionWrapper():
         self._projection = projection # Projection being wrapped (may *not* be the one being learned; see note above)
         self._pnl_proj = pnl_proj # Projection that directly projects to/from sender/receiver (see above)
         self._idx = component_idx     # Index of Projection in Composition's list of projections
-        self._port_idx = port_idx     # Index of sender's port
+        self._port_idx = port_idx     # Index of sender's port (used by LLVM)
+        self._value_idx = 0           # Index of value in sender's value (used in collate_afferents)
         self.sender = sender          # PytorchMechanismWrapper to which Projection's sender is mapped
         self.receiver = receiver      # PytorchMechanismWrapper to which Projection's receiver is mapped
         self._context = context
+
+        # MODIFIED 10/11/23 NEW:
+        # Get item of value corresponding to OutputPort that is Projection's sender
+        # Note: this may not be the same as _port_idx if the sender Mechanism has OutputPorts for Projections
+        #       that are not in the current Composition
+        # FIX: WRITE CODE FOR THIS
+        if context._composition:
+            for i, output_port in enumerate(self.sender._mechanism.output_ports):
+                if all(p in context._composition.projections for p in output_port.efferents):
+                    if self._pnl_proj in output_port.efferents:
+                        self._value_idx = i
+                        break
+                    i += 1
+        # MODIFIED 10/11/23 END
 
         matrix = projection.parameters.matrix.get(
                             context=context)

@@ -2878,6 +2878,7 @@ import collections
 import enum
 import functools
 import inspect
+import types
 import itertools
 import logging
 import sys
@@ -2902,7 +2903,8 @@ from psyneulink.core.components.functions.nonstateful.combinationfunctions impor
         LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.nonstateful.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
-from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity, Logistic, SoftMax
+from psyneulink.core.components.functions.nonstateful.transferfunctions import \
+    TransferFunction, Identity, Logistic, SoftMax
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError, MechanismList
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
@@ -8803,6 +8805,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 """Check whether input_port's function is LinearCombination with operation=SUM
                 If it is anything else, then raise error and give advice about reconfiguring Composition
                 """
+                if isinstance(function, TransferFunction):
+                    return False
                 if (not isinstance(function, LinearCombination)
                         or function.operation is not SUM):
                     if allow:
@@ -8823,9 +8827,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #  - takes more than one argument and
             #  - it is not LinearCombination(operation=SUM)
             if (len(output_source.variable) > 1 and _non_additive_comb_fct(output_source.function, allow=True)):
-                # for input_port if input_port is not learned_projection.receiver in output_source.input_ports]:
-                # for input_port in output_source.input_ports if input_port is not learned_projection.receiver]:
-                # for input_port in [p for p in output_source.input_ports if p is not learned_projection.receiver]:
                 for input_port in output_source.input_ports:
                     # Projections to output_source should only ever be combined using LinearCombination(operation=SUM)
                     #   so that they can be ignored by the derivative of its function;
@@ -8870,13 +8871,29 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        and isinstance(lp.sender.owner.function, BackPropagation))),
                                   None)
 
+
+        # Get index of OutputPort for input_source that sends learned_projection  
+        input_source_outpt_idx = learned_projection.sender.owner.output_ports.index(learned_projection.sender)
+        
+        # Get index of InputPort for output_source that receives learned_projection;
+        # For TransferMechanisms, InputPort and OutputPorts should be treated as parallel processing streams:
+        #   LearningMechanism for Projection to each InputPort should only receieve error_signals
+        #      from efferents of the corresponding OutputPort
+        if isinstance(output_source.function, TransferFunction):
+            # Get output_port corresonding to index of input_port that receives learned_projection
+            output_source_input_port_idx = output_source.input_ports.index(learned_projection.receiver)
+        else:
+            output_source_input_port_idx = 0
+        efferents = [p for p in output_source.output_ports[output_source_input_port_idx].efferents
+                     if p in self.projections]
+
         # If learning_mechanism exists:
         #    error_sources will be empty (as they have been dealt with in self._get_back_prop_error_sources
         #    error_projections will contain list of any created to be added to the Composition below
         if learning_mechanism:
             # This should only be reached for duplicate learning pathways
             #  or when and AutodiffComposition is being trained (as it creates a duplicate of the learning pathways)
-            error_sources, error_projections = self._get_back_prop_error_sources(output_source,
+            error_sources, error_projections = self._get_back_prop_error_sources(efferents,
                                                                                  learning_mechanism,
                                                                                  context)
             self.add_projections(error_projections)
@@ -8886,7 +8903,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    get error_sources needed to create learning_mechanism
         #    error_projections should be empty since there is not yet any learning_mechanism;
         #    they will be created (using error_sources) after learning_mechanism is created below.
-        error_sources, _ = self._get_back_prop_error_sources(output_source, context=context)
+        error_sources, _ = self._get_back_prop_error_sources(efferents, context=context)
         assert not _, f"PROGRAM ERROR: there should not yet be error_projections: {_}"
 
         error_signal_template = [error_source.output_ports[ERROR_SIGNAL].value for error_source in error_sources]
@@ -8925,11 +8942,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Create MappingProjections for INPUT_SOURCE, OUTPUT_SOURCE and COVARIATES (if any)
 
         # Projection from input_source
-        act_in_projection = MappingProjection(sender=input_source.output_ports[0],
+        act_in_projection = MappingProjection(sender=input_source.output_ports[input_source_outpt_idx],
                                               receiver=learning_mechanism.input_ports[0],
                                               matrix=IDENTITY_MATRIX)
 
-        act_out_projection = MappingProjection(sender=output_source.output_ports[0],
+        # Projection from output_source
+        act_out_projection = MappingProjection(sender=output_source.output_ports[output_source_input_port_idx],
                                                receiver=learning_mechanism.input_ports[1],
                                                matrix=IDENTITY_MATRIX)
 
@@ -8957,7 +8975,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return learning_mechanism
 
-    def _get_back_prop_error_sources(self, receiver_activity_mech, learning_mech=None, context=None):
+    def _get_back_prop_error_sources(self, efferents, learning_mech=None, context=None):
         # FIX CROSSED_PATHWAYS [JDC]:  GENERALIZE THIS TO HANDLE COMPARATOR/TARGET ASSIGNMENTS IN BACKPROP
         #                              AND THEN TO HANDLE ALL FORMS OF LEARNING (AS BELOW)
         #  REFACTOR TO DEAL WITH CROSSING PATHWAYS (?CREATE METHOD ON LearningMechanism TO DO THIS?):
@@ -8966,7 +8984,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #       (see current implementation in add_backpropagation_learning_pathway)
         #     - for terminal sequence, handle target and sample projections as below
         #  2) For non-terminal sequences, determine # of error_signals coming from LearningMechanisms associated with
-        #     all efferentprojections of ProcessingMechanism that projects to ACTIVATION_OUTPUT of LearningMechanism
+        #     all efferent projections of ProcessingMechanism that projects to ACTIVATION_OUTPUT of LearningMechanism
         #     - check validity of existing error_signal projections with respect to those and, if possible,
         #       their correspondence with error_matrices
         #     - check if any ERROR_SIGNAL input_ports are empty (vacated by terminal sequence elements deleted in
@@ -8974,11 +8992,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     - call add_ports method on LearningMechanism to add new ERROR_SIGNAL input_port to its input_ports
         #       and error_matrix to its self.error_matrices attribute
         #     - add new error_signal projection
-        """Add any LearningMechanisms associated with efferent projection from receiver_activity_mech"""
+        """Add any LearningMechanisms associated with efferent projection from output_source"""
         error_sources = []
         error_projections = []
 
-        for efferent in [p for p in receiver_activity_mech.efferents if p in self.projections]:
+        for efferent in efferents:
 
             # FIX: 9/9/23 - ADD HANDLING OF MULTI-LEVEL NESTING
             # Deal with OUTPUT Node of a nested Composition (note: this currently only handles one level of nesting)
@@ -8990,7 +9008,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 except IndexError:
                     continue
 
-            # Only use efferents of receiver_activity_mech with a LearningProjection that are in current Composition
+            # Only use efferents of output_source with a LearningProjection that are in current Composition
             if not (hasattr(efferent, 'has_learning_projection')
                     and efferent.has_learning_projection
                     and efferent in self.projections):
@@ -9028,10 +9046,47 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     so they can be added to the Composition by _create_non_terminal_backprop_learning_components
         return error_sources, error_projections
 
+    # # MODIFIED 10/16/23 OLD:
+    # def _add_error_projection_to_dependent_learning_mechs(self, error_source, context=None):
+    #
+    #     # FIX: 10/15/23 - CHECK FOR Linear FUNCTION HERE AND DON"T ADD DEPENDENCY FOR PARALLEL STREAM
+    #     # Get all afferents to output_source (error_source.input_source) in Composition that have LearningProjections
+    #     for afferent in [p for p in error_source.input_source.path_afferents
+    #                      if (p in self.projections
+    #                          and hasattr(p, 'has_learning_projection')
+    #                          and p.has_learning_projection)]:
+    #
+    #         # For each LearningProjection to that afferent, if its LearningMechanism doesn't already have a receiver
+    #         for learning_projection in [lp for lp in afferent.parameter_ports[MATRIX].mod_afferents
+    #                                     if (isinstance(lp, LearningProjection)
+    #                                         and lp.sender.owner.error_sources
+    #                                         and error_source not in lp.sender.owner.error_sources
+    #                                         # # FIX 10/15/23: FAILS ON SEMANITC NETWORK
+    #                                         # and not isinstance(error_source.input_source.function, TransferFunction)
+    #                                         and lp.sender.owner.learning_type is LearningType.SUPERVISED)]:
+    #
+    #             dependent_learning_mech = learning_projection.sender.owner
+    #
+    #             # If dependent_learning_mech already has a Projection from the error_source, can skip
+    #             if any(dependent_learning_mech == efferent.receiver.owner
+    #                    for efferent in error_source.output_ports[ERROR_SIGNAL].efferents):
+    #                 continue
+    #
+    #             error_signal_input_port = dependent_learning_mech.add_ports(
+    #                                                 InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
+    #                                                           name=ERROR_SIGNAL,
+    #                                                           context=context),
+    #                                                 context=context)[0]
+    #             self.add_projections(error_signal_input_port.path_afferents[0])
+    # MODIFIED 10/16/23 NEW:
     def _add_error_projection_to_dependent_learning_mechs(self, error_source, context=None):
 
-        # Get all afferents to receiver_activity_mech in Composition that have LearningProjections
-        for afferent in [p for p in error_source.input_source.path_afferents
+        idx = error_source.input_source.output_ports.index(
+            error_source.input_ports[ACTIVATION_INPUT_INDEX].path_afferents[0].sender)
+        input_port = error_source.input_source.input_ports[idx]
+
+        # Get all afferents to output_source (error_source.input_source) in Composition that have LearningProjections
+        for afferent in [p for p in input_port.path_afferents
                          if (p in self.projections
                              and hasattr(p, 'has_learning_projection')
                              and p.has_learning_projection)]:
@@ -9056,6 +9111,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                               context=context),
                                                     context=context)[0]
                 self.add_projections(error_signal_input_port.path_afferents[0])
+    # MODIFIED 10/16/23 END
 
     def _get_deeply_nested_aux_projections(self, node):
         deeply_nested_projections = {}
@@ -10048,7 +10104,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Validate that keys for inputs are all legal *types*
         bad_entries = [key for key in inputs if not isinstance(key, (InputPort, Mechanism, Composition))]
         if bad_entries:
-            bad_entry_names = [repr(key.full_name) if isinstance(key, Port) else repr(key.name) for key in bad_entries]
+            bad_entry_names = [None] * len(bad_entries)
+            for i, entry in enumerate(bad_entries):
+                # If built-in function (e.g., 'input'), get name
+                if isinstance(entry, types.BuiltinFunctionType):
+                    name = entry.__name__
+                # If Port, get name as Mechanism[Port]
+                elif isinstance(entry, Port):
+                    name = repr(entry.full_name)
+                else:
+                    name = entry.name
+                bad_entry_names[i] = f"'{name}'"
             raise RunError(f"The following items specified in the 'inputs' arg of the run() method for "
                            f"'{self.name}' that are not a Mechanism, Composition, or an InputPort of one: "
                            f"{', '.join(bad_entry_names)}.")

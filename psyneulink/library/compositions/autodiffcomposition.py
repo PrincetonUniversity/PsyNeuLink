@@ -787,15 +787,23 @@ class AutodiffComposition(Composition):
         for component in curr_tensor_outputs.keys():
             # possibly add custom loss option, which is a loss function that takes many args
             # (outputs, targets, weights, and more) and returns a scalar
-            new_loss = self.loss(curr_tensor_outputs[component], curr_tensor_targets[component])
+            new_loss = self.loss(curr_tensor_outputs[component].squeeze(),
+                                 curr_tensor_targets[component])
             tracked_loss += new_loss
 
+        # outputs = None
         outputs = []
         for input_port in self.output_CIM.input_ports:
             assert (len(input_port.all_afferents) == 1), \
                 f"PROGRAM ERROR: {input_port.name} of ouput_CIM for '{self.name}' has more than one afferent."
             _, component, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
-            outputs.append(curr_tensor_outputs[component].detach().cpu().numpy().copy())
+            # MODIFIED 10/11/23 OLD:
+            # outputs.append(curr_tensor_outputs[component].detach().cpu().numpy().copy())
+            # MODIFIED 10/11/23 NEW:
+            # output = curr_tensor_outputs[component].detach().cpu().numpy().copy()
+            # outputs = np.concatenate((outputs, output)) if outputs is not None else output
+            outputs += curr_tensor_outputs[component].detach().cpu().numpy().copy().tolist()
+            # MODIFIED 10/11/23 END
 
         self.parameters.tracked_loss_count._set(self.parameters.tracked_loss_count._get(context=context) + 1,
                                                 context=context,
