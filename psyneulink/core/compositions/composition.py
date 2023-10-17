@@ -9046,41 +9046,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     so they can be added to the Composition by _create_non_terminal_backprop_learning_components
         return error_sources, error_projections
 
-    # # MODIFIED 10/16/23 OLD:
-    # def _add_error_projection_to_dependent_learning_mechs(self, error_source, context=None):
-    #
-    #     # FIX: 10/15/23 - CHECK FOR Linear FUNCTION HERE AND DON"T ADD DEPENDENCY FOR PARALLEL STREAM
-    #     # Get all afferents to output_source (error_source.input_source) in Composition that have LearningProjections
-    #     for afferent in [p for p in error_source.input_source.path_afferents
-    #                      if (p in self.projections
-    #                          and hasattr(p, 'has_learning_projection')
-    #                          and p.has_learning_projection)]:
-    #
-    #         # For each LearningProjection to that afferent, if its LearningMechanism doesn't already have a receiver
-    #         for learning_projection in [lp for lp in afferent.parameter_ports[MATRIX].mod_afferents
-    #                                     if (isinstance(lp, LearningProjection)
-    #                                         and lp.sender.owner.error_sources
-    #                                         and error_source not in lp.sender.owner.error_sources
-    #                                         # # FIX 10/15/23: FAILS ON SEMANITC NETWORK
-    #                                         # and not isinstance(error_source.input_source.function, TransferFunction)
-    #                                         and lp.sender.owner.learning_type is LearningType.SUPERVISED)]:
-    #
-    #             dependent_learning_mech = learning_projection.sender.owner
-    #
-    #             # If dependent_learning_mech already has a Projection from the error_source, can skip
-    #             if any(dependent_learning_mech == efferent.receiver.owner
-    #                    for efferent in error_source.output_ports[ERROR_SIGNAL].efferents):
-    #                 continue
-    #
-    #             error_signal_input_port = dependent_learning_mech.add_ports(
-    #                                                 InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
-    #                                                           name=ERROR_SIGNAL,
-    #                                                           context=context),
-    #                                                 context=context)[0]
-    #             self.add_projections(error_signal_input_port.path_afferents[0])
-    # MODIFIED 10/16/23 NEW:
     def _add_error_projection_to_dependent_learning_mechs(self, error_source, context=None):
 
+        # Get input_port that receives the relevant afferents
         idx = error_source.input_source.output_ports.index(
             error_source.input_ports[ACTIVATION_INPUT_INDEX].path_afferents[0].sender)
         input_port = error_source.input_source.input_ports[idx]
@@ -9111,7 +9079,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                               context=context),
                                                     context=context)[0]
                 self.add_projections(error_signal_input_port.path_afferents[0])
-    # MODIFIED 10/16/23 END
 
     def _get_deeply_nested_aux_projections(self, node):
         deeply_nested_projections = {}

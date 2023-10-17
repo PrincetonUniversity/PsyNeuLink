@@ -647,21 +647,6 @@ class PytorchMechanismWrapper():
             f"PROGRAM ERROR: No afferents found for '{self._mechanism.name}' in AutodiffComposition"
         # FIX: AUGMENT THIS TO SUPPORT InputPort's function
         # Specific port is specified
-        # # MODIFIED 10/11/23 OLD:
-        # if port is not None:
-        #     return sum(proj_wrapper.execute(proj_wrapper.sender.value)
-        #                for proj_wrapper in self.afferents if proj_wrapper._pnl_proj
-        #                in self._mechanism.input_ports[port].path_afferents)
-        # # Has only one input_port
-        # elif len(self._mechanism.input_ports) == 1:
-        #     return sum((proj_wrapper.execute(proj_wrapper.sender.value) for proj_wrapper in self.afferents))
-        # # Has multiple input_ports
-        # else:
-        #     # # Sum projections to each input_port of the Mechanism and return array with the sums
-        #     return torch.stack([sum(proj_wrapper.execute(proj_wrapper.sender.value)
-        #                             for proj_wrapper in self.afferents if proj_wrapper._pnl_proj
-        #                             in input_port.path_afferents) for input_port in self._mechanism.input_ports])
-        # MODIFIED 10/11/23 NEW:
         # FIX: USING _port_idx TO INDEX INTO sender.value GETS IT WRONG IF THE MECHANISM HAS AN OUTPUT PORT
         #      USED BY A PROJECTION NOT IN THE CURRENT COMPOSITION
         if port is not None:
@@ -681,14 +666,11 @@ class PytorchMechanismWrapper():
                                     for proj_wrapper in self.afferents
                                     if proj_wrapper._pnl_proj in input_port.path_afferents)
                                 for input_port in self._mechanism.input_ports])
-        # MODIFIED 10/11/23 END
 
     def execute(self, variable):
         self.value = self.function(variable)
-        # # MODIFIED 10/11/23 NEW:
         if len(self.value.shape) == 1:
             self.value = self.value.unsqueeze(0)
-        # MODIFIED 10/11/23 END
         return self.value
 
     def _gen_llvm_execute(self, ctx, builder, state, params, mech_input, data):
@@ -790,11 +772,9 @@ class PytorchProjectionWrapper():
         self.receiver = receiver      # PytorchMechanismWrapper to which Projection's receiver is mapped
         self._context = context
 
-        # MODIFIED 10/11/23 NEW:
         # Get item of value corresponding to OutputPort that is Projection's sender
         # Note: this may not be the same as _port_idx if the sender Mechanism has OutputPorts for Projections
         #       that are not in the current Composition
-        # FIX: WRITE CODE FOR THIS
         if context._composition:
             for i, output_port in enumerate(self.sender._mechanism.output_ports):
                 if all(p in context._composition.projections for p in output_port.efferents):
@@ -802,7 +782,6 @@ class PytorchProjectionWrapper():
                         self._value_idx = i
                         break
                     i += 1
-        # MODIFIED 10/11/23 END
 
         matrix = projection.parameters.matrix.get(
                             context=context)

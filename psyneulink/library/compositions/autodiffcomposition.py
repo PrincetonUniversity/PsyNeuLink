@@ -797,13 +797,7 @@ class AutodiffComposition(Composition):
             assert (len(input_port.all_afferents) == 1), \
                 f"PROGRAM ERROR: {input_port.name} of ouput_CIM for '{self.name}' has more than one afferent."
             _, component, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
-            # MODIFIED 10/11/23 OLD:
-            # outputs.append(curr_tensor_outputs[component].detach().cpu().numpy().copy())
-            # MODIFIED 10/11/23 NEW:
-            # output = curr_tensor_outputs[component].detach().cpu().numpy().copy()
-            # outputs = np.concatenate((outputs, output)) if outputs is not None else output
             outputs += curr_tensor_outputs[component].detach().cpu().numpy().copy().tolist()
-            # MODIFIED 10/11/23 END
 
         self.parameters.tracked_loss_count._set(self.parameters.tracked_loss_count._get(context=context) + 1,
                                                 context=context,
