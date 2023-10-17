@@ -3128,8 +3128,8 @@ class TestRunInputSpecifications:
          'are not INPUT Nodes of that Composition (nor InputPorts of them): \'OB\'."'
          ),
         ('non_input_port',
-         '"The following items specified in the \'inputs\' arg of the run() method for \'Composition-1\' '
-         'that are not a Mechanism, Composition, or an InputPort of one: \'OA[OutputPort-0]\'."'
+         "The following items specified in the 'inputs' arg of the run() method for 'Composition-1' "
+         "that are not a Mechanism, Composition, or an InputPort of one: 'OA[OutputPort-0]'."
          ),
         ('nested_non_input_node',
          '"The following items specified in the \'inputs\' arg of the run() method for \'Composition-1\' '

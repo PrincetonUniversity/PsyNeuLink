@@ -10111,7 +10111,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     name = entry.__name__
                 # If Port, get name as Mechanism[Port]
                 elif isinstance(entry, Port):
-                    name = repr(entry.full_name)
+                    name = entry.full_name
                 else:
                     name = entry.name
                 bad_entry_names[i] = f"'{name}'"
