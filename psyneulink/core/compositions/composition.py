@@ -2937,17 +2937,17 @@ from psyneulink.core.compositions.report import Report, \
 from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHOW_CIM, EXECUTION_SET, SHOW_CONTROLLER
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, CROSS_ENTROPY, \
-    DEFAULT, DICT, FEEDBACK, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, \
-    INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
-    LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, Loss, \
-    MATRIX, MAYBE, MODEL_SPEC_ID_METADATA, \
-    MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, NODES, OBJECTIVE_MECHANISM, ONLINE, ONLY, OUTCOME, \
-    OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
-    PARAMETER, PARAMETER_CIM_NAME, PORT, \
-    PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP, RECEIVER, \
-    SAMPLE, SENDER, SHADOW_INPUTS, SOFT_CLAMP, SUM, \
-    TARGET, TARGET_MECHANISM, TEXT, VARIABLE, WEIGHT, OWNER_MECH
+    (AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, CROSS_ENTROPY, \
+     DEFAULT, DICT, FEEDBACK, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, \
+     INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
+     LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
+     LEARNING_SIGNAL, Loss, \
+     MATRIX, MAYBE, MODEL_SPEC_ID_METADATA, MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, NODES,
+     OBJECTIVE_MECHANISM, ONLINE, ONLY, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
+     PARAMETER, PARAMETER_CIM_NAME, PORT, \
+     PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP, RECEIVER, \
+     SAMPLE, SENDER, SHADOW_INPUTS, SOFT_CLAMP, SUM, \
+     TARGET, TARGET_MECHANISM, TEXT, VARIABLE, WEIGHT, OWNER_MECH)
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
@@ -9136,8 +9136,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # # MODIFIED 10/17/23 NEW:
     def _add_error_projection_to_dependent_learning_mechs(self, source_learning_mech, context=None):
 
-        # FIX: 10/17/23:  MappingProjection IS BEING CREATED
-        #                   FROM learning mech for hidden_c.output_ports[1] to learning_mech for input_c.output_ports[0]
         for idx, input_port in enumerate(source_learning_mech.input_source.input_ports):
 
             # Get all afferents to output_source (source_learning_mech.input_source) in Composition that have LearningProjections
@@ -9157,6 +9155,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 and lp.sender.owner.learning_type is LearningType.SUPERVISED)]:
 
                     dependent_learning_mech = learning_projection.sender.owner
+
+                    # ZZZ
+                    # FIX: 10/17/23:  CHECK THAT learned_projection of source_learning_mech
+                    #                 (source_learning_mech.output_ports[LEARNING_SIGNAL].efferents[0].receiver.owner)
+                    #                 IS EFFERENT OF output_port OF source_learning_mech.input_source
+                    #                 WITH SAME INDEX AS input_port OF source_learning_mech.input_source THAT RECEIVES
+                    #                 learned_projection of dependent_learning_mech (learning_projection.receiver)
+
+                    # # If input_source for source_learning_mech uses a TransferFunction,
+                    #   then only consider dependent learning mechanisms that have the same input_port index
+                    #   as the outpu_port_index of projection being learned by the source_learning_mech
+                    mech = source_learning_mech.input_source
+                    output_port = source_learning_mech.output_ports[LEARNING_SIGNAL].efferents[0].receiver.owner.sender
+                    input_port_idx = mech.input_ports.index(input_port)
+                    output_port_idx = mech.output_ports.index(output_port)
+                    if isinstance(mech.function, TransferFunction) and input_port_idx != output_port_idx:
+                        continue
 
                     # If dependent_learning_mech already has a Projection from the source_learning_mech, can skip
                     if any(dependent_learning_mech == efferent.receiver.owner
