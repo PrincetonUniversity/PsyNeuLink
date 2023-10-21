@@ -577,7 +577,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 #  note: these may be different than for actual Composition, as they are flattened
                 if (node._mechanism in self._composition.get_nested_nodes_output_nodes_at_levels()):
                     outputs[node._mechanism] = node.value
-                assert True
 
         # NOTE: Context source needs to be set to COMMAND_LINE to force logs to update independently of timesteps
         # if not self._composition.is_nested:
@@ -662,16 +661,47 @@ class PytorchMechanismWrapper():
         # Has multiple input_ports
         else:
             # # Sum projections to each input_port of the Mechanism and return array with the sums
-            return torch.stack([sum(proj_wrapper.execute(proj_wrapper.sender.value[proj_wrapper._value_idx]).unsqueeze(0)
-                                    for proj_wrapper in self.afferents
-                                    if proj_wrapper._pnl_proj in input_port.path_afferents)
-                                for input_port in self._mechanism.input_ports])
+            # # MODIFIED 10/19/23 OLD:
+            # return torch.stack([sum(proj_wrapper.execute(proj_wrapper.sender.value[proj_wrapper._value_idx]).unsqueeze(0)
+            #                         for proj_wrapper in self.afferents
+            #                         if proj_wrapper._pnl_proj in input_port.path_afferents)
+            #                     for input_port in self._mechanism.input_ports])
+            # # MODIFIED 10/19/23 NEW:
+            # return torch.nested.nested_tensor([sum(proj_wrapper.execute(proj_wrapper.sender.value[proj_wrapper._value_idx]).unsqueeze(0)
+            #                         for proj_wrapper in self.afferents
+            #                         if proj_wrapper._pnl_proj in input_port.path_afferents)
+            #                     for input_port in self._mechanism.input_ports])
+            # MODIFIED 10/19/23 NEWER:
+            return [sum(proj_wrapper.execute(proj_wrapper.sender.value[proj_wrapper._value_idx]).unsqueeze(0)
+                         for proj_wrapper in self.afferents
+                         if proj_wrapper._pnl_proj in input_port.path_afferents)
+                     for input_port in self._mechanism.input_ports]
+            # MODIFIED 10/19/23 END
 
     def execute(self, variable):
-        self.value = self.function(variable)
-        if len(self.value.shape) == 1:
-            self.value = self.value.unsqueeze(0)
+        # # MODIFIED 10/19/23 OLD:
+        # self.value = self.function(variable)
+        # if len(self.value.shape) == 1:
+        #     self.value = self.value.unsqueeze(0)
+        # return self.value
+        # # MODIFIED 10/19/23 NEW:
+        # value = self.function(variable)
+        # try:
+        #     value[1][0]
+        #     self.value = value
+        #     return self.value
+        # except IndexError:
+        #     self.value = value.unsqueeze(0)
+        #     return self.value
+        # MODIFIED 10/19/23 NEWER:
+        if ((isinstance(variable, list) and len(variable) == 1)
+            or (isinstance(variable, torch.Tensor) and len(variable.shape) == 1)):
+            # Enforce 2d on value of MechanismWrapper
+            self.value = self.function(variable).unsqueeze(0)
+        else:
+            self.value = [self.function(variable[i].squeeze(0)) for i in range(len(variable))]
         return self.value
+        # MODIFIED 10/19/23 END
 
     def _gen_llvm_execute(self, ctx, builder, state, params, mech_input, data):
         mech_func = ctx.import_llvm_function(self._mechanism)

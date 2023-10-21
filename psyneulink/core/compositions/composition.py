@@ -8707,30 +8707,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Add error_signal projections to any learning_mechanisms that are now dependent on the new one
 
         for lm in learning_mechanisms:
-            # MODIFIED 10/17/23 OLD:
-            # if lm.dependent_learning_mechanisms:
-            #     self._add_error_projection_to_dependent_learning_mechs(lm, context)
-            # # MODIFIED 10/17/23 NEW:
-            # # if isinstance(input_source.function, TransferFunction):
-            # #     # Get output_port corresonding to index of input_port that receives learned_projection
-            # #     output_source_input_port_idx = output_source.input_ports.index(learned_projection.receiver)
-            # # else:
-            # #     output_source_input_port_idx = 0
-            # # efferents = [p for p in output_source.output_ports[output_source_input_port_idx].efferents
-            # #              if p in self.projections]
-            # for input_port in lm.input_source.input_ports:
-            #     dependent_learning_mechanisms = [p.parameter_ports[MATRIX].mod_afferents[0].sender.owner
-            #                                      for p in (input_port.path_afferents) if p.has_learning_projection]
-            #     # if lm.covariates_input_ports and dependent_learning_mechanisms:
-            #     if dependent_learning_mechanisms:
-            #         # self._add_error_projection_to_dependent_learning_mechs(lm, context)
-            #         self._add_error_projection_to_dependent_learning_mechs(input_port, lm, context)
-            #     # MODIFIED 10/17/23 END
             self._add_error_projection_to_dependent_learning_mechs(lm, context)
-            # MODIFIED 10/17/23 NEWER:
-
-            # MODIFIED 10/17/23 END
-
 
         # Suppress "no efferent connections" warning for:
         #    - error_signal OutputPort of last LearningMechanism in sequence
@@ -8837,7 +8814,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        required_roles=NodeRole.LEARNING,
                        context=context)
 
-        # FIX 10/17/23 - input_sourc and output_source NEED TO BE REPLACED WITH IDX'S
         learning_related_projections = self._create_learning_related_projections(input_source_output_port,
                                                                                  output_source_input_port,
                                                                                  target_mechanism,
@@ -9099,41 +9075,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     so they can be added to the Composition by _create_non_terminal_backprop_learning_components
         return error_sources, error_projections
 
-    # # MODIFIED 10/17/23 OLD:
-    # def _add_error_projection_to_dependent_learning_mechs(self, error_source, context=None):
-    #
-    #     # Get input_port that receives the relevant afferents
-    #     idx = error_source.input_source.output_ports.index(
-    #         error_source.input_ports[ACTIVATION_INPUT_INDEX].path_afferents[0].sender)
-    #     input_port = error_source.input_source.input_ports[idx]
-    #
-    #     # Get all afferents to output_source (error_source.input_source) in Composition that have LearningProjections
-    #     for afferent in [p for p in input_port.path_afferents
-    #                      if (p in self.projections
-    #                          and hasattr(p, 'has_learning_projection')
-    #                          and p.has_learning_projection)]:
-    #
-    #         # For each LearningProjection to that afferent, if its LearningMechanism doesn't already have a receiver
-    #         for learning_projection in [lp for lp in afferent.parameter_ports[MATRIX].mod_afferents
-    #                                     if (isinstance(lp, LearningProjection)
-    #                                         and lp.sender.owner.error_sources
-    #                                         and error_source not in lp.sender.owner.error_sources
-    #                                         and lp.sender.owner.learning_type is LearningType.SUPERVISED)]:
-    #
-    #             dependent_learning_mech = learning_projection.sender.owner
-    #
-    #             # If dependent_learning_mech already has a Projection from the error_source, can skip
-    #             if any(dependent_learning_mech == efferent.receiver.owner
-    #                    for efferent in error_source.output_ports[ERROR_SIGNAL].efferents):
-    #                 continue
-    #
-    #             error_signal_input_port = dependent_learning_mech.add_ports(
-    #                                                 InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
-    #                                                           name=ERROR_SIGNAL,
-    #                                                           context=context),
-    #                                                 context=context)[0]
-    #             self.add_projections(error_signal_input_port.path_afferents[0])
-    # # MODIFIED 10/17/23 NEW:
     def _add_error_projection_to_dependent_learning_mechs(self, source_learning_mech, context=None):
 
         for idx, input_port in enumerate(source_learning_mech.input_source.input_ports):
@@ -9149,23 +9090,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                             if (isinstance(lp, LearningProjection)
                                                 and lp.sender.owner.error_sources
                                                 and source_learning_mech not in lp.sender.owner.error_sources
-                                                # # FIX 10/17/23: WORKS FOR ScratchPad but not semantic network
-                                                # and not isinstance(source_learning_mech.input_source.function,
-                                                #                TransferFunction)
                                                 and lp.sender.owner.learning_type is LearningType.SUPERVISED)]:
 
                     dependent_learning_mech = learning_projection.sender.owner
 
-                    # ZZZ
-                    # FIX: 10/17/23:  CHECK THAT learned_projection of source_learning_mech
-                    #                 (source_learning_mech.output_ports[LEARNING_SIGNAL].efferents[0].receiver.owner)
-                    #                 IS EFFERENT OF output_port OF source_learning_mech.input_source
-                    #                 WITH SAME INDEX AS input_port OF source_learning_mech.input_source THAT RECEIVES
-                    #                 learned_projection of dependent_learning_mech (learning_projection.receiver)
-
-                    # # If input_source for source_learning_mech uses a TransferFunction,
-                    #   then only consider dependent learning mechanisms that have the same input_port index
-                    #   as the outpu_port_index of projection being learned by the source_learning_mech
+                    # If input_source for source_learning_mech uses a TransferFunction,
+                    #   then only consider as dependent learning mechanisms for projections to the input_port with the
+                    #   same index as the output_port for the projection being learned by thesource_learning_mech
                     mech = source_learning_mech.input_source
                     output_port = source_learning_mech.output_ports[LEARNING_SIGNAL].efferents[0].receiver.owner.sender
                     input_port_idx = mech.input_ports.index(input_port)
@@ -9184,7 +9115,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                   context=context),
                                                         context=context)[0]
                     self.add_projections(error_signal_input_port.path_afferents[0])
-        # MODIFIED 10/17/23 END
 
     def _get_deeply_nested_aux_projections(self, node):
         deeply_nested_projections = {}

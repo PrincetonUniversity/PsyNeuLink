@@ -776,10 +776,15 @@ class AutodiffComposition(Composition):
                 input = inputs[component]
             curr_tensor_inputs[component] = torch.tensor(input, device=self.device).double()
         for component in targets.keys():
-            target = targets[component][0]
-            # curr_tensor_targets[component] = torch.tensor(target, device=self.device).double()
-            # Convert Node back to output Node for indexing by component below
-            curr_tensor_targets[self.target_output_map[component]] = torch.tensor(target, device=self.device).double()
+            # MODIFIED 10/19/23 OLD:
+            # target = targets[component][0]
+            # # curr_tensor_targets[component] = torch.tensor(target, device=self.device).double()
+            # # Convert Node back to output Node for indexing by component below
+            # curr_tensor_targets[self.target_output_map[component]] = torch.tensor(target, device=self.device).double()
+            # MODIFIED 10/19/23 NEW:
+            curr_tensor_targets[self.target_output_map[component]] = [torch.tensor(target, device=self.device).double()
+                                                                      for target in targets[component]]
+            # MODIFIED 10/19/23 END
 
         # do forward computation on current inputs
         curr_tensor_outputs = self.parameters.pytorch_representation._get(context).forward(curr_tensor_inputs, context)
@@ -787,8 +792,13 @@ class AutodiffComposition(Composition):
         for component in curr_tensor_outputs.keys():
             # possibly add custom loss option, which is a loss function that takes many args
             # (outputs, targets, weights, and more) and returns a scalar
-            new_loss = self.loss(curr_tensor_outputs[component].squeeze(),
+            # MODIFIED 10/19/23 OLD:
+            # new_loss = self.loss(curr_tensor_outputs[component].squeeze(),
+            #                      curr_tensor_targets[component])
+            # MODIFIED 10/19/23 NEW:
+            new_loss = self.loss(curr_tensor_outputs[component],
                                  curr_tensor_targets[component])
+            # MODIFIED 10/19/23 END
             tracked_loss += new_loss
 
         # outputs = None
@@ -797,7 +807,11 @@ class AutodiffComposition(Composition):
             assert (len(input_port.all_afferents) == 1), \
                 f"PROGRAM ERROR: {input_port.name} of ouput_CIM for '{self.name}' has more than one afferent."
             _, component, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
-            outputs += curr_tensor_outputs[component].detach().cpu().numpy().copy().tolist()
+            # # MODIFIED 10/19/23 OLD:
+            # outputs += curr_tensor_outputs[component].detach().cpu().numpy().copy().tolist()
+            # MODIFIED 10/19/23 NEW:
+            outputs += curr_tensor_outputs[component]
+            # MODIFIED 10/19/23 END
 
         self.parameters.tracked_loss_count._set(self.parameters.tracked_loss_count._get(context=context) + 1,
                                                 context=context,
