@@ -2427,8 +2427,8 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         store_prob = pnlvm.helpers.load_extract_scalar_array_one(builder, store_prob_ptr)
         store_rand = builder.fcmp_ordered('<', store_prob, store_prob.type(1.0))
 
-        # The call to random function needs to be behind jump to match python
-        # code
+        # The call to random function needs to be behind the check of 'store_rand'
+        # to match python code semantics
         with builder.if_then(store_rand):
             rand_ptr = builder.alloca(ctx.float_ty)
             builder.call(uniform_f, [rand_struct, rand_ptr])
@@ -2439,6 +2439,23 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         # Store
         store = builder.load(store_ptr)
         with builder.if_then(store, likely=True):
+            modified_key_ptr = builder.alloca(var_key_ptr.type.pointee)
+
+            # Apply noise to key.
+            # There are 3 types of noise: scalar, vector1, and vector matching variable
+            noise_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "noise")
+            with pnlvm.helpers.array_ptr_loop(b, var_key_ptr, "key_apply_noise") as (b, idx):
+                if pnlvm.helpers.is_2d_matrix(noise_ptr):
+                    noise_elem_ptr = b.gep(noise_ptr, [ctx.int32_ty(0), ctx.int32_ty(0), idx])
+                    noise_val = b.load(noise_elem_ptr)
+                else:
+                    noise_val = pnlvm.helpers.load_extract_scalar_array_one(b, noise_ptr)
+
+                modified_key_elem_ptr = b.gep(modified_key_ptr, [ctx.int32_ty(0), idx])
+                key_elem_ptr = b.gep(var_key_ptr, [ctx.int32_ty(0), idx])
+                key_elem = b.load(key_elem_ptr)
+                key_elem = b.fadd(key_elem, noise_val)
+                b.store(key_elem, modified_key_elem_ptr)
 
             # Check if such key already exists
             is_new_key_ptr = builder.alloca(ctx.bool_ty)
@@ -2451,7 +2468,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
                 key_differs_ptr = b.alloca(ctx.bool_ty)
                 b.store(key_differs_ptr.type.pointee(0), key_differs_ptr)
                 with pnlvm.helpers.array_ptr_loop(b, cmp_key_ptr, "key_compare") as (b2, idx2):
-                    var_key_element = b2.gep(var_key_ptr, [ctx.int32_ty(0), idx2])
+                    var_key_element = b2.gep(modified_key_ptr, [ctx.int32_ty(0), idx2])
                     cmp_key_element = b2.gep(cmp_key_ptr, [ctx.int32_ty(0), idx2])
                     element_differs = b.fcmp_unordered('!=',
                                                        b.load(var_key_element),
@@ -2473,7 +2490,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
                 store_key_ptr = builder.gep(keys_ptr, [ctx.int32_ty(0), write_idx])
                 store_val_ptr = builder.gep(vals_ptr, [ctx.int32_ty(0), write_idx])
 
-                builder.store(builder.load(var_key_ptr), store_key_ptr)
+                builder.store(builder.load(modified_key_ptr), store_key_ptr)
                 builder.store(builder.load(var_val_ptr), store_val_ptr)
 
                 # Update counters
