@@ -2444,16 +2444,20 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
             # Apply noise to key.
             # There are 3 types of noise: scalar, vector1, and vector matching variable
             noise_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "noise")
-            with pnlvm.helpers.array_ptr_loop(b, var_key_ptr, "key_apply_noise") as (b, idx):
+            rate_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "rate")
+            with pnlvm.helpers.array_ptr_loop(b, var_key_ptr, "key_apply_rate_noise") as (b, idx):
                 if pnlvm.helpers.is_2d_matrix(noise_ptr):
                     noise_elem_ptr = b.gep(noise_ptr, [ctx.int32_ty(0), ctx.int32_ty(0), idx])
                     noise_val = b.load(noise_elem_ptr)
                 else:
                     noise_val = pnlvm.helpers.load_extract_scalar_array_one(b, noise_ptr)
 
+                rate_val = pnlvm.helpers.load_extract_scalar_array_one(b, rate_ptr)
+
                 modified_key_elem_ptr = b.gep(modified_key_ptr, [ctx.int32_ty(0), idx])
                 key_elem_ptr = b.gep(var_key_ptr, [ctx.int32_ty(0), idx])
                 key_elem = b.load(key_elem_ptr)
+                key_elem = b.fmul(key_elem, rate_val)
                 key_elem = b.fadd(key_elem, noise_val)
                 b.store(key_elem, modified_key_elem_ptr)
 
@@ -2691,7 +2695,13 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
             #           CURRENT PROBLEM WITH LATTER IS THAT IT CAUSES CRASH ON INIT, SINCE NOT OUTPUT_PORT
             #           SO, WOULD HAVE TO RETURN ZEROS ON INIT AND THEN SUPPRESS AFTERWARDS, AS MOCKED UP BELOW
             memory = [[0]* self.parameters.key_size._get(context), [0]* self.parameters.val_size._get(context)]
+
         # Store variable to dict:
+        rate = self._get_current_parameter_value(RATE, context)
+        if rate is not None:
+            key = np.asfarray(key) * np.asfarray(rate)
+            assert len(key) == len(variable[KEYS]), "{} vs. {}".format(key, variable[KEYS])
+
         if noise is not None:
             # TODO: does val need noise?
             key = np.asfarray(key) + np.asfarray(noise)[KEYS]
