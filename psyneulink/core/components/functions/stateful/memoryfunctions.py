@@ -2676,16 +2676,12 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
             memory = [[0]* self.parameters.key_size._get(context), [0]* self.parameters.val_size._get(context)]
         # Store variable to dict:
         if noise is not None:
-            key = np.asarray(key, dtype=float)
-            if isinstance(noise, numbers.Number):
-                key += noise
-            else:
-                # assume array with same shape as variable
-                # TODO: does val need noise?
-                key += noise[KEYS]
+            # TODO: does val need noise?
+            key = np.asfarray(key) + np.asfarray(noise)[KEYS]
+            assert len(key) == len(variable[KEYS]), "{} vs. {}".format(key, variable[KEYS])
 
         if storage_prob == 1.0 or (storage_prob > 0.0 and storage_prob > random_state.uniform()):
-            self._store_memory(variable, context)
+            self._store_memory([key, val], context)
 
         # Return 3d array with keys and vals as lists
         # IMPLEMENTATION NOTE:  if try to create np.ndarray directly, and keys and vals have same length
