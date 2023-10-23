@@ -796,8 +796,8 @@ class AutodiffComposition(Composition):
             # new_loss = self.loss(curr_tensor_outputs[component].squeeze(),
             #                      curr_tensor_targets[component])
             # MODIFIED 10/19/23 NEW:
-            new_loss = self.loss(curr_tensor_outputs[component],
-                                 curr_tensor_targets[component])
+            new_loss = self.loss(curr_tensor_outputs[component][0],
+                                 curr_tensor_targets[component][0])
             # MODIFIED 10/19/23 END
             tracked_loss += new_loss
 
@@ -810,7 +810,7 @@ class AutodiffComposition(Composition):
             # # MODIFIED 10/19/23 OLD:
             # outputs += curr_tensor_outputs[component].detach().cpu().numpy().copy().tolist()
             # MODIFIED 10/19/23 NEW:
-            outputs += curr_tensor_outputs[component]
+            outputs += curr_tensor_outputs[component][0].detach().cpu().numpy().copy().tolist()
             # MODIFIED 10/19/23 END
 
         self.parameters.tracked_loss_count._set(self.parameters.tracked_loss_count._get(context=context) + 1,
