@@ -8877,13 +8877,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             return covariates_sources
 
-        def _get_acts_in_out_cov(input_source, output_source, learned_projection)->List[list]:
+        def _get_acts_in_out_cov(input_source_output_port, output_source_output_port, learned_projection)->List[list]:
             """Get shapes of activation_input and activation_output used by LearningMechanism and BackPropagation Fct"""
             # activation_input has more than one value if activation function has more than one argument
-            activation_input = [input_source.output_ports[0].value]
+            activation_input = [input_source_output_port.value]
+            output_source = output_source_output_port.owner
             covariates_sources = _get_covariate_info(output_source, learned_projection)
             # activation_output is always a single value since activation function is assumed to have only one output
-            activation_output = [output_source.output_ports[0].value]
+            activation_output = [output_source_output_port.value]
             # ensure that output_source.function.derivative can handle covariates
             if covariates_sources:
                 try:
@@ -8937,8 +8938,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         error_signal_template = [error_source.output_ports[ERROR_SIGNAL].value for error_source in error_sources]
 
-        activation_input, activation_output, covariates_sources = _get_acts_in_out_cov(input_source,
-                                                                                       output_source,
+        activation_input, activation_output, covariates_sources = _get_acts_in_out_cov(input_source_output_port,
+                                                                                       ouput_source_output_port,
                                                                                        learned_projection)
 
         # Use only one error_signal_template for learning_function, since it gets only one source of error at a time
