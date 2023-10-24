@@ -66,7 +66,7 @@ def pytorch_function_creator(function, device, context=None):
             if weights is not None:
                 return lambda x: torch.prod(x * weights,0)
             else:
-                return lambda x: torch.prod(x,0)
+                return lambda x: torch.prod(torch.stack(x),0)
         else:
             from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
             raise AutodiffCompositionError(f"The 'operation' parameter of {function.componentName} is not supported "
@@ -660,48 +660,23 @@ class PytorchMechanismWrapper():
                         for proj_wrapper in self.afferents))
         # Has multiple input_ports
         else:
-            # # Sum projections to each input_port of the Mechanism and return array with the sums
-            # # MODIFIED 10/19/23 OLD:
-            # return torch.stack([sum(proj_wrapper.execute(proj_wrapper.sender.value[proj_wrapper._value_idx]).unsqueeze(0)
-            #                         for proj_wrapper in self.afferents
-            #                         if proj_wrapper._pnl_proj in input_port.path_afferents)
-            #                     for input_port in self._mechanism.input_ports])
-            # # MODIFIED 10/19/23 NEW:
-            # return torch.nested.nested_tensor([sum(proj_wrapper.execute(proj_wrapper.sender.value[proj_wrapper._value_idx]).unsqueeze(0)
-            #                         for proj_wrapper in self.afferents
-            #                         if proj_wrapper._pnl_proj in input_port.path_afferents)
-            #                     for input_port in self._mechanism.input_ports])
-            # MODIFIED 10/19/23 NEWER:
             return [sum(proj_wrapper.execute(proj_wrapper.sender.value[proj_wrapper._value_idx]).unsqueeze(0)
                          for proj_wrapper in self.afferents
                          if proj_wrapper._pnl_proj in input_port.path_afferents)
                      for input_port in self._mechanism.input_ports]
-            # MODIFIED 10/19/23 END
 
     def execute(self, variable):
-        # # MODIFIED 10/19/23 OLD:
-        # self.value = self.function(variable)
-        # if len(self.value.shape) == 1:
-        #     self.value = self.value.unsqueeze(0)
-        # return self.value
-        # # MODIFIED 10/19/23 NEW:
-        # value = self.function(variable)
-        # try:
-        #     value[1][0]
-        #     self.value = value
-        #     return self.value
-        # except IndexError:
-        #     self.value = value.unsqueeze(0)
-        #     return self.value
-        # MODIFIED 10/19/23 NEWER:
+        """Execute Mechanism's function on variable, enforce result to be 2d, and assign to self.value"""
         if ((isinstance(variable, list) and len(variable) == 1)
-            or (isinstance(variable, torch.Tensor) and len(variable.shape) == 1)):
-            # Enforce 2d on value of MechanismWrapper
+            or (isinstance(variable, torch.Tensor) and len(variable.shape) == 1)
+                or isinstance(self._mechanism.function, LinearCombination)):
+            # Enforce 2d on value of MechanismWrapper (using unsqueeze)
+            # for single InputPort or if CombinationFunction (which reduces output to single item from multi-item input)
             self.value = self.function(variable).unsqueeze(0)
         else:
+            # Make value 2d by creating list of values returned by function for each item in variable
             self.value = [self.function(variable[i].squeeze(0)) for i in range(len(variable))]
         return self.value
-        # MODIFIED 10/19/23 END
 
     def _gen_llvm_execute(self, ctx, builder, state, params, mech_input, data):
         mech_func = ctx.import_llvm_function(self._mechanism)
