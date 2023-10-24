@@ -810,7 +810,7 @@ class AutodiffComposition(Composition):
             # # MODIFIED 10/19/23 OLD:
             # outputs += curr_tensor_outputs[component].detach().cpu().numpy().copy().tolist()
             # MODIFIED 10/19/23 NEW:
-            outputs += curr_tensor_outputs[component][0].detach().cpu().numpy().copy().tolist()
+            outputs += [curr_tensor_outputs[component][0].detach().cpu().numpy().copy().tolist()]
             # MODIFIED 10/19/23 END
 
         self.parameters.tracked_loss_count._set(self.parameters.tracked_loss_count._get(context=context) + 1,
