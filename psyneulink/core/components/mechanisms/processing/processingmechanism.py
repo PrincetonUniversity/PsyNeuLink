@@ -302,13 +302,18 @@ class ProcessingMechanism(ProcessingMechanism_Base):
                                                   **kwargs)
 
     def _instantiate_output_ports(self, context=None):
-        # If no OutputPorts have been specified and variable has more than one item, instantiate one OutputPort for each
-        if self.output_ports or len(self.defaults.variable) == 1:
-            return super()._instantiate_output_ports(context=context)
-        else:
+        """If no OutputPorts have been specified, len(variable) >1 and function is TransferFunction,
+        create an OutputPort for each item of variable
+        """
+        from psyneulink.core.components.ports.outputport import _instantiate_output_ports
+        from psyneulink.core.components.functions.nonstateful.transferfunctions import TransferFunction
+        if (self.output_ports is None
+                and len(self.defaults.variable) > 1
+                and isinstance(self.function, TransferFunction)):
             output_ports = []
             for i in range(len(self.defaults.variable)):
                 output_ports.append({NAME: f'OutputPort {i}',
                                      VARIABLE: (OWNER_VALUE, i)})
-            from psyneulink.core.components.ports.outputport import _instantiate_output_ports
             return _instantiate_output_ports(owner=self, output_ports=output_ports, context=context)
+        else:
+            return super()._instantiate_output_ports(context=context)

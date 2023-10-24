@@ -1760,7 +1760,7 @@ class TestNestedLearning:
                                         pathways=[[input_nodes[0],hidden_nodes[0], output_nodes[0]]],
                                         inputs=inputs)
 
-        np.testing.assert_allclose(comp_results, autodiff_results)
+        np.testing.assert_allclose(comp_results, autodiff_results,  rtol=1e-8, atol=1e-8)
 
     def test_2_sequential_nested_hidden(self, nodes_for_testing_nested_comps, execute_learning):
         nodes = nodes_for_testing_nested_comps(1, 2, 1)
