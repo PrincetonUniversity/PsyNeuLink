@@ -1835,7 +1835,7 @@ class TestNestedLearning:
                                             inputs=inputs)
 
         # Note:
-        #  the MappingProjections are not needed, as they were actualy implemented in the autodiff version
+        #  the MappingProjections are not needed, as they were actually implemented in the autodiff version
         #  in infer_backpropagation_learning_pathways() (when flattening the nessted Composition)
         pathway_a = [input_nodes[0], hidden_nodes[0], hidden_with_two_output_ports, output_nodes[0]]
         pathway_b = [input_nodes[0], hidden_nodes[0], hidden_with_two_output_ports, output_nodes[1]]

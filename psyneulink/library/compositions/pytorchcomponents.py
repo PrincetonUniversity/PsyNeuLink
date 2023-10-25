@@ -59,14 +59,14 @@ def pytorch_function_creator(function, device, context=None):
             weights = torch.tensor(weights, device=device).double()
         if function.operation == SUM:
             if weights is not None:
-                return lambda x: torch.sum(x * weights, 0)
+                return lambda x: torch.sum(torch.stack(x) * weights, 0)
             else:
-                return lambda x: torch.sum(x,0)
+                return lambda x: torch.sum(torch.stack(x), 0)
         elif function.operation == PRODUCT:
             if weights is not None:
-                return lambda x: torch.prod(x * weights,0)
+                return lambda x: torch.prod(torch.stack(x) * weights, 0)
             else:
-                return lambda x: torch.prod(torch.stack(x),0)
+                return lambda x: torch.prod(torch.stack(x), 0)
         else:
             from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
             raise AutodiffCompositionError(f"The 'operation' parameter of {function.componentName} is not supported "
@@ -668,10 +668,12 @@ class PytorchMechanismWrapper():
     def execute(self, variable):
         """Execute Mechanism's function on variable, enforce result to be 2d, and assign to self.value"""
         if ((isinstance(variable, list) and len(variable) == 1)
-            or (isinstance(variable, torch.Tensor) and len(variable.shape) == 1)
+            or (isinstance(variable, torch.Tensor) and len(variable.squeeze(0).shape) == 1)
                 or isinstance(self._mechanism.function, LinearCombination)):
             # Enforce 2d on value of MechanismWrapper (using unsqueeze)
             # for single InputPort or if CombinationFunction (which reduces output to single item from multi-item input)
+            if isinstance(variable, torch.Tensor):
+                variable = variable.squeeze(0)
             self.value = self.function(variable).unsqueeze(0)
         else:
             # Make value 2d by creating list of values returned by function for each item in variable
