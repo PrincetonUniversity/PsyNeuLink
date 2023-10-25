@@ -8610,9 +8610,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Otherwise, create new ones
             else:
+                if len(output_source.input_ports) > 1:
+                    raise CompositionError(f"'{output_source.name}', which is the terminal node of a learning pathway "
+                                           f"in '{self.name}', has a more than one output_port "
+                                           f"({len(output_source.output_ports)}), which is not currently supported "
+                                           f"for learning. Trying using a different Mechanism for each output.")
                 target, comparator, learning_mechanism = \
-                    self._create_terminal_backprop_learning_components(input_source,
-                                                                       output_source,
+                    self._create_terminal_backprop_learning_components(output_source,
                                                                        error_function,
                                                                        loss_spec,
                                                                        learned_projection,
@@ -8668,9 +8672,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     del self.required_node_roles[self.required_node_roles.index((pathway_mech, NodeRole.OUTPUT))]
 
             # Create terminal_sequence
+            if len(output_source.input_ports) > 1:
+                raise CompositionError(f"'{output_source.name}', which is the terminal node of a learning pathway "
+                                       f"in '{self.name}', has a more than one output_port "
+                                       f"({len(output_source.output_ports)}), which is not currently supported "
+                                       f"for learning. Trying using a different Mechanism for each output.")
             target, comparator, learning_mechanism = \
-                self._create_terminal_backprop_learning_components(input_source,
-                                                                   output_source,
+                self._create_terminal_backprop_learning_components(output_source,
                                                                    error_function,
                                                                    loss_spec,
                                                                    learned_projection,
@@ -8695,8 +8703,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             output_source = processing_pathway[i]
             input_source, output_source = _get_nodes_if_nested(input_source, output_source)
 
-            learning_mechanism = self._create_non_terminal_backprop_learning_components(input_source,
-                                                                                        output_source,
+            learning_mechanism = self._create_non_terminal_backprop_learning_components(output_source,
                                                                                         learned_projection,
                                                                                         learning_rate,
                                                                                         learning_update,
@@ -8737,7 +8744,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
 
     def _create_terminal_backprop_learning_components(self,
-                                                      input_source,
                                                       output_source,
                                                       error_function,
                                                       loss_spec,
@@ -8828,7 +8834,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return target_mechanism, objective_mechanism, learning_mechanism
 
     def _create_non_terminal_backprop_learning_components(self,
-                                                          input_source,
                                                           output_source,
                                                           learned_projection,
                                                           learning_rate,
@@ -9113,13 +9118,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 continue
                         elif len(mech.output_ports) != 1:
                             raise CompositionError(f"'{mech.name}', which is in a learning pathway for '{self.name}' "
-                                                   f"and uses a {TransferFunction.compnentName} as its function, has a "
-                                                   f"different number of output_ports ({len(mech.output_ports)}) than "
-                                                   f"input_ports ({len(mech.input_ports)}), which is currently not "
-                                                   f"supported for learning.  Trying using different splitting the "
+                                                   f"and uses a {TransferFunction.__name__} as its function, has "
+                                                   f"a different number of output_ports ({len(mech.output_ports)}) "
+                                                   f"than input_ports ({len(mech.input_ports)}), which is currently "
+                                                   f"not supported for learning.  Trying using splitting the "
                                                    f"input-output mappings into subsets involving one-to-many, "
-                                                   f"many-to-one, or num-to-same_num (parallel), and using a different "
-                                                   f"ProcessingMechanism for each.")
+                                                   f"many-to-one, or num-to-same_num (parallel), and using a "
+                                                   f"different ProcessingMechanism for each.")
 
                     # If dependent_learning_mech already has a Projection from the source_learning_mech, can skip
                     if any(dependent_learning_mech == efferent.receiver.owner
