@@ -550,7 +550,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 if isinstance(node, PytorchCompositionWrapper):
                     node.forward(inputs=None)
                     continue
-                # FIX: 10/1/23 - REFACTOR BELOW TO INTEGRATE GETTING EXTERNAL INPUT WITH COLLATING AFFERENTS
                 elif node._is_input:
                     # If node's input is explicitly specified, use that
                     if node._mechanism in inputs:
@@ -568,8 +567,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                 variable.append(node.collate_afferents(i).squeeze(0))
                         if len(variable) == 1:
                             variable = variable[0]
-                        else:
-                            variable = torch.stack(variable)
                 else:
                     variable = node.collate_afferents()
                 node.execute(variable)

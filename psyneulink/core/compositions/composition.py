@@ -9095,15 +9095,31 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     dependent_learning_mech = learning_projection.sender.owner
 
-                    # If input_source for source_learning_mech uses a TransferFunction,
-                    #   then only consider as dependent learning mechanisms for projections to the input_port with the
-                    #   same index as the output_port for the projection being learned by thesource_learning_mech
                     mech = source_learning_mech.input_source
                     output_port = source_learning_mech.output_ports[LEARNING_SIGNAL].efferents[0].receiver.owner.sender
-                    input_port_idx = mech.input_ports.index(input_port)
-                    output_port_idx = mech.output_ports.index(output_port)
-                    if isinstance(mech.function, TransferFunction) and input_port_idx != output_port_idx:
-                        continue
+
+                    # If input_source for source_learning_mech uses a TransferFunction,
+                    #  - and it has more than one input_port
+                    #  - and it has the same number of output_ports
+                    # then:
+                    #   treat as parallel processing of inputs to putput
+                    #   and only consider, as dependent, learning mechanisms for projections to the input_port with the
+                    #   same index as the output_port for the projection being learned by the source_learning_mech
+                    if len(mech.input_ports) > 1:
+                        if len(mech.output_ports) == len(mech.input_ports):
+                            input_port_idx = mech.input_ports.index(input_port)
+                            output_port_idx = mech.output_ports.index(output_port)
+                            if isinstance(mech.function, TransferFunction) and input_port_idx != output_port_idx:
+                                continue
+                        elif len(mech.output_ports) != 1:
+                            raise CompositionError(f"'{mech.name}', which is in a learning pathway for '{self.name}' "
+                                                   f"and uses a {TransferFunction.compnentName} as its function, has a "
+                                                   f"different number of output_ports ({len(mech.output_ports)}) than "
+                                                   f"input_ports ({len(mech.input_ports)}), which is currently not "
+                                                   f"supported for learning.  Trying using different splitting the "
+                                                   f"input-output mappings into subsets involving one-to-many, "
+                                                   f"many-to-one, or num-to-same_num (parallel), and using a different "
+                                                   f"ProcessingMechanism for each.")
 
                     # If dependent_learning_mech already has a Projection from the source_learning_mech, can skip
                     if any(dependent_learning_mech == efferent.receiver.owner
