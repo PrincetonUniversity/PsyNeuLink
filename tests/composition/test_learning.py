@@ -3146,9 +3146,11 @@ class TestAutodiffMultipleOutput_ports:
                                       input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
                               learning_rate = .01, epochs=3)
 
-        np.testing.assert_allclose(result_autodiff_ports, result_autodiff_nodes,rtol=1e-8, atol=1e-8)
-        np.testing.assert_allclose(result_comp_ports, result_comp_nodes,rtol=1e-8, atol=1e-8)
-        np.testing.assert_allclose(result_autodiff_ports, result_comp_nodes,rtol=1e-8, atol=1e-8)
+        expected = [[-0.14091702170015408, 0.11156579308015635]]
+        np.testing.assert_allclose(result_autodiff_ports, expected, rtol=1e-8, atol=1e-8)
+        np.testing.assert_allclose(result_autodiff_nodes, expected, rtol=1e-8, atol=1e-8)
+        np.testing.assert_allclose(result_comp_ports, expected, rtol=1e-8, atol=1e-8)
+        np.testing.assert_allclose(result_comp_nodes, expected, rtol=1e-8, atol=1e-8)
 
     def test_single_input_to_multiple_output_ports_converge_internal(self):
 
@@ -3226,9 +3228,11 @@ class TestAutodiffMultipleOutput_ports:
         result_comp_nodes = comp.learn(inputs={input: [[1, 2], [1, 2], [1, 2], [1, 2]]},
                                        learning_rate = .01, epochs=3)
 
-        np.testing.assert_allclose(result_autodiff_ports, result_autodiff_nodes,rtol=1e-8, atol=1e-8)
-        np.testing.assert_allclose(result_comp_ports, result_comp_nodes,rtol=1e-8, atol=1e-8)
-        np.testing.assert_allclose(result_autodiff_ports, result_comp_nodes,rtol=1e-8, atol=1e-8)
+        expected = [[-0.5448706019245989, -0.45743872720005285]]
+        np.testing.assert_allclose(result_autodiff_ports, expected, rtol=1e-8, atol=1e-8)
+        np.testing.assert_allclose(result_autodiff_nodes, expected, rtol=1e-8, atol=1e-8)
+        np.testing.assert_allclose(result_comp_ports, expected, rtol=1e-8, atol=1e-8)
+        np.testing.assert_allclose(result_comp_nodes, expected, rtol=1e-8, atol=1e-8)
 
 
 def validate_learning_mechs(comp):
