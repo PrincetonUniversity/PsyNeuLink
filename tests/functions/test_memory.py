@@ -46,7 +46,7 @@ test_data = [
     pytest.param(Functions.DictionaryMemory, test_var, {'initializer':test_initializer, 'seed': module_seed},
                  [test_var[0], test_var[1]],
                  id="DictionaryMemory Initializer"),
-    pytest.param(Functions.DictionaryMemory, test_var, {'retrieval_prob':0.5, 'seed': module_seed},
+    pytest.param(Functions.DictionaryMemory, test_var, {'retrieval_prob':0.1, 'seed': module_seed},
                  np.zeros_like(test_var),
                  id="DictionaryMemory Low Retrieval"),
     pytest.param(Functions.DictionaryMemory, test_var, {'storage_prob':0.1, 'seed': module_seed},
@@ -67,7 +67,9 @@ test_data = [
     pytest.param(Functions.DictionaryMemory, test_var, {'noise':test_var / 2},
                  [test_var[0] + test_var[0] / 2, test_var[1]],
                  id="DictionaryMemory NoiseVecN"),
-    pytest.param(Functions.ContentAddressableMemory, test_var, {'rate':RAND1, 'retrieval_prob':0.5, 'seed': module_seed},
+
+    # ContentAddressableMemory
+    pytest.param(Functions.ContentAddressableMemory, test_var, {'rate':RAND1, 'retrieval_prob':0.1, 'seed': module_seed},
                  np.zeros_like(test_var),
                  id="ContentAddressableMemory Low Retrieval"),
     pytest.param(Functions.ContentAddressableMemory, test_var, {'rate':RAND1, 'storage_prob':0.1, 'seed': module_seed},
@@ -96,7 +98,7 @@ test_data = [
     pytest.param(Functions.DictionaryMemory, philox_var, {'storage_prob':0.01, 'seed': module_seed},
                  np.zeros_like(philox_var),
                  id="DictionaryMemory Low Storage Philox"),
-    pytest.param(Functions.DictionaryMemory, philox_var, {'retrieval_prob':0.95, 'storage_prob':0.95, 'seed': module_seed},
+    pytest.param(Functions.DictionaryMemory, philox_var, {'retrieval_prob':0.98, 'storage_prob':0.98, 'seed': module_seed},
                  [philox_var[0], philox_var[1]],
                  id="DictionaryMemory High Storage/Retrieve Philox"),
     pytest.param(Functions.DictionaryMemory, philox_var, {'noise':RAND2},
@@ -111,13 +113,15 @@ test_data = [
     pytest.param(Functions.DictionaryMemory, philox_var, {'noise':philox_var / 2},
                  [philox_var[0] + philox_var[0] / 2, philox_var[1]],
                  id="DictionaryMemory NoiseVecN Philox"),
+
+    # ContentAddressableMemory
     pytest.param(Functions.ContentAddressableMemory, philox_var, {'rate':RAND1, 'retrieval_prob':0.1, 'seed': module_seed},
                  np.zeros_like(philox_var),
                  id="ContentAddressableMemory Low Retrieval Philox"),
     pytest.param(Functions.ContentAddressableMemory, philox_var, {'rate':RAND1, 'storage_prob':0.01, 'seed': module_seed},
                  np.zeros_like(philox_var),
                  id="ContentAddressableMemory Low Storage Philox"),
-    pytest.param(Functions.ContentAddressableMemory, philox_var, {'rate':RAND1, 'retrieval_prob':0.9, 'storage_prob':0.9, 'seed': module_seed},
+    pytest.param(Functions.ContentAddressableMemory, philox_var, {'rate':RAND1, 'retrieval_prob':0.98, 'storage_prob':0.98, 'seed': module_seed},
                  [philox_var[0], philox_var[1]],
                  id="ContentAddressableMemory High Storage/Retrieval Philox"),
     pytest.param(Functions.ContentAddressableMemory, philox_var, {'initializer':philox_initializer, 'rate':RAND1, 'seed': module_seed},
@@ -145,6 +149,12 @@ def test_basic(func, variable, params, expected, benchmark, func_mode):
     EX = pytest.helpers.get_func_execution(f, func_mode, writeback=False)
 
     EX(variable)
+
+    # Store value * 4 with a duplicate key
+    # This insertion should be ignored unless the function allows
+    # "duplicate_keys"
+    if len(variable) == 2:
+        EX([variable[0], variable[1] * 4])
     res = benchmark(EX, variable)
 
     # This still needs to use "allclose" as the key gets manipulated before
