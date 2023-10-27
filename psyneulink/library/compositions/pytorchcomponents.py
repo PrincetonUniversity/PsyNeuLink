@@ -102,7 +102,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
     Set up parameters of PyTorch model & information required for forward computation
 
     Handle nested compositions (flattened in infer_backpropagation_learning_pathways):
-    Deal with Projections into our out of a nested Composition as follows:
+    Deal with Projections into or out of a nested Composition as follows:
 
      [      OUTER     ][                            NESTED                               ][     OUTER      ]
             \\learnable//   \\not learnable//                     \\not learnable//    \\learnable//

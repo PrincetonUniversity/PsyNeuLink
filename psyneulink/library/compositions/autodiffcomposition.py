@@ -660,9 +660,17 @@ class AutodiffComposition(Composition):
             #     see test_xor_training_identicalness_standard_composition_vs_PyTorch_and_LLVM for example)
             output_mechs = self.get_nested_nodes_output_nodes_at_levels()
             assert set([mech for mech in [pathway[-1] for pathway in pathways]]) == set(output_mechs)
-            target_mechs = [ProcessingMechanism(default_variable = np.zeros_like(mech.value),
+            # # MODIFIED 10/27/23 OLD:
+            # target_mechs = [ProcessingMechanism(default_variable = np.zeros_like(mech.value),
+            #                                     name= 'TARGET for ' + mech.name)
+            #                 for mech in output_mechs if mech not in self.target_output_map.values()]
+            # MODIFIED 10/27/23 NEW:
+            target_mechs = [ProcessingMechanism(default_variable = np.array([np.zeros_like(value)
+                                                                             for value in output_mechs[0].value],
+                                                                            dtype=object),
                                                 name= 'TARGET for ' + mech.name)
                             for mech in output_mechs if mech not in self.target_output_map.values()]
+            # MODIFIED 10/27/23 END
             # Suppress warnings about role assignments
             context = Context(source=ContextFlags.METHOD)
             self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.LEARNING], context=context)
@@ -776,15 +784,15 @@ class AutodiffComposition(Composition):
                 input = inputs[component]
             curr_tensor_inputs[component] = torch.tensor(input, device=self.device).double()
         for component in targets.keys():
-            # MODIFIED 10/19/23 OLD:
-            # target = targets[component][0]
-            # # curr_tensor_targets[component] = torch.tensor(target, device=self.device).double()
-            # # Convert Node back to output Node for indexing by component below
-            # curr_tensor_targets[self.target_output_map[component]] = torch.tensor(target, device=self.device).double()
-            # MODIFIED 10/19/23 NEW:
-            curr_tensor_targets[self.target_output_map[component]] = [torch.tensor(target, device=self.device).double()
-                                                                      for target in targets[component]]
-            # MODIFIED 10/19/23 END
+            # # MODIFIED 10/27/23 OLD:
+            # curr_tensor_targets[self.target_output_map[component]] = [torch.tensor(target, device=self.device).double()
+            #                                                           for target in targets[component]]
+            # MODIFIED 10/27/23 NEW:
+            curr_tensor_targets[self.target_output_map[component]] = [torch.tensor(target_elem,
+                                                                                   device=self.device).double()
+                                                                      for target in targets[component] for
+                                                                      target_elem in target]
+            # MODIFIED 10/27/23 END
 
         # do forward computation on current inputs
         curr_tensor_outputs = self.parameters.pytorch_representation._get(context).forward(curr_tensor_inputs, context)
@@ -792,26 +800,24 @@ class AutodiffComposition(Composition):
         for component in curr_tensor_outputs.keys():
             # possibly add custom loss option, which is a loss function that takes many args
             # (outputs, targets, weights, and more) and returns a scalar
-            # MODIFIED 10/19/23 OLD:
-            # new_loss = self.loss(curr_tensor_outputs[component].squeeze(),
-            #                      curr_tensor_targets[component])
-            # MODIFIED 10/19/23 NEW:
-            new_loss = self.loss(curr_tensor_outputs[component][0],
-                                 curr_tensor_targets[component][0])
-            # MODIFIED 10/19/23 END
+            # # MODIFIED 10/27/23 OLD:
+            # new_loss = self.loss(curr_tensor_outputs[component][i],
+            #                      curr_tensor_targets[component][i])
+            # MODIFIED 10/27/23 NEW:
+            # FIX: 10/26/23 - SHOULD HANDLE MULTIPLE OUTPUT PORTS curr_tensor_outputs[component][idx] as per below
+            for i in range(len(curr_tensor_outputs[component])):
+                new_loss = self.loss(curr_tensor_outputs[component][i],
+                                     curr_tensor_targets[component][i])
+            # MODIFIED 10/27/23 END
             tracked_loss += new_loss
 
-        # outputs = None
         outputs = []
         for input_port in self.output_CIM.input_ports:
             assert (len(input_port.all_afferents) == 1), \
                 f"PROGRAM ERROR: {input_port.name} of ouput_CIM for '{self.name}' has more than one afferent."
-            _, component, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
-            # # MODIFIED 10/19/23 OLD:
-            # outputs += curr_tensor_outputs[component].detach().cpu().numpy().copy().tolist()
-            # MODIFIED 10/19/23 NEW:
-            outputs += [curr_tensor_outputs[component][0].detach().cpu().numpy().copy().tolist()]
-            # MODIFIED 10/19/23 END
+            port, component, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
+            idx = component.output_ports.index(port)
+            outputs += [curr_tensor_outputs[component][idx].detach().cpu().numpy().copy().tolist()]
 
         self.parameters.tracked_loss_count._set(self.parameters.tracked_loss_count._get(context=context) + 1,
                                                 context=context,

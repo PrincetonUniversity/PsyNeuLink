@@ -9782,8 +9782,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
             # Reassign target inputs from output Nodes to target mechanisms constructed for PyTorch execution
-            return {target: value
-                    for target, value in zip(self.target_output_map.keys(), targets.values())}
+            return {target: value for target, value in zip(self.target_output_map.keys(), targets.values())}
 
         ret = {}
         for node, values in targets.items():
