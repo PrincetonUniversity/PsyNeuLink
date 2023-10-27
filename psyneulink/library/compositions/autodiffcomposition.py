@@ -660,7 +660,7 @@ class AutodiffComposition(Composition):
             #     see test_xor_training_identicalness_standard_composition_vs_PyTorch_and_LLVM for example)
             output_mechs = self.get_nested_nodes_output_nodes_at_levels()
             assert set([mech for mech in [pathway[-1] for pathway in pathways]]) == set(output_mechs)
-            # # MODIFIED 10/27/23 OLD:
+            # # # MODIFIED 10/27/23 OLD:
             # target_mechs = [ProcessingMechanism(default_variable = np.zeros_like(mech.value),
             #                                     name= 'TARGET for ' + mech.name)
             #                 for mech in output_mechs if mech not in self.target_output_map.values()]
@@ -788,10 +788,11 @@ class AutodiffComposition(Composition):
             # curr_tensor_targets[self.target_output_map[component]] = [torch.tensor(target, device=self.device).double()
             #                                                           for target in targets[component]]
             # MODIFIED 10/27/23 NEW:
-            curr_tensor_targets[self.target_output_map[component]] = [torch.tensor(target_elem,
-                                                                                   device=self.device).double()
-                                                                      for target in targets[component] for
-                                                                      target_elem in target]
+            terminal_node = self.target_output_map[component]
+            curr_tensor_targets[terminal_node] = [torch.tensor(target_port_input,
+                                                               device=self.device).double()
+                                                  for target in targets[component] for
+                                                  target_port_input in target]
             # MODIFIED 10/27/23 END
 
         # do forward computation on current inputs
@@ -801,8 +802,8 @@ class AutodiffComposition(Composition):
             # possibly add custom loss option, which is a loss function that takes many args
             # (outputs, targets, weights, and more) and returns a scalar
             # # MODIFIED 10/27/23 OLD:
-            # new_loss = self.loss(curr_tensor_outputs[component][i],
-            #                      curr_tensor_targets[component][i])
+            # new_loss = self.loss(curr_tensor_outputs[component][0],
+            #                      curr_tensor_targets[component][0])
             # MODIFIED 10/27/23 NEW:
             # FIX: 10/26/23 - SHOULD HANDLE MULTIPLE OUTPUT PORTS curr_tensor_outputs[component][idx] as per below
             for i in range(len(curr_tensor_outputs[component])):
