@@ -121,7 +121,8 @@ class CompositionRunner():
                     try:
                         trial_input, _ = self._composition._parse_learning_spec(inputs=inputs(idx),
                                                                                 targets=None,
-                                                                                execution_mode=execution_mode)
+                                                                                execution_mode=execution_mode,
+                                                                                context=context)
                     except:
                         break
                     if trial_input is None:
@@ -223,7 +224,8 @@ class CompositionRunner():
 
             stim_input, num_input_trials = self._composition._parse_learning_spec(inputs=stim_input,
                                                                                   targets=stim_target,
-                                                                                  execution_mode=execution_mode)
+                                                                                  execution_mode=execution_mode,
+                                                                                  context=context)
             if num_trials is None:
                 num_trials = num_input_trials
 
