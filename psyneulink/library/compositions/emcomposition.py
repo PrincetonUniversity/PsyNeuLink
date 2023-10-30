@@ -129,6 +129,7 @@
 #          - Add warning of this on initial call to learn()
 #
 #      - Composition:
+#        - _validate_input_shapes_and_expand_for_all_trials: consolidate with get_input_format()
 #        - Generalize treatment of FEEDBACK specification:
       #        - FIX: ADD TESTS FOR FEEDBACK TUPLE SPECIFICATION OF Projection, DIRECT SPECIFICATION IN CONSTRUCTOR
 #              - FIX: why aren't FEEDBACK_SENDER and FEEDBACK_RECEIVER roles being assigned when feedback is specified?

@@ -783,38 +783,19 @@ class AutodiffComposition(Composition):
         curr_tensor_targets = {}
         for component in inputs.keys():
             if isinstance(component, Mechanism_Base):
-                # FIX 10/1/23: SHOULD REALLY CYCLE THROUGH INPUT PORTS FOR A MECHANISM
+                # FIX 10/1/23 f/u: 10/29/23: SHOULD REALLY CYCLE THROUGH INPUT PORTS FOR A MECHANISM
                 #  RATHER THAN JUST ASSUMING ONE INPUT AND USING [0]
-                input = inputs[component][0]
+                # # MODIFIED 10/29/23 OLD:
+                # input = inputs[component][0]
+                # MODIFIED 10/29/23 NEW:
+                input = inputs[component]
+                # MODIFIED 10/29/23 END
             else:
                 input = inputs[component]
             curr_tensor_inputs[component] = torch.tensor(input, device=self.device).double()
         for component in targets.keys():
-            # FIX: 10/28/23:  BRANCH ON WHETHER TARGET ARRAY IS REGULAR OR RAGGED?
-            # # MODIFIED 10/27/23 OLD: WORKS FOR TESTS BUT NOT SCRATCH PAD BECAUSE IT FORCES A RAGGED ARRAY INTO A TENSOR
-            # curr_tensor_targets[self.target_output_map[component]] = [torch.tensor(target, device=self.device).double()
-            #                                                           for target in targets[component]]
-            # # # MODIFIED 10/27/23 NEW:
-            # terminal_node = self.target_output_map[component]
-            # curr_tensor_targets[terminal_node] = [torch.tensor(target_port_input,
-            #                                                    device=self.device).double()
-            #                                       for target in targets[component] for
-            #                                       target_port_input in target]
-            # # # MODIFIED 10/27/23 NEWER:  WORKS FOR SCRATCH PAD BUT NOT TESTS BECAUSE IT REDUCES ONE DIMENSION TOO FAR
-            # #                             AND PRODUCES BAD RESULT FOR TESTS BECAUSE IT ADDS A DIMENSION TO THE TENSORS
-            # terminal_node = self.target_output_map[component]
-            # curr_tensor_targets[terminal_node] = [torch.tensor([target_port_input],
-            #                                                    device=self.device).double()
-            #                                       for target in targets[component] for
-            #                                       target_port_input in target]
-            # # # MODIFIED 10/27/23 NEWEST:
-            terminal_node = self.target_output_map[component]
-            curr_tensor_target = []
-            for target in targets[component]:
-                for target_port_input in target:
-                    curr_tensor_target.append(torch.tensor(target_port_input, device=self.device).double())
-            curr_tensor_targets[terminal_node] = curr_tensor_target
-            # MODIFIED 10/27/23 END
+            curr_tensor_targets[self.target_output_map[component]] = [torch.tensor(target, device=self.device).double()
+                                                                      for target in targets[component]]
 
         # do forward computation on current inputs
         curr_tensor_outputs = self.parameters.pytorch_representation._get(context).forward(curr_tensor_inputs, context)
@@ -822,15 +803,10 @@ class AutodiffComposition(Composition):
         for component in curr_tensor_outputs.keys():
             # possibly add custom loss option, which is a loss function that takes many args
             # (outputs, targets, weights, and more) and returns a scalar
-            # # MODIFIED 10/27/23 OLD:
-            # new_loss = self.loss(curr_tensor_outputs[component][0],
-            #                      curr_tensor_targets[component][0])
-            # MODIFIED 10/27/23 NEW:
             new_loss = 0
             for i in range(len(curr_tensor_outputs[component])):
                 new_loss += self.loss(curr_tensor_outputs[component][i],
                                      curr_tensor_targets[component][i])
-            # MODIFIED 10/27/23 END
             tracked_loss += new_loss
 
         outputs = []
@@ -884,6 +860,7 @@ class AutodiffComposition(Composition):
         ---------
         A dict mapping TARGET Nodes -> target values
         """
+        # 10/29/23: FIX - VALUES SHOULD 2D HERE
         return {node:value for node, value in nodes.items() if node in self.target_output_map}
 
     def _infer_input_nodes(self, nodes: dict):
@@ -911,8 +888,8 @@ class AutodiffComposition(Composition):
                     input_nodes[node] = values
         return input_nodes
 
-    def _parse_learning_spec(self, inputs, targets, execution_mode):
-        stim_input, num_input_trials = super()._parse_learning_spec(inputs, targets, execution_mode)
+    def _parse_learning_spec(self, inputs, targets, execution_mode, context):
+        stim_input, num_input_trials = super()._parse_learning_spec(inputs, targets, execution_mode, context)
 
         if not callable(inputs):
             input_ports_for_INPUT_Nodes = self._get_input_receivers()
