@@ -10226,9 +10226,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if INPUT_Node in inputs:
                 # If entry is for an INPUT_Node of self,
                 # check format, adjust as needed, assign the entry to input_dict, and proceed to next
-                # # MODIFIED 10/29/23 OLD:
-                # input_dict[INPUT_Node] = inputs[INPUT_Node]
-                # MODIFIED 10/29/23 NEW:
                 # FIX: 10/29/23
                 #  ENFORCE get_input_format() spec for inputs here
                 #  (e.g., impose outer dimension for single trial or single input_port)
@@ -10236,26 +10233,44 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Check formatting of first node as proxy for formatting of all items, and make changes accordingly
                 # (any other errant items will be detected in _validate_input_shapes_and_expand_for_all_trials())
 
-                node = INPUT_Node
+                node_spec = INPUT_Node
                 if isinstance(INPUT_Node, Composition):
-                    node = INPUT_Node.input_CIM
-                is_input_port = isinstance(node, InputPort)
-                num_input_ports = None
-                input_port_shape = None
+                    node_spec = INPUT_Node.input_CIM
+                is_mech = isinstance(node_spec, Mechanism_Base)
+                num_input_ports = len(node_spec.external_input_shape) if is_mech else None
+                is_input_port = not num_input_ports
 
                 if isinstance(_inputs, dict):
                     # entry is dict for a nested Composition, which will be handled recursively
                     pass
-                elif isinstance(_inputs, numbers.Number):
-                    # Single scalar, so must be single value for single trial
-                    _inputs = [[[_inputs]]]
+
+                elif convert_to_np_array(_inputs).squeeze().ndim == 0:
+                    # Single scalar (alone or in list), so must be single value for single trial
+                    _inputs = np.atleast_3d(_inputs).tolist()
+
                 elif all(isinstance(elem, numbers.Number) for elem in _inputs):
-                    # List of scalars, so determine if it is one trial's input for array variable or array of trials
-                    # (use squeeze in to handle both Mechanism or InputPort)
-                    if len(_inputs) == len(np.array(node.external_input_shape).squeeze()):
-                        _inputs = [[_inputs]]
+                    # 1d list of scalars of len > 1 (len == 1 handled above)
+                    if is_mech:
+                    #  node_spec is mech:
+                        # 1 trial's worth of input for mech with 1 input_port and len(variable) > 1:
+                        # >1 trial's worth of input for > 1 input_port all of which have len(variable) == 1:
+
+                        if num_input_ports == 1:
+                            if len(_inputs) == len(node_spec.external_input_shape[0]):
+                                # 1 trial's worth of input for mech with 1 input_port and len(variable) > 1:
+                                _inputs = [[_inputs]]
+                        else:
+                            # >1 trial's worth of input for > 1 input_port all of which have len(variable) == 1:
+                            _inputs = [[[elem]] for elem in _inputs]
                     else:
-                        _inputs = [np.atleast_2d(elem).tolist() for elem in _inputs]
+                    # node_spec is inpput_port:
+                        if len(_inputs) == len(node_spec.variable):
+                            # 1 trial's worth of input for input_port with len(variable) > 1:
+                            _inputs = [[_inputs]]
+                        else:
+                            # >1 trial's worth of input for input_port with len(variable) == 1:
+                            _inputs = [[[elem]] for elem in _inputs]                            
+
                 elif convert_to_np_array(_inputs).ndim == 3:
                     # 3d regular array
                     # FIX: IS THIS OK FOR A PORT (VS. MECH) SPEC?  WILL IT BE HANDLED PROPERLY IN _validate...
@@ -10263,71 +10278,32 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # Nothing more to do, as entry is already 3d
                     # shapes of entries will be validated in _validate_input_shapes_and_expand_for_all_trials())
                     pass
+
                 else:
-                    # FIX: CAN NOW BE EITHER:
+                    # 3D ragged array or 2d array
                     entry = convert_to_np_array(_inputs)
                     if entry.dtype == object and entry.ndim == 2:
-                        # 3D ragged array (e.g., [[[1, 2, 3], [4, 5]]]):
+                        # 3d ragged array  (e.g., [[[1, 2, 3], [4, 5]]])
                         #     one or more trials' worth of 2 or more input_ports;
-                        # Ensure that node is mech (input spec for port should not be 3d)
-                        if not isinstance(node, Mechanism):
+                        # Ensure that node_spec is mech (input spec for port should not be 3d)
+                        if not isinstance(node_spec, Mechanism):
                             raise CompositionError(f"BAD ENTRY") # FIX: MSG -> INPUT IS 3D BUT NODE IS NOT MECHANISM")
                         # Ensure that each entry is one trial's worth of 2 or more input_ports
                         if not len(entry[0]) > 1:
                             raise CompositionError(f"BAD ENTRY") # FIX: MSG -> ITEMS SHOULD BE ENTRIES FOR MULT PORTS
                         # Nothing more to do, as entry is already 3d
                     else:
-                        # Must be 2d array,
+                        # 2d array (e.g., [[1, 2, 3], [4, 5, 6]])
                         # FIX: USE num_input_ports FOR THIS:
-                        if len(_inputs) == len(np.array(node.external_input_shape)):
+                        if len(_inputs) == len(np.array(node_spec.external_input_shape)):
                             # 1 trial's worth of input for > 1 input_port, so add outer dimension to make it 3d
                             _inputs = [_inputs]
                         else:
                             # > 1 trial's worth of input for 1 input_port, so add extra dimension to each trial's input
                             _inputs = [[input] for input in _inputs]
 
-                        # # - 2D RAGGED ARRAY (e.g., [[1, 2, 3], [4, 5]])
-                        # #    > ONE TRIAL'S WORTH OF 2 OR MORE INPUT_PORTS
-                        #
-                        # #  - 2D REGULAR ARRAY  (e.g., [[1, 2, 3], [4, 5, 6]])
-                        # #    > 2 OR MORE TRIAL'S WORTH OF 1 INPUT_PORT: CHECK WHETHER THERE IS ONLY ONE INPUT_PORT
-                        # #    > ONE TRIAL'S WORTH OF 2 OR MORE INPUT_PORTS: CHECK FOR MATCH OF NUMBER & SHAPE OF INPUT_PORTS
-                        #
-                        # # if len(_inputs) == len(np.array(INPUT_Node.variable).squeeze(0)):
-                        #
-                        # # FIX: THE FOLLOWING ONLY WORKS IF INPUT IS 3D, OR HAVE ALREADY DETERMINED
-                        # #      THAT IT IS FOR MULTIPLE TRIALS (3D) OR FOR ONLY ONE INPUT_PORT (2D)
-                        # entry = convert_to_np_array(entry[0])
-                        # if entry.dtype == object:
-                        #     # FIX: NEED TO FIGURE OUT WHERE RAGGED ARRAY IS COMING FROM:
-                        #     #     IF AXIS 1, THEN:
-                        #     # Entry is ragged, so at some level must be specification for input_ports of NODE
-                        #     if entry.ndim == 1:
-                        #         # entry is ragged so must be a list of inputs to the ports of INPUT_Node for a single trial
-                        #         item = entry
-                        #         add_dim = True
-                        #     elif entry.ndim == 2:
-                        #         # entry itself is not ragged, so must be multiple trials, but input for each must be ragged
-                        #         item = entry[0]
-                        #     else:
-                        #         raise CompositionError(f"BAD ENTRY") # FIX: MSG -> TOO MANY DIMENSIONS TO ENTRY IN INPUT
-                        #     for i, input_port in zip(item, INPUT_Node.input_ports):
-                        #         # Make sure each item of the entry is a 1d vector the size of the corresponding input_port
-                        #         if not np.array(i).ndim == 1 and len(i) == len(input_port.defaults.value):
-                        #             raise CompositionError(f"BAD ENTRY") # FIX: MSG -> MISMATCH BETWEEN ENTRY AND INPUT_PORT
-                        #
-                        # else:
-                        #     # entry is a regular array, so if it is 3d we're done
-                        #     if entry.ndim == 1:
-                        #         # enforce 3d on each entry
-                        #         # (validity of shape will be determined in _validate_input_shapes_and_expand_for_all_trials())
-                        #         add_dim = True
-
-                # if add_dim:
-                #     _inputs = [[input] for input in _inputs]
 
                 input_dict[INPUT_Node] = _inputs
-                # MODIFIED 10/29/23 END
 
                 remaining_inputs.remove(INPUT_Node)
                 continue
