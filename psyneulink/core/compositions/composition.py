@@ -10259,9 +10259,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             if len(_inputs) == len(node_spec.external_input_shape[0]):
                                 # 1 trial's worth of input for mech with 1 input_port and len(variable) > 1:
                                 _inputs = [[_inputs]]
+                            elif len(node_spec.external_input_shape[0]) == 1:
+                                # >1 trial's worth of input for input_port with len(variable) == 1:
+                                _inputs = [[[elem]] for elem in _inputs]
+                            else:
+                                raise CompositionError(f"BAD ENTRY") # FIX: MSG -> WRONG LENGTH INPUT FOR 1 INPUT_PORT
                         else:
-                            # >1 trial's worth of input for > 1 input_port all of which have len(variable) == 1:
-                            _inputs = [[[elem]] for elem in _inputs]
+                            raise CompositionError(f"BAD ENTRY") # FIX: MSG -> INPUT IS 1d LIST FOR MECH WITH >1 INPUT_PORT
                     else:
                     # node_spec is inpput_port:
                         if len(_inputs) == len(node_spec.variable):
@@ -10282,8 +10286,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     # 3D ragged array or 2d array
                     entry = convert_to_np_array(_inputs)
-                    if entry.dtype == object and entry.ndim == 2:
-                        # 3d ragged array  (e.g., [[[1, 2, 3], [4, 5]]])
+                    ragged_array = entry.dtype == object
+                    if ragged_array and entry.ndim == 2:
+                        # 3d ragged array  (e.g., [[[1, 2], [3, 4, 5]]])
                         #     one or more trials' worth of 2 or more input_ports;
                         # Ensure that node_spec is mech (input spec for port should not be 3d)
                         if not isinstance(node_spec, Mechanism):
@@ -10293,7 +10298,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             raise CompositionError(f"BAD ENTRY") # FIX: MSG -> ITEMS SHOULD BE ENTRIES FOR MULT PORTS
                         # Nothing more to do, as entry is already 3d
                     else:
-                        # 2d array (e.g., [[1, 2, 3], [4, 5, 6]])
+                        # FIX: CONSOLIDATE THIS WITH 3D RAGGED ABOVE AND TREAT REGULAR 2D ARRAY IN ITS OWN BRANCH
+                        # 2d array
+                        if ragged_array:
+                            # 2d ragged array(e.g., [[1, 2], [3, 4, 5]])
+                        else:
+                            # 2d regular array(e.g., [[1, 2], [3, 4]])
                         # FIX: USE num_input_ports FOR THIS:
                         if len(_inputs) == len(np.array(node_spec.external_input_shape)):
                             # 1 trial's worth of input for > 1 input_port, so add outer dimension to make it 3d
