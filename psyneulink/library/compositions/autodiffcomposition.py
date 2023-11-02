@@ -338,14 +338,11 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
-from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
-from psyneulink.core.components.projections.projection import Projection_Base
-from psyneulink.core.compositions.composition import Composition, NodeRole, CompositionError, get_composition_for_node
-from psyneulink.core.compositions.report \
-    import ReportOutput, ReportParams, ReportProgress, ReportSimulations, ReportDevices, \
-    EXECUTE_REPORT, LEARN_REPORT, PROGRESS_REPORT
+from psyneulink.core.components.ports.inputport import InputPort
+from psyneulink.core.compositions.composition import Composition, NodeRole, CompositionError
+from psyneulink.core.compositions.report import (ReportOutput, ReportParams, ReportProgress, ReportSimulations,
+                                                 ReportDevices, EXECUTE_REPORT, LEARN_REPORT, PROGRESS_REPORT)
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context, CONTEXT
 from psyneulink.core.globals.keywords import AUTODIFF_COMPOSITION, SOFT_CLAMP, Loss
 from psyneulink.core.scheduling.scheduler import Scheduler
@@ -872,7 +869,8 @@ class AutodiffComposition(Composition):
         """
         input_nodes = {}
         for node, values in nodes.items():
-            if NodeRole.INPUT in self.get_roles_by_node(node) and NodeRole.TARGET not in self.get_roles_by_node(node):
+            mech = node.owner if isinstance(node, InputPort) else node
+            if NodeRole.INPUT in self.get_roles_by_node(mech) and NodeRole.TARGET not in self.get_roles_by_node(mech):
                 if isinstance(node, Composition):
                     i = 0
                     for output_port in node.input_CIM.output_ports:
