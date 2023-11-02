@@ -10252,15 +10252,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # 1d list of scalars of len > 1 (len == 1 handled above)
                     if is_mech:
                     #  node_spec is mech:
-                        # 1 trial's worth of input for mech with 1 input_port and len(variable) > 1:
-                        # >1 trial's worth of input for > 1 input_port all of which have len(variable) == 1:
-
                         if num_input_ports == 1:
                             if len(_inputs) == len(node_spec.external_input_shape[0]):
                                 # 1 trial's worth of input for mech with 1 input_port and len(variable) > 1:
                                 _inputs = [[_inputs]]
                             elif len(node_spec.external_input_shape[0]) == 1:
-                                # >1 trial's worth of input for input_port with len(variable) == 1:
+                                # > 1 trial's worth of input for > 1 input_port all of which have len(variable) == 1:
                                 _inputs = [[[elem]] for elem in _inputs]
                             else:
                                 raise CompositionError(f"BAD ENTRY") # FIX: MSG -> WRONG LENGTH INPUT FOR 1 INPUT_PORT
@@ -10272,8 +10269,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             # 1 trial's worth of input for input_port with len(variable) > 1:
                             _inputs = [[_inputs]]
                         else:
-                            # >1 trial's worth of input for input_port with len(variable) == 1:
-                            _inputs = [[[elem]] for elem in _inputs]                            
+                            # > 1 trial's worth of input for input_port with len(variable) == 1:
+                            _inputs = [[[elem]] for elem in _inputs]
 
                 elif convert_to_np_array(_inputs).ndim == 3:
                     # 3d regular array
@@ -10287,7 +10284,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # 3D ragged array or 2d array
                     entry = convert_to_np_array(_inputs)
                     ragged_array = entry.dtype == object
-                    if ragged_array
+                    if ragged_array:
                         if entry.ndim == 2:
                             # 3d ragged array  (e.g., [[[1, 2], [3, 4, 5]]]):
                             #   one or more trials' worth of 2 or more input_ports
@@ -10299,26 +10296,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 raise CompositionError(f"BAD ENTRY") #FIX: MSG -> ITEMS SHOULD BE ENTRIES FOR MULT PORTS
                             # Nothing more to do, as entry is already 3d
                         else:
-                            # FIX: CONSOLIDATE THIS WITH 3D RAGGED ABOVE AND TREAT REGULAR 2D ARRAY IN ITS OWN BRANCH
                             # 2d ragged array (e.g., [[1, 2], [3, 4, 5]])
-                            if len(_inputs) == len(np.array(node_spec.external_input_shape)):
+                            if len(_inputs) == len(convert_to_np_array(node_spec.external_input_shape)):
                                 # 1 trial's worth of input for > 1 input_port, so add outer dimension to make it 3d
                                 _inputs = [_inputs]
                             else:
                                 raise CompositionError(f"BAD ENTRY") #FIX: MSG -> INPUT SHAPE(S) DON'T MATCH INPUT_PORTS
 
                     else:
-                        # 2d regular array(e.g., [[1, 2], [3, 4]])
-                        # FIX: USE num_input_ports FOR THIS:
+                        # 2d regular array  (e.g., [[1, 2], [3, 4]] or [[1, 2]])
                         if len(_inputs) == len(np.array(node_spec.external_input_shape)):
-                            # 1 trial's worth of input for > 1 input_port, so add outer dimension to make it 3d
+                            # 1 trial's worth of input for > 1 input_ports
                             _inputs = [_inputs]
-                        else:
-                            raise CompositionError(f"BAD ENTRY") # FIX: SHAPE(S) OF INPUTS DON'T MATCH INPUT_PORTS
-                        else:
+                        elif len(_inputs[0]) == len(convert_to_np_array(node_spec.external_input_shape[0])):
                             # > 1 trial's worth of input for 1 input_port, so add extra dimension to each trial's input
                             _inputs = [[input] for input in _inputs]
-
+                        else:
+                            raise CompositionError(f"BAD ENTRY") # FIX: SHAPE(S) OF INPUTS DON'T MATCH INPUT_PORTS
 
                 input_dict[INPUT_Node] = _inputs
 
