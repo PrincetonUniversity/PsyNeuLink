@@ -10016,7 +10016,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # # FIX: THIS GETS TRIGGERED IF INPUTS ARE A FUNCTION (OR JUST CALLABLE?) AND THEN DON'T GET PARSED
         # #      SEE IF REMOVING IT GETS RID OF NEED FOR RECENT MOD THAT RETURNS XXX[0] IN GENERATOR?
         # # If Composition is in learning mode, presumably inputs have already been parsed so shouldn't do it again
-        if context and (context.runmode & ContextFlags.LEARNING_MODE) and (context.source & ContextFlags.COMPOSITION):
+        # if context and (context.runmode & ContextFlags.LEARNING_MODE) and (context.source & ContextFlags.COMPOSITION):
+        if (context and (context.runmode & ContextFlags.LEARNING_MODE)
+                and (context.source & ContextFlags.COMPOSITION)
+                and not (context.execution_phase & ContextFlags.PREPARING)):
+        # if not (context.execution_phase & ContextFlags.PREPARING):
             return inputs, 1
         # # MODIFIED 10/23/23 & 11/3/23 NEWER:
         # if self.parsed_inputs:
