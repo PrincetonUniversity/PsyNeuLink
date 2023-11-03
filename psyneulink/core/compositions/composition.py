@@ -4742,18 +4742,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return nested_nodes if any(nested_nodes) else None
 
     def get_nested_nodes_input_nodes_at_levels(self)->list or None:
-        """Return all Nodes from nested Compositions that receive input from the environment."""
+        """Return all Nodes from nested Compositions that receive input directly from input to outermost Composition."""
         input_nodes = self.get_nested_nodes_by_roles_at_any_level(self, include_roles=NodeRole.INPUT)
         return [input_node for input_node in input_nodes
+                # include node if call to _get_source_node_for_input_CIM returns None for any of its afferents
                 if not all(proj.sender.owner._get_source_node_for_input_CIM(proj.sender)
-                           for proj in input_port.path_afferents for input_port in input_node)] or None
+                           for input_port in input_node.input_ports for proj in input_port.path_afferents
+                           if isinstance(proj.sender.owner, CompositionInterfaceMechanism))] or None
 
     def get_nested_nodes_output_nodes_at_levels(self)->list or None:
-        """Return all Nodes from nested Compositions that receive input from the environment."""
+        """Return all Nodes from nested Compositions that send output directly to outermost Composition."""
         output_nodes = self.get_nested_nodes_by_roles_at_any_level(self, include_roles=NodeRole.OUTPUT)
         return [output_node for output_node in output_nodes
                 if not all(proj.receiver.owner._get_destination_info_for_output_CIM(proj.receiver)
-                           for output_port in output_node.output_ports for proj in output_port.efferents)] or None
+                           for output_port in output_node.output_ports for proj in output_port.efferents
+                           if isinstance(proj.receiver.owner, CompositionInterfaceMechanism))] or None
 
     def _get_input_nodes_by_CIM_input_order(self):
         """Return a list with the `INPUT` `Nodes <Composition_Nodes>` of the Composition in the same order as their

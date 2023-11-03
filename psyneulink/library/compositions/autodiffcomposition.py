@@ -870,7 +870,8 @@ class AutodiffComposition(Composition):
         input_nodes = {}
         for node, values in nodes.items():
             mech = node.owner if isinstance(node, InputPort) else node
-            if NodeRole.INPUT in self.get_roles_by_node(mech) and NodeRole.TARGET not in self.get_roles_by_node(mech):
+            if (mech in self.get_nested_nodes_input_nodes_at_levels()
+                    and mech not in self.get_nodes_by_role(NodeRole.TARGET)):
                 if isinstance(node, Composition):
                     i = 0
                     for output_port in node.input_CIM.output_ports:
