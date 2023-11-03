@@ -550,15 +550,16 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     node.forward(inputs=None)
                     continue
                 elif node._is_input:
-                    # If node's input is explicitly specified, use that
+                    # Node is an INPUT to Composition
                     if node._mechanism in inputs:
+                        # If input is specified for the Mechanism (i.e., Mechanism is a key in inputs dict), use that
                         variable = inputs[node._mechanism]
-                    # Node's iput in *not* explicitly specified, but its input_port(s) may have been
+                    # Input for the Mechanism is *not* explicitly specified, but its input_port(s) may have been
                     else:
                         # Get input for each input_port of the node
                         variable = []
                         for i, input_port in enumerate(node._mechanism.input_ports):
-                            # If input to the node's input_port(s) is explicitly specified, use that
+                            # If input to the node's input_port(s) is specified in the inputs dict, use that
                             if input_port in inputs:
                                 variable.append(inputs[input_port])
                             # Otherwise, use the node's input_port's afferents
@@ -567,6 +568,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         if len(variable) == 1:
                             variable = variable[0]
                 else:
+                    # Node is not INPUT to Composition, so get input from its afferents
                     variable = node.collate_afferents()
                 node.execute(variable)
                 # Add entry to outputs dict for OUTPUT Nodes of pytorch representation

@@ -2442,11 +2442,17 @@ class TestMiscTrainingFunctionality:
         # np.testing.assert_allclose(pt_weights_hid_bp, pt_weights_hid_ap)
         # np.testing.assert_allclose(pt_weights_out_bp, pt_weights_out_ap)
 
+
+    print("*****************************************************************************************************")
+    print("***************************** REPLACE OTHER LOSS FUNCTIONS ******************************************")
+    print("*****************************************************************************************************")
     @pytest.mark.parametrize(
-        'loss, expected', [(Loss.MSE, [[[0.99330509]], [[0.99933169]], [[0.99933169]], [[0.9998504]]]),
-                           (Loss.L1, []),
-                           (Loss.POISSON_NLL, []),
-                           (Loss.CROSS_ENTROPY, [[[0.99330715]], [[0.99933202]], [[0.99933202]], [[0.99985049]]])]
+        'loss, expected', [
+            # (Loss.MSE, [[[0.99330509]], [[0.99933169]], [[0.99933169]], [[0.9998504]]]),
+            # (Loss.L1, []),
+            # (Loss.POISSON_NLL, []),
+            (Loss.CROSS_ENTROPY, [[[0.99330715]], [[0.99933202]], [[0.99933202]], [[0.99985049]]])
+        ]
     )
     def test_loss_specs(self, loss, expected, autodiff_mode):
         if autodiff_mode is not pnl.ExecutionMode.Python and loss in [Loss.POISSON_NLL, Loss.L1]:

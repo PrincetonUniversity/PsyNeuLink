@@ -4008,6 +4008,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._scheduler = None
         self._partially_added_nodes = []
 
+        self.parsed_inputs = False
+
         self.disable_learning = disable_learning
         self.learning_rate = learning_rate
         self._runtime_learning_rate = None
@@ -10013,8 +10015,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # # MODIFIED 10/23/23 & 11/3/23 NEW:
         # # FIX: THIS GETS TRIGGERED IF INPUTS ARE A FUNCTION (OR JUST CALLABLE?) AND THEN DON'T GET PARSED
         # #      SEE IF REMOVING IT GETS RID OF NEED FOR RECENT MOD THAT RETURNS XXX[0] IN GENERATOR?
-        # # If Composition is in learning mode, presumably inputs have already been parsed so no need to do it again
-        # if context and (context.runmode & ContextFlags.LEARNING_MODE) and (context.source & ContextFlags.COMPOSITION):
+        # # If Composition is in learning mode, presumably inputs have already been parsed so shouldn't do it again
+        if context and (context.runmode & ContextFlags.LEARNING_MODE) and (context.source & ContextFlags.COMPOSITION):
+            return inputs, 1
+        # # MODIFIED 10/23/23 & 11/3/23 NEWER:
+        # if self.parsed_inputs:
         #     return inputs, 1
         # # MODIFIED 10/23/23 & 11/3/23 END
 
@@ -10027,6 +10032,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         _inputs = self._flatten_nested_dicts(_inputs)
         _inputs = self._validate_input_shapes_and_expand_for_all_trials(_inputs)
         num_inputs_sets = len(next(iter(_inputs.values()),[]))
+        self.parsed_inputs = True
+
         return _inputs, num_inputs_sets
 
     def _parse_names_in_inputs(self, inputs):
@@ -10653,7 +10660,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     raise CompositionError(f"Problem with function provided to 'inputs' arg of {self.name}.run")
         elif isgenerator(inputs):
+            # MODIFIED 11/3/23 OLD:
             next_inputs, _ = self._parse_input_dict(inputs.__next__(), context)
+            # # MODIFIED 11/3/23 NEW:
+            # next_inputs = inputs.__next__()
+            # MODIFIED 11/3/23 END:
             i = 0
         else:
             num_inputs_sets = len(next(iter(inputs.values())))
@@ -11045,6 +11056,10 @@ _
 
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
+        # # MODIFIED 11/3/23 NEW:
+        # if context.source & ContextFlags.COMMAND_LINE:
+        #     self.parsed_inputs = False
+        # MODIFIED 11/3/23 END
         inputs, num_inputs_sets = self._parse_run_inputs(inputs, context)
 
         if num_trials is None:

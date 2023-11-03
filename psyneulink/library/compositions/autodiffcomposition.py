@@ -785,10 +785,19 @@ class AutodiffComposition(Composition):
                 input = inputs[component]
             curr_tensor_inputs[component] = torch.tensor(input, device=self.device).double()
         for component in targets.keys():
-            curr_tensor_targets[self.target_output_map[component]] = [torch.tensor(target, device=self.device).double()
+            # MODIFIED 11/3/23 OLD:
+            curr_tensor_targets[self.target_output_map[component]] = [torch.tensor(target,
+                                                                                   device=self.device).double()
                                                                       for target in targets[component]]
+            # # MODIFIED 11/3/23 NEW:
+            # # Reduce by one dimension to make 2d to match values of outputs returned by foward computation below
+            # curr_tensor_targets[self.target_output_map[component]] = [torch.tensor(target,
+            #                                                                        device=self.device).double()[0]
+            #                                                           for target in targets[component]]
+            # MODIFIED 11/3/23 END
 
         # do forward computation on current inputs
+        #   should return 2d values for each component
         curr_tensor_outputs = self.parameters.pytorch_representation._get(context).forward(curr_tensor_inputs, context)
 
         for component in curr_tensor_outputs.keys():
@@ -844,17 +853,7 @@ class AutodiffComposition(Composition):
     def _get_total_loss(self, num_trials: int=1, context:Context=None):
         return sum(self.parameters.trial_losses._get(context)[-num_trials:]) /num_trials
 
-    def _infer_output_nodes(self, nodes: dict):
-        """Remove INPUT Nodes, and return dict with values for TARGET Nodes
-
-        Returns
-        ---------
-        A dict mapping TARGET Nodes -> target values
-        """
-        # 10/29/23: FIX - VALUES SHOULD 2D HERE
-        return {node:value for node, value in nodes.items() if node in self.target_output_map}
-
-    def _infer_input_nodes(self, nodes: dict):
+    def _infer_input_nodes(self, input_dict: dict):
         """Remove TARGET Nodes, and return dict with values of INPUT Nodes for single trial
         For nested Compositions, replace input to nested Composition with inputs to its INPUT Nodes
         For InuptPorts, replace with owner
@@ -863,8 +862,8 @@ class AutodiffComposition(Composition):
         ---------
         A dict mapping INPUT Nodes -> input values for a single trial
         """
-        input_nodes = {}
-        for node, values in nodes.items():
+        autodiff_input_dict = {}
+        for node, values in input_dict.items():
             mech = node.owner if isinstance(node, InputPort) else node
             # # MODIFIED 11/3/23 OLD:
             # if (mech in self.get_nested_nodes_input_nodes_at_levels()
@@ -882,28 +881,14 @@ class AutodiffComposition(Composition):
             #             i += 1
             #     else:
             #         input_nodes[node] = values
-            # # MODIFIED 11/3/23 NEW:
-            # if (mech in self.get_nested_nodes_input_nodes_at_levels()
-            #         and mech not in self.get_nodes_by_role(NodeRole.TARGET)
-            #         or isinstance(node, Composition)):
-            #     if isinstance(node, Composition):
-            #         i = 0
-            #         for output_port in node.input_CIM.output_ports:
-            #             # If node has input from a Node in an outer Composition, no need for input here
-            #             if node.input_CIM._get_source_node_for_input_CIM(output_port):
-            #                 continue
-            #             assert len(output_port.efferents) == 1, \
-            #                 (f"PROGRAM ERROR: {output_port.name} of ouput_CIM for '{node.name}' "
-            #                  f"has more than one efferent.")
-            #             input_nodes[output_port.efferents[0].receiver] = values[i]
-            #             i += 1
-            #     else:
-            #         input_nodes[node] = values
-            # MODIFIED 11/3/23 NEWEST:
+            # MODIFIED 11/3/23 NEW:
             if (mech in self.get_nested_nodes_input_nodes_at_levels()
                     and mech not in self.get_nodes_by_role(NodeRole.TARGET)):
-                input_nodes[node] = values
+                # Pass along inputs to all INPUT Nodes except TARGETS
+                # (those are handled separately in _infer_output_nodes)
+                autodiff_input_dict[node] = values
             elif isinstance(node, Composition):
+                # Replace input to nested Composition with inputs for the InputPorts of its INPUT Nodes
                 i = 0
                 for output_port in node.input_CIM.output_ports:
                     # If node has input from a Node in an outer Composition, no need for input here
@@ -912,10 +897,32 @@ class AutodiffComposition(Composition):
                     assert len(output_port.efferents) == 1, \
                         (f"PROGRAM ERROR: {output_port.name} of ouput_CIM for '{node.name}' "
                          f"has more than one efferent.")
-                    input_nodes[output_port.efferents[0].receiver] = values[i]
+                    # Get input for destination input_port for every trial in values
+                    #   note: each value (input spec) should be 2d rather than 3d,
+                    #         since it is the input for an InputPort rather than a Mechanism;
+                    #         this gets parsed in PytorchCompositionWrapper.forward()
+                    # autodiff_input_dict[output_port.efferents[0].receiver] = values[i]
+                    # autodiff_input_dict[output_port.efferents[0].receiver] = [value[i] for value in values]
                     i += 1
             # MODIFIED 11/3/23 END
-        return input_nodes
+        return autodiff_input_dict
+
+    def _infer_output_nodes(self, input_dict: dict):
+        """Remove INPUT Nodes, and return dict with values for TARGET Nodes
+
+        Get Inputs to TARGET Nodes and assign to dict mapping them to OUTPUT Nodes of Composition,
+        which are used for computation of loss in autodiff_training().
+
+        Returns
+        ---------
+        A dict mapping TARGET Nodes -> target values corresponding to OUTPUT Nodes of Composition
+        """
+        # Reduce from 3d inputs to 2d values to match outputs computed in forward computation in autodiff_training()
+        # MODIFIED 11/3/23 OLD:
+        return {node:value for node, value in input_dict.items() if node in self.target_output_map}
+        # # MODIFIED 11/3/23 NEW:
+        # return {node:value[0] for node, value in input_dict.items() if node in self.target_output_map}
+        # MODIFIED 11/3/23 END
 
     def _parse_learning_spec(self, inputs, targets, execution_mode, context):
         stim_input, num_input_trials = super()._parse_learning_spec(inputs, targets, execution_mode, context)
