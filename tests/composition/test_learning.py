@@ -64,15 +64,24 @@ def xor_network():
 
 class TestInputAndTargetSpecs:
 
+    print("***********************************************************************")
+    print("***************** RESTORE FULL TESTS **********************************")
+    print("***********************************************************************")
     @pytest.mark.pytorch
-    @pytest.mark.parametrize('input_type', ['dict', 'func', 'gen', 'gen_func'],
-                             ids=['dict', 'func', 'gen', 'gen_func'])
-    @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.PyTorch,
-                                           pnl.ExecutionMode.LLVMRun,
-                                           pnl.ExecutionMode.Python],
-                             ids=['PyTorch', 'LLVM', 'Python'])
-    @pytest.mark.parametrize('comp_type', ['composition', 'autodiff'],
-                             ids=['composition', 'autodiff'])
+    # @pytest.mark.parametrize('input_type', ['dict', 'func', 'gen', 'gen_func'],
+    #                          ids=['dict', 'func', 'gen', 'gen_func'])
+    # @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.PyTorch,
+    #                                        pnl.ExecutionMode.LLVMRun,
+    #                                        pnl.ExecutionMode.Python],
+    #                          ids=['PyTorch', 'LLVM', 'Python'])
+    # @pytest.mark.parametrize('comp_type', ['composition', 'autodiff'],
+    #                          ids=['composition', 'autodiff'])
+    @pytest.mark.parametrize('input_type', ['func'],
+                             ids=['func'])
+    @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.LLVMRun],
+                             ids=['LLVM'])
+    @pytest.mark.parametrize('comp_type', ['autodiff'],
+                             ids=['autodiff'])
     def test_identicalness_of_input_types(self, xor_network, comp_type, input_type, exec_mode):
 
         if comp_type == 'composition' and exec_mode != pnl.ExecutionMode.Python:

@@ -10010,10 +10010,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         """
 
-        # MODIFIED 10/29/23 NEW:
+        # # MODIFIED 10/23/23 & 11/3/23 NEW:
+        # FIX: THIS GETS TRIGGERED IF INPUTS ARE A FUNCTION (OR JUST CALLABLE?) AND THEN DON'T GET PARSED
+        #      SEE IF REMOVING IT GETS RID OF NEED FOR RECENT MOD THAT RETURNS XXX[0] IN GENERATOR?
+        # If Composition is in learning mode, presumably inputs have already been parsed so no need to do it again
         if context and (context.runmode & ContextFlags.LEARNING_MODE) and (context.source & ContextFlags.COMPOSITION):
             return inputs, 1
-        # MODIFIED 10/29/23 END
+        # # MODIFIED 10/23/23 & 11/3/23 END
 
         # parse a user-provided input dict to format it properly for execution.
         # compute number of input sets and return that as well
@@ -10599,7 +10602,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if inputs is None and self.warned_about_run_with_no_inputs is False:
             warnings.warn(f"No inputs provided in call to {self.name}.run(). The following defaults will be used "
-                          f"for each INPUT Node:{dict((k,np.array(v).tolist()) for k,v in _inputs.items())}")
+                          f"for each INPUT Node:"
+                          f"{dict((k, np.array(v, dtype=object).tolist()) for k,v in _inputs.items())}")
             self.warned_about_run_with_no_inputs = True
 
         return _inputs, num_inputs_sets
@@ -10675,10 +10679,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node, inp in inputs.items():
             if isinstance(node, Composition) and type(inp) == dict:
                 inp = node._parse_input_dict(inp)
-            if np.array(inp).ndim == 3:
+            if convert_to_np_array(inp).ndim == 3:
                 # If inp formatted for trial series, get only one one trial's worth of inputs to test
+                # # MODIFIED 11/3/23 OLD:
                 # inp = np.squeeze(inp, 0)
+                # MODIFIED 11/3/23 NEW:
                 inp = inp[0]
+                # MODIFIED 11/3/23 END
             inp = self._validate_single_input(node, inp)
             if inp is None:
                 raise CompositionError(f"Input stimulus ({inp}) for {node.name} is incompatible "
