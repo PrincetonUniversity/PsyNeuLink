@@ -10011,11 +10011,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
 
         # # MODIFIED 10/23/23 & 11/3/23 NEW:
-        # FIX: THIS GETS TRIGGERED IF INPUTS ARE A FUNCTION (OR JUST CALLABLE?) AND THEN DON'T GET PARSED
-        #      SEE IF REMOVING IT GETS RID OF NEED FOR RECENT MOD THAT RETURNS XXX[0] IN GENERATOR?
-        # If Composition is in learning mode, presumably inputs have already been parsed so no need to do it again
-        if context and (context.runmode & ContextFlags.LEARNING_MODE) and (context.source & ContextFlags.COMPOSITION):
-            return inputs, 1
+        # # FIX: THIS GETS TRIGGERED IF INPUTS ARE A FUNCTION (OR JUST CALLABLE?) AND THEN DON'T GET PARSED
+        # #      SEE IF REMOVING IT GETS RID OF NEED FOR RECENT MOD THAT RETURNS XXX[0] IN GENERATOR?
+        # # If Composition is in learning mode, presumably inputs have already been parsed so no need to do it again
+        # if context and (context.runmode & ContextFlags.LEARNING_MODE) and (context.source & ContextFlags.COMPOSITION):
+        #     return inputs, 1
         # # MODIFIED 10/23/23 & 11/3/23 END
 
         # parse a user-provided input dict to format it properly for execution.

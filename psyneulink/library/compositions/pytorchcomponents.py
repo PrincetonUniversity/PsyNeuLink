@@ -544,7 +544,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
         outputs = {}  # dict for storing values of terminal (output) nodes
         for current_exec_set in self.execution_sets:
             for node in current_exec_set:
-                # FIX: THE FOLLOWING IS NOT CURRENTLY BEING USED SINCE EXECUTION SETS ARE FLATTENED IN __init__()
                 # If node is nested Composition (wrapped in PytorchCompositionWrapper),
                 #    calls its forward method recursively
                 if isinstance(node, PytorchCompositionWrapper):
@@ -636,12 +635,12 @@ class PytorchMechanismWrapper():
 
     def collate_afferents(self, port=None):
         """Return weight-multiplied sum of afferent projections for input_port(s) of the Mechanism
-        If there is only one input_port or the number of ports
+        If there is only one input_port, return the sum of its afferents (for those in Composition)
         If there are multiple input_ports, return an array with the sum for each input_port
+        # FIX: AUGMENT THIS TO SUPPORT InputPort's function
         """
         assert self.afferents,\
             f"PROGRAM ERROR: No afferents found for '{self._mechanism.name}' in AutodiffComposition"
-        # FIX: AUGMENT THIS TO SUPPORT InputPort's function
         # Specific port is specified
         # FIX: USING _port_idx TO INDEX INTO sender.value GETS IT WRONG IF THE MECHANISM HAS AN OUTPUT PORT
         #      USED BY A PROJECTION NOT IN THE CURRENT COMPOSITION

@@ -780,13 +780,7 @@ class AutodiffComposition(Composition):
         curr_tensor_targets = {}
         for component in inputs.keys():
             if isinstance(component, Mechanism_Base):
-                # FIX 10/1/23 f/u: 10/29/23: SHOULD REALLY CYCLE THROUGH INPUT PORTS FOR A MECHANISM
-                #  RATHER THAN JUST ASSUMING ONE INPUT AND USING [0]
-                # # MODIFIED 10/29/23 OLD:
-                # input = inputs[component][0]
-                # MODIFIED 10/29/23 NEW:
                 input = inputs[component]
-                # MODIFIED 10/29/23 END
             else:
                 input = inputs[component]
             curr_tensor_inputs[component] = torch.tensor(input, device=self.device).double()
@@ -862,6 +856,8 @@ class AutodiffComposition(Composition):
 
     def _infer_input_nodes(self, nodes: dict):
         """Remove TARGET Nodes, and return dict with values of INPUT Nodes for single trial
+        For nested Compositions, replace input to nested Composition with inputs to its INPUT Nodes
+        For InuptPorts, replace with owner
 
         Returns
         ---------
@@ -870,21 +866,38 @@ class AutodiffComposition(Composition):
         input_nodes = {}
         for node, values in nodes.items():
             mech = node.owner if isinstance(node, InputPort) else node
+            # # MODIFIED 11/3/23 OLD:
+            # if (mech in self.get_nested_nodes_input_nodes_at_levels()
+            #         and mech not in self.get_nodes_by_role(NodeRole.TARGET)):
+            #     if isinstance(node, Composition):
+            #         i = 0
+            #         for output_port in node.input_CIM.output_ports:
+            #             # If node has input from a Node in an outer Composition, no need for input here
+            #             if node.input_CIM._get_source_node_for_input_CIM(output_port):
+            #                 continue
+            #             assert len(output_port.efferents) == 1, \
+            #                 (f"PROGRAM ERROR: {output_port.name} of ouput_CIM for '{node.name}' "
+            #                  f"has more than one efferent.")
+            #             input_nodes[output_port.efferents[0].receiver] = values[i]
+            #             i += 1
+            #     else:
+            #         input_nodes[node] = values
+            # MODIFIED 11/3/23 NEW:
             if (mech in self.get_nested_nodes_input_nodes_at_levels()
                     and mech not in self.get_nodes_by_role(NodeRole.TARGET)):
-                if isinstance(node, Composition):
-                    i = 0
-                    for output_port in node.input_CIM.output_ports:
-                        # If node has input from a Node in an outer Composition, no need for input here
-                        if node.input_CIM._get_source_node_for_input_CIM(output_port):
-                            continue
-                        assert len(output_port.efferents) == 1, \
-                            (f"PROGRAM ERROR: {output_port.name} of ouput_CIM for '{node.name}' "
-                             f"has more than one efferent.")
-                        input_nodes[output_port.efferents[0].receiver] = values[i]
-                        i += 1
-                else:
-                    input_nodes[node] = values
+                input_nodes[node] = values
+            elif isinstance(node, Composition):
+                i = 0
+                for output_port in node.input_CIM.output_ports:
+                    # If node has input from a Node in an outer Composition, no need for input here
+                    if node.input_CIM._get_source_node_for_input_CIM(output_port):
+                        continue
+                    assert len(output_port.efferents) == 1, \
+                        (f"PROGRAM ERROR: {output_port.name} of ouput_CIM for '{node.name}' "
+                         f"has more than one efferent.")
+                    input_nodes[output_port.efferents[0].receiver] = values[i]
+                    i += 1
+            # MODIFIED 11/3/23 END
         return input_nodes
 
     def _parse_learning_spec(self, inputs, targets, execution_mode, context):
