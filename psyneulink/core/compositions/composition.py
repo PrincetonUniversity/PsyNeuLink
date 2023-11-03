@@ -10677,7 +10677,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 inp = node._parse_input_dict(inp)
             if np.array(inp).ndim == 3:
                 # If inp formatted for trial series, get only one one trial's worth of inputs to test
-                inp = np.squeeze(inp, 0)
+                # inp = np.squeeze(inp, 0)
+                inp = inp[0]
             inp = self._validate_single_input(node, inp)
             if inp is None:
                 raise CompositionError(f"Input stimulus ({inp}) for {node.name} is incompatible "

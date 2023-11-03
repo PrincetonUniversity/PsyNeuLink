@@ -3434,12 +3434,17 @@ class TestRunInputSpecifications:
             }
 
         t_g = test_generator()
+        c.run(inputs=t_g)
 
         try:
             c.run(inputs=t_g)
         except Exception as e:
-            # assert isinstance(e, pnl.CompositionError)
-            assert isinstance(e, ValueError)
+            assert isinstance(e, pnl.CompositionError)
+        #
+        # with pytest.raises(pnl.CompositionError) as error_text:
+        #     c.run(inputs=t_g)
+        # assert ('Problem with input ([array([[1]]), array([[2]])]) for TransferMechanism-0.'
+        #         in str(error_text.value))
 
 
 class TestRun:
