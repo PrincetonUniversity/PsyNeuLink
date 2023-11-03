@@ -882,7 +882,24 @@ class AutodiffComposition(Composition):
             #             i += 1
             #     else:
             #         input_nodes[node] = values
-            # MODIFIED 11/3/23 NEW:
+            # # MODIFIED 11/3/23 NEW:
+            # if (mech in self.get_nested_nodes_input_nodes_at_levels()
+            #         and mech not in self.get_nodes_by_role(NodeRole.TARGET)
+            #         or isinstance(node, Composition)):
+            #     if isinstance(node, Composition):
+            #         i = 0
+            #         for output_port in node.input_CIM.output_ports:
+            #             # If node has input from a Node in an outer Composition, no need for input here
+            #             if node.input_CIM._get_source_node_for_input_CIM(output_port):
+            #                 continue
+            #             assert len(output_port.efferents) == 1, \
+            #                 (f"PROGRAM ERROR: {output_port.name} of ouput_CIM for '{node.name}' "
+            #                  f"has more than one efferent.")
+            #             input_nodes[output_port.efferents[0].receiver] = values[i]
+            #             i += 1
+            #     else:
+            #         input_nodes[node] = values
+            # MODIFIED 11/3/23 NEWEST:
             if (mech in self.get_nested_nodes_input_nodes_at_levels()
                     and mech not in self.get_nodes_by_role(NodeRole.TARGET)):
                 input_nodes[node] = values
