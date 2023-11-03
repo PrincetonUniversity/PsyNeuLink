@@ -3438,7 +3438,8 @@ class TestRunInputSpecifications:
         try:
             c.run(inputs=t_g)
         except Exception as e:
-            assert isinstance(e, pnl.CompositionError)
+            # assert isinstance(e, pnl.CompositionError)
+            assert isinstance(e, ValueError)
 
 
 class TestRun:

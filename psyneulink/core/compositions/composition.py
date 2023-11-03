@@ -10308,7 +10308,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     else:
                         # 2d regular array  (e.g., [[1, 2], [3, 4]] or [[1, 2]])
-                        if len(_inputs) == len(np.array(node_spec.external_input_shape)):
+                        if len(_inputs) == len(convert_to_np_array(node_spec.external_input_shape)):
                             # 1 trial's worth of input for > 1 input_ports
                             _inputs = [_inputs]
                         elif len(_inputs[0]) == len(convert_to_np_array(node_spec.external_input_shape[0])):
