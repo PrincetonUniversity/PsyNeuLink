@@ -1317,6 +1317,10 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         if getattr(self.parameters, 'has_recurrent_input_port', False):
             blacklist.update(['combination_function'])
 
+        # Drop previous_value from MemoryFunctions
+        if hasattr(self.parameters, 'duplicate_keys'):
+            blacklist.add("previous_value")
+
         def _is_compilation_state(p):
             # FIXME: This should use defaults instead of 'p.get'
             return p.name not in blacklist and \
@@ -1400,7 +1404,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "random_variables", "smoothing_factor", "per_item",
                      "key_size", "val_size", "max_entries", "random_draw",
                      "randomization_dimension", "save_values", "save_samples",
-                     "max_iterations",
+                     "max_iterations", "duplicate_keys",
                      # not used in compiled learning
                      "learning_results", "learning_signal", "learning_signals",
                      "error_matrix", "error_signal", "activation_input",

@@ -224,10 +224,11 @@ def test_helper_all_close(mode, var1, var2, atol, rtol):
 
 @pytest.mark.llvm
 @pytest.mark.parametrize("ir_argtype,format_spec,values_to_check", [
-    (pnlvm.ir.IntType(32), "%u", range(0, 20)),
-    (pnlvm.ir.IntType(64), "%lld", [int(-4E10), int(-3E10), int(-2E10)]),
-    (pnlvm.ir.DoubleType(), "%lf", [x *.5 for x in range(0, 5)]),
-    ], ids=["i32", "i64", "double"])
+    pytest.param(pnlvm.ir.IntType(32), "%u", range(0, 20), id="i32"),
+    pytest.param(pnlvm.ir.IntType(64), "%lld", [int(-4E10), int(-3E10), int(-2E10)], id="i64"),
+    pytest.param(pnlvm.ir.DoubleType(), "%lf", [x *.5 for x in range(0, 5)], id="double"),
+    pytest.param(pnlvm.ir.FloatType(), "%lf", [x *.5 for x in range(0, 5)], id="float"),
+    ])
 def test_helper_printf(capfd, ir_argtype, format_spec, values_to_check):
 
     format_str = f"Hello {(format_spec + ' ') * len(values_to_check)}\n"
