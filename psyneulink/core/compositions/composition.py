@@ -10012,20 +10012,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         """
 
-        # # MODIFIED 10/23/23 & 11/3/23 NEW:
-        # # FIX: THIS GETS TRIGGERED IF INPUTS ARE A FUNCTION (OR JUST CALLABLE?) AND THEN DON'T GET PARSED
-        # #      SEE IF REMOVING IT GETS RID OF NEED FOR RECENT MOD THAT RETURNS XXX[0] IN GENERATOR?
-        # # If Composition is in learning mode, presumably inputs have already been parsed so shouldn't do it again
-        # if context and (context.runmode & ContextFlags.LEARNING_MODE) and (context.source & ContextFlags.COMPOSITION):
+        # If Composition is in learning mode, not called from COMMAND_LINE, and  not still preparing,
+        #   presumably inputs have already been parsed so shouldn't do it again
         if (context and (context.runmode & ContextFlags.LEARNING_MODE)
                 and (context.source & ContextFlags.COMPOSITION)
                 and not (context.execution_phase & ContextFlags.PREPARING)):
-        # if not (context.execution_phase & ContextFlags.PREPARING):
             return inputs, 1
-        # # MODIFIED 10/23/23 & 11/3/23 NEWER:
-        # if self.parsed_inputs:
-        #     return inputs, 1
-        # # MODIFIED 10/23/23 & 11/3/23 END
 
         # parse a user-provided input dict to format it properly for execution.
         # compute number of input sets and return that as well
@@ -10246,6 +10238,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # FIX: 10/29/23
                 #  ENFORCE get_input_format() spec for inputs here
                 #  (e.g., impose outer dimension for single trial or single input_port)
+                # FIX "MSG ->" BELOW
                 _inputs = inputs[INPUT_Node]
                 # Check formatting of first node as proxy for formatting of all items, and make changes accordingly
                 # (any other errant items will be detected in _validate_input_shapes_and_expand_for_all_trials())
@@ -10550,12 +10543,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                             "(or other values) to represent the outside stimulus for " \
                                             "the inhibition InputPort, and for Compositions, put your inputs"
                     raise RunError(err_msg)
-            else:
-                # # MODIFIED 10/29/23 OLD:
-                # _input = [_input]
-                # MODIFIED 10/29/23 NEW:
-                assert True
-                # MODIFIED 10/29/23 END
             _inputs[receiver] = _input
             input_length = len(_input)
             if input_length == 1:
@@ -10633,26 +10620,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
 
         # parse and return a single trial's worth of inputs.
-        # # MODIFIED 10/29/23 OLD:
-        # if callable(inputs):
-        #     try:
-        #         inputs, _ = self._parse_input_dict(inputs(trial_num), context)
-        #         i = 0
-        #     except TypeError as e:
-        #         error_text = e.args[0]
-        #         if f" takes 0 positional arguments but 1 was given" in error_text:
-        #             raise CompositionError(f"{error_text}: requires arg for trial number")
-        #         else:
-        #             raise CompositionError(f"Problem with function provided to 'inputs' arg of {self.name}.run")
-        # elif isgenerator(inputs):
-        #     inputs, _ = self._parse_input_dict(inputs.__next__(), context)
-        #     i = 0
-        # else:
-        #     num_inputs_sets = len(next(iter(inputs.values())))
-        #     i = trial_num % num_inputs_sets
-        # next_inputs = {node:inp[i] for node, inp in inputs.items()}
-        # next_inputs = inputs
-        # MODIFIED 10/29/23 NEW:
         if callable(inputs):
             try:
                 next_inputs, _ = self._parse_input_dict(inputs(trial_num), context)
@@ -10664,17 +10631,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     raise CompositionError(f"Problem with function provided to 'inputs' arg of {self.name}.run")
         elif isgenerator(inputs):
-            # MODIFIED 11/3/23 OLD:
             next_inputs, _ = self._parse_input_dict(inputs.__next__(), context)
-            # # MODIFIED 11/3/23 NEW:
-            # next_inputs = inputs.__next__()
-            # MODIFIED 11/3/23 END:
             i = 0
         else:
             num_inputs_sets = len(next(iter(inputs.values())))
             i = trial_num % num_inputs_sets
             next_inputs = {node:inp[i] for node, inp in inputs.items()}
-        # MODIFIED 10/29/23 END
         return next_inputs
 
     def _validate_execution_inputs(self, inputs):
@@ -10696,11 +10658,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 inp = node._parse_input_dict(inp)
             if convert_to_np_array(inp).ndim == 3:
                 # If inp formatted for trial series, get only one one trial's worth of inputs to test
-                # # MODIFIED 11/3/23 OLD:
-                # inp = np.squeeze(inp, 0)
-                # MODIFIED 11/3/23 NEW:
                 inp = inp[0]
-                # MODIFIED 11/3/23 END
             inp = self._validate_single_input(node, inp)
             if inp is None:
                 raise CompositionError(f"Input stimulus ({inp}) for {node.name} is incompatible "
@@ -11060,10 +11018,6 @@ _
 
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
-        # # MODIFIED 11/3/23 NEW:
-        # if context.source & ContextFlags.COMMAND_LINE:
-        #     self.parsed_inputs = False
-        # MODIFIED 11/3/23 END
         inputs, num_inputs_sets = self._parse_run_inputs(inputs, context)
 
         if num_trials is None:

@@ -657,23 +657,11 @@ class AutodiffComposition(Composition):
             #     see test_xor_training_identicalness_standard_composition_vs_PyTorch_and_LLVM for example)
             output_mechs = self.get_nested_nodes_output_nodes_at_levels()
             assert set([mech for mech in [pathway[-1] for pathway in pathways]]) == set(output_mechs)
-            # # # MODIFIED 10/27/23 OLD:
-            # target_mechs = [ProcessingMechanism(default_variable = np.zeros_like(mech.value),
-            #                                     name= 'TARGET for ' + mech.name)
-            #                 for mech in output_mechs if mech not in self.target_output_map.values()]
-            # # MODIFIED 10/27/23 NEW:
-            # target_mechs = [ProcessingMechanism(default_variable = np.array([np.zeros_like(value)
-            #                                                                  for value in output_mechs[0].value],
-            #                                                                 dtype=object),
-            #                                     name= 'TARGET for ' + mech.name)
-            #                 for mech in output_mechs if mech not in self.target_output_map.values()]
-            # # MODIFIED 10/27/23 NEWER:
             target_mechs = [ProcessingMechanism(default_variable = np.array([np.zeros_like(value)
                                                                              for value in mech.value],
                                                                             dtype=object),
                                                 name= 'TARGET for ' + mech.name)
                             for mech in output_mechs if mech not in self.target_output_map.values()]
-            # MODIFIED 10/27/23 END
             # Suppress warnings about role assignments
             context = Context(source=ContextFlags.METHOD)
             self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.LEARNING], context=context)
