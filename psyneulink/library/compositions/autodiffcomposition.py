@@ -568,9 +568,10 @@ class AutodiffComposition(Composition):
                                             for p in node.efferents
                                             if p in current_comp.projections]:
 
-                    # Ignore ones that are not learnable except to a CIM (deal with those next)
-                    if (((not hasattr(efferent_proj,'learnable')) or (efferent_proj.learnable is False))
-                            and not isinstance(rcvr, CompositionInterfaceMechanism)):
+                    # Ignore efferent Projections that do not have a learnable attribute
+                    #   or are ModulatoryProjections (i.e., including LearningProjections)
+                    # Note: if learnable==False, it will be passed along to PyTorch in PytorchProjectionWrapper
+                    if not hasattr(efferent_proj,'learnable') or isinstance(efferent_proj,ModulatoryProjection_Base):
                         continue
 
                     # Deal with Projections to CIMs since nested comps can be learned in PyTorch mode
