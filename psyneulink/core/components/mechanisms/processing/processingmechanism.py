@@ -25,29 +25,119 @@ Contents
 Overview
 --------
 
-A ProcessingMechanism is a type of `Mechanism <>` that transforms its input in some way.  A ProcessingMechanism always
+A ProcessingMechanism is a type of `Mechanism` that transforms its input in some way.  A ProcessingMechanism always
 receives its input either from another Mechanism, or from the input to a `Composition` when it is
 executed.  Similarly, its output is generally conveyed to another Mechanism or used as the output for a Composition.
 
-The ProcessingMechanism is the simplest mechanism in PsyNeuLink. It does not have any extra arguments or
-specialized validation. Almost any PsyNeuLink Function, including the `UserDefinedFunction`, may be the function of a
-ProcessingMechanism. Currently, the only exception is `BackPropagation`. Subtypes of
-ProcessingMechanism have more specialized state_features, and often have restrictions on which Functions are allowed.
+The ProcessingMechanism is the simplest mechanism in PsyNeuLink. It does not have any extra arguments or specialized
+validation. Almost any PsyNeuLink `Function`, including the `UserDefinedFunction`, may be the function of a
+ProcessingMechanism. Currently, the only exception is `BackPropagation`. Subtypes of ProcessingMechanism have more
+specialized features, and often have restrictions on which Functions are allowed.
 
 The output of a ProcessingMechanism may also be used by a `ModulatoryMechanism <ModulatoryMechanism>` to modify the
-parameters of other components (or its own parameters). ProcessingMechanisms are always executed before all
-ModulatoryMechanisms in the Composition to which they belong, so that any modifications made by the ModulatoryMechanism
-are available to all ProcessingMechanisms in the next `TRIAL <TimeScale.TRIAL>`.
+parameters of other components (or its own parameters), as in the case of an `Objective Mechanism <ObjectiveMechanism>`
+that is specialized for this purpose.
 
 .. _ProcessingMechanism_Creation:
 
 Creating a ProcessingMechanism
 ------------------------------
 
-A ProcessingMechanism is created by calling its constructor.
+A ProcessingMechanism is created by calling its constructor. By default, a ProcessingMechanism is assigned:
 
-Its `function <Mechanism_Base.function>` is specified in the **function** argument, which may be the name of a
-`Function <Function>` class:
+- a single `InputPort`, that receives (and sums the `value <Projection_Base.value>`) of any `Projection`\\s to it;
+
+- `Linear` as its `function <Mechanism_Base.function>`;
+
+- a single `OutputPort`, the `value <OutputPort.value>` of which is the result of the linear transformation
+  of its input (which, if no `parameters <Parameters>` are assigned to it function, is the same as its input).
+
+However, it can be configured otherwise, for various forms of processing, as described below.
+
+.. _ProcessingMechanism_Configuration:
+
+*Configuring a ProcessingMechanism*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+As with any `Mechanism`, the number of InputPorts can be specified using the **input_ports**, **default_variable** or
+**size** arguments of the constructor (see `Mechanism_InputPorts`), and OutputPorts can be specified using the
+**output_ports** argument (see `Mechanism_OutputPorts`).  These can be used to configure processing in a variety of
+ways. Some common ones are described below (also see `ProcessingMechanism_Examples`).
+
+    .. note::
+       All of the configurations below assume that:
+
+       - the ProcessingMechanism's `function <Mechanism_Base.function>` is a `TransferFunction`
+
+       - any specified **InputPorts and/or OutputPorts** use their **default** `function <Port_Base.function>`,
+
+       - the `variable <OutputPort.variable>` of **OutputPorts** is **not specified**.
+
+       If any of these is not the case, then the results may differ from those described below.
+
+.. _ProcessingMechanism_Parallel_Processing:
+
+Parallel Processing
+^^^^^^^^^^^^^^^^^^^
+
+- *Multiple InputPorts* and either *no or an equal number of OutputPorts*:
+  one `OutputPort` is created for each `InputPort`, and the `value <OutputPort.value>` of each is the result of the
+  transformation of the `value <InputPort.value>` for each corresponding InputPort.  This exploits the property a
+  TransferFunction, that preserves the shape of its input, implementing parallel processing streams in which the same
+  `function <Mechanism_Base.function>` is used to process the input to each InputPort independently of the others
+  (including during `learning <Composition_Learning>`)
+
+.. _ProcessingMechanism_Divergent_Processing:
+
+Divergent Processing
+^^^^^^^^^^^^^^^^^^^^
+
+- *One InputPort* and *multiple outputPorts*:
+  all OutputPorts receive the result of the ProcessingMechanism's `function <Mechanism_Base.function>`
+  applied to the `value <InputPort.value>` of the `InputPort`.
+
+Custom Processing
+^^^^^^^^^^^^^^^^^
+
+- *Multiple* but an *unequal* number of *InputPorts and OutputPorts*:
+  all OutputPorts receive the result of the ProcessingMechanism's `function <Mechanism_Base.function>` applied to
+  the `value <InputPort.value>` of its *first* `InputPort`; this can be modified by specifying the variable for
+  the OutputPort(s) explicitly (see `OutputPort_Custom_Variable`).
+
+  .. warning::
+     An unequal number of InputPorts and OutputPorts is not supported for `learning <Composition_Learning>`
+
+
+.. _ProcessingMechanism_Structure:
+
+Structure
+---------
+
+A ProcessingMechanism has the same structure as a `Mechanism <Mechanism>`, with the addition of several
+`StandardOutputPorts <OutputPort_Standard>` to its `standard_output_ports <ProcessingMechanism.standard_output_ports>`
+attribute.
+
+See documentation for individual subtypes of ProcessingMechanism for more specific information about their structure.
+
+.. _ProcessingMechanism_Execution:
+
+Execution
+---------
+
+The execution of a ProcessingMechanism follows the same sequence of actions as a standard `Mechanism <Mechanism>`
+(see `Mechanism_Execution`).
+
+See `ProcessingMechanism_Parallel_Processing` above for a description of how processing is affect by the number of 
+InputPorts and OutputPorts.
+
+
+.. _ProcessingMechanism_Examples:
+
+Examples
+--------
+
+The `function <Mechanism_Base.function>` of a ProcessingMechanism is specified in the **function** argument,
+which may be the name of a `Function <Function>` class:
 
     >>> import psyneulink as pnl
     >>> my_linear_processing_mechanism = pnl.ProcessingMechanism(function=pnl.Linear)
@@ -59,25 +149,16 @@ for the Function's parameters:
 
     >>> my_logistic_processing_mechanism = pnl.ProcessingMechanism(function=pnl.Logistic(gain=1.0, bias=-4))
 
+COMMENT:
+EXMAMPLES OF PARLLEL AND NON_PARALLEL PROCESSING
 
-.. _ProcessingMechanism_Structure:
+If the function is *not* a `TransferFunction` then, if not specified otherwise, a single OutputPort is created,
+the `value <OutputPort.value>` of which is the result of the function's transformation of the `value
+<InputPort.value>` the number of InputPorts required by the function for its input.
+FIX: EXAMPLE HERE OF LinearCombination Function
+COMMENT
 
-Structure
----------
 
-A ProcessingMechanism has the same structure as a `Mechanism <Mechanism>`, with the addition of several
-`StandardOutputPorts <OutputPort_Standard>` to its `standard_output_ports
-<ProcessingMechanism.standard_output_ports>` attribute.
-
-See documentation for individual subtypes of ProcessingMechanism for more specific information about their structure.
-
-.. _ProcessingMechanism_Execution:
-
-Execution
----------
-
-The execution of a ProcessingMechanism follows the same sequence of actions as a standard `Mechanism <Mechanism>`
-(see `Mechanism_Execution`).
 
 .. _ProcessingMechanism_Class_Reference:
 
