@@ -2622,6 +2622,43 @@ class TestAutodiffMultipleOutput_ports:
         np.testing.assert_allclose(result_comp_ports, expected, rtol=1e-8, atol=1e-8)
         np.testing.assert_allclose(result_comp_nodes, expected, rtol=1e-8, atol=1e-8)
 
+    def test_two_output_ports_on_OUTPUT_Node(self):
+
+        # Autodiff: SEPARATE INPUT NODES TO ONE OUTPUT NODE WITH TWO OUTPUTPORTS
+        sizes = {OUTPUT_A: (2,3)}
+        nodes = nodes_for_testing_nested_comps(sizes)
+        input_A = nodes[INPUT_A]
+        input_B = nodes[INPUT_B]
+        output = nodes[OUTPUT_A]
+        autodiff = AutodiffComposition(pathways=[[input_A,
+                                                  MappingProjection(input_A, output.input_ports[0]),
+                                                  output],
+                                                 [input_B,
+                                                  MappingProjection(input_B, output.input_ports[1]),
+                                                  output]],
+                                       name='autodiff')
+        result_autodiff_ports = autodiff.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
+                                                       input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                                               learning_rate = .01, epochs=3)
+
+        # Autodiff: SEPARATE INPUT NODES TO SEPARATE OUTPUT NODES WITH ONE OUTPUTPORT EACH
+        sizes = {OUTPUT_A: 2,
+                 OUTPUT_B: 3}
+        nodes = nodes_for_testing_nested_comps(sizes)
+        input_A = nodes[INPUT_A]
+        input_B = nodes[INPUT_B]
+        output_A = nodes[OUTPUT_A]
+        output_B = nodes[OUTPUT_B]
+        autodiff = AutodiffComposition(pathways=[[input_A, output_A],
+                                                 [input_B, output_B]],
+                                       name='autodiff')
+        result_autodiff_nodes = autodiff.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
+                                                       input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                                               learning_rate = .01, epochs=3)
+
+        for port, node in zip(result_autodiff_ports, result_autodiff_nodes):
+            np.testing.assert_allclose(port, node)
+
 
 @pytest.mark.pytorch
 @pytest.mark.acmisc
