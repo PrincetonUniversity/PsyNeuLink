@@ -15,6 +15,10 @@ Contents
 
   * `ProcessingMechanism_Overview`
   * `ProcessingMechanism_Creation`
+    - `ProcessingMechanism_Configuration`
+      - `ProcessingMechanism_Parallel_Processing`
+      - `ProcessingMechanism_Divergent_Processing`
+      - `ProcessingMechanism_Custom_Processing`
   * `ProcessingMechanism_Structure`
   * `ProcessingMechanism_Execution`
   * `ProcessingMechanism_Class_Reference`
@@ -81,11 +85,11 @@ Parallel Processing
 ^^^^^^^^^^^^^^^^^^^
 
 - *Multiple InputPorts* and either *no or an equal number of OutputPorts*:
-  one `OutputPort` is created for each `InputPort`, and the `value <OutputPort.value>` of each is the result of the
-  transformation of the `value <InputPort.value>` for each corresponding InputPort.  This exploits the property a
-  TransferFunction, that preserves the shape of its input, implementing parallel processing streams in which the same
-  `function <Mechanism_Base.function>` is used to process the input to each InputPort independently of the others
-  (including during `learning <Composition_Learning>`)
+  one `OutputPort` is created for (and given the same name as) each `InputPort`; the `value <OutputPort.value>` of
+  each is assigned the result of the transformation of the `value <InputPort.value>` of its corresponding InputPort.
+  This exploits the property of a TransferFunction, which preserves the shape of its input, implementing parallel
+  processing streams in which the same `function <Mechanism_Base.function>` is used to process the input to each
+  InputPort independently of the others (including during `learning <Composition_Learning>`)
 
 .. _ProcessingMechanism_Divergent_Processing:
 
@@ -96,13 +100,22 @@ Divergent Processing
   all OutputPorts receive the result of the ProcessingMechanism's `function <Mechanism_Base.function>`
   applied to the `value <InputPort.value>` of the `InputPort`.
 
+.. _ProcessingMechanism_Custom_Processing:
+
 Custom Processing
 ^^^^^^^^^^^^^^^^^
 
 - *Multiple* but an *unequal* number of *InputPorts and OutputPorts*:
-  all OutputPorts receive the result of the ProcessingMechanism's `function <Mechanism_Base.function>` applied to
-  the `value <InputPort.value>` of its *first* `InputPort`; this can be modified by specifying the variable for
-  the OutputPort(s) explicitly (see `OutputPort_Custom_Variable`).
+
+  - if there are *fewer* OutputPorts than InputPorts, each OutputPort is assigned a name and `value <OutputPort.value>`
+    corresponding to the name and result of processing of the input to the corresponding InputPort. In this case, the
+    inputs to the additional InputPorts are ignored; however, this can be modified by explicitly specifying the
+    `variable <OutputPort.variable>` for the OutputPort(s) (see `OutputPort_Custom_Variable`).
+
+  - if there are *more* OutputPorts than Inputports, then all are assigned a `default name <OutputPort.name>`,
+    and a `value <OutputPort.value>` that is the result of processing the input of the *first* (`primary
+    <InputPort_Primary>`) InputPort`; this can be modified by explicitly specifying the variable for the OutputPort(s)
+    (see `OutputPort_Custom_Variable`).
 
   .. warning::
      An unequal number of InputPorts and OutputPorts is not supported for `learning <Composition_Learning>`
@@ -185,6 +198,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
+from psyneulink.core.globals.context import ContextFlags
 
 __all__ = [
     'ProcessingMechanismError',
@@ -388,13 +402,50 @@ class ProcessingMechanism(ProcessingMechanism_Base):
         """
         from psyneulink.core.components.ports.outputport import _instantiate_output_ports
         from psyneulink.core.components.functions.nonstateful.transferfunctions import TransferFunction
-        if (self.output_ports is None
-                and len(self.defaults.variable) > 1
-                and isinstance(self.function, TransferFunction)):
+        if (len(self.defaults.variable) > 1 and isinstance(self.function, TransferFunction)):
+            # More than one InputPort, and funciton is TransferFunction, so implement corresponding OutputPorts
             output_ports = []
-            for i in range(len(self.defaults.variable)):
-                output_ports.append({NAME: f'OutputPort {i}',
-                                     VARIABLE: (OWNER_VALUE, i)})
-            return _instantiate_output_ports(owner=self, output_ports=output_ports, context=context)
-        else:
-            return super()._instantiate_output_ports(context=context)
+            if self.output_ports is None:
+                # No OutputPorts have been specified, so:
+                # - create one for each item of Mechanism's variable (i.e., InputPort)
+                # - name it the same as corresponding InputPort
+                for i in range(len(self.defaults.variable)):
+                    output_ports.append({NAME: f'{self.input_ports[i].name}',
+                                         VARIABLE: (OWNER_VALUE, i)})
+                return _instantiate_output_ports(owner=self, output_ports=output_ports, context=context)
+            elif len(self.output_ports) <= len(self.defaults.variable):
+                # Some OutputPorts have been specified, but fewer than there are items of variable, so:
+                for i, output_port in enumerate(self.output_ports):
+                    # - for each:
+                    #   - if no name is specified, name it the same as corresponding InputPort
+                    #   - if no variable is specified, assign the corresponding item of Mechanism's value
+                    if isinstance(output_port, str):
+                        output_ports.append({NAME: output_port,
+                                             VARIABLE: (OWNER_VALUE, i)})
+                    elif isinstance(output_port, dict):
+                        if not output_port:
+                            output_ports.append({NAME: f'{self.input_ports[i].name}',
+                                                 VARIABLE: (OWNER_VALUE, i)})
+                        else:
+                            variable = output_port[VARIABLE] if VARIABLE in output_port else (OWNER_VALUE, i)
+                            output_port.update({VARIABLE: variable})
+                            if NAME in output_port:
+                                output_port.update({NAME: output_port[NAME]})
+                            elif isinstance(variable, tuple) and variable[0] is OWNER_VALUE:
+                                output_port.update({NAME: f'{self.input_ports[variable[1]].name}'})
+                            output_ports.append(output_port)
+                    elif isinstance(output_port, OutputPort):
+                        if output_port.initialization_status & ContextFlags.DEFERRED_INIT:
+                            if output_port._init_args[VARIABLE] is None:
+                                # FIX: HACK;  FOR SOME REASON, ASSIGNING (OWNER_VALUE, i) TO VARIABLE ARG DOESN'T WORK
+                                output_port._variable_spec = (OWNER_VALUE, i)
+                            if output_port._init_args[NAME] is None:
+                                if (isinstance(output_port._variable_spec, tuple)
+                                        and output_port._variable_spec[0] is OWNER_VALUE):
+                                    output_port._init_args[NAME] = \
+                                        f'{self.input_ports[output_port._variable_spec[1]].name}'
+                        output_ports.append(output_port)
+                return _instantiate_output_ports(owner=self, output_ports=output_ports, context=context)
+        # Multiple but unequal numbers of InputPorts and OutputPorts, so follow default protocol
+        #   (i.e., assign value of all OutputPorts to the first item of Mechanism's value unless otherwise specified)
+        return super()._instantiate_output_ports(context=context)
