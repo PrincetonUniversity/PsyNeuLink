@@ -415,9 +415,10 @@ dictionary <OutputPort_Specification_Dictionary>`, or in the variable spec (2nd)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 By default, an OutputPort uses the first (and often only) item of the owner Mechanism's `value
-<Mechanism_Base.value>` as its `variable <OutputPort.variable>`.  However, this can be customized by specifying
-any other item of its `owner <Port.owner>`\\s `value <Mechanism_Base.value>`, the full `value
-<Mechanism_Base.value>` itself, other attributes of the `owner <Port.owner>`, or any combination of these
+<Mechanism_Base.value>` as its `variable <OutputPort.variable>`, which usuall corresponds to the `value
+<InputPort.value>` of the Mechanism's first (primary) `InputPort <InputPort_Primary>`.  However, this can be
+customized by specifying any other item of its `owner <Port.owner>`\\s `value <Mechanism_Base.value>`, the full
+`value <Mechanism_Base.value>` itself, other attributes of the `owner <Port.owner>`, or any combination of these
 using the following:
 
     *OWNER_VALUE* -- keyword specifying the entire `value <Mechanism_Base.value>` of the OutputPort's `owner

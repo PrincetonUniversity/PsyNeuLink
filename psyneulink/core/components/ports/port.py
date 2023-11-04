@@ -2052,7 +2052,7 @@ class Port_Base(Port):
                         projection_variable = projection.function.defaults.value
                 projection.parameters.variable._set(projection_variable, context)
                 projection_value = projection._parse_function_variable(projection_variable)
-                set_projection_value(projection,projection_value, context)
+                set_projection_value(projection, projection_value, context)
 
             # Actually execute Projection to get its value
             else:

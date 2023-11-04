@@ -59,14 +59,14 @@ def pytorch_function_creator(function, device, context=None):
             weights = torch.tensor(weights, device=device).double()
         if function.operation == SUM:
             if weights is not None:
-                return lambda x: torch.sum(x * weights, 0)
+                return lambda x: torch.sum(torch.stack(x) * weights, 0)
             else:
-                return lambda x: torch.sum(x,0)
+                return lambda x: torch.sum(torch.stack(x), 0)
         elif function.operation == PRODUCT:
             if weights is not None:
-                return lambda x: torch.prod(x * weights,0)
+                return lambda x: torch.prod(torch.stack(x) * weights, 0)
             else:
-                return lambda x: torch.prod(x,0)
+                return lambda x: torch.prod(torch.stack(x), 0)
         else:
             from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
             raise AutodiffCompositionError(f"The 'operation' parameter of {function.componentName} is not supported "
@@ -102,7 +102,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
     Set up parameters of PyTorch model & information required for forward computation
 
     Handle nested compositions (flattened in infer_backpropagation_learning_pathways):
-    Deal with Projections into our out of a nested Composition as follows:
+    Deal with Projections into or out of a nested Composition as follows:
 
      [      OUTER     ][                            NESTED                               ][     OUTER      ]
             \\learnable//   \\not learnable//                     \\not learnable//    \\learnable//
@@ -239,12 +239,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
             else:
                 continue
 
-            port_idx = projection.sender.owner.output_ports.index(projection.sender) # used by LLVM
+            port_idx = projection.sender.owner.output_ports.index(projection.sender)
             pytorch_proj_wrapper = PytorchProjectionWrapper(
                 projection,
                 pnl_proj,
                 list(self._composition._inner_projections).index(projection),
-                port_idx, device,
+                port_idx,
+                device,
                 sender=proj_sndr,
                 receiver=proj_rcvr,
                 context=context)
@@ -543,40 +544,37 @@ class PytorchCompositionWrapper(torch.nn.Module):
         outputs = {}  # dict for storing values of terminal (output) nodes
         for current_exec_set in self.execution_sets:
             for node in current_exec_set:
-                # FIX: THE FOLLOWING IS NOT CURRENTLY BEING USED SINCE EXECUTION SETS ARE FLATTENED IN __init__()
                 # If node is nested Composition (wrapped in PytorchCompositionWrapper),
                 #    calls its forward method recursively
                 if isinstance(node, PytorchCompositionWrapper):
                     node.forward(inputs=None)
                     continue
-                # FIX: 10/1/23 - REFACTOR BELOW TO INTEGRATE GETTING EXTERNAL INPUT WITH COLLATING AFFERENTS
                 elif node._is_input:
-                    # If node's input is explicitly specified, use that
+                    # Node is an INPUT to Composition
                     if node._mechanism in inputs:
+                        # If input is specified for the Mechanism (i.e., Mechanism is a key in inputs dict), use that
                         variable = inputs[node._mechanism]
-                    # Node's iput in *not* explicitly specified, but its input_port(s) may have been
+                    # Input for the Mechanism is *not* explicitly specified, but its input_port(s) may have been
                     else:
                         # Get input for each input_port of the node
                         variable = []
                         for i, input_port in enumerate(node._mechanism.input_ports):
-                            # If input to the node's input_port(s) is explicitly specified, use that
+                            # If input to the node's input_port(s) is specified in the inputs dict, use that
                             if input_port in inputs:
                                 variable.append(inputs[input_port])
                             # Otherwise, use the node's input_port's afferents
                             else:
-                                variable.append(node.collate_afferents(i))
+                                variable.append(node.collate_afferents(i).squeeze(0))
                         if len(variable) == 1:
                             variable = variable[0]
-                        else:
-                            variable = torch.stack(variable)
                 else:
+                    # Node is not INPUT to Composition, so get input from its afferents
                     variable = node.collate_afferents()
                 node.execute(variable)
                 # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
                 #  note: these may be different than for actual Composition, as they are flattened
                 if (node._mechanism in self._composition.get_nested_nodes_output_nodes_at_levels()):
                     outputs[node._mechanism] = node.value
-                assert True
 
         # NOTE: Context source needs to be set to COMMAND_LINE to force logs to update independently of timesteps
         # if not self._composition.is_nested:
@@ -639,29 +637,49 @@ class PytorchMechanismWrapper():
 
     def collate_afferents(self, port=None):
         """Return weight-multiplied sum of afferent projections for input_port(s) of the Mechanism
-        If there is only one input_port or the number of ports
+        If there is only one input_port, return the sum of its afferents (for those in Composition)
         If there are multiple input_ports, return an array with the sum for each input_port
+        # FIX: AUGMENT THIS TO SUPPORT InputPort's function
         """
         assert self.afferents,\
             f"PROGRAM ERROR: No afferents found for '{self._mechanism.name}' in AutodiffComposition"
-        # FIX: AUGMENT THIS TO SUPPORT InputPort's function
         # Specific port is specified
+        # FIX: USING _port_idx TO INDEX INTO sender.value GETS IT WRONG IF THE MECHANISM HAS AN OUTPUT PORT
+        #      USED BY A PROJECTION NOT IN THE CURRENT COMPOSITION
         if port is not None:
-            return sum(proj_wrapper.execute(proj_wrapper.sender.value)
-                       for proj_wrapper in self.afferents if proj_wrapper._pnl_proj
-                       in self._mechanism.input_ports[port].path_afferents)
+            return sum(proj_wrapper.execute(proj_wrapper.sender.value[proj_wrapper._value_idx]).unsqueeze(0)
+                                            for proj_wrapper in self.afferents
+                                            if proj_wrapper._pnl_proj
+                                            in self._mechanism.input_ports[port].path_afferents)
         # Has only one input_port
         elif len(self._mechanism.input_ports) == 1:
-            return sum((proj_wrapper.execute(proj_wrapper.sender.value) for proj_wrapper in self.afferents))
+            # Get value corresponding to port from which each afferent projects
+            return sum((proj_wrapper.execute(proj_wrapper.sender.value[proj_wrapper._value_idx]).unsqueeze(0)
+                        for proj_wrapper in self.afferents))
         # Has multiple input_ports
         else:
-            # # Sum projections to each input_port of the Mechanism and return array with the sums
-            return torch.stack([sum(proj_wrapper.execute(proj_wrapper.sender.value)
-                                    for proj_wrapper in self.afferents if proj_wrapper._pnl_proj
-                                    in input_port.path_afferents) for input_port in self._mechanism.input_ports])
+            return [sum(proj_wrapper.execute(proj_wrapper.sender.value[proj_wrapper._value_idx]).unsqueeze(0)
+                         for proj_wrapper in self.afferents
+                         if proj_wrapper._pnl_proj in input_port.path_afferents)
+                     for input_port in self._mechanism.input_ports]
 
     def execute(self, variable):
-        self.value = self.function(variable)
+        """Execute Mechanism's function on variable, enforce result to be 2d, and assign to self.value"""
+        if ((isinstance(variable, list) and len(variable) == 1)
+            or (isinstance(variable, torch.Tensor) and len(variable.squeeze(0).shape) == 1)
+                or isinstance(self._mechanism.function, LinearCombination)):
+            # Enforce 2d on value of MechanismWrapper (using unsqueeze)
+            # for single InputPort or if CombinationFunction (which reduces output to single item from multi-item input)
+            if isinstance(variable, torch.Tensor):
+                variable = variable.squeeze(0)
+            self.value = self.function(variable).unsqueeze(0)
+        else:
+            # Make value 2d by creating list of values returned by function for each item in variable
+            # MODIFIED 11/4/23 OLD:
+            self.value = [self.function(variable[i].squeeze(0)) for i in range(len(variable))]
+            # # MODIFIED 11/4/23 NEW:
+            # self.value = [self.function(variable[i]) for i in range(len(variable))]
+            # MODIFIED 11/4/23 END
         return self.value
 
     def _gen_llvm_execute(self, ctx, builder, state, params, mech_input, data):
@@ -757,10 +775,22 @@ class PytorchProjectionWrapper():
         self._projection = projection # Projection being wrapped (may *not* be the one being learned; see note above)
         self._pnl_proj = pnl_proj # Projection that directly projects to/from sender/receiver (see above)
         self._idx = component_idx     # Index of Projection in Composition's list of projections
-        self._port_idx = port_idx     # Index of sender's port
+        self._port_idx = port_idx     # Index of sender's port (used by LLVM)
+        self._value_idx = 0           # Index of value in sender's value (used in collate_afferents)
         self.sender = sender          # PytorchMechanismWrapper to which Projection's sender is mapped
         self.receiver = receiver      # PytorchMechanismWrapper to which Projection's receiver is mapped
         self._context = context
+
+        # Get item of value corresponding to OutputPort that is Projection's sender
+        # Note: this may not be the same as _port_idx if the sender Mechanism has OutputPorts for Projections
+        #       that are not in the current Composition
+        if context._composition:
+            for i, output_port in enumerate(self.sender._mechanism.output_ports):
+                if all(p in context._composition.projections for p in output_port.efferents):
+                    if self._pnl_proj in output_port.efferents:
+                        self._value_idx = i
+                        break
+                    i += 1
 
         matrix = projection.parameters.matrix.get(
                             context=context)

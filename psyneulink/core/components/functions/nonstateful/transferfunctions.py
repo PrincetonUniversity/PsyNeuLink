@@ -500,7 +500,6 @@ class Linear(TransferFunction):  # ---------------------------------------------
         Slope of function :  number or array
 
         """
-
         return self._get_current_parameter_value(SLOPE, context)
 
     def _is_identity(self, context=None, defaults=False):

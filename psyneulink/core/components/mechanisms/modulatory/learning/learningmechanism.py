@@ -1188,11 +1188,11 @@ class LearningMechanism(ModulatoryMechanism_Base):
             # (harder to do this for error_sources and covariates_sources, since they may have different shapes
             if i < 3:
                 if not np.array(variable[i]).ndim == 1:
-                    raise LearningMechanismError(f"{item_num_string} of variable for '{self.name}' ({item_name}: "
-                                                 f"{variable[i]}) is not a list of numeric values or 1d np.array.")
+                    raise LearningMechanismError(f"{item_num_string} of variable for '{self.name}' "
+                                                 f"({variable[i]}) is not a list of numeric values or 1d np.array.")
                 if not (is_numeric(variable[i])):
-                    raise LearningMechanismError("{item_num_string} of variable for {self.name} ({item_name}: "
-                                                 "{variable[i]}) is not numeric.")
+                    raise LearningMechanismError(f"{item_num_string} of variable for '{self.name}' "
+                                                 f"({variable[i]}) is not numeric.")
 
             # Any input_ports for error_sources > 1 (the default) and/or ones for covariates haven't yet been assigned
             #    so length of variable should be short that number
@@ -1447,8 +1447,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         if self.error_matrices is None:
             error_matrices = self._init_error_matrices(error_signal_inputs, error_signal_indices)
         else:
-            error_matrices = np.array(self.error_matrices)[np.array([c - ERROR_SIGNAL_INDEX
-                                                                     for c in error_signal_indices])]
+            error_matrices = np.array(self.error_matrices)[range(len(self.error_signal_input_ports))]
 
         for i, matrix in enumerate(error_matrices):
             if isinstance(error_matrices[i], ParameterPort):
@@ -1515,11 +1514,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
     @property
     def learned_projections(self):
         return [lp.receiver.owner for ls in self.learning_signals for lp in ls.efferents]
-
-    @property
-    def dependent_learning_mechanisms(self):
-        return [p.parameter_ports[MATRIX].mod_afferents[0].sender.owner for p in self.input_source.path_afferents
-                if p.has_learning_projection]
 
     @property
     def validate_error_signal_and_covariate_sources(self):

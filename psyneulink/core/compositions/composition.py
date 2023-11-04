@@ -2878,6 +2878,8 @@ import collections
 import enum
 import functools
 import inspect
+import types
+import numbers
 import itertools
 import logging
 import sys
@@ -2902,7 +2904,8 @@ from psyneulink.core.components.functions.nonstateful.combinationfunctions impor
         LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.nonstateful.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
-from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity, Logistic, SoftMax
+from psyneulink.core.components.functions.nonstateful.transferfunctions import \
+    TransferFunction, Identity, Logistic, SoftMax
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError, MechanismList
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
@@ -2938,10 +2941,10 @@ from psyneulink.core.globals.keywords import \
     AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, CROSS_ENTROPY, \
     DEFAULT, DICT, FEEDBACK, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, \
     INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
-    LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, Loss, \
-    MATRIX, MAYBE, MODEL_SPEC_ID_METADATA, \
-    MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, NODES, OBJECTIVE_MECHANISM, ONLINE, ONLY, OUTCOME, \
-    OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
+    LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
+    LEARNING_SIGNAL, Loss, \
+    MATRIX, MAYBE, MODEL_SPEC_ID_METADATA, MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, NODES, \
+    OBJECTIVE_MECHANISM, ONLINE, ONLY, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PORT, \
     PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP, RECEIVER, \
     SAMPLE, SENDER, SHADOW_INPUTS, SOFT_CLAMP, SUM, \
@@ -4005,6 +4008,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._scheduler = None
         self._partially_added_nodes = []
 
+        self.parsed_inputs = False
+
         self.disable_learning = disable_learning
         self.learning_rate = learning_rate
         self._runtime_learning_rate = None
@@ -4739,18 +4744,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return nested_nodes if any(nested_nodes) else None
 
     def get_nested_nodes_input_nodes_at_levels(self)->list or None:
-        """Return all Nodes from nested Compositions that receive input from the environment."""
+        """Return all Nodes from nested Compositions that receive input directly from input to outermost Composition."""
         input_nodes = self.get_nested_nodes_by_roles_at_any_level(self, include_roles=NodeRole.INPUT)
         return [input_node for input_node in input_nodes
+                # include node if call to _get_source_node_for_input_CIM returns None for any of its afferents
                 if not all(proj.sender.owner._get_source_node_for_input_CIM(proj.sender)
-                           for proj in input_port.path_afferents for input_port in input_node)] or None
+                           for input_port in input_node.input_ports for proj in input_port.path_afferents
+                           if isinstance(proj.sender.owner, CompositionInterfaceMechanism))] or None
 
     def get_nested_nodes_output_nodes_at_levels(self)->list or None:
-        """Return all Nodes from nested Compositions that receive input from the environment."""
+        """Return all Nodes from nested Compositions that send output directly to outermost Composition."""
         output_nodes = self.get_nested_nodes_by_roles_at_any_level(self, include_roles=NodeRole.OUTPUT)
         return [output_node for output_node in output_nodes
                 if not all(proj.receiver.owner._get_destination_info_for_output_CIM(proj.receiver)
-                           for output_port in output_node.output_ports for proj in output_port.efferents)] or None
+                           for output_port in output_node.output_ports for proj in output_port.efferents
+                           if isinstance(proj.receiver.owner, CompositionInterfaceMechanism))] or None
 
     def _get_input_nodes_by_CIM_input_order(self):
         """Return a list with the `INPUT` `Nodes <Composition_Nodes>` of the Composition in the same order as their
@@ -5062,11 +5070,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     )
                 del node.aux_components[node.aux_components.index(proj_spec)]
 
-            # MODIFIED 12/29/21 NEW:
             # # Finally, check for any deferred_init Projections
             invalid_aux_components.extend([p for p in node.projections
                                            if p._initialization_status & ContextFlags.DEFERRED_INIT])
-            # MODIFIED 12/29/21 END
 
         return invalid_aux_components
 
@@ -7276,21 +7282,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     pway = [pway]
                 return pway_type, pway, None, None
             elif isinstance(pway, tuple):
-                # FIX: ADD SUPPORT FOR 3-ITEM TUPLE AND SPECIFCATION OF DEFAULT MATRIX HERE 10/29/22
-                # # MODIFIED 10/29/22 OLD:
-                # pway_type = LEARNING_PATHWAY
-                # if len(pway)!=2:
-                #     raise CompositionError(f"A tuple specified in the {pathways_arg_str}"
-                #                            f" has more than two items: {pway}")
-                # pway, learning_function = pway
-                # if not (_is_node_spec(pway) or isinstance(pway, (list, Pathway))):
-                #     raise CompositionError(f"The 1st item in {tuple_or_dict_str} specified in the "
-                #                            f" {pathways_arg_str} must be a node or a list: {pway}")
-                # if not (isinstance(learning_function, type) and issubclass(learning_function, LearningFunction)):
-                #     raise CompositionError(f"The 2nd item in {tuple_or_dict_str} specified in the "
-                #                            f"{pathways_arg_str} must be a LearningFunction: {learning_function}")
-                # return pway_type, pway, learning_function
-                # MODIFIED 10/29/22 NEW:
                 if len(pway) not in {2,3}:
                     raise CompositionError(f"A tuple specified in the {pathways_arg_str}"
                                            f" must have either two or three items: {pway}")
@@ -7314,7 +7305,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                f"specified for the {pathways_arg_str}: {item}; "
                                                f"its item(s) must be a matrix specification and/or a LearningFunction")
                 return pway_type, pathway_item, matrix_item, learning_function_item
-                # MODIFIED 10/29/22 END
             else:
                 assert False, f"PROGRAM ERROR: arg to identify_pway_type_and_parse_tuple_prn in {self.name}" \
                               f"is not a Node, list or tuple: {pway}"
@@ -8058,9 +8048,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                               # context=context)
                                                               context=context)
 
+        input_source_output_port = learned_projection.sender
+        output_source_input_port = learned_projection.receiver
         # Learning Components
-        target, comparator, learning_mechanism = self._create_learning_related_mechanisms(input_source,
-                                                                                          output_source,
+        target, comparator, learning_mechanism = self._create_learning_related_mechanisms(input_source_output_port,
+                                                                                          output_source_input_port,
                                                                                           error_function,
                                                                                           learning_function,
                                                                                           learned_projection,
@@ -8079,8 +8071,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        context=context)
 
         # Create Projections to and among learning-related Mechanisms and add to Composition
-        learning_related_projections = self._create_learning_related_projections(input_source,
-                                                                                 output_source,
+        learning_related_projections = self._create_learning_related_projections(input_source_output_port,
+                                                                                 output_source_input_port,
                                                                                  target,
                                                                                  comparator,
                                                                                  learning_mechanism)
@@ -8313,6 +8305,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    f"see AutodiffComposition for other learning models.")
         return input_source, output_source, learned_projection
 
+    def _get_ports_for_input_output_sources(self, learned_projection, output_source)->(int, int):
+        # Get index of OutputPort for input_source that sends learned_projection
+        input_source_outpt_idx = learned_projection.sender.owner.output_ports.index(learned_projection.sender)
+        input_source_output_port = learned_projection.sender.owner.output_ports[input_source_outpt_idx]
+
+        # Get index of InputPort for output_source that receives learned_projection;
+        # For TransferMechanisms, InputPort and OutputPorts should be treated as parallel processing streams:
+        #   LearningMechanism for Projection to each InputPort should only receieve error_signals
+        #      from efferents of the corresponding OutputPort
+        if isinstance(output_source.function, TransferFunction):
+            # Get output_port corresponding to index of input_port that receives learned_projection
+            output_source_input_port_idx = output_source.input_ports.index(learned_projection.receiver)
+        else:
+            output_source_input_port_idx = 0
+        output_source_input_port = output_source.input_ports[output_source_input_port_idx]
+
+        return input_source_output_port, output_source_input_port
+
     # FIX: NOT CURRENTLY USED; IMPLEMENTED FOR FUTURE USE IN GENERALIZATION OF LEARNING METHODS
     def _create_learning_components(self,
                                     sender_activity_source,   # aka input_source
@@ -8340,8 +8350,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return learning_mechanism
 
     def _create_learning_related_mechanisms(self,
-                                            input_source,
-                                            output_source,
+                                            input_source_output_port,
+                                            output_source_input_port,
                                             error_function,
                                             learning_function,
                                             learned_projection,
@@ -8357,6 +8367,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 raise CompositionError(f"'learning_function' argument for add_linear_learning_pathway "
                                        f"({learning_function}) must be a class of {LearningFunction.__name__}")
+
+            input_source = input_source_output_port.owner
+            output_source = output_source_input_port.owner
+            output_source_output_port = (
+                output_source.output_ports)[output_source.input_ports.index(output_source_input_port)]
 
             target_mechanism, objective_mechanism, learning_mechanism = creation_method(input_source,
                                                                                         output_source,
@@ -8377,11 +8392,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                       )
             learning_mechanism = \
                 LearningMechanism(
-                    function=learning_function(default_variable=[input_source.output_ports[0].value,
-                                                                 output_source.output_ports[0].value,
+                    function=learning_function(default_variable=[input_source_output_port.value,
+                                                                 output_source_output_port.value,
                                                                  objective_mechanism.output_ports[0].value]),
-                    default_variable=[input_source.output_ports[0].value,
-                                      output_source.output_ports[0].value,
+                    default_variable=[input_source_output_port.value,
+                                      output_source_output_port.value,
                                       objective_mechanism.output_ports[0].value],
                     error_sources=objective_mechanism,
                     learning_enabled=learning_update,
@@ -8400,21 +8415,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                                        override=True)
         return target_mechanism, objective_mechanism, learning_mechanism
 
-    def _create_learning_related_projections(self, input_source, output_source, target, comparator, learning_mechanism):
+    def _create_learning_related_projections(self,
+                                             input_source_output_port,
+                                             output_source_input_port,
+                                             target, comparator, learning_mechanism):
         """Construct MappingProjections among `learning components <Composition_Learning_Components>` for pathway"""
+
+        input_source = input_source_output_port.owner
+        output_source = output_source_input_port.owner
+        output_source_output_port = output_source.output_ports[output_source.input_ports.index(output_source_input_port)]
 
         # FIX 5/29/19 [JDC]:  INTEGRATE WITH _get_back_prop_error_sources (RIGHT NOW, ONLY CALLED FOR TERMINAL SEQUENCE)
         try:
-            sample_projection = MappingProjection(sender=output_source, receiver=comparator.input_ports[SAMPLE])
+            sample_projection = MappingProjection(sender=output_source_output_port, receiver=comparator.input_ports[SAMPLE])
         except DuplicateProjectionError:
-            sample_projection = [p for p in output_source.efferents
+            sample_projection = [p for p in output_source_output_port.efferents
                                  if p in comparator.input_ports[SAMPLE].path_afferents]
         try:
             target_projection = MappingProjection(sender=target, receiver=comparator.input_ports[TARGET])
         except DuplicateProjectionError:
             target_projection = [p for p in target.efferents
                                  if p in comparator.input_ports[TARGET].path_afferents]
-        # MODIFIED 9/1/23 NEW:
         # FIX: THIS CURRENTLY ONLY SUPPORTS A SINGLE PROJECTION TO/FROM A NESTED COMPOSITION USING PRIMARY CIM PORTS
         #      NEED TO AUGMENT TO SUPPORT MULTIPLE PROJECTIONS TO/FROM (E.G., FOR EMComposition)
         if isinstance(input_source, Composition):
@@ -8423,10 +8444,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if isinstance(output_source, Composition):
             _, output_source ,_ = \
                 output_source.output_CIM._get_destination_info_from_input_CIM(output_source.input_CIM.input_port)
-        # MODIFIED 9/1/23 END
-        act_in_projection = MappingProjection(sender=input_source.output_ports[0],
+
+        act_in_projection = MappingProjection(sender=input_source_output_port,
                                               receiver=learning_mechanism.input_ports[ACTIVATION_INPUT_INDEX])
-        act_out_projection = MappingProjection(sender=output_source.output_ports[0],
+        act_out_projection = MappingProjection(sender=output_source_output_port,
                                                receiver=learning_mechanism.input_ports[ACTIVATION_OUTPUT_INDEX])
         # FIX CROSS_PATHWAYS 7/28/19 [JDC]: THIS MAY NEED TO USE add_ports (SINCE ONE MAY EXIST; CONSTRUCT TEST FOR IT)
         error_signal_projection = MappingProjection(sender=comparator.output_ports[OUTCOME],
@@ -8595,9 +8616,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Otherwise, create new ones
             else:
+                if len(output_source.input_ports) > 1:
+                    raise CompositionError(f"'{output_source.name}', which is the terminal node of a learning pathway "
+                                           f"in '{self.name}', has a more than one output_port "
+                                           f"({len(output_source.output_ports)}), which is not currently supported "
+                                           f"for learning. Trying using a different Mechanism for each output.")
                 target, comparator, learning_mechanism = \
-                    self._create_terminal_backprop_learning_components(input_source,
-                                                                       output_source,
+                    self._create_terminal_backprop_learning_components(output_source,
                                                                        error_function,
                                                                        loss_spec,
                                                                        learned_projection,
@@ -8653,9 +8678,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     del self.required_node_roles[self.required_node_roles.index((pathway_mech, NodeRole.OUTPUT))]
 
             # Create terminal_sequence
+            if len(output_source.input_ports) > 1:
+                raise CompositionError(f"'{output_source.name}', which is the terminal node of a learning pathway "
+                                       f"in '{self.name}', has a more than one output_port "
+                                       f"({len(output_source.output_ports)}), which is not currently supported "
+                                       f"for learning. Trying using a different Mechanism for each output.")
             target, comparator, learning_mechanism = \
-                self._create_terminal_backprop_learning_components(input_source,
-                                                                   output_source,
+                self._create_terminal_backprop_learning_components(output_source,
                                                                    error_function,
                                                                    loss_spec,
                                                                    learned_projection,
@@ -8680,8 +8709,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             output_source = processing_pathway[i]
             input_source, output_source = _get_nodes_if_nested(input_source, output_source)
 
-            learning_mechanism = self._create_non_terminal_backprop_learning_components(input_source,
-                                                                                        output_source,
+            learning_mechanism = self._create_non_terminal_backprop_learning_components(output_source,
                                                                                         learned_projection,
                                                                                         learning_rate,
                                                                                         learning_update,
@@ -8690,9 +8718,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learned_projections.append(learned_projection)
 
         # Add error_signal projections to any learning_mechanisms that are now dependent on the new one
+
         for lm in learning_mechanisms:
-            if lm.dependent_learning_mechanisms:
-                self._add_error_projection_to_dependent_learning_mechs(lm, context)
+            self._add_error_projection_to_dependent_learning_mechs(lm, context)
 
         # Suppress "no efferent connections" warning for:
         #    - error_signal OutputPort of last LearningMechanism in sequence
@@ -8722,7 +8750,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
 
     def _create_terminal_backprop_learning_components(self,
-                                                      input_source,
                                                       output_source,
                                                       error_function,
                                                       loss_spec,
@@ -8772,15 +8799,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                       function=error_function,
                                                       output_ports=output_ports)
 
-        learning_function = BackPropagation(default_variable=[input_source.output_ports[0].value,
-                                                              output_source.output_ports[0].value,
+        input_source_output_port, output_source_input_port = \
+            self._get_ports_for_input_output_sources(learned_projection, output_source)
+
+        learning_function = BackPropagation(default_variable=[input_source_output_port.value,
+                                                              output_source_input_port.value,
                                                               objective_mechanism.output_ports[0].value],
                                             activation_derivative_fct=output_source.function.derivative,
                                             loss_spec=loss_spec)
 
         learning_mechanism = LearningMechanism(function=learning_function,
-                                               default_variable=[input_source.output_ports[0].value,
-                                                                 output_source.output_ports[0].value,
+                                               default_variable=[input_source_output_port.value,
+                                                                 output_source_input_port.value,
                                                                  objective_mechanism.output_ports[0].value],
                                                error_sources=objective_mechanism,
                                                learning_enabled=learning_update,
@@ -8796,8 +8826,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        required_roles=NodeRole.LEARNING,
                        context=context)
 
-        learning_related_projections = self._create_learning_related_projections(input_source,
-                                                                                 output_source,
+        learning_related_projections = self._create_learning_related_projections(input_source_output_port,
+                                                                                 output_source_input_port,
                                                                                  target_mechanism,
                                                                                  objective_mechanism,
                                                                                  learning_mechanism)
@@ -8810,7 +8840,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return target_mechanism, objective_mechanism, learning_mechanism
 
     def _create_non_terminal_backprop_learning_components(self,
-                                                          input_source,
                                                           output_source,
                                                           learned_projection,
                                                           learning_rate,
@@ -8823,6 +8852,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 """Check whether input_port's function is LinearCombination with operation=SUM
                 If it is anything else, then raise error and give advice about reconfiguring Composition
                 """
+                if isinstance(function, TransferFunction):
+                    return False
                 if (not isinstance(function, LinearCombination)
                         or function.operation is not SUM):
                     if allow:
@@ -8843,9 +8874,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #  - takes more than one argument and
             #  - it is not LinearCombination(operation=SUM)
             if (len(output_source.variable) > 1 and _non_additive_comb_fct(output_source.function, allow=True)):
-                # for input_port if input_port is not learned_projection.receiver in output_source.input_ports]:
-                # for input_port in output_source.input_ports if input_port is not learned_projection.receiver]:
-                # for input_port in [p for p in output_source.input_ports if p is not learned_projection.receiver]:
                 for input_port in output_source.input_ports:
                     # Projections to output_source should only ever be combined using LinearCombination(operation=SUM)
                     #   so that they can be ignored by the derivative of its function;
@@ -8860,13 +8888,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             return covariates_sources
 
-        def _get_acts_in_out_cov(input_source, output_source, learned_projection)->List[list]:
+        def _get_acts_in_out_cov(input_source_output_port, output_source_output_port, learned_projection)->List[list]:
             """Get shapes of activation_input and activation_output used by LearningMechanism and BackPropagation Fct"""
             # activation_input has more than one value if activation function has more than one argument
-            activation_input = [input_source.output_ports[0].value]
+            activation_input = [input_source_output_port.value]
+            output_source = output_source_output_port.owner
             covariates_sources = _get_covariate_info(output_source, learned_projection)
             # activation_output is always a single value since activation function is assumed to have only one output
-            activation_output = [output_source.output_ports[0].value]
+            activation_output = [output_source_output_port.value]
             # ensure that output_source.function.derivative can handle covariates
             if covariates_sources:
                 try:
@@ -8890,13 +8919,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        and isinstance(lp.sender.owner.function, BackPropagation))),
                                   None)
 
+        input_source_output_port, output_source_input_port = \
+            self._get_ports_for_input_output_sources(learned_projection, output_source)
+
+        output_source_input_port_idx = output_source.input_ports.index(output_source_input_port)
+        ouput_source_output_port = output_source.output_ports[output_source_input_port_idx]
+
+        efferents = [p for p in ouput_source_output_port.efferents
+                     if p in self.projections]
+
         # If learning_mechanism exists:
         #    error_sources will be empty (as they have been dealt with in self._get_back_prop_error_sources
         #    error_projections will contain list of any created to be added to the Composition below
         if learning_mechanism:
             # This should only be reached for duplicate learning pathways
             #  or when and AutodiffComposition is being trained (as it creates a duplicate of the learning pathways)
-            error_sources, error_projections = self._get_back_prop_error_sources(output_source,
+            error_sources, error_projections = self._get_back_prop_error_sources(efferents,
                                                                                  learning_mechanism,
                                                                                  context)
             self.add_projections(error_projections)
@@ -8906,13 +8944,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    get error_sources needed to create learning_mechanism
         #    error_projections should be empty since there is not yet any learning_mechanism;
         #    they will be created (using error_sources) after learning_mechanism is created below.
-        error_sources, _ = self._get_back_prop_error_sources(output_source, context=context)
+        error_sources, _ = self._get_back_prop_error_sources(efferents, context=context)
         assert not _, f"PROGRAM ERROR: there should not yet be error_projections: {_}"
 
         error_signal_template = [error_source.output_ports[ERROR_SIGNAL].value for error_source in error_sources]
 
-        activation_input, activation_output, covariates_sources = _get_acts_in_out_cov(input_source,
-                                                                                       output_source,
+        activation_input, activation_output, covariates_sources = _get_acts_in_out_cov(input_source_output_port,
+                                                                                       ouput_source_output_port,
                                                                                        learned_projection)
 
         # Use only one error_signal_template for learning_function, since it gets only one source of error at a time
@@ -8945,11 +8983,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Create MappingProjections for INPUT_SOURCE, OUTPUT_SOURCE and COVARIATES (if any)
 
         # Projection from input_source
-        act_in_projection = MappingProjection(sender=input_source.output_ports[0],
+        act_in_projection = MappingProjection(sender=input_source_output_port,
                                               receiver=learning_mechanism.input_ports[0],
                                               matrix=IDENTITY_MATRIX)
 
-        act_out_projection = MappingProjection(sender=output_source.output_ports[0],
+        # Projection from output_source
+        act_out_projection = MappingProjection(sender=ouput_source_output_port,
                                                receiver=learning_mechanism.input_ports[1],
                                                matrix=IDENTITY_MATRIX)
 
@@ -8977,7 +9016,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return learning_mechanism
 
-    def _get_back_prop_error_sources(self, receiver_activity_mech, learning_mech=None, context=None):
+    def _get_back_prop_error_sources(self, efferents, learning_mech=None, context=None):
         # FIX CROSSED_PATHWAYS [JDC]:  GENERALIZE THIS TO HANDLE COMPARATOR/TARGET ASSIGNMENTS IN BACKPROP
         #                              AND THEN TO HANDLE ALL FORMS OF LEARNING (AS BELOW)
         #  REFACTOR TO DEAL WITH CROSSING PATHWAYS (?CREATE METHOD ON LearningMechanism TO DO THIS?):
@@ -8986,7 +9025,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #       (see current implementation in add_backpropagation_learning_pathway)
         #     - for terminal sequence, handle target and sample projections as below
         #  2) For non-terminal sequences, determine # of error_signals coming from LearningMechanisms associated with
-        #     all efferentprojections of ProcessingMechanism that projects to ACTIVATION_OUTPUT of LearningMechanism
+        #     all efferent projections of ProcessingMechanism that projects to ACTIVATION_OUTPUT of LearningMechanism
         #     - check validity of existing error_signal projections with respect to those and, if possible,
         #       their correspondence with error_matrices
         #     - check if any ERROR_SIGNAL input_ports are empty (vacated by terminal sequence elements deleted in
@@ -8994,11 +9033,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     - call add_ports method on LearningMechanism to add new ERROR_SIGNAL input_port to its input_ports
         #       and error_matrix to its self.error_matrices attribute
         #     - add new error_signal projection
-        """Add any LearningMechanisms associated with efferent projection from receiver_activity_mech"""
+        """Add any LearningMechanisms associated with efferent projection from output_source"""
         error_sources = []
         error_projections = []
 
-        for efferent in [p for p in receiver_activity_mech.efferents if p in self.projections]:
+        for efferent in efferents:
 
             # FIX: 9/9/23 - ADD HANDLING OF MULTI-LEVEL NESTING
             # Deal with OUTPUT Node of a nested Composition (note: this currently only handles one level of nesting)
@@ -9010,7 +9049,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 except IndexError:
                     continue
 
-            # Only use efferents of receiver_activity_mech with a LearningProjection that are in current Composition
+            # Only use efferents of output_source with a LearningProjection that are in current Composition
             if not (hasattr(efferent, 'has_learning_projection')
                     and efferent.has_learning_projection
                     and efferent in self.projections):
@@ -9048,34 +9087,62 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     so they can be added to the Composition by _create_non_terminal_backprop_learning_components
         return error_sources, error_projections
 
-    def _add_error_projection_to_dependent_learning_mechs(self, error_source, context=None):
+    def _add_error_projection_to_dependent_learning_mechs(self, source_learning_mech, context=None):
 
-        # Get all afferents to receiver_activity_mech in Composition that have LearningProjections
-        for afferent in [p for p in error_source.input_source.path_afferents
-                         if (p in self.projections
-                             and hasattr(p, 'has_learning_projection')
-                             and p.has_learning_projection)]:
+        for idx, input_port in enumerate(source_learning_mech.input_source.input_ports):
 
-            # For each LearningProjection to that afferent, if its LearningMechanism doesn't already have a receiver
-            for learning_projection in [lp for lp in afferent.parameter_ports[MATRIX].mod_afferents
-                                        if (isinstance(lp, LearningProjection)
-                                            and lp.sender.owner.error_sources
-                                            and error_source not in lp.sender.owner.error_sources
-                                            and lp.sender.owner.learning_type is LearningType.SUPERVISED)]:
+            # Get all afferents to output_source (source_learning_mech.input_source) in Composition that have LearningProjections
+            for afferent in [p for p in input_port.path_afferents
+                             if (p in self.projections
+                                 and hasattr(p, 'has_learning_projection')
+                                 and p.has_learning_projection)]:
 
-                dependent_learning_mech = learning_projection.sender.owner
+                # For each LearningProjection to that afferent, if its LearningMechanism doesn't already have a receiver
+                for learning_projection in [lp for lp in afferent.parameter_ports[MATRIX].mod_afferents
+                                            if (isinstance(lp, LearningProjection)
+                                                and lp.sender.owner.error_sources
+                                                and source_learning_mech not in lp.sender.owner.error_sources
+                                                and lp.sender.owner.learning_type is LearningType.SUPERVISED)]:
 
-                # If dependent_learning_mech already has a Projection from the error_source, can skip
-                if any(dependent_learning_mech == efferent.receiver.owner
-                       for efferent in error_source.output_ports[ERROR_SIGNAL].efferents):
-                    continue
+                    dependent_learning_mech = learning_projection.sender.owner
 
-                error_signal_input_port = dependent_learning_mech.add_ports(
-                                                    InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
-                                                              name=ERROR_SIGNAL,
-                                                              context=context),
-                                                    context=context)[0]
-                self.add_projections(error_signal_input_port.path_afferents[0])
+                    mech = source_learning_mech.input_source
+                    output_port = source_learning_mech.output_ports[LEARNING_SIGNAL].efferents[0].receiver.owner.sender
+
+                    # If input_source for source_learning_mech uses a TransferFunction,
+                    #  - and it has more than one input_port
+                    #  - and it has the same number of output_ports
+                    # then:
+                    #   treat as parallel processing of inputs to putput
+                    #   and only consider, as dependent, learning mechanisms for projections to the input_port with the
+                    #   same index as the output_port for the projection being learned by the source_learning_mech
+                    if len(mech.input_ports) > 1:
+                        if len(mech.output_ports) == len(mech.input_ports):
+                            input_port_idx = mech.input_ports.index(input_port)
+                            output_port_idx = mech.output_ports.index(output_port)
+                            if isinstance(mech.function, TransferFunction) and input_port_idx != output_port_idx:
+                                continue
+                        elif len(mech.output_ports) != 1:
+                            raise CompositionError(f"'{mech.name}', which is in a learning pathway for '{self.name}' "
+                                                   f"and uses a {TransferFunction.__name__} as its function, has "
+                                                   f"a different number of output_ports ({len(mech.output_ports)}) "
+                                                   f"than input_ports ({len(mech.input_ports)}), which is currently "
+                                                   f"not supported for learning.  Trying using splitting the "
+                                                   f"input-output mappings into subsets involving one-to-many, "
+                                                   f"many-to-one, or num-to-same_num (parallel), and using a "
+                                                   f"different ProcessingMechanism for each.")
+
+                    # If dependent_learning_mech already has a Projection from the source_learning_mech, can skip
+                    if any(dependent_learning_mech == efferent.receiver.owner
+                           for efferent in source_learning_mech.output_ports[ERROR_SIGNAL].efferents):
+                        continue
+
+                    error_signal_input_port = dependent_learning_mech.add_ports(
+                                                        InputPort(projections=source_learning_mech.output_ports[ERROR_SIGNAL],
+                                                                  name=ERROR_SIGNAL,
+                                                                  context=context),
+                                                        context=context)[0]
+                    self.add_projections(error_signal_input_port.path_afferents[0])
 
     def _get_deeply_nested_aux_projections(self, node):
         deeply_nested_projections = {}
@@ -9721,8 +9788,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
             # Reassign target inputs from output Nodes to target mechanisms constructed for PyTorch execution
-            return {target: value
-                    for target, value in zip(self.target_output_map.keys(), targets.values())}
+            return {target: value for target, value in zip(self.target_output_map.keys(), targets.values())}
 
         ret = {}
         for node, values in targets.items():
@@ -9746,7 +9812,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 ret[node] = values
         return ret
 
-    def _parse_learning_spec(self, inputs, targets, execution_mode):
+    def _parse_learning_spec(self, inputs, targets, execution_mode, context):
         """
         Converts learning inputs and targets to a standardized form
 
@@ -9789,7 +9855,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # 3) Resize inputs to be of the form [[[]]],
         # where each level corresponds to: <TRIALS <PORTS <INPUTS> > >
-        inputs, num_inputs_sets = self._parse_input_dict(inputs)
+        inputs, num_inputs_sets = self._parse_input_dict(inputs, context)
 
         return inputs, num_inputs_sets
 
@@ -9931,7 +9997,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             _input = None
         return _input
 
-    def _parse_input_dict(self, inputs):
+    def _parse_input_dict(self, inputs, context=None):
         """
         Validate and parse a dict provided as input to a Composition into a standardized form to be used throughout
             its execution
@@ -9945,6 +10011,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Number of input sets (i.e., trials' worths of inputs) in dict for each input node in the Composition
 
         """
+
+        # If Composition is in learning mode, not called from COMMAND_LINE, and not still preparing,
+        #   presumably inputs have already been parsed so shouldn't do it again
+        # FIX: 11/3/23 - NOTE: This circumvents parsing of inputs when they are a func and called fromautodiff_training
+        if (context and (context.runmode & ContextFlags.LEARNING_MODE)
+                and (context.source & ContextFlags.COMPOSITION)
+                and not (context.execution_phase & ContextFlags.PREPARING)):
+            return inputs, 1
+
         # parse a user-provided input dict to format it properly for execution.
         # compute number of input sets and return that as well
         _inputs = self._parse_names_in_inputs(inputs)
@@ -9952,8 +10027,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._validate_input_dict_keys(_inputs)
         _inputs = self._instantiate_input_dict(_inputs)
         _inputs = self._flatten_nested_dicts(_inputs)
-        _inputs = self._validate_input_shapes(_inputs)
+        _inputs = self._validate_input_shapes_and_expand_for_all_trials(_inputs)
         num_inputs_sets = len(next(iter(_inputs.values()),[]))
+        self.parsed_inputs = True
+
         return _inputs, num_inputs_sets
 
     def _parse_names_in_inputs(self, inputs):
@@ -10068,7 +10145,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Validate that keys for inputs are all legal *types*
         bad_entries = [key for key in inputs if not isinstance(key, (InputPort, Mechanism, Composition))]
         if bad_entries:
-            bad_entry_names = [repr(key.full_name) if isinstance(key, Port) else repr(key.name) for key in bad_entries]
+            bad_entry_names = [None] * len(bad_entries)
+            for i, entry in enumerate(bad_entries):
+                # If built-in function (e.g., 'input'), get name
+                if isinstance(entry, types.BuiltinFunctionType):
+                    name = entry.__name__
+                # If Port, get name as Mechanism[Port]
+                elif isinstance(entry, Port):
+                    name = entry.full_name
+                else:
+                    name = entry.name
+                bad_entry_names[i] = f"'{name}'"
             raise RunError(f"The following items specified in the 'inputs' arg of the run() method for "
                            f"'{self.name}' that are not a Mechanism, Composition, or an InputPort of one: "
                            f"{', '.join(bad_entry_names)}.")
@@ -10143,12 +10230,115 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for INPUT_Node in input_nodes:
 
             if not inputs:
-                input_dict[INPUT_Node] = INPUT_Node.external_input_shape
+                input_dict[INPUT_Node] = [INPUT_Node.external_input_shape]
                 continue
 
-            # If entry is for an INPUT_Node of self, assign the entry directly to input_dict and proceed to next
+            # FIX: 11/3/23 - THE FOLLOWING CURRENTLY ONLY LOOKS AT input KEYS THAT ARE NODES
+            #                HANDLING OF InputPorts IS INCLUDED FOR FUTURE USE
+            #              - SHOULD ALSO BE CONSOLIDATED WITH _validate_input_shapes_and_expand_for_all_trials()
             if INPUT_Node in inputs:
-                input_dict[INPUT_Node] = inputs[INPUT_Node]
+                # If entry is for an INPUT_Node of self,
+                # check format, adjust as needed, assign the entry to input_dict, and proceed to next
+                # FIX: 10/29/23
+                #  USE get_input_format() spec for formatting inputs here, or below?
+                _inputs = inputs[INPUT_Node]
+
+                # Check formatting of entry and updimension to 3d if necessary
+                # (any other errant items will be detected in _validate_input_shapes_and_expand_for_all_trials())
+                node_spec = INPUT_Node
+                if isinstance(INPUT_Node, Composition):
+                    node_spec = INPUT_Node.input_CIM
+                is_mech = isinstance(node_spec, Mechanism_Base)
+                num_input_ports = len(node_spec.external_input_shape) if is_mech else None
+                # is_input_port = not num_input_ports
+
+                if is_mech:
+                    node_name = node_spec.name
+                else:
+                    node_name = node_spec.full_name
+                error_base_msg = f"Input for '{node_name}' of {self.name} ({_inputs}) "
+
+                if isinstance(_inputs, dict):
+                    # entry is dict for a nested Composition, which will be handled recursively
+                    pass
+
+                elif convert_to_np_array(_inputs).squeeze().ndim == 0:
+                    # Single scalar (alone or in list), so must be single value for single trial
+                    _inputs = np.atleast_3d(_inputs).tolist()
+
+                elif all(isinstance(elem, numbers.Number) for elem in _inputs):
+                    # 1d list of scalars of len > 1 (len == 1 handled above)
+                    if is_mech:
+                    #  node_spec is mech:
+                        if num_input_ports == 1:
+                            if len(_inputs) == len(node_spec.external_input_shape[0]):
+                                # 1 trial's worth of input for mech with 1 input_port and len(variable) > 1:
+                                _inputs = [[_inputs]]
+                            elif len(node_spec.external_input_shape[0]) == 1:
+                                # > 1 trial's worth of input for > 1 input_port all of which have len(variable) == 1:
+                                _inputs = [[[elem]] for elem in _inputs]
+                            else:
+                                raise CompositionError(error_base_msg +
+                                                       "is wrong length for a Mechanism with a single InputPort")
+                        else:
+                            raise CompositionError(error_base_msg +
+                                                   "should be a 2d list since Mechanism has more than one InputPort")
+                    else:
+                    # node_spec is inpput_port:
+                        if len(_inputs) == len(node_spec.variable):
+                            # 1 trial's worth of input for input_port with len(variable) > 1:
+                            _inputs = [[_inputs]]
+                        else:
+                            # > 1 trial's worth of input for input_port with len(variable) == 1:
+                            _inputs = [[[elem]] for elem in _inputs]
+
+                elif convert_to_np_array(_inputs).ndim == 3:
+                    # 3d regular array
+                    if not isinstance(node_spec, Mechanism):
+                        raise CompositionError(error_base_msg + "should not be 3d since it is for an InputPort")
+                    # Nothing more to do, as entry is already 3d
+                    # shapes of entries will be validated in _validate_input_shapes_and_expand_for_all_trials())
+
+                else:
+                    # 3D ragged array or 2d array
+                    entry = convert_to_np_array(_inputs)
+                    ragged_array = entry.dtype == object
+                    if ragged_array:
+                        if entry.ndim == 2:
+                            # 3d ragged array  (e.g., [[[1, 2], [3, 4, 5]]] or [[[1, 2]], [[3, 4, 5]]])
+                            #   one or more trials' worth inputs for 2 or more input_ports
+                            # Ensure that node_spec is mech (input spec for port should not be 3d)
+                            if not isinstance(node_spec, Mechanism):
+                                raise CompositionError(error_base_msg + "should not be 3d since it is for an InputPort")
+                            # Ensure that each entry is one trial's worth of input for 2 or more input_ports
+                            if num_input_ports == 1 and len(entry[0]) > 1:
+                                raise CompositionError(error_base_msg +
+                                                       "is incorrect for Mechanism with a single InputPort")
+                            if num_input_ports > 1 and len(entry[0]) != num_input_ports:
+                                raise CompositionError(error_base_msg + "badly shaped for multiple InputPorts")
+                            # Nothing more to do, as entry is already 3d
+                        else:
+                            # 2d ragged array (e.g., [[1, 2], [3, 4, 5]])
+                            if len(_inputs) == len(convert_to_np_array(node_spec.external_input_shape)):
+                                # 1 trial's worth of input for > 1 input_port, so add outer dimension to make it 3d
+                                _inputs = [_inputs]
+                            else:
+                                raise CompositionError(error_base_msg + "doesn't match the shape of its InputPorts")
+
+                    else:
+                        # 2d regular array  (e.g., [[1, 2], [3, 4]] or [[1, 2]])
+                        if len(_inputs) == len(convert_to_np_array(node_spec.external_input_shape)):
+                            # 1 trial's worth of input for > 1 input_ports
+                            _inputs = [_inputs]
+                        elif (num_input_ports == 1 and
+                              len(_inputs[0]) == len(convert_to_np_array(node_spec.external_input_shape[0]))):
+                            # > 1 or more trial's worth of input for 1 input_port, so add extra dimension to each trial's input
+                            _inputs = [[input] for input in _inputs]
+                        else:
+                            raise CompositionError(error_base_msg + "doesn't match the shape of its InputPorts")
+
+                input_dict[INPUT_Node] = _inputs
+
                 remaining_inputs.remove(INPUT_Node)
                 continue
 
@@ -10314,7 +10504,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 _inputs.update({node:inp})
         return _inputs
 
-    def _validate_input_shapes(self, inputs):
+    def _validate_input_shapes_and_expand_for_all_trials(self, inputs):
         """
         Validates that all inputs provided in input dict are valid
 
@@ -10341,9 +10531,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # see if the entire stimulus set provided is a valid input for the receiver
             # (i.e. in the case of a call with a single trial of provided input)
             _input = self._validate_single_input(receiver, stimulus)
-            if _input is not None:
-                _input = [_input]
-            else:
+            if _input is None:
                 # if _input is None, it may mean there are multiple trials of input in the stimulus set,
                 #     so in list comprehension below loop through and validate each individual input;
                 _input = [self._validate_single_input(receiver, single_trial_input) for single_trial_input in stimulus]
@@ -10425,14 +10613,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if inputs is None and self.warned_about_run_with_no_inputs is False:
             warnings.warn(f"No inputs provided in call to {self.name}.run(). The following defaults will be used "
-                          f"for each INPUT Node:{dict((k,np.array(v).tolist()) for k,v in _inputs.items())}")
+                          f"for each INPUT Node:"
+                          f"{dict((k, np.array(v, dtype=object).tolist()) for k,v in _inputs.items())}")
             self.warned_about_run_with_no_inputs = True
 
         return _inputs, num_inputs_sets
 
-    def _parse_trial_inputs(self, inputs, trial_num):
+    def _parse_trial_inputs(self, inputs, trial_num, context):
         """
         Extracts inputs for a single trial and parses it in accordance with its type
+        Note: this method is intended to run BEFORE a call to Composition.execute
 
         Returns
         -------
@@ -10441,11 +10631,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Input dict parsed for a single trial of a Composition's execution
 
         """
+
         # parse and return a single trial's worth of inputs.
-        # this method is intended to run BEFORE a call to Composition.execute
         if callable(inputs):
             try:
-                inputs, _ = self._parse_input_dict(inputs(trial_num))
+                next_inputs, _ = self._parse_input_dict(inputs(trial_num), context)
                 i = 0
             except TypeError as e:
                 error_text = e.args[0]
@@ -10454,12 +10644,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     raise CompositionError(f"Problem with function provided to 'inputs' arg of {self.name}.run")
         elif isgenerator(inputs):
-            inputs, _ = self._parse_input_dict(inputs.__next__())
+            next_inputs, _ = self._parse_input_dict(inputs.__next__(), context)
             i = 0
         else:
             num_inputs_sets = len(next(iter(inputs.values())))
             i = trial_num % num_inputs_sets
-        next_inputs = {node:inp[i] for node, inp in inputs.items()}
+            next_inputs = {node:inp[i] for node, inp in inputs.items()}
         return next_inputs
 
     def _validate_execution_inputs(self, inputs):
@@ -10479,9 +10669,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node, inp in inputs.items():
             if isinstance(node, Composition) and type(inp) == dict:
                 inp = node._parse_input_dict(inp)
-            if np.array(inp).ndim == 3:
+            if convert_to_np_array(inp).ndim == 3:
                 # If inp formatted for trial series, get only one one trial's worth of inputs to test
-                inp = np.squeeze(inp, 0)
+                inp = inp[0]
             inp = self._validate_single_input(node, inp)
             if inp is None:
                 raise CompositionError(f"Input stimulus ({inp}) for {node.name} is incompatible "
@@ -10735,7 +10925,7 @@ _
         Examples
         --------
 
-        This figure shows an animation of the Composition in the XXX example script, with
+        This figure shows an animation of the Composition in the ge_ example script, with
         the `show_graph <ShowGraph.show_graph>` **show_learning** argument specified as *ALL*:
 
         .. _Composition_XXX_movie:
@@ -11022,7 +11212,7 @@ _
                 # PROCESSING ------------------------------------------------------------------------
                 # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
                 try:
-                    execution_stimuli = self._parse_trial_inputs(inputs, trial_num)
+                    execution_stimuli = self._parse_trial_inputs(inputs, trial_num, context)
                 except StopIteration:
                     break
 

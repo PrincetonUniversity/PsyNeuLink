@@ -1501,7 +1501,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 for i, item in enumerate(self.defaults.variable):
                     output_ports.append({NAME: f'{RESULT}-{i}', VARIABLE: (OWNER_VALUE, i)})
             self.parameters.output_ports._set(output_ports, context)
-        super()._instantiate_output_ports(context=context)
+        super(ProcessingMechanism_Base, self)._instantiate_output_ports(context=context)
 
         # # Relabel first output_port:
         # #    default (assigned by Mechanism's OutputPort registry) is to name it "RESULT";

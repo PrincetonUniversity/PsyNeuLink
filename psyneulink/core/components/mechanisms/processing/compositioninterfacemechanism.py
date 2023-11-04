@@ -241,7 +241,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     # def _get_source_node_for_input_CIM(self, port, start_comp=None, end_comp=None):
     def _get_source_node_for_input_CIM(self, port, start_comp=None)->tuple or None:
         """Return Port, Node and Composition  for source of projection to input_CIM from (possibly nested) outer comp
-        Return None if there is no source Node (i.e., port receives input from environment)
+        Return None if there is no source Node (i.e., port receives input direcdtly from input to outermost Composition)
         **port** InputPort or OutputPort of the input_CIM from which the local projection projects;
         **comp** Composition at which to begin the search (or continue it when called recursively;
                  assumes the current CompositionInterfaceMechanism's Composition by default

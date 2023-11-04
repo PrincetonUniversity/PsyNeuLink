@@ -13,9 +13,10 @@ from psyneulink.core.components.functions.stateful.integratorfunctions import Si
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear, Exponential, Logistic, SoftMax, LinearMatrix
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Reduce, LinearCombination, CombineMeans
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
+from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import \
     MAX_ABS_INDICATOR, MAX_ABS_ONE_HOT, MAX_ABS_VAL, MAX_INDICATOR, MAX_ONE_HOT, MAX_VAL, \
-    MEAN, MEDIAN, PROB, STANDARD_DEVIATION, VARIANCE
+    MEAN, MEDIAN, NAME, OWNER_VALUE, PROB, STANDARD_DEVIATION, VARIABLE, VARIANCE
 
 class TestProcessingMechanismFunctions:
 
@@ -132,12 +133,79 @@ class TestProcessingMechanismFunctions:
         # np.testing.assert_allclose(PM1.value, 1.0)
 
     def test_processing_mechanism_multiple_input_ports(self):
+
         PM1 = ProcessingMechanism(size=[4, 4], function=LinearCombination, input_ports=['input_1', 'input_2'])
         PM2 = ProcessingMechanism(size=[2, 2, 2], function=LinearCombination, input_ports=['1', '2', '3'])
         PM1.execute([[1, 2, 3, 4], [5, 4, 2, 2]])
         PM2.execute([[2, 0], [1, 3], [1, 0]])
         np.testing.assert_allclose(PM1.value, [[6, 6, 5, 6]])
         np.testing.assert_allclose(PM2.value, [[4, 3]])
+
+        mech = ProcessingMechanism(name='mech',
+                                   input_ports=['a','b','c'])
+        result = mech.execute([[1],[2],[3]])
+        assert mech.input_ports.names == ['a','b','c']
+        assert mech.output_ports.names == ['a','b','c']
+        assert result.tolist() == [[1],[2],[3]]     # Note: this is the result of the Mechanism's function
+        assert mech.output_values == [[1],[2],[3]]  # Note: this is list of values of its OutputPorts
+
+        mech = ProcessingMechanism(name='mech',
+                                   input_ports=['a','b','c'],
+                                   output_ports=['d','e'])
+        result = mech.execute([[1],[2],[3]])
+        assert mech.output_ports.names == ['d','e']
+        assert result.tolist() == [[1],[2],[3]]  # Note: this is the result of the Mechanism's function
+        assert mech.output_values == [[1],[2]]   # Note: this is list of values of its OutputPorts
+
+        mech = ProcessingMechanism(name='mech',
+                                   input_ports=['a','b','c'],
+                                   output_ports=[{}, {}])
+        result = mech.execute([[1],[2],[3]])
+        assert mech.output_ports.names == ['a','b']
+        assert result.tolist() == [[1],[2],[3]]  # Note: this is the result of the Mechanism's function
+        assert mech.output_values == [[1],[2]]   # Note: this is list of values of its OutputPorts
+
+        mech = ProcessingMechanism(name='mech',
+                                   input_ports=['a','b','c'],
+                                   output_ports=[OutputPort(), OutputPort()])
+        result = mech.execute([[1],[2],[3]])
+        assert mech.output_ports.names == ['a','b']
+        assert result.tolist() == [[1],[2],[3]]  # Note: this is the result of the Mechanism's function
+        assert mech.output_values == [[1],[2]]   # Note: this is list of values of its OutputPorts
+
+        mech = ProcessingMechanism(name='mech',
+                                   input_ports=['a','b','c'],
+                                   output_ports=[{NAME: 'd'}, {VARIABLE: (OWNER_VALUE, 0)}])
+        result = mech.execute([[1],[2],[3]])
+        assert mech.output_ports.names == ['d','a']
+        assert result.tolist() == [[1],[2],[3]]  # Note: this is the result of the Mechanism's function
+        assert mech.output_values == [[1],[1]]   # Note: this is list of values of its OutputPorts
+
+        mech = ProcessingMechanism(name='mech',
+                                   input_ports=['a','b','c'],
+                                   output_ports=[OutputPort(),
+                                                 OutputPort(name='3rd', variable=(OWNER_VALUE, 2))])
+        result = mech.execute([[1],[2],[3]])
+        assert mech.output_ports.names == ['a','3rd']
+        assert result.tolist() == [[1],[2],[3]]  # Note: this is the result of the Mechanism's function
+        assert mech.output_values == [[1],[3]]   # Note: this is list of values of its OutputPorts
+
+        mech = ProcessingMechanism(name='mech',
+                                   input_ports=['a','b','c'],
+                                   output_ports=[OutputPort(name='1st'), OutputPort(variable=(OWNER_VALUE, 2))])
+        result = mech.execute([[1],[2],[3]])
+        assert mech.output_ports.names == ['1st','c']
+        assert result.tolist() == [[1],[2],[3]]  # Note: this is the result of the Mechanism's function
+        assert mech.output_values == [[1],[3]]   # Note: this is list of values of its OutputPorts
+
+        mech = ProcessingMechanism(name='mech',
+                                   input_ports=['a','b','c'],
+                                   output_ports=[OutputPort(name='1st'), OutputPort()])
+        result = mech.execute([[1],[2],[3]])
+        assert mech.output_ports.names == ['1st','b']
+        assert result.tolist() == [[1],[2],[3]]  # Note: this is the result of the Mechanism's function
+        assert mech.output_values == [[1],[2]]   # Note: this is list of values of its OutputPorts
+
 
 class TestLinearMatrixFunction:
 

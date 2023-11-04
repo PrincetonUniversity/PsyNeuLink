@@ -12,6 +12,8 @@
 #   - SHOULD differential of SoftmaxGainControl Node be included in learning?
 #   - SHOULD MEMORY DECAY OCCUR IF STORAGE DOES NOT? CURRENTLY IT DOES NOT (SEE EMStorage Function)
 
+# - FIX: NAMING
+#        - "KEY INPUT" -> "QUERY" (OR "CUE")
 # - FIX: Concatenation:
 # -      LLVM for function and derivative
 # -      Add Concatenate to pytorchcreator_function
@@ -129,6 +131,7 @@
 #          - Add warning of this on initial call to learn()
 #
 #      - Composition:
+#        - _validate_input_shapes_and_expand_for_all_trials: consolidate with get_input_format()
 #        - Generalize treatment of FEEDBACK specification:
       #        - FIX: ADD TESTS FOR FEEDBACK TUPLE SPECIFICATION OF Projection, DIRECT SPECIFICATION IN CONSTRUCTOR
 #              - FIX: why aren't FEEDBACK_SENDER and FEEDBACK_RECEIVER roles being assigned when feedback is specified?
@@ -511,16 +514,18 @@ and the number of entries is determined by the `memory_capacity <EMComposition_M
   .. technical_note::
      The memories are actually stored in the `matrix <MappingProjection.matrix>` parameters of the `MappingProjections`
      from the `combined_softmax_node <EMComposition.combined_softmax_node>` to each of the `retrieved_nodes
-     <EMComposition.retrieved_nodes>`. Memories associated with each key are also stored in the `matrix
-     <MappingProjection.matrix>` parameters of the `MappingProjections` from the `key_input_nodes
+     <EMComposition.retrieved_nodes>`. Memories associated with each key are also stored (in inverted form) in the
+     `matrix <MappingProjection.matrix>` parameters of the `MappingProjections` from the `key_input_nodes
      <EMComposition.key_input_nodes>` to each of the corresponding `match_nodes <EMComposition.match_nodes>`.
      This is done so that the match of each key to the memories for the corresponding field can be computed simply
      by passing the input for each key through the Projection (which computes the dot product of the input with
      the Projection's `matrix <MappingProjection.matrix>` parameter) to the corresponding match_node; and, similarly,
-     retrieivals can be computed by passing the softmax disintributions and weighting for each field computed
+     retrieivals can be computed by passing the softmax distributions and weighting for each field computed
      in the `combined_softmax_node <EMComposition.combined_softmax_node>` through its Projection to each
-     `retrieved_node <EMComposition.retrieved_nodes>` (which computes the dot product of the weighted softmax over
-     entries with the corresponding field of each entry) to get the retreieved value for each field.
+     `retrieved_node <EMComposition.retrieved_nodes>` (which are inverted versions of the matrices of the
+     `MappingProjections` from the `key_input_nodes <EMComposition.key_input_nodes>` to each of the corresponding
+     `match_nodes <EMComposition.match_nodes>`), to compute the dot product of the weighted softmax over
+     entries with the corresponding field of each entry that yields the retreieved value for each field.
 
 .. _EMComposition_Output:
 
@@ -1918,7 +1923,7 @@ class EMComposition(AutodiffComposition):
                                                            memory_template[:,i].tolist()).transpose().astype(float),
                                                        function=LinearMatrix(normalize=normalize_memories),
                                                        name=f'MEMORY for {self.key_names[i]}')},
-                    name=f'MATCH {self.key_names[i]}')
+                    name=f'MATCH for {self.key_names[i]}')
                 for i in range(self.num_keys)
             ]
 
