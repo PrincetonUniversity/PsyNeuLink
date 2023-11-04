@@ -113,7 +113,7 @@ Custom Processing
     `variable <OutputPort.variable>` for the OutputPort(s) (see `OutputPort_Custom_Variable`).
 
   - if there are *more* OutputPorts than Inputports, then all are assigned a `default name <OutputPort.name>`,
-    and a `value <OutputPort.value>` that is the result of processing the input of the *first* (`primary
+    and a `value <OutputPort.value>` that is the result of processing the input to the *first* (`primary
     <InputPort_Primary>`) InputPort`; this can be modified by explicitly specifying the variable for the OutputPort(s)
     (see `OutputPort_Custom_Variable`).
 
@@ -402,9 +402,11 @@ class ProcessingMechanism(ProcessingMechanism_Base):
         """
         from psyneulink.core.components.ports.outputport import _instantiate_output_ports
         from psyneulink.core.components.functions.nonstateful.transferfunctions import TransferFunction
+
         if (len(self.defaults.variable) > 1 and isinstance(self.function, TransferFunction)):
             # More than one InputPort, and funciton is TransferFunction, so implement corresponding OutputPorts
             output_ports = []
+
             if self.output_ports is None:
                 # No OutputPorts have been specified, so:
                 # - create one for each item of Mechanism's variable (i.e., InputPort)
@@ -413,6 +415,7 @@ class ProcessingMechanism(ProcessingMechanism_Base):
                     output_ports.append({NAME: f'{self.input_ports[i].name}',
                                          VARIABLE: (OWNER_VALUE, i)})
                 return _instantiate_output_ports(owner=self, output_ports=output_ports, context=context)
+
             elif len(self.output_ports) <= len(self.defaults.variable):
                 # Some OutputPorts have been specified, but fewer than there are items of variable, so:
                 for i, output_port in enumerate(self.output_ports):
@@ -445,7 +448,9 @@ class ProcessingMechanism(ProcessingMechanism_Base):
                                     output_port._init_args[NAME] = \
                                         f'{self.input_ports[output_port._variable_spec[1]].name}'
                         output_ports.append(output_port)
+
                 return _instantiate_output_ports(owner=self, output_ports=output_ports, context=context)
+
         # Multiple but unequal numbers of InputPorts and OutputPorts, so follow default protocol
         #   (i.e., assign value of all OutputPorts to the first item of Mechanism's value unless otherwise specified)
         return super()._instantiate_output_ports(context=context)
