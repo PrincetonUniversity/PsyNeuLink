@@ -140,7 +140,7 @@ Execution
 The execution of a ProcessingMechanism follows the same sequence of actions as a standard `Mechanism <Mechanism>`
 (see `Mechanism_Execution`).
 
-See `ProcessingMechanism_Parallel_Processing` above for a description of how processing is affect by the number of 
+See `ProcessingMechanism_Parallel_Processing` above for a description of how processing is affect by the number of
 InputPorts and OutputPorts.
 
 
