@@ -2152,11 +2152,14 @@ class TestNestedLearning:
                 np.testing.assert_allclose(comp_results[i][j], autodiff_results[i][j])
 
     # def test_output_from_multiple_output_ports_and_OUTPUT_nodes(self, nodes_for_testing_nested_comps, execute_learning):
+    #     # FIX:  1) No input assigned to hidden_2d.input_port[1]
+    #     #       2) Output from hidden_2d.output_port[0] erroneously projects to output_nodes[1]
+    #     #          in addition to correctly projecting to output_nodes[0]
     #     nodes = nodes_for_testing_nested_comps(1, 1, 2)
     #     input_nodes, hidden_nodes, output_nodes = nodes
     #     inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
     #
-    #     hidden_2d = pnl.ProcessingMechanism(name='2d', size=(2,2))
+    #     hidden_2d = pnl.ProcessingMechanism(name='hidden 2d', size=(2,2))
     #     nested = AutodiffComposition(nodes = [hidden_nodes[0], hidden_2d], name='nested')
     #     pathway_a = [input_nodes[0],
     #                  MappingProjection(input_nodes[0], hidden_2d),
@@ -2335,6 +2338,289 @@ class TestNestedLearning:
             autodiff.learn(inputs={input_mech: [[0, 0]]}, execution_mode=pnl.ExecutionMode.Python)
         assert error_msg in str(error.value)
 
+
+# Names and objects for TestAutodiffMultipleOutput_ports
+INPUT_A = 'input_A'
+INPUT_B = 'input_B'
+INPUT_C = 'input_C'
+HIDDEN_A = 'hidden_A'
+HIDDEN_B = 'hidden_B'
+HIDDEN_C = 'hidden_C'
+OUTPUT_A = 'output_A'
+OUTPUT_B = 'output_B'
+def nodes_for_testing_nested_comps(sizes):
+    return {INPUT_A: pnl.ProcessingMechanism(name=INPUT_A, size=sizes.pop(INPUT_A, 2)),
+            INPUT_B: pnl.ProcessingMechanism(name=INPUT_B, size=sizes.pop(INPUT_B, 2)),
+            INPUT_C: pnl.ProcessingMechanism(name=INPUT_C, size=sizes.pop(INPUT_C, 2)),
+            HIDDEN_A: pnl.ProcessingMechanism(name=HIDDEN_A, size=sizes.pop(HIDDEN_A, 2)),
+            HIDDEN_B: pnl.ProcessingMechanism(name=HIDDEN_B, size=sizes.pop(HIDDEN_B, 2)),
+            HIDDEN_C: pnl.ProcessingMechanism(name=HIDDEN_C, size=sizes.pop(HIDDEN_C, 2)),
+            OUTPUT_A: pnl.ProcessingMechanism(name=OUTPUT_A, size=sizes.pop(OUTPUT_A, 2)),
+            OUTPUT_B: pnl.ProcessingMechanism(name=OUTPUT_B, size=sizes.pop(OUTPUT_B, 2))}
+
+
+@pytest.mark.pytorch
+class TestAutodiffMultipleOutput_ports:
+
+    def test_parallel_inputs_to_output_ports_converge_internal(self):
+
+        # Autodiff: PARALLEL PATHWAYS USING SEPARATE INPUT AND OUTPUT PORTS ON hidden_1
+        sizes = {HIDDEN_A: (2,3)}
+        nodes = nodes_for_testing_nested_comps(sizes)
+        input_A = nodes[INPUT_A]
+        input_B = nodes[INPUT_B]
+        hidden_A = nodes[HIDDEN_A]
+        hidden_B = nodes[HIDDEN_B]
+        output = nodes[OUTPUT_A]
+        autodiff = pnl.AutodiffComposition(pathways=[[input_A,
+                                                      pnl.MappingProjection(input_A, hidden_A.input_ports[0]),
+                                                      hidden_A,
+                                                      pnl.MappingProjection(hidden_A.output_ports[0],hidden_B),
+                                                      hidden_B,
+                                                      output],
+                                                     [input_B,
+                                                      pnl.MappingProjection(input_B, hidden_A.input_ports[1]),
+                                                      hidden_A,
+                                                      pnl.MappingProjection(hidden_A.output_ports[1],hidden_B),
+                                                      hidden_B,
+                                                      output]],
+                                           name='autodiff')
+        # autodiff.show_graph(show_all=True)
+        result_autodiff_ports = autodiff.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
+                                                       input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                                               learning_rate = .01, epochs=3)
+
+        # # Autodiff: PARALLEL PATHWAYS USING SEPARATE HIDDEN NODES (hidden_1 VS. hidden_2)
+        sizes = {HIDDEN_B: 3}
+        nodes = nodes_for_testing_nested_comps(sizes)
+        input_A = nodes[INPUT_A]
+        input_B = nodes[INPUT_B]
+        hidden_A = nodes[HIDDEN_A]
+        hidden_B = nodes[HIDDEN_B]
+        hidden_C = nodes[HIDDEN_C]
+        output = nodes[OUTPUT_A]
+        autodiff = pnl.AutodiffComposition(pathways=[[input_A,
+                                                  hidden_A,
+                                                  hidden_C,
+                                                  output],
+                                                 [input_B,
+                                                  hidden_B,
+                                                  hidden_C,
+                                                  output]],
+                                       name='autodiff')
+
+        result_autodiff_nodes = autodiff.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
+                                        input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                                learning_rate = .01, epochs=3)
+
+        # # Composition: PARALLEL PATHWAYS USING SEPARATE INPUT AND OUTPUT PORTS ON hidden_1
+        sizes = {HIDDEN_A: (2,3)}
+        nodes = nodes_for_testing_nested_comps(sizes)
+        input_A = nodes[INPUT_A]
+        input_B = nodes[INPUT_B]
+        hidden_A = nodes[HIDDEN_A]
+        hidden_B = nodes[HIDDEN_B]
+        output = nodes[OUTPUT_A]
+        comp = Composition(name='comp')
+        comp.add_backpropagation_learning_pathway([input_A,
+                                                   pnl.MappingProjection(input_A, hidden_A.input_ports[0]),
+                                                   hidden_A,
+                                                   pnl.MappingProjection(hidden_A.output_ports[0],hidden_B),
+                                                   hidden_B,
+                                                   output])
+        comp.add_backpropagation_learning_pathway([input_B,
+                                                   pnl.MappingProjection(input_B, hidden_A.input_ports[1]),
+                                                   hidden_A,
+                                                   pnl.MappingProjection(hidden_A.output_ports[1],hidden_B),
+                                                   hidden_B,
+                                                   output])
+        result_comp_ports = comp.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
+                                      input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                              learning_rate = .01, epochs=3)
+
+        # # Comp: PARALLEL PATHWAYS USING SEPARATE HIDDEN NODES (hidden_1 VS. hidden_2)
+        sizes = {HIDDEN_B: 3}
+        nodes = nodes_for_testing_nested_comps(sizes)
+        input_A = nodes[INPUT_A]
+        input_B = nodes[INPUT_B]
+        hidden_A = nodes[HIDDEN_A]
+        hidden_B = nodes[HIDDEN_B]
+        hidden_C = nodes[HIDDEN_C]
+        output = nodes[OUTPUT_A]
+        comp = Composition(name='comp')
+        comp.add_backpropagation_learning_pathway([input_A,
+                                                   hidden_A,
+                                                   hidden_C,
+                                                   output])
+        comp.add_backpropagation_learning_pathway([input_B,
+                                                   hidden_B,
+                                                   hidden_C,
+                                                   output])
+        result_comp_nodes = comp.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
+                                      input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                              learning_rate = .01, epochs=3)
+
+        expected = [[-0.14091702170015408, 0.11156579308015635]]
+        np.testing.assert_allclose(result_autodiff_ports, expected, rtol=1e-8, atol=1e-8)
+        np.testing.assert_allclose(result_autodiff_nodes, expected, rtol=1e-8, atol=1e-8)
+        np.testing.assert_allclose(result_comp_ports, expected, rtol=1e-8, atol=1e-8)
+        np.testing.assert_allclose(result_comp_nodes, expected, rtol=1e-8, atol=1e-8)
+
+    def test_single_input_to_multiple_output_ports_converge_internal(self):
+
+        # Autodiff: DIVERGENT PATHWAY USING SEPARATE INPUT AND OUTPUT PORTS ON hidden_1
+        sizes = {HIDDEN_A: (2,3)}
+        nodes = nodes_for_testing_nested_comps(sizes)
+        input = nodes[INPUT_A]
+        hidden_A = nodes[HIDDEN_A]
+        hidden_B = nodes[HIDDEN_B]
+        output = nodes[OUTPUT_A]
+        autodiff = pnl.AutodiffComposition(pathways=[[input,
+                                                      pnl.MappingProjection(input, hidden_A.input_ports[0]),
+                                                      hidden_A,
+                                                      pnl.MappingProjection(hidden_A.output_ports[0],hidden_B),
+                                                      hidden_B,
+                                                      output],
+                                                     [input,
+                                                      pnl.MappingProjection(input, hidden_A.input_ports[1]),
+                                                      hidden_A,
+                                                      pnl.MappingProjection(hidden_A.output_ports[1],hidden_B),
+                                                      hidden_B,
+                                                      output]],
+                                           name='autodiff')
+        result_autodiff_ports = autodiff.learn(inputs={input: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                                               learning_rate = .01, epochs=3)
+
+        # # Autodiff: DIVERGENT PATHWAY USING SEPARATE HIDDEN NODES (hidden_1 VS. hidden_2)
+        sizes = {HIDDEN_B: 3}
+        nodes = nodes_for_testing_nested_comps(sizes)
+        input = nodes[INPUT_A]
+        hidden_A = nodes[HIDDEN_A]
+        hidden_B = nodes[HIDDEN_B]
+        hidden_C = nodes[HIDDEN_C]
+        output = nodes[OUTPUT_A]
+        autodiff = pnl.AutodiffComposition(pathways=[[input, hidden_A, hidden_C, output],
+                                                     [input, hidden_B, hidden_C, output]],
+                                           name='autodiff')
+        result_autodiff_nodes = autodiff.learn(inputs={input: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                                               learning_rate = .01, epochs=3)
+
+        # Composition: DIVERGENT PATHWAY USING SEPARATE INPUT AND OUTPUT PORTS ON hidden_1
+        sizes = {HIDDEN_A: (2,3)}
+        nodes = nodes_for_testing_nested_comps(sizes)
+        input = nodes[INPUT_A]
+        hidden_A = nodes[HIDDEN_A]
+        hidden_B = nodes[HIDDEN_B]
+        output = nodes[OUTPUT_A]
+        comp = Composition(name='comp')
+        comp.add_backpropagation_learning_pathway([input,
+                                                   pnl.MappingProjection(input, hidden_A.input_ports[0]),
+                                                   hidden_A,
+                                                   pnl.MappingProjection(hidden_A.output_ports[0],hidden_B),
+                                                   hidden_B,
+                                                   output])
+        comp.add_backpropagation_learning_pathway([input,
+                                                   pnl.MappingProjection(input, hidden_A.input_ports[1]),
+                                                   hidden_A,
+                                                   pnl.MappingProjection(hidden_A.output_ports[1],hidden_B),
+                                                   hidden_B,
+                                                   output])
+        result_comp_ports = comp.learn(inputs={input: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                                       learning_rate = .01, epochs=3)
+
+        # Comp: DIVERGENT PATHWAY USING SEPARATE HIDDEN NODES (hidden_1 VS. hidden_2)
+        sizes = {HIDDEN_B: 3}
+        nodes = nodes_for_testing_nested_comps(sizes)
+        input = nodes[INPUT_A]
+        hidden_A = nodes[HIDDEN_A]
+        hidden_B = nodes[HIDDEN_B]
+        hidden_C = nodes[HIDDEN_C]
+        output = nodes[OUTPUT_A]
+        comp = Composition(name='comp')
+        comp.add_backpropagation_learning_pathway([input, hidden_A, hidden_C, output])
+        comp.add_backpropagation_learning_pathway([input, hidden_B, hidden_C, output])
+        result_comp_nodes = comp.learn(inputs={input: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                                       learning_rate = .01, epochs=3)
+
+        expected = [[-0.5448706019245989, -0.45743872720005285]]
+        np.testing.assert_allclose(result_autodiff_ports, expected, rtol=1e-8, atol=1e-8)
+        np.testing.assert_allclose(result_autodiff_nodes, expected, rtol=1e-8, atol=1e-8)
+        np.testing.assert_allclose(result_comp_ports, expected, rtol=1e-8, atol=1e-8)
+        np.testing.assert_allclose(result_comp_nodes, expected, rtol=1e-8, atol=1e-8)
+
+    def test_single_input_to_multiple_output_ports_converge_on_OUTPUT_Node(self):
+
+        # Autodiff: PARALLEL PATHWAYS USE SEPARATE INPUT AND OUTPUT PORTS ON hidden
+        sizes = {HIDDEN_A: (2,3)}
+        nodes = nodes_for_testing_nested_comps(sizes)
+        input = nodes[INPUT_A]
+        hidden = nodes[HIDDEN_A]
+        output = nodes[OUTPUT_A]
+        autodiff = pnl.AutodiffComposition(pathways=[[input,
+                                                  pnl.MappingProjection(input, hidden.input_ports[0]),
+                                                  hidden,
+                                                  pnl.MappingProjection(hidden.output_ports[0],output),
+                                                  output],
+                                                 [input,
+                                                  pnl.MappingProjection(input, hidden.input_ports[1]),
+                                                  hidden,
+                                                  pnl.MappingProjection(hidden.output_ports[1],output),
+                                                  output]                                         ],
+                                       name='autodiff')
+        result_autodiff_ports = autodiff.learn(inputs={input: [[0, 0], [0, 1], [1, 0], [1, 1]]},
+                                 learning_rate = .01, epochs=3)
+
+        # Autodiff: PARALLEL PATHWAYS USE SEPARATE HIDDEN NODES (hidden_1 VS. hidden_2)
+        sizes = {HIDDEN_B: 3}
+        nodes = nodes_for_testing_nested_comps(sizes)
+        input = nodes[INPUT_A]
+        hidden_A = nodes[HIDDEN_A]
+        hidden_B = nodes[HIDDEN_B]
+        output = nodes[OUTPUT_A]
+        autodiff = pnl.AutodiffComposition(pathways=[[input, hidden_A, output],
+                                                 [input, hidden_B, output]                                         ],
+                                       name='autodiff')
+        result_autodiff_nodes = autodiff.learn(inputs={input: [[0, 0], [0, 1], [1, 0], [1, 1]]},
+                                                learning_rate = .01, epochs=3)
+
+        # Comp: PARALLEL PATHWAYS USE SEPARATE HIDDEN NODES (hidden_1 VS. hidden_2)
+        sizes = {HIDDEN_B: 3}
+        nodes = nodes_for_testing_nested_comps(sizes)
+        input = nodes[INPUT_A]
+        hidden_A = nodes[HIDDEN_A]
+        hidden_B = nodes[HIDDEN_B]
+        output = nodes[OUTPUT_A]
+        comp = Composition(name='comp')
+        comp.add_backpropagation_learning_pathway([input, hidden_A, output])
+        comp.add_backpropagation_learning_pathway([input, hidden_B, output])
+        result_comp_nodes = comp.learn(inputs={input: [[0, 0], [0, 1], [1, 0], [1, 1]]},
+                               learning_rate = .01, epochs=3)
+
+        # Comp: PARALLEL PATHWAYS USE SEPARATE INPUT AND OUTPUT PORTS ON hidden_c
+        sizes = {HIDDEN_A: (2,3)}
+        nodes = nodes_for_testing_nested_comps(sizes)
+        input = nodes[INPUT_A]
+        hidden = nodes[HIDDEN_A]
+        output = nodes[OUTPUT_A]
+        comp = Composition(name='comp')
+        comp.add_backpropagation_learning_pathway([input,
+                                                   pnl.MappingProjection(input, hidden.input_ports[0]),
+                                                   hidden,
+                                                   pnl.MappingProjection(hidden.output_ports[0],output),
+                                                   output])
+        comp.add_backpropagation_learning_pathway([input,
+                                                   pnl.MappingProjection(input, hidden.input_ports[1]),
+                                                   hidden,
+                                                   pnl.MappingProjection(hidden.output_ports[1],output),
+                                                   output])
+        result_comp_ports = comp.learn(inputs={input: [[0, 0], [0, 1], [1, 0], [1, 1]]},
+                                        learning_rate = .01, epochs=3)
+
+        expected = [[3.3178720430554267, 3.3245710462077773]]
+        np.testing.assert_allclose(result_autodiff_ports, expected, rtol=1e-8, atol=1e-8)
+        np.testing.assert_allclose(result_autodiff_nodes, expected, rtol=1e-8, atol=1e-8)
+        np.testing.assert_allclose(result_comp_ports, expected, rtol=1e-8, atol=1e-8)
+        np.testing.assert_allclose(result_comp_nodes, expected, rtol=1e-8, atol=1e-8)
 
 
 @pytest.mark.pytorch
