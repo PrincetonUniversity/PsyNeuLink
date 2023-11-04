@@ -3198,6 +3198,47 @@ class TestRunInputSpecifications:
             ocomp._analyze_graph()
             icomp.run(inputs={ia:[1]})
 
+    def test_input_shape_errors(self):
+        # Mechanism with single InputPort
+        mech = pnl.TransferMechanism(name='input', size=2)
+        comp = pnl.Composition(mech, name='comp')
+
+        with pytest.raises(CompositionError) as error_text:
+            comp.run(inputs={mech: [1, 2, 3]})
+        assert "is wrong length for a Mechanism with a single InputPort" in str(error_text.value)
+        with pytest.raises(CompositionError) as error_text:
+            comp.run(inputs={mech: [1, 2, 3]})
+        assert "is wrong length for a Mechanism with a single InputPort" in str(error_text.value)
+        with pytest.raises(CompositionError) as error_text:
+            comp.run(inputs={mech: [[1, 2], [3, 4, 5]]})
+        assert "doesn't match the shape of its InputPorts" in str(error_text.value)
+        with pytest.raises(RunError) as error_text:
+            comp.run(inputs={mech: [[[1, 2]], [[3, 4, 5]]]})
+        assert "is incompatible with the shape of its external input" in str(error_text.value)
+        with pytest.raises(CompositionError) as error_text:
+            comp.run(inputs={mech: [[[1, 2], [3, 4, 5]]]})
+        assert "is incorrect for Mechanism with a single InputPort" in str(error_text.value)
+
+        # Mechanism with two InputPorts
+        mech2 = pnl.TransferMechanism(name='input', size=(2,2))
+        comp = pnl.Composition(mech2, name='comp')
+
+        with pytest.raises(CompositionError) as error_text:
+            comp.run(inputs={mech2: [1, 2]})
+        assert "should be a 2d list since Mechanism has more than one InputPort" in str(error_text.value)
+        with pytest.raises(CompositionError) as error_text:
+            comp.run(inputs={mech2: [1, 2, 3]})
+        assert "should be a 2d list since Mechanism has more than one InputPort" in str(error_text.value)
+        with pytest.raises(CompositionError) as error_text:
+            comp.run(inputs={mech2: [[[1, 2]], [[3,4,5]]]})
+        assert "badly shaped for multiple InputPorts" in str(error_text.value)
+        with pytest.raises(CompositionError) as error_text:
+            comp.run(inputs={mech2: [[1, 2], [3, 4, 5], [4]]})
+        assert "doesn't match the shape of its InputPorts" in str(error_text.value)
+        with pytest.raises(CompositionError) as error_text:
+            comp.run(inputs={mech2: [[1, 2]]})
+        assert "doesn't match the shape of its InputPorts" in str(error_text.value)
+
     def test_some_inputs_not_specified(self):
         comp = Composition()
 

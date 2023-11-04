@@ -10012,8 +10012,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         """
 
-        # If Composition is in learning mode, not called from COMMAND_LINE, and  not still preparing,
+        # If Composition is in learning mode, not called from COMMAND_LINE, and not still preparing,
         #   presumably inputs have already been parsed so shouldn't do it again
+        # FIX: 11/3/23 - NOTE: This circumvents parsing of inputs when they are a func and called fromautodiff_training
         if (context and (context.runmode & ContextFlags.LEARNING_MODE)
                 and (context.source & ContextFlags.COMPOSITION)
                 and not (context.execution_phase & ContextFlags.PREPARING)):
@@ -10232,23 +10233,30 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 input_dict[INPUT_Node] = [INPUT_Node.external_input_shape]
                 continue
 
+            # FIX: 11/3/23 - THE FOLLOWING CURRENTLY ONLY LOOKS AT input KEYS THAT ARE NODES
+            #                HANDLING OF InputPorts IS INCLUDED FOR FUTURE USE
+            #              - SHOULD ALSO BE CONSOLIDATED WITH _validate_input_shapes_and_expand_for_all_trials()
             if INPUT_Node in inputs:
                 # If entry is for an INPUT_Node of self,
                 # check format, adjust as needed, assign the entry to input_dict, and proceed to next
                 # FIX: 10/29/23
-                #  ENFORCE get_input_format() spec for inputs here
-                #  (e.g., impose outer dimension for single trial or single input_port)
-                # FIX "MSG ->" BELOW
+                #  USE get_input_format() spec for formatting inputs here, or below?
                 _inputs = inputs[INPUT_Node]
-                # Check formatting of first node as proxy for formatting of all items, and make changes accordingly
-                # (any other errant items will be detected in _validate_input_shapes_and_expand_for_all_trials())
 
+                # Check formatting of entry and updimension to 3d if necessary
+                # (any other errant items will be detected in _validate_input_shapes_and_expand_for_all_trials())
                 node_spec = INPUT_Node
                 if isinstance(INPUT_Node, Composition):
                     node_spec = INPUT_Node.input_CIM
                 is_mech = isinstance(node_spec, Mechanism_Base)
                 num_input_ports = len(node_spec.external_input_shape) if is_mech else None
-                is_input_port = not num_input_ports
+                # is_input_port = not num_input_ports
+
+                if is_mech:
+                    node_name = node_spec.name
+                else:
+                    node_name = node_spec.full_name
+                error_base_msg = f"Input for '{node_name}' of {self.name} ({_inputs}) "
 
                 if isinstance(_inputs, dict):
                     # entry is dict for a nested Composition, which will be handled recursively
@@ -10270,9 +10278,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 # > 1 trial's worth of input for > 1 input_port all of which have len(variable) == 1:
                                 _inputs = [[[elem]] for elem in _inputs]
                             else:
-                                raise CompositionError(f"BAD ENTRY") # FIX: MSG -> WRONG LENGTH INPUT FOR 1 INPUT_PORT
+                                raise CompositionError(error_base_msg +
+                                                       "is wrong length for a Mechanism with a single InputPort")
                         else:
-                            raise CompositionError(f"BAD ENTRY") # FIX: MSG -> INPUT IS 1d LIST FOR MECH WITH >1 INPUT_PORT
+                            raise CompositionError(error_base_msg +
+                                                   "should be a 2d list since Mechanism has more than one InputPort")
                     else:
                     # node_spec is inpput_port:
                         if len(_inputs) == len(node_spec.variable):
@@ -10284,11 +10294,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 elif convert_to_np_array(_inputs).ndim == 3:
                     # 3d regular array
-                    # FIX: IS THIS OK FOR A PORT (VS. MECH) SPEC?  WILL IT BE HANDLED PROPERLY IN _validate...
-                    #      > TEST THIS
+                    if not isinstance(node_spec, Mechanism):
+                        raise CompositionError(error_base_msg + "should not be 3d since it is for an InputPort")
                     # Nothing more to do, as entry is already 3d
                     # shapes of entries will be validated in _validate_input_shapes_and_expand_for_all_trials())
-                    pass
 
                 else:
                     # 3D ragged array or 2d array
@@ -10296,14 +10305,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     ragged_array = entry.dtype == object
                     if ragged_array:
                         if entry.ndim == 2:
-                            # 3d ragged array  (e.g., [[[1, 2], [3, 4, 5]]]):
-                            #   one or more trials' worth of 2 or more input_ports
+                            # 3d ragged array  (e.g., [[[1, 2], [3, 4, 5]]] or [[[1, 2]], [[3, 4, 5]]])
+                            #   one or more trials' worth inputs for 2 or more input_ports
                             # Ensure that node_spec is mech (input spec for port should not be 3d)
                             if not isinstance(node_spec, Mechanism):
-                                raise CompositionError(f"BAD ENTRY") #FIX: MSG -> INPUT IS 3D BUT NODE IS NOT MECHANISM")
-                            # Ensure that each entry is one trial's worth of 2 or more input_ports
-                            if not len(entry[0]) > 1:
-                                raise CompositionError(f"BAD ENTRY") #FIX: MSG -> ITEMS SHOULD BE ENTRIES FOR MULT PORTS
+                                raise CompositionError(error_base_msg + "should not be 3d since it is for an InputPort")
+                            # Ensure that each entry is one trial's worth of input for 2 or more input_ports
+                            if num_input_ports == 1 and len(entry[0]) > 1:
+                                raise CompositionError(error_base_msg +
+                                                       "is incorrect for Mechanism with a single InputPort")
+                            if num_input_ports > 1 and len(entry[0]) != num_input_ports:
+                                raise CompositionError(error_base_msg + "badly shaped for multiple InputPorts")
                             # Nothing more to do, as entry is already 3d
                         else:
                             # 2d ragged array (e.g., [[1, 2], [3, 4, 5]])
@@ -10311,18 +10323,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 # 1 trial's worth of input for > 1 input_port, so add outer dimension to make it 3d
                                 _inputs = [_inputs]
                             else:
-                                raise CompositionError(f"BAD ENTRY") #FIX: MSG -> INPUT SHAPE(S) DON'T MATCH INPUT_PORTS
+                                raise CompositionError(error_base_msg + "doesn't match the shape of its InputPorts")
 
                     else:
                         # 2d regular array  (e.g., [[1, 2], [3, 4]] or [[1, 2]])
                         if len(_inputs) == len(convert_to_np_array(node_spec.external_input_shape)):
                             # 1 trial's worth of input for > 1 input_ports
                             _inputs = [_inputs]
-                        elif len(_inputs[0]) == len(convert_to_np_array(node_spec.external_input_shape[0])):
-                            # > 1 trial's worth of input for 1 input_port, so add extra dimension to each trial's input
+                        elif (num_input_ports == 1 and
+                              len(_inputs[0]) == len(convert_to_np_array(node_spec.external_input_shape[0]))):
+                            # > 1 or more trial's worth of input for 1 input_port, so add extra dimension to each trial's input
                             _inputs = [[input] for input in _inputs]
                         else:
-                            raise CompositionError(f"BAD ENTRY") # FIX: SHAPE(S) OF INPUTS DON'T MATCH INPUT_PORTS
+                            raise CompositionError(error_base_msg + "doesn't match the shape of its InputPorts")
 
                 input_dict[INPUT_Node] = _inputs
 
