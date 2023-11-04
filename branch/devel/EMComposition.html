@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EMComposition &mdash; PsyNeuLink 0.14.0.0+75.g87fd1a916 documentation</title>
+  <title>EMComposition &mdash; PsyNeuLink 0.14.0.0+76.g688021c1e documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.14.0.0+75
+                  0.14.0.0+76
                 </div>
               
             
@@ -467,14 +467,17 @@ and the number of entries is determined by the <a class="reference internal" hre
 <blockquote>
 <div><div class="technical-note docutils container" id="emcomposition-memory-storage">
 <p>The memories are actually stored in the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameters of the <code class="xref any docutils literal notranslate"><span class="pre">MappingProjections</span></code>
-from the <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.combined_softmax_node" title="psyneulink.library.compositions.emcomposition.EMComposition.combined_softmax_node"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">combined_softmax_node</span></code></a> to each of the <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.retrieved_nodes" title="psyneulink.library.compositions.emcomposition.EMComposition.retrieved_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">retrieved_nodes</span></code></a>. Memories associated with each key are also stored in the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameters of the <code class="xref any docutils literal notranslate"><span class="pre">MappingProjections</span></code> from the <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.key_input_nodes" title="psyneulink.library.compositions.emcomposition.EMComposition.key_input_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">key_input_nodes</span></code></a> to each of the corresponding <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.match_nodes" title="psyneulink.library.compositions.emcomposition.EMComposition.match_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">match_nodes</span></code></a>.
+from the <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.combined_softmax_node" title="psyneulink.library.compositions.emcomposition.EMComposition.combined_softmax_node"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">combined_softmax_node</span></code></a> to each of the <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.retrieved_nodes" title="psyneulink.library.compositions.emcomposition.EMComposition.retrieved_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">retrieved_nodes</span></code></a>. Memories associated with each key are also stored (in inverted form) in the
+<a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameters of the <code class="xref any docutils literal notranslate"><span class="pre">MappingProjections</span></code> from the <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.key_input_nodes" title="psyneulink.library.compositions.emcomposition.EMComposition.key_input_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">key_input_nodes</span></code></a> to each of the corresponding <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.match_nodes" title="psyneulink.library.compositions.emcomposition.EMComposition.match_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">match_nodes</span></code></a>.
 This is done so that the match of each key to the memories for the corresponding field can be computed simply
 by passing the input for each key through the Projection (which computes the dot product of the input with
 the Projection’s <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter) to the corresponding match_node; and, similarly,
-retrieivals can be computed by passing the softmax disintributions and weighting for each field computed
+retrieivals can be computed by passing the softmax distributions and weighting for each field computed
 in the <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.combined_softmax_node" title="psyneulink.library.compositions.emcomposition.EMComposition.combined_softmax_node"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">combined_softmax_node</span></code></a> through its Projection to each
-<a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.retrieved_nodes" title="psyneulink.library.compositions.emcomposition.EMComposition.retrieved_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">retrieved_node</span></code></a> (which computes the dot product of the weighted softmax over
-entries with the corresponding field of each entry) to get the retreieved value for each field.</p>
+<a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.retrieved_nodes" title="psyneulink.library.compositions.emcomposition.EMComposition.retrieved_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">retrieved_node</span></code></a> (which are inverted versions of the matrices of the
+<code class="xref any docutils literal notranslate"><span class="pre">MappingProjections</span></code> from the <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.key_input_nodes" title="psyneulink.library.compositions.emcomposition.EMComposition.key_input_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">key_input_nodes</span></code></a> to each of the corresponding
+<a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.match_nodes" title="psyneulink.library.compositions.emcomposition.EMComposition.match_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">match_nodes</span></code></a>), to compute the dot product of the weighted softmax over
+entries with the corresponding field of each entry that yields the retreieved value for each field.</p>
 </div>
 </div></blockquote>
 </section>

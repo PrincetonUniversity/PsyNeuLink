@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>CompositionInterfaceMechanism &mdash; PsyNeuLink 0.14.0.0+75.g87fd1a916 documentation</title>
+  <title>CompositionInterfaceMechanism &mdash; PsyNeuLink 0.14.0.0+76.g688021c1e documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.14.0.0+75
+                  0.14.0.0+76
                 </div>
               
             
@@ -391,7 +391,7 @@ Port specification(s) can be an Port object or the name of one.</p>
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_source_node_for_input_CIM">
 <span class="sig-name descname"><span class="pre">_get_source_node_for_input_CIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_comp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_source_node_for_input_CIM" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return Port, Node and Composition  for source of projection to input_CIM from (possibly nested) outer comp
-Return None if there is no source Node (i.e., port receives input from environment)
+Return None if there is no source Node (i.e., port receives input direcdtly from input to outermost Composition)
 <strong>port</strong> InputPort or OutputPort of the input_CIM from which the local projection projects;
 <strong>comp</strong> Composition at which to begin the search (or continue it when called recursively;</p>
 <blockquote>

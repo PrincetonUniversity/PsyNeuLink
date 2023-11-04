@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.14.0.0+75.g87fd1a916 documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.14.0.0+76.g688021c1e documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.14.0.0+75
+                  0.14.0.0+76
                 </div>
               
             
@@ -388,8 +388,8 @@ or to an equivalent PyTorch model, then its inner components are not actually ex
 limited support for logging parameters of components inside an AutodiffComposition; Currently, the only supported
 parameters are:</p>
 <ol class="arabic simple">
-<li><p>the <a class="reference internal" href="KohonenMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.matrix" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter of Projections</p></li>
-<li><p>the <a class="reference internal" href="LCControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.value" title="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> parameter of its inner components</p></li>
+<li><p>the <a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter of Projections</p></li>
+<li><p>the <a class="reference internal" href="ControlProjection.html#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.value" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> parameter of its inner components</p></li>
 </ol>
 <p class="rubric" id="autodiffcomposition-examples">Examples</p>
 <p id="autodiffcomposition-creation-example">The following is an example showing how to create a simple AutodiffComposition, specify its inputs and targets,
@@ -573,23 +573,11 @@ Uses Pytorch backward method to compute gradients and update weights</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._infer_output_nodes">
-<span class="sig-name descname"><span class="pre">_infer_output_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._infer_output_nodes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove INPUT Nodes, and return dict with values for TARGET Nodes</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p></p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>A dict mapping TARGET Nodes -&gt; target values</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._infer_input_nodes">
-<span class="sig-name descname"><span class="pre">_infer_input_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._infer_input_nodes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove TARGET Nodes, and return dict with values of INPUT Nodes for single trial</p>
+<span class="sig-name descname"><span class="pre">_infer_input_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._infer_input_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove TARGET Nodes, and return dict with values of INPUT Nodes for single trial
+For nested Compositions, replace input to nested Composition with inputs to its INPUT Nodes
+For InuptPorts, replace with owner</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p></p>
@@ -601,8 +589,24 @@ Uses Pytorch backward method to compute gradients and update weights</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._infer_output_nodes">
+<span class="sig-name descname"><span class="pre">_infer_output_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._infer_output_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove INPUT Nodes, and return dict with values for TARGET Nodes</p>
+<p>Get Inputs to TARGET Nodes and assign to dict mapping them to OUTPUT Nodes of Composition,
+which are used for computation of loss in autodiff_training().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>A dict mapping TARGET Nodes -&gt; target values corresponding to OUTPUT Nodes of Composition</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._parse_learning_spec">
-<span class="sig-name descname"><span class="pre">_parse_learning_spec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execution_mode</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._parse_learning_spec" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_parse_learning_spec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execution_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._parse_learning_spec" title="Permalink to this definition">¶</a></dt>
 <dd><p>Converts learning inputs and targets to a standardized form</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
