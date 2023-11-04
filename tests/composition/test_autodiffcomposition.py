@@ -2655,7 +2655,6 @@ class TestAutodiffMultipleOutput_ports:
         result_autodiff_nodes = autodiff.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
                                                        input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
                                                learning_rate = .01, epochs=3)
-
         for port, node in zip(result_autodiff_ports, result_autodiff_nodes):
             np.testing.assert_allclose(port, node)
 
