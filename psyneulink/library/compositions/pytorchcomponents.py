@@ -40,11 +40,23 @@ def pytorch_function_creator(function, device, context=None):
     """
 
     def get_fct_param_value(param_name):
-        val = function._get_current_parameter_value(
-            param_name, context=context)
+        val = function._get_current_parameter_value(param_name, context=context)
         if val is None:
             val = getattr(function.defaults, param_name)
-        return val if isinstance(val, str) else float(val)
+        # # MODIFIED 11/4/23 OLD:
+        # return val if isinstance(val, str) else float(val)
+        # MODIFIED 11/4/23 NEW:
+        if isinstance(val, (str, type(None))):
+            return val
+        elif np.isscalar(np.array(val)):
+            return float(val)
+        try:
+            return torch.tensor(val, device=device).double()
+        except:
+            assert False, (f"PROGRAM ERROR: unspported value of parameter '{param_name}' ({val}) "
+                           f"encountered in pytorch_function_creater().")
+
+        # MODIFIED 11/4/23 END
 
     if isinstance(function, Identity):
         return lambda x: x
@@ -95,12 +107,28 @@ def pytorch_function_creator(function, device, context=None):
         return lambda x: (torch.dropout(input=x, p=prob, train=False))
 
     elif isinstance(function, EMStorage):
-        memory_matrix = get_fct_param_value('MEMORY_MATRIX')
+        memory_matrix = get_fct_param_value('memory_matrix')
         axis = get_fct_param_value('axis')
         storage_location = get_fct_param_value('storage_location')
-        storage_prob = get_fct_param_value('storage_prob')
+        # storage_prob = get_fct_param_value('storage_prob')
         decay_rate = get_fct_param_value('decay_rate')
-        #FIX 11/4/23: HOW TO SUPPORT IF STATEMENTS HERE?
+        def func(entry):
+            # FIX: IGNORE STORAGE PROB FOR NOW
+            # if random_state.uniform(0, 1) < storage_prob:
+            if decay_rate:
+                memory_matrix *= decay_rate
+            if storage_location is not None:
+                idx_of_min = storage_location
+            else:
+                # Find weakest entry (i.e., with lowest norm) along specified axis of matrix
+                idx_of_min = torch.argmin(torch.linalg.norm(memory_matrix, axis=axis))
+            if axis == 0:
+                memory_matrix[:,idx_of_min] = torch.tensor(entry)
+            elif axis == 1:
+                memory_matrix[idx_of_min,:] = torch.tensor(entry)
+            self.parameters.entry._set(entry, context)
+            self.parameters.memory_matrix._set(memory_matrix, context)
+        return func
 
     else:
         raise Exception(f"Function {function} is not currently supported by AutodiffComposition")
