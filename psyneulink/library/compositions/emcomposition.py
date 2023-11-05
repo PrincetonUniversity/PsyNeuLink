@@ -2230,13 +2230,6 @@ class EMComposition(AutodiffComposition):
 
     def _get_execution_mode(self, execution_mode):
         """Parse execution_mode argument and return a valid execution mode for the learn() method"""
-        # if execution_mode is None:
-        #     if self.execution_mode_warned_about_default is False:
-        #         warnings.warn(f"The execution_mode argument was not specified in the learn() method of {self.name}; "
-        #                       f"ExecutionMode.Python will be used by default.")
-        #         self.execution_mode_warned_about_default = True
-        #     execution_mode = ExecutionMode.Python
-        # return execution_mode
         if execution_mode is None:
             if self.execution_mode_warned_about_default is False:
                 warnings.warn(f"The execution_mode argument was not specified in the learn() method of {self.name}; "
