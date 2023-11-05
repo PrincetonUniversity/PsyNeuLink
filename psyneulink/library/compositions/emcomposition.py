@@ -2146,8 +2146,13 @@ class EMComposition(AutodiffComposition):
 
     def execute(self, inputs, context, **kwargs):
         """Set input to weights of Projections to match_nodes and retrieved_nodes if not use_storage_node."""
+        # MODIFIED 11/5/23 OLD:
         # FIX: FOR NOW, SKIP AUTODIFF EXECUTION UNTIL FULLY IMPLEMENTED (INCLUDING LinearCombination FUNCTION in torch)
         results = super(AutodiffComposition, self).execute(inputs=inputs, context=context, **kwargs)
+        # # MODIFIED 11/5/23 NEW:
+        # # FIX: CRASHES HERE SINCE Storage FUNCTION IS NOT SUPPORTED IN PYTORCH
+        # results = super().execute(inputs=inputs, context=context, **kwargs)
+        # MODIFIED 11/5/23 END
         if not self.use_storage_node:
             self._store_memory(inputs, context)
         return results
@@ -2226,7 +2231,7 @@ class EMComposition(AutodiffComposition):
             self.retrieved_nodes[i].path_afferents[0].parameters.matrix.set(field_memories, context)
 
     def learn(self, *args, **kwargs):
-        super().learn(*args, **kwargs)
+        return super().learn(*args, **kwargs)
 
     def _get_execution_mode(self, execution_mode):
         """Parse execution_mode argument and return a valid execution mode for the learn() method"""
