@@ -126,7 +126,9 @@ def pytorch_function_creator(function, device, context=None):
                 memory_matrix[:,idx_of_min] = torch.tensor(entry)
             elif axis == 1:
                 memory_matrix[idx_of_min,:] = torch.tensor(entry)
+            # FIX: This is not essential (used in Pythonn version to report which entry was updated):
             self.parameters.entry._set(entry, context)
+            # FIX: This IS ESSENTIAL (it is the main point of the function):
             self.parameters.memory_matrix._set(memory_matrix, context)
         return func
 

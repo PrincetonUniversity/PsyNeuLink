@@ -486,9 +486,7 @@ class EMStorage(LearningFunction):
             else:
                 raise FunctionError(f"PROGRAM ERROR: axis ({axis}) is not 0 or 1")
 
-        # FIX: This is not essential (used in Pythonn version to report which entry was updated):
         self.parameters.entry._set(entry, context)
-        # FIX: This IS ESSENTIAL (it is the main point of the function):
         self.parameters.memory_matrix._set(memory_matrix, context)
 
         return self.convert_output_type(memory_matrix)
