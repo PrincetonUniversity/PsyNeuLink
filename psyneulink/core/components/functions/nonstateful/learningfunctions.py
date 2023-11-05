@@ -486,8 +486,10 @@ class EMStorage(LearningFunction):
             else:
                 raise FunctionError(f"PROGRAM ERROR: axis ({axis}) is not 0 or 1")
 
-        self.parameters.entry._set(entry, context)
-        self.parameters.memory_matrix._set(memory_matrix, context)
+            # Store entry in memory:
+            self.parameters.memory_matrix._set(memory_matrix, context)
+            # Record entry updated:
+            self.parameters.entry._set(entry, context)
 
         return self.convert_output_type(memory_matrix)
 
