@@ -18,6 +18,7 @@ from psyneulink.core.components.component import Component, ComponentsMeta
 from psyneulink.core.components.functions.nonstateful.transferfunctions import \
     Linear, Logistic, ReLU, SoftMax, Dropout, Identity
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, PRODUCT, SUM
+from psyneulink.core.components.functions.nonstateful.learningfunctions import EMStorage
 from psyneulink.core.compositions.composition import NodeRole, CompositionInterfaceMechanism
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
@@ -92,6 +93,14 @@ def pytorch_function_creator(function, device, context=None):
     elif isinstance(function, Dropout):
         prob = get_fct_param_value('p')
         return lambda x: (torch.dropout(input=x, p=prob, train=False))
+
+    elif isinstance(function, EMStorage):
+        memory_matrix = get_fct_param_value('MEMORY_MATRIX')
+        axis = get_fct_param_value('axis')
+        storage_location = get_fct_param_value('storage_location')
+        storage_prob = get_fct_param_value('storage_prob')
+        decay_rate = get_fct_param_value('decay_rate')
+        #FIX 11/4/23: HOW TO SUPPORT IF STATEMENTS HERE?
 
     else:
         raise Exception(f"Function {function} is not currently supported by AutodiffComposition")
