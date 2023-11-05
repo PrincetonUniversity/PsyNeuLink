@@ -792,8 +792,7 @@ class PytorchProjectionWrapper():
                         break
                     i += 1
 
-        matrix = projection.parameters.matrix.get(
-                            context=context)
+        matrix = projection.parameters.matrix.get(context=context)
         if matrix is None:
             matrix = projection.parameters.matrix.get(context=None)
         self.matrix = torch.nn.Parameter(torch.tensor(matrix.copy(),
