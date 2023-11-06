@@ -3365,6 +3365,13 @@ class NodeRole(enum.Enum):
         A `Node <Composition_Nodes>` that is both an `ORIGIN` and a `TERMINAL`.  This role cannot be modified
         programmatically.
 
+    BIAS
+        A `Node <Composition_Nodes>` for which one or more of its `InputPorts <InputPort>` is assigned a `default_input
+        <InputPort.default_input>` (which provides a prespecified constant value as its input), and any otber InputPorts
+        are designated as `internal_only <InputPort.internal_only>`. Since such a node does not receive any external
+        inputs, it is *not* assigned the role of `INPUT`. However, it may be assigned the role of `ORIGIN`, if none of
+        its afferents are from another Node.  This role cannot be modified programmatically.
+
     INTERNAL
         A `Node <Composition_Nodes>` that is neither `INPUT` nor `OUTPUT`.  Note that it *can* also be `ORIGIN`,
         `TERMINAL` or `SINGLETON`, if it has no `afferent <Mechanism_Base.afferents>` or `efferent
@@ -3451,6 +3458,7 @@ class NodeRole(enum.Enum):
     ORIGIN = enum.auto()
     INPUT = enum.auto()
     SINGLETON = enum.auto()
+    BIAS = enum.auto()
     INTERNAL = enum.auto()
     CYCLE = enum.auto()
     FEEDBACK_SENDER = enum.auto()
@@ -3465,6 +3473,12 @@ class NodeRole(enum.Enum):
     OUTPUT = enum.auto()
     TERMINAL = enum.auto()
 
+unmodifiable_node_roles = {NodeRole.ORIGIN,
+                           NodeRole.BIAS,
+                           NodeRole.INTERNAL,
+                           NodeRole.SINGLETON,
+                           NodeRole.TERMINAL,
+                           NodeRole.CYCLE}
 
 class Composition(Composition_Base, metaclass=ComponentsMeta):
     """
@@ -4577,7 +4591,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 warnings.warn(f"{role} is not a role that can be assigned directly {to_from} {self.name}. "
                               f"The relevant {Projection.__name__} to it must be designated as 'feedback' "
                               f"where it is addd to the {self.name};  assignment will be ignored.")
-            elif role in {NodeRole.ORIGIN, NodeRole.INTERNAL, NodeRole.SINGLETON, NodeRole.TERMINAL, NodeRole.CYCLE}:
+            elif role in unmodifiable_node_roles:
                 raise CompositionError(f"Attempt to assign {role} (to {node} of {self.name})"
                                        f"that cannot be modified by user.")
 
@@ -5184,6 +5198,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         SINGLETON:
           - all Nodes that are *both* ORIGIN and TERMINAL
 
+        BIAS:
+          - all Nodes that have one or more InputPorts for which default_input != None, and of their other InputPorts
+            are assigned internal_only=True
+
         INTERNAL:
           - all Nodes that are *neither* ORIGIN nor TERMINAL
 
@@ -5279,9 +5297,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.scheduler.consideration_queue:
             self._determine_origin_and_terminal_nodes_from_consideration_queue()
 
-        # INPUT
+        # INPUT (also assign BIAS here)
         origin_nodes = self.get_nodes_by_role(NodeRole.ORIGIN)
         for node in self.nodes:
+            # Assign any BIAS Nodes and exclude them as INPUT
+            if (isinstance(node, Mechanism)
+                    and any(input_port.default_input is not None for input_port in node.input_ports)
+                    and all(input_port.internal_only for input_port in node.input_ports)):
+                self._add_node_role(node, NodeRole.BIAS)
+                continue
+            # Check all remaining ORIGIN Nodes
             if node in origin_nodes:
                 # Don't allow INTERNAL Nodes to be INPUTS
                 if NodeRole.INTERNAL in self.get_roles_by_node(node):
