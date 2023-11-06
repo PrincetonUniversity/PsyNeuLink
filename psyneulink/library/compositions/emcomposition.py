@@ -910,7 +910,7 @@ def _memory_getter(owning_component=None, context=None)->list:
     <Mechanism_Base.afferents>` MappingProjections to each of the `retrieved_nodes <EMComposition.retrieved_nodes>`.
     """
 
-    # If storage_node is implemented, get memory from that
+    # If storage_node (EMstoragemechanism) is implemented, get memory from that
     if owning_component.is_initializing:
         return None
     if owning_component.use_storage_node:
@@ -1817,7 +1817,8 @@ class EMComposition(AutodiffComposition):
                                self.combined_softmax_node]
                     # if self.softmax_gain_control_nodes:
                     #     pathway.insert(4, self.softmax_gain_control_nodes[0]) # Only one, ensured above
-                self.add_backpropagation_learning_pathway(pathway)
+                # self.add_backpropagation_learning_pathway(pathway)
+                self.add_linear_processing_pathway(pathway)
 
             # softmax gain control is specified:
             for gain_control_node in self.softmax_gain_control_nodes:
@@ -1826,14 +1827,16 @@ class EMComposition(AutodiffComposition):
             # field_weights -> weighted_softmax pathways
             if self.field_weight_nodes:
                 for i in range(self.num_keys):
-                    self.add_backpropagation_learning_pathway([self.field_weight_nodes[i],
-                                                               self.weighted_softmax_nodes[i]])
+                    # self.add_backpropagation_learning_pathway([self.field_weight_nodes[i],
+                    #                                            self.weighted_softmax_nodes[i]])
+                    self.add_linear_processing_pathway([self.field_weight_nodes[i], self.weighted_softmax_nodes[i]])
 
             self.add_nodes(self.value_input_nodes)
 
             # Retrieval pathways
             for i in range(len(self.retrieved_nodes)):
-                self.add_backpropagation_learning_pathway([self.combined_softmax_node, self.retrieved_nodes[i]])
+                # self.add_backpropagation_learning_pathway([self.combined_softmax_node, self.retrieved_nodes[i]])
+                self.add_linear_processing_pathway([self.combined_softmax_node, self.retrieved_nodes[i]])
 
             # Storage Nodes
             if use_storage_node:
