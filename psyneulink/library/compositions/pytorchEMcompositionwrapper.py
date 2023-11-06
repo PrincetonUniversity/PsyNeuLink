@@ -26,6 +26,7 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         super().__init__(*args, **kwargs)
         self.storage_node = [node for node in self.nodes_map.values()
                              if isinstance(node._mechanism, EMStorageMechanism)][0]
+        # self.storage_mech = [node for node in self.nodes_map if isinstance(node, EMStorageMechanism)][0]
 
     # FIX: ?NEED TO CONTRUCT memory_matix FROM ??memory_template or pytorch?? IN __init__?
 
@@ -74,7 +75,7 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
 
         # FIX: NEW --------------------------------------------------------------------
 
-        memory = self.projections_map[self.storage_node]
+        memory = self.projections_map[self.storage_node._mechnanism]
 
     def store_memory(self, memory_to_store, context):
         """Store variable in memory_matrix
