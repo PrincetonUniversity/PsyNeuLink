@@ -5365,13 +5365,13 @@ class TestImportComposition:
 
         c = Composition(nodes=[i1,i2, o1,o2])
         c.import_composition(em,
-                             get_input_from={i1:em.key_input_nodes[0],
+                             get_input_from={i1:em.query_input_nodes[0],
                                              i2:em.value_input_nodes[0]},
                              send_output_to={em.retrieved_nodes[0]:o1,
                                              em.retrieved_nodes[1]:o2})
 
         assert all(node in c.nodes for node in em.nodes)
-        assert i1 in [proj.sender.owner for proj in em.key_input_nodes[0].path_afferents]
+        assert i1 in [proj.sender.owner for proj in em.query_input_nodes[0].path_afferents]
         assert i2 in [proj.sender.owner for proj in em.value_input_nodes[0].path_afferents]
         assert o1 in [proj.receiver.owner for proj in em.retrieved_nodes[0].efferents]
         assert o2 in [proj.receiver.owner for proj in em.retrieved_nodes[1].efferents]

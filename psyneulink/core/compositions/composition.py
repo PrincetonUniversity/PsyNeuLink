@@ -2939,7 +2939,7 @@ from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHO
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, CROSS_ENTROPY, \
-    DEFAULT, DICT, FEEDBACK, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, \
+    DEFAULT, DEFAULT_VARIABLE, DICT, FEEDBACK, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, \
     INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
     LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     LEARNING_SIGNAL, Loss, \
@@ -3366,11 +3366,11 @@ class NodeRole(enum.Enum):
         programmatically.
 
     BIAS
-        A `Node <Composition_Nodes>` for which one or more of its `InputPorts <InputPort>` is assigned a `default_input
-        <InputPort.default_input>` (which provides a prespecified constant value as its input), and any otber InputPorts
-        are designated as `internal_only <InputPort.internal_only>`. Since such a node does not receive any external
-        inputs, it is *not* assigned the role of `INPUT`. However, it may be assigned the role of `ORIGIN`, if none of
-        its afferents are from another Node.  This role cannot be modified programmatically.
+        A `Node <Composition_Nodes>` for which one or more of its `InputPorts <InputPort>` is assigned
+        *DEFAULT_VARIABLE* as its `default_input <InputPort.default_input>` (which provides it a prespecified
+        input that is constant across executions).  Such a node can also be assigned as an `INPUT` and/or `ORIGIN`,
+        if it receives input from outside the Composition and/or does not receive any `Projections <Projection>` from
+        other Nodes within the Composition, respectively.  This role cannot be modified programmatically.
 
     INTERNAL
         A `Node <Composition_Nodes>` that is neither `INPUT` nor `OUTPUT`.  Note that it *can* also be `ORIGIN`,
@@ -5199,8 +5199,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
           - all Nodes that are *both* ORIGIN and TERMINAL
 
         BIAS:
-          - all Nodes that have one or more InputPorts for which default_input != None, and of their other InputPorts
-            are assigned internal_only=True
+          - all Nodes that have one or more InputPorts for which default_input == DEFAULT_VARIABLE
 
         INTERNAL:
           - all Nodes that are *neither* ORIGIN nor TERMINAL
@@ -5297,15 +5296,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.scheduler.consideration_queue:
             self._determine_origin_and_terminal_nodes_from_consideration_queue()
 
-        # INPUT (also assign BIAS here)
+        # INPUT
         origin_nodes = self.get_nodes_by_role(NodeRole.ORIGIN)
         for node in self.nodes:
-            # Assign any BIAS Nodes and exclude them as INPUT
-            if (isinstance(node, Mechanism)
-                    and any(input_port.default_input is not None for input_port in node.input_ports)
-                    and all(input_port.internal_only for input_port in node.input_ports)):
-                self._add_node_role(node, NodeRole.BIAS)
-                continue
             # Check all remaining ORIGIN Nodes
             if node in origin_nodes:
                 # Don't allow INTERNAL Nodes to be INPUTS
@@ -5342,6 +5335,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                   and (not node.path_afferents
                        or all(p.sender.owner is self.input_CIM for p in node.path_afferents))):
                 self._add_node_role(node, NodeRole.INPUT)
+
+        # BIAS
+        for node in self.nodes:
+            if (isinstance(node, Mechanism)
+                    and any(input_port.default_input == DEFAULT_VARIABLE for input_port in node.input_ports)):
+                self._add_node_role(node, NodeRole.BIAS)
 
         # CYCLE
         for node in self.graph_processing.cycle_vertices:
