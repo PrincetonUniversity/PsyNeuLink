@@ -690,7 +690,7 @@ class EMStorageMechanism(LearningMechanism):
 
     def _instantiate_input_ports(self, input_ports=None, reference_value=None, context=None):
         """Override LearningMechanism to instantiate an InputPort for each field"""
-        input_ports = [{NAME: f"KEY_INPUT_{i}" if self.field_types[i] == 1 else f"VALUE_INPUT_{i}",
+        input_ports = [{NAME: f"QUERY_INPUT_{i}" if self.field_types[i] == 1 else f"VALUE_INPUT_{i}",
                         VARIABLE: self.variable[i],
                         PROJECTIONS: field}
                        for i, field in enumerate(self.input_ports)]
@@ -725,11 +725,11 @@ class EMStorageMechanism(LearningMechanism):
                  runtime_params=None):
         """Execute EMStorageMechanism.function and return learning_signals
 
-        For each node in key_input_nodes and value_input_nodes,
+        For each node in query_input_nodes and value_input_nodes,
         assign its value to afferent weights of corresponding retrieved_node.
         - memory = matrix of entries made up vectors for each field in each entry (row)
         - memory_full_vectors = matrix of entries made up vectors concatentated across all fields (used for norm)
-        - entry_to_store = key_input or value_input to store
+        - entry_to_store = query_input or value_input to store
         - field_memories = weights of Projections for each field
 
         DIVISION OF LABOR BETWEEN MECHANISM AND FUNCTION:

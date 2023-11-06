@@ -110,6 +110,10 @@ def pytorch_function_creator(function, device, context=None):
         prob = get_fct_param_value('p')
         return lambda x: (torch.dropout(input=x, p=prob, train=False))
 
+    elif isinstance(function, EMStorage):
+        # Stub for support of pytorchEMcompositionwrapper.py
+        return None
+
     else:
         raise Exception(f"Function {function} is not currently supported by AutodiffComposition")
 
@@ -607,7 +611,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     # Node is not INPUT to Composition or BIAS, so get all input from its afferents
                     variable = node.collate_afferents()
 
-                self.execute_node(node, variable)
+                self.execute_node(node, variable, context)
 
                 # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
                 #  note: these may be different than for actual Composition, as they are flattened
@@ -624,9 +628,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         return outputs
 
-    def execute_node(self, node, variable):
+    def execute_node(self, node, variable, context=None):
         """Execute node and store the result in the node's value attribute
-        Implemented as method so that it can be overridden by subclasses of PytorchCompositionWrapper
+        Implemented as method (and includes context as arg) so that it can be overridden
+        by subclasses of PytorchCompositionWrapper
         """
         node.execute(variable)
 

@@ -24,22 +24,22 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
 
     # FIX: ?NEED TO CONTRUCT memory_matix FROM ??memory_template or pytorch?? IN __init__?
 
-    def execute_node(self, node, variable):
+    def execute_node(self, node, variable, context):
         """Override to handle storage of entry to memory_matrix by EMStorage Function"""
         if isinstance(node._mechanism, EMStorageMechanism):
-            self.store_memory(variable)
+            self.store_memory(node, variable, context)
         else:
-            super().execute_node(node, variable)
+            super().execute_node(node, variable, context)
 
 
-    def store_memory(self, memory_to_store):
+    def store_memory(self, node, memory_to_store, context):
         """Store variable in memory_matrix
 
-        For each node in key_input_nodes and value_input_nodes,
+        For each node in query_input_nodes and value_input_nodes,
         assign its value to afferent weights of corresponding retrieved_node.
         - memory = matrix of entries made up vectors for each field in each entry (row)
         - memory_full_vectors = matrix of entries made up vectors concatentated across all fields (used for norm)
-        - entry_to_store = key_input or value_input to store
+        - entry_to_store = query_input or value_input to store
         - field_memories = weights of Projections for each field
 
         DIVISION OF LABOR BETWEEN MECHANISM AND FUNCTION:
@@ -53,18 +53,23 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
 
         :return: List[2d np.array] self.learning_signal
         """
+        from psyneulink.library.compositions.pytorchcomponents import pytorch_function_creator
+        # get_param = pytorch_function_creator.get_fct_param_value
+        mech = node._mechanism
+        axis = mech.function.parameters.axis._get(context)
+        storage_location = mech.function.parameters.storage_location._get(context)
+        storage_prob = mech.function.parameters.storage_prob._get(context)
+        decay_rate = mech.function.parameters.decay_rate._get(context)
+        field_weights = mech.parameters.field_weights.get(context) # modulable, so use getter
 
         memory_matrix = self.projections_map[node._mechanism.afferents[XXX]].matrix
-        PARAMETER = node.execute(variable, memory_matrix)
+        # memory_matrix = mech.function.parameters.memory_matrix._get(context)
 
+
+        PARAMETER = node.execute(variable, memory_matrix)
 
         # FIX: FROM pytorch_function_creator:
 
-        # memory_matrix = get_fct_param_value('memory_matrix')
-        axis = get_fct_param_value('axis')
-        storage_location = get_fct_param_value('storage_location')
-        storage_prob = get_fct_param_value('storage_prob')
-        decay_rate = get_fct_param_value('decay_rate')
         def func(entry, memory_matrix):
             # if random_state.uniform(0, 1) < storage_prob:
             if torch.rand(1) < storage_prob:

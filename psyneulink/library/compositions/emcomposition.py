@@ -2187,7 +2187,7 @@ class EMComposition(AutodiffComposition):
         assign its value to afferent weights of corresponding retrieved_node.
         - memory = matrix of entries made up vectors for each field in each entry (row)
         - memory_full_vectors = matrix of entries made up vectors concatentated across all fields (used for norm)
-        - entry_to_store = key_input or value_input to store
+        - entry_to_store = query_input or value_input to store
         - field_memories = weights of Projections for each field
         """
 
@@ -2224,7 +2224,7 @@ class EMComposition(AutodiffComposition):
                 # Decay existing memories before storage if memory_decay_rate is specified
                 if self.memory_decay_rate:
                     field_memories *= self.parameters.memory_decay_rate._get(context)
-                # Assign key_input vector to col of matrix that has lowest norm (i.e., weakest memory)
+                # Assign query_input vector to col of matrix that has lowest norm (i.e., weakest memory)
                 field_memories[:,idx_of_min] = np.array(entry_to_store)
                 # Assign updated matrix to Projection
                 input_node.efferents[0].parameters.matrix.set(field_memories, context)
