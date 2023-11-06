@@ -722,7 +722,7 @@ class EMStorageMechanism(LearningMechanism):
         For each node in query_input_nodes and value_input_nodes,
         assign its value to afferent weights of corresponding retrieved_node.
         - memory = matrix of entries made up vectors for each field in each entry (row)
-        - memory_full_vectors = matrix of entries made up vectors concatentated across all fields (used for norm)
+        - memory_full_vectors = matrix of entries made up of vectors concatentated across all fields (used for norm)
         - entry_to_store = query_input or value_input to store
         - field_memories = weights of Projections for each field
 
@@ -773,7 +773,7 @@ class EMStorageMechanism(LearningMechanism):
             if i < num_match_fields:
                 # For match matrices,
                 #   get entry to store from variable of Projection matrix (memory_field)
-                #   to match_node in which memory will be store (this is to accomodate concatenation_node)
+                #   to match_node in which memory will be stored (this is to accomodate concatenation_node)
                 axis = 0
                 entry_to_store = field_projection.variable
                 if concatenation_node is None:

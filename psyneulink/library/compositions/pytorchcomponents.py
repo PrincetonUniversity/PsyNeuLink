@@ -111,8 +111,24 @@ def pytorch_function_creator(function, device, context=None):
         return lambda x: (torch.dropout(input=x, p=prob, train=False))
 
     elif isinstance(function, EMStorage):
-        # Stub for support of pytorchEMcompositionwrapper.py
-        return None
+        # # Stub for support of pytorchEMcompositionwrapper.py
+        # return None
+        def func(entry_to_store, memory_matrix, axis, storage_location, storage_prob, decay_rate, random_state):
+            # if torch.rand(1) < storage_prob:
+            if random_state.uniform(0, 1) < storage_prob:
+                if decay_rate:
+                    memory_matrix *= decay_rate
+                if storage_location is not None:
+                    idx_of_min = storage_location
+                else:
+                    # Find weakest entry (i.e., with lowest norm) along specified axis of matrix
+                    idx_of_min = torch.argmin(torch.linalg.norm(memory_matrix, axis=axis))
+                if axis == 0:
+                    memory_matrix[:,idx_of_min] = entry_to_store
+                elif axis == 1:
+                    memory_matrix[idx_of_min,:] = entry_to_store
+            return memory_matrix
+        return func
 
     else:
         raise Exception(f"Function {function} is not currently supported by AutodiffComposition")

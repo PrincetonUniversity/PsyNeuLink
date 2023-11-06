@@ -1937,7 +1937,7 @@ class EMComposition(AutodiffComposition):
                                                        matrix = np.array(
                                                            memory_template[:,i].tolist()).transpose().astype(float),
                                                        function=LinearMatrix(normalize=normalize_memories),
-                                                       name=f'MEMORY for {self.key_names[i]}')},
+                                                       name=f'MEMORY for {self.key_names[i]} [KEY]')},
                     name=f'{self.key_names[i]} [MATCH to KEYS]')
                 for i in range(self.num_keys)
             ]
@@ -2074,7 +2074,7 @@ class EMComposition(AutodiffComposition):
                                                 MappingProjection(
                                                     sender=self.combined_softmax_node,
                                                     matrix=memory_template[:,i],
-                                                    name=f'MEMORY FOR {self.key_names[i]}')
+                                                    name=f'MEMORY FOR {self.key_names[i]} [RETRIEVE KEY]')
                                             },
                                name= f'{self.key_names[i]} [RETRIEVED]')
              for i in range(self.num_keys)]
@@ -2086,7 +2086,7 @@ class EMComposition(AutodiffComposition):
                                                     sender=self.combined_softmax_node,
                                                     matrix=memory_template[:,
                                                            i + self.num_keys],
-                                                    name=f'MEMORY FOR {self.value_names[i]}')},
+                                                    name=f'MEMORY FOR {self.value_names[i]} [RETRIEVE VALUE]')},
                                name= f'{self.value_names[i]} [RETRIEVED]')
              for i in range(self.num_values)]
 
