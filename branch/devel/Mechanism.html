@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanism &mdash; PsyNeuLink 0.14.0.0+78.g8150acae documentation</title>
+  <title>Mechanism &mdash; PsyNeuLink 0.14.0.0+79.g0818baab documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.14.0.0+78
+                  0.14.0.0+79
                 </div>
               
             
@@ -364,7 +364,7 @@ constructor, as described under <a class="reference internal" href="ParameterPor
 specified by the Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> attribute.  Every type of Mechanism has at least one
 (primary) function, and some have additional (auxiliary) ones (for example, <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> and
 <a class="reference internal" href="EVCControlMechanism.html"><span class="doc">EVCControlMechanism</span></a>). Mechanism functions are generally from the PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> class.  Most Mechanisms
-allow their function to be specified, using the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.function" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> argument of the Mechanism’s constructor.  The function can
+allow their function to be specified, using the <a class="reference internal" href="LCControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> argument of the Mechanism’s constructor.  The function can
 be specified using the name of <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> class, or its constructor (including arguments that specify its
 parameters).  For example, the <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>, which is <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> by
 default, can be specified to be the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> function as follows:</p>
