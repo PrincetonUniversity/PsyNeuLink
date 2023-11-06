@@ -22,17 +22,61 @@ __all__ = ['PytorchEMCompositionWrapper']
 class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
     """Wrapper for EMComposition as a Pytorch Module"""
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.storage_node = [node for node in self.nodes_map.values()
+                             if isinstance(node._mechanism, EMStorageMechanism)][0]
+
     # FIX: ?NEED TO CONTRUCT memory_matix FROM ??memory_template or pytorch?? IN __init__?
 
     def execute_node(self, node, variable, context):
         """Override to handle storage of entry to memory_matrix by EMStorage Function"""
-        if isinstance(node._mechanism, EMStorageMechanism):
-            self.store_memory(node, variable, context)
+        if node is self.storage_node:
+            self.store_memory(variable, context)
         else:
             super().execute_node(node, variable, context)
 
 
-    def store_memory(self, node, memory_to_store, context):
+    def get_memory(self)->list:
+        """Return list of memories in which rows (outer dimension) are memories for each field.
+        These are derived from `matrix <MappingProjection.matrix>` parameter of the `afferent
+        <Mechanism_Base.afferents>` MappingProjections to each of the `retrieved_nodes
+        <EMComposition.retrieved_nodes>`.
+        """
+        # if mech.is_initializing:
+        #     if mech.learning_signals is None or mech.input_ports is None:
+        #         return None
+
+        # # FIX: OLD --------------------------------------------------------------------
+        #
+        # num_fields = len(mech.input_ports)
+        #
+        # # Get learning_signals that project to retrieved_nodes
+        # num_learning_signals = len(mech.learning_signals)
+        # learning_signals_for_retrieved = owning_component.learning_signals[num_learning_signals - num_fields:]
+        #
+        # # Get memory from learning_signals that project to retrieved_nodes
+        # if owning_component.is_initializing:
+        #     # If initializing, learning_signals are still MappingProjections used to specify them, so get from them
+        #     memory = [retrieved_learning_signal.parameters.matrix.get(context)
+        #               for retrieved_learning_signal in learning_signals_for_retrieved]
+        # else:
+        #     # Otherwise, get directly from the learning_signals
+        #     memory = [retrieved_learning_signal.efferents[0].receiver.owner.parameters.matrix.get(context)
+        #               for retrieved_learning_signal in learning_signals_for_retrieved]
+        #
+        # # Get memory capacity from first length of first matrix (can use full set since might be ragged array)
+        # memory_capacity = len(memory[0])
+        #
+        # # Reorganize memory so that each row is an entry and each column is a field
+        # return [[memory[j][i] for j in range(num_fields)]
+        #           for i in range(memory_capacity)]
+
+        # FIX: NEW --------------------------------------------------------------------
+
+        memory = self.projections_map[self.storage_node]
+
+    def store_memory(self, memory_to_store, context):
         """Store variable in memory_matrix
 
         For each node in query_input_nodes and value_input_nodes,
@@ -54,48 +98,41 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         :return: List[2d np.array] self.learning_signal
         """
         from psyneulink.library.compositions.pytorchcomponents import pytorch_function_creator
-        # get_param = pytorch_function_creator.get_fct_param_value
-        mech = node._mechanism
-        axis = mech.function.parameters.axis._get(context)
-        storage_location = mech.function.parameters.storage_location._get(context)
-        storage_prob = mech.function.parameters.storage_prob._get(context)
-        decay_rate = mech.function.parameters.decay_rate._get(context)
-        field_weights = mech.parameters.field_weights.get(context) # modulable, so use getter
 
-        memory_matrix = self.projections_map[node._mechanism.afferents[XXX]].matrix
+        # FIX: FROM pytorch_function_creator (torch version of EMStorage)
+        # def func(entry, memory_matrix):
+        #     # if random_state.uniform(0, 1) < storage_prob:
+        #     if torch.rand(1) < storage_prob:
+        #         if decay_rate:
+        #             memory_matrix *= decay_rate
+        #         if storage_location is not None:
+        #             idx_of_min = storage_location
+        #         else:
+        #             # Find weakest entry (i.e., with lowest norm) along specified axis of matrix
+        #             idx_of_min = torch.argmin(torch.linalg.norm(memory_matrix, axis=axis))
+        #         if axis == 0:
+        #             memory_matrix[:,idx_of_min] = torch.tensor(entry)
+        #         elif axis == 1:
+        #             memory_matrix[idx_of_min,:] = torch.tensor(entry)
+        #     return memory_matrix
+
+        # # FIX: MAYBE NEEDED BELOW: -------------------------
         # memory_matrix = mech.function.parameters.memory_matrix._get(context)
+        # axis = mech.function.parameters.axis._get(context)
+        # storage_location = mech.function.parameters.storage_location._get(context)
+        # # FIX: ------------------------------------------
 
+        # FIX: MODIFIED FROM EMStorageMechanism._execute:
 
-        PARAMETER = node.execute(variable, memory_matrix)
+        mech = self.storage_node._mechanism
+        decay_rate = mech.parameters.decay_rate._get(context)      # modulable, so use getter
+        storage_prob = mech.parameters.storage_prob._get(context)  # modulable, so use getter
+        field_weights = mech.parameters.field_weights.get(context) # modulable, so use getter
+        concatenation_node = mech.concatenation_node
+        num_match_fields = 1 if concatenation_node else len([i for i in mech.field_types if i==1])
 
-        # FIX: FROM pytorch_function_creator:
-
-        def func(entry, memory_matrix):
-            # if random_state.uniform(0, 1) < storage_prob:
-            if torch.rand(1) < storage_prob:
-                if decay_rate:
-                    memory_matrix *= decay_rate
-                if storage_location is not None:
-                    idx_of_min = storage_location
-                else:
-                    # Find weakest entry (i.e., with lowest norm) along specified axis of matrix
-                    idx_of_min = torch.argmin(torch.linalg.norm(memory_matrix, axis=axis))
-                if axis == 0:
-                    memory_matrix[:,idx_of_min] = torch.tensor(entry)
-                elif axis == 1:
-                    memory_matrix[idx_of_min,:] = torch.tensor(entry)
-            return memory_matrix
-
-
-        # FIX: FROM EMStorageMechanism._execute:
-
-        decay_rate = self.parameters.decay_rate._get(context)      # modulable, so use getter
-        storage_prob = self.parameters.storage_prob._get(context)  # modulable, so use getter
-        field_weights = self.parameters.field_weights.get(context) # modulable, so use getter
-        concatenation_node = self.concatenation_node
-        num_match_fields = 1 if concatenation_node else len([i for i in self.field_types if i==1])
-
-        memory = self.parameters.memory_matrix._get(context)
+        memory = self.get_memory()
+        # FIX: THIS ??INSTEAD??
         if memory is None or self.is_initializing:
             if self.is_initializing:
                 # Return existing matrices for field_memories  # FIX: THE FOLLOWING DOESN'T TEST FUNCTION:
@@ -146,3 +183,7 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
                                                                  runtime_params=runtime_params))
         self.parameters.value._set(value, context)
         return value
+
+        # FIX: MAYBE:??
+        PARAMETER = node.execute(variable, memory_matrix)
+

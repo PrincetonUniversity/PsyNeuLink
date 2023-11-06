@@ -197,12 +197,6 @@ MEMORY_MATRIX = 'memory_matrix'
 FIELDS = 'fields'
 FIELD_TYPES = 'field_types'
 
-# def _memory_matrix_getter(owning_component=None, context=None):
-#     if context.composition:
-#         return context.composition.parameters.memory._get(context)
-#     else:
-#         return None
-
 def _memory_matrix_getter(owning_component=None, context=None)->list:
     """Return list of memories in which rows (outer dimension) are memories for each field.
     These are derived from `matrix <MappingProjection.matrix>` parameter of the `afferent
