@@ -442,7 +442,7 @@ class EMStorage(LearningFunction):
         decay_rate = self.parameters.decay_rate._get(context)
         random_state = self.parameters.random_state._get(context)
 
-        # FIX: IMPLEMENT decay_rate CALCUALTION
+        # FIX: IMPLEMENT decay_rate CALCULATION
 
         # IMPLEMENTATION NOTE: if memory_matrix is an arg, it must in params (put there by Component.function()
         # Manage memory_matrix param

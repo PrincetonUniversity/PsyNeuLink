@@ -883,6 +883,7 @@ from psyneulink.core.components.functions.function import \
     DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.compositions.composition import CompositionError, NodeRole
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
+from psyneulink.library.compositions.pytorchEMcompositionwrapper import PytorchEMCompositionWrapper
 from psyneulink.library.components.mechanisms.modulatory.learning.EMstoragemechanism import EMStorageMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
@@ -1199,6 +1200,8 @@ class EMComposition(AutodiffComposition):
     """
 
     componentCategory = EM_COMPOSITION
+    pytorch_composition_wrapper_type = PytorchEMCompositionWrapper
+
     class Parameters(AutodiffComposition.Parameters):
         """
             Attributes

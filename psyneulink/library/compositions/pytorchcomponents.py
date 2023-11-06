@@ -110,32 +110,6 @@ def pytorch_function_creator(function, device, context=None):
         prob = get_fct_param_value('p')
         return lambda x: (torch.dropout(input=x, p=prob, train=False))
 
-    elif isinstance(function, EMStorage):
-        memory_matrix = get_fct_param_value('memory_matrix')
-        axis = get_fct_param_value('axis')
-        storage_location = get_fct_param_value('storage_location')
-        storage_prob = get_fct_param_value('storage_prob')
-        decay_rate = get_fct_param_value('decay_rate')
-        def func(entry):
-            # if random_state.uniform(0, 1) < storage_prob:
-            if torch.rand(1) < storage_prob:
-                if decay_rate:
-                    memory_matrix *= decay_rate
-                if storage_location is not None:
-                    idx_of_min = storage_location
-                else:
-                    # Find weakest entry (i.e., with lowest norm) along specified axis of matrix
-                    idx_of_min = torch.argmin(torch.linalg.norm(memory_matrix, axis=axis))
-                if axis == 0:
-                    memory_matrix[:,idx_of_min] = torch.tensor(entry)
-                elif axis == 1:
-                    memory_matrix[idx_of_min,:] = torch.tensor(entry)
-                # # FIX: This is not essential (used in Pythonn version to report which entry was updated):
-                # self.parameters.entry._set(entry, context)
-                # FIX: This IS ESSENTIAL (it is the main point of the function):
-                self.parameters.memory_matrix._set(memory_matrix, context)
-        return func
-
     else:
         raise Exception(f"Function {function} is not currently supported by AutodiffComposition")
 
@@ -579,7 +553,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
             raise Exception("OPTIMIZER TYPE", optimizer_type, "NOT SUPPORTED")
         return optimizer
 
-    # performs forward computation for the model
     @handle_external_context()
     def forward(self, inputs, context=None)->dict:
         """Forward method of the model for PyTorch and LLVM modes
@@ -634,7 +607,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     # Node is not INPUT to Composition or BIAS, so get all input from its afferents
                     variable = node.collate_afferents()
 
-                node.execute(variable)
+                self.execute_node(node, variable)
+
                 # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
                 #  note: these may be different than for actual Composition, as they are flattened
                 if (node._mechanism in self._composition.get_nested_nodes_output_nodes_at_levels()):
@@ -649,6 +623,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
         context.source = old_source
 
         return outputs
+
+    def execute_node(self, node, variable):
+        """Execute node and store the result in the node's value attribute
+        Implemented as method so that it can be overridden by subclasses of PytorchCompositionWrapper
+        """
+        node.execute(variable)
 
     def detach_all(self):
         for projection in self.projections_map.values():
@@ -681,14 +661,13 @@ class PytorchMechanismWrapper():
         self._idx = component_idx
         self._context = context
 
-        self.function = pytorch_function_creator(mechanism.function, device, context)
-        self._context = context
-        self.value = None
+        self._is_input = False
+        self._is_bias = False
         self.afferents = []
         self.efferents = []
-
+        self.function = pytorch_function_creator(mechanism.function, device, context)
+        self.value = None
         self._target_mechanism = None
-        self._is_input = False
 
     def add_efferent(self, efferent):
         assert efferent not in self.efferents

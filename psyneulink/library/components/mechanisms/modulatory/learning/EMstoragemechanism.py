@@ -723,7 +723,7 @@ class EMStorageMechanism(LearningMechanism):
                  variable=None,
                  context=None,
                  runtime_params=None):
-        """Execute EMStorageMechanism. function and return learning_signals
+        """Execute EMStorageMechanism.function and return learning_signals
 
         For each node in key_input_nodes and value_input_nodes,
         assign its value to afferent weights of corresponding retrieved_node.

@@ -433,6 +433,8 @@ class AutodiffComposition(Composition):
     """
 
     componentCategory = AUTODIFF_COMPOSITION
+    pytorch_composition_wrapper_type = PytorchCompositionWrapper
+
     class Parameters(Composition.Parameters):
         optimizer = None
         learning_rate = Parameter(.001, fallback_default=True)
@@ -684,9 +686,9 @@ class AutodiffComposition(Composition):
         if self.scheduler is None:
             self.scheduler = Scheduler(graph=self.graph_processing)
         if self.parameters.pytorch_representation._get(context=context) is None or refresh:
-            model = PytorchCompositionWrapper(composition=self,
-                                              device=self.device,
-                                              context=context)
+            model = self.pytorch_composition_wrapper_type(composition=self,
+                                                          device=self.device,
+                                                          context=context)
 
             self.parameters.pytorch_representation._set(model, context, skip_history=True, skip_log=True)
 
