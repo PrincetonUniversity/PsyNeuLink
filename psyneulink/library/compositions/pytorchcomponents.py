@@ -100,21 +100,21 @@ def pytorch_function_creator(function, device, context=None):
 
     elif isinstance(function, SoftMax):
         gain = get_fct_param_value('gain')
-        # # MODIFIED 11/5/23 OLD:
-        # return lambda x: (torch.softmax(x, len(x)))
-        # MODIFIED 11/5/23 NEW:
         return lambda x: (torch.softmax(x, 0))
-        # MODIFIED 11/5/23 END
 
     elif isinstance(function, Dropout):
         prob = get_fct_param_value('p')
         return lambda x: (torch.dropout(input=x, p=prob, train=False))
 
     elif isinstance(function, EMStorage):
-        # # Stub for support of pytorchEMcompositionwrapper.py
-        # return None
-        def func(entry_to_store, memory_matrix, axis, storage_location, storage_prob, decay_rate, random_state):
-            # if torch.rand(1) < storage_prob:
+        def func(entry_to_store,
+                 memory_matrix,
+                 axis,
+                 storage_location,
+                 storage_prob,
+                 decay_rate,
+                 random_state)->torch.tensor:
+            """Decay existing memories and replace weakest entry with entry_to_store (parallel EMStorage._function)"""
             if random_state.uniform(0, 1) < storage_prob:
                 if decay_rate:
                     memory_matrix *= decay_rate

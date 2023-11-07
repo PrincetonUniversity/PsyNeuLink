@@ -9,10 +9,8 @@
 
 """PyTorch wrapper for EMComposition"""
 
-import graph_scheduler
 import torch
-import numpy as np
-
+from typing import Optional
 
 from psyneulink.library.compositions.pytorchcomponents import PytorchCompositionWrapper
 from psyneulink.library.components.mechanisms.modulatory.learning.EMstoragemechanism import EMStorageMechanism
@@ -30,7 +28,7 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
                              if isinstance(node._mechanism, EMStorageMechanism)][0]
 
         # Get PytorchProjectionWrappers for Projections to match and retrieve nodes;
-        #   used by get_memory() to construct memory_matrix and store_memory() to store entry in it)
+        #   used by get_memory() to construct memory_matrix and store_memory() to store entry in it
         pnl_storage_mech = self.storage_node._mechanism
         num_fields = len(pnl_storage_mech.input_ports)
         num_learning_signals = len(pnl_storage_mech.learning_signals)
@@ -58,7 +56,7 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
             super().execute_node(node, variable, context)
 
     @property
-    def memory(self)->list:
+    def memory(self)->Optional[torch.Tensor]:
         """Return list of memories in which rows (outer dimension) are memories for each field.
         These are derived from the matrix parameters of the afferent Projections to the retrieval_nodes
         """
@@ -71,32 +69,31 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
                                   for i in range(memory_capacity)]))
 
     def store_memory(self, memory_to_store, context):
-        """Store variable in memory_matrix
+        """Store variable in memory_matrix (parallel EMStorageMechanism._execute)
 
         For each node in query_input_nodes and value_input_nodes,
-        assign its value to afferent weights of corresponding retrieved_node.
+        assign its value to weights of corresponding afferents to corresponding match_node and/or retrieved_node.
         - memory = matrix of entries made up vectors for each field in each entry (row)
-        - memory_full_vectors = matrix of entries made up vectors concatentated across all fields (used for norm)
         - entry_to_store = query_input or value_input to store
-        - field_memories = weights of Projections for each field
+        - field_projections = Projections the matrices of which comprise memory
 
-        DIVISION OF LABOR BETWEEN MECHANISM AND FUNCTION:
-        EMStorageMechanism._execute:
+        DIVISION OF LABOR between this method and function called by it
+        store_memory (corresponds to EMStorageMechanism._execute)
          - compute norms to find weakest entry in memory
          - compute storage_prob to determine whether to store current entry in memory
-         - call function for each LearningSignal to decay existing memory and assign input to weakest entry
-        EMStorage function:
+         - call function with memory matrix for each field, to decay existing memory and assign input to weakest entry
+        storage_node.function (corresponds to EMStorage._function):
          - decay existing memories
          - assign input to weakest entry (given index for passed from EMStorageMechanism)
 
-        :return: List[2d np.array] self.learning_signal
+        :return: List[2d tensor] updated memories
         """
 
         from psyneulink.library.compositions.pytorchcomponents import pytorch_function_creator
         memory = self.memory
         assert memory is not None, f"PROGRAM ERROR: '{self.name}'.memory is None"
 
-        # Get updated parameter values for EMComposition's EMStorageMechanism
+        # Get current parameter values from EMComposition's EMStorageMechanism
         mech = self.storage_node._mechanism
         random_state = mech.function.parameters.random_state._get(context)
         decay_rate = mech.parameters.decay_rate._get(context)      # modulable, so use getter
@@ -104,8 +101,6 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         field_weights = mech.parameters.field_weights.get(context) # modulable, so use getter
         concatenation_node = mech.concatenation_node
         num_match_fields = 1 if concatenation_node else len([i for i in mech.field_types if i==1])
-
-        # Parallels EMStorageMechanism._execute:
 
         # Find weakest memory (i.e., with lowest norm)
         field_norms = torch.stack([torch.linalg.norm(field, dim=1) for field in [row for row in memory]])
