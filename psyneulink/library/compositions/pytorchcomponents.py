@@ -47,6 +47,7 @@ def pytorch_function_creator(function, device, context=None)->callable:
     returns a torch.tensor as output.
     """
 
+    # FIX: PUT ON Function Class
     def get_fct_param_value(param_name):
         val = function._get_current_parameter_value(param_name, context=context)
         if val is None:
@@ -61,6 +62,7 @@ def pytorch_function_creator(function, device, context=None)->callable:
             assert False, (f"PROGRAM ERROR: unspported value of parameter '{param_name}' ({val}) "
                            f"encountered in pytorch_function_creater().")
 
+    # FIX: PUT EACH OF THESE ON THE PNL FUNCTIONS THEMSELVES
     if isinstance(function, Identity):
         return lambda x: x
 
