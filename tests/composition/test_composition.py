@@ -34,9 +34,12 @@ from psyneulink.core.compositions.composition import Composition, NodeRole, Comp
 from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import \
-    (ADDITIVE, ALLOCATION_SAMPLES, BEFORE, DEFAULT, DISABLE, INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS,
+    (ADDITIVE, ALLOCATION_SAMPLES, BEFORE, DEFAULT, DEFAULT_INPUT, DEFAULT_VARIABLE, DISABLE,
+     INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS,
     LEARNED_PROJECTIONS, RANDOM_CONNECTIVITY_MATRIX, CONTROL,
-    NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OUTPUT_MECHANISM, OVERRIDE, SLOPE, TARGET_MECHANISM, VARIANCE)
+    NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OUTPUT_MECHANISM, OVERRIDE,
+     PARAMS, SLOPE, TARGET_MECHANISM,
+    VARIABLE, VARIANCE)
 from psyneulink.core.scheduling.condition import AtTimeStep, AtTrial, Never, TimeInterval
 from psyneulink.core.scheduling.condition import EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
@@ -7043,6 +7046,33 @@ class TestNodeRoles:
         assert set(comp.get_nodes_by_role(NodeRole.INPUT)) == {A,B}
         assert set(comp.get_nodes_by_role(NodeRole.OUTPUT)) == {A,C}
         assert set(comp.get_nodes_by_role(NodeRole.SINGLETON)) == {A}
+
+    def test_BIAS(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B', input_ports=[A,
+                                                       'external',
+                                                       {NAME:'bias',
+                                                        VARIABLE:21,
+                                                        PARAMS: {DEFAULT_INPUT: DEFAULT_VARIABLE}}])
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D', input_ports=[{NAME:'bias',
+                                                        VARIABLE:33,
+                                                        PARAMS: {DEFAULT_INPUT: DEFAULT_VARIABLE}},
+                                                       'recurrent'])
+        E = ProcessingMechanism(name='E')
+        MappingProjection(E,D.input_ports[1])
+        MappingProjection(D.output_ports[1],E)
+        # # FIX: INCLUSION OF A BELOW BLOCKS B FROM RECIEVING EXTERNAL INPUT ON UNOCCUPIED INPUTPORT
+        # comp = Composition(pathways=[[A,B],[B,C],[D,E,D]], name='comp')
+        comp = Composition(pathways=[[B,C],[D,E,D]], name='comp')
+        comp._analyze_graph()
+        comp.run()
+        assert B.value[2] == [21]
+        assert D.value[0] == [33]
+        assert set(comp.get_nodes_by_role(NodeRole.INPUT)) == {B,D,E}
+        assert set(comp.get_nodes_by_role(NodeRole.BIAS)) == {B,D}
+        assert set(comp.get_nodes_by_role(NodeRole.OUTPUT)) == {C,D,E}
+
 
     def test_INTERNAL(self):
         comp = Composition(name='comp')

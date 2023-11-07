@@ -466,9 +466,21 @@ class Linear(TransferFunction):  # ---------------------------------------------
                 if variable.dtype == object:
                     result = np.zeros_like(variable)
                     for i, item in enumerate(variable):
-                        result[i] = variable[i] * slope + intercept
+                        try:
+                            result[i] = variable[i] * slope + intercept
+                        except TypeError:
+                            owner_str = f" of '{self.owner.name}'" if self.owner else ""
+                            if variable[i] is None:
+                                err_msg = (f"Item {i} of {VARIABLE} passed to {self.name}{owner_str} is 'None'; "
+                                           f"may be due to missing afferent projection to input_ports[{i}]")
+                            else:
+                                err_msg = (f"Unrecognized type for item {i} of {VARIABLE} (variable[i]) "
+                                           f"passed to {self.name}{owner_str}.")
+                            raise FunctionError(err_msg)
                 else:
-                    raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
+                    owner_str = f"'{self.owner.name}'" if self.owner else ""
+                    raise FunctionError(f"Unrecognized type for {VARIABLE} ({variable}) "
+                                        f"passed to {self.name}{owner_str}.")
             # KAM 6/28/18: If the variable does not have a "dtype" attr but made it to this line, then it must be of a
             # type that even np does not recognize -- typically a custom OutputPort variable with items of different
             # shapes (e.g. variable = [[0.0], [0.0], array([[0.0, 0.0]])] )
