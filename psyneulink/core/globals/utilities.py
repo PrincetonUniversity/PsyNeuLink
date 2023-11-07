@@ -121,8 +121,16 @@ from itertools import chain, combinations
 
 import numpy as np
 
+# Conditionally import torch
+try:
+    import torch
+except ImportError:
+    torch = None
+
 from psyneulink.core.globals.keywords import \
     comparison_operators, DISTANCE_METRICS, EXPONENTIAL, GAUSSIAN, LINEAR, MATRIX_KEYWORD_VALUES, NAME, SINUSOID, VALUE
+
+
 
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_list', 'convert_to_np_array',
@@ -1048,7 +1056,12 @@ def convert_to_np_array(value, dimension=None):
                 else:
                     raise
 
-    value = safe_create_np_array(value)
+    # If we get a RuntimeError, this is probably a BatchedTensorImpl from torch\vmap
+    # We can't convert to a numpy array, just let it pass through
+    try:
+        value = safe_create_np_array(value)
+    except RuntimeError as ex:
+        pass
 
     if dimension == 1:
         value = np.atleast_1d(value)
@@ -1061,7 +1074,14 @@ def convert_to_np_array(value, dimension=None):
         ):
             pass
         else:
-            value = np.atleast_2d(value)
+            try:
+                value = np.atleast_2d(value)
+            except RuntimeError:
+                # If we get a RuntimeError, this is probably a BatchedTensorImpl from torch\vmap
+                # We can't convert to a numpy array and use np.atleast_2d, so we need to use
+                # torch's atleast_2d function instead
+                if torch:
+                    value = torch.atleast_2d(value)
     elif dimension is not None:
         raise UtilitiesError("dimension param ({0}) must be None, 1, or 2".format(dimension))
 

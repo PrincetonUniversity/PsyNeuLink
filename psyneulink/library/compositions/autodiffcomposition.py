@@ -774,7 +774,12 @@ class AutodiffComposition(Composition):
                 input = inputs[component][0]
             else:
                 input = inputs[component]
-            curr_tensor_inputs[component] = torch.tensor(input, device=self.device).double()
+
+            if not isinstance(input, torch.Tensor):
+                curr_tensor_inputs[component] = torch.tensor(input, device=self.device).double()
+            else:
+                curr_tensor_inputs[component] = input
+
         for component in targets.keys():
             target = targets[component][0]
             # curr_tensor_targets[component] = torch.tensor(target, device=self.device).double()
