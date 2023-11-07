@@ -1872,6 +1872,7 @@ class TestNestedLearning:
             pnl.Composition(([input_mech, nested, output_mech],BackPropagation), name='comp')
         assert error_msg == str(error.value)
 
+
 class TestBackPropLearning:
 
     def test_matrix_spec_and_learning_rate(self):
@@ -1923,8 +1924,7 @@ class TestBackPropLearning:
             assert comp.nodes[6].parameters.learning_rate.get(comp) == learning_pathway_learning_rate
         np.testing.assert_allclose(result, expected_value)
 
-    @pytest.mark.pytorch
-    def test_back_prop(self):
+    def test_basic_python_back_prop(self):
 
         input_layer = pnl.TransferMechanism(name="input",
                                             size=2,
@@ -2106,6 +2106,29 @@ class TestBackPropLearning:
         expected = [[[0.024, 0.024]], [[0.03085165, 0.03226625]], [[0.04114933, 0.04513236]],
                     [[0.05755718, 0.06642539]], [[0.08571825, 0.10452682]]]
         np.testing.assert_allclose(actual=comp.results, desired=expected, atol=1e-8)
+
+    def test_two_output_ports_on_OUTPUT_Node(self):
+
+        input_A = pnl.ProcessingMechanism(name='INPUT_A', size=2)
+        input_B = pnl.ProcessingMechanism(name='INPUT_B', size=2)
+        output = pnl.ProcessingMechanism(name='OUTPUT', size=(2,3))
+        comp = Composition(name='comp')
+
+        with pytest.raises(CompositionError) as error_text:
+            comp.add_backpropagation_learning_pathway([input_A,
+                                                       pnl.MappingProjection(input_A, output.input_ports[0]),
+                                                       output])
+        error_msg = ("'OUTPUT', which is the terminal node of a learning pathway in 'comp', "
+                     "has a more than one output_port (2), which is not currently supported for learning. "
+                     "Trying using a different Mechanism for each output.")
+        assert error_msg in str(error_text.value)
+        # # FIX: Add these when/if learning is supported for multiple output_ports
+        # comp.add_backpropagation_learning_pathway([input_B,
+        #                                            pnl.MappingProjection(input_B, output.input_ports[1]),
+        #                                            output])
+        # comp.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
+        #                    input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+        #            learning_rate = .01, epochs=3)
 
 
     expected_quantities = [

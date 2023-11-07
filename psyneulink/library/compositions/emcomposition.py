@@ -12,6 +12,7 @@
 #   - SHOULD differential of SoftmaxGainControl Node be included in learning?
 #   - SHOULD MEMORY DECAY OCCUR IF STORAGE DOES NOT? CURRENTLY IT DOES NOT (SEE EMStorage Function)
 
+# - FIX: NAMING
 # - FIX: Concatenation:
 # -      LLVM for function and derivative
 # -      Add Concatenate to pytorchcreator_function
@@ -129,6 +130,7 @@
 #          - Add warning of this on initial call to learn()
 #
 #      - Composition:
+#        - _validate_input_shapes_and_expand_for_all_trials: consolidate with get_input_format()
 #        - Generalize treatment of FEEDBACK specification:
       #        - FIX: ADD TESTS FOR FEEDBACK TUPLE SPECIFICATION OF Projection, DIRECT SPECIFICATION IN CONSTRUCTOR
 #              - FIX: why aren't FEEDBACK_SENDER and FEEDBACK_RECEIVER roles being assigned when feedback is specified?
@@ -511,16 +513,18 @@ and the number of entries is determined by the `memory_capacity <EMComposition_M
   .. technical_note::
      The memories are actually stored in the `matrix <MappingProjection.matrix>` parameters of the `MappingProjections`
      from the `combined_softmax_node <EMComposition.combined_softmax_node>` to each of the `retrieved_nodes
-     <EMComposition.retrieved_nodes>`. Memories associated with each key are also stored in the `matrix
-     <MappingProjection.matrix>` parameters of the `MappingProjections` from the `key_input_nodes
+     <EMComposition.retrieved_nodes>`. Memories associated with each key are also stored (in inverted form) in the
+     `matrix <MappingProjection.matrix>` parameters of the `MappingProjections` from the `key_input_nodes
      <EMComposition.key_input_nodes>` to each of the corresponding `match_nodes <EMComposition.match_nodes>`.
      This is done so that the match of each key to the memories for the corresponding field can be computed simply
      by passing the input for each key through the Projection (which computes the dot product of the input with
      the Projection's `matrix <MappingProjection.matrix>` parameter) to the corresponding match_node; and, similarly,
-     retrieivals can be computed by passing the softmax disintributions and weighting for each field computed
+     retrieivals can be computed by passing the softmax distributions and weighting for each field computed
      in the `combined_softmax_node <EMComposition.combined_softmax_node>` through its Projection to each
-     `retrieved_node <EMComposition.retrieved_nodes>` (which computes the dot product of the weighted softmax over
-     entries with the corresponding field of each entry) to get the retreieved value for each field.
+     `retrieved_node <EMComposition.retrieved_nodes>` (which are inverted versions of the matrices of the
+     `MappingProjections` from the `key_input_nodes <EMComposition.key_input_nodes>` to each of the corresponding
+     `match_nodes <EMComposition.match_nodes>`), to compute the dot product of the weighted softmax over
+     entries with the corresponding field of each entry that yields the retreieved value for each field.
 
 .. _EMComposition_Output:
 
@@ -1649,11 +1653,11 @@ class EMComposition(AutodiffComposition):
         self.num_keys = len(keys_weights)
         self.num_values = self.num_fields - self.num_keys
         if parsed_field_names:
-            self.key_names = parsed_field_weights[:self.num_keys]
-            self.value_names = parsed_field_weights[self.num_keys:]
+            self.key_names = parsed_field_names[:self.num_keys]
+            self.value_names = parsed_field_names[self.num_keys:]
         else:
-            self.key_names = [f'KEY {i}' for i in range(self.num_keys)] if self.num_keys > 1 else ['KEY']
-            self.value_names = [f'VALUE {i}' for i in range(self.num_values)] if self.num_values > 1 else ['VALUE']
+            self.key_names = [f'{i} [QUERY]' for i in range(self.num_keys)] if self.num_keys > 1 else ['KEY']
+            self.value_names = [f'{i} [VALUE]' for i in range(self.num_values)] if self.num_values > 1 else ['VALUE']
 
         user_specified_concatenate_keys = concatenate_keys or False
         parsed_concatenate_keys = (user_specified_concatenate_keys
@@ -1837,7 +1841,7 @@ class EMComposition(AutodiffComposition):
             f"non-zero values in field_weights ({len(key_indices)})."
 
         key_input_nodes = [TransferMechanism(size=len(self.entry_template[key_indices[i]]),
-                                             name=f'{self.key_names[i]} INPUT')
+                                             name=f'{self.key_names[i]} [QUERY]')
                        for i in range(self.num_keys)]
 
         return key_input_nodes
@@ -1856,7 +1860,7 @@ class EMComposition(AutodiffComposition):
             f"non-zero values in field_weights ({len(value_indices)})."
 
         value_input_nodes = [TransferMechanism(size=len(self.entry_template[value_indices[i]]),
-                                               name= f'{self.value_names[i]} INPUT')
+                                               name= f'{self.value_names[i]} [VALUE]')
                            for i in range(self.num_values)]
 
         return value_input_nodes
@@ -1918,7 +1922,7 @@ class EMComposition(AutodiffComposition):
                                                            memory_template[:,i].tolist()).transpose().astype(float),
                                                        function=LinearMatrix(normalize=normalize_memories),
                                                        name=f'MEMORY for {self.key_names[i]}')},
-                    name=f'MATCH {self.key_names[i]}')
+                    name=f'{self.key_names[i]} [MATCH to KEYS]')
                 for i in range(self.num_keys)
             ]
 
@@ -1949,7 +1953,7 @@ class EMComposition(AutodiffComposition):
                                                             name=f'MATCH to SOFTMAX for {self.key_names[i]}')},
                                            function=SoftMax(gain=softmax_gain),
                                            name='SOFTMAX' if len(self.match_nodes) == 1
-                                           else f'SOFTMAX for {self.key_names[i]}')
+                                           else f'{self.key_names[i]} [SOFTMAX]')
                          for i, match_node in enumerate(self.match_nodes)]
 
         return softmax_nodes
@@ -1963,7 +1967,7 @@ class EMComposition(AutodiffComposition):
                                                       control_signals=[(GAIN, self.softmax_nodes[i])],
                                                       function=get_softmax_gain,
                                                       name='SOFTMAX GAIN CONTROL' if len(self.softmax_nodes) == 1
-                                                      else f'SOFTMAX GAIN CONTROL {i}')
+                                                      else f'SOFTMAX GAIN CONTROL {self.key_names[i]}')
                                      for i, match_node in enumerate(self.match_nodes)]
 
         return softmax_gain_control_nodes
@@ -1988,7 +1992,7 @@ class EMComposition(AutodiffComposition):
                                                                        PARAMS:{DEFAULT_INPUT: DEFAULT_VARIABLE},
                                                                        NAME: 'FIELD_WEIGHT'},
                                                           name= 'WEIGHT' if self.num_keys == 1
-                                                          else f'WEIGHT FOR {self.key_names[i]}')
+                                                          else f'{self.key_names[i]} [WEIGHT]')
                                       for i in range(self.num_keys)]
         return field_weight_nodes
 
@@ -2009,7 +2013,7 @@ class EMComposition(AutodiffComposition):
                                                     matrix=FULL_CONNECTIVITY_MATRIX,
                                                     name=f'WEIGHT to WEIGHTED SOFTMAX for {self.key_names[i]}')}],
                 function=LinearCombination(operation=PRODUCT),
-                name=f'WEIGHTED SOFTMAX FOR {self.key_names[i]}')
+                name=f'{self.key_names[i]} [WEIGHTED SOFTMAX]')
                 for i, sm_fw_pair in enumerate(zip(self.softmax_nodes,
                                                    self.field_weight_nodes))]
         return weighted_softmax_nodes
@@ -2036,7 +2040,7 @@ class EMComposition(AutodiffComposition):
                                                                              name=f'WEIGHTED SOFTMAX to RETRIEVAL for '
                                                                                   f'{self.key_names[i]}')
                                                            for i, s in enumerate(input_source)]}],
-                                name='RETRIEVAL'))
+                                name='RETRIEVE'))
 
         assert len(combined_softmax_node.output_port.value) == memory_capacity, \
             'PROGRAM ERROR: number of items in combined_softmax_node ' \
@@ -2056,7 +2060,7 @@ class EMComposition(AutodiffComposition):
                                                     matrix=memory_template[:,i],
                                                     name=f'MEMORY FOR {self.key_names[i]}')
                                             },
-                               name= f'{self.key_names[i]} RETRIEVED')
+                               name= f'{self.key_names[i]} [RETRIEVED]')
              for i in range(self.num_keys)]
 
         self.retrieved_value_nodes = \
@@ -2067,7 +2071,7 @@ class EMComposition(AutodiffComposition):
                                                     matrix=memory_template[:,
                                                            i + self.num_keys],
                                                     name=f'MEMORY FOR {self.value_names[i]}')},
-                               name= f'{self.value_names[i]} RETRIEVED')
+                               name= f'{self.value_names[i]} [RETRIEVED]')
              for i in range(self.num_values)]
 
         return self.retrieved_key_nodes + self.retrieved_value_nodes
@@ -2119,7 +2123,7 @@ class EMComposition(AutodiffComposition):
                                           learning_signals=learning_signals,
                                           storage_prob=storage_prob,
                                           decay_rate = memory_decay_rate,
-                                          name='STORAGE MECHANISM')
+                                          name='STORE')
         return storage_node
 
     def _set_learning_attributes(self):
@@ -2222,17 +2226,23 @@ class EMComposition(AutodiffComposition):
             self.retrieved_nodes[i].path_afferents[0].parameters.matrix.set(field_memories, context)
 
     def learn(self, *args, **kwargs):
-        # super(AutodiffComposition, self).learn(*args, **kwargs)
         super().learn(*args, **kwargs)
 
     def _get_execution_mode(self, execution_mode):
         """Parse execution_mode argument and return a valid execution mode for the learn() method"""
+        # if execution_mode is None:
+        #     if self.execution_mode_warned_about_default is False:
+        #         warnings.warn(f"The execution_mode argument was not specified in the learn() method of {self.name}; "
+        #                       f"ExecutionMode.Python will be used by default.")
+        #         self.execution_mode_warned_about_default = True
+        #     execution_mode = ExecutionMode.Python
+        # return execution_mode
         if execution_mode is None:
             if self.execution_mode_warned_about_default is False:
                 warnings.warn(f"The execution_mode argument was not specified in the learn() method of {self.name}; "
-                              f"ExecutionMode.Python will be used by default.")
+                              f"ExecutionMode.PyTorch will be used by default.")
                 self.execution_mode_warned_about_default = True
-            execution_mode = ExecutionMode.Python
+            execution_mode = ExecutionMode.PyTorch
         return execution_mode
 
     def _update_learning_parameters(self, context):

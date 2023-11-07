@@ -338,14 +338,11 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
-from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
-from psyneulink.core.components.projections.projection import Projection_Base
-from psyneulink.core.compositions.composition import Composition, NodeRole, CompositionError, get_composition_for_node
-from psyneulink.core.compositions.report \
-    import ReportOutput, ReportParams, ReportProgress, ReportSimulations, ReportDevices, \
-    EXECUTE_REPORT, LEARN_REPORT, PROGRESS_REPORT
+from psyneulink.core.components.ports.inputport import InputPort
+from psyneulink.core.compositions.composition import Composition, NodeRole, CompositionError
+from psyneulink.core.compositions.report import (ReportOutput, ReportParams, ReportProgress, ReportSimulations,
+                                                 ReportDevices, EXECUTE_REPORT, LEARN_REPORT, PROGRESS_REPORT)
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context, CONTEXT
 from psyneulink.core.globals.keywords import AUTODIFF_COMPOSITION, SOFT_CLAMP, Loss
 from psyneulink.core.scheduling.scheduler import Scheduler
@@ -571,9 +568,10 @@ class AutodiffComposition(Composition):
                                             for p in node.efferents
                                             if p in current_comp.projections]:
 
-                    # Ignore ones that are not learnable except to a CIM (deal with those next)
-                    if (((not hasattr(efferent_proj,'learnable')) or (efferent_proj.learnable is False))
-                            and not isinstance(rcvr, CompositionInterfaceMechanism)):
+                    # Ignore efferent Projections that do not have a learnable attribute
+                    #   or are ModulatoryProjections (i.e., including LearningProjections)
+                    # Note: if learnable==False, it will be passed along to PyTorch in PytorchProjectionWrapper
+                    if not hasattr(efferent_proj,'learnable') or isinstance(efferent_proj,ModulatoryProjection_Base):
                         continue
 
                     # Deal with Projections to CIMs since nested comps can be learned in PyTorch mode
@@ -660,7 +658,9 @@ class AutodiffComposition(Composition):
             #     see test_xor_training_identicalness_standard_composition_vs_PyTorch_and_LLVM for example)
             output_mechs = self.get_nested_nodes_output_nodes_at_levels()
             assert set([mech for mech in [pathway[-1] for pathway in pathways]]) == set(output_mechs)
-            target_mechs = [ProcessingMechanism(default_variable = np.zeros_like(mech.value),
+            target_mechs = [ProcessingMechanism(default_variable = np.array([np.zeros_like(value)
+                                                                             for value in mech.value],
+                                                                            dtype=object),
                                                 name= 'TARGET for ' + mech.name)
                             for mech in output_mechs if mech not in self.target_output_map.values()]
             # Suppress warnings about role assignments
@@ -768,39 +768,36 @@ class AutodiffComposition(Composition):
         curr_tensor_inputs = {}
         curr_tensor_targets = {}
         for component in inputs.keys():
-            if isinstance(component, Mechanism_Base):
-                # FIX 10/1/23: SHOULD REALLY CYCLE THROUGH INPUT PORTS FOR A MECHANISM
-                #  RATHER THAN JUST ASSUMING ONE INPUT AND USING [0]
-                input = inputs[component][0]
+            if not isinstance(inputs[component], torch.Tensor):
+                curr_tensor_inputs[component] = torch.tensor(inputs[component], device=self.device).double()
             else:
-                input = inputs[component]
-
-            if not isinstance(input, torch.Tensor):
-                curr_tensor_inputs[component] = torch.tensor(input, device=self.device).double()
-            else:
-                curr_tensor_inputs[component] = input
+                curr_tensor_inputs[component] = inputs[component]
 
         for component in targets.keys():
-            target = targets[component][0]
-            # curr_tensor_targets[component] = torch.tensor(target, device=self.device).double()
-            # Convert Node back to output Node for indexing by component below
-            curr_tensor_targets[self.target_output_map[component]] = torch.tensor(target, device=self.device).double()
+            curr_tensor_targets[self.target_output_map[component]] = [torch.tensor(np.atleast_1d(target),
+                                                                                   device=self.device).double()
+                                                                      for target in targets[component]]
 
         # do forward computation on current inputs
+        #   should return 2d values for each component
         curr_tensor_outputs = self.parameters.pytorch_representation._get(context).forward(curr_tensor_inputs, context)
 
         for component in curr_tensor_outputs.keys():
             # possibly add custom loss option, which is a loss function that takes many args
             # (outputs, targets, weights, and more) and returns a scalar
-            new_loss = self.loss(curr_tensor_outputs[component], curr_tensor_targets[component])
+            new_loss = 0
+            for i in range(len(curr_tensor_outputs[component])):
+                new_loss += self.loss(curr_tensor_outputs[component][i],
+                                     curr_tensor_targets[component][i])
             tracked_loss += new_loss
 
         outputs = []
         for input_port in self.output_CIM.input_ports:
             assert (len(input_port.all_afferents) == 1), \
                 f"PROGRAM ERROR: {input_port.name} of ouput_CIM for '{self.name}' has more than one afferent."
-            _, component, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
-            outputs.append(curr_tensor_outputs[component].detach().cpu().numpy().copy())
+            port, component, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
+            idx = component.output_ports.index(port)
+            outputs += [curr_tensor_outputs[component][idx].detach().cpu().numpy().copy().tolist()]
 
         self.parameters.tracked_loss_count._set(self.parameters.tracked_loss_count._get(context=context) + 1,
                                                 context=context,
@@ -838,42 +835,58 @@ class AutodiffComposition(Composition):
     def _get_total_loss(self, num_trials: int=1, context:Context=None):
         return sum(self.parameters.trial_losses._get(context)[-num_trials:]) /num_trials
 
-    def _infer_output_nodes(self, nodes: dict):
-        """Remove INPUT Nodes, and return dict with values for TARGET Nodes
-
-        Returns
-        ---------
-        A dict mapping TARGET Nodes -> target values
-        """
-        return {node:value for node,value in nodes.items() if node in self.target_output_map}
-
-    def _infer_input_nodes(self, nodes: dict):
+    def _infer_input_nodes(self, input_dict: dict):
         """Remove TARGET Nodes, and return dict with values of INPUT Nodes for single trial
+        For nested Compositions, replace input to nested Composition with inputs to its INPUT Nodes
+        For InuptPorts, replace with owner
 
         Returns
         ---------
         A dict mapping INPUT Nodes -> input values for a single trial
         """
-        input_nodes = {}
-        for node, values in nodes.items():
-            if NodeRole.INPUT in self.get_roles_by_node(node) and NodeRole.TARGET not in self.get_roles_by_node(node):
-                if isinstance(node, Composition):
-                    i = 0
-                    for output_port in node.input_CIM.output_ports:
-                        # If node has input from a Node in an outer Composition, no need for input here
-                        if node.input_CIM._get_source_node_for_input_CIM(output_port):
-                            continue
-                        assert len(output_port.efferents) == 1, \
-                            (f"PROGRAM ERROR: {output_port.name} of ouput_CIM for '{node.name}' "
-                             f"has more than one efferent.")
-                        input_nodes[output_port.efferents[0].receiver] = values[i]
-                        i += 1
-                else:
-                    input_nodes[node] = values
-        return input_nodes
+        autodiff_input_dict = {}
+        for node, values in input_dict.items():
+            mech = node.owner if isinstance(node, InputPort) else node
+            if (mech in self.get_nested_nodes_input_nodes_at_levels()
+                    and mech not in self.get_nodes_by_role(NodeRole.TARGET)):
+                # Pass along inputs to all INPUT Nodes except TARGETS
+                # (those are handled separately in _infer_output_nodes)
+                autodiff_input_dict[node] = values
+            # FIX: 11/3/23:  This is handled _parse_learning_spec
+            # elif isinstance(node, Composition):
+            #     # Replace input to nested Composition with inputs for the InputPorts of its INPUT Nodes
+            #     i = 0
+            #     for output_port in node.input_CIM.output_ports:
+            #         # If node has input from a Node in an outer Composition, no need for input here
+            #         if node.input_CIM._get_source_node_for_input_CIM(output_port):
+            #             continue
+            #         assert len(output_port.efferents) == 1, \
+            #             (f"PROGRAM ERROR: {output_port.name} of ouput_CIM for '{node.name}' "
+            #              f"has more than one efferent.")
+            #         # Get input for destination input_port for every trial in values
+            #         #   note: each value (input spec) should be 2d rather than 3d,
+            #         #         since it is the input for an InputPort rather than a Mechanism;
+            #         #         this gets parsed in PytorchCompositionWrapper.forward()
+            #         # autodiff_input_dict[output_port.efferents[0].receiver] = values[i]
+            #         # autodiff_input_dict[output_port.efferents[0].receiver] = [value[i] for value in values]
+            #         i += 1
+        return autodiff_input_dict
 
-    def _parse_learning_spec(self, inputs, targets, execution_mode):
-        stim_input, num_input_trials = super()._parse_learning_spec(inputs, targets, execution_mode)
+    def _infer_output_nodes(self, input_dict: dict):
+        """Remove INPUT Nodes, and return dict with values for TARGET Nodes
+
+        Get Inputs to TARGET Nodes and assign to dict mapping them to OUTPUT Nodes of Composition,
+        which are used for computation of loss in autodiff_training().
+
+        Returns
+        ---------
+        A dict mapping TARGET Nodes -> target values corresponding to OUTPUT Nodes of Composition
+        """
+        # Reduce from 3d inputs to 2d values to match outputs computed in forward computation in autodiff_training()
+        return {node:value for node, value in input_dict.items() if node in self.target_output_map}
+
+    def _parse_learning_spec(self, inputs, targets, execution_mode, context):
+        stim_input, num_input_trials = super()._parse_learning_spec(inputs, targets, execution_mode, context)
 
         if not callable(inputs):
             input_ports_for_INPUT_Nodes = self._get_input_receivers()
