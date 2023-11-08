@@ -70,7 +70,6 @@ from enum import Flag, auto
 from math import e, pi, sqrt
 
 import numpy as np
-import torch
 from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Callable
@@ -273,7 +272,7 @@ class Identity(TransferFunction):  # -------------------------------------------
         val = builder.load(arg_in)
         builder.store(val, arg_out)
         return builder
-    
+
     def _gen_pytorch_fct(self, device, context=None):
         return lambda x: x
 
@@ -692,37 +691,6 @@ class Exponential(TransferFunction):  # ----------------------------------------
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
-        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-
-        rate_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, RATE)
-        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
-        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
-        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
-
-        rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_ptr)
-        bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
-        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
-        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
-
-        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
-        val = builder.load(ptri)
-        val = builder.fmul(val, rate)
-        val = builder.fadd(val, bias)
-        val = builder.call(exp_f, [val])
-
-        if "derivative" in tags:
-            # f'(x) = s*r*e^(r*x + b)
-            val = builder.fmul(val, scale)
-            val = builder.fmul(val, rate)
-        else:
-            # f(x) = s*e^(r*x + b) + o
-            val = builder.fmul(val, scale)
-            val = builder.fadd(val, offset)
-
-        builder.store(val, ptro)
-
     def _function(self,
                  variable=None,
                  context=None,
@@ -780,6 +748,46 @@ class Exponential(TransferFunction):  # ----------------------------------------
         bias = self._get_current_parameter_value(BIAS, context)
 
         return rate * scale * e**(rate * input + bias)
+
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        rate_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, RATE)
+        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
+        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
+        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
+
+        rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_ptr)
+        bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
+        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
+        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
+
+        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
+        val = builder.load(ptri)
+        val = builder.fmul(val, rate)
+        val = builder.fadd(val, bias)
+        val = builder.call(exp_f, [val])
+
+        if "derivative" in tags:
+            # f'(x) = s*r*e^(r*x + b)
+            val = builder.fmul(val, scale)
+            val = builder.fmul(val, rate)
+        else:
+            # f(x) = s*e^(r*x + b) + o
+            val = builder.fmul(val, scale)
+            val = builder.fadd(val, offset)
+
+        builder.store(val, ptro)
+
+    def _gen_pytorch_fct(self, device, context=None):
+        import torch
+        rate = self._get_pytorch_fct_param_value('rate', device, context)
+        scale = self._get_pytorch_fct_param_value('scale', device, context)
+        bias = self._get_pytorch_fct_param_value('bias', device, context)
+
+        return rate * scale * torch.exp(rate * input + bias)
+
 
 # **********************************************************************************************************************
 #                                                   Logistic
@@ -1102,6 +1110,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         builder.store(val, ptro)
 
     def _gen_pytorch_fct(self, device, context=None):
+        import torch
         gain = self._get_pytorch_fct_param_value('gain', device, context)
         bias = self._get_pytorch_fct_param_value('bias', device, context)
         offset = self._get_pytorch_fct_param_value('offset', device, context)
@@ -1429,12 +1438,13 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 
         builder.store(val, ptro)
 
-    def _gen_pytorch_fct(self, device, context=None):        
+    def _gen_pytorch_fct(self, device, context=None):
+        import torch
         gain = self._get_pytorch_fct_param_value('gain', device, context)
         bias = self._get_pytorch_fct_param_value('bias', device, context)
         offset = self._get_pytorch_fct_param_value('offset', device, context)
         return lambda x: 1 / (1 + torch.exp(-gain * (x + bias) + offset))
-        
+
 # **********************************************************************************************************************
 #                                                    ReLU
 # **********************************************************************************************************************
@@ -1671,13 +1681,14 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         builder.store(val, ptro)
 
     def _gen_pytorch_fct(self, device, context=None):
+        import torch
         gain = self._get_pytorch_fct_param_value('gain', device, context)
         bias = self._get_pytorch_fct_param_value('bias', device, context)
         leak = self._get_pytorch_fct_param_value('leak', device, context)
         return lambda x: (torch.max(input=(x - bias), other=torch.tensor([0], device=device).double()) * gain +
                             torch.min(input=(x - bias), other=torch.tensor([0], device=device).double()) * leak)
 
-        
+
 # **********************************************************************************************************************
 #                                                    Angle
 # **********************************************************************************************************************
@@ -2882,8 +2893,9 @@ class Dropout(TransferFunction):  #
 
         val = builder.load(ptri)
         builder.store(val, ptro)
-        
+
     def _gen_pytorch_fct(self, device, context=None):
+        import torch
         prob = self._get_pytorch_fct_param_value('p')
         return lambda x: (torch.dropout(input=x, p=prob, train=False))
 
@@ -3383,10 +3395,11 @@ class SoftMax(TransferFunction):
             return builder
         else:
             return self.__gen_llvm_apply(ctx, builder, params, state, arg_in, arg_out, output_type, tags=tags)
-        
+
     def _gen_pytorch_fct(self, device, context=None):
+        import torch
         gain = self._get_pytorch_fct_param_value('gain', device, context)
-        return lambda x: (torch.softmax(gain * x, 0))    
+        return lambda x: (torch.softmax(gain * x, 0))
 
 
 # **********************************************************************************************************************

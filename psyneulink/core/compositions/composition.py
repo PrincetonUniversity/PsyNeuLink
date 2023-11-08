@@ -3473,12 +3473,14 @@ class NodeRole(enum.Enum):
     OUTPUT = enum.auto()
     TERMINAL = enum.auto()
 
+
 unmodifiable_node_roles = {NodeRole.ORIGIN,
                            NodeRole.BIAS,
                            NodeRole.INTERNAL,
                            NodeRole.SINGLETON,
                            NodeRole.TERMINAL,
                            NodeRole.CYCLE}
+
 
 class Composition(Composition_Base, metaclass=ComponentsMeta):
     """

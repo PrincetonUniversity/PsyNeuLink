@@ -1583,7 +1583,7 @@ class LinearCombination(
             from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
             raise AutodiffCompositionError(f"The 'operation' parameter of {function.componentName} is not supported "
                                            f"by AutodiffComposition; use 'SUM' or 'PRODUCT' if possible.")
-        
+
 
 class CombineMeans(CombinationFunction):  # ------------------------------------------------------------------------
     # FIX: CONFIRM THAT 1D KWEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE

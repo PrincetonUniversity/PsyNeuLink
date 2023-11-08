@@ -276,7 +276,7 @@ for retrieval,, and that adds the capability for `memory_decay <EMComposition.me
 each entry in `memory <EMComposition.memory>` is structured (the number of fields in each entry and the length of
 each field), and its ``field_weights`` argument that defines which fields are used as cues for retrieval -- "keys" --
 and whether and how they are differentially weighted in the match process used for retrieval, and which are treated
-as "values" that are retrieved but not used by the match process.  The inputs corresponding to each key (i.e., used 
+as "values" that are retrieved but not used by the match process.  The inputs corresponding to each key (i.e., used
 as "queries") and value are represented as `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of the EMComposition
 (listed in its `query_input_nodes <EMComposition.query_input_nodes>` and `value_input_nodes
 <EMComposition.value_input_nodes>` attributes, respectively), and the retrieved values are represented as `OUTPUT
