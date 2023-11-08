@@ -70,6 +70,10 @@ from enum import Flag, auto
 from math import e, pi, sqrt
 
 import numpy as np
+try:
+    import torch
+except ImportError:
+    torch = None
 from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Callable
@@ -781,7 +785,6 @@ class Exponential(TransferFunction):  # ----------------------------------------
         builder.store(val, ptro)
 
     def _gen_pytorch_fct(self, device, context=None):
-        import torch
         rate = self._get_pytorch_fct_param_value('rate', device, context)
         scale = self._get_pytorch_fct_param_value('scale', device, context)
         bias = self._get_pytorch_fct_param_value('bias', device, context)
@@ -1110,7 +1113,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
         builder.store(val, ptro)
 
     def _gen_pytorch_fct(self, device, context=None):
-        import torch
         gain = self._get_pytorch_fct_param_value('gain', device, context)
         bias = self._get_pytorch_fct_param_value('bias', device, context)
         offset = self._get_pytorch_fct_param_value('offset', device, context)
@@ -1439,7 +1441,6 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         builder.store(val, ptro)
 
     def _gen_pytorch_fct(self, device, context=None):
-        import torch
         gain = self._get_pytorch_fct_param_value('gain', device, context)
         bias = self._get_pytorch_fct_param_value('bias', device, context)
         offset = self._get_pytorch_fct_param_value('offset', device, context)
@@ -1681,7 +1682,6 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         builder.store(val, ptro)
 
     def _gen_pytorch_fct(self, device, context=None):
-        import torch
         gain = self._get_pytorch_fct_param_value('gain', device, context)
         bias = self._get_pytorch_fct_param_value('bias', device, context)
         leak = self._get_pytorch_fct_param_value('leak', device, context)
@@ -2895,7 +2895,6 @@ class Dropout(TransferFunction):  #
         builder.store(val, ptro)
 
     def _gen_pytorch_fct(self, device, context=None):
-        import torch
         prob = self._get_pytorch_fct_param_value('p')
         return lambda x: (torch.dropout(input=x, p=prob, train=False))
 
@@ -3397,7 +3396,6 @@ class SoftMax(TransferFunction):
             return self.__gen_llvm_apply(ctx, builder, params, state, arg_in, arg_out, output_type, tags=tags)
 
     def _gen_pytorch_fct(self, device, context=None):
-        import torch
         gain = self._get_pytorch_fct_param_value('gain', device, context)
         return lambda x: (torch.softmax(gain * x, 0))
 

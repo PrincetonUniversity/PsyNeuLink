@@ -12,7 +12,7 @@
 import torch
 from typing import Optional
 
-from psyneulink.library.compositions.pytorchcomponents import PytorchCompositionWrapper
+from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper
 from psyneulink.library.components.mechanisms.modulatory.learning.EMstoragemechanism import EMStorageMechanism
 
 __all__ = ['PytorchEMCompositionWrapper']

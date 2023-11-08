@@ -148,7 +148,10 @@ import warnings
 from enum import Enum, IntEnum
 
 import numpy as np
-import torch
+try:
+    import torch
+except ImportError:
+    torch = None
 from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Callable
@@ -959,8 +962,6 @@ class Function_Base(Function):
          Use default value if not yet assigned
          Convert using torch.tensor if val is an array
         """
-        if torch is None:
-            raise FunctionError(f"torch must be installed to call pytorch version of {self.__class__.__name__}")
         val = self._get_current_parameter_value(param_name, context=context)
         if val is None:
             val = getattr(self.defaults, param_name)
@@ -970,9 +971,9 @@ class Function_Base(Function):
             return float(val)
         try:
             return torch.tensor(val, device=device).double()
-        except:
+        except Exception:
             assert False, (f"PROGRAM ERROR: unspported value of parameter '{param_name}' ({val}) "
-                           f"encountered in pytorch_function_creater().")
+                           f"encountered in pytorch_function_creator().")
 
 
 # *****************************************   EXAMPLE FUNCTION   *******************************************************

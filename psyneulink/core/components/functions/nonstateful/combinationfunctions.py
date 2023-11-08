@@ -34,7 +34,10 @@ when the CombinationFunction is used as the function of an InputPort or OutputPo
 import numbers
 
 import numpy as np
-import torch
+try:
+    import torch
+except ImportError:
+    torch = None
 from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Literal

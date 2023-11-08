@@ -332,7 +332,7 @@ try:
 except ImportError:
     torch_available = False
 else:
-    from psyneulink.library.compositions.pytorchcomponents import PytorchCompositionWrapper
+    from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper
 
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism

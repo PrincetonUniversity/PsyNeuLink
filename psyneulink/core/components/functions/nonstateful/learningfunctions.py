@@ -27,7 +27,10 @@ import types
 from collections import namedtuple
 
 import numpy as np
-import torch
+try:
+    import torch
+except ImportError:
+    torch = None
 from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Literal, Callable
