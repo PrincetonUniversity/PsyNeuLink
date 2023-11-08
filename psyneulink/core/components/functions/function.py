@@ -955,8 +955,8 @@ class Function_Base(Function):
         return model
     
     def _get_pytorch_fct_param_value(self, param_name, device, context):
-        """Return the current value of the parameter of the function with name param_name
-            (or its default value if not yet assigned)"""
+        """Return the current value of the param_name (or its default value if not yet assigned),
+        Convert using torch.tensor if it is an array"""
         val = self._get_current_parameter_value(param_name, context=context)
         if val is None:
             val = getattr(self.defaults, param_name)
