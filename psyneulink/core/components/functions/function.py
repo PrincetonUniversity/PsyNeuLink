@@ -148,7 +148,6 @@ import warnings
 from enum import Enum, IntEnum
 
 import numpy as np
-import torch
 from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Callable
@@ -953,10 +952,13 @@ class Function_Base(Function):
             model.function = typ
 
         return model
-    
+
     def _get_pytorch_fct_param_value(self, param_name, device, context):
-        """Return the current value of the param_name (or its default value if not yet assigned),
-        Convert using torch.tensor if it is an array"""
+        """Return the current value of param_name for the function
+         Use default value if not yet assigned
+         Convert using torch.tensor if val is an array
+        """
+        import torch
         val = self._get_current_parameter_value(param_name, context=context)
         if val is None:
             val = getattr(self.defaults, param_name)
