@@ -9,7 +9,10 @@
 
 """PyTorch wrapper for EMComposition"""
 
-import torch
+try:
+    import torch
+except ImportError:
+    torch = None
 from typing import Optional
 
 from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper
