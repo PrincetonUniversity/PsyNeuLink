@@ -640,11 +640,7 @@ class PytorchMechanismWrapper():
             self.value = self.function(variable).unsqueeze(0)
         else:
             # Make value 2d by creating list of values returned by function for each item in variable
-            # MODIFIED 11/4/23 OLD:
             self.value = [self.function(variable[i].squeeze(0)) for i in range(len(variable))]
-            # # MODIFIED 11/4/23 NEW:
-            # self.value = [self.function(variable[i]) for i in range(len(variable))]
-            # MODIFIED 11/4/23 END
         return self.value
 
     def _gen_llvm_execute(self, ctx, builder, state, params, mech_input, data):

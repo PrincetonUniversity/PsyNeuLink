@@ -10038,7 +10038,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # If Composition is in learning mode, not called from COMMAND_LINE, and not still preparing,
         #   presumably inputs have already been parsed so shouldn't do it again
-        # FIX: 11/3/23 - NOTE: This circumvents parsing of inputs when they are a func and called fromautodiff_training
+        # FIX: 11/3/23 - NOTE: This circumvents parsing of inputs when they are a func and called from autodiff_training
         if (context and (context.runmode & ContextFlags.LEARNING_MODE)
                 and (context.source & ContextFlags.COMPOSITION)
                 and not (context.execution_phase & ContextFlags.PREPARING)):
