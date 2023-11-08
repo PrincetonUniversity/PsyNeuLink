@@ -70,6 +70,7 @@ from enum import Flag, auto
 from math import e, pi, sqrt
 
 import numpy as np
+import torch
 from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Callable
@@ -272,6 +273,9 @@ class Identity(TransferFunction):  # -------------------------------------------
         val = builder.load(arg_in)
         builder.store(val, arg_out)
         return builder
+    
+    def _gen_pytorch_fct(self, device, context=None):
+        return lambda x: x
 
 
 # **********************************************************************************************************************
@@ -408,27 +412,6 @@ class Linear(TransferFunction):  # ---------------------------------------------
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
-        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-        slope_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SLOPE)
-        intercept_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, INTERCEPT)
-
-        slope = pnlvm.helpers.load_extract_scalar_array_one(builder, slope_ptr)
-        intercept = pnlvm.helpers.load_extract_scalar_array_one(builder, intercept_ptr)
-
-
-        if "derivative" in tags:
-            # f'(x) = m
-            val = slope
-        else:
-            # f(x) = mx + b
-            val = builder.load(ptri)
-            val = builder.fmul(val, slope)
-            val = builder.fadd(val, intercept)
-
-        builder.store(val, ptro)
-
     def _function(self,
                  variable=None,
                  context=None,
@@ -456,7 +439,6 @@ class Linear(TransferFunction):  # ---------------------------------------------
         slope = self._get_current_parameter_value(SLOPE, context)
         intercept = self._get_current_parameter_value(INTERCEPT, context)
 
-        # MODIFIED 11/9/17 NEW:
         try:
             # By default, result should be returned as np.ndarray with same dimensionality as input
             result = variable * slope + intercept
@@ -523,6 +505,32 @@ class Linear(TransferFunction):  # ---------------------------------------------
             intercept = self.parameters.intercept._get(context)
 
         return slope == 1 and intercept == 0
+
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+        slope_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SLOPE)
+        intercept_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, INTERCEPT)
+
+        slope = pnlvm.helpers.load_extract_scalar_array_one(builder, slope_ptr)
+        intercept = pnlvm.helpers.load_extract_scalar_array_one(builder, intercept_ptr)
+
+
+        if "derivative" in tags:
+            # f'(x) = m
+            val = slope
+        else:
+            # f(x) = mx + b
+            val = builder.load(ptri)
+            val = builder.fmul(val, slope)
+            val = builder.fadd(val, intercept)
+
+        builder.store(val, ptro)
+
+    def _gen_pytorch_fct(self, device, context=None):
+        slope = self._get_pytorch_fct_param_value('slope', device, context)
+        intercept = self._get_pytorch_fct_param_value('intercept', device, context)
+        return lambda x: x * slope + intercept
 
 
 # **********************************************************************************************************************
@@ -975,45 +983,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
-        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-
-        gain_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, GAIN)
-        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
-        x_0_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, X_0)
-        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
-        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
-
-        gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
-        bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
-        x_0 = pnlvm.helpers.load_extract_scalar_array_one(builder, x_0_ptr)
-        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
-        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
-
-        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
-        val = builder.load(ptri)
-
-        if "derivative_out" not in tags:
-            val = builder.fadd(val, bias)
-            val = builder.fsub(val, x_0)
-            val = builder.fmul(val, gain)
-            val = builder.fsub(offset, val)
-            val = builder.call(exp_f, [val])
-            val = builder.fadd(ctx.float_ty(1), val)
-            val = builder.fdiv(ctx.float_ty(1), val)
-            val = builder.fmul(val, scale)
-
-        if "derivative" in tags or "derivative_out" in tags:
-            # f(x) = g * s * o * (1-o)
-            function_val = val
-            val = builder.fsub(ctx.float_ty(1), function_val)
-            val = builder.fmul(function_val, val)
-            val = builder.fmul(gain, val)
-            val = builder.fmul(scale, val)
-
-        builder.store(val, ptro)
-
     def _function(self,
                  variable=None,
                  context=None,
@@ -1092,6 +1061,51 @@ class Logistic(TransferFunction):  # -------------------------------------------
             output = self.function(input, context=context)
 
         return gain * scale * output * (1 - output)
+
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        gain_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, GAIN)
+        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
+        x_0_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, X_0)
+        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
+        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
+
+        gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
+        bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
+        x_0 = pnlvm.helpers.load_extract_scalar_array_one(builder, x_0_ptr)
+        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
+        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
+
+        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
+        val = builder.load(ptri)
+
+        if "derivative_out" not in tags:
+            val = builder.fadd(val, bias)
+            val = builder.fsub(val, x_0)
+            val = builder.fmul(val, gain)
+            val = builder.fsub(offset, val)
+            val = builder.call(exp_f, [val])
+            val = builder.fadd(ctx.float_ty(1), val)
+            val = builder.fdiv(ctx.float_ty(1), val)
+            val = builder.fmul(val, scale)
+
+        if "derivative" in tags or "derivative_out" in tags:
+            # f(x) = g * s * o * (1-o)
+            function_val = val
+            val = builder.fsub(ctx.float_ty(1), function_val)
+            val = builder.fmul(function_val, val)
+            val = builder.fmul(gain, val)
+            val = builder.fmul(scale, val)
+
+        builder.store(val, ptro)
+
+    def _gen_pytorch_fct(self, device, context=None):
+        gain = self._get_pytorch_fct_param_value('gain', device, context)
+        bias = self._get_pytorch_fct_param_value('bias', device, context)
+        offset = self._get_pytorch_fct_param_value('offset', device, context)
+        return lambda x: 1 / (1 + torch.exp(-gain * (x + bias) + offset))
 
     def as_mdf_model(self):
         model = super().as_mdf_model()
@@ -1293,58 +1307,6 @@ class Tanh(TransferFunction):  # -----------------------------------------------
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
-        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-
-        gain_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, GAIN)
-        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
-        x_0_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, X_0)
-        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
-        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
-
-        gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
-        bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
-        x_0 = pnlvm.helpers.load_extract_scalar_array_one(builder, x_0_ptr)
-        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
-        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
-
-        variable = builder.load(ptri)
-        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
-
-        if "derivative" in tags:
-            exponent = builder.fadd(variable, bias)
-            exponent = builder.fsub(exponent, x_0)
-            exponent = builder.fmul(gain, exponent)
-            exponent = builder.fadd(exponent, offset)
-            exponent = builder.fmul(exponent.type(-2), exponent)
-
-            mult = builder.fmul(gain, scale)
-            mult = builder.fmul(mult.type(-2), mult)
-
-            exp_val = builder.call(exp_f, [exponent])
-            numerator = builder.fmul(exp_val.type(-2), exp_val)
-
-            denominator = builder.fadd(exp_val.type(1), exp_val)
-            denominator = builder.fmul(denominator, denominator)
-
-            val = builder.fdiv(numerator, denominator)
-            val = builder.fmul(val, mult)
-        else:
-            exp_val = builder.fadd(variable, bias)
-            exp_val = builder.fsub(exp_val, x_0)
-            exp_val = builder.fmul(exp_val, gain)
-            exp_val = builder.fadd(exp_val, offset)
-            exp_val = builder.fmul(exp_val.type(-2), exp_val)
-
-            val = builder.call(exp_f, [exp_val])
-            val1 = builder.fsub(val.type(1), val)
-            val2 = builder.fadd(val.type(1), val)
-            val = builder.fdiv(val1, val2)
-            val = builder.fmul(val, scale)
-
-        builder.store(val, ptro)
-
     def _function(self,
                  variable=None,
                  context=None,
@@ -1415,7 +1377,64 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 
         return mult * (numerator / denominator)
 
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
+        gain_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, GAIN)
+        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
+        x_0_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, X_0)
+        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
+        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
+
+        gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
+        bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
+        x_0 = pnlvm.helpers.load_extract_scalar_array_one(builder, x_0_ptr)
+        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
+        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
+
+        variable = builder.load(ptri)
+        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
+
+        if "derivative" in tags:
+            exponent = builder.fadd(variable, bias)
+            exponent = builder.fsub(exponent, x_0)
+            exponent = builder.fmul(gain, exponent)
+            exponent = builder.fadd(exponent, offset)
+            exponent = builder.fmul(exponent.type(-2), exponent)
+
+            mult = builder.fmul(gain, scale)
+            mult = builder.fmul(mult.type(-2), mult)
+
+            exp_val = builder.call(exp_f, [exponent])
+            numerator = builder.fmul(exp_val.type(-2), exp_val)
+
+            denominator = builder.fadd(exp_val.type(1), exp_val)
+            denominator = builder.fmul(denominator, denominator)
+
+            val = builder.fdiv(numerator, denominator)
+            val = builder.fmul(val, mult)
+        else:
+            exp_val = builder.fadd(variable, bias)
+            exp_val = builder.fsub(exp_val, x_0)
+            exp_val = builder.fmul(exp_val, gain)
+            exp_val = builder.fadd(exp_val, offset)
+            exp_val = builder.fmul(exp_val.type(-2), exp_val)
+
+            val = builder.call(exp_f, [exp_val])
+            val1 = builder.fsub(val.type(1), val)
+            val2 = builder.fadd(val.type(1), val)
+            val = builder.fdiv(val1, val2)
+            val = builder.fmul(val, scale)
+
+        builder.store(val, ptro)
+
+    def _gen_pytorch_fct(self, device, context=None):        
+        gain = self._get_pytorch_fct_param_value('gain', device, context)
+        bias = self._get_pytorch_fct_param_value('bias', device, context)
+        offset = self._get_pytorch_fct_param_value('offset', device, context)
+        return lambda x: 1 / (1 + torch.exp(-gain * (x + bias) + offset))
+        
 # **********************************************************************************************************************
 #                                                    ReLU
 # **********************************************************************************************************************
@@ -1586,37 +1605,6 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         return self.convert_output_type(result)
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
-        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-
-        gain_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, GAIN)
-        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
-        leak_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, LEAK)
-
-        gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
-        bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
-        leak = pnlvm.helpers.load_extract_scalar_array_one(builder, leak_ptr)
-
-        # Maxnum for some reason needs full function prototype
-        max_f = ctx.get_builtin("maxnum", [ctx.float_ty])
-        var = builder.load(ptri)
-        if "derivative_out" in tags:
-            val = builder.fdiv(var, gain)
-        else:
-            val = builder.fsub(var, bias)
-
-        if "derivative" in tags or "derivative_out" in tags:
-            predicate = builder.fcmp_ordered('>', val, val.type(0))
-            val = builder.select(predicate, gain, builder.fmul(gain, leak))
-        else:
-            val1 = builder.fmul(val, gain)
-            val2 = builder.fmul(val1, leak)
-
-            val = builder.call(max_f, [val1, val2])
-
-        builder.store(val, ptro)
-
     @handle_external_context()
     def derivative(self, input=None, output=None, context=None):
         """
@@ -1651,7 +1639,45 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         value = np.where(variable > 0, gain, gain * leak)
         return value
 
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
+        gain_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, GAIN)
+        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
+        leak_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, LEAK)
+
+        gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
+        bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
+        leak = pnlvm.helpers.load_extract_scalar_array_one(builder, leak_ptr)
+
+        # Maxnum for some reason needs full function prototype
+        max_f = ctx.get_builtin("maxnum", [ctx.float_ty])
+        var = builder.load(ptri)
+        if "derivative_out" in tags:
+            val = builder.fdiv(var, gain)
+        else:
+            val = builder.fsub(var, bias)
+
+        if "derivative" in tags or "derivative_out" in tags:
+            predicate = builder.fcmp_ordered('>', val, val.type(0))
+            val = builder.select(predicate, gain, builder.fmul(gain, leak))
+        else:
+            val1 = builder.fmul(val, gain)
+            val2 = builder.fmul(val1, leak)
+
+            val = builder.call(max_f, [val1, val2])
+
+        builder.store(val, ptro)
+
+    def _gen_pytorch_fct(self, device, context=None):
+        gain = self._get_pytorch_fct_param_value('gain', device, context)
+        bias = self._get_pytorch_fct_param_value('bias', device, context)
+        leak = self._get_pytorch_fct_param_value('leak', device, context)
+        return lambda x: (torch.max(input=(x - bias), other=torch.tensor([0], device=device).double()) * gain +
+                            torch.min(input=(x - bias), other=torch.tensor([0], device=device).double()) * leak)
+
+        
 # **********************************************************************************************************************
 #                                                    Angle
 # **********************************************************************************************************************
@@ -2780,13 +2806,6 @@ class Dropout(TransferFunction):  #
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
-        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-
-        val = builder.load(ptri)
-        builder.store(val, ptro)
-
     def _function(self,
                  variable=None,
                  context=None,
@@ -2825,14 +2844,6 @@ class Dropout(TransferFunction):  #
 
         return self.convert_output_type(result)
 
-    def _is_identity(self, context=None, defaults=False):
-        if defaults:
-            p = self.defaults.p
-        else:
-            p = self.parameters.p._get(context)
-
-        return (context.run_mode != ContextFlags.LEARNING_MODE) or (p == 0.0)
-
     @handle_external_context()
     def derivative(self, input=None, output=None, context=None):
         # raise FunctionError(f"Derivative of Dropout not yet supported.")
@@ -2856,6 +2867,25 @@ class Dropout(TransferFunction):  #
         # FIX: ?WHICH IS CORRECT:
         # return self._get_current_parameter_value(VARIABLE, context)
         return 1.0
+
+    def _is_identity(self, context=None, defaults=False):
+        if defaults:
+            p = self.defaults.p
+        else:
+            p = self.parameters.p._get(context)
+
+        return (context.run_mode != ContextFlags.LEARNING_MODE) or (p == 0.0)
+
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        val = builder.load(ptri)
+        builder.store(val, ptro)
+        
+    def _gen_pytorch_fct(self, device, context=None):
+        prob = self._get_pytorch_fct_param_value('p')
+        return lambda x: (torch.dropout(input=x, p=prob, train=False))
 
 
 # **********************************************************************************************************************
@@ -3076,6 +3106,132 @@ class SoftMax(TransferFunction):
 
         return np.asarray(variable)
 
+    def apply_softmax(self, input_value, gain, output_type):
+        # Modulate input_value by gain
+        v = gain * input_value
+        # Shift by max to avoid extreme values:
+        v = v - np.max(v)
+        # Exponentiate
+        v = np.exp(v)
+        # Normalize (to sum to 1)
+        sm = v / np.sum(v, axis=0)
+
+        # Generate one-hot encoding based on selected output_type
+
+        if output_type in {MAX_VAL, MAX_INDICATOR}:
+            return self.one_hot_function(sm)
+        elif output_type in {PROB, PROB_INDICATOR}:
+            return self.one_hot_function([input_value, sm])
+        else:
+            return sm
+
+    def _function(self,
+                 variable=None,
+                 context=None,
+                 params=None,
+                 ):
+        """
+
+        Arguments
+        ---------
+
+        variable : 1d array : default class_defaults.variable
+           an array to be transformed.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        Returns
+        -------
+
+        SoftMax transformation of variable : number or array
+
+        """
+        # Assign the params and return the result
+        output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
+        gain = self._get_current_parameter_value(GAIN, context)
+        per_item = self._get_current_parameter_value(PER_ITEM, context)
+        # Compute softmax and assign to sm
+
+        if per_item and len(np.shape(variable)) > 1:
+            output = []
+            for item in variable:
+                output.append(self.apply_softmax(item, gain, output_type))
+        else:
+            output = self.apply_softmax(variable, gain, output_type)
+
+        return self.convert_output_type(output)
+
+    @handle_external_context()
+    def derivative(self, input=None, output=None, context=None):
+        """
+        derivative(output)
+
+        .. technical note::
+           If MAX_VAL is specified for the `output <SoftMax.output>` parameter, and there is a tie for the maximum
+           value, the element with the lower index is used to compute the derivative (see IMPLEMENTATION NOTE below).
+
+        Returns
+        -------
+        derivative of values returned by SoftMax :  1d or 2d array (depending on *OUTPUT_TYPE* of SoftMax)
+        """
+
+        if output is None:
+            output = self.function(input, params={OUTPUT_TYPE: ALL}, context=context)
+        else:
+            assert not np.any(np.equal(0, output))
+
+        per_item = self._get_current_parameter_value(PER_ITEM, context)
+        if not per_item:
+            output = [output]
+
+        if np.array(output).ndim == 1:
+            output = np.atleast_2d(output)
+
+        result = []
+        for sm in output:
+            size = len(sm)
+
+            output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
+            if output_type == ALL:
+                # Return full Jacobian matrix of derivatives using Kronecker's delta method:
+                derivative = np.empty([size, size])
+                for i, j in np.ndindex(size, size):
+                    if i == j:
+                        d = 1
+                    else:
+                        d = 0
+                    derivative[j, i] = sm[i] * (d - sm[j])
+            elif output_type in {MAX_VAL, MAX_INDICATOR}:
+                # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
+                derivative = np.empty(size)
+                # Get the element of output returned as non-zero (max val) when output_type is not ALL
+                # IMPLEMENTATION NOTES:
+                #    if there is a tie for max, this chooses the item in sm with the lowest index in sm:
+                index_of_max = int(np.where(sm == np.max(sm))[-1][0])
+                #    the following would randomly choose a value in case of a tie,
+                #    but may cause problems with compilation:
+                # index_of_max = np.where(sm == np.max(sm))[0]
+                # if len(index_of_max)>1:
+                #     index_of_max = int(np.random.choice(index_of_max))
+                max_val = sm[index_of_max]
+                for i in range(size):
+                    if i == index_of_max:
+                        d = 1
+                    else:
+                        d = 0
+                    derivative[i] = sm[i] * (d - max_val)
+            else:
+                raise FunctionError("Can't assign derivative for SoftMax function{} since OUTPUT_TYPE is PROB "
+                                    "(and therefore the relevant element is ambiguous)".format(self.owner_name))
+
+            result.append(derivative)
+
+        assert per_item or len(result) == 1
+        return result[0] if not per_item or np.array(result).ndim == 3 else result
+
     def __gen_llvm_exp_sum(self, builder, index, ctx, vi, gain, exp_sum_ptr):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
 
@@ -3227,132 +3383,10 @@ class SoftMax(TransferFunction):
             return builder
         else:
             return self.__gen_llvm_apply(ctx, builder, params, state, arg_in, arg_out, output_type, tags=tags)
-
-    def apply_softmax(self, input_value, gain, output_type):
-        # Modulate input_value by gain
-        v = gain * input_value
-        # Shift by max to avoid extreme values:
-        v = v - np.max(v)
-        # Exponentiate
-        v = np.exp(v)
-        # Normalize (to sum to 1)
-        sm = v / np.sum(v, axis=0)
-
-        # Generate one-hot encoding based on selected output_type
-
-        if output_type in {MAX_VAL, MAX_INDICATOR}:
-            return self.one_hot_function(sm)
-        elif output_type in {PROB, PROB_INDICATOR}:
-            return self.one_hot_function([input_value, sm])
-        else:
-            return sm
-
-    def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
-        """
-
-        Arguments
-        ---------
-
-        variable : 1d array : default class_defaults.variable
-           an array to be transformed.
-
-        params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
-            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-            arguments of the constructor.
-
-        Returns
-        -------
-
-        SoftMax transformation of variable : number or array
-
-        """
-        # Assign the params and return the result
-        output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
-        gain = self._get_current_parameter_value(GAIN, context)
-        per_item = self._get_current_parameter_value(PER_ITEM, context)
-        # Compute softmax and assign to sm
-
-        if per_item and len(np.shape(variable)) > 1:
-            output = []
-            for item in variable:
-                output.append(self.apply_softmax(item, gain, output_type))
-        else:
-            output = self.apply_softmax(variable, gain, output_type)
-
-        return self.convert_output_type(output)
-
-    @handle_external_context()
-    def derivative(self, input=None, output=None, context=None):
-        """
-        derivative(output)
-
-        .. technical note::
-           If MAX_VAL is specified for the `output <SoftMax.output>` parameter, and there is a tie for the maximum
-           value, the element with the lower index is used to compute the derivative (see IMPLEMENTATION NOTE below).
-
-        Returns
-        -------
-        derivative of values returned by SoftMax :  1d or 2d array (depending on *OUTPUT_TYPE* of SoftMax)
-        """
-
-        if output is None:
-            output = self.function(input, params={OUTPUT_TYPE: ALL}, context=context)
-        else:
-            assert not np.any(np.equal(0, output))
-
-        per_item = self._get_current_parameter_value(PER_ITEM, context)
-        if not per_item:
-            output = [output]
-
-        if np.array(output).ndim == 1:
-            output = np.atleast_2d(output)
-
-        result = []
-        for sm in output:
-            size = len(sm)
-
-            output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
-            if output_type == ALL:
-                # Return full Jacobian matrix of derivatives using Kronecker's delta method:
-                derivative = np.empty([size, size])
-                for i, j in np.ndindex(size, size):
-                    if i == j:
-                        d = 1
-                    else:
-                        d = 0
-                    derivative[j, i] = sm[i] * (d - sm[j])
-            elif output_type in {MAX_VAL, MAX_INDICATOR}:
-                # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
-                derivative = np.empty(size)
-                # Get the element of output returned as non-zero (max val) when output_type is not ALL
-                # IMPLEMENTATION NOTES:
-                #    if there is a tie for max, this chooses the item in sm with the lowest index in sm:
-                index_of_max = int(np.where(sm == np.max(sm))[-1][0])
-                #    the following would randomly choose a value in case of a tie,
-                #    but may cause problems with compilation:
-                # index_of_max = np.where(sm == np.max(sm))[0]
-                # if len(index_of_max)>1:
-                #     index_of_max = int(np.random.choice(index_of_max))
-                max_val = sm[index_of_max]
-                for i in range(size):
-                    if i == index_of_max:
-                        d = 1
-                    else:
-                        d = 0
-                    derivative[i] = sm[i] * (d - max_val)
-            else:
-                raise FunctionError("Can't assign derivative for SoftMax function{} since OUTPUT_TYPE is PROB "
-                                    "(and therefore the relevant element is ambiguous)".format(self.owner_name))
-
-            result.append(derivative)
-
-        assert per_item or len(result) == 1
-        return result[0] if not per_item or np.array(result).ndim == 3 else result
+        
+    def _gen_pytorch_fct(self, device, context=None):
+        gain = self._get_pytorch_fct_param_value('gain', device, context)
+        return lambda x: (torch.softmax(gain * x, 0))    
 
 
 # **********************************************************************************************************************

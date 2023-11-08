@@ -15,10 +15,7 @@ import torch.nn as nn
 import numpy as np
 
 from psyneulink.core.components.component import Component, ComponentsMeta
-from psyneulink.core.components.functions.nonstateful.transferfunctions import \
-    Linear, Logistic, ReLU, SoftMax, Dropout, Identity
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, PRODUCT, SUM
-from psyneulink.core.components.functions.nonstateful.learningfunctions import EMStorage
 from psyneulink.core.compositions.composition import NodeRole, CompositionInterfaceMechanism
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
@@ -30,113 +27,6 @@ from psyneulink.core.globals.log import LogCondition
 from psyneulink.core import llvm as pnlvm
 
 __all__ = ['PytorchCompositionWrapper', 'PytorchMechanismWrapper', 'PytorchProjectionWrapper']
-
-
-def pytorch_function_creator(function, device, context=None)->callable:
-    """Convert a PsyNeuLink function into an equivalent function callable in PyTorch
-
-    Sets any modulable function-specific parameters to their values at the time of instantiation (or defaults if not
-    yet assigned).
-
-    NOTE: This is needed due to PyTorch limitations
-    (see: https://github.com/PrincetonUniversity/PsyNeuLink/pull/1657#discussion_r437489990)
-
-    Returns
-    -------
-    A function that takes a torch.tensor (any additional function-specific parameters) as input and
-    returns a torch.tensor as output.
-    """
-
-    # FIX: PUT ON Function Class
-    def get_fct_param_value(param_name):
-        val = function._get_current_parameter_value(param_name, context=context)
-        if val is None:
-            val = getattr(function.defaults, param_name)
-        if isinstance(val, (str, type(None))):
-            return val
-        elif np.isscalar(np.array(val)):
-            return float(val)
-        try:
-            return torch.tensor(val, device=device).double()
-        except:
-            assert False, (f"PROGRAM ERROR: unspported value of parameter '{param_name}' ({val}) "
-                           f"encountered in pytorch_function_creater().")
-
-    # FIX: PUT EACH OF THESE ON THE PNL FUNCTIONS THEMSELVES
-    if isinstance(function, Identity):
-        return lambda x: x
-
-    elif isinstance(function, Linear):
-        slope = get_fct_param_value('slope')
-        intercept = get_fct_param_value('intercept')
-        return lambda x: x * slope + intercept
-
-    elif isinstance(function, LinearCombination):
-        weights = function.parameters.weights.get(context)
-        if weights is not None:
-            weights = torch.tensor(weights, device=device).double()
-        if function.operation == SUM:
-            if weights is not None:
-                return lambda x: torch.sum(torch.stack(x) * weights, 0)
-            else:
-                return lambda x: torch.sum(torch.stack(x), 0)
-        elif function.operation == PRODUCT:
-            if weights is not None:
-                return lambda x: torch.prod(torch.stack(x) * weights, 0)
-            else:
-                return lambda x: torch.prod(torch.stack(x), 0)
-        else:
-            from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
-            raise AutodiffCompositionError(f"The 'operation' parameter of {function.componentName} is not supported "
-                                           f"by AutodiffComposition; use 'SUM' or 'PRODUCT' if possible.")
-
-    elif isinstance(function, Logistic):
-        gain = get_fct_param_value('gain')
-        bias = get_fct_param_value('bias')
-        offset = get_fct_param_value('offset')
-        return lambda x: 1 / (1 + torch.exp(-gain * (x + bias) + offset))
-
-    elif isinstance(function, ReLU):
-        gain = get_fct_param_value('gain')
-        bias = get_fct_param_value('bias')
-        leak = get_fct_param_value('leak')
-        return lambda x: (torch.max(input=(x - bias), other=torch.tensor([0], device=device).double()) * gain +
-                            torch.min(input=(x - bias), other=torch.tensor([0], device=device).double()) * leak)
-
-    elif isinstance(function, SoftMax):
-        gain = get_fct_param_value('gain')
-        return lambda x: (torch.softmax(x, 0))
-
-    elif isinstance(function, Dropout):
-        prob = get_fct_param_value('p')
-        return lambda x: (torch.dropout(input=x, p=prob, train=False))
-
-    elif isinstance(function, EMStorage):
-        def func(entry_to_store,
-                 memory_matrix,
-                 axis,
-                 storage_location,
-                 storage_prob,
-                 decay_rate,
-                 random_state)->torch.tensor:
-            """Decay existing memories and replace weakest entry with entry_to_store (parallel EMStorage._function)"""
-            if random_state.uniform(0, 1) < storage_prob:
-                if decay_rate:
-                    memory_matrix *= decay_rate
-                if storage_location is not None:
-                    idx_of_min = storage_location
-                else:
-                    # Find weakest entry (i.e., with lowest norm) along specified axis of matrix
-                    idx_of_min = torch.argmin(torch.linalg.norm(memory_matrix, axis=axis))
-                if axis == 0:
-                    memory_matrix[:,idx_of_min] = entry_to_store
-                elif axis == 1:
-                    memory_matrix[idx_of_min,:] = entry_to_store
-            return memory_matrix
-        return func
-
-    else:
-        raise Exception(f"Function {function} is not currently supported by AutodiffComposition")
 
 
 class PytorchCompositionWrapper(torch.nn.Module):
@@ -691,7 +581,13 @@ class PytorchMechanismWrapper():
         self._is_bias = False
         self.afferents = []
         self.efferents = []
-        self.function = pytorch_function_creator(mechanism.function, device, context)
+        try:
+            self.function = mechanism.function._gen_pytorch_fct(device, context)
+        except:
+            from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
+            raise AutodiffCompositionError(
+                f"Function {mechanism.function} is not currently supported by AutodiffComposition")
+
         self.value = None
         self._target_mechanism = None
 
@@ -910,117 +806,3 @@ class PytorchProjectionWrapper():
 
     def __repr__(self):
         return "PytorchWrapper for: " +self._projection.__repr__()
-
-
-# class PytorchFunctionWrapper(callable):
-#     """Wrapper for a PsyNeuLink function in a form callable in PyTorch
-#
-#     Sets any modulable function-specific parameters to their values at the time of instantiation (or defaults if not
-#     yet assigned).
-#
-#     NOTE: This is needed due to PyTorch limitations
-#     (see: https://github.com/PrincetonUniversity/PsyNeuLink/pull/1657#discussion_r437489990)
-#
-#     Returns
-#     -------
-#     A function that takes a torch.tensor (any additional function-specific parameters) as input and
-#     returns a torch.tensor as output.
-#     """
-#
-#     def __init__(function, device, context=None):
-#         """Convert a PsyNeuLink function into an equivalent PyTorch lambda function.
-#         NOTE: This is needed due to PyTorch limitations
-#         (see: https://github.com/PrincetonUniversity/PsyNeuLink/pull/1657#discussion_r437489990)
-#         Returns a lamba function that takes a torch.tensor as input and returns a torch.tensor as output.
-#         """
-#
-#         def get_fct_param_value(param_name):
-#             val = function._get_current_parameter_value(param_name, context=context)
-#             if val is None:
-#                 val = getattr(function.defaults, param_name)
-#             if isinstance(val, (str, type(None))):
-#                 return val
-#             elif np.isscalar(np.array(val)):
-#                 return float(val)
-#             try:
-#                 return torch.tensor(val, device=device).double()
-#             except:
-#                 assert False, (f"PROGRAM ERROR: unspported value of parameter '{param_name}' ({val}) "
-#                                f"encountered in pytorch_function_creater().")
-#
-#         if isinstance(function, Identity):
-#             return lambda x: x
-#
-#         elif isinstance(function, Linear):
-#             slope = get_fct_param_value('slope')
-#             intercept = get_fct_param_value('intercept')
-#             return lambda x: x * slope + intercept
-#
-#         elif isinstance(function, LinearCombination):
-#             weights = function.parameters.weights.get(context)
-#             if weights is not None:
-#                 weights = torch.tensor(weights, device=device).double()
-#             if function.operation == SUM:
-#                 if weights is not None:
-#                     return lambda x: torch.sum(torch.stack(x) * weights, 0)
-#                 else:
-#                     return lambda x: torch.sum(torch.stack(x), 0)
-#             elif function.operation == PRODUCT:
-#                 if weights is not None:
-#                     return lambda x: torch.prod(torch.stack(x) * weights, 0)
-#                 else:
-#                     return lambda x: torch.prod(torch.stack(x), 0)
-#             else:
-#                 from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
-#                 raise AutodiffCompositionError(f"The 'operation' parameter of {function.componentName} is not supported "
-#                                                f"by AutodiffComposition; use 'SUM' or 'PRODUCT' if possible.")
-#
-#         elif isinstance(function, Logistic):
-#             gain = get_fct_param_value('gain')
-#             bias = get_fct_param_value('bias')
-#             offset = get_fct_param_value('offset')
-#             return lambda x: 1 / (1 + torch.exp(-gain * (x + bias) + offset))
-#
-#         elif isinstance(function, ReLU):
-#             gain = get_fct_param_value('gain')
-#             bias = get_fct_param_value('bias')
-#             leak = get_fct_param_value('leak')
-#             return lambda x: (torch.max(input=(x - bias), other=torch.tensor([0], device=device).double()) * gain +
-#                                 torch.min(input=(x - bias), other=torch.tensor([0], device=device).double()) * leak)
-#
-#         elif isinstance(function, SoftMax):
-#             gain = get_fct_param_value('gain')
-#             return lambda x: (torch.softmax(x, 0))
-#
-#         elif isinstance(function, Dropout):
-#             prob = get_fct_param_value('p')
-#             return lambda x: (torch.dropout(input=x, p=prob, train=False))
-#
-#         elif isinstance(function, EMStorage):
-#             def func(entry_to_store,
-#                      memory_matrix,
-#                      axis,
-#                      storage_location,
-#                      storage_prob,
-#                      decay_rate,
-#                      random_state)->torch.tensor:
-#                 """Decay existing memories and replace weakest entry with entry_to_store (parallel EMStorage._function)"""
-#                 if random_state.uniform(0, 1) < storage_prob:
-#                     if decay_rate:
-#                         memory_matrix *= decay_rate
-#                     if storage_location is not None:
-#                         idx_of_min = storage_location
-#                     else:
-#                         # Find weakest entry (i.e., with lowest norm) along specified axis of matrix
-#                         idx_of_min = torch.argmin(torch.linalg.norm(memory_matrix, axis=axis))
-#                     if axis == 0:
-#                         memory_matrix[:,idx_of_min] = entry_to_store
-#                     elif axis == 1:
-#                         memory_matrix[idx_of_min,:] = entry_to_store
-#                 return memory_matrix
-#             return func
-#
-#         else:
-#             raise Exception(f"Function {function} is not currently supported by AutodiffComposition")
-#
-#

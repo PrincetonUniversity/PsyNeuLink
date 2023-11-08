@@ -148,6 +148,7 @@ import warnings
 from enum import Enum, IntEnum
 
 import numpy as np
+import torch
 from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Callable
@@ -952,6 +953,22 @@ class Function_Base(Function):
             model.function = typ
 
         return model
+    
+    def _get_pytorch_fct_param_value(self, param_name, device, context):
+        """Return the current value of the parameter of the function with name param_name
+            (or its default value if not yet assigned)"""
+        val = self._get_current_parameter_value(param_name, context=context)
+        if val is None:
+            val = getattr(self.defaults, param_name)
+        if isinstance(val, (str, type(None))):
+            return val
+        elif np.isscalar(np.array(val)):
+            return float(val)
+        try:
+            return torch.tensor(val, device=device).double()
+        except:
+            assert False, (f"PROGRAM ERROR: unspported value of parameter '{param_name}' ({val}) "
+                           f"encountered in pytorch_function_creater().")
 
 
 # *****************************************   EXAMPLE FUNCTION   *******************************************************

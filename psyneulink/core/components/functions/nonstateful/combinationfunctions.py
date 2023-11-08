@@ -34,6 +34,7 @@ when the CombinationFunction is used as the function of an InputPort or OutputPo
 import numbers
 
 import numpy as np
+import torch
 from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Literal
@@ -1564,6 +1565,25 @@ class LinearCombination(
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
         builder.store(val, ptro)
 
+    def _gen_pytorch_fct(self, device, context=None):
+        weights = self._get_pytorch_fct_param_value('weights', device, context)
+        if weights is not None:
+            weights = torch.tensor(weights, device=device).double()
+        if self.operation == SUM:
+            if weights is not None:
+                return lambda x: torch.sum(torch.stack(x) * weights, 0)
+            else:
+                return lambda x: torch.sum(torch.stack(x), 0)
+        elif self.operation == PRODUCT:
+            if weights is not None:
+                return lambda x: torch.prod(torch.stack(x) * weights, 0)
+            else:
+                return lambda x: torch.prod(torch.stack(x), 0)
+        else:
+            from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
+            raise AutodiffCompositionError(f"The 'operation' parameter of {function.componentName} is not supported "
+                                           f"by AutodiffComposition; use 'SUM' or 'PRODUCT' if possible.")
+        
 
 class CombineMeans(CombinationFunction):  # ------------------------------------------------------------------------
     # FIX: CONFIRM THAT 1D KWEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE

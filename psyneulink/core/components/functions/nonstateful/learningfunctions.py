@@ -27,6 +27,7 @@ import types
 from collections import namedtuple
 
 import numpy as np
+import torch
 from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Literal, Callable
@@ -493,6 +494,29 @@ class EMStorage(LearningFunction):
 
         return self.convert_output_type(memory_matrix)
 
+    def _gen_pytorch_fct(self, device, context=None):
+        def func(entry_to_store,
+                 memory_matrix,
+                 axis,
+                 storage_location,
+                 storage_prob,
+                 decay_rate,
+                 random_state)->torch.tensor:
+            """Decay existing memories and replace weakest entry with entry_to_store (parallel EMStorage._function)"""
+            if random_state.uniform(0, 1) < storage_prob:
+                if decay_rate:
+                    memory_matrix *= decay_rate
+                if storage_location is not None:
+                    idx_of_min = storage_location
+                else:
+                    # Find weakest entry (i.e., with lowest norm) along specified axis of matrix
+                    idx_of_min = torch.argmin(torch.linalg.norm(memory_matrix, axis=axis))
+                if axis == 0:
+                    memory_matrix[:,idx_of_min] = entry_to_store
+                elif axis == 1:
+                    memory_matrix[idx_of_min,:] = entry_to_store
+            return memory_matrix
+        return func
 
 class BayesGLM(LearningFunction):
     """

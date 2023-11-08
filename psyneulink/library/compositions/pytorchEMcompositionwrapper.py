@@ -89,7 +89,6 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         :return: List[2d tensor] updated memories
         """
 
-        from psyneulink.library.compositions.pytorchcomponents import pytorch_function_creator
         memory = self.memory
         assert memory is not None, f"PROGRAM ERROR: '{self.name}'.memory is None"
 
