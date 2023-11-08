@@ -4199,13 +4199,17 @@ class TestRun:
         A = ProcessingMechanism()
         B = ProcessingMechanism(input_ports=['OCCUPIED', 'UNOCCUPIED'])
         comp = Composition([A,B])
-        warning_type = UserWarning
-        warning_msg = '"InputPort (\'UNOCCUPIED\') of \'ProcessingMechanism-1\' ' \
-                      'doesn\'t have any afferent Projections."'
-        with pytest.raises(TypeError): # Caused by error on B at construction (with only one InputPort "occupied")
-            with pytest.warns(warning_type) as warning:
-                comp.run()
-        assert repr(warning[0].message.args[0]) == warning_msg
+        # warning_type = UserWarning
+        # warning_msg = '"InputPort (\'UNOCCUPIED\') of \'ProcessingMechanism-1\' ' \
+        #               'doesn\'t have any afferent Projections."'
+        # with pytest.raises(TypeError): # Caused by error on B at construction (with only one InputPort "occupied")
+        #     with pytest.warns(warning_type) as warning:
+        #         comp.run()
+        # assert repr(warning[0].message.args[0]) == warning_msg
+        with pytest.raises(pnl.FunctionError) as error: # Caused by error on B at construction (with only one InputPort
+            comp.run()
+        assert ("Item 1 of variable passed to Linear Function-8 of 'ProcessingMechanism-1' is 'None'; "
+                "may be due to missing afferent projection to input_ports[1]") in str(error.value)
 
     def test_missing_efferent_at_run_time(self):
         A = ProcessingMechanism()
