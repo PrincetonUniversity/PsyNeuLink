@@ -148,6 +148,7 @@ import warnings
 from enum import Enum, IntEnum
 
 import numpy as np
+import torch
 from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Callable
@@ -958,7 +959,8 @@ class Function_Base(Function):
          Use default value if not yet assigned
          Convert using torch.tensor if val is an array
         """
-        import torch
+        if torch is None:
+            raise FunctionError(f"torch must be installed to call pytorch version of {self.__class__.__name__}")
         val = self._get_current_parameter_value(param_name, context=context)
         if val is None:
             val = getattr(self.defaults, param_name)
