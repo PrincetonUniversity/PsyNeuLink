@@ -972,7 +972,7 @@ class Function_Base(Function):
         try:
             return torch.tensor(val, device=device).double()
         except Exception:
-            assert False, (f"PROGRAM ERROR: unspported value of parameter '{param_name}' ({val}) "
+            assert False, (f"PROGRAM ERROR: unsupported value of parameter '{param_name}' ({val}) "
                            f"encountered in pytorch_function_creator().")
 
 

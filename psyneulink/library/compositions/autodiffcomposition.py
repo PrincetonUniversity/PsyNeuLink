@@ -433,7 +433,11 @@ class AutodiffComposition(Composition):
     """
 
     componentCategory = AUTODIFF_COMPOSITION
-    pytorch_composition_wrapper_type = PytorchCompositionWrapper
+    if torch_available:
+        pytorch_composition_wrapper_type = PytorchCompositionWrapper
+    else:
+        raise AutodiffCompositionError('Pytorch python module (torch) is not installed. Please install it with '
+                                       '`pip install torch` or `pip3 install torch`')
 
     class Parameters(Composition.Parameters):
         optimizer = None
