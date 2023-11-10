@@ -11,12 +11,7 @@
 
 import graph_scheduler
 import torch
-# try:
-#     import torch
-# except (ImportError, ModuleNotFoundError):
-#     torch = None
 import torch.nn as nn
-import numpy as np
 
 from psyneulink.core.components.component import Component, ComponentsMeta
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, PRODUCT, SUM
