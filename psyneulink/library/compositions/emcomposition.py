@@ -1422,6 +1422,8 @@ class EMComposition(AutodiffComposition):
                                  self.learn_field_weights,
                                  use_gating_for_weighting)
 
+        self.pytorch_composition_wrapper_type = PytorchEMCompositionWrapper
+
         # Final Configuration and Clean-up ---------------------------------------------------------------------------
 
         # Assign learning-related attributes

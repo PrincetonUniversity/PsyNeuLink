@@ -334,7 +334,6 @@ except ImportError:
 else:
     from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper
 
-from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
@@ -433,7 +432,7 @@ class AutodiffComposition(Composition):
     """
 
     componentCategory = AUTODIFF_COMPOSITION
-    pytorch_composition_wrapper_type = PytorchCompositionWrapper
+    # pytorch_composition_wrapper_type = PytorchCompositionWrapper
 
     class Parameters(Composition.Parameters):
         optimizer = None
@@ -463,6 +462,8 @@ class AutodiffComposition(Composition):
         if not torch_available:
             raise AutodiffCompositionError('Pytorch python module (torch) is not installed. Please install it with '
                                            '`pip install torch` or `pip3 install torch`')
+
+        self.pytorch_composition_wrapper_type = PytorchCompositionWrapper
 
         super(AutodiffComposition, self).__init__(name = name,
                                                   learning_rate = learning_rate,
