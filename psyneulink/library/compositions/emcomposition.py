@@ -1200,7 +1200,7 @@ class EMComposition(AutodiffComposition):
     """
 
     componentCategory = EM_COMPOSITION
-    pytorch_composition_wrapper_type = PytorchEMCompositionWrapper
+    # pytorch_composition_wrapper_type = PytorchEMCompositionWrapper
 
     class Parameters(AutodiffComposition.Parameters):
         """
