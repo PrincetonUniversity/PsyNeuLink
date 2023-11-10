@@ -11,7 +11,7 @@
 
 try:
     import torch
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     torch = None
 from typing import Optional
 
