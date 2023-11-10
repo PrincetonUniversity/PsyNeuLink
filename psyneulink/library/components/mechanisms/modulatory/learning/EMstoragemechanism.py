@@ -197,12 +197,6 @@ MEMORY_MATRIX = 'memory_matrix'
 FIELDS = 'fields'
 FIELD_TYPES = 'field_types'
 
-# def _memory_matrix_getter(owning_component=None, context=None):
-#     if context.composition:
-#         return context.composition.parameters.memory._get(context)
-#     else:
-#         return None
-
 def _memory_matrix_getter(owning_component=None, context=None)->list:
     """Return list of memories in which rows (outer dimension) are memories for each field.
     These are derived from `matrix <MappingProjection.matrix>` parameter of the `afferent
@@ -690,7 +684,7 @@ class EMStorageMechanism(LearningMechanism):
 
     def _instantiate_input_ports(self, input_ports=None, reference_value=None, context=None):
         """Override LearningMechanism to instantiate an InputPort for each field"""
-        input_ports = [{NAME: f"KEY_INPUT_{i}" if self.field_types[i] == 1 else f"VALUE_INPUT_{i}",
+        input_ports = [{NAME: f"QUERY_INPUT_{i}" if self.field_types[i] == 1 else f"VALUE_INPUT_{i}",
                         VARIABLE: self.variable[i],
                         PROJECTIONS: field}
                        for i, field in enumerate(self.input_ports)]
@@ -723,13 +717,13 @@ class EMStorageMechanism(LearningMechanism):
                  variable=None,
                  context=None,
                  runtime_params=None):
-        """Execute EMStorageMechanism. function and return learning_signals
+        """Execute EMStorageMechanism.function and return learning_signals
 
-        For each node in key_input_nodes and value_input_nodes,
+        For each node in query_input_nodes and value_input_nodes,
         assign its value to afferent weights of corresponding retrieved_node.
         - memory = matrix of entries made up vectors for each field in each entry (row)
-        - memory_full_vectors = matrix of entries made up vectors concatentated across all fields (used for norm)
-        - entry_to_store = key_input or value_input to store
+        - memory_full_vectors = matrix of entries made up of vectors concatentated across all fields (used for norm)
+        - entry_to_store = query_input or value_input to store
         - field_memories = weights of Projections for each field
 
         DIVISION OF LABOR BETWEEN MECHANISM AND FUNCTION:
@@ -779,7 +773,7 @@ class EMStorageMechanism(LearningMechanism):
             if i < num_match_fields:
                 # For match matrices,
                 #   get entry to store from variable of Projection matrix (memory_field)
-                #   to match_node in which memory will be store (this is to accomodate concatenation_node)
+                #   to match_node in which memory will be stored (this is to accomodate concatenation_node)
                 axis = 0
                 entry_to_store = field_projection.variable
                 if concatenation_node is None:

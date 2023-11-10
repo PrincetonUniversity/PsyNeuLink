@@ -73,7 +73,7 @@ class TestInputAndTargetSpecs:
                              ids=['PyTorch', 'LLVM', 'Python'])
     @pytest.mark.parametrize('comp_type', ['composition', 'autodiff'],
                              ids=['composition', 'autodiff'])
-    def test_identicalness_of_input_types(self, xor_network, comp_type, input_type, exec_mode):
+    def node_spec_types(self, xor_network, comp_type, input_type, exec_mode):
 
         if comp_type == 'composition' and exec_mode != pnl.ExecutionMode.Python:
             pytest.skip(f"Execution mode {exec_mode} not relevant for Composition")

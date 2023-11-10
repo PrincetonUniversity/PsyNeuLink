@@ -27,6 +27,10 @@ import types
 from collections import namedtuple
 
 import numpy as np
+try:
+    import torch
+except ImportError:
+    torch = None
 from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Literal, Callable
@@ -442,7 +446,7 @@ class EMStorage(LearningFunction):
         decay_rate = self.parameters.decay_rate._get(context)
         random_state = self.parameters.random_state._get(context)
 
-        # FIX: IMPLEMENT decay_rate CALCUALTION
+        # FIX: IMPLEMENT decay_rate CALCULATION
 
         # IMPLEMENTATION NOTE: if memory_matrix is an arg, it must in params (put there by Component.function()
         # Manage memory_matrix param
@@ -486,11 +490,36 @@ class EMStorage(LearningFunction):
             else:
                 raise FunctionError(f"PROGRAM ERROR: axis ({axis}) is not 0 or 1")
 
-        self.parameters.entry._set(entry, context)
-        self.parameters.memory_matrix._set(memory_matrix, context)
+            # Store entry in memory:
+            self.parameters.memory_matrix._set(memory_matrix, context)
+            # Record entry updated:
+            self.parameters.entry._set(entry, context)
 
         return self.convert_output_type(memory_matrix)
 
+    def _gen_pytorch_fct(self, device, context=None):
+        def func(entry_to_store,
+                 memory_matrix,
+                 axis,
+                 storage_location,
+                 storage_prob,
+                 decay_rate,
+                 random_state)->torch.tensor:
+            """Decay existing memories and replace weakest entry with entry_to_store (parallel EMStorage._function)"""
+            if random_state.uniform(0, 1) < storage_prob:
+                if decay_rate:
+                    memory_matrix *= decay_rate
+                if storage_location is not None:
+                    idx_of_min = storage_location
+                else:
+                    # Find weakest entry (i.e., with lowest norm) along specified axis of matrix
+                    idx_of_min = torch.argmin(torch.linalg.norm(memory_matrix, axis=axis))
+                if axis == 0:
+                    memory_matrix[:,idx_of_min] = entry_to_store
+                elif axis == 1:
+                    memory_matrix[idx_of_min,:] = entry_to_store
+            return memory_matrix
+        return func
 
 class BayesGLM(LearningFunction):
     """

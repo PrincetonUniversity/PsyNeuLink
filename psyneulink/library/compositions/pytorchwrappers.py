@@ -12,89 +12,20 @@
 import graph_scheduler
 import torch
 import torch.nn as nn
-import numpy as np
 
 from psyneulink.core.components.component import Component, ComponentsMeta
-from psyneulink.core.components.functions.nonstateful.transferfunctions import \
-    Linear, Logistic, ReLU, SoftMax, Dropout, Identity
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, PRODUCT, SUM
 from psyneulink.core.compositions.composition import NodeRole, CompositionInterfaceMechanism
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
 from psyneulink.library.compositions.compiledloss import MSELoss, CROSS_ENTROPYLoss
-from psyneulink.core.globals.keywords import NODE, TARGET_MECHANISM, Loss
+from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, Loss, NODE, TARGET_MECHANISM
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core import llvm as pnlvm
 
 __all__ = ['PytorchCompositionWrapper', 'PytorchMechanismWrapper', 'PytorchProjectionWrapper']
-
-
-def pytorch_function_creator(function, device, context=None):
-    """Convert a PsyNeuLink function into an equivalent PyTorch lambda function.
-    NOTE: This is needed due to PyTorch limitations
-    (see: https://github.com/PrincetonUniversity/PsyNeuLink/pull/1657#discussion_r437489990)
-    Returns a lamba function that takes a torch.tensor as input and returns a torch.tensor as output.
-    """
-
-    def get_fct_param_value(param_name):
-        val = function._get_current_parameter_value(
-            param_name, context=context)
-        if val is None:
-            val = getattr(function.defaults, param_name)
-        return val if isinstance(val, str) else float(val)
-
-    if isinstance(function, Identity):
-        return lambda x: x
-
-    elif isinstance(function, Linear):
-        slope = get_fct_param_value('slope')
-        intercept = get_fct_param_value('intercept')
-        return lambda x: x * slope + intercept
-
-    elif isinstance(function, LinearCombination):
-        weights = function.parameters.weights.get(context)
-        if weights is not None:
-            weights = torch.tensor(weights, device=device).double()
-        if function.operation == SUM:
-            if weights is not None:
-                return lambda x: torch.sum(torch.stack(x) * weights, 0)
-            else:
-                return lambda x: torch.sum(torch.stack(x), 0)
-        elif function.operation == PRODUCT:
-            if weights is not None:
-                return lambda x: torch.prod(torch.stack(x) * weights, 0)
-            else:
-                return lambda x: torch.prod(torch.stack(x), 0)
-        else:
-            from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
-            raise AutodiffCompositionError(f"The 'operation' parameter of {function.componentName} is not supported "
-                                           f"by AutodiffComposition; use 'SUM' or 'PRODUCT' if possible.")
-
-    elif isinstance(function, Logistic):
-        gain = get_fct_param_value('gain')
-        bias = get_fct_param_value('bias')
-        offset = get_fct_param_value('offset')
-        return lambda x: 1 / (1 + torch.exp(-gain * (x + bias) + offset))
-
-    elif isinstance(function, ReLU):
-        gain = get_fct_param_value('gain')
-        bias = get_fct_param_value('bias')
-        leak = get_fct_param_value('leak')
-        return lambda x: (torch.max(input=(x - bias), other=torch.tensor([0], device=device).double()) * gain +
-                            torch.min(input=(x - bias), other=torch.tensor([0], device=device).double()) * leak)
-
-    elif isinstance(function, SoftMax):
-        gain = get_fct_param_value('gain')
-        return lambda x: (torch.softmax(x, len(x)))
-
-    elif isinstance(function, Dropout):
-        prob = get_fct_param_value('p')
-        return lambda x: (torch.dropout(input=x, p=prob, train=False))
-
-    else:
-        raise Exception(f"Function {function} is not currently supported by AutodiffComposition")
 
 
 class PytorchCompositionWrapper(torch.nn.Module):
@@ -166,6 +97,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                        self._composition._get_node_index(node),
                                                        device,
                                                        context=context)
+                pytorch_node._is_bias = any(input_port.default_input == DEFAULT_VARIABLE
+                                            for input_port in node.input_ports)
             self.nodes_map[node] = pytorch_node
             self.node_wrappers.append(pytorch_node)
 
@@ -181,7 +114,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     else:
                         _assign_input_nodes(pytorch_node.node_wrappers)
             _assign_input_nodes(self.node_wrappers)
-
 
         # Instantiate PyTorch ProjectionWrappers (ignoring any from/to CIMs in the same composition)
         for projection in composition._inner_projections:
@@ -535,7 +467,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
             raise Exception("OPTIMIZER TYPE", optimizer_type, "NOT SUPPORTED")
         return optimizer
 
-    # performs forward computation for the model
     @handle_external_context()
     def forward(self, inputs, context=None)->dict:
         """Forward method of the model for PyTorch and LLVM modes
@@ -544,33 +475,54 @@ class PytorchCompositionWrapper(torch.nn.Module):
         outputs = {}  # dict for storing values of terminal (output) nodes
         for current_exec_set in self.execution_sets:
             for node in current_exec_set:
+
                 # If node is nested Composition (wrapped in PytorchCompositionWrapper),
                 #    calls its forward method recursively
                 if isinstance(node, PytorchCompositionWrapper):
                     node.forward(inputs=None)
                     continue
-                elif node._is_input:
-                    # Node is an INPUT to Composition
+
+                elif node._is_input or node._is_bias:
+                    # node is an INPUT to Composition
                     if node._mechanism in inputs:
-                        # If input is specified for the Mechanism (i.e., Mechanism is a key in inputs dict), use that
-                        variable = inputs[node._mechanism]
+                        # external input is specified for the Mechanism (i.e., Mechanism is a key in inputs dict)
+                        if not node._is_bias:
+                            # all input_ports receive external input, so use that
+                            variable = inputs[node._mechanism]
+                        else:
+                            # node is also a BIAS node, so get input for each input_port individually
+                            for i, input_port in enumerate(node._mechanism.input_ports):
+                                input = inputs[node._mechanism]
+                                variable = []
+                                if not input_port.internal_only:
+                                    # input_port receives external input, so get from inputs
+                                    variable.append(input[i])
+                                elif input_port.default_input == DEFAULT_VARIABLE:
+                                    # input_port uses a bias, so get that
+                                    variable.append(input_port.defaults.variable)
+
                     # Input for the Mechanism is *not* explicitly specified, but its input_port(s) may have been
                     else:
                         # Get input for each input_port of the node
                         variable = []
                         for i, input_port in enumerate(node._mechanism.input_ports):
-                            # If input to the node's input_port(s) is specified in the inputs dict, use that
                             if input_port in inputs:
+                                # input to input_port is specified in the inputs dict, so use that
                                 variable.append(inputs[input_port])
-                            # Otherwise, use the node's input_port's afferents
-                            else:
+                            elif input_port.default_input == DEFAULT_VARIABLE:
+                                # input_port uses a bias, so get that
+                                variable.append(input_port.defaults.variable)
+                            elif not input_port.internal_only:
+                                # otherwise, use the node's input_port's afferents
                                 variable.append(node.collate_afferents(i).squeeze(0))
                         if len(variable) == 1:
                             variable = variable[0]
                 else:
-                    # Node is not INPUT to Composition, so get input from its afferents
+                    # Node is not INPUT to Composition or BIAS, so get all input from its afferents
                     variable = node.collate_afferents()
-                node.execute(variable)
+
+                self.execute_node(node, variable, context)
+
                 # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
                 #  note: these may be different than for actual Composition, as they are flattened
                 if (node._mechanism in self._composition.get_nested_nodes_output_nodes_at_levels()):
@@ -585,6 +537,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
         context.source = old_source
 
         return outputs
+
+    def execute_node(self, node, variable, context=None):
+        """Execute node and store the result in the node's value attribute
+        Implemented as method (and includes context as arg) so that it can be overridden
+        by subclasses of PytorchCompositionWrapper
+        """
+        node.execute(variable)
 
     def detach_all(self):
         for projection in self.projections_map.values():
@@ -617,14 +576,19 @@ class PytorchMechanismWrapper():
         self._idx = component_idx
         self._context = context
 
-        self.function = pytorch_function_creator(mechanism.function, device, context)
-        self._context = context
-        self.value = None
+        self._is_input = False
+        self._is_bias = False
         self.afferents = []
         self.efferents = []
+        try:
+            self.function = mechanism.function._gen_pytorch_fct(device, context)
+        except:
+            from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
+            raise AutodiffCompositionError(
+                f"Function {mechanism.function} is not currently supported by AutodiffComposition")
 
+        self.value = None
         self._target_mechanism = None
-        self._is_input = False
 
     def add_efferent(self, efferent):
         assert efferent not in self.efferents
@@ -675,11 +639,7 @@ class PytorchMechanismWrapper():
             self.value = self.function(variable).unsqueeze(0)
         else:
             # Make value 2d by creating list of values returned by function for each item in variable
-            # MODIFIED 11/4/23 OLD:
             self.value = [self.function(variable[i].squeeze(0)) for i in range(len(variable))]
-            # # MODIFIED 11/4/23 NEW:
-            # self.value = [self.function(variable[i]) for i in range(len(variable))]
-            # MODIFIED 11/4/23 END
         return self.value
 
     def _gen_llvm_execute(self, ctx, builder, state, params, mech_input, data):
@@ -792,8 +752,7 @@ class PytorchProjectionWrapper():
                         break
                     i += 1
 
-        matrix = projection.parameters.matrix.get(
-                            context=context)
+        matrix = projection.parameters.matrix.get(context=context)
         if matrix is None:
             matrix = projection.parameters.matrix.get(context=None)
         self.matrix = torch.nn.Parameter(torch.tensor(matrix.copy(),

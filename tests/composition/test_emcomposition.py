@@ -189,7 +189,7 @@ class TestConstruction:
                        for j in range(num_fields) for k in range(repeat,memory_capacity))
 
         # Validate node structure
-        assert len(em.key_input_nodes) == num_keys
+        assert len(em.query_input_nodes) == num_keys
         assert len(em.value_input_nodes) == num_values
         assert isinstance(em.concatenate_keys_node, Mechanism) == concatenate_node
         if em.concatenate_keys:
@@ -364,7 +364,8 @@ class TestExecution:
                                                expected_retrieval):
 
         if comp_mode != pnl.ExecutionMode.Python:
-            pytest.skip('Compilation not yet support for Composition.import.')
+        # if comp_mode not in {pnl.ExecutionMode.Python, pnl.Exeuction.PyTorch}:
+            pytest.skip('Execution of EMComposition not yet supported for LLVM Mode.')
 
         # Restrict testing of learning configurations (which are much larger) to select tests
         if enable_learning and test_num not in {10}:
@@ -396,7 +397,7 @@ class TestExecution:
         em = EMComposition(**params)
 
         # Construct inputs
-        input_nodes = em.key_input_nodes + em.value_input_nodes
+        input_nodes = em.query_input_nodes + em.value_input_nodes
         inputs = {input_nodes[i]:inputs[i] for i in range(len(inputs))}
 
         # Validate any specified initial memories
@@ -439,7 +440,7 @@ class TestExecution:
     def test_multiple_trials_concatenation_and_storage_node_no_learning(self, comp_mode, concatenate, use_storage_node):
 
         if comp_mode != pnl.ExecutionMode.Python:
-            pytest.skip('Compilation not yet support for Composition.import.')
+            pytest.skip('Execution of EMComposition not yet supported for LLVM Mode.')
 
         def temp(context):
             memory = context.composition.parameters.memory.get(context)
@@ -463,10 +464,9 @@ class TestExecution:
                            [[2.5, 3.125, 3.75 ], [2.5625, 3.1875, 3.8125]],
                            [[25., 50., 75.], [27.75, 55.5,  83.25]]]
 
-        input_nodes = em.key_input_nodes + em.value_input_nodes
+        input_nodes = em.query_input_nodes + em.value_input_nodes
         inputs = {input_nodes[i]:inputs[i] for
                   i in range(len(input_nodes))}
-        em.run(inputs=inputs,
-               # call_after_trial=temp
-               )
+        em.run(inputs=inputs)
+        # em.learn(inputs=inputs)
         np.testing.assert_equal(em.memory, expected_memory)
