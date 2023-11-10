@@ -32,8 +32,8 @@ def _single_learn_results(composition, *args, **kwargs):
 
 
 @pytest.mark.pytorch
-@pytest.mark.acconstructor
-class TestACConstructor:
+@pytest.mark.autodiff_constructor
+class TestAutodiffConstructor:
 
     def test_no_args(self):
         comp = AutodiffComposition()
@@ -67,6 +67,36 @@ class TestACConstructor:
         # comp = AutodiffComposition()
         # assert comp.patience == 10
 
+# Note: don't use @pytest.mark.composition here to force test of Autodiff without torch installed
+@pytest.mark.composition
+def test_autodiff_without_torch():
+    """Test Autodiff without torch installed"""
+
+    # Should run with ExecutionMode.Python no matter what
+    mech_A = TransferMechanism()
+    mech_B = TransferMechanism()
+    comp = AutodiffComposition([mech_A, mech_B])
+    comp.run()
+    result = comp.learn(inputs={mech_A:[[1], [2]]},
+                       epochs=3,
+               execution_mode = pnl.ExecutionMode.Python)
+    assert comp.pytorch_representation is None
+    np.testing.assert_allclose(result,[[1.95634283]], atol=1e-08, rtol=1e-08)
+
+    # If torch is not installed, should raise exception for learn() with ExecutionMode.Python
+    from psyneulink.library.compositions.autodiffcomposition import torch_available
+    if not torch_available:
+        mech_A = TransferMechanism()
+        mech_B = TransferMechanism()
+        comp = AutodiffComposition([mech_A, mech_B])
+        comp.run()
+        with pytest.raises(AutodiffCompositionError) as error:
+            result = comp.learn(inputs={mech_A:[[1], [2]]},
+                                epochs=3,
+                                execution_mode = pnl.ExecutionMode.PyTorch)
+            np.testing.assert_allclose(result,[[1.95634283]], atol=1e-08, rtol=1e-08)
+        assert (f"'autodiff_composition.learn()' has been called with ExecutionMode.Pytorch, but Pytorch module ('torch') "
+                f"is not installed. Please install it with `pip install torch` or `pip3 install torch`") in str(error.value)
 
 @pytest.mark.pytorch
 @pytest.mark.composition

@@ -461,9 +461,9 @@ class AutodiffComposition(Composition):
                  name="autodiff_composition",
                  **kwargs):
 
-        if not torch_available:
-            raise AutodiffCompositionError('Pytorch python module (torch) is not installed. Please install it with '
-                                           '`pip install torch` or `pip3 install torch`')
+        # if not torch_available:
+        #     raise AutodiffCompositionError('Pytorch python module (torch) is not installed. Please install it with '
+        #                                    '`pip install torch` or `pip3 install torch`')
 
         super(AutodiffComposition, self).__init__(name = name,
                                                   learning_rate = learning_rate,
@@ -497,7 +497,7 @@ class AutodiffComposition(Composition):
                 self.device = torch.device('cuda')
             else:
                 self.device = torch.device('cuda:' + str(cuda_index))
-        else:
+        elif torch_available:
             self.device = torch.device('cpu')
 
         # Set to True after first warning about failure to specify execution mode so warning is issued only once
@@ -991,6 +991,11 @@ class AutodiffComposition(Composition):
             self._assign_execution_ids(context)
             context.composition = self
             context.source = ContextFlags.COMPOSITION
+
+            if execution_mode is pnlvm.ExecutionMode.PyTorch and not torch_available:
+                raise AutodiffCompositionError(f"'{self.name}.learn()' has been called with ExecutionMode.Pytorch, "
+                                               f"but Pytorch module ('torch') is not installed. "
+                                               f"Please install it with `pip install torch` or `pip3 install torch`")
 
             if scheduler is None:
                 scheduler = self.scheduler
