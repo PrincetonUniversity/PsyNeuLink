@@ -11,6 +11,10 @@
 
 import graph_scheduler
 import torch
+# try:
+#     import torch
+# except (ImportError, ModuleNotFoundError):
+#     torch = None
 import torch.nn as nn
 import numpy as np
 

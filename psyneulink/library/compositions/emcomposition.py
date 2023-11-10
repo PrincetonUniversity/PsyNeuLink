@@ -877,13 +877,13 @@ import psyneulink.core.scheduling.condition as conditions
 
 from psyneulink._typing import Optional, Union
 
+from psyneulink.library.compositions import torch_available
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax, LinearMatrix
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate, LinearCombination
 from psyneulink.core.components.functions.function import \
     DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.compositions.composition import CompositionError, NodeRole
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
-from psyneulink.library.compositions.pytorchEMcompositionwrapper import PytorchEMCompositionWrapper
 from psyneulink.library.components.mechanisms.modulatory.learning.EMstoragemechanism import EMStorageMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
@@ -1200,7 +1200,11 @@ class EMComposition(AutodiffComposition):
     """
 
     componentCategory = EM_COMPOSITION
-    # pytorch_composition_wrapper_type = PytorchEMCompositionWrapper
+
+    if torch_available:
+        from psyneulink.library.compositions.pytorchEMcompositionwrapper import PytorchEMCompositionWrapper
+        pytorch_composition_wrapper_type = PytorchEMCompositionWrapper
+
 
     class Parameters(AutodiffComposition.Parameters):
         """
@@ -1422,7 +1426,9 @@ class EMComposition(AutodiffComposition):
                                  self.learn_field_weights,
                                  use_gating_for_weighting)
 
-        self.pytorch_composition_wrapper_type = PytorchEMCompositionWrapper
+        # if torch_available:
+        #     from psyneulink.library.compositions.pytorchEMcompositionwrapper import PytorchEMCompositionWrapper
+        #     self.pytorch_composition_wrapper_type = PytorchEMCompositionWrapper
 
         # Final Configuration and Clean-up ---------------------------------------------------------------------------
 
