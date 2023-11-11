@@ -95,8 +95,9 @@ def test_autodiff_without_torch():
                                 epochs=3,
                                 execution_mode = pnl.ExecutionMode.PyTorch)
             np.testing.assert_allclose(result,[[1.95634283]], atol=1e-08, rtol=1e-08)
-        assert (f"'autodiff_composition.learn()' has been called with ExecutionMode.Pytorch, but Pytorch module ('torch') "
-                f"is not installed. Please install it with `pip install torch` or `pip3 install torch`") in str(error.value)
+        assert (f"'autodiff_composition-1.learn()' has been called with ExecutionMode.Pytorch, "
+                f"but Pytorch module ('torch') is not installed. "
+                f"Please install it with `pip install torch` or `pip3 install torch`") in str(error.value)
 
 @pytest.mark.pytorch
 @pytest.mark.composition
