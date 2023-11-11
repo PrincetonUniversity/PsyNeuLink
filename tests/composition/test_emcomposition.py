@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 #     FIX: ENABLE TESTS FOR LEARNING ONCE CONCATENATION IS IMPLEMENTED FOR THAT
 
 @pytest.mark.pytorch
-@pytest.mark.acconstructor
+@pytest.mark.autodiff_constructor
 class TestConstruction:
 
     # def test_two_calls_no_args(self):
@@ -470,3 +470,12 @@ class TestExecution:
         em.run(inputs=inputs)
         # em.learn(inputs=inputs)
         np.testing.assert_equal(em.memory, expected_memory)
+
+    @pytest.mark.pytorch
+    @pytest.mark.composition
+    def test_learning_with_pytorch(self):
+        pass
+
+    @pytest.mark.composition
+    def test_learning_without_pytorch(self):
+        pass
