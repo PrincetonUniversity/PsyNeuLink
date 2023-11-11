@@ -471,7 +471,7 @@ class TestExecution:
         # em.learn(inputs=inputs)
         np.testing.assert_equal(em.memory, expected_memory)
 
-    @pytest.mark.torch
+    @pytest.mark.pytorch
     @pytest.mark.composition
     def test_learning_with_pytorch(self):
         pass
