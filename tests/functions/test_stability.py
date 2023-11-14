@@ -1,4 +1,3 @@
-
 import numpy as np
 
 import psyneulink.core.llvm as pnlvm
@@ -43,3 +42,10 @@ def test_basic(variable, metric, normalize, expected, benchmark, func_mode):
     res = benchmark(EX, variable)
     np.testing.assert_allclose(res, expected)
     assert np.isscalar(res) or len(res) == 1
+
+
+def test_Stability_squeezes_variable():
+    s1 = Functions.Stability(default_variable=[[0.0, 0.0]])
+    s2 = Functions.Stability(default_variable=[0.0, 0.0])
+
+    assert s1.execute([5, 5]) == s2.execute([5, 5])
