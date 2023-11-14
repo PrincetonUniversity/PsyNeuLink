@@ -586,7 +586,7 @@ from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.port import PortError, Port_Base, _instantiate_port_list, port_type_keywords
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    COMBINE, CONTROL_SIGNAL, DEFAULT_VARIABLE, EXPONENT, FUNCTION, GATING_SIGNAL, \
+    COMBINE, CONTROL_SIGNAL, DEFAULT_INPUT, DEFAULT_VARIABLE, EXPONENT, FUNCTION, GATING_SIGNAL, \
     INPUT_PORT, INPUT_PORTS, INPUT_PORT_PARAMS, \
     LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, NAME, OPERATION, OUTPUT_PORT, OUTPUT_PORTS, OWNER, \
     PARAMS, PROJECTIONS, REFERENCE_VALUE, \
@@ -718,8 +718,8 @@ class InputPort(Port_Base):
         .. note::
            If `default_input <InputPort.default_input>` is assigned *DEFAULT_VARIABLE*, then its `internal_only
            <InputPort.internal_only>` attribute is automatically assigned True. This is so that if the `Mechanism`
-           to which the InputPort belongs is assigned to a `Composition`, it is not treated as an `ORIGIN
-           <NodeRole.ORIGIN>` `Node <Composition_Nodes>` of that Composition (and automatically assigned a Projection
+           to which the InputPort belongs is assigned to a `Composition`, it is not treated as an `INPUT
+           <NodeRole.INPUT>` `Node <Composition_Nodes>` of that Composition (and automatically assigned a Projection
            from its `input_CIM <Composition.input_CIM>`.
 
     input_shape : 1d array
@@ -899,7 +899,8 @@ class InputPort(Port_Base):
         if combine:
             self.combine_function_args = (combine, function)
 
-        if default_input == DEFAULT_VARIABLE:
+        if (default_input == DEFAULT_VARIABLE
+                or params and DEFAULT_INPUT in params and params[DEFAULT_INPUT] == DEFAULT_VARIABLE):
             internal_only = True
 
         # If owner or reference_value has not been assigned, defer init to Port_Base._instantiate_projection()

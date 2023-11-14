@@ -332,9 +332,8 @@ try:
 except ImportError:
     torch_available = False
 else:
-    from psyneulink.library.compositions.pytorchcomponents import PytorchCompositionWrapper
+    from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper
 
-from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
@@ -433,6 +432,10 @@ class AutodiffComposition(Composition):
     """
 
     componentCategory = AUTODIFF_COMPOSITION
+    if torch_available:
+        from psyneulink.library.compositions.pytorchEMcompositionwrapper import PytorchCompositionWrapper
+        pytorch_composition_wrapper_type = PytorchCompositionWrapper
+
     class Parameters(Composition.Parameters):
         optimizer = None
         learning_rate = Parameter(.001, fallback_default=True)
@@ -458,9 +461,9 @@ class AutodiffComposition(Composition):
                  name="autodiff_composition",
                  **kwargs):
 
-        if not torch_available:
-            raise AutodiffCompositionError('Pytorch python module (torch) is not installed. Please install it with '
-                                           '`pip install torch` or `pip3 install torch`')
+        # if not torch_available:
+        #     raise AutodiffCompositionError('Pytorch python module (torch) is not installed. Please install it with '
+        #                                    '`pip install torch` or `pip3 install torch`')
 
         super(AutodiffComposition, self).__init__(name = name,
                                                   learning_rate = learning_rate,
@@ -494,7 +497,7 @@ class AutodiffComposition(Composition):
                 self.device = torch.device('cuda')
             else:
                 self.device = torch.device('cuda:' + str(cuda_index))
-        else:
+        elif torch_available:
             self.device = torch.device('cpu')
 
         # Set to True after first warning about failure to specify execution mode so warning is issued only once
@@ -684,9 +687,9 @@ class AutodiffComposition(Composition):
         if self.scheduler is None:
             self.scheduler = Scheduler(graph=self.graph_processing)
         if self.parameters.pytorch_representation._get(context=context) is None or refresh:
-            model = PytorchCompositionWrapper(composition=self,
-                                              device=self.device,
-                                              context=context)
+            model = self.pytorch_composition_wrapper_type(composition=self,
+                                                          device=self.device,
+                                                          context=context)
 
             self.parameters.pytorch_representation._set(model, context, skip_history=True, skip_log=True)
 
@@ -988,6 +991,11 @@ class AutodiffComposition(Composition):
             self._assign_execution_ids(context)
             context.composition = self
             context.source = ContextFlags.COMPOSITION
+
+            if execution_mode is pnlvm.ExecutionMode.PyTorch and not torch_available:
+                raise AutodiffCompositionError(f"'{self.name}.learn()' has been called with ExecutionMode.Pytorch, "
+                                               f"but Pytorch module ('torch') is not installed. "
+                                               f"Please install it with `pip install torch` or `pip3 install torch`")
 
             if scheduler is None:
                 scheduler = self.scheduler

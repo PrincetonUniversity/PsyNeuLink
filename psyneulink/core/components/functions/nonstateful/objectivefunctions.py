@@ -34,7 +34,7 @@ from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DOT_PRODUCT, \
     ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, NORMALIZE, \
     NORMED_L0_SIMILARITY, OBJECTIVE_FUNCTION_TYPE, SIZE, STABILITY_FUNCTION
-from psyneulink.core.globals.parameters import Parameter, check_user_specified
+from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import DistanceMetricLiteral, safe_len, convert_to_np_array
 from psyneulink.core.globals.utilities import is_iterable
@@ -205,7 +205,7 @@ class Stability(ObjectiveFunction):
         metric = Parameter(ENERGY, stateful=False)
         metric_fct = Parameter(None, stateful=False, loggable=False)
         transfer_fct = Parameter(None, stateful=False, loggable=False)
-        normalize = Parameter(False, stateful=False)
+        normalize = FunctionParameter(False, function_name='metric_fct')
 
     @check_user_specified
     @beartype
@@ -364,11 +364,12 @@ class Stability(ObjectiveFunction):
                             self.defaults.variable]
 
         if self.metric == ENTROPY:
-            self.metric_fct = Distance(default_variable=default_variable, metric=CROSS_ENTROPY, normalize=self.normalize)
+            self.metric_fct = Distance(default_variable=default_variable, metric=CROSS_ENTROPY, normalize=self.parameters.normalize.default_value)
         elif self.metric in DISTANCE_METRICS._set():
-            self.metric_fct = Distance(default_variable=default_variable, metric=self.metric, normalize=self.normalize)
+            self.metric_fct = Distance(default_variable=default_variable, metric=self.metric, normalize=self.parameters.normalize.default_value)
         else:
             assert False, "Unknown metric"
+
         #FIXME: This is a hack to make sure metric-fct param is set
         self.parameters.metric_fct.set(self.metric_fct)
 

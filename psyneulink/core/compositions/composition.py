@@ -2939,7 +2939,7 @@ from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHO
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, CROSS_ENTROPY, \
-    DEFAULT, DICT, FEEDBACK, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, \
+    DEFAULT, DEFAULT_VARIABLE, DICT, FEEDBACK, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, \
     INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
     LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     LEARNING_SIGNAL, Loss, \
@@ -3365,6 +3365,13 @@ class NodeRole(enum.Enum):
         A `Node <Composition_Nodes>` that is both an `ORIGIN` and a `TERMINAL`.  This role cannot be modified
         programmatically.
 
+    BIAS
+        A `Node <Composition_Nodes>` for which one or more of its `InputPorts <InputPort>` is assigned
+        *DEFAULT_VARIABLE* as its `default_input <InputPort.default_input>` (which provides it a prespecified
+        input that is constant across executions).  Such a node can also be assigned as an `INPUT` and/or `ORIGIN`,
+        if it receives input from outside the Composition and/or does not receive any `Projections <Projection>` from
+        other Nodes within the Composition, respectively.  This role cannot be modified programmatically.
+
     INTERNAL
         A `Node <Composition_Nodes>` that is neither `INPUT` nor `OUTPUT`.  Note that it *can* also be `ORIGIN`,
         `TERMINAL` or `SINGLETON`, if it has no `afferent <Mechanism_Base.afferents>` or `efferent
@@ -3451,6 +3458,7 @@ class NodeRole(enum.Enum):
     ORIGIN = enum.auto()
     INPUT = enum.auto()
     SINGLETON = enum.auto()
+    BIAS = enum.auto()
     INTERNAL = enum.auto()
     CYCLE = enum.auto()
     FEEDBACK_SENDER = enum.auto()
@@ -3464,6 +3472,14 @@ class NodeRole(enum.Enum):
     PROBE = enum.auto()
     OUTPUT = enum.auto()
     TERMINAL = enum.auto()
+
+
+unmodifiable_node_roles = {NodeRole.ORIGIN,
+                           NodeRole.BIAS,
+                           NodeRole.INTERNAL,
+                           NodeRole.SINGLETON,
+                           NodeRole.TERMINAL,
+                           NodeRole.CYCLE}
 
 
 class Composition(Composition_Base, metaclass=ComponentsMeta):
@@ -4577,7 +4593,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 warnings.warn(f"{role} is not a role that can be assigned directly {to_from} {self.name}. "
                               f"The relevant {Projection.__name__} to it must be designated as 'feedback' "
                               f"where it is addd to the {self.name};  assignment will be ignored.")
-            elif role in {NodeRole.ORIGIN, NodeRole.INTERNAL, NodeRole.SINGLETON, NodeRole.TERMINAL, NodeRole.CYCLE}:
+            elif role in unmodifiable_node_roles:
                 raise CompositionError(f"Attempt to assign {role} (to {node} of {self.name})"
                                        f"that cannot be modified by user.")
 
@@ -5184,6 +5200,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         SINGLETON:
           - all Nodes that are *both* ORIGIN and TERMINAL
 
+        BIAS:
+          - all Nodes that have one or more InputPorts for which default_input == DEFAULT_VARIABLE
+
         INTERNAL:
           - all Nodes that are *neither* ORIGIN nor TERMINAL
 
@@ -5282,6 +5301,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # INPUT
         origin_nodes = self.get_nodes_by_role(NodeRole.ORIGIN)
         for node in self.nodes:
+            # Check all remaining ORIGIN Nodes
             if node in origin_nodes:
                 # Don't allow INTERNAL Nodes to be INPUTS
                 if NodeRole.INTERNAL in self.get_roles_by_node(node):
@@ -5317,6 +5337,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                   and (not node.path_afferents
                        or all(p.sender.owner is self.input_CIM for p in node.path_afferents))):
                 self._add_node_role(node, NodeRole.INPUT)
+
+        # BIAS
+        for node in self.nodes:
+            if (isinstance(node, Mechanism)
+                    and any(input_port.default_input == DEFAULT_VARIABLE for input_port in node.input_ports)):
+                self._add_node_role(node, NodeRole.BIAS)
 
         # CYCLE
         for node in self.graph_processing.cycle_vertices:
@@ -10014,7 +10040,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # If Composition is in learning mode, not called from COMMAND_LINE, and not still preparing,
         #   presumably inputs have already been parsed so shouldn't do it again
-        # FIX: 11/3/23 - NOTE: This circumvents parsing of inputs when they are a func and called fromautodiff_training
+        # FIX: 11/3/23 - NOTE: This circumvents parsing of inputs when they are a func and called from autodiff_training
         if (context and (context.runmode & ContextFlags.LEARNING_MODE)
                 and (context.source & ContextFlags.COMPOSITION)
                 and not (context.execution_phase & ContextFlags.PREPARING)):
