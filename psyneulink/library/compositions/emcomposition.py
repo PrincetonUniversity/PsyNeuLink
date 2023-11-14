@@ -1357,7 +1357,7 @@ class EMComposition(AutodiffComposition):
     def __init__(self,
                  memory_template:Union[tuple, list, np.ndarray]=[[0],[0]],
                  memory_capacity:Optional[int]=None,
-                 memory_fill:Union[int, float, RANDOM]=0,
+                 memory_fill:Union[int, float, tuple, RANDOM]=0,
                  field_names:Optional[list]=None,
                  field_weights:tuple=None,
                  concatenate_keys:bool=False,
