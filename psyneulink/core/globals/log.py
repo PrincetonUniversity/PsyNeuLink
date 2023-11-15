@@ -1298,19 +1298,19 @@ class Log:
     @beartype
     def nparray(self,
                 entries=None,
-                report_all_executions=False,
-                exclude_sims=False,
                 header:bool=True,
                 owner_name:bool=False,
-                contexts=NotImplemented,
+                report_all_executions=False,
+                exclude_sims=False,
+                contexts=NotImplemented
                 ):
         """
         nparray(                          \
             entries=None,                 \
-            report_all_executions=False,  \
-            exclude_sims=False,           \
             header:bool=True,             \
             owner_name=False):            \
+            report_all_executions=False,  \
+            exclude_sims=False,           \
             )
 
         Return a 2d numpy array with headers (optional) and values for the specified entries.
@@ -1447,11 +1447,14 @@ class Log:
     def nparray_dictionary(self,
                            entries=None,
                            report_all_executions=False,
-                           contexts=NotImplemented,
-                           exclude_sims=False):
+                           exclude_sims=False,
+                           contexts=NotImplemented
+                           ):
         """
         nparray_dictionary(                 \
-            entries=None,        \
+            entries=None,                   \
+            report_all_executions=False,    \
+            exclude_sims=False,             \
             )
 
         Returns an `OrderedDict <https://docs.python.org/3.5/library/collections.html#collections.OrderedDict>`_
@@ -1798,6 +1801,18 @@ class Log:
             # if not, enter `None` in the entry's list
             datum = data[i]
             if time_values:
+                # # MODIFIED 11/14/23 OLD:
+                # if i == len(data) - 1 or data[i + 1].time != time:
+                #     if datum.time != time:
+                #         row.append(None)
+                #     else:
+                #         value = None if datum.value is None else np.array(datum.value).tolist()  # else, if is time,
+                #         # append value
+                #         row.append(value)
+                #     time = next(time_col, None)  # increment time value
+                #     if time is None:  # if no more times, break
+                #         break
+                # MODIFIED 11/14/23 NEW:
                 if report_all_executions:
                     # Report values for all executions within a given time
                     if i == 0 or time != data[i - 1].time:
@@ -1827,6 +1842,7 @@ class Log:
                         time = next(time_col, None)  # increment time value
                         if time is None:  # if no more times, break
                             break
+                # MODIFIED 11/14/23 END
             else:
                 if datum.value is None:
                     value = None
