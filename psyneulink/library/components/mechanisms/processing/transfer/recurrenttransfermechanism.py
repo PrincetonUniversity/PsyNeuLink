@@ -1278,7 +1278,10 @@ class RecurrentTransferMechanism(TransferMechanism):
         assert "reset" in tags
 
         # Check if we have reinitializers
-        has_reinitializers_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "has_initializers")
+        has_reinitializers_ptr = ctx.get_param_or_state_ptr(builder,
+                                                            self,
+                                                            "has_initializers",
+                                                            param_struct_ptr=params)
         has_initializers = builder.load(has_reinitializers_ptr)
         not_initializers = builder.fcmp_ordered("==", has_initializers,
                                                 has_initializers.type(0))
@@ -1287,39 +1290,43 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         # Reinit main function. This is a no-op if it's not a stateful function.
         reinit_func = ctx.import_llvm_function(self.function, tags=tags)
-        reinit_params = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
-        reinit_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
+        reinit_params, reinit_state = ctx.get_param_or_state_ptr(builder,
+                                                                 self,
+                                                                 "function",
+                                                                 param_struct_ptr=params,
+                                                                 state_struct_ptr=state)
         reinit_in = builder.alloca(reinit_func.args[2].type.pointee, name="reinit_in")
         reinit_out = builder.alloca(reinit_func.args[3].type.pointee, name="reinit_out")
-        builder.call(reinit_func, [reinit_params, reinit_state, reinit_in,
-                                   reinit_out])
+        builder.call(reinit_func, [reinit_params, reinit_state, reinit_in, reinit_out])
 
         # Reinit integrator function
         if self.integrator_mode:
-            reinit_f = ctx.import_llvm_function(self.integrator_function,
-                                                tags=tags)
+            reinit_f = ctx.import_llvm_function(self.integrator_function, tags=tags)
             reinit_in = builder.alloca(reinit_f.args[2].type.pointee, name="integ_reinit_in")
             reinit_out = builder.alloca(reinit_f.args[3].type.pointee, name="integ_reinit_out")
-            reinit_params = pnlvm.helpers.get_param_ptr(builder, self, params, "integrator_function")
-            reinit_state = pnlvm.helpers.get_state_ptr(builder, self, state, "integrator_function")
-            builder.call(reinit_f, [reinit_params, reinit_state, reinit_in,
-                                    reinit_out])
+            reinit_params, reinit_state = ctx.get_param_or_state_ptr(builder,
+                                                                     self,
+                                                                     "integrator_function",
+                                                                     param_struct_ptr=params,
+                                                                     state_struct_ptr=state)
+            builder.call(reinit_f, [reinit_params, reinit_state, reinit_in, reinit_out])
 
-        prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "old_val")
+        prev_val_ptr = ctx.get_param_or_state_ptr(builder, self, "old_val", state_struct_ptr=state)
         builder.store(prev_val_ptr.type.pointee(None), prev_val_ptr)
         return builder
 
     def _gen_llvm_input_ports(self, ctx, builder, params, state, arg_in):
-        recurrent_state = pnlvm.helpers.get_state_ptr(builder, self, state,
-                                                      "recurrent_projection")
-        recurrent_params = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                                       "recurrent_projection")
+        recurrent_params, recurrent_state = ctx.get_param_or_state_ptr(builder,
+                                                                       self,
+                                                                       "recurrent_projection",
+                                                                       param_struct_ptr=params,
+                                                                       state_struct_ptr=state)
         recurrent_f = ctx.import_llvm_function(self.recurrent_projection)
 
         # Extract the correct output port value
-        prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "old_val")
-        recurrent_in = builder.gep(prev_val_ptr, [ctx.int32_ty(0),
-            ctx.int32_ty(self.output_ports.index(self.recurrent_projection.sender))])
+        prev_val_ptr = ctx.get_param_or_state_ptr(builder, self, "old_val", state_struct_ptr=state)
+        recurrent_index = self.output_ports.index(self.recurrent_projection.sender)
+        recurrent_in = builder.gep(prev_val_ptr, [ctx.int32_ty(0), ctx.int32_ty(recurrent_index)])
 
         # Get the correct recurrent output location
         recurrent_out = builder.gep(arg_in, [ctx.int32_ty(0),
@@ -1346,8 +1353,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         ret = super()._gen_llvm_output_ports(ctx, builder, value, mech_params,
                                              mech_state, mech_in, mech_out)
 
-        old_val = pnlvm.helpers.get_state_ptr(builder, self, mech_state, "old_val")
-        builder.store(builder.load(mech_out), old_val)
+        prev_val_ptr = ctx.get_param_or_state_ptr(builder, self, "old_val", state_struct_ptr=mech_state)
+        builder.store(builder.load(mech_out), prev_val_ptr)
         return ret
 
     @property

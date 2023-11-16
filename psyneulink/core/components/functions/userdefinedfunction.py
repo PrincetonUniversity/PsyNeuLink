@@ -682,7 +682,7 @@ class UserDefinedFunction(Function_Base):
         assert len(func_globals) == 0 or (
                len(func_globals) == 1 and np in func_globals.values()), \
                "Compiling functions with global variables is not supported! ({})".format(closure_vars.globals)
-        func_params = {param_id: pnlvm.helpers.get_param_ptr(builder, self, params, param_id) for param_id in self.llvm_param_ids}
+        func_params = {param_id: ctx.get_param_or_state_ptr(builder, self, param_id, param_struct_ptr=params) for param_id in self.llvm_param_ids}
 
         pnlvm.codegen.UserDefinedFunctionVisitor(ctx, builder, func_globals, func_params, arg_in, arg_out).visit(func_ast)
 

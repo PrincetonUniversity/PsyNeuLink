@@ -510,8 +510,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-        slope_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SLOPE)
-        intercept_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, INTERCEPT)
+        slope_ptr = ctx.get_param_or_state_ptr(builder, self, SLOPE, param_struct_ptr=params)
+        intercept_ptr = ctx.get_param_or_state_ptr(builder, self, INTERCEPT, param_struct_ptr=params)
 
         slope = pnlvm.helpers.load_extract_scalar_array_one(builder, slope_ptr)
         intercept = pnlvm.helpers.load_extract_scalar_array_one(builder, intercept_ptr)
@@ -755,10 +755,10 @@ class Exponential(TransferFunction):  # ----------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        rate_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, RATE)
-        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
-        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
-        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
+        rate_ptr = ctx.get_param_or_state_ptr(builder, self, RATE, param_struct_ptr=params)
+        bias_ptr = ctx.get_param_or_state_ptr(builder, self, BIAS, param_struct_ptr=params)
+        scale_ptr = ctx.get_param_or_state_ptr(builder, self, SCALE, param_struct_ptr=params)
+        offset_ptr = ctx.get_param_or_state_ptr(builder, self, OFFSET, param_struct_ptr=params)
 
         rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -1075,11 +1075,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        gain_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, GAIN)
-        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
-        x_0_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, X_0)
-        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
-        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
+        gain_ptr = ctx.get_param_or_state_ptr(builder, self, GAIN, param_struct_ptr=params)
+        bias_ptr = ctx.get_param_or_state_ptr(builder, self, BIAS, param_struct_ptr=params)
+        x_0_ptr = ctx.get_param_or_state_ptr(builder, self, X_0, param_struct_ptr=params)
+        scale_ptr = ctx.get_param_or_state_ptr(builder, self, SCALE, param_struct_ptr=params)
+        offset_ptr = ctx.get_param_or_state_ptr(builder, self, OFFSET, param_struct_ptr=params)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -1390,11 +1390,11 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        gain_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, GAIN)
-        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
-        x_0_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, X_0)
-        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
-        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
+        gain_ptr = ctx.get_param_or_state_ptr(builder, self, GAIN, param_struct_ptr=params)
+        bias_ptr = ctx.get_param_or_state_ptr(builder, self, BIAS, param_struct_ptr=params)
+        x_0_ptr = ctx.get_param_or_state_ptr(builder, self, X_0, param_struct_ptr=params)
+        offset_ptr = ctx.get_param_or_state_ptr(builder, self, OFFSET, param_struct_ptr=params)
+        scale_ptr = ctx.get_param_or_state_ptr(builder, self, SCALE, param_struct_ptr=params)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -1652,9 +1652,9 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        gain_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, GAIN)
-        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
-        leak_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, LEAK)
+        gain_ptr = ctx.get_param_or_state_ptr(builder, self, GAIN, param_struct_ptr=params)
+        bias_ptr = ctx.get_param_or_state_ptr(builder, self, BIAS, param_struct_ptr=params)
+        leak_ptr = ctx.get_param_or_state_ptr(builder, self, LEAK, param_struct_ptr=params)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -2104,10 +2104,10 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        standard_deviation_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, STANDARD_DEVIATION)
-        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
-        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
-        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
+        standard_deviation_ptr = ctx.get_param_or_state_ptr(builder, self, STANDARD_DEVIATION, param_struct_ptr=params)
+        bias_ptr = ctx.get_param_or_state_ptr(builder, self, BIAS, param_struct_ptr=params)
+        scale_ptr = ctx.get_param_or_state_ptr(builder, self, SCALE, param_struct_ptr=params)
+        offset_ptr = ctx.get_param_or_state_ptr(builder, self, OFFSET, param_struct_ptr=params)
 
         standard_deviation = pnlvm.helpers.load_extract_scalar_array_one(builder, standard_deviation_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -2381,10 +2381,10 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        variance_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, VARIANCE)
-        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
-        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
-        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
+        variance_ptr = ctx.get_param_or_state_ptr(builder, self, VARIANCE, param_struct_ptr=params)
+        bias_ptr = ctx.get_param_or_state_ptr(builder, self, BIAS, param_struct_ptr=params)
+        scale_ptr = ctx.get_param_or_state_ptr(builder, self, SCALE, param_struct_ptr=params)
+        offset_ptr = ctx.get_param_or_state_ptr(builder, self, OFFSET, param_struct_ptr=params)
 
         variance = pnlvm.helpers.load_extract_scalar_array_one(builder, variance_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -2600,7 +2600,7 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        p_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, 'p')
+        p_ptr = ctx.get_param_or_state_ptr(builder, self, 'p', param_struct_ptr=params)
         p = builder.load(p_ptr)
         mod_p = builder.fsub(p.type(1), p)
         p_mod_ptr = builder.alloca(mod_p.type)
@@ -3268,7 +3268,7 @@ class SoftMax(TransferFunction):
         exp_sum_ptr = builder.alloca(ctx.float_ty)
         builder.store(exp_sum_ptr.type.pointee(0), exp_sum_ptr)
 
-        gain_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, GAIN)
+        gain_ptr = ctx.get_param_or_state_ptr(builder, self, GAIN, param_struct_ptr=params)
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
 
         with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_sum_max") as args:
@@ -3278,14 +3278,18 @@ class SoftMax(TransferFunction):
         exp_sum = builder.load(exp_sum_ptr)
 
         if output_type == ALL:
+            one_hot_p = ctx.get_param_or_state_ptr(builder, self, 'one_hot_function', param_struct_ptr=params, state_struct_ptr=state)
+
+            # Derivative first gets the output_type == ALL result even if the selected output type is different.
+            assert self.output != output_type or one_hot_p.type.pointee.elements == (), \
+                "OneHot parameter should be empty for output_type == ALL: {}".format(one_hot_p)
             with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as args:
                 self.__gen_llvm_exp_div(ctx=ctx, vi=arg_in, vo=arg_out,
                                         gain=gain, exp_sum=exp_sum, *args)
             return builder
 
+        one_hot_p, one_hot_s = ctx.get_param_or_state_ptr(builder, self, 'one_hot_function', param_struct_ptr=params, state_struct_ptr=state)
         one_hot_f = ctx.import_llvm_function(self.one_hot_function, tags=tags)
-        one_hot_p = pnlvm.helpers.get_param_ptr(builder, self, params, 'one_hot_function')
-        one_hot_s = pnlvm.helpers.get_state_ptr(builder, self, state, 'one_hot_function')
 
         assert one_hot_f.args[3].type == arg_out.type
         one_hot_out = arg_out
@@ -3323,7 +3327,6 @@ class SoftMax(TransferFunction):
         forward_tags = tags.difference({"derivative", "derivative_out"})
 
         # SoftMax derivative is calculated from the "ALL" results.
-        # Those can provided from outside, but we don't support receiving data in arg_out
         if "derivative_out" in tags:
             all_out = arg_in
         else:
@@ -3896,8 +3899,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                           pnlvm.PNLCompilerWarning)
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-        matrix = pnlvm.helpers.get_param_ptr(builder, self, params, MATRIX)
-        normalize = pnlvm.helpers.get_param_ptr(builder, self, params, NORMALIZE)
+        matrix = ctx.get_param_or_state_ptr(builder, self, MATRIX, param_struct_ptr=params)
+        normalize = ctx.get_param_or_state_ptr(builder, self, NORMALIZE, param_struct_ptr=params)
 
         # Convert array pointer to pointer to the fist element
         matrix = builder.gep(matrix, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -4929,27 +4932,34 @@ class TransferWithCosts(TransferFunction):
         # Run transfer function first
         transfer_f = self.parameters.transfer_fct
         trans_f = ctx.import_llvm_function(transfer_f.get())
-        trans_p = pnlvm.helpers.get_param_ptr(builder, self, params, transfer_f.name)
-        trans_s = pnlvm.helpers.get_state_ptr(builder, self, state, transfer_f.name)
+        trans_p, trans_s = ctx.get_param_or_state_ptr(builder,
+                                                      self,
+                                                      transfer_f.name,
+                                                      param_struct_ptr=params,
+                                                      state_struct_ptr=state)
         trans_in = arg_in
         trans_out = arg_out
         builder.call(trans_f, [trans_p, trans_s, trans_in, trans_out])
-        intensity_ptr = pnlvm.helpers.get_state_space(builder, self, state, self.parameters.intensity.name)
+        intensity_ptr = ctx.get_state_space(builder, self, state, self.parameters.intensity)
 
         costs = [(self.parameters.intensity_cost_fct, CostFunctions.INTENSITY, self.parameters.intensity_cost),
                  (self.parameters.adjustment_cost_fct, CostFunctions.ADJUSTMENT, self.parameters.adjustment_cost),
                  (self.parameters.duration_cost_fct, CostFunctions.DURATION, self.parameters.duration_cost)]
 
-        for (func, flag, out) in costs:
+        for (func, flag, res_param) in costs:
+
+            cost_in = trans_out
+            cost_out = ctx.get_state_space(builder, self, state, res_param)
 
             # The check for enablement is structural and has to be done in Python.
             # If a cost function is not enabled the cost parameter is None
             if flag in self.parameters.enabled_cost_functions.get():
                 cost_f = ctx.import_llvm_function(func.get())
-                cost_p = pnlvm.helpers.get_param_ptr(builder, self, params, func.name)
-                cost_s = pnlvm.helpers.get_state_ptr(builder, self, state, func.name)
-                cost_out = pnlvm.helpers.get_state_space(builder, self, state, out.name)
-                cost_in = trans_out
+                cost_p, cost_s = ctx.get_param_or_state_ptr(builder,
+                                                            self,
+                                                            func,
+                                                            param_struct_ptr=params,
+                                                            state_struct_ptr=state)
 
                 if flag == CostFunctions.ADJUSTMENT:
                     old_intensity = pnlvm.helpers.load_extract_scalar_array_one(builder, intensity_ptr)
@@ -4963,9 +4973,21 @@ class TransferWithCosts(TransferFunction):
                     builder.store(adjustment, builder.gep(cost_in, [ctx.int32_ty(0), ctx.int32_ty(0)]))
 
                 builder.call(cost_f, [cost_p, cost_s, cost_in, cost_out])
+            else:
+                # Intensity is [1] when the cost function is disabled but other cost functions are enabled
+                # https://github.com/PrincetonUniversity/PsyNeuLink/issues/2711
+                exp_out_len = 0 if self.parameters.enabled_cost_functions.get() == CostFunctions.NONE or flag != CostFunctions.INTENSITY else 1
+                assert len(cost_out.type.pointee) == exp_out_len, "Unexpected out sturct for {}: {}".format(flag, cost_out.type.pointee)
+
 
         # TODO: combine above costs via a call to combine_costs_fct
         # depends on: https://github.com/PrincetonUniversity/PsyNeuLink/issues/2712
+        # This function is still used in OCM so track both state and parameters
+        combine_p, combine_s = ctx.get_param_or_state_ptr(builder,
+                                                          self,
+                                                          self.parameters.combine_costs_fct,
+                                                          param_struct_ptr=params,
+                                                          state_struct_ptr=state)
 
         builder.store(builder.load(trans_out), intensity_ptr)
 
