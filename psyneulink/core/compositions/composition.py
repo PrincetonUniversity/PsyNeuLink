@@ -5206,7 +5206,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
           - all Nodes that have one or more InputPorts for which default_input == DEFAULT_VARIABLE
 
         INTERNAL:
-          - all Nodes that are *neither* ORIGIN nor TERMINAL
+            A `Node <Composition_Nodes>` that is neither `INPUT` nor
+            `OUTPUT`.  Note that it *can* also be `ORIGIN`, `TERMINAL`
+            or `SINGLETON`, if it has no `afferent
+            <Mechanism_Base.afferents>` or `efferent
+            <Mechanism_Base.efferents>` Projections or neither,
+            respectively. This role cannot be modified programmatically.
 
         CYCLE:
           - all Nodes that identified as being in a cycle by self.graph_processing
@@ -5476,7 +5481,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in self.nodes:
             if all(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
                 self._add_node_role(node, NodeRole.SINGLETON)
-            if not any(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
+            if not any(n in self.nodes_to_roles[node] for n in {NodeRole.INPUT, NodeRole.OUTPUT}):
                 self._add_node_role(node, NodeRole.INTERNAL)
 
         # Finally, remove any NodeRole assignments specified in excluded_node_roles
