@@ -52,7 +52,9 @@ class Scheduler(graph_scheduler.Scheduler, MDFSerializable):
                 default_execution_id = composition.default_execution_id
 
         # TODO: consider integrating something like this into graph-scheduler?
-        self._user_specified_conds = copy.copy(conditions) if conditions is not None else {}
+        self._user_specified_conds = graph_scheduler.ConditionSet()
+        if conditions is not None:
+            self._user_specified_conds.add_condition_set(copy.copy(conditions))
         self._user_specified_termination_conds = copy.copy(termination_conds) if termination_conds is not None else {}
 
         super().__init__(
@@ -96,7 +98,7 @@ class Scheduler(graph_scheduler.Scheduler, MDFSerializable):
             )
 
     def add_condition(self, owner, condition):
-        self._user_specified_conds[owner] = condition
+        self._user_specified_conds.add_condition(owner, condition)
         self._add_condition(owner, condition)
 
     def _add_condition(self, owner, condition):
@@ -104,7 +106,7 @@ class Scheduler(graph_scheduler.Scheduler, MDFSerializable):
         super().add_condition(owner, condition)
 
     def add_condition_set(self, conditions):
-        self._user_specified_conds.update(conditions)
+        self._user_specified_conds.add_condition_set(conditions)
         self._add_condition_set(conditions)
 
     def _add_condition_set(self, conditions):
@@ -114,8 +116,8 @@ class Scheduler(graph_scheduler.Scheduler, MDFSerializable):
             pass
 
         conditions = {
-            node: _create_as_pnl_condition(cond)
-            for node, cond in conditions.items()
+            node: _create_as_pnl_condition(conditions[node])
+            for node in conditions
         }
         super().add_condition_set(conditions)
 

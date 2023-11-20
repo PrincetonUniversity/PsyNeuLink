@@ -7932,7 +7932,7 @@ class TestMisc:
         assert comp.scheduler.conditions[C].args == (A, 2)
 
         assert comp.scheduler.execution_list[comp.default_execution_id] == [{A}, {A, B}, {C}]
-        assert set(comp.scheduler._user_specified_conds.keys()) == {B, C}
+        assert set(comp.scheduler._user_specified_conds.conditions.keys()) == {B, C}
 
     def test_rebuild_scheduler_after_remove_node(self):
         A = ProcessingMechanism(name='A')
@@ -7952,7 +7952,7 @@ class TestMisc:
         assert comp.scheduler.conditions[C].args == (A, 2)
 
         assert comp.scheduler.execution_list[comp.default_execution_id] == [{A}, {A}, {C}]
-        assert set(comp.scheduler._user_specified_conds.keys()) == {C}
+        assert set(comp.scheduler._user_specified_conds.conditions.keys()) == {C}
 
 
 class TestInputSpecsDocumentationExamples:
