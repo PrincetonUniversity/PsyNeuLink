@@ -1300,14 +1300,17 @@ class Log:
                 entries=None,
                 header:bool=True,
                 owner_name:bool=False,
-                contexts=NotImplemented,
+                report_all_executions=False,
                 exclude_sims=False,
+                contexts=NotImplemented
                 ):
         """
-        nparray(                 \
-            entries=None,        \
-            header:bool=True,    \
-            owner_name=False):   \
+        nparray(                          \
+            entries=None,                 \
+            header:bool=True,             \
+            owner_name=False):            \
+            report_all_executions=False,  \
+            exclude_sims=False,           \
             )
 
         Return a 2d numpy array with headers (optional) and values for the specified entries.
@@ -1321,11 +1324,11 @@ class Log:
         given entry at a given time point, it is entered as `None`.
 
         If any of the data for any entry does not have a time value (e.g., if that Component was not run within a
-        System), then all of the entries must have the same number of data (LogEntry) items, and the first row is a
-        sequential index (starting with 0) that simply designates the data item number.
+        Composition), then all of the entries must have the same number of data (LogEntry) items, and the first row
+        is a sequential index (starting with 0) that simply designates the data item number.
 
         .. note::
-           For data without time stamps, the nth items in each entry correspond (i.e., ones in the same column)
+           For data without time stamps, the nth items in each entry (i.e., ones in the same column)
            are not guaranteed to have been logged at the same time point.
 
         If header is `True`, the first item of each row is a header field: for time indices it is either "Run",
@@ -1348,6 +1351,18 @@ class Log:
             returned.
         COMMENT
 
+        report_all_executions : bool : default False
+            specifies whether to report all executions within a given `TIME_STEP <TimeScale.TIME_STEP>` (if True)
+            or just the last (if False, the default). This in only relevant for Mechanisms that can be executed
+            multiple times within a `TIME_STEP <TimeScale.TIME_STEP>` (e.g., `TransferMechanism` and `DDM`) when
+            their `execute_until_finished <Component.execute_until_finished>` attribute is set to True (see
+            `Component_Execute_Until_Finished` for additional details).
+
+        exclude_sims
+            set to True to exclude from output any values logged during `simulations <OptimizationControlMechanism_Model_Based>`
+            :default value: False
+            :type: bool
+
         header : bool : default True
             specifies whether or not to include a header in each row with the name of the Component for that entry.
 
@@ -1355,12 +1370,6 @@ class Log:
             specifies whether or not to include the Log's `owner <Log.owner>` in the header of each field;
             if it is True, the format of the header for each field is "<Owner name>[<entry name>]";
             otherwise, it is "<entry name>".
-
-        exclude_sims
-            set to True to exclude from output any values logged during `simulations <OptimizationControlMechanism_Model_Based>`
-
-            :default value: False
-            :type: bool
 
         Returns:
             2d np.array
@@ -1422,10 +1431,10 @@ class Log:
                     data_entry = [data_entry]
 
             for entry in entries:
-                row = self._assemble_entry_data(entry, time_values, eid)
+                row = self._assemble_entry_data(entry, time_values, report_all_executions, eid)
 
                 if header:
-                    entry_header = "{}{}{}{}".format(owner_name_str, lb, self._alias_owner_name(entry), rb)
+                    entry_header = f"{owner_name_str}{lb}{self._alias_owner_name(entry)}{rb}"
                     row = [entry_header] + row
                 data_entry.append(row)
 
@@ -1435,10 +1444,17 @@ class Log:
 
         return npa
 
-    def nparray_dictionary(self, entries=None, contexts=NotImplemented, exclude_sims=False):
+    def nparray_dictionary(self,
+                           entries=None,
+                           report_all_executions=False,
+                           exclude_sims=False,
+                           contexts=NotImplemented
+                           ):
         """
         nparray_dictionary(                 \
-            entries=None,        \
+            entries=None,                   \
+            report_all_executions=False,    \
+            exclude_sims=False,             \
             )
 
         Returns an `OrderedDict <https://docs.python.org/3.5/library/collections.html#collections.OrderedDict>`_
@@ -1489,6 +1505,13 @@ class Log:
             <Log.loggable_items>` of the Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
             If **entries** is *ALL* or is not specified, then all `logged_items <Log.logged_items>` are included.
 
+        report_all_executions : bool : default False
+            specifies whether to report all executions within a given `TIME_STEP <TimeScale.TIME_STEP>` (if True)
+            or just the last (if False, the default). This in only relevant for Mechanisms that can be executed
+            multiple times within a `TIME_STEP <TimeScale.TIME_STEP>` (e.g., `TransferMechanism` and `DDM`) when
+            their `execute_until_finished <Component.execute_until_finished>` attribute is set to True (see
+            `Component_Execute_Until_Finished` for additional details).
+
         exclude_sims
             set to True to exclude from output any values logged during `simulations <OptimizationControlMechanism_Model_Based>`
 
@@ -1532,7 +1555,10 @@ class Log:
                 log_dict[eid]["Index"] = np.arange(num_indicies).reshape(num_indicies, 1).tolist()
 
             for entry in entries:
-                log_dict[eid][entry] = np.array(self._assemble_entry_data(entry, time_values, eid))
+                log_dict[eid][entry] = np.array(self._assemble_entry_data(entry,
+                                                                          time_values,
+                                                                          report_all_executions,
+                                                                          eid))
 
         return log_dict
 
@@ -1751,9 +1777,11 @@ class Log:
 
         return time_values
 
-    def _assemble_entry_data(self, entry, time_values, execution_id=None):
+    def _assemble_entry_data(self, entry, time_values, report_all_executions=False, execution_id=None):
         # Assembles list of entry's (component's) value at each of the time points specified in time_values
-        # If there are multiple entries for a given time point, the last one will be used
+        # If there are multiple entries for a given time point:
+        #   - if report_all_executions = False (default), report only the last one
+        #   - if report_all_executions = True, report values of all of them
         # If data was not recorded for this entry (component) for a given time point, it will be stored as None
 
         # entry = self._dealias_owner_name(entry)
@@ -1773,16 +1801,48 @@ class Log:
             # if not, enter `None` in the entry's list
             datum = data[i]
             if time_values:
-                if i == len(data) - 1 or data[i + 1].time != time:
+                # # MODIFIED 11/14/23 OLD:
+                # if i == len(data) - 1 or data[i + 1].time != time:
+                #     if datum.time != time:
+                #         row.append(None)
+                #     else:
+                #         value = None if datum.value is None else np.array(datum.value).tolist()  # else, if is time,
+                #         # append value
+                #         row.append(value)
+                #     time = next(time_col, None)  # increment time value
+                #     if time is None:  # if no more times, break
+                #         break
+                # MODIFIED 11/14/23 NEW:
+                if report_all_executions:
+                    # Report values for all executions within a given time
+                    if i == 0 or time != data[i - 1].time:
+                        # Start new execution set on first datum or if time of entry has changed
+                        execution_set = []
+                    # If the entry's time value doesn't match one of the times specified in the call, enter None
                     if datum.time != time:
-                        row.append(None)
+                        execution_set.append(None)
                     else:
-                        value = None if datum.value is None else np.array(datum.value).tolist()  # else, if is time,
-                        # append value
-                        row.append(value)
-                    time = next(time_col, None)  # increment time value
+                        execution_set.append(None if datum.value is None else np.array(datum.value).tolist())
+                    if i == len(data) - 1 or data[i + 1].time != time:
+                        time = next(time_col, None)  # increment time value
+                        row.append(execution_set)
                     if time is None:  # if no more times, break
                         break
+                else:
+                    # Only report one value (execution) for each unique time
+                    if i == len(data) - 1 or data[i + 1].time != time:
+                        # Only record value if time of entry is about to change and/or for last entry
+                        if datum.time != time:
+                            # If entry's time value doesn't match one of the times specified in the call, report None
+                            row.append(None)
+                        else:
+                            # Report value of entry
+                            value = None if datum.value is None else np.array(datum.value).tolist()
+                            row.append(value)
+                        time = next(time_col, None)  # increment time value
+                        if time is None:  # if no more times, break
+                            break
+                # MODIFIED 11/14/23 END
             else:
                 if datum.value is None:
                     value = None
