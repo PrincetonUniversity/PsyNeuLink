@@ -520,6 +520,7 @@ def construct_model(model_name:str=MODEL_NAME,
                        memory_fill=(0,.01),
                        memory_capacity=NUM_EXPERIENCE_SEQS,
                        softmax_gain=1.0,
+                       # Input Nodes:
                        field_names=[state_input_name,
                                     time_input_name,
                                     context_name,
@@ -642,6 +643,7 @@ def construct_model(model_name:str=MODEL_NAME,
     # -------------------------------------------------  EGO Composition  --------------------------------------------
     # ----------------------------------------------------------------------------------------------------------------
     
+
     EGO_comp = Composition(name=model_name,
                            # # Terminate a Task.PREDICT trial after decision_layer executes if a reward is retrieved
                            # termination_processing={
@@ -678,22 +680,39 @@ def construct_model(model_name:str=MODEL_NAME,
 
     # Projections:
 
+    # # MODIFIED 11/21/23 OLD:
+    # # EM encoding --------------------------------------------------------------------------------
+    # # state -> em
+    # EGO_comp.add_projection(MappingProjection(state_input_layer, em.input_ports[STATE_INPUT_LAYER_NAME]))
+    # # time -> em
+    # EGO_comp.add_projection(MappingProjection(time_input_layer, em.input_ports[TIME_INPUT_LAYER_NAME]))
+    # # context -> em
+    # EGO_comp.add_projection(MappingProjection(context_layer, em.input_ports[CONTEXT_LAYER_NAME]))
+    # # reward -> em
+    # EGO_comp.add_projection(MappingProjection(reward_input_layer, em.input_ports[REWARD_INPUT_LAYER_NAME]))
+    # MODIFIED 11/21/23 NEW:
     # EM encoding --------------------------------------------------------------------------------
     # state -> em
-    EGO_comp.add_projection(MappingProjection(state_input_layer, em.input_ports[STATE_INPUT_LAYER_NAME]))
+    EGO_comp.add_projection(MappingProjection(state_input_layer, em.nodes[state_input_name]))
     # time -> em
-    EGO_comp.add_projection(MappingProjection(time_input_layer, em.input_ports[TIME_INPUT_LAYER_NAME]))
+    EGO_comp.add_projection(MappingProjection(time_input_layer, em.nodes[time_input_name]))
     # context -> em
-    EGO_comp.add_projection(MappingProjection(context_layer, em.input_ports[CONTEXT_LAYER_NAME]))
+    EGO_comp.add_projection(MappingProjection(context_layer, em.nodes[context_name]))
     # reward -> em
-    EGO_comp.add_projection(MappingProjection(reward_input_layer, em.input_ports[REWARD_INPUT_LAYER_NAME]))
+    EGO_comp.add_projection(MappingProjection(reward_input_layer, em.nodes[reward_input_name]))
+    # MODIFIED 11/21/23 END
 
     # Inputs to Context ---------------------------------------------------------------------------
     # actual state -> attend_external_layer
     EGO_comp.add_projection(MappingProjection(state_input_layer, attend_external_layer))
     # retrieved state -> attend_memory_layer
-    EGO_comp.add_projection(MappingProjection(em.output_ports[f'RETRIEVED_{STATE_INPUT_LAYER_NAME}'],
+    # # MODIFIED 11/21/23 OLD:
+    # EGO_comp.add_projection(MappingProjection(em.output_ports[f'RETRIEVED_{STATE_INPUT_LAYER_NAME}'],
+    #                                           attend_memory_layer))
+    # MODIFIED 11/21/23 NEW:
+    EGO_comp.add_projection(MappingProjection(em.nodes[f'RETRIEVED_{STATE_INPUT_LAYER_NAME}'],
                                               attend_memory_layer))
+    # MODIFIED 11/21/23 END
     # attend_external_layer -> context_layer
     EGO_comp.add_projection(MappingProjection(attend_external_layer, context_layer,
                                               matrix=np.eye(STATE_SIZE) * state_weight))
@@ -701,13 +720,23 @@ def construct_model(model_name:str=MODEL_NAME,
     EGO_comp.add_projection(MappingProjection(attend_memory_layer, context_layer,
                                               matrix=np.eye(STATE_SIZE) * state_weight))
     # retrieved context -> context_layer
-    EGO_comp.add_projection(MappingProjection(em.output_ports[f'RETRIEVED_{CONTEXT_LAYER_NAME}'], context_layer,
+    # MODIFIED 11/21/23 OLD:
+    # EGO_comp.add_projection(MappingProjection(em.output_ports[f'RETRIEVED_{CONTEXT_LAYER_NAME}'], context_layer,
+    #                                           matrix=np.eye(STATE_SIZE) * context_weight))
+    # MODIFIED 11/21/23 NEW:
+    EGO_comp.add_projection(MappingProjection(em.nodes[f'RETRIEVED_{CONTEXT_LAYER_NAME}'], context_layer,
                                               matrix=np.eye(STATE_SIZE) * context_weight))
+    # MODIFIED 11/21/23 END
 
     # Decision pathway ---------------------------------------------------------------------------
     # retrieved reward -> retrieved reward
-    EGO_comp.add_projection(MappingProjection(em.output_ports[f'RETRIEVED_{REWARD_INPUT_LAYER_NAME}'],
+    # # MODIFIED 11/21/23 OLD:
+    # EGO_comp.add_projection(MappingProjection(em.output_ports[f'RETRIEVED_{REWARD_INPUT_LAYER_NAME}'],
+    #                                           retrieved_reward_layer))
+    # MODIFIED 11/21/23 NEW:
+    EGO_comp.add_projection(MappingProjection(em.nodes[f'RETRIEVED_{REWARD_INPUT_LAYER_NAME}'],
                                               retrieved_reward_layer))
+    # MODIFIED 11/21/23 END
     # retrieved reward -> decision layer
     EGO_comp.add_projection(MappingProjection(retrieved_reward_layer, decision_layer))
 
