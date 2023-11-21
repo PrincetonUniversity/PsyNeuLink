@@ -3052,7 +3052,7 @@ class SoftMax(TransferFunction):
         bounds = (0, 1)
         output = ALL
         per_item = Parameter(True, pnl_internal=True)
-        one_hot_function = Parameter(OneHot, stateful=False, loggable=False)
+        one_hot_function = Parameter(None, stateful=False, loggable=False)
 
         def _validate_output(self, output):
             options = {ALL, MAX_VAL, MAX_INDICATOR, PROB}
