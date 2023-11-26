@@ -765,7 +765,10 @@ class EMStorageMechanism(LearningMechanism):
                                               f"must include '{MEMORY_MATRIX}' in params arg.")
 
         # Get least used slot (i.e., weakest memory = row of matrix with lowest weights) computed across all fields
-        field_norms = np.array([np.linalg.norm(field, axis=1) for field in [row for row in memory]])
+        field_norms = np.empty((len(memory),len(memory[0])))
+        for row in range(len(memory)):
+            for col in range(len(memory[0])):
+                field_norms[row][col] = np.linalg.norm(memory[row][col])
         if field_weights is not None:
             field_norms *= field_weights
         row_norms = np.sum(field_norms, axis=1)

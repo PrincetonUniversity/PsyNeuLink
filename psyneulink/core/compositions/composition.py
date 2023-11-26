@@ -12219,13 +12219,17 @@ _
                         else:
                             is_simulating = False
 
-                        # Run node-level compiled nested composition
-                        # only if there are no control projections
-                        nested_execution_mode = execution_mode \
-                            if len(node.parameter_CIM.afferents) == 0 else \
-                            pnlvm.ExecutionMode.Python
-                        ret = node.execute(context=context,
-                                           execution_mode=nested_execution_mode)
+                        # # MODIFIED 11/24/23 OLD:
+                        # # Run node-level compiled nested composition
+                        # # only if there are no control projections
+                        # nested_execution_mode = execution_mode \
+                        #     if len(node.parameter_CIM.afferents) == 0 else \
+                        #     pnlvm.ExecutionMode.Python
+                        # ret = node.execute(context=context,
+                        #                    execution_mode=nested_execution_mode)
+                        # MODIFIED 11/24/23 NEW:
+                        ret = node.execute(context=context, execution_mode=execution_mode)
+                        # MODIFIED 11/24/23 END
 
                         # Get output info from nested execution
                         if execution_mode & pnlvm.ExecutionMode.COMPILED:

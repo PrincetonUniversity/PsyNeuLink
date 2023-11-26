@@ -151,6 +151,8 @@ DISPLAY_MODEL = (                      # Only one of the following can be uncomm
 )
 RUN_MODEL = True                       # True => run the model
 # RUN_MODEL = False                      # False => don't run the model
+# EXECUTION_MODE = ExecutionMode.Python
+EXECUTION_MODE = ExecutionMode.PyTorch
 ANALYZE_RESULTS = False                # True => output analysis of results of run
 REPORT_OUTPUT = ReportOutput.FULL     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
@@ -779,6 +781,7 @@ if __name__ == '__main__':
         # Experience Phase
         print(f"Presenting {model.name} with {TOTAL_NUM_EXPERIENCE_STIMS} EXPERIENCE stimuli")
         model.run(inputs={k: v for k, v in zip(input_layers, experience_inputs)},
+                  execution_mode=EXECUTION_MODE,
                   report_output=REPORT_OUTPUT,
                   report_progress=REPORT_PROGRESS)
 

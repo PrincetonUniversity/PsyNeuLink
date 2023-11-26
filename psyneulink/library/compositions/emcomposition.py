@@ -130,6 +130,8 @@
 #          - Add warning of this on initial call to learn()
 #
 #      - Composition:
+#        - Add default_execution_mode attribute to allow nested Compositions to be executed in
+#              different model than outer Composition
 #        - _validate_input_shapes_and_expand_for_all_trials: consolidate with get_input_format()
 #        - Generalize treatment of FEEDBACK specification:
       #        - FIX: ADD TESTS FOR FEEDBACK TUPLE SPECIFICATION OF Projection, DIRECT SPECIFICATION IN CONSTRUCTOR
@@ -2161,7 +2163,10 @@ class EMComposition(AutodiffComposition):
     # *********************************** Execution Methods  **********************************************************
     # *****************************************************************************************************************
 
-    def execute(self, inputs, context, **kwargs):
+    def execute(self,
+                inputs=None,
+                context=None,
+                **kwargs):
         """Set input to weights of Projections to match_nodes and retrieved_nodes if not use_storage_node."""
         results = super().execute(inputs=inputs, context=context, **kwargs)
         if not self.use_storage_node:
