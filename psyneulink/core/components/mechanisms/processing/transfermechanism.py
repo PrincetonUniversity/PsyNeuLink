@@ -1564,6 +1564,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 cond = b.fcmp_ordered(">=", test_val, max_val)
                 max_val = b.select(cond, test_val, max_val)
                 b.store(max_val, cmp_val_ptr)
+            assert "termination_measure" not in self.llvm_param_ids, "'term_measure' in {}: {}".format(self.name, pnlvm.helpers.get_param_ptr(builder, self, m_base_params, "termination_measure").type.pointee)
 
         elif isinstance(self.termination_measure, Function):
             prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state, "value", 1)
@@ -1593,12 +1594,13 @@ class TransferMechanism(ProcessingMechanism_Base):
             builder.store(builder.extract_value(prev_val, 0), func_in_prev_ptr)
 
             builder.call(func, [func_params, func_state, func_in, cmp_val_ptr])
+
         elif isinstance(self.termination_measure, TimeScale):
-            ptr = builder.gep(pnlvm.helpers.get_state_ptr(builder, self, m_state, "num_executions"),
-                              [ctx.int32_ty(0), ctx.int32_ty(self.termination_measure.value)])
-            ptr_val = builder.sitofp(builder.load(ptr), threshold.type)
-            pnlvm.helpers.printf(builder, f"TERM MEASURE {self.termination_measure} %d %d\n",ptr_val, threshold)
-            builder.store(ptr_val, cmp_val_ptr)
+            num_executions_array_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state, "num_executions")
+            elem_ptr = builder.gep(num_executions_array_ptr, [ctx.int32_ty(0), ctx.int32_ty(self.termination_measure.value)])
+            elem_val = builder.sitofp(builder.load(elem_ptr), threshold.type)
+            builder.store(elem_val, cmp_val_ptr)
+
         else:
             assert False, f"Not Supported: {self.termination_measure}."
 
