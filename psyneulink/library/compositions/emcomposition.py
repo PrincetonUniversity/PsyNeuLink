@@ -939,7 +939,10 @@ def get_softmax_gain(v, scale=1, base=1, entropy_weighting=.1)->float:
 
 
 class EMCompositionError(CompositionError):
-    pass
+    def __init__(self, error_value):
+        self.error_value = error_value
+    def __str__(self):
+        return repr(self.error_value)
 
 
 class EMComposition(AutodiffComposition):
@@ -2258,6 +2261,11 @@ class EMComposition(AutodiffComposition):
                 self.execution_mode_warned_about_default = True
             execution_mode = ExecutionMode.PyTorch
         return execution_mode
+
+    def infer_backpropagation_learning_pathways(self, execution_mode, context=None):
+        if self.concatenate_keys:
+            raise EMCompositionError(f"EMComposition does not support learning with 'concatenate_keys'=True.")
+        super().infer_backpropagation_learning_pathways(execution_mode, context=context)
 
     def _update_learning_parameters(self, context):
         pass

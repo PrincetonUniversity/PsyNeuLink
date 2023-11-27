@@ -9,7 +9,7 @@ import psyneulink as pnl
 
 from psyneulink.core.globals.keywords import AUTO, CONTROL
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
-from psyneulink.library.compositions.emcomposition import EMComposition
+from psyneulink.library.compositions.emcomposition import EMComposition, EMCompositionError
 
 module_seed = 0
 np.random.seed(0)
@@ -338,8 +338,9 @@ class TestExecution:
                              ids=[x[0] for x in test_execution_data])
     @pytest.mark.parametrize('enable_learning', [False, True], ids=['no_learning','learning'])
     @pytest.mark.composition
+    @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch])
     def test_simple_execution_without_learning(self,
-                                               comp_mode,
+                                               exec_mode,
                                                enable_learning,
                                                test_num,
                                                memory_template,
@@ -354,9 +355,8 @@ class TestExecution:
                                                inputs,
                                                expected_retrieval):
 
-        if comp_mode != pnl.ExecutionMode.Python:
-        # if comp_mode not in {pnl.ExecutionMode.Python, pnl.Exeuction.PyTorch}:
-            pytest.skip('Execution of EMComposition not yet supported for LLVM Mode.')
+        # # if comp_mode not in {pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch}:
+        # #     pytest.skip('Execution of EMComposition not yet supported for LLVM Mode.')
 
         # Restrict testing of learning configurations (which are much larger) to select tests
         if enable_learning and test_num not in {10}:
@@ -397,7 +397,7 @@ class TestExecution:
                 np.testing.assert_equal(em.memory_template[i][j], memory_template[i][j])
 
         # Execute and validate results
-        retrieved = em.run(inputs=inputs, execution_mode=comp_mode)
+        retrieved = em.run(inputs=inputs, execution_mode=exec_mode)
         for retrieved, expected in zip(retrieved, expected_retrieval):
             np.testing.assert_allclose(retrieved, expected)
 
@@ -438,14 +438,11 @@ class TestExecution:
     @pytest.mark.composition
     @pytest.mark.parametrize('concatenate', [True, False])
     @pytest.mark.parametrize('use_storage_node', [True, False])
-    def test_multiple_trials_concatenation_and_storage_node_no_learning(self, comp_mode, concatenate, use_storage_node):
+    @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch])
+    def test_multiple_trials_concatenation_and_storage_node_no_learning(self, exec_mode, concatenate, use_storage_node):
 
-        if comp_mode != pnl.ExecutionMode.Python:
-            pytest.skip('Execution of EMComposition not yet supported for LLVM Mode.')
-
-        def temp(context):
-            memory = context.composition.parameters.memory.get(context)
-            assert True
+        # if comp_mode != pnl.ExecutionMode.Python:
+        #     pytest.skip('Execution of EMComposition not yet supported for LLVM Mode.')
 
         em = EMComposition(memory_template=(2,3),
                            field_weights=[1,1],
@@ -468,14 +465,45 @@ class TestExecution:
         input_nodes = em.query_input_nodes + em.value_input_nodes
         inputs = {input_nodes[i]:inputs[i] for
                   i in range(len(input_nodes))}
-        em.run(inputs=inputs)
-        # em.learn(inputs=inputs)
+        em.run(inputs=inputs, execution_mode=exec_mode)
         np.testing.assert_equal(em.memory, expected_memory)
 
-    @pytest.mark.pytorch
+    # FIX: CONSOLIDATE WITH ABOVE BY MOVING CALL TO LEAR AFTER CALL TO RUN WITH CORRESPONDING ERROR CHECKS
+    #      SO THAT CONSTRUCTION DOESN'T HAVE TO BE EXECUTED TWICE
     @pytest.mark.composition
-    def test_learning_with_pytorch(self):
-        pass
+    @pytest.mark.parametrize('concatenate', [True, False])
+    @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch])
+    def test_multiple_trials_concatenation_and_storage_node_with_learning(self, exec_mode, concatenate):
+
+        em = EMComposition(memory_template=(2,3),
+                           field_weights=[1,1],
+                           memory_capacity=4,
+                           softmax_gain=100,
+                           memory_fill=(0,.001),
+                           concatenate_keys=concatenate,
+                           enable_learning=False)
+
+        inputs = [[[[1,2,3]],[[4,5,6]],[[10,20,30]],[[40,50,60]],[[100,200,300]],[[400,500,600]]],
+                  [[[1,2,5]],[[4,5,8]],[[11,21,31]],[[41,51,61]],[[111,222,333]],[[444,555,666]]],
+                  [[[1,2,10]],[[4,5,10]]],[[[51,52,53]],[[81,82,83]],[[777,888,999]],[[1111,2222,3333]]]]
+
+        expected_memory = [[[0.15625, 0.3125,  0.46875], [0.171875, 0.328125, 0.484375]],
+                           [[400., 500., 600.], [444., 555., 666.]],
+                           [[2.5, 3.125, 3.75 ], [2.5625, 3.1875, 3.8125]],
+                           [[25., 50., 75.], [27.75, 55.5,  83.25]]]
+
+        input_nodes = em.query_input_nodes + em.value_input_nodes
+        inputs = {input_nodes[i]:inputs[i] for
+                  i in range(len(input_nodes))}
+
+        if concatenate:
+            with pytest.raises(EMCompositionError) as error:
+                em.learn(inputs=inputs, execution_mode=exec_mode)
+            assert "EMComposition does not support learning with 'concatenate_keys'=True." in str(error.value)
+
+        else:
+            em.learn(inputs=inputs, execution_mode=exec_mode)
+            np.testing.assert_equal(em.memory, expected_memory)
 
     @pytest.mark.composition
     def test_learning_without_pytorch(self):
