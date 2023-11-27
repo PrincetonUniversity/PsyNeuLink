@@ -1413,13 +1413,15 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         # Mechanism's need few extra entries:
         # * matrix -- is never used directly, and is flatened below
         # * integration rate -- shape mismatch with param port input
+        # * initializer -- only present on DDM and never used
         if hasattr(self, 'ports'):
-            blacklist.update(["matrix", "integration_rate"])
+            blacklist.update(["matrix", "integration_rate", "initializer"])
         else:
             # Execute until finished is only used by mechanisms
             blacklist.update(["execute_until_finished", "max_executions_before_finished"])
+
             # "has_initializers" is only used by RTM
-            blacklist.update(["has_initializers"])
+            blacklist.add('has_initializers')
 
         # Drop combination function params from RTM if not needed
         if getattr(self.parameters, 'has_recurrent_input_port', False):
