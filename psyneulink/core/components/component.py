@@ -1405,6 +1405,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "key_size", "val_size", "max_entries", "random_draw",
                      "randomization_dimension", "save_values", "save_samples",
                      "max_iterations", "duplicate_keys",
+                     "search_termination_function", "state_feature_function",
+                     "search_function",
                      # not used in compiled learning
                      "learning_results", "learning_signal", "learning_signals",
                      "error_matrix", "error_signal", "activation_input",
