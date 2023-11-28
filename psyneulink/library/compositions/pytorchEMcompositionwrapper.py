@@ -106,14 +106,10 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         num_match_fields = 1 if concatenation_node else len([i for i in mech.field_types if i==1])
 
         # Find weakest memory (i.e., with lowest norm)
-        # MODIFIED 11/25/23 OLD:
-        # field_norms = torch.stack([torch.linalg.norm(field, dim=1) for field in [row for row in memory]])
-        # MODIFIED 11/25/23 NEW:
         field_norms = torch.empty((len(memory),len(memory[0])))
         for row in range(len(memory)):
             for col in range(len(memory[0])):
                 field_norms[row][col] = torch.linalg.norm(memory[row][col])
-        # MODIFIED 11/25/23 END
         if field_weights is not None:
             field_norms *= field_weights
         row_norms = torch.sum(field_norms, axis=1)
