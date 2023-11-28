@@ -1410,7 +1410,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      # not used in compiled learning
                      "learning_results", "learning_signal", "learning_signals",
                      "error_matrix", "error_signal", "activation_input",
-                     "activation_output", "error_sources", "covariates_sources"
+                     "activation_output", "error_sources", "covariates_sources",
+                     "target", "sample",
                      }
         # Mechanism's need few extra entries:
         # * matrix -- is never used directly, and is flatened below
