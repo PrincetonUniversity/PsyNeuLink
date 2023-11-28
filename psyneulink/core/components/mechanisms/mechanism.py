@@ -2834,6 +2834,8 @@ class Mechanism_Base(Mechanism):
         return port_param_dicts
 
     def _get_param_ids(self):
+        if len(self._parameter_ports) == 0:
+            return super()._get_param_ids()
         # FIXME: parameter ports should be part of generated params
         return ["_parameter_ports"] + super()._get_param_ids()
 
@@ -2841,11 +2843,15 @@ class Mechanism_Base(Mechanism):
         ports_params = (ctx.get_param_struct_type(s) for s in self._parameter_ports)
         ports_param_struct = pnlvm.ir.LiteralStructType(ports_params)
         mech_param_struct = ctx.get_param_struct_type(super())
+        if len(self._parameter_ports) == 0:
+            return mech_param_struct
 
         return pnlvm.ir.LiteralStructType((ports_param_struct,
                                            *mech_param_struct))
 
     def _get_state_ids(self):
+        if len(self._parameter_ports) == 0:
+            return super()._get_state_ids()
         # FIXME: parameter ports should be part of generated state
         return ["_parameter_ports"] + super()._get_state_ids()
 
@@ -2853,6 +2859,8 @@ class Mechanism_Base(Mechanism):
         ports_state = (ctx.get_state_struct_type(s) for s in self._parameter_ports)
         ports_state_struct = pnlvm.ir.LiteralStructType(ports_state)
         mech_state_struct = ctx.get_state_struct_type(super())
+        if len(self._parameter_ports) == 0:
+            return mech_state_struct
 
         return pnlvm.ir.LiteralStructType((ports_state_struct,
                                            *mech_state_struct))
@@ -2884,12 +2892,16 @@ class Mechanism_Base(Mechanism):
     def _get_param_initializer(self, context):
         port_param_init = tuple(s._get_param_initializer(context) for s in self._parameter_ports)
         mech_param_init = super()._get_param_initializer(context)
+        if len(self._parameter_ports) == 0:
+            return mech_param_init
 
         return (port_param_init, *mech_param_init)
 
     def _get_state_initializer(self, context):
         port_state_init = tuple(s._get_state_initializer(context) for s in self._parameter_ports)
         mech_state_init = super()._get_state_initializer(context)
+        if len(self._parameter_ports) == 0:
+            return mech_state_init
 
         return (port_state_init, *mech_state_init)
 
