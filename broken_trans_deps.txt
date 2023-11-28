@@ -25,3 +25,7 @@ torch !=2.0.1, !=2.0.0, !=1.13.*, !=1.12.*; python_version == '3.10' and platfor
 # https://github.com/python-attrs/cattrs/issues/372
 # PNL is restricted to typing_extension <4 because of dependence on old rich<10.13
 cattrs != 23.1.1; python_version < '3.8'
+
+# cattrs==23.2.{1,2} breaks json serialization
+# https://github.com/python-attrs/cattrs/issues/453
+cattrs != 23.2.1, != 23.2.2
