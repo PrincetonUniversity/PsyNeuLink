@@ -504,7 +504,3 @@ class TestExecution:
         else:
             em.learn(inputs=inputs, execution_mode=exec_mode)
             np.testing.assert_equal(em.memory, expected_memory)
-
-    @pytest.mark.composition
-    def test_learning_without_pytorch(self):
-        pass
