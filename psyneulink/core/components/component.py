@@ -1417,8 +1417,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         # * matrix -- is never used directly, and is flatened below
         # * integration rate -- shape mismatch with param port input
         # * initializer -- only present on DDM and never used
+        # * search_space -- duplicated between OCM and its function
         if hasattr(self, 'ports'):
-            blacklist.update(["matrix", "integration_rate", "initializer"])
+            blacklist.update(["matrix", "integration_rate", "initializer", "search_space"])
         else:
             # Execute until finished is only used by mechanisms
             blacklist.update(["execute_until_finished", "max_executions_before_finished"])
