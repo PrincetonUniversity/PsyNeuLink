@@ -439,7 +439,8 @@ class TestExecution:
     @pytest.mark.parametrize('concatenate', [True, False])
     @pytest.mark.parametrize('use_storage_node', [True, False])
     @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch])
-    def test_multiple_trials_concatenation_and_storage_node_no_learning(self, exec_mode, concatenate, use_storage_node):
+    def test_multiple_trials_concatenation_and_storage_node(self, exec_mode, concatenate, use_storage_node):
+        """Test with and without learning (learning is tested only for using_storage_node and no concatenation)"""
 
         # if comp_mode != pnl.ExecutionMode.Python:
         #     pytest.skip('Execution of EMComposition not yet supported for LLVM Mode.')
@@ -467,6 +468,17 @@ class TestExecution:
                   i in range(len(input_nodes))}
         em.run(inputs=inputs, execution_mode=exec_mode)
         np.testing.assert_equal(em.memory, expected_memory)
+
+        if not use_storage_node:
+            if concatenate:
+                with pytest.raises(EMCompositionError) as error:
+                    em.learn(inputs=inputs, execution_mode=exec_mode)
+                assert "EMComposition does not support learning with 'concatenate_keys'=True." in str(error.value)
+
+            else:
+                em.learn(inputs=inputs, execution_mode=exec_mode)
+                np.testing.assert_equal(em.memory, expected_memory)
+
 
     # FIX: CONSOLIDATE WITH ABOVE BY MOVING CALL TO LEAR AFTER CALL TO RUN WITH CORRESPONDING ERROR CHECKS
     #      SO THAT CONSTRUCTION DOESN'T HAVE TO BE EXECUTED TWICE
