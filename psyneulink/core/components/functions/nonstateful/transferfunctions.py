@@ -139,8 +139,6 @@ class TransferFunction(Function_Base):
 
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        # Pretend we have one huge array to work on
-        # TODO: should this be invoked in parts?
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
         assert arg_in.type == arg_out.type
 
