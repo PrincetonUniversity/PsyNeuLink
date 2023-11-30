@@ -1317,6 +1317,10 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         if getattr(self.parameters, 'has_recurrent_input_port', False):
             blacklist.update(['combination_function'])
 
+        # Drop integrator function if integrator_mode is not enabled
+        if not getattr(self, 'integrator_mode', False):
+            blacklist.add('integrator_function')
+
         # Drop previous_value from MemoryFunctions
         if hasattr(self.parameters, 'duplicate_keys'):
             blacklist.add("previous_value")
@@ -1430,6 +1434,10 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         # Drop combination function params from RTM if not needed
         if getattr(self.parameters, 'has_recurrent_input_port', False):
             blacklist.update(['combination_function'])
+
+        # Drop integrator function if integrator_mode is not enabled
+        if not getattr(self, 'integrator_mode', False):
+            blacklist.add('integrator_function')
 
         def _is_compilation_param(p):
             def _is_user_only_param(p):
