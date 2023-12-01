@@ -3099,7 +3099,7 @@ class Graph(object):
         self.comp_to_vertex = collections.OrderedDict()  # Translate from PNL Mech, Comp or Proj to corresponding vertex
         self.vertices = []  # List of vertices within graph
 
-        self.cycle_vertices = set()
+        self.cycle_vertices = []
 
     def copy(self):
         """
@@ -3231,14 +3231,14 @@ class Graph(object):
         # stores the original unmodified dependencies
         structural_dependencies = self.dependency_dict
         # wipe and reconstruct list of vertices in cycles
-        self.cycle_vertices = set()
+        self.cycle_vertices = []
         flexible_edges = set()
 
         for node in execution_dependencies:
             # prune recurrent edges
             try:
                 execution_dependencies[node].remove(node)
-                self.cycle_vertices.add(node)
+                self.cycle_vertices.append([node])
             except KeyError:
                 pass
 
@@ -3298,9 +3298,11 @@ class Graph(object):
             # a cycle will still depend on n_i when it is part of a
             # flattened cycle. The flattened cycle will simply add more
             # nodes to the consideration set in which n_i exists
+            cycle_verts = []
             for child in cycle:
-                self.cycle_vertices.add(child)
+                cycle_verts.append(child)
                 execution_dependencies[child] = acyclic_dependencies
+            self.cycle_vertices.append(cycle_verts)
 
         return (
             execution_dependencies,
@@ -5208,7 +5210,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         CYCLE:
           - all Nodes that identified as being in a cycle by self.graph_processing
-            (i.e., in self.graph_processing.cycle_vertices)
+            (i.e., in a cycle in self.graph_processing.cycle_vertices)
 
         FEEDBACK_SENDER:
           - all Nodes that send a Projection designated as feedback by self.graph_processing OR
@@ -5345,8 +5347,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._add_node_role(node, NodeRole.BIAS)
 
         # CYCLE
-        for node in self.graph_processing.cycle_vertices:
-            self._add_node_role(node, NodeRole.CYCLE)
+        for cycle in self.graph_processing.cycle_vertices:
+            for node in cycle:
+                self._add_node_role(node, NodeRole.CYCLE)
 
         # FEEDBACK_SENDER and FEEDBACK_RECEIVER
         for receiver in self.graph_processing.vertices:
