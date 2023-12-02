@@ -1321,7 +1321,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         # Drop combination function params from RTM if not needed
         if getattr(self.parameters, 'has_recurrent_input_port', False):
-            blacklist.update(['combination_function'])
+            blacklist.add('combination_function')
 
         # Drop integrator function if integrator_mode is not enabled
         if not getattr(self, 'integrator_mode', False):
@@ -1439,7 +1439,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         # Drop combination function params from RTM if not needed
         if getattr(self.parameters, 'has_recurrent_input_port', False):
-            blacklist.update(['combination_function'])
+            blacklist.add('combination_function')
 
         # Drop integrator function if integrator_mode is not enabled
         if not getattr(self, 'integrator_mode', False):
