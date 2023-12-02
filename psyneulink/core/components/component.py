@@ -1309,6 +1309,12 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             whitelist.update({"value", "num_executions_before_finished",
                               "num_executions", "is_finished_flag"})
 
+            # If both the mechanism and its functoin use random_state it's DDM
+            # with integrator function. The mechanism's random_state is not used.
+            if hasattr(self.parameters, 'random_state') and hasattr(self.function.parameters, 'random_state'):
+                whitelist.remove('random_state')
+
+
         # Only mechanisms and compositions need 'num_executions'
         if hasattr(self, 'nodes'):
             whitelist.add("num_executions")
