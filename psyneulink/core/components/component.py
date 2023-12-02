@@ -1327,6 +1327,16 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         if not getattr(self, 'integrator_mode', False):
             blacklist.add('integrator_function')
 
+        # Drop unused cost functions
+        cost_functions = getattr(self, 'enabled_cost_functions', None)
+        if cost_functions is not None:
+            if cost_functions.INTENSITY not in cost_functions:
+                blacklist.add('intensity_cost_fct')
+            if cost_functions.ADJUSTMENT not in cost_functions:
+                blacklist.add('adjustment_cost_fct')
+            if cost_functions.DURATION not in cost_functions:
+                blacklist.add('duration_cost_fct')
+
         # Drop previous_value from MemoryFunctions
         if hasattr(self.parameters, 'duplicate_keys'):
             blacklist.add("previous_value")
@@ -1444,6 +1454,16 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         # Drop integrator function if integrator_mode is not enabled
         if not getattr(self, 'integrator_mode', False):
             blacklist.add('integrator_function')
+
+        # Drop unused cost functions
+        cost_functions = getattr(self, 'enabled_cost_functions', None)
+        if cost_functions is not None:
+            if cost_functions.INTENSITY not in cost_functions:
+                blacklist.add('intensity_cost_fct')
+            if cost_functions.ADJUSTMENT not in cost_functions:
+                blacklist.add('adjustment_cost_fct')
+            if cost_functions.DURATION not in cost_functions:
+                blacklist.add('duration_cost_fct')
 
         def _is_compilation_param(p):
             def _is_user_only_param(p):
