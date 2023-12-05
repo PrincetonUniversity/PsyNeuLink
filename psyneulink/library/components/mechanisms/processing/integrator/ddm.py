@@ -1157,8 +1157,10 @@ class DDM(ProcessingMechanism):
 
             # Store threshold as decision variable output
             # this will be used by the mechanism to return the right decision
-            threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self.function,
-                                                        params, THRESHOLD)
+            threshold_ptr = ctx.get_param_or_state_ptr(builder,
+                                                       self.function,
+                                                       THRESHOLD,
+                                                       param_struct_ptr=params)
             threshold = pnlvm.helpers.load_extract_scalar_array_one(builder, threshold_ptr)
             decision_ptr = builder.gep(m_val, [ctx.int32_ty(0),
                                                ctx.int32_ty(self.DECISION_VARIABLE_INDEX),
@@ -1247,13 +1249,16 @@ class DDM(ProcessingMechanism):
 
     def _gen_llvm_is_finished_cond(self, ctx, builder, m_base_params, m_state, m_in):
         # Setup pointers to internal function
-        f_state = pnlvm.helpers.get_state_ptr(builder, self, m_state, "function")
+        f_base_params, f_state = ctx.get_param_or_state_ptr(builder,
+                                                            self,
+                                                            "function",
+                                                            param_struct_ptr=m_base_params,
+                                                            state_struct_ptr=m_state)
 
         # Find the single numeric entry in previous_value.
         # This exists only if the 'function' is 'integrator'
-        try:
-            prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self.function, f_state, "previous_value")
-        except ValueError:
+        prev_val_ptr = ctx.get_param_or_state_ptr(builder, self.function, "previous_value", state_struct_ptr=f_state)
+        if prev_val_ptr is None:
             return ctx.bool_ty(1)
 
         # Extract scalar value from ptr
@@ -1265,15 +1270,14 @@ class DDM(ProcessingMechanism):
         prev_val = builder.call(llvm_fabs, [prev_val])
 
         # Get functions params and apply modulation
-        f_base_params = pnlvm.helpers.get_param_ptr(builder, self, m_base_params, "function")
         f_params, builder = self._gen_llvm_param_ports_for_obj(
                 self.function, f_base_params, ctx, builder, m_base_params, m_state, m_in)
 
         # Get threshold value
-        threshold_ptr = pnlvm.helpers.get_param_ptr(builder,
-                                                    self.function,
-                                                    f_params,
-                                                    "threshold")
+        threshold_ptr = ctx.get_param_or_state_ptr(builder,
+                                                   self.function,
+                                                   THRESHOLD,
+                                                   param_struct_ptr=f_params)
 
         threshold_ptr = builder.gep(threshold_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
         threshold = builder.load(threshold_ptr)

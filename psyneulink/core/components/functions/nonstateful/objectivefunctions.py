@@ -402,7 +402,7 @@ class Stability(ObjectiveFunction):
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         # Dot product
         dot_out = builder.alloca(arg_in.type.pointee)
-        matrix = pnlvm.helpers.get_param_ptr(builder, self, params, MATRIX)
+        matrix = ctx.get_param_or_state_ptr(builder, self, MATRIX, param_struct_ptr=params, state_struct_ptr=state)
 
         # Convert array pointer to pointer to the fist element
         matrix = builder.gep(matrix, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -423,6 +423,10 @@ class Stability(ObjectiveFunction):
             #FIXME: implement this
             assert False, "Support for transfer functions is not implemented"
         else:
+            # Check that transfer_fct is absent from the compiled parameter
+            # structure or represented by an empty structure
+            assert "transfer_fct" not in self.llvm_param_ids or ctx.get_param_or_state_ptr(builder, self, "transfer_fct", param_struct_ptr=params).type.pointee.elements == ()
+
             trans_out = builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
             builder.store(builder.load(dot_out), trans_out)
 
@@ -430,8 +434,7 @@ class Stability(ObjectiveFunction):
         builder.store(builder.load(arg_in), builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(0)]))
 
         # Distance Function
-        metric_params = pnlvm.helpers.get_param_ptr(builder, self, params, "metric_fct")
-        metric_state = pnlvm.helpers.get_state_ptr(builder, self, state, "metric_fct")
+        metric_params, metric_state = ctx.get_param_or_state_ptr(builder, self, "metric_fct", param_struct_ptr=params, state_struct_ptr=state)
         metric_out = arg_out
         builder.call(metric_fun, [metric_params, metric_state, metric_in, metric_out])
         return builder
@@ -1120,7 +1123,7 @@ class Distance(ObjectiveFunction):
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0),
                                             ctx.int32_ty(0)])
 
-        normalize_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, NORMALIZE)
+        normalize_ptr = ctx.get_param_or_state_ptr(builder, self, NORMALIZE, param_struct_ptr=params)
         normalize = builder.load(normalize_ptr)
         normalize_b = builder.fcmp_ordered("!=", normalize, normalize.type(0))
 
