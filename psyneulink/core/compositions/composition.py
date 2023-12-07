@@ -2892,10 +2892,11 @@ import graph_scheduler
 import networkx
 import numpy as np
 import pint
+import toposort
 from PIL import Image
 from beartype import beartype
 
-from psyneulink._typing import Optional, Union, Literal, Type, Callable, List
+from psyneulink._typing import Optional, Union, Literal, Type, Callable, List, Set
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentError, ComponentsMeta
@@ -3099,7 +3100,7 @@ class Graph(object):
         self.comp_to_vertex = collections.OrderedDict()  # Translate from PNL Mech, Comp or Proj to corresponding vertex
         self.vertices = []  # List of vertices within graph
 
-        self.cycle_vertices = set()
+        self.cycle_vertices = []
 
     def copy(self):
         """
@@ -3231,14 +3232,14 @@ class Graph(object):
         # stores the original unmodified dependencies
         structural_dependencies = self.dependency_dict
         # wipe and reconstruct list of vertices in cycles
-        self.cycle_vertices = set()
+        self.cycle_vertices = []
         flexible_edges = set()
 
         for node in execution_dependencies:
             # prune recurrent edges
             try:
                 execution_dependencies[node].remove(node)
-                self.cycle_vertices.add(node)
+                self.cycle_vertices.append([node])
             except KeyError:
                 pass
 
@@ -3298,9 +3299,11 @@ class Graph(object):
             # a cycle will still depend on n_i when it is part of a
             # flattened cycle. The flattened cycle will simply add more
             # nodes to the consideration set in which n_i exists
+            cycle_verts = []
             for child in cycle:
-                self.cycle_vertices.add(child)
+                cycle_verts.append(child)
                 execution_dependencies[child] = acyclic_dependencies
+            self.cycle_vertices.append(cycle_verts)
 
         return (
             execution_dependencies,
@@ -3344,7 +3347,10 @@ class NodeRole(enum.Enum):
     ----------
 
     ORIGIN
-        A `Node <Composition_Nodes>` that does not receive any `Projections <Projection>` from any other Nodes
+        A `Node <Composition_Nodes>` that has no scheduling dependencies
+        on any other Nodes within its own `Composition`. Typically,
+        an `ORIGIN` Node also do not receive any `Projections <Projection>` from
+        any other Nodes
         within its own `Composition`, though if it is in a `nested Composition <Composition_Nested>` it may
         receive Projections from the outer Composition.  `Execution of a `Composition <Composition_Execution>`
         always begins with an `ORIGIN` Node.  A Composition may have many `ORIGIN` Nodes.  This role cannot be
@@ -3444,7 +3450,10 @@ class NodeRole(enum.Enum):
         <Composition_Node_Role_Assignment>` to Nodes.  A Composition can have many `OUTPUT` Nodes.
 
     TERMINAL
-        A `Node <Composition_Nodes>` that does not send any `Projections <Projection>` to any other Nodes within
+        A `Node <Composition_Nodes>` on which no other Nodes have
+        scheduling dependencies within its own `Composition`, excluding
+        `ObjectiveMechanism`. Typically, a `TERMINAL` Node does not send
+        any `Projections <Projection>` to any other Nodes within
         its own `Composition`, though if it is in a `nested Composition <Composition_Nested>` it may send Projections
         to the outer Composition. A Composition may have many `TERMINAL` Nodes. The `ObjectiveMechanism` associated
         with the Composition's `controller <Composition.controller>` (assigned the role `CONTROLLER_OBJECTIVE`)
@@ -3452,6 +3461,8 @@ class NodeRole(enum.Enum):
         always ends with a `TERMINAL` Node, although the `controller <Composition.controller>` and its associated
         `ObjectiveMechanism` may execute after that; some `TERMINAL` Nodes may also execute earlier (i.e., if they
         belong to a `Pathway` that is shorter than the longest one in the Composition).
+        Nodes in a flattened cycle will be either all TERMINAL or all
+        not TERMINAL.
         This role cannot be modified programmatically.
 
     """
@@ -4968,6 +4979,55 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if nested:
             return any(component in comp._all_nodes for comp in self._get_nested_compositions())
 
+    def _get_terminal_nodes(self, graph, toposorted_graph=None) -> Set[Component]:
+        """
+        Returns a list of nodes in this composition that are
+        NodeRole.TERMINAL with respect to an acyclic **graph**. The
+        result can change depending on whether the scheduler or
+        composition graph is used. The **graph** of the scheduler graph
+        is the scheduler's consideration_queue.
+
+        Includes all nodes that have no receivers in **graph**. The
+        ObjectiveMechanism of a Composition's controller cannot be
+        NodeRole.TERMINAL, so if the ObjectiveMechanism is the only node
+        with no receivers in **graph**, then that node's senders are
+        assigned NodeRole.TERMINAL instead.
+        """
+        terminal_nodes = set()
+
+        receivers = {n: set() for n in graph}
+        for n in graph:
+            for sender in graph[n]:
+                receivers[sender].add(n)
+
+        nodes_without_receivers = {n for n in graph if len(receivers[n]) == 0}
+
+        # if a node is in a flattened cycle, all others in that cycle
+        # must also have no receivers, or that node cannot be terminal
+        if self.graph_processing.cycle_vertices:
+            for node in copy(nodes_without_receivers):
+                for cycle in self.graph_processing.cycle_vertices:
+                    if (
+                        node in cycle
+                        and any(n not in nodes_without_receivers for n in cycle)
+                    ):
+                        nodes_without_receivers.remove(node)
+
+        for node in nodes_without_receivers:
+            if NodeRole.CONTROLLER_OBJECTIVE not in self.get_roles_by_node(node):
+                terminal_nodes.add(node)
+            elif len(nodes_without_receivers) < 2:
+                if toposorted_graph is None:
+                    toposorted_graph = list(toposort.toposort(graph))
+                assert len(toposorted_graph) > 1 and node in toposorted_graph[-1], (
+                    'CONTROLLER_OBJECTIVE node skipped as terminal, but'
+                    ' consideration queue is not suitable for fallback'
+                )
+                for previous_node in toposorted_graph[-2]:
+                    terminal_nodes.add(previous_node)
+
+        return terminal_nodes
+
     def _determine_origin_and_terminal_nodes_from_consideration_queue(self):
         """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL
            to all nodes in the last entry of the consideration queue. The ObjectiveMechanism of a Composition's
@@ -4979,24 +5039,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in list(queue)[0]:
             self._add_node_role(node, NodeRole.ORIGIN)
 
-        for node in list(queue)[-1]:
-            if NodeRole.CONTROLLER_OBJECTIVE not in self.get_roles_by_node(node):
-                self._add_node_role(node, NodeRole.TERMINAL)
-            elif len(queue[-1]) < 2:
-                for previous_node in queue[-2]:
-                    self._add_node_role(previous_node, NodeRole.TERMINAL)
-
-        # IMPLEMENTATION NOTE:
-        #   The following is needed because the assignments above only identify nodes in the *last* consideration_set;
-        #   however, the TERMINAL node(s) of a pathway with fewer nodes than the longest one may not be in the last
-        #   consideration set.  Identifying these assumes that graph_processing has been called/updated,
-        #   which identifies and "breaks" cycles, and assigns FEEDBACK_SENDER to the appropriate consideration set(s).
-        for node in self.nodes:
-            if not any([
-                efferent.is_active_in_composition(self) for efferent in node.efferents
-                if efferent.receiver.owner is not self.output_CIM
-            ]):
-                self._add_node_role(node, NodeRole.TERMINAL)
+        for node in self._get_terminal_nodes(self.scheduler.dependency_dict, queue):
+            self._add_node_role(node, NodeRole.TERMINAL)
 
     def _add_node_aux_components(self, node, context=None):
         """Add aux_components of node to Composition.
@@ -5193,7 +5237,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
              - these will all be assigined afferent Projections from Composition.input_CIM
 
         INPUT:
-          - all ORIGIN Nodes for which INPUT has not been removed and/or excluded using exclude_node_roles();
+          - all Nodes that have no incoming edges in this composition,
+            or that are in a cycle with no external incoming edges, for
+            which INPUT has not been removed and/or excluded using
+            exclude_node_roles();
           - all Nodes for which INPUT has been assigned as a required_node_role by user
             (i.e., in self.required_node_roles[NodeRole.INPUT].
 
@@ -5204,11 +5251,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
           - all Nodes that have one or more InputPorts for which default_input == DEFAULT_VARIABLE
 
         INTERNAL:
-          - all Nodes that are *neither* ORIGIN nor TERMINAL
+            A `Node <Composition_Nodes>` that is neither `INPUT` nor
+            `OUTPUT`.  Note that it *can* also be `ORIGIN`, `TERMINAL`
+            or `SINGLETON`, if it has no `afferent
+            <Mechanism_Base.afferents>` or `efferent
+            <Mechanism_Base.efferents>` Projections or neither,
+            respectively. This role cannot be modified programmatically.
 
         CYCLE:
           - all Nodes that identified as being in a cycle by self.graph_processing
-            (i.e., in self.graph_processing.cycle_vertices)
+            (i.e., in a cycle in self.graph_processing.cycle_vertices)
 
         FEEDBACK_SENDER:
           - all Nodes that send a Projection designated as feedback by self.graph_processing OR
@@ -5251,7 +5303,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
              - must project to a LearningMechanism
 
         OUTPUT:
-          - all TERMINAL Nodes *unless* they are:
+          - all Nodes that have no outgoing edges in this compositions
+            *unless* they are:
             - a ModulatoryMechanism (i.e., ControlMechanism or LearningMechanism)
             - an ObjectiveMechanisms associated with ModulatoryMechanism
           - all Nodes that project only to:
@@ -5298,11 +5351,32 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.scheduler.consideration_queue:
             self._determine_origin_and_terminal_nodes_from_consideration_queue()
 
+        # With graph structure conditions, the scheduler graph may be
+        # different than the composition graph.
+        comp_graph_dependencies = self.graph_processing.prune_feedback_edges()[0]
+
         # INPUT
-        origin_nodes = self.get_nodes_by_role(NodeRole.ORIGIN)
+
+        # all nodes from processing graph with no incoming edges are INPUT
+        input_nodes = {
+            n for n in comp_graph_dependencies if len(comp_graph_dependencies[n]) == 0
+        }
+
+        # an entire cycle that has no node with any incoming edge other
+        # than from other nodes in the cycle is treated as INPUT
+        # ex: tests/composition/test_composition.py::TestNodeRoles::test_BIAS
+        if self.graph_processing.cycle_vertices:
+            for cycle in self.graph_processing.cycle_vertices:
+                for i, node in enumerate(cycle):
+                    prev = cycle[(i - 1) % len(cycle)]
+                    if comp_graph_dependencies[node] != {prev}:
+                        break
+                else:
+                    input_nodes = input_nodes.union(cycle)
+
         for node in self.nodes:
             # Check all remaining ORIGIN Nodes
-            if node in origin_nodes:
+            if node in input_nodes:
                 # Don't allow INTERNAL Nodes to be INPUTS
                 if NodeRole.INTERNAL in self.get_roles_by_node(node):
                     continue
@@ -5320,7 +5394,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             # always obey standard scheduling behavior
                             if (
                                 not isinstance(parent.component, ControlMechanism)
-                                or parent.component not in origin_nodes
+                                or parent.component not in input_nodes
                             ):
                                 continue
 
@@ -5345,8 +5419,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._add_node_role(node, NodeRole.BIAS)
 
         # CYCLE
-        for node in self.graph_processing.cycle_vertices:
-            self._add_node_role(node, NodeRole.CYCLE)
+        for cycle in self.graph_processing.cycle_vertices:
+            for node in cycle:
+                self._add_node_role(node, NodeRole.CYCLE)
 
         # FEEDBACK_SENDER and FEEDBACK_RECEIVER
         for receiver in self.graph_processing.vertices:
@@ -5366,11 +5441,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     - NOTE IN PROGRAM ERROR FAILURE TO ASSIGN CONTROL_OBJECTIVE
 
         # OUTPUT
+        # Note: "TERMINAL" referenced below is in respect to the
+        # the composition graph, not the scheduler graph, because OUTPUT
+        # is determined by composition structure, not scheduling order.
+        try:
+            output_nodes = self._get_terminal_nodes(comp_graph_dependencies)
+        except IndexError:
+            output_nodes = []
 
         for node in self.nodes:
 
             # Assign OUTPUT if node is TERMINAL...
-            if NodeRole.TERMINAL in self.get_roles_by_node(node):
+            if node in output_nodes:
                 # unless it is a ModulatoryMechanism
                 if isinstance(node, ModulatoryMechanism_Base):
                     continue
@@ -5473,7 +5555,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in self.nodes:
             if all(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
                 self._add_node_role(node, NodeRole.SINGLETON)
-            if not any(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
+            if not any(n in self.nodes_to_roles[node] for n in {NodeRole.INPUT, NodeRole.OUTPUT}):
                 self._add_node_role(node, NodeRole.INTERNAL)
 
         # Finally, remove any NodeRole assignments specified in excluded_node_roles
