@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.14.0.0+106.g62c708467 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.14.0.0+110.g29790e8cc documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.14.0.0+106
+                  0.14.0.0+110
                 </div>
               
             
@@ -3782,6 +3782,26 @@ Include input_CIM and output_CIM for self and all nested Compositions</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._get_terminal_nodes">
+<span class="sig-name descname"><span class="pre">_get_terminal_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">toposorted_graph</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._get_terminal_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of nodes in this composition that are
+NodeRole.TERMINAL with respect to an acyclic <strong>graph</strong>. The
+result can change depending on whether the scheduler or
+composition graph is used. The <strong>graph</strong> of the scheduler graph
+is the scheduler’s consideration_queue.</p>
+<p>Includes all nodes that have no receivers in <strong>graph</strong>. The
+ObjectiveMechanism of a Composition’s controller cannot be
+NodeRole.TERMINAL, so if the ObjectiveMechanism is the only node
+with no receivers in <strong>graph</strong>, then that node’s senders are
+assigned NodeRole.TERMINAL instead.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code>[<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><code class="xref py py-class docutils literal notranslate"><span class="pre">Component</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._determine_origin_and_terminal_nodes_from_consideration_queue">
 <span class="sig-name descname"><span class="pre">_determine_origin_and_terminal_nodes_from_consideration_queue</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._determine_origin_and_terminal_nodes_from_consideration_queue" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL
@@ -3835,7 +3855,10 @@ unless otherwise noted.</p>
 </ul>
 </dd>
 <dt>INPUT:</dt><dd><ul class="simple">
-<li><p>all ORIGIN Nodes for which INPUT has not been removed and/or excluded using exclude_node_roles();</p></li>
+<li><p>all Nodes that have no incoming edges in this composition,
+or that are in a cycle with no external incoming edges, for
+which INPUT has not been removed and/or excluded using
+exclude_node_roles();</p></li>
 <li><p>all Nodes for which INPUT has been assigned as a required_node_role by user
 (i.e., in self.required_node_roles[NodeRole.INPUT].</p></li>
 </ul>
@@ -3848,13 +3871,14 @@ unless otherwise noted.</p>
 <li><p>all Nodes that have one or more InputPorts for which default_input == DEFAULT_VARIABLE</p></li>
 </ul>
 </dd>
-<dt>INTERNAL:</dt><dd><ul class="simple">
-<li><p>all Nodes that are <em>neither</em> ORIGIN nor TERMINAL</p></li>
-</ul>
+<dt>INTERNAL:</dt><dd><p>A <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Node</span></a> that is neither <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> nor
+<a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a>.  Note that it <em>can</em> also be <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.ORIGIN" title="psyneulink.core.compositions.composition.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ORIGIN</span></code></a>, <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.TERMINAL" title="psyneulink.core.compositions.composition.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TERMINAL</span></code></a>
+or <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.SINGLETON" title="psyneulink.core.compositions.composition.NodeRole.SINGLETON"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">SINGLETON</span></code></a>, if it has no <a class="reference internal" href="Mechanism.html#id16" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">afferent</span></code></a> or <a class="reference internal" href="Mechanism.html#id17" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.efferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">efferent</span></code></a> Projections or neither,
+respectively. This role cannot be modified programmatically.</p>
 </dd>
 <dt>CYCLE:</dt><dd><ul class="simple">
 <li><p>all Nodes that identified as being in a cycle by self.graph_processing
-(i.e., in self.graph_processing.cycle_vertices)</p></li>
+(i.e., in a cycle in self.graph_processing.cycle_vertices)</p></li>
 </ul>
 </dd>
 <dt>FEEDBACK_SENDER:</dt><dd><ul class="simple">
@@ -3921,7 +3945,8 @@ or _create_terminal_backprop_learning_components()</p></li>
 </div>
 </dd>
 <dt>OUTPUT:</dt><dd><ul>
-<li><p>all TERMINAL Nodes <em>unless</em> they are:
+<li><p>all Nodes that have no outgoing edges in this compositions
+<em>unless</em> they are:
 - a ModulatoryMechanism (i.e., ControlMechanism or LearningMechanism)
 - an ObjectiveMechanisms associated with ModulatoryMechanism</p></li>
 <li><p>all Nodes that project only to:
@@ -5481,7 +5506,10 @@ that can receive Projections</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.compositions.composition.NodeRole.ORIGIN">
 <span class="sig-name descname"><span class="pre">ORIGIN</span></span><a class="headerlink" href="#psyneulink.core.compositions.composition.NodeRole.ORIGIN" title="Permalink to this definition">¶</a></dt>
-<dd><p>A <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Node</span></a> that does not receive any <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> from any other Nodes
+<dd><p>A <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Node</span></a> that has no scheduling dependencies
+on any other Nodes within its own <a class="reference internal" href="#"><span class="doc">Composition</span></a>. Typically,
+an <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.ORIGIN" title="psyneulink.core.compositions.composition.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ORIGIN</span></code></a> Node also do not receive any <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> from
+any other Nodes
 within its own <a class="reference internal" href="#"><span class="doc">Composition</span></a>, though if it is in a <a class="reference internal" href="#composition-nested"><span class="std std-ref">nested Composition</span></a> it may
 receive Projections from the outer Composition.  <a class="reference internal" href="#composition-execution"><span class="std std-ref">Execution of a `Composition</span></a>
 always begins with an <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.ORIGIN" title="psyneulink.core.compositions.composition.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ORIGIN</span></code></a> Node.  A Composition may have many <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.ORIGIN" title="psyneulink.core.compositions.composition.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ORIGIN</span></code></a> Nodes.  This role cannot be
@@ -5612,7 +5640,10 @@ Composition are also its <a class="reference internal" href="#psyneulink.core.co
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.compositions.composition.NodeRole.TERMINAL">
 <span class="sig-name descname"><span class="pre">TERMINAL</span></span><a class="headerlink" href="#psyneulink.core.compositions.composition.NodeRole.TERMINAL" title="Permalink to this definition">¶</a></dt>
-<dd><p>A <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Node</span></a> that does not send any <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> to any other Nodes within
+<dd><p>A <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Node</span></a> on which no other Nodes have
+scheduling dependencies within its own <a class="reference internal" href="#"><span class="doc">Composition</span></a>, excluding
+<a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>. Typically, a <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.TERMINAL" title="psyneulink.core.compositions.composition.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TERMINAL</span></code></a> Node does not send
+any <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> to any other Nodes within
 its own <a class="reference internal" href="#"><span class="doc">Composition</span></a>, though if it is in a <a class="reference internal" href="#composition-nested"><span class="std std-ref">nested Composition</span></a> it may send Projections
 to the outer Composition. A Composition may have many <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.TERMINAL" title="psyneulink.core.compositions.composition.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TERMINAL</span></code></a> Nodes. The <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> associated
 with the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a> (assigned the role <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.CONTROLLER_OBJECTIVE" title="psyneulink.core.compositions.composition.NodeRole.CONTROLLER_OBJECTIVE"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">CONTROLLER_OBJECTIVE</span></code></a>)
@@ -5620,6 +5651,8 @@ cannot be a <a class="reference internal" href="#psyneulink.core.compositions.co
 always ends with a <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.TERMINAL" title="psyneulink.core.compositions.composition.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TERMINAL</span></code></a> Node, although the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a> and its associated
 <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> may execute after that; some <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.TERMINAL" title="psyneulink.core.compositions.composition.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TERMINAL</span></code></a> Nodes may also execute earlier (i.e., if they
 belong to a <a class="reference internal" href="Pathway.html"><span class="doc">Pathway</span></a> that is shorter than the longest one in the Composition).
+Nodes in a flattened cycle will be either all TERMINAL or all
+not TERMINAL.
 This role cannot be modified programmatically.</p>
 </dd></dl>
 
