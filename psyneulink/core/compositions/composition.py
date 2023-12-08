@@ -4144,13 +4144,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.needs_update_scheduler or not isinstance(self._scheduler, Scheduler):
             old_scheduler = self._scheduler
             if old_scheduler is not None:
-                orig_conds = old_scheduler._user_specified_conds
-                orig_term_conds = old_scheduler._user_specified_termination_conds
+                self._scheduler = Scheduler(
+                    composition=self,
+                    conditions=old_scheduler._user_specified_conds,
+                    termination_conds=old_scheduler._user_specified_termination_conds,
+                    default_execution_id=old_scheduler.default_execution_id,
+                    mode=old_scheduler.mode,
+                    default_absolute_time_unit=old_scheduler.default_absolute_time_unit,
+                )
             else:
-                orig_conds = None
-                orig_term_conds = None
+                self._scheduler = Scheduler(composition=self)
 
-            self._scheduler = Scheduler(composition=self, conditions=orig_conds, termination_conds=orig_term_conds)
             self.needs_update_scheduler = False
 
         return self._scheduler
