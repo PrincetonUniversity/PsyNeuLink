@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EMComposition &mdash; PsyNeuLink 0.14.0.0+113.g9123666ed documentation</title>
+  <title>EMComposition &mdash; PsyNeuLink 0.14.0.0+114.gb7cf26c4f documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.14.0.0+113
+                  0.14.0.0+114
                 </div>
               
             
@@ -1451,6 +1451,22 @@ details and <a class="reference internal" href="Report.html#psyneulink.core.comp
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition._get_execution_mode">
 <span class="sig-name descname"><span class="pre">_get_execution_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">execution_mode</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._get_execution_mode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parse execution_mode argument and return a valid execution mode for the learn() method</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition.infer_backpropagation_learning_pathways">
+<span class="sig-name descname"><span class="pre">infer_backpropagation_learning_pathways</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">execution_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition.infer_backpropagation_learning_pathways" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create backpropapagation learning pathways for every Input Node –&gt; Output Node pathway
+Flattens nested compositions:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>only includes the Projections in outer Composition to/from the CIMs of the nested Composition
+(i.e., to input_CIMs and from output_CIMs) – the ones that should be learned;</p></li>
+<li><p>excludes Projections from/to CIMs in the nested Composition
+(from input_CIMs and to output_CIMs), as those should remain identity Projections;</p></li>
+</ul>
+<p>see <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PytorchCompositionWrapper</span></code></a> for table of how Projections are handled and further details.</p>
+</div></blockquote>
 </dd></dl>
 
 <dl class="py method">
