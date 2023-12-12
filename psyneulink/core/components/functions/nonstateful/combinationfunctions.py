@@ -85,7 +85,7 @@ class CombinationFunction(Function_Base):
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
     def _gen_llvm_load_param(self, ctx, builder, params, param_name, index, default):
-        param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, param_name)
+        param_ptr = ctx.get_param_or_state_ptr(builder, self, param_name, param_struct_ptr=params)
         param_type = param_ptr.type.pointee
         if isinstance(param_type, pnlvm.ir.LiteralStructType):
             assert len(param_type) == 0

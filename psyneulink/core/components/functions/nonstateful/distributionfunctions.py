@@ -205,8 +205,8 @@ class NormalDist(DistributionFunction):
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, _, arg_out, *, tags:frozenset):
         random_state = ctx.get_random_state_ptr(builder, self, state, params)
-        mean_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "mean")
-        std_dev_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "standard_deviation")
+        mean_ptr = ctx.get_param_or_state_ptr(builder, self, DIST_MEAN, param_struct_ptr=params)
+        std_dev_ptr = ctx.get_param_or_state_ptr(builder, self, STANDARD_DEVIATION, param_struct_ptr=params)
         ret_val_ptr = builder.alloca(ctx.float_ty)
         norm_rand_f = ctx.get_normal_dist_function_by_state(random_state)
         builder.call(norm_rand_f, [random_state, ret_val_ptr])
@@ -634,8 +634,8 @@ class UniformDist(DistributionFunction):
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, _, arg_out, *, tags:frozenset):
         random_state = ctx.get_random_state_ptr(builder, self, state, params)
-        low_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, LOW)
-        high_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, HIGH)
+        low_ptr = ctx.get_param_or_state_ptr(builder, self, LOW, param_struct_ptr=params)
+        high_ptr = ctx.get_param_or_state_ptr(builder, self, HIGH, param_struct_ptr=params)
         ret_val_ptr = builder.alloca(ctx.float_ty)
         norm_rand_f = ctx.get_uniform_dist_function_by_state(random_state)
         builder.call(norm_rand_f, [random_state, ret_val_ptr])
@@ -1421,7 +1421,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
 
         def load_scalar_param(name):
-            param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, name)
+            param_ptr = ctx.get_param_or_state_ptr(builder, self, name, param_struct_ptr=params)
             return pnlvm.helpers.load_extract_scalar_array_one(builder, param_ptr)
 
         attentional_drift_rate = load_scalar_param(DRIFT_RATE)

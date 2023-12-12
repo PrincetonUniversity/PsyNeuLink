@@ -2339,7 +2339,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         uniform_f = ctx.get_uniform_dist_function_by_state(rand_struct)
 
         # Ring buffer
-        buffer_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "ring_memory")
+        buffer_ptr = ctx.get_param_or_state_ptr(builder, self, "ring_memory", state_struct_ptr=state)
         keys_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
         vals_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(1)])
         count_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(2)])
@@ -2357,7 +2357,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         # Check retrieval probability
         retr_ptr = builder.alloca(ctx.bool_ty)
         builder.store(retr_ptr.type.pointee(1), retr_ptr)
-        retr_prob_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, RETRIEVAL_PROB)
+        retr_prob_ptr = ctx.get_param_or_state_ptr(builder, self, RETRIEVAL_PROB, param_struct_ptr=params)
 
         # Prob can be [x] if we are part of a mechanism
         retr_prob = pnlvm.helpers.load_extract_scalar_array_one(builder, retr_prob_ptr)
@@ -2379,8 +2379,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         with builder.if_then(retr, likely=True):
             # Determine distances
             distance_f = ctx.import_llvm_function(self.distance_function)
-            distance_params = pnlvm.helpers.get_param_ptr(builder, self, params, "distance_function")
-            distance_state = pnlvm.helpers.get_state_ptr(builder, self, state, "distance_function")
+            distance_params, distance_state = ctx.get_param_or_state_ptr(builder, self, "distance_function", param_struct_ptr=params, state_struct_ptr=state)
             distance_arg_in = builder.alloca(distance_f.args[2].type.pointee)
             builder.store(builder.load(var_key_ptr),
                           builder.gep(distance_arg_in, [ctx.int32_ty(0),
@@ -2395,8 +2394,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
                                     distance_arg_in, distance_arg_out])
 
             selection_f = ctx.import_llvm_function(self.selection_function)
-            selection_params = pnlvm.helpers.get_param_ptr(builder, self, params, "selection_function")
-            selection_state = pnlvm.helpers.get_state_ptr(builder, self, state, "selection_function")
+            selection_params, selection_state = ctx.get_param_or_state_ptr(builder, self, "selection_function", param_struct_ptr=params, state_struct_ptr=state)
             selection_arg_out = builder.alloca(selection_f.args[3].type.pointee)
             builder.call(selection_f, [selection_params, selection_state,
                                        selection_arg_in, selection_arg_out])
@@ -2421,7 +2419,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         # Check storage probability
         store_ptr = builder.alloca(ctx.bool_ty)
         builder.store(store_ptr.type.pointee(1), store_ptr)
-        store_prob_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, STORAGE_PROB)
+        store_prob_ptr = ctx.get_param_or_state_ptr(builder, self, STORAGE_PROB, param_struct_ptr=params)
 
         # Prob can be [x] if we are part of a mechanism
         store_prob = pnlvm.helpers.load_extract_scalar_array_one(builder, store_prob_ptr)
@@ -2443,8 +2441,8 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
             # Apply noise to key.
             # There are 3 types of noise: scalar, vector1, and vector matching variable
-            noise_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "noise")
-            rate_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "rate")
+            noise_ptr = ctx.get_param_or_state_ptr(builder, self, NOISE, param_struct_ptr=params)
+            rate_ptr = ctx.get_param_or_state_ptr(builder, self, RATE, param_struct_ptr=params)
             with pnlvm.helpers.array_ptr_loop(b, var_key_ptr, "key_apply_rate_noise") as (b, idx):
                 if pnlvm.helpers.is_2d_matrix(noise_ptr):
                     noise_elem_ptr = b.gep(noise_ptr, [ctx.int32_ty(0), ctx.int32_ty(0), idx])

@@ -539,8 +539,8 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         assert "reset" in tags
         for a in self.stateful_attributes:
             initializer = getattr(self.parameters, a).initializer
-            source_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, initializer)
-            dest_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, a)
+            source_ptr = ctx.get_param_or_state_ptr(builder, self, initializer, param_struct_ptr=params)
+            dest_ptr = ctx.get_param_or_state_ptr(builder, self, a, state_struct_ptr=state)
             builder.store(builder.load(source_ptr), dest_ptr)
 
         return builder
