@@ -1859,7 +1859,7 @@ def _parse_connection_specs(connectee_port_type,
                                           f"not of a required type ({' ,'.join([pt.__name__ for pt in port_types])}).")
             except PortError as e:
                 raise ProjectionError(f"Problem with specification for {Port.__name__} in {Projection.__name__} "
-                                      f"specification{(' for ' + owner.name) if owner else ' '}: " + e.error_value)
+                                      f"specification{(' for ' + owner.name) if owner else ' '}: " + e.args[0])
 
             # Check compatibility with any Port(s) returned by _get_port_for_socket
 

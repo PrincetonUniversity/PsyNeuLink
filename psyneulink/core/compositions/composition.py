@@ -12307,9 +12307,10 @@ _
 
                         # Run node-level compiled nested composition
                         # only if there are no control projections
-                        nested_execution_mode = execution_mode \
-                            if len(node.parameter_CIM.afferents) == 0 else \
-                            pnlvm.ExecutionMode.Python
+                        if execution_mode == pnlvm.ExecutionMode.LLVM and len(node.parameter_CIM.afferents) != 0:
+                            nested_execution_mode = pnlvm.ExecutionMode.Python
+                        else:
+                            nested_execution_mode = execution_mode
                         ret = node.execute(context=context,
                                            execution_mode=nested_execution_mode)
 

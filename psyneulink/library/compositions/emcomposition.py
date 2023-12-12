@@ -130,6 +130,8 @@
 #          - Add warning of this on initial call to learn()
 #
 #      - Composition:
+#        - Add default_execution_mode attribute to allow nested Compositions to be executed in
+#              different model than outer Composition
 #        - _validate_input_shapes_and_expand_for_all_trials: consolidate with get_input_format()
 #        - Generalize treatment of FEEDBACK specification:
       #        - FIX: ADD TESTS FOR FEEDBACK TUPLE SPECIFICATION OF Projection, DIRECT SPECIFICATION IN CONSTRUCTOR
@@ -937,7 +939,10 @@ def get_softmax_gain(v, scale=1, base=1, entropy_weighting=.1)->float:
 
 
 class EMCompositionError(CompositionError):
-    pass
+    def __init__(self, error_value):
+        self.error_value = error_value
+    def __str__(self):
+        return repr(self.error_value)
 
 
 class EMComposition(AutodiffComposition):
@@ -1357,7 +1362,7 @@ class EMComposition(AutodiffComposition):
     def __init__(self,
                  memory_template:Union[tuple, list, np.ndarray]=[[0],[0]],
                  memory_capacity:Optional[int]=None,
-                 memory_fill:Union[int, float, RANDOM]=0,
+                 memory_fill:Union[int, float, tuple, RANDOM]=0,
                  field_names:Optional[list]=None,
                  field_weights:tuple=None,
                  concatenate_keys:bool=False,
@@ -2161,7 +2166,10 @@ class EMComposition(AutodiffComposition):
     # *********************************** Execution Methods  **********************************************************
     # *****************************************************************************************************************
 
-    def execute(self, inputs, context, **kwargs):
+    def execute(self,
+                inputs=None,
+                context=None,
+                **kwargs):
         """Set input to weights of Projections to match_nodes and retrieved_nodes if not use_storage_node."""
         results = super().execute(inputs=inputs, context=context, **kwargs)
         if not self.use_storage_node:
@@ -2253,6 +2261,11 @@ class EMComposition(AutodiffComposition):
                 self.execution_mode_warned_about_default = True
             execution_mode = ExecutionMode.PyTorch
         return execution_mode
+
+    def infer_backpropagation_learning_pathways(self, execution_mode, context=None):
+        if self.concatenate_keys:
+            raise EMCompositionError(f"EMComposition does not support learning with 'concatenate_keys'=True.")
+        super().infer_backpropagation_learning_pathways(execution_mode, context=context)
 
     def _update_learning_parameters(self, context):
         pass

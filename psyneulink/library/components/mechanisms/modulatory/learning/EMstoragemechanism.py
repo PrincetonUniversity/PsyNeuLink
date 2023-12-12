@@ -167,19 +167,16 @@ from psyneulink._typing import Optional, Union, Callable, Literal
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.nonstateful.learningfunctions import EMStorage
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
-    ACTIVATION_INPUT, LearningMechanism, LearningMechanismError, LearningTiming, LearningType
+    LearningMechanism, LearningMechanismError, LearningTiming, LearningType
 from psyneulink.core.components.projections.projection import Projection, projection_keywords
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, EM_STORAGE_MECHANISM, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNALS, MULTIPLICATIVE, MODULATION, \
-    NAME, OVERRIDE, OWNER_VALUE, PROJECTIONS, REFERENCE_VALUE, VARIABLE
-from psyneulink.core.globals.parameters import Parameter, check_user_specified
+    (ADDITIVE, EM_STORAGE_MECHANISM, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNALS, MULTIPLICATIVE,
+     MULTIPLICATIVE_PARAM, MODULATION, NAME, OVERRIDE, OWNER_VALUE, PROJECTIONS, REFERENCE_VALUE, VARIABLE)
+from psyneulink.core.globals.parameters import Parameter, check_user_specified, FunctionParameter
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric, ValidParamSpecType, all_within_range
@@ -523,7 +520,14 @@ class EMStorageMechanism(LearningMechanism):
                                        read_only=True,
                                        structural=True)
         function = Parameter(EMStorage, stateful=False, loggable=False)
-        storage_prob = Parameter(1.0, modulable=True, stateful=True)
+        # storage_prob = Parameter(1.0, modulable=True, stateful=True)
+        storage_prob = FunctionParameter(1.0,
+                                         function_name='function',
+                                         function_parameter_name='storage_prob',
+                                         primary=True,
+                                         modulable=True,
+                                         aliases=[MULTIPLICATIVE_PARAM],
+                                         stateful=True)
         decay_rate = Parameter(0.0, modulable=True, stateful=True)
         memory_matrix = Parameter(None, getter=_memory_matrix_getter, read_only=True, structural=True)
         modulation = OVERRIDE
@@ -761,7 +765,10 @@ class EMStorageMechanism(LearningMechanism):
                                               f"must include '{MEMORY_MATRIX}' in params arg.")
 
         # Get least used slot (i.e., weakest memory = row of matrix with lowest weights) computed across all fields
-        field_norms = np.array([np.linalg.norm(field, axis=1) for field in [row for row in memory]])
+        field_norms = np.empty((len(memory),len(memory[0])))
+        for row in range(len(memory)):
+            for col in range(len(memory[0])):
+                field_norms[row][col] = np.linalg.norm(memory[row][col])
         if field_weights is not None:
             field_norms *= field_weights
         row_norms = np.sum(field_norms, axis=1)
