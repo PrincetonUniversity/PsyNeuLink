@@ -895,6 +895,7 @@ class LCControlMechanism(ControlMechanism):
                                                          "scaling_factor_gain")
         base_factor_ptr = pnlvm.helpers.get_param_ptr(builder, self, m_params,
                                                       "base_level_gain")
+
         # If modulated, parameters are single element array
         scaling_factor = pnlvm.helpers.load_extract_scalar_array_one(builder, scaling_factor_ptr)
         base_factor = pnlvm.helpers.load_extract_scalar_array_one(builder, base_factor_ptr)
