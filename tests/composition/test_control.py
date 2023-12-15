@@ -18,7 +18,7 @@ class TestControlSpecification:
     #    with adding a controller that may also specify control of that node.
     # Principles:
     #    1) there should be no redundant ControlSignals or ControlProjections created;
-    #    2) specification of control in controller supercedes any conflicting specification on a node;
+    #    2) specification of control in controller supersedes any conflicting specification on a node;
     #    3) order of addition to the composition does not matter (i.e., Principle 2 always applies)
 
     def test_add_node_with_control_specified_then_add_controller(self):
@@ -81,7 +81,7 @@ class TestControlSpecification:
     def test_redundant_control_spec_add_controller_in_comp_constructor_then_add_node_with_control_specified(self):
         # First create Composition with controller that has HAS control specification,
         #    then add Mechanism with control specification to Composition;
-        # Control specification on controller should supercede one on Mechanism (which should be ignored)
+        # Control specification on controller should supersede one on Mechanism (which should be ignored)
         ddm = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
                                 drift_rate=(1.0,
                                             pnl.ControlProjection(
@@ -101,7 +101,7 @@ class TestControlSpecification:
     def test_redundant_control_spec_add_controller_in_comp_constructor_then_add_node_with_alloc_samples_specified(self,control_spec):
         # First create Composition with controller that has HAS control specification that includes allocation_samples,
         #    then add Mechanism with control specification to Composition;
-        # Control specification on controller should supercede one on Mechanism (which should be ignored)
+        # Control specification on controller should supersede one on Mechanism (which should be ignored)
         ddm = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
                                 drift_rate=(1.0,
                                             pnl.ControlProjection(
@@ -1095,9 +1095,9 @@ class TestControlMechanisms:
         # 4
         f"The '{pnl.STATE_FEATURES}' argument has been specified for 'OptimizationControlMechanism-0' that is using "
         f"a Composition ('OUTER COMP') as its agent_rep, but some of the specifications are not compatible with the "
-        f"inputs required by its 'agent_rep': 'Input stimulus ([0.0]) for OB is incompatible with the shape of its "
-        f"external input ([0.0 0.0 0.0]).' Use the get_inputs_format() method of 'OUTER COMP' to see the required "
-        f"format, or remove the specification of 'state_features' from the constructor for "
+        f"inputs required by its 'agent_rep': 'Input stimulus shape ([[[0.0]]]) for 'OB' is incompatible with the "
+        f"shape of its external input ([array([0., 0., 0.])]).' Use the get_inputs_format() method of 'OUTER COMP' to "
+        f"see the required format, or remove the specification of 'state_features' from the constructor for "
         f"OptimizationControlMechanism-0 to have them automatically assigned.",
 
         # 5
@@ -1753,14 +1753,14 @@ class TestControlMechanisms:
         Note: Even though both mech and control_mech don't receive pathway inputs, since control_mech projects to mech,
         control_mech is assigned as NodeRole.INPUT (can be overridden with assignments in add_nodes)
         """
-        mech = pnl.ProcessingMechanism(input_ports=['A','B','C'])
-        control_mech = pnl.ControlMechanism(control=mech.input_ports[0])
+        mech = pnl.ProcessingMechanism(input_ports=['A','B','C'], name='mech')
+        control_mech = pnl.ControlMechanism(control=mech.input_ports[0], name='ctl_mech')
         comp = pnl.Composition()
         comp.add_nodes([mech, control_mech])
         result = comp.run(inputs={control_mech:[2]}, num_trials=3)
         # np.testing.assert_allclose(result, [[2],[2],[2]])
-        assert pnl.NodeRole.INPUT not in comp.get_roles_by_node(mech)
-        assert pnl.NodeRole.INPUT in comp.get_roles_by_node(control_mech)
+        assert mech in comp.get_nodes_by_role(pnl.NodeRole.INPUT)
+        assert control_mech in comp.get_nodes_by_role(pnl.NodeRole.INPUT)
 
         # Should produce same result as above
         mech = pnl.ProcessingMechanism(input_ports=['A','B','C'])
@@ -1768,8 +1768,8 @@ class TestControlMechanisms:
         comp = pnl.Composition()
         comp.add_nodes([mech, control_mech])
         comp.run(inputs={control_mech:[2]}, num_trials=3)
-        assert pnl.NodeRole.INPUT not in comp.get_roles_by_node(mech)
-        assert pnl.NodeRole.INPUT in comp.get_roles_by_node(control_mech)
+        assert mech in comp.get_nodes_by_role(pnl.NodeRole.INPUT)
+        assert control_mech in comp.get_nodes_by_role(pnl.NodeRole.INPUT)
 
     def test_modulation_of_control_signal_intensity_cost_function_ADDITIVE(self):
         # tests additive modulation of default intensity_cost_function (Exponential) of
@@ -1922,7 +1922,7 @@ class TestControlMechanisms:
                                                    allocation_samples=pnl.SampleSpec(start=1.0, stop=5.0, num=5))])
         )
         result = benchmark(ocomp.run, [5], execution_mode=mode)
-        np.testing.assert_allclose(result, [[50], [50]])
+        np.testing.assert_allclose(result, [[50]])
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -1986,7 +1986,7 @@ class TestControlMechanisms:
                                                                                      num=5))])
         )
         result = benchmark(ocomp.run, [5], execution_mode=mode)
-        np.testing.assert_allclose(result, [[70],[70]])
+        np.testing.assert_allclose(result, [[70]])
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2050,7 +2050,7 @@ class TestControlMechanisms:
                                                                                      num=5))])
         )
         result = benchmark(ocomp.run, [5], execution_mode=mode)
-        np.testing.assert_allclose(result, [[5],[5]])
+        np.testing.assert_allclose(result, [[5]])
 
     def test_two_tier_ocm(self):
         integrationConstant = 0.8  # Time Constant
@@ -2391,6 +2391,7 @@ class TestControlMechanisms:
         with pytest.warns(UserWarning) as warning:
             comp = pnl.Composition(name='COMPOSITION', pathways=[ctl])
             comp.add_node(mech)
+            comp.verbosePref = pnl.PreferenceEntry(True, pnl.PreferenceLevel.INSTANCE)
             comp.run()
         assert all(msg in [repr(w.message.args[0]) for w in warning]
                    for msg in {warning_msg_1, warning_msg_2, warning_msg_3})
@@ -2403,14 +2404,13 @@ class TestControlMechanisms:
         (pnl.CostFunctions.ADJUSTMENT, 3, [3, 3, 3, 3, 3] ),
         (pnl.CostFunctions.INTENSITY | pnl.CostFunctions.ADJUSTMENT, 3, [0.2817181715409549, -4.389056098930649, -17.085536923187664, -51.59815003314423, -145.41315910257657]),
         (pnl.CostFunctions.DURATION, 3, [-7, -8, -9, -10, -11]),
-        # FIXME: combinations with DURATION are broken
-        # (pnl.CostFunctions.DURATION | pnl.CostFunctions.ADJUSTMENT, ,),
-        # (pnl.CostFunctions.ALL, ,),
+        (pnl.CostFunctions.DURATION | pnl.CostFunctions.ADJUSTMENT, None ,None),
+        (pnl.CostFunctions.ALL, None, None),
         pytest.param(pnl.CostFunctions.DEFAULTS, 7, [3, 4, 5, 6, 7], id="CostFunctions.DEFAULT")],
         ids=lambda x: x if isinstance(x, pnl.CostFunctions) else "")
     def test_modulation_simple(self, cost, expected, exp_values, comp_mode):
-        if comp_mode != pnl.ExecutionMode.Python and cost not in {pnl.CostFunctions.NONE, pnl.CostFunctions.INTENSITY}:
-            pytest.skip("Not implemented!")
+        if cost != pnl.CostFunctions.DURATION and pnl.CostFunctions.DURATION in cost:
+            pytest.skip("Cost calculations using duration in combination with other costs are broken!")
 
         obj = pnl.ObjectiveMechanism()
         mech = pnl.ProcessingMechanism()
@@ -2431,7 +2431,7 @@ class TestControlMechanisms:
                 ),
 
                 # Need to specify GridSearch since save_values is False by default and we
-                # going to check these values later in the test.
+                # check these values below
                 function=pnl.GridSearch(save_values=True)
             )
         )
@@ -3280,13 +3280,16 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
 
     @pytest.mark.benchmark(group="Model Based OCM")
     @pytest.mark.parametrize("mode, ocm_mode", pytest.helpers.get_comp_and_ocm_execution_modes())
-    def test_model_based_ocm_after(self, benchmark, mode, ocm_mode):
+    @pytest.mark.parametrize("controller_mode,result", [
+        pytest.param(pnl.AFTER, [[[1.]], [[1.5]], [[2.25]]], id="AFTER"),
+        pytest.param(pnl.BEFORE, [[[0.75]], [[1.5]], [[2.25]]], id="BEFORE")
+    ])
+    def test_model_based_ocm(self, benchmark, controller_mode, result, mode, ocm_mode):
 
         A = pnl.ProcessingMechanism(name='A')
         B = pnl.ProcessingMechanism(name='B')
 
-        comp = pnl.Composition(name='comp',
-                               controller_mode=pnl.AFTER)
+        comp = pnl.Composition(name='comp', controller_mode=controller_mode)
         comp.add_linear_processing_pathway([A, B])
 
         search_range = pnl.SampleSpec(start=0.25, stop=0.75, step=0.25)
@@ -3303,62 +3306,20 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                                                function=pnl.GridSearch(save_values=True),
                                                control_signals=[control_signal],
                                                comp_execution_mode=ocm_mode)
-        # objective_mech.log.set_log_conditions(pnl.OUTCOME)
 
         comp.add_controller(ocm)
 
         inputs = {A: [[[1.0]], [[2.0]], [[3.0]]]}
 
-        comp.run(inputs=inputs, execution_mode=mode)
+        def comp_run(inputs, execution_mode):
+            comp.run(inputs=inputs, execution_mode=execution_mode)
+            return comp.results.copy(), np.asfarray(ocm.function.saved_values)
 
-        # objective_mech.log.print_entries(pnl.OUTCOME)
-        np.testing.assert_allclose(comp.results, [[np.array([1.])], [np.array([1.5])], [np.array([2.25])]])
+        results, saved_values = benchmark(comp_run, inputs, mode)
+
+        np.testing.assert_array_equal(results, result)
         if mode == pnl.ExecutionMode.Python:
-            np.testing.assert_allclose(np.asfarray(ocm.function.saved_values).flatten(), [0.75, 1.5, 2.25])
-
-        if benchmark.enabled:
-            benchmark(comp.run, inputs, execution_mode=mode)
-
-    @pytest.mark.benchmark(group="Model Based OCM")
-    @pytest.mark.parametrize("mode, ocm_mode", pytest.helpers.get_comp_and_ocm_execution_modes())
-    def test_model_based_ocm_before(self, benchmark, mode, ocm_mode):
-
-        A = pnl.ProcessingMechanism(name='A')
-        B = pnl.ProcessingMechanism(name='B')
-
-        comp = pnl.Composition(name='comp',
-                               controller_mode=pnl.BEFORE)
-        comp.add_linear_processing_pathway([A, B])
-
-        search_range = pnl.SampleSpec(start=0.25, stop=0.75, step=0.25)
-        control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, A)],
-                                           variable=1.0,
-                                           allocation_samples=search_range,
-                                           cost_options=pnl.CostFunctions.INTENSITY,
-                                           intensity_cost_function=pnl.Linear(slope=0.))
-
-        objective_mech = pnl.ObjectiveMechanism(monitor=[B])
-        ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
-                                               state_features=[A.input_port],
-                                               objective_mechanism=objective_mech,
-                                               function=pnl.GridSearch(save_values=True),
-                                               control_signals=[control_signal],
-                                               comp_execution_mode=ocm_mode)
-        # objective_mech.log.set_log_conditions(pnl.OUTCOME)
-
-        comp.add_controller(ocm)
-
-        inputs = {A: [[[1.0]], [[2.0]], [[3.0]]]}
-
-        comp.run(inputs=inputs, execution_mode=mode)
-
-        # objective_mech.log.print_entries(pnl.OUTCOME)
-        np.testing.assert_allclose(comp.results, [[np.array([0.75])], [np.array([1.5])], [np.array([2.25])]])
-        if mode == pnl.ExecutionMode.Python:
-            np.testing.assert_allclose(np.asfarray(ocm.function.saved_values).flatten(), [0.75, 1.5, 2.25])
-
-        if benchmark.enabled:
-            benchmark(comp.run, inputs, execution_mode=mode)
+            np.testing.assert_array_equal(saved_values.flatten(), [0.75, 1.5, 2.25])
 
     def test_model_based_ocm_with_buffer(self):
 

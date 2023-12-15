@@ -455,12 +455,12 @@ class DDM(ProcessingMechanism):
     See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes.
 
     The default behaviour for the DDM is to reset its integration state on each new trial, this can be overridden by
-    setting the `reset_stateful_function_when <Component.reset_stateful_function_when>` attribute to a different condition.
-    In addition, unlike `TransferMechamism <TransferMechamism>`, the DDM's
-    `execute_until_finished <Component.execute_until_finished>`
-    attribute is set to :code:`True` by default. This will cause the DDM to execute multiple time steps per
-    call to its `execute <Component.execute>`  method until the decision threshold is reached. This default behavior can
-    be changed by setting `execute_until_finished <Component.execute_until_finished>` to :code:`False`.
+    setting the `reset_stateful_function_when <Component.reset_stateful_function_when>` attribute to a different
+    condition. In addition, unlike `TransferMechanism <TransferMechanism>`, the DDM's `execute_until_finished
+    <Component.execute_until_finished>` attribute is set to `True` by default. This will cause the DDM to execute
+    multiple time steps per call to its `execute <Component.execute>`  method until the decision threshold is reached.
+    This default behavior can be changed by setting `execute_until_finished <Component.execute_until_finished>` to
+    `False`.
 
 
     Arguments
@@ -565,8 +565,8 @@ class DDM(ProcessingMechanism):
             element is set to 0. \n
           • `integration mode <DDM_Integration_Mode>`: the value of the element in the stimulus array based on the
             decision variable (1st item of the DDM's `value <DDM.value>`) at the current TIME_STEP of execution:
-            it is assigned to the 1st element if the decision variable is closer to the upper threshold, and to the  2nd
-            element if the decision variable is closer to the lower threshold; the other element is set to 0. \n
+            it is assigned to the 1st element if the decision variable is closer to the upper threshold, and to the
+            2nd element if the decision variable is closer to the lower threshold; the other element is set to 0. \n
 
         .. _DDM_RESPONSE_TIME:
 
@@ -574,17 +574,17 @@ class DDM(ProcessingMechanism):
           • `analytic mode <DDM_Analytic_Mode>`: mean time (in seconds) for the decision variable to reach the positive
             or negative value of the DDM `function <DDM.function>`'s threshold attribute as estimated by the analytic
             solution calculated by the `function <DDM.function>`); \n
-          • `integration mode <DDM_Integration_Mode>`: the number of `TIME_STEP` that have occurred since the DDM began
-            to execute in the current `TRIAL <TimeScale.TRIAL>` or, if it has reached the positive or negative value of
-            the DDM `function <DDM.function>`'s threshold attribute, the `TIME_STEP` at which that occurred. \n
-          Corresponds to the 2nd item of the DDM's `value <DDM.value>`.
+          • `integration mode <DDM_Integration_Mode>`: the number of `TIME_STEP`\\s that have occurred since the DDM
+            began to execute in the current `TRIAL <TimeScale.TRIAL>` or, if it has reached the positive or negative
+            value of the DDM `function <DDM.function>`'s threshold attribute, the `TIME_STEP` at which that occurred. \n
+            Corresponds to the 2nd item of the DDM's `value <DDM.value>`.
 
         .. _DDM_DECISION_OUTCOME:
 
         *DECISION_OUTCOME* : float
-          • `analytic mode <DDM_Analytic_Mode>`: 1.0 if the value of the threshold crossed by the decision variable on the
-            current TRIAL (which is either the value of the DDM `function <DDM.function>`'s threshold attribute or its
-            negative) is positive, 0 otherwise. \n
+          • `analytic mode <DDM_Analytic_Mode>`: 1.0 if the value of the threshold crossed by the decision variable on
+            the current TRIAL (which is either the value of the DDM `function <DDM.function>`'s threshold attribute or
+            its negative) is positive, 0 otherwise. \n
           • `integration mode <DDM_Integration_Mode>`: 1if the value of the decision variable at the current
             TIME_STEP of execution is positive, 0 otherwise. \n
 
@@ -865,6 +865,7 @@ class DDM(ProcessingMechanism):
         # is, it should execute until it reaches its threshold.
         self.parameters.execute_until_finished.default_value = True
 
+        # FIX: MAKE THIS A PARAMETER WITH ARGUMENT IN CONSTRUCTOR (ALIGN WITH reset Parameter OF IntegratorMechanism)
         # New (1/19/2021) default behavior of DDM mechanism is to reset stateful functions
         # on each new trial.
         if 'reset_stateful_function_when' not in kwargs:
@@ -1156,8 +1157,10 @@ class DDM(ProcessingMechanism):
 
             # Store threshold as decision variable output
             # this will be used by the mechanism to return the right decision
-            threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self.function,
-                                                        params, THRESHOLD)
+            threshold_ptr = ctx.get_param_or_state_ptr(builder,
+                                                       self.function,
+                                                       THRESHOLD,
+                                                       param_struct_ptr=params)
             threshold = pnlvm.helpers.load_extract_scalar_array_one(builder, threshold_ptr)
             decision_ptr = builder.gep(m_val, [ctx.int32_ty(0),
                                                ctx.int32_ty(self.DECISION_VARIABLE_INDEX),
@@ -1246,13 +1249,16 @@ class DDM(ProcessingMechanism):
 
     def _gen_llvm_is_finished_cond(self, ctx, builder, m_base_params, m_state, m_in):
         # Setup pointers to internal function
-        f_state = pnlvm.helpers.get_state_ptr(builder, self, m_state, "function")
+        f_base_params, f_state = ctx.get_param_or_state_ptr(builder,
+                                                            self,
+                                                            "function",
+                                                            param_struct_ptr=m_base_params,
+                                                            state_struct_ptr=m_state)
 
         # Find the single numeric entry in previous_value.
         # This exists only if the 'function' is 'integrator'
-        try:
-            prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self.function, f_state, "previous_value")
-        except ValueError:
+        prev_val_ptr = ctx.get_param_or_state_ptr(builder, self.function, "previous_value", state_struct_ptr=f_state)
+        if prev_val_ptr is None:
             return ctx.bool_ty(1)
 
         # Extract scalar value from ptr
@@ -1264,15 +1270,14 @@ class DDM(ProcessingMechanism):
         prev_val = builder.call(llvm_fabs, [prev_val])
 
         # Get functions params and apply modulation
-        f_base_params = pnlvm.helpers.get_param_ptr(builder, self, m_base_params, "function")
         f_params, builder = self._gen_llvm_param_ports_for_obj(
                 self.function, f_base_params, ctx, builder, m_base_params, m_state, m_in)
 
         # Get threshold value
-        threshold_ptr = pnlvm.helpers.get_param_ptr(builder,
-                                                    self.function,
-                                                    f_params,
-                                                    "threshold")
+        threshold_ptr = ctx.get_param_or_state_ptr(builder,
+                                                   self.function,
+                                                   THRESHOLD,
+                                                   param_struct_ptr=f_params)
 
         threshold_ptr = builder.gep(threshold_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
         threshold = builder.load(threshold_ptr)

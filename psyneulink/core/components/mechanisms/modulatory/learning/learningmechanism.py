@@ -157,7 +157,7 @@ names and roles (shown in the `figure <LearningMechanism_Single_Layer_Learning_F
   that receives its input from a ComparatorMechanism. If the `primary_learned_projection` is part of a `multilayer
   learning pathway <LearningMechanism_Multilayer_Learning>`, then the LearningMechanism will have one or more
   *ERROR_SIGNAL* InputPorts, that receive their input from the next LearningMechanism(s) in the sequence;  that is,
-  the one(s) associated with the `efferents <Port.efferents>` (outgoing Projections) of its `output_source`,
+  the one(s) associated with the `efferents <Port_Base.efferents>` (outgoing Projections) of its `output_source`,
   with one *ERROR_SIGNAL* InputPort for each of those Projections.  The `value <InputPort.value>`\\s of the
   *ERROR_SIGNAL* InputPorts are summed by the LearningMechanism's `function <LearningMechanism.function>` to
   calculate the `learning_signal <LearningMechanism.learning_signal>` (see `below <LearningMechanism_Function>`);
@@ -170,10 +170,35 @@ names and roles (shown in the `figure <LearningMechanism_Single_Layer_Learning_F
   as an item of the LearningMechanism's `variable <LearningMechanism.variable>` attribute, beginning with its third
   item (i.e., following the `value <InputPort.value>` of the *ACTIVATION_INPUT* and *ACTIVATION_VALUE* InputPorts).
 
+.. _LearningMechanism_Covariates:
+
+* *COVARIATES* - one or more InputPorts that receive the value of the inputs to `output_source (i.e., the
+  *ProcessingMechanism* to which the `primary_learned_projection` projects) other than `primary_learned_projection
+  <LearningMechanism_Primary_Learned_Projection>`, if the `output_source <LearningMechanism.output_source>`'s
+  `function <Mechanism_Base.function>` takes more than one argument and they affect its derivative. These are
+  assigned as a list to the fourth item in the LearningMechanism's `variable <LearningMechanism.variable>`
+  attribute, and are used to calculate the `learning_signal <LearningMechanism.learning_signal>` (see `below
+  <LearningMechanism_Function>`).
+
+  .. note::
+     The LearningMechanism has a separate InputPort for each covariate, however their
+     values are combined into a single item of the LearningMechanism's `variable <LearningMechanism.variable>`
+     that is provided to its `function <LearningMechanism.function>` at the fourth position.
+
+  .. technical_note::
+     Although the *COVARIATES* InputPorts receive Projections from the same senders as the corresponding
+     Projections to the `output_source <LearningMechanism.output_source>`, these are for display only,
+     and are not to actually compute the LearningSignal, since they are not subject to learning and therefore
+     do not provide the same value as the actual Projections they shadow.  Rather, those values are accessed
+     directly by the LearningMechanism from the InputPorts of the `output_source <LearningMechanism.output_source>`,
+     in a manner similar to its access of the `error_matrices <LearningMechanism.error_matrices>` from the
+     `ParameterPort`s of the `error_sources <LearningMechanism.error_sources>`.
+
 The Mechanisms from the which the `value <InputPort.values>`\\s above are received are listed in the
 LearningMechanism's `input_source <LearningMechanism.input_source>`, `output_source <LearningMechanism.output_source>`,
 and `error_sources <LearningMechanism.error_sources>` attributes, respectively (see
 `LearningMechanism_Additional_Attributes` for additional details).
+
 
 .. _LearningMechanism_Function:
 
@@ -277,11 +302,13 @@ They are each described below:
   corresponding MappingProjections. Multiple LearningSignals can be specified for a LearningMechanism by including
   them in a list assigned to the **learning_signals** argument of the LearningMechanism's constructor.
 
+  COMMENT:
   The `learning_rate <LearningSignal.learning_rate>` for each LearningSignal, and the `learning_rate
   <LearningProjection.learning_rate>` for each of its `LearningProjections <LearningProjection>`, can all be assigned
   different values (with the latter taking precedence over the former).  If none of these are specified, the
   `learning_rate <LearningMechanism.learning_rate>` of the LearningMechanism is used (see `below
   <LearningMechanism_Learning_Rate>`).
+  COMMENT
 
   All of the LearningSignals of a LearningMechanism are listed in its `learning_signals` attribute.  Because these
   are `OutputPorts <OutputPort>`, they are also listed in the `output_ports <LearningMechanism.output_ports>`
@@ -322,7 +349,11 @@ refer to the Components being learned and/or its operation:
 ..
 * `error_matrices` - the `matrix <MappingProjection.matrix>` parameters of the Projections associated with the
   `error_sources <LearningMechanism.error_sources>`;  that is, of any of the `output_source
-  <LearningMechanism.output_source>`'s `efferents <OutputPorts.efferents>` that are also being learned.
+  <LearningMechanism.output_source>`'s `efferents <Port_Base.efferents>` that are also being learned.
+..
+* `covariates_sources` - the `InputPort`s of `Mechanism`(s) that provide covariates used in calculating the derivative
+  of the `output_source <LearningMechanism.output_source>`'s `function <Mechanism_Base.function>` (see `above
+  `LearningMechanism_Covariates`), and project to its *COVARIATES* `InputPort <LearningMechanism_Covariates>`.
 ..
 * `modulation` - the default value used for the `modulation <LearningSignal.modulation>` attribute of
   LearningMechanism's `LearningSignals <LearningSignal>` (i.e. those for which it is not explicitly specified).
@@ -334,27 +365,31 @@ refer to the Components being learned and/or its operation:
 
 .. _LearningMechanism_Learning_Rate:
 
-* `learning_rate <LearningMechanism.learning_rate>` - specifies the :keyword:`learning_rate` parameter used by the
-  LearningMechanism's `function <LearningMechanism.function>`, which uses it to multiply the weight change matrix
-  before returning it as the `learning_signal <LearningMechanism.learning_signal>`.  This can be specified in the
-  **learning_rate** argument of the LearningMechanism's constructor (or the constructor for its `function
-  <LearningMechanism.function>`;  doing so supersedes specification of the **learning_rate** for a
-  `RecurrentTransferMechanism <RecurrentTransferMechanism_Learning>` used to implement `unsupervised learning
-  <Composition_Learning_Unsupervised>`, or a Composition's `learning method <Composition_Learning_Methods>` used to
-  implement a `supervised learning pathway <Composition_Learning_Supervised>`.  The default value for a
-  LearningMechanism's `learning_rate <LearningMechanism.learning_rate>` attribute is `None`, in which case the
-  LearningMechanism (and its `function <LearningMechanism.function>`) inherit the learning_rate from the
-  `RecurrentTransferMechanism <RecurrentTransferMechanism_Learning>` or the `learning method
-  <Composition_Learning_Methods>` of a Composition in which learning was defined.  If that is `None`, then it inherits
-  the learning_rate specified in the constructor of the `RecurrentTransferMechanism
-  <RecurrentTransferMechanism_Learning>` (for unsupervised learning) or Composition's `learning method
-  <Composition_Learning_Methods>` (for supervised learning). If that is also `None`, then it uses the value of the
-  `default_learning_rate <LearningFunction.default_learning_rate>` parameter of its `function
-  <LearningMechanism.function>`. A :keyword:`learning_rate` parameter can also be specified for individual
-  `LearningSignals <LearningSignal>` and/or their associated `LearningProjections <LearningProjection>`.
+* `learning_rate <LearningMechanism.learning_rate>` - specifies the `learning_rate <LearningFunction.learning_rate>`
+  parameter used by the LearningMechanism's `function <LearningMechanism.function>` which, for most forms of learning,
+  uses it to multiply the weight change matrix before returning it as the `learning_signal
+  <LearningMechanism.learning_signal>`.  The value can be specified in the **learning_rate** argument of the
+  LearningMechanism's constructor, or in the constructor for its `function <LearningMechanism.function>`.  If both
+  are specified, the specification for the function takes precedence; in either case, the value of the learning_rate
+  parameter is always the same for the LearningMechanism and its function.  If neither is specified, then it inherits
+  its value from any specifications made for the `Composition` or a `learning Pathway <Composition_Learning_Pathway>`
+  of the Composition to which it belongs (see `Composition_Learning_Rate` for additional details). However, after the
+  Composition and/or its `learning pathways <Composition_Learning_Pathway>` have been constructed, specifying the
+  `learning_rate <LearningMechanism.learning_rate>` for a LearningMechanism (or its function) overrides any
+  specifications made for the Composition or its learning pathways, including in calls the Composition's `learn
+  <Composition.learn>` method.  In this way, individual LearningMechanisms can be assigned specific learning rates
+  that apply whenever those are executed. If the learning_rate is not explicitly specified anywhere, the `default
+  value <Parameter_Defaults>` for the LearningMechanism's `function <LearningMechanism.function>` is used.
+
+  COMMENT: TBI
+  A `learning_rate` parameter can also be specified for individual `LearningSignals <LearningSignal>` and/or their
+  associated `LearningProjections <LearningProjection>`. Those have a direct multiplicative effect on the
+  `learning_signal <LearningProjection.learning_signal>` of the LearningSignal and/or it LearningProjections (see
+  `LearningSignal learning_rate <LearningSignal_Learning_Rate>` for additional details).
+  A `learning_rate` parameter can also be specified for individual `LearningProjections <LearningProjection>`.
   Those have a direct multiplicative effect on the `learning_signal <LearningProjection.learning_signal>` of the
-  LearningSignal and/or it LearningProjections (see `LearningSignal learning_rate <LearningSignal_Learning_Rate>`
-  for additional details).
+  LearningSignal (see `LearningProjection_Function_and_Learning_Rate>` for additional details).
+  COMMENT
 
 .. _LearningMechanism_Learning_Configurations:
 
@@ -437,14 +472,18 @@ sequence, the following additional MappingProjections are created for learning (
 <LearningMechanism_Multilayer_Learning_Figure>` below):
 
 * from the `input_source <LearningMechanism.input_source>` to the LearningMechanism's *ACTIVATION_INPUT* `InputPort
-  <LearningMechanism_Activation_Input>`.
+  <LearningMechanism_Activation_Input>`;
 ..
 * from the `output_source <LearningMechanism.output_source>` to the LearningMechanism's *ACTIVATION_OUTPUT* `InputPort
-  <LearningMechanism_Activation_Output>`.
+  <LearningMechanism_Activation_Output>`;
 ..
 * from the *ERROR_SIGNAL* `OutputPort <LearningMechanism_Output_Error_Signal>` of each of the LearningMechanism's
   `error_sources <LearningMechanisms.error_sources>` to each of its corresponding *ERROR_SIGNAL* `InputPort(s)
-  <LearningMechanism_Input_Error_Signal>`.
+  <LearningMechanism_Input_Error_Signal>`;
+
+* from the `covariates_source <LearningMechanism.covariates_source>` to the LearningMechanism's *COVARIATES*
+  `InputPort`(s)  if the `function <Mechaism_Base.function>` of the `output_source <LearningMechanism.output_source>`
+  takes more than one argument and they affect its derivative (see `above <LearningMechanism_Covariates>`).
 
 In addition, a `LearningProjection` is created from the `LearningSignal <LearningMechanism_LearningSignal>` for the
 `primary_learned_projection` of each LearningMechanism in the sequence, to the `ParameterPort` for the `matrix
@@ -541,8 +580,9 @@ from psyneulink.core.components.functions.nonstateful.learningfunctions import B
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.core.components.ports.modulatorysignals.learningsignal import LearningSignal
+from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.parameterport import ParameterPort
+from psyneulink.core.components.ports.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
@@ -557,7 +597,8 @@ from psyneulink.core.globals.utilities import ContentAddressableList, convert_to
 
 __all__ = [
     'ACTIVATION_INPUT', 'ACTIVATION_INPUT_INDEX', 'ACTIVATION_OUTPUT', 'ACTIVATION_OUTPUT_INDEX',
-    'DefaultTrainingMechanism', 'ERROR_SIGNAL', 'ERROR_SIGNAL_INDEX', 'ERROR_SOURCES',
+    'COVARIATES', 'COVARIATES_SOURCES', 'DefaultTrainingMechanism',
+    'ERROR_SIGNAL', 'ERROR_SIGNAL_INDEX', 'ERROR_SOURCES',
     'LearningMechanism', 'LearningMechanismError', 'input_port_names', 'output_port_names'
 ]
 
@@ -641,10 +682,12 @@ ERROR_SIGNAL_INDEX = 2
 ACTIVATION_INPUT = 'activation_input'     # InputPort
 ACTIVATION_OUTPUT = 'activation_output'   # InputPort
 ERROR_SIGNAL = 'error_signal'
-input_port_names = [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL]
+COVARIATES = 'covariate'                  # Basename for one or more InputPorts
+input_port_names = [ACTIVATION_INPUT, ACTIVATION_OUTPUT]
 output_port_names = [LEARNING_SIGNAL, ERROR_SIGNAL]
 
 ERROR_SOURCES = 'error_sources'
+COVARIATES_SOURCES = 'covariates_sources'
 
 DefaultTrainingMechanism = ObjectiveMechanism
 
@@ -670,6 +713,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
     """
     LearningMechanism(                    \
         variable,                         \
+        covariates_sources,               \
         error_sources,                    \
         function=BackPropagation,         \
         learning_rate=None,               \
@@ -719,6 +763,11 @@ class LearningMechanism(ModulatoryMechanism_Base):
         <InputPort.value>` of the corresponding `InputPort <LearningMechanism_InputPorts>` (see `variable
         <LearningMechanism.variable>` for additional details).
 
+    covariates_sources : InputPort or list of them : default None
+        specifies the `InputPort`(s) of the LearningMechanism's `output_source <LearningMechanism.output_source>`
+        other than the one to which the `primary_learned_projection` projects. (see `LearningMechanism_Covariates`
+        for additional details).
+
     error_sources : ComparatorMechanism, LearningMechanism, OutputPort or list of them
         specifies the source(s) of the error signal(s) used by the LearningMechanism's `function
         <LearningMechanism.function>`.  Each must be a `ComparatorMechanism` for `single layer learning
@@ -732,16 +781,18 @@ class LearningMechanism(ModulatoryMechanism_Base):
         `variable <Function_Base.variable>` must have three items, each of which must be a list or 1d array of
         numeric values, corresponding to values provided by the LearningMechanism's *ACTIVATION_INPUT*,
         *ACTIVATION_OUTPUT*, and *ERROR_SOURCES* InputPorts, respectively (see `LearningMechanism_InputPorts
-        `LearningMechanism_Function` and `LearningMechanism_InputPorts` for additional details).
+        `LearningMechanism_Function` and `LearningMechanism_InputPorts` for additional details). If supports an
+        activation function that takes more than one argument that impact its derivative, then it must also accept a
+        potential fourth keyword argument (``covariates``), that is a list or 1d array of numeric values provided by
+        the LearningMechanism's *COVARIATES* InputPort(s) (see `LearningMechanism_Covariates` for additional details).
 
     learning_rate : float : default None
         specifies the learning rate for the LearningMechanism (see `learning_rate <LearningMechanism.learning_rate>`
         for details).
 
     learning_signals : List[parameter of Projection, ParameterPort, Projection, tuple[str, Projection] or dict] :
-    default *LEARNING_SIGNAL*
-        specifies the parameter(s) to be learned (see `learning_signals <LearningMechanism.learning_signals>` for
-        details).
+        default *LEARNING_SIGNAL* specifies the parameter(s) to be learned (see `learning_signals
+        <LearningMechanism.learning_signals>` for details).
 
     modulation : str : default ADDITIVE
         specifies the default form of modulation used by the LearningMechanism's LearningSignals,
@@ -767,7 +818,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
     input_ports : ContentAddressableList[OutputPort]
         list containing the LearningMechanism's three `InputPorts <LearningMechanism_InputPorts>`:
-        *ACTIVATION_INPUT*,  *ACTIVATION_OUTPUT*, and *ERROR_SIGNAL*.
+        *ACTIVATION_INPUT*, *ACTIVATION_OUTPUT*, *ERROR_SIGNAL*, and possible its *COVARIATES*.
 
     error_signal_input_ports : list[InputPorts]
         list of InputPorts that receive error_signals from the LearningMechanism's `error_sources
@@ -780,6 +831,19 @@ class LearningMechanism(ModulatoryMechanism_Base):
     output_source : ProcessingMechanism
         the Mechanism that receives the `primary_learned_projection`, and  projects to the
         LearningMechanism's *ACTIVATION_OUTPUT* `InputPort <LearningMechanism_Activation_Output>`.
+
+    covariates_sources : List[InputPort]
+        the `InputPort`(s) of the LearningMechanism's `output_source <LearningMechanism.output_source>`
+        other than the one to which the `primary_learned_projection` projects;  these are used as
+        covariates in the calculation of the derivative of `output_source <LearningMechanism.output_source>`\\'s
+        `function <LearningMechanism.function>` with respect to `value <MappingProjection.value>` of the
+        `primary_learned_projection` (see `LearningMechanism_Covariates` for additional details).
+
+    covariates_values : List[1d np.array]
+        the values of the InputPorts to which the `covariates_sources <LearningMechanism.covariates_sources>` project;
+        passed to the LearningMechanism's `function <LearningMechanism.function>` as the *COVARIATES* item of its
+        `variable <LearningMechanism.variable>`, and assigned as the `value <InputPort.value>` of the LearningMechanism's
+        *COVARIATES* `InputPort <LearningMechanism_Covariates>`s.
 
     error_sources : list[ComparatorMechanism or LearningMechanism]
         the Mechanism(s) that calculate the error signal(s) provided to the
@@ -897,6 +961,18 @@ class LearningMechanism(ModulatoryMechanism_Base):
             Attributes
             ----------
 
+                variable
+                    see `variable <LearningMechanism.variable>`
+
+                    :default value: numpy.array([[0],[0],[0]])
+                    :type: numpy.ndarray
+
+                covariates_sources
+                    see `covariates_source <LearningMechanism.covariates_source>`
+
+                    :default value: None
+                    :type: list[InputPort]
+
                 error_matrix
                     see `error_matrix <LearningMechanism.error_matrix>`
 
@@ -910,6 +986,13 @@ class LearningMechanism(ModulatoryMechanism_Base):
                     :type:
                     :read only: True
 
+                error_sources
+                    see `error_source <LearningMechanism_Error_Source>`
+
+                    :default value: None
+                    :type: list[Mechanism, OutputPort, tuple[str, Mechanism, OutputPort]]
+                    :read only: True
+
                 function
                     see `function <LearningMechanism_Function>`
 
@@ -919,7 +1002,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
                 input_ports
                     see `input_ports <LearningMechanism.input_ports>`
 
-                    :default value: [`ACTIVATION_INPUT`, `ACTIVATION_OUTPUT`, `ERROR_SIGNAL`]
+                    :default value: [`ACTIVATION_INPUT`, `ACTIVATION_OUTPUT`, `ERROR_SIGNAL`, `COVARIATES`]
                     :type: ``list``
                     :read only: True
 
@@ -962,46 +1045,46 @@ class LearningMechanism(ModulatoryMechanism_Base):
                     :type: ``list``
                     :read only: True
         """
+        variable = Parameter(np.array([[0],[0]]),
+                             pnl_internal=True,
+                             constructor_argument='default_variable')
         function = Parameter(BackPropagation, stateful=False, loggable=False)
+        covariates_sources = Parameter(None, stateful=False, structural=True, read_only=True)
+        error_sources = Parameter(None, stateful=False, structural=True, read_only=True)
         error_matrix = Parameter(None, modulable=True)
         learning_signal = Parameter(None, read_only=True, getter=_learning_signal_getter)
         error_signal = Parameter(None, read_only=True, getter=_error_signal_getter)
         learning_rate = FunctionParameter(None)
         learning_enabled = True
         modulation = ADDITIVE
-        input_ports = Parameter(
-            [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL],
-            stateful=False,
-            loggable=False,
-            read_only=True,
-            structural=True,
-            parse_spec=True,
-        )
-        output_ports = Parameter(
-            [
-                {
-                    NAME: ERROR_SIGNAL,
-                    PORT_TYPE: OUTPUT_PORT,
-                    VARIABLE: (OWNER_VALUE, 1)
-                },
-            ],
-            stateful=False,
-            loggable=False,
-            read_only=True,
-            structural=True,
-        )
-        learning_signals = Parameter(
-            [
-                {
-                    NAME: LEARNING_SIGNAL,
-                    VARIABLE: (OWNER_VALUE, 0)
-                }
-            ],
-            stateful=False,
-            loggable=False,
-            read_only=True,
-            structural=True,
-        )
+        learning_type = LearningType.SUPERVISED
+
+        input_ports = Parameter([ACTIVATION_INPUT, ACTIVATION_OUTPUT],
+                                stateful=False,
+                                loggable=False,
+                                read_only=True,
+                                structural=True,
+                                parse_spec=True)
+        output_ports = Parameter([{NAME: ERROR_SIGNAL,
+                                   PORT_TYPE: OUTPUT_PORT,
+                                   VARIABLE: (OWNER_VALUE, 1)}],
+                                 stateful=False,
+                                 loggable=False,
+                                 read_only=True,
+                                 structural=True)
+        learning_signals = Parameter([{NAME: LEARNING_SIGNAL,
+                                       VARIABLE: (OWNER_VALUE, 0)}],
+                                     stateful=False,
+                                     loggable=False,
+                                     read_only=True,
+                                     structural=True)
+        def _parse_covariates_sources(self, covariates_sources):
+            if covariates_sources:
+                return convert_to_list(covariates_sources)
+
+        def _parse_error_sources(self, error_sources):
+            if error_sources:
+                return convert_to_list(error_sources)
 
     @check_user_specified
     @beartype
@@ -1009,6 +1092,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
                  # default_variable:Union[list, np.ndarray],
                  default_variable=None,
                  size=None,
+                 covariates_sources: Optional[Union[InputPort, list]] = None,
                  error_sources: Optional[Union[Mechanism, list]] = None,
                  function=None,
                  learning_signals: Optional[list] = None,
@@ -1022,13 +1106,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
                  prefs: Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
-        # IMPLEMENTATION NOTE:
-        #    assign to private attribute as self.error_sources is used as a property
-        #    private attribute is used for validation and in _instantiate_attribute_before_function;
-        #    thereafter, self.error_sources contains actual error_sources
-        if error_sources:
-            error_sources = convert_to_list(error_sources)
-        self._error_sources = error_sources
 
         self.in_composition = in_composition
 
@@ -1045,17 +1122,22 @@ class LearningMechanism(ModulatoryMechanism_Base):
         super().__init__(
             default_variable=default_variable,
             size=size,
-            modulation=modulation,
+            covariates_sources=covariates_sources,
+            error_sources=error_sources,
             function=function,
+            output_ports=output_ports,
+            modulation=modulation,
+            learning_rate=learning_rate,
+            learning_enabled=learning_enabled,
+            learning_signals=learning_signals,
             params=params,
             name=name,
             prefs=prefs,
-            learning_enabled=learning_enabled,
-            learning_signals=learning_signals,
-            learning_rate=learning_rate,
-            output_ports=output_ports,
             **kwargs
         )
+        # If default to value assigned to its function, so any later assignments can be detected
+        #    (e.g., in CompositionRunner.run_learning)
+        self.defaults.learning_rate = self.parameters.learning_rate.get()
 
     def _check_type_and_timing(self):
         try:
@@ -1072,14 +1154,17 @@ class LearningMechanism(ModulatoryMechanism_Base):
                                                 repr(LEARNING_TIMING)))
 
     def _parse_function_variable(self, variable, context=None):
-        function_variable = np.zeros_like(
-            variable[np.array([ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL_INDEX])]
-        )
-        function_variable[ACTIVATION_INPUT_INDEX] = variable[ACTIVATION_INPUT_INDEX]
-        function_variable[ACTIVATION_OUTPUT_INDEX] = variable[ACTIVATION_OUTPUT_INDEX]
-        function_variable[ERROR_SIGNAL_INDEX] = variable[ERROR_SIGNAL_INDEX]
-
-        return function_variable
+        # # MODIFIED 9/11/23 OLD:
+        # Return values of ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, and first ERROR_SIGNAL_INDEX InputPorts
+        #   in variable; remaining inputs (additional error signals and/or COVARITES) are passed in kwargs)
+        return variable[range(min(len(self.input_ports),3))]
+        # MODIFIED 9/11/23 NEW:
+        # Return values of ACTIVATION_INPUT, ACTIVATION_OUTPUT, and ERROR_SIGNAL InputPorts in variable;
+        #   remaining inputs (additional error signals and/or COVARITES) are passed in kwargs)
+        # return np.array(self.input_values, dtype=object)
+        # FIX: SHOULD EXTRA ERROR_SIGNAL (AND ERROR_MATRIX) BE PUT IN params? CF WHAT HAPPENS WITH RUMELHART NETWORK
+        # return variable[range(2 + len(self.error_signal_input_ports))]
+        # MODIFIED 9/11/23 END
 
     def _validate_variable(self, variable, context=None):
         """Validate that variable has exactly three items: activation_input, activation_output and error_signal
@@ -1087,34 +1172,43 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
         variable = super()._validate_variable(variable, context)
 
-        if len(variable) < 3:
-            raise LearningMechanismError("Variable for {} ({}) must have at least three items ({}, {}, and {}{})".
-                                         format(self.name, variable,
-                                                ACTIVATION_INPUT,
-                                                ACTIVATION_OUTPUT,
-                                                ERROR_SIGNAL,"(s)"))
+        # if len(variable) < 3:
+        num_input_ports = len(self.input_ports)
+        error_signals_msg = f", and 'ERROR_SIGNAL(s)'" if num_input_ports > 2 else ""
+        if len(variable) < num_input_ports:
+            raise LearningMechanismError(f"Variable for {self.name} ({variable}) must have at least {num_input_ports} "
+                                         f"items: 'ACTIVATION_INPUT', 'ACTIVATION_INPUT'{error_signals_msg}")
 
-        # Validate that activation_input, activation_output are numeric and lists or 1d np.ndarrays
-        #    and that there is the correct number of error_signal_input_ports and and error_matrices:
-        #    (which should be the number of items for error_signals in variable)
-
-        assert ASSERT, "ADD TEST FOR LEN OF VARIABLE AGAINST NUMBER OF ERROR_SIGNALS AND ERROR_MATRICES"
-
+        # Validate that activation_input, activation_output are numeric and lists or 1d arrays and that
+        # there is the correct number of items beyond those for the number of error_sources and covariates_sources
         for i in range(len(variable)):
-            item_num_string = "Item {} ".format(i)
-            try:
-                item_name = self.input_ports.names[i]
-            except:
-                try:
-                    item_name = input_port_names[i]
-                except IndexError:
-                    item_name = f'{ERROR_SIGNAL}-{i-2}'
-            if not np.array(variable[i]).ndim == 1:
-                raise LearningMechanismError(f"{item_num_string} of variable for {self.name} ({item_name}:{variable[i]}) "
-                                             f"is not a list or 1d np.array.")
-            if not (is_numeric(variable[i])):
-                raise LearningMechanismError("{} of variable for {} ({}:{}) is not numeric".
-                                              format(item_num_string, self.name, item_name, variable[i]))
+            item_num_string = "Item {i+1}"
+
+            # Ensure that activation_input and activation_output are numeric and lists or 1d np.ndarrays
+            # (harder to do this for error_sources and covariates_sources, since they may have different shapes
+            if i < 3:
+                if not np.array(variable[i]).ndim == 1:
+                    raise LearningMechanismError(f"{item_num_string} of variable for '{self.name}' "
+                                                 f"({variable[i]}) is not a list of numeric values or 1d np.array.")
+                if not (is_numeric(variable[i])):
+                    raise LearningMechanismError(f"{item_num_string} of variable for '{self.name}' "
+                                                 f"({variable[i]}) is not numeric.")
+
+            # Any input_ports for error_sources > 1 (the default) and/or ones for covariates haven't yet been assigned
+            #    so length of variable should be short that number
+            elif self.is_initializing:
+                num_error_sources = len(self.error_sources) # 1 is already in input_ports
+                num_covariates_sources = len(self.covariates_sources) if self.covariates_sources else 0
+                if len(variable) != len(self.input_ports) + num_error_sources + num_covariates_sources:
+                    assert False, f"Number of items ({len(variable)}) in variable for '{self.name}' doesn't match " \
+                                  f"the number of expected InputPorts ({len(self.input_ports)}) during initialization."
+
+            # All input_ports have been assigned, so number of items in variable should match number of input_ports
+            elif len(variable) != len(self.input_ports):
+                # All input_ports have been assigned, so number of items in variable should match number of input_ports
+                assert False, f"Number of items ({len(variable)}) in variable for '{self.name}' doesn't match " \
+                              f"the number of its assigned InputPorts ({len(self.input_ports)})"
+
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -1134,15 +1228,19 @@ class LearningMechanism(ModulatoryMechanism_Base):
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.core.components.projections.projection import _validate_receiver
 
-        if self._error_sources:
-            error_sources = self._error_sources
-            if not isinstance(error_sources, list):
-                error_sources = [error_sources]
+        if COVARIATES_SOURCES in target_set and target_set[COVARIATES_SOURCES]:
+            if not all(isinstance(item, InputPort) for item in self.covariates_sources):
+                raise LearningMechanismError(f"Each item in {repr(COVARIATES_SOURCES)} arg for '{self.name}' "
+                                             f"must be an {InputPort.__name__}.")
 
-            if not len(error_sources) == len(self.defaults.variable[ERROR_SIGNAL_INDEX:]):
+        if ERROR_SOURCES in target_set and target_set[ERROR_SOURCES]:
+            error_sources = self.parameters.error_sources.get()
+            num_error_sources = len(error_sources)
+            if not num_error_sources == \
+                   len(self.defaults.variable[ERROR_SIGNAL_INDEX:ERROR_SIGNAL_INDEX + num_error_sources]):
                 raise LearningMechanismError(f"Number of items specified in {repr(ERROR_SOURCES)} arg "
-                                             f"for {self.name} ({len(error_sources)}) must equal the number "
-                                             f"of its {InputPort.__name__} {ERROR_SIGNAL.upper()}s "
+                                             f"for '{self.name}' ({len(error_sources)}) must equal the number "
+                                             f"of its {InputPort.__name__} {ERROR_SIGNAL.upper()}(S) "
                                              f"({len(self.error_signal_input_ports)}).")
 
             for error_source in error_sources:
@@ -1176,6 +1274,33 @@ class LearningMechanism(ModulatoryMechanism_Base):
                 else:
                     pass
 
+
+    def _instantiate_input_ports(self, input_ports=None, reference_value=None, context=None):
+        """Instantiate COVARIATES InputPorts if there are any covariate_sources"""
+
+        input_ports = self.input_ports
+
+        # if self.error_sources:
+        #     input_ports += [ERROR_SIGNAL] * (len(self.error_sources) - 1)  # 1 ERROR_SIGNAL InputPort is assigned by default
+        # num_error_sources = len(self.error_sources) if self.error_sources else 0
+        num_error_sources = len(self.error_sources) if self.error_sources else 0
+        input_ports += [ERROR_SIGNAL] * num_error_sources
+
+        if self.covariates_sources:
+            num_covariates = len(self.covariates_sources)
+            if num_covariates == 1:
+                input_ports += [COVARIATES]
+            else:
+                for i in range(num_covariates):
+                    input_ports += [f'{COVARIATES}_{i}']
+                    # input_ports[i].reference_value = reference_value[i]
+
+        super()._instantiate_input_ports(input_ports=input_ports, reference_value=reference_value, context=context)
+
+        self.error_signal_input_ports = self.input_ports[ERROR_SIGNAL_INDEX:ERROR_SIGNAL_INDEX + num_error_sources]
+        self.covariates_input_ports = self.input_ports[ERROR_SIGNAL_INDEX + num_error_sources:]
+
+
     def _instantiate_attributes_before_function(self, function=None, context=None):
         """Instantiates MappingProjection(s) from error_sources (if specified) to LearningMechanism
 
@@ -1183,19 +1308,17 @@ class LearningMechanism(ModulatoryMechanism_Base):
             Projection with which each error_source is associated.
             :param function:
         """
-
-        if self._error_sources:
-            self.parameters.input_ports._set(
-                self.input_ports[:2] + [ERROR_SIGNAL] * len(self._error_sources),
-                context
-            )
+        # error_sources = self.parameters.error_sources.get(context)
+        # if error_sources:
+        #     self.parameters.input_ports._set(self.input_ports[:2] + [ERROR_SIGNAL] * len(error_sources),context)
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
         self.error_matrices = None
-        if self._error_sources:
-            self.error_matrices = [None] * len(self._error_sources)
-            for i, error_source in enumerate(self._error_sources):
+        # error_sources = self.parameters.error_sources.get()
+        if self.error_sources:
+            self.error_matrices = [None] * len(self.error_sources)
+            for i, error_source in enumerate(self.error_sources):
                 if not self.in_composition:
                     # IMPLEMENTATION NOTE:
                     #    _create_terminal_backprop_sequence_components and _create_multilayer_backprop_components
@@ -1266,9 +1389,9 @@ class LearningMechanism(ModulatoryMechanism_Base):
             context
         )
 
-        # Initialize _error_signals;  this is assigned for efficiency (rather than just using the property)
-        #    since it is used by the execute method
-        self._error_signal_input_ports = self.error_signal_input_ports
+        # # Initialize _error_signals;  this is assigned for efficiency (rather than just using the property)
+        # #    since it is used by the execute method
+        # self._error_signal_input_ports = self.error_signal_input_ports
 
     @handle_external_context()
     def add_ports(self, error_sources, context=None):
@@ -1280,8 +1403,10 @@ class LearningMechanism(ModulatoryMechanism_Base):
             error_source = input_port.path_afferents[0].sender.owner
             self.error_matrices.append(error_source.primary_learned_projection.parameter_ports[MATRIX])
             if ERROR_SIGNAL in input_port.name:
-                self._error_signal_input_ports.append(input_port)
+                self.error_signal_input_ports.append(input_port)
             instantiated_input_ports.append(input_port)
+
+        assert True
 
         # TODO: enable this. fails because LearningMechanism does not have a
         # consistent _parse_function_variable
@@ -1296,15 +1421,13 @@ class LearningMechanism(ModulatoryMechanism_Base):
         for i, port in enumerate([s for s in ports if s in self.error_signal_input_ports]):
             del self.error_matrices[i]
         super().remove_ports(ports=ports)
-        self._error_signal_input_ports = [s for s in self.input_ports if ERROR_SIGNAL in s.name]
+        self.error_signal_input_ports = [s for s in self.input_ports if ERROR_SIGNAL in s.name]
 
     def _execute(
-        self,
-        variable=None,
-        context=None,
-        runtime_params=None,
-
-    ):
+            self,
+            variable=None,
+            context=None,
+            runtime_params=None)->list:
         """Execute LearningMechanism function and return learning_signal
 
         Identify error_signals received from LearningMechanisms currently being executed
@@ -1316,35 +1439,15 @@ class LearningMechanism(ModulatoryMechanism_Base):
         -------
 
         List[ndarray, ndarray] : summed learning_signal, summed error_signal
-
         """
 
         # Get error_signals (from ERROR_SIGNAL InputPorts) and error_matrices relevant for the current execution:
-        error_signal_indices = self.error_signal_indices
+        error_signal_indices = [self.input_ports.index(s) for s in self.error_signal_input_ports]
         error_signal_inputs = variable[error_signal_indices]
-        # FIX 7/22/19 [JDC]: MOVE THIS TO ITS OWN METHOD CALLED ON INITALIZATION AND UPDATED AS NECESSARY
         if self.error_matrices is None:
-            # KAM 6/28/19 Hack to get the correct shape and contents for initial error matrix in backprop
-            if self.function is BackPropagation or isinstance(self.function, BackPropagation):
-                mat = []
-                for i in range(len(error_signal_inputs[0])):
-                    row = []
-                    for j in range(len(error_signal_inputs[0])):
-                        if i == j:
-                            row.append(1.)
-                        else:
-                            row.append(0.)
-                    mat.append(row)
-                self.error_matrices = mat
-                error_matrices = mat
-
-            else:
-                self.error_matrices = [[0.]]
-                error_matrices = \
-                    np.array(self.error_matrices)[np.array([c - ERROR_SIGNAL_INDEX for c in error_signal_indices])]
+            error_matrices = self._init_error_matrices(error_signal_inputs, error_signal_indices)
         else:
-            error_matrices = \
-                np.array(self.error_matrices)[np.array([c - ERROR_SIGNAL_INDEX for c in error_signal_indices])]
+            error_matrices = np.array(self.error_matrices)[range(len(self.error_signal_input_ports))]
 
         for i, matrix in enumerate(error_matrices):
             if isinstance(error_matrices[i], ParameterPort):
@@ -1355,18 +1458,23 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
         # Compute learning_signal for each error_signal (and corresponding error-Matrix):
         for error_signal_input, error_matrix in zip(error_signal_inputs, error_matrices):
-            function_variable = convert_to_np_array(
-                [
-                    variable[ACTIVATION_INPUT_INDEX],
-                    variable[ACTIVATION_OUTPUT_INDEX],
-                    error_signal_input
-                ]
-            )
+            function_variable = convert_to_np_array([variable[ACTIVATION_INPUT_INDEX],
+                                                     variable[ACTIVATION_OUTPUT_INDEX],
+                                                     error_signal_input])
+            # Get covariates_values and pass in covariates arg
+            if self.covariates_sources:
+                covariates_values = [source.value for source in self.covariates_sources]
+            else:
+                covariates_values = None
             learning_signal, error_signal = super()._execute(variable=function_variable,
                                                              context=context,
                                                              error_matrix=error_matrix,
-                                                             runtime_params=runtime_params,
-                                                             )
+                                                             covariates=covariates_values,
+                                                             runtime_params=runtime_params)
+            # Assign covariates values to their input_ports (not needed for computation; make available for reference)
+            for i, covariate_input_port in enumerate(self.covariates_input_ports):
+                covariate_input_port.parameters.value._set(covariates_values[i], context, override=True)
+
             # Sum learning_signals and error_signals
             summed_learning_signal += learning_signal
             summed_error_signal += error_signal
@@ -1385,18 +1493,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
         return [summed_learning_signal, summed_error_signal]
 
-    # @property
-    # def learning_enabled(self):
-    #     try:
-    #         return self._learning_enabled
-    #     except AttributeError:
-    #         self._learning_enabled = True
-    #         return self._learning_enabled
-    #
-    # @learning_enabled.setter
-    # def learning_enabled(self, assignment: Optional[Union[bool, Literal['online', 'after']]] = None):
-    #     self._learning_enabled = assignment
-
     @property
     def input_source(self):
         try:
@@ -1411,32 +1507,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
         except IndexError:
             return None
 
-    # FIX 7/28/19 [JDC]:  PROPERLY MANAGE BACKGING FIELD
-    #                     (?WITH SETTER, AND LINKED TO INPUT_PORTS PROPERTY?/LIST?)
-    @property
-    def error_signal_input_ports(self):
-        try:
-            # This is maintained for efficiency (since it is called by execute method)
-            return self._error_signal_input_ports
-        except AttributeError:
-            try:
-                return [s for s in self.input_ports if ERROR_SIGNAL in s.name]
-            except:
-                return [s for s in self.input_ports if ERROR_SIGNAL in s]
-
-    @property
-    def error_signal_indices(self):
-        current_error_signal_inputs = self.error_signal_input_ports
-        return [self.input_ports.index(s) for s in current_error_signal_inputs]
-
-    @property
-    def error_sources(self):
-        error_sources = []
-        for error_signal_input_port in self.error_signal_input_ports:
-            for error_signal_projection in error_signal_input_port.path_afferents:
-                error_sources.append(error_signal_projection.sender.owner)
-        return error_sources
-
     @property
     def primary_learned_projection(self):
         return self.learned_projections[0]
@@ -1446,6 +1516,30 @@ class LearningMechanism(ModulatoryMechanism_Base):
         return [lp.receiver.owner for ls in self.learning_signals for lp in ls.efferents]
 
     @property
-    def dependent_learning_mechanisms(self):
-        return [p.parameter_ports[MATRIX].mod_afferents[0].sender.owner for p in self.input_source.path_afferents
-                if p.has_learning_projection]
+    def validate_error_signal_and_covariate_sources(self):
+        # FIX: 8/1/23 - NEEDS ERROR MESSAGES, AND TO BE CALLED SOMEWHERE
+        #               (MAYBE BY COMPOSITION ONCE ALL NODES AND PROJECTIONS HAVE BEEN INSTANTIATED)
+        assert set(input_port.path_afferents[0].sender.owner
+                   for input_port in self.error_signal_input_ports) == set(self.error_sources)
+        assert set(input_port.path_afferents[0].sender.owner
+                   for input_port in self.covariates_input_ports) == set(self.covariates_sources)
+
+    def _init_error_matrices(self, error_signal_inputs, error_signal_indices):
+        # KAM 6/28/19 Hack to get the correct shape and contents for initial error matrix in backprop
+        if self.function is BackPropagation or isinstance(self.function, BackPropagation):
+            mat = []
+            for i in range(len(error_signal_inputs[0])):
+                row = []
+                for j in range(len(error_signal_inputs[0])):
+                    if i == j:
+                        row.append(1.)
+                    else:
+                        row.append(0.)
+                mat.append(row)
+            self.error_matrices = mat
+            error_matrices = mat
+        else:
+            self.error_matrices = [[0.]]
+            error_matrices = \
+                np.array(self.error_matrices)[np.array([c - ERROR_SIGNAL_INDEX for c in error_signal_indices])]
+        return error_matrices

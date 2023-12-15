@@ -32,9 +32,9 @@ from psyneulink.core.components.functions.function import EPSILON, FunctionError
 from psyneulink.core.globals.keywords import \
     CORRELATION, COSINE, COSINE_SIMILARITY, CROSS_ENTROPY, \
     DEFAULT_VARIABLE, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DOT_PRODUCT, \
-    ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, \
+    ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, NORMALIZE, \
     NORMED_L0_SIMILARITY, OBJECTIVE_FUNCTION_TYPE, SIZE, STABILITY_FUNCTION
-from psyneulink.core.globals.parameters import Parameter, check_user_specified
+from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import DistanceMetricLiteral, safe_len, convert_to_np_array
 from psyneulink.core.globals.utilities import is_iterable
@@ -205,7 +205,7 @@ class Stability(ObjectiveFunction):
         metric = Parameter(ENERGY, stateful=False)
         metric_fct = Parameter(None, stateful=False, loggable=False)
         transfer_fct = Parameter(None, stateful=False, loggable=False)
-        normalize = Parameter(False, stateful=False)
+        normalize = FunctionParameter(False, function_name='metric_fct')
 
     @check_user_specified
     @beartype
@@ -364,11 +364,12 @@ class Stability(ObjectiveFunction):
                             self.defaults.variable]
 
         if self.metric == ENTROPY:
-            self.metric_fct = Distance(default_variable=default_variable, metric=CROSS_ENTROPY, normalize=self.normalize)
+            self.metric_fct = Distance(default_variable=default_variable, metric=CROSS_ENTROPY, normalize=self.parameters.normalize.default_value)
         elif self.metric in DISTANCE_METRICS._set():
-            self.metric_fct = Distance(default_variable=default_variable, metric=self.metric, normalize=self.normalize)
+            self.metric_fct = Distance(default_variable=default_variable, metric=self.metric, normalize=self.parameters.normalize.default_value)
         else:
             assert False, "Unknown metric"
+
         #FIXME: This is a hack to make sure metric-fct param is set
         self.parameters.metric_fct.set(self.metric_fct)
 
@@ -401,7 +402,7 @@ class Stability(ObjectiveFunction):
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         # Dot product
         dot_out = builder.alloca(arg_in.type.pointee)
-        matrix = pnlvm.helpers.get_param_ptr(builder, self, params, MATRIX)
+        matrix = ctx.get_param_or_state_ptr(builder, self, MATRIX, param_struct_ptr=params, state_struct_ptr=state)
 
         # Convert array pointer to pointer to the fist element
         matrix = builder.gep(matrix, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -422,6 +423,10 @@ class Stability(ObjectiveFunction):
             #FIXME: implement this
             assert False, "Support for transfer functions is not implemented"
         else:
+            # Check that transfer_fct is absent from the compiled parameter
+            # structure or represented by an empty structure
+            assert "transfer_fct" not in self.llvm_param_ids or ctx.get_param_or_state_ptr(builder, self, "transfer_fct", param_struct_ptr=params).type.pointee.elements == ()
+
             trans_out = builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
             builder.store(builder.load(dot_out), trans_out)
 
@@ -429,8 +434,7 @@ class Stability(ObjectiveFunction):
         builder.store(builder.load(arg_in), builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(0)]))
 
         # Distance Function
-        metric_params = pnlvm.helpers.get_param_ptr(builder, self, params, "metric_fct")
-        metric_state = pnlvm.helpers.get_state_ptr(builder, self, state, "metric_fct")
+        metric_params, metric_state = ctx.get_param_or_state_ptr(builder, self, "metric_fct", param_struct_ptr=params, state_struct_ptr=state)
         metric_out = arg_out
         builder.call(metric_fun, [metric_params, metric_state, metric_in, metric_out])
         return builder
@@ -913,6 +917,7 @@ class Distance(ObjectiveFunction):
         val = builder.fmul(val1, val1)
         denom = builder.fadd(denom, val)
         builder.store(denom, denom1_acc)
+
         # Denominator2
         denom = builder.load(denom2_acc)
         val = builder.fmul(val2, val2)
@@ -1113,18 +1118,25 @@ class Distance(ObjectiveFunction):
             ret = builder.call(fabs, [corr])
             ret = builder.fsub(ctx.float_ty(1), ret)
 
-        # MAX_ABS_DIFF, CORRELATION, and COSINE ignore normalization
-        ignores = frozenset((MAX_ABS_DIFF, CORRELATION, COSINE, COSINE_SIMILARITY))
-        if self.normalize and self.metric not in ignores:
-            norm_factor = input_length
-            if self.metric == ENERGY:
-                norm_factor = norm_factor ** 2
-            ret = builder.fdiv(ret, ctx.float_ty(norm_factor), name="normalized")
         if arg_out.type.pointee != ret.type:
-            # Some instance use 2d output values
+            # Some instances use 2d output values
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0),
                                             ctx.int32_ty(0)])
-        builder.store(ret, arg_out)
+
+        normalize_ptr = ctx.get_param_or_state_ptr(builder, self, NORMALIZE, param_struct_ptr=params)
+        normalize = builder.load(normalize_ptr)
+        normalize_b = builder.fcmp_ordered("!=", normalize, normalize.type(0))
+
+        # MAX_ABS_DIFF, CORRELATION, and COSINE/COSINE_SIMILARITY ignore normalization
+        allow_normalize_b = normalize_b.type(self.metric not in {MAX_ABS_DIFF, CORRELATION, COSINE, COSINE_SIMILARITY})
+        normalize_b = builder.and_(normalize_b, allow_normalize_b)
+        with builder.if_else(normalize_b) as (then, otherwise):
+            with then:
+                norm_factor = input_length ** 2 if self.metric == ENERGY else input_length
+                normalized = builder.fdiv(ret, ctx.float_ty(norm_factor), name="normalized")
+                builder.store(normalized, arg_out)
+            with otherwise:
+                builder.store(ret, arg_out)
 
         return builder
 
@@ -1178,15 +1190,12 @@ class Distance(ObjectiveFunction):
 
         # Cosine similarity of v1 and v2
         elif self.metric in {COSINE, COSINE_SIMILARITY}:
-            # result = np.correlate(v1, v2)
             result = 1.0 - np.fabs(Distance.cosine(v1, v2))
-            return self.convert_output_type(result)
 
         # Correlation of v1 and v2
         elif self.metric == CORRELATION:
             # result = np.correlate(v1, v2)
             result = 1.0 - np.fabs(Distance.correlation(v1, v2))
-            return self.convert_output_type(result)
 
         # FIX: IMPLEMENT VERSION THAT DIRECTLY COMPUTES THE LUCE RATIO
         # Cross-entropy of v1 and v2
@@ -1207,7 +1216,7 @@ class Distance(ObjectiveFunction):
         else:
             assert False, '{} not a recognized metric in {}'.format(self.metric, self.__class__.__name__)
 
-        if self.normalize and self.metric not in {MAX_ABS_DIFF, CORRELATION}:
+        if self.normalize and self.metric not in {MAX_ABS_DIFF, CORRELATION, COSINE, COSINE_SIMILARITY}:
             if self.metric == ENERGY:
                 result /= len(v1) ** 2.0
             else:

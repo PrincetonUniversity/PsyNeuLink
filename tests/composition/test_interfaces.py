@@ -472,25 +472,27 @@ class TestConnectCompositionsViaCIMS:
         # level_2 output = 2.0 * (1.0 + 2.0 + 14.0) = 34.0
         np.testing.assert_allclose(level_2.get_output_values(level_2), [[34.0]])
 
-    def test_warning_on_custom_cim_ports(self):
+    def test_error_on_custom_cim_ports(self):
 
         comp = Composition()
         mech = ProcessingMechanism()
         comp.add_node(mech)
-        warning_text = ('You are attempting to add custom ports to a CIM, which can result in unpredictable behavior '
-                        'and is therefore recommended against. If suitable, you should instead add ports to the '
-                       r'mechanism\(s\) that project to or are projected to from the CIM.')
-        with pytest.warns(UserWarning, match=warning_text):
-            # KDM 7/22/20: previously was OutputPort, but that produces
-            # an invalid CIM state that cannot be executed, and will
-            # throw an error due to new _update_default_variable call
+
+        # NOTE: Adding ports to CIM from command line is currenlty disallowed
+        # warning_msg = ('You are attempting to add custom ports to a CIM, which can result in unpredictable behavior '
+        #                 'and is therefore recommended against. If suitable, you should instead add ports to the '
+        #                r'mechanism\(s\) that project to or are projected to from the CIM.')
+        error_msg = ('Adding ports to a CompositionInterfaceMechanism is not supported at this time; '
+                     'these are handled automatically when a Composition is created.')
+        with pytest.raises(CompositionError) as error_text:
             comp.input_CIM.add_ports(InputPort())
+        assert error_msg in str(error_text.value)
 
-        with pytest.warns(None) as w:
-            comp._analyze_graph()
-            comp.run({mech: [[1]]})
-
-        assert len(w) == 0
+        # with pytest.warns(None) as w:
+        #     comp._analyze_graph()
+        #     comp.run({mech: [[1]]})
+        #
+        # assert len(w) == 0
 
     def test_user_added_ports(self):
 
@@ -500,18 +502,27 @@ class TestConnectCompositionsViaCIMS:
         # instantiate custom input and output ports
         inp = InputPort(size=2)
         out = OutputPort(size=2)
-        # add custom input and output ports to CIM
-        comp.input_CIM.add_ports([inp, out])
-        # verify the ports have been added to the user_added_ports set
-        # and that no extra ports were added
-        assert inp in comp.input_CIM.user_added_ports['input_ports']
-        assert len(comp.input_CIM.user_added_ports['input_ports']) == 1
-        assert out in comp.input_CIM.user_added_ports['output_ports']
-        assert len(comp.input_CIM.user_added_ports['output_ports']) == 1
-        comp.input_CIM.remove_ports([inp, out])
-        # verify that call to remove ports succesfully removed the ports from user_added_ports
-        assert len(comp.input_CIM.user_added_ports['input_ports']) == 0
-        assert len(comp.input_CIM.user_added_ports['output_ports']) == 0
+
+        # NOTE: Adding ports to CIM from command line is currenlty disallowed
+        # # add custom input and output ports to CIM
+        # comp.input_CIM.add_ports([inp, out])
+        # # verify the ports have been added to the user_added_ports set
+        # # and that no extra ports were added
+        # assert inp in comp.input_CIM.user_added_ports['input_ports']
+        # assert len(comp.input_CIM.user_added_ports['input_ports']) == 1
+        # assert out in comp.input_CIM.user_added_ports['output_ports']
+        # assert len(comp.input_CIM.user_added_ports['output_ports']) == 1
+        # comp.input_CIM.remove_ports([inp, out])
+        # # verify that call to remove ports succesfully removed the ports from user_added_ports
+        # assert len(comp.input_CIM.user_added_ports['input_ports']) == 0
+        # assert len(comp.input_CIM.user_added_ports['output_ports']) == 0
+
+        error_msg = ('Adding ports to a CompositionInterfaceMechanism is not supported at this time; '
+                     'these are handled automatically when a Composition is created.')
+        with pytest.raises(CompositionError) as error_text:
+            comp.input_CIM.add_ports([inp, out])
+        assert error_msg in str(error_text.value)
+
 
     def test_parameter_CIM_port_order(self) -> object:
         # Note:  CIM_port order is also tested in TestNodes and test_simplified_necker_cube()
@@ -555,12 +566,15 @@ class TestConnectCompositionsViaCIMS:
         self, parameter_CIM_routing_composition
     ):
         ia, ib, cm, icomp, ocomp = parameter_CIM_routing_composition
-        warning_msg = f"A MappingProjection has been created from a ControlSignal of 'control_mechanism' " \
-                      f"-- specified in 'pathway' arg for add_linear_procesing_pathway method of 'ocomp' -- " \
-                      f"to another Mechanism in that pathway.  " \
-                      f"If this is not the intended behavior, add 'control_mechanism' separately to 'ocomp'."
-        with pytest.warns(UserWarning, match=warning_msg):
-            ocomp.add_linear_processing_pathway([cm, icomp])
+        # warning_msg = f"A MappingProjection has been created from a ControlSignal of 'control_mechanism' " \
+        #               f"-- specified in 'pathway' arg for add_linear_processing_pathway method of 'ocomp' -- " \
+        #               f"to another Mechanism in that pathway.  " \
+        #               f"If this is not the intended behavior, add 'control_mechanism' separately to 'ocomp'."
+        # with pytest.warns(UserWarning, match=warning_msg):
+        ocomp.add_linear_processing_pathway([cm, icomp])
+            # ocomp.add_linear_processing_pathway([icomp])
+            # ocomp.add_node(cm)
+            # ocomp.show_graph(show_cim=True, show_node_structure=True)
         ocomp._analyze_graph()
         input_nodes = ocomp.get_nodes_by_role(NodeRole.INPUT)
         assert cm in input_nodes
@@ -572,13 +586,12 @@ class TestConnectCompositionsViaCIMS:
                 icomp: [[2], [2], [2]],
             }
         )
-        # linear combination of cm output and run inputs to icomp
-        # results in effective input of 2+2=4, then this is multiplied
-        # by the controlled slope of ib (2), resulting in 8
-        np.testing.assert_array_almost_equal(ocomp.results, [[[8]], [[8]], [[8]]])
+        # Input of 2's multiplied by the controlled slope of ib (2)
+        #   (since control_mechanism executes before ib) results in 4's
+        np.testing.assert_array_almost_equal(ocomp.results, [[[4]], [[4]], [[4]]])
         assert len(ib.mod_afferents) == 1
-        # Verify that MappingProjection from cm to icomp (for which warning was elicited above) is in place
-        assert cm.control_signals[0].efferents[0].receiver.owner == icomp.input_CIM
+        assert len(cm.control_signals[0].efferents) == 1
+        assert cm.control_signals[0].efferents[0].receiver.owner == icomp.parameter_CIM
         assert ib.mod_afferents[0].sender == icomp.parameter_CIM.output_port
         assert icomp.parameter_CIM_ports[ib.parameter_ports['slope']][0].path_afferents[0].sender == cm.output_port
         assert cm in ocomp.graph_processing.dependency_dict[icomp]

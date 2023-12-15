@@ -49,7 +49,8 @@ from psyneulink.core.globals.keywords import \
     INCREMENT, INITIALIZER, INPUT_PORTS, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, \
     INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LEAKY_COMPETING_INTEGRATOR_FUNCTION, \
     MULTIPLICATIVE_PARAM, NOISE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_PORTS, PRODUCT, \
-    RATE, REST, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE, THRESHOLD, VARIABLE, MODEL_SPEC_ID_MDF_VARIABLE
+    RATE, REST, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE, THRESHOLD, VARIABLE, MODEL_SPEC_ID_MDF_VARIABLE, \
+    PREVIOUS_VALUE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import ValidParamSpecType, all_within_range, \
@@ -382,17 +383,14 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
 
         return builder
 
-    def _gen_llvm_load_param(self, ctx, builder, params, index, param, *,
-                             state=None):
-        param_p = pnlvm.helpers.get_param_ptr(builder, self, params, param)
-        if param == NOISE and isinstance(param_p.type.pointee, pnlvm.ir.LiteralStructType):
+    def _gen_llvm_load_param(self, ctx, builder, params, index, param, *, state=None):
+        param_p = ctx.get_param_or_state_ptr(builder, self, param, param_struct_ptr=params, state_struct_ptr=state)
+        if param == NOISE and isinstance(param_p, tuple):
             # This is a noise function so call it to get value
-            assert state is not None
-            state_p = pnlvm.helpers.get_state_ptr(builder, self, state, NOISE)
             noise_f = ctx.import_llvm_function(self.parameters.noise.get())
             noise_in = builder.alloca(noise_f.args[2].type.pointee)
             noise_out = builder.alloca(noise_f.args[3].type.pointee)
-            builder.call(noise_f, [param_p, state_p, noise_in, noise_out])
+            builder.call(noise_f, [param_p[0], param_p[1], noise_in, noise_out])
             value_p = noise_out
 
         elif isinstance(param_p.type.pointee, pnlvm.ir.ArrayType) and param_p.type.pointee.count > 1:
@@ -672,11 +670,11 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
     def _gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
         rate = self._gen_llvm_load_param(ctx, builder, params, index, RATE)
         increment = self._gen_llvm_load_param(ctx, builder, params, index, INCREMENT)
-        noise = self._gen_llvm_load_param(ctx, builder, params, index, NOISE,
-                                          state=state)
+        noise = self._gen_llvm_load_param(ctx, builder, params, index, NOISE, state=state)
 
-        # Get the only context member -- previous value
-        prev_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_value")
+        # Get the only state member; previous value
+        prev_ptr = ctx.get_param_or_state_ptr(builder, self, PREVIOUS_VALUE, state_struct_ptr=state)
+
         # Get rid of 2d array. When part of a Mechanism the input,
         # (and output, and context) are 2d arrays.
         prev_ptr = pnlvm.helpers.unwrap_2d_array(builder, prev_ptr)
@@ -899,11 +897,11 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
     def _gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
         rate = self._gen_llvm_load_param(ctx, builder, params, index, RATE)
         offset = self._gen_llvm_load_param(ctx, builder, params, index, OFFSET)
-        noise = self._gen_llvm_load_param(ctx, builder, params, index, NOISE,
-                                          state=state)
+        noise = self._gen_llvm_load_param(ctx, builder, params, index, NOISE, state=state)
 
-        # Get the only context member -- previous value
-        prev_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_value")
+        # Get the only state member; previous value
+        prev_ptr = ctx.get_param_or_state_ptr(builder, self, PREVIOUS_VALUE, state_struct_ptr=state)
+
         # Get rid of 2d array. When part of a Mechanism the input,
         # (and output, and context) are 2d arrays.
         prev_ptr = pnlvm.helpers.unwrap_2d_array(builder, prev_ptr)
@@ -1164,11 +1162,11 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
     def _gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
         rate = self._gen_llvm_load_param(ctx, builder, params, index, RATE)
         offset = self._gen_llvm_load_param(ctx, builder, params, index, OFFSET)
-        noise = self._gen_llvm_load_param(ctx, builder, params, index, NOISE,
-                                          state=state)
+        noise = self._gen_llvm_load_param(ctx, builder, params, index, NOISE, state=state)
 
-        # Get the only context member -- previous value
-        prev_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_value")
+        # Get the only state member; previous value
+        prev_ptr = ctx.get_param_or_state_ptr(builder, self, PREVIOUS_VALUE, state_struct_ptr=state)
+
         # Get rid of 2d array. When part of a Mechanism the input,
         # (and output, and context) are 2d arrays.
         prev_ptr = pnlvm.helpers.unwrap_2d_array(builder, prev_ptr)
@@ -2558,8 +2556,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
     def _gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
         # Get parameter pointers
         rate = self._gen_llvm_load_param(ctx, builder, params, index, RATE)
-        noise = self._gen_llvm_load_param(ctx, builder, params, index, NOISE,
-                                          state=state)
+        noise = self._gen_llvm_load_param(ctx, builder, params, index, NOISE, state=state)
         offset = self._gen_llvm_load_param(ctx, builder, params, index, OFFSET)
         threshold = self._gen_llvm_load_param(ctx, builder, params, index, THRESHOLD)
         time_step_size = self._gen_llvm_load_param(ctx, builder, params, index, TIME_STEP_SIZE)
@@ -2571,8 +2568,8 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         rand_val = builder.load(rand_val_ptr)
 
         # Get state pointers
-        prev_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_value")
-        prev_time_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_time")
+        prev_ptr = ctx.get_param_or_state_ptr(builder, self, PREVIOUS_VALUE, state_struct_ptr=state)
+        prev_time_ptr = ctx.get_param_or_state_ptr(builder, self, "previous_time", state_struct_ptr=state)
 
         # value = previous_value + rate * variable * time_step_size \
         #       + np.sqrt(time_step_size * noise) * random_state.normal()
@@ -3173,7 +3170,9 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         previous_value = self.parameters.previous_value._get(context)
 
         try:
-            drift = np.full(dimension - 1, variable)
+            variable = variable.flatten()
+            drift = variable if len(variable) == dimension - 1 else np.full(dimension - 1, variable)
+
         except ValueError:
             owner_str = f"'of '{self.owner.name}" if self.owner else ""
             raise FunctionError(f"Length of 'variable' for {self.name}{owner_str} ({len(variable)}) must be "
@@ -3199,68 +3198,6 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         self.parameters.previous_value._set(value, context)
 
         return angle_function(value)
-
-    # def _gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
-    #     # Get parameter pointers
-    #     rate = self._gen_llvm_load_param(ctx, builder, params, index, RATE)
-    #     noise = self._gen_llvm_load_param(ctx, builder, params, index, NOISE,
-    #                                       state=state)
-    #     offset = self._gen_llvm_load_param(ctx, builder, params, index, OFFSET)
-    #     threshold = self._gen_llvm_load_param(ctx, builder, params, index, THRESHOLD)
-    #     time_step_size = self._gen_llvm_load_param(ctx, builder, params, index, TIME_STEP_SIZE)
-    #
-    #     random_state = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
-    #     rand_val_ptr = builder.alloca(ctx.float_ty)
-    #     rand_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_normal")
-    #     builder.call(rand_f, [random_state, rand_val_ptr])
-    #     rand_val = builder.load(rand_val_ptr)
-    #
-    #     if isinstance(rate.type, pnlvm.ir.ArrayType):
-    #         assert len(rate.type) == 1
-    #         rate = builder.extract_value(rate, 0)
-    #
-    #     # Get state pointers
-    #     prev_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_value")
-    #     prev_time_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_time")
-    #
-    #     # value = previous_value + rate * variable * time_step_size \
-    #     #       + np.sqrt(time_step_size * noise) * random_state.normal()
-    #     prev_val_ptr = builder.gep(prev_ptr, [ctx.int32_ty(0), index])
-    #     prev_val = builder.load(prev_val_ptr)
-    #     val = builder.load(builder.gep(vi, [ctx.int32_ty(0), index]))
-    #     if isinstance(val.type, pnlvm.ir.ArrayType):
-    #         assert len(val.type) == 1
-    #         val = builder.extract_value(val, 0)
-    #     val = builder.fmul(val, rate)
-    #     val = builder.fmul(val, time_step_size)
-    #     val = builder.fadd(val, prev_val)
-    #
-    #     factor = builder.fmul(noise, time_step_size)
-    #     sqrt_f = ctx.get_builtin("sqrt", [ctx.float_ty])
-    #     factor = builder.call(sqrt_f, [factor])
-    #
-    #     factor = builder.fmul(rand_val, factor)
-    #
-    #     val = builder.fadd(val, factor)
-    #
-    #     val = builder.fadd(val, offset)
-    #     neg_threshold = pnlvm.helpers.fneg(builder, threshold)
-    #     val = pnlvm.helpers.fclamp(builder, val, neg_threshold, threshold)
-    #
-    #     # Store value result
-    #     data_vo_ptr = builder.gep(vo, [ctx.int32_ty(0),
-    #                                    ctx.int32_ty(0), index])
-    #     builder.store(val, data_vo_ptr)
-    #     builder.store(val, prev_val_ptr)
-    #
-    #     # Update timestep
-    #     prev_time_ptr = builder.gep(prev_time_ptr, [ctx.int32_ty(0), index])
-    #     prev_time = builder.load(prev_time_ptr)
-    #     curr_time = builder.fadd(prev_time, time_step_size)
-    #     builder.store(curr_time, prev_time_ptr)
-    #
-    #     time_vo_ptr = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(1), index])
-    #     builder.store(curr_time, time_vo_ptr)
 
     def reset(self, previous_value=None, previous_time=None, context=None):
         return super().reset(
@@ -3910,8 +3847,9 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         offset = self._gen_llvm_load_param(ctx, builder, params, index, OFFSET)
         time_step = self._gen_llvm_load_param(ctx, builder, params, index, TIME_STEP_SIZE)
 
-        # Get the only context member -- previous value
-        prev_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_value")
+        # Get the only state member; previous value
+        prev_ptr = ctx.get_param_or_state_ptr(builder, self, PREVIOUS_VALUE, state_struct_ptr=state)
+
         # Get rid of 2d array. When part of a Mechanism the input,
         # (and output, and context) are 2d arrays.
         prev_ptr = pnlvm.helpers.unwrap_2d_array(builder, prev_ptr)
@@ -4942,21 +4880,23 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
 
         # Get state pointers
         def _get_state_ptr(x):
-            ptr = pnlvm.helpers.get_state_ptr(builder, self, state, x)
+            ptr = ctx.get_param_or_state_ptr(builder, self, x, state_struct_ptr=state)
             return pnlvm.helpers.unwrap_2d_array(builder, ptr)
+
         prev = {s: _get_state_ptr(s) for s in self.llvm_state_ids}
 
         # Output locations
         def _get_out_ptr(i):
             ptr = builder.gep(arg_out, [zero_i32, ctx.int32_ty(i)])
             return pnlvm.helpers.unwrap_2d_array(builder, ptr)
+
         out = {l: _get_out_ptr(i) for i, l in enumerate(('v', 'w', 'time'))}
 
         # Load parameters
-        def _get_param_val(x):
-            ptr = pnlvm.helpers.get_param_ptr(builder, self, params, x)
+        def _load_param(x):
+            ptr = ctx.get_param_or_state_ptr(builder, self, x, param_struct_ptr=params)
             return pnlvm.helpers.load_extract_scalar_array_one(builder, ptr)
-        param_vals = {p: _get_param_val(p) for p in self.llvm_param_ids}
+        param_vals = {p: _load_param(p) for p in self.llvm_param_ids}
 
         inner_args = {"ctx": ctx, "var_ptr": arg_in, "param_vals": param_vals,
                       "out_v": out['v'], "out_w": out['w'],

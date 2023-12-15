@@ -556,7 +556,7 @@ any specifications in the Mechanism's `input_ports <Mechanism_Base.input_ports>`
 associated with an instantiated OutputPort at the time the Mechanism is executed are ignored.
 
 The `PathwayProjections <PathwayProjection>` (e.g., `MappingProjections <MappingProjection>`) it receives are listed
-in its `path_afferents <Port.path_afferents>` attribute.  If the Mechanism is an `ORIGIN` Mechanism of a
+in its `path_afferents <Port_Base.path_afferents>` attribute.  If the Mechanism is an `ORIGIN` Mechanism of a
 `Composition`, this includes a Projection from the Composition's `input_CIM <Composition.input_CIM>`.  Any
 `ControlProjections <ControlProjection>` or `GatingProjections <GatingProjection>` it receives are listed in its
 `mod_afferents <Port.mod_afferents>` attribute.
@@ -998,7 +998,7 @@ or its `name <Port_Base.name>` as the key, and a dictionary containing parameter
        and `num_executions <Component_Num_Executions>` attributes will be incremented (since the OutputPorts --
        Components of the Mechanism -- executed).
 
-     - As expected, specifying `value <Port_Base.value>` supercedes any specification of `variable
+     - As expected, specifying `value <Port_Base.value>` supersedes any specification of `variable
        <Port_Base.variable>` or of the parameters of its `function <Port_Base.function>`.
 
 COMMENT:
@@ -1018,7 +1018,7 @@ as the key, and a dictionary containing parameter specifications as its value.
    .. note::
      If the `value <Projection_Base.value>` of a Projection is specified as a runtime parameter, then it will not be
      executed (see `Lazy Evaluation <Component_Lazy_Updating>`); accordingly, specifying `value <Port_Base.value>`
-     supercedes any specification of `variable <Port_Base.variable>` or of the parameters of its `function
+     supersedes any specification of `variable <Port_Base.variable>` or of the parameters of its `function
      <Projection_Base.function>.`
 
 COMMENT:
@@ -1412,20 +1412,20 @@ class Mechanism_Base(Mechanism):
 
     projections : ContentAddressableList
         a list of all of the Mechanism's `Projections <Projection>`, composed from the
-        `path_afferents <Port.path_afferents>` of all of its `input_ports <Mechanism_Base.input_ports>`,
+        `path_afferents <Port_Base.path_afferents>` of all of its `input_ports <Mechanism_Base.input_ports>`,
         the `mod_afferents` of all of its `input_ports <Mechanism_Base.input_ports>`,
         `parameter_ports <Mechanism)Base.parameter_ports>`, and `output_ports <Mechanism_Base.output_ports>`,
-        and the `efferents <Port.efferents>` of all of its `output_ports <Mechanism_Base.output_ports>`.
+        and the `efferents <Port_Base.efferents>` of all of its `output_ports <Mechanism_Base.output_ports>`.
 
     afferents : ContentAddressableList
         a list of all of the Mechanism's afferent `Projections <Projection>`, composed from the
-        `path_afferents <Port.path_afferents>` of all of its `input_ports <Mechanism_Base.input_ports>`,
+        `path_afferents <Port_Base.path_afferents>` of all of its `input_ports <Mechanism_Base.input_ports>`,
         and the `mod_afferents` of all of its `input_ports <Mechanism_Base.input_ports>`,
         `parameter_ports <Mechanism)Base.parameter_ports>`, and `output_ports <Mechanism_Base.output_ports>`.,
 
     path_afferents : ContentAddressableList
         a list of all of the Mechanism's afferent `PathwayProjections <PathwayProjection>`, composed from the
-        `path_afferents <Port.path_afferents>` attributes of all of its `input_ports
+        `path_afferents <Port_Base.path_afferents>` attributes of all of its `input_ports
         <Mechanism_Base.input_ports>`.
 
     mod_afferents : ContentAddressableList
@@ -1435,7 +1435,7 @@ class Mechanism_Base(Mechanism):
 
     efferents : ContentAddressableList
         a list of all of the Mechanism's efferent `Projections <Projection>`, composed from the `efferents
-        <Port.efferents>` attributes of all of its `output_ports <Mechanism_Base.output_ports>`.
+        <Port_Base.efferents>` attributes of all of its `output_ports <Mechanism_Base.output_ports>`.
 
     senders : ContentAddressableList
         a list of all of the Mechanisms that send `Projections <Projection>` to the Mechanism (i.e., the senders of
@@ -2646,8 +2646,8 @@ class Mechanism_Base(Mechanism):
                 else:
                     input_port.parameters.value._set(value, context)
             else:
-                raise MechanismError(f"Length ({len(input_item)}) of input ({input_item}) does not match "
-                                     f"required length ({input_port.default_input_shape.size}) for input "
+                raise MechanismError(f"Shape ({input_item.shape}) of input ({input_item}) does not match "
+                                     f"required shape ({input_port.default_input_shape.shape}) for input "
                                      f"to {InputPort.__name__} {repr(input_port.name)} of {self.name}.")
 
         # Return values of input_ports for use as variable of Mechanism
@@ -2834,6 +2834,8 @@ class Mechanism_Base(Mechanism):
         return port_param_dicts
 
     def _get_param_ids(self):
+        if len(self._parameter_ports) == 0:
+            return super()._get_param_ids()
         # FIXME: parameter ports should be part of generated params
         return ["_parameter_ports"] + super()._get_param_ids()
 
@@ -2841,11 +2843,15 @@ class Mechanism_Base(Mechanism):
         ports_params = (ctx.get_param_struct_type(s) for s in self._parameter_ports)
         ports_param_struct = pnlvm.ir.LiteralStructType(ports_params)
         mech_param_struct = ctx.get_param_struct_type(super())
+        if len(self._parameter_ports) == 0:
+            return mech_param_struct
 
         return pnlvm.ir.LiteralStructType((ports_param_struct,
                                            *mech_param_struct))
 
     def _get_state_ids(self):
+        if len(self._parameter_ports) == 0:
+            return super()._get_state_ids()
         # FIXME: parameter ports should be part of generated state
         return ["_parameter_ports"] + super()._get_state_ids()
 
@@ -2853,6 +2859,8 @@ class Mechanism_Base(Mechanism):
         ports_state = (ctx.get_state_struct_type(s) for s in self._parameter_ports)
         ports_state_struct = pnlvm.ir.LiteralStructType(ports_state)
         mech_state_struct = ctx.get_state_struct_type(super())
+        if len(self._parameter_ports) == 0:
+            return mech_state_struct
 
         return pnlvm.ir.LiteralStructType((ports_state_struct,
                                            *mech_state_struct))
@@ -2884,12 +2892,16 @@ class Mechanism_Base(Mechanism):
     def _get_param_initializer(self, context):
         port_param_init = tuple(s._get_param_initializer(context) for s in self._parameter_ports)
         mech_param_init = super()._get_param_initializer(context)
+        if len(self._parameter_ports) == 0:
+            return mech_param_init
 
         return (port_param_init, *mech_param_init)
 
     def _get_state_initializer(self, context):
         port_state_init = tuple(s._get_state_initializer(context) for s in self._parameter_ports)
         mech_state_init = super()._get_state_initializer(context)
+        if len(self._parameter_ports) == 0:
+            return mech_state_init
 
         return (port_state_init, *mech_state_init)
 
@@ -2897,8 +2909,7 @@ class Mechanism_Base(Mechanism):
                         get_output_ptr, get_input_data_ptr,
                         mech_params, mech_state, mech_input):
         group_ports = getattr(self, group)
-        ports_param = pnlvm.helpers.get_param_ptr(builder, self, mech_params, group)
-        ports_state = pnlvm.helpers.get_state_ptr(builder, self, mech_state, group, None)
+        ports_param, ports_state = ctx.get_param_or_state_ptr(builder, self, group, param_struct_ptr=mech_params, state_struct_ptr=mech_state, history=None)
 
         mod_afferents = self.mod_afferents
         for i, port in enumerate(ports):
@@ -3006,13 +3017,11 @@ class Mechanism_Base(Mechanism):
             builder = pnlvm.helpers.memcpy(builder, params_out, params_in)
 
         def _get_output_ptr(b, i):
-            ptr = pnlvm.helpers.get_param_ptr(b, obj, params_out,
-                                              param_ports[i].source.name)
+            ptr = ctx.get_param_or_state_ptr(b, obj, param_ports[i].source, param_struct_ptr=params_out)
             return b, ptr
 
         def _get_input_data_ptr(b, i):
-            ptr = pnlvm.helpers.get_param_ptr(b, obj, params_in,
-                                              param_ports[i].source.name)
+            ptr = ctx.get_param_or_state_ptr(b, obj, param_ports[i].source, param_struct_ptr=params_in)
             return b, ptr
 
         builder = self._gen_llvm_ports(ctx, builder, param_ports, "_parameter_ports",
@@ -3098,10 +3107,9 @@ class Mechanism_Base(Mechanism):
                                       m_val, ip_output, *, tags:frozenset):
 
         # Default mechanism runs only the main function
-        f_base_params = pnlvm.helpers.get_param_ptr(builder, self, m_base_params, "function")
+        f_base_params, f_state = ctx.get_param_or_state_ptr(builder, self, "function", param_struct_ptr=m_base_params, state_struct_ptr=m_state)
         f_params, builder = self._gen_llvm_param_ports_for_obj(
                 self.function, f_base_params, ctx, builder, m_base_params, m_state, m_in)
-        f_state = pnlvm.helpers.get_state_ptr(builder, self, m_state, "function")
 
         return self._gen_llvm_invoke_function(ctx, builder, self.function,
                                               f_params, f_state, ip_output,
@@ -3114,7 +3122,7 @@ class Mechanism_Base(Mechanism):
                                                         m_base_params, m_state, arg_in)
 
         # This will move history items around to make space for a new entry
-        mech_val_ptr = pnlvm.helpers.get_state_space(builder, self, m_state, "value")
+        mech_val_ptr = ctx.get_state_space(builder, self, m_state, VALUE)
 
         value, builder = self._gen_llvm_mechanism_functions(ctx, builder, m_base_params,
                                                             m_params, m_state, arg_in,
@@ -3131,7 +3139,7 @@ class Mechanism_Base(Mechanism):
                           pnlvm.PNLCompilerWarning)
 
         # Update  num_executions parameter
-        num_executions_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state, "num_executions")
+        num_executions_ptr = ctx.get_param_or_state_ptr(builder, self, "num_executions", state_struct_ptr=m_state)
         for scale in TimeScale:
             assert scale.value < len(num_executions_ptr.type.pointee)
             num_exec_time_ptr = builder.gep(num_executions_ptr,
@@ -3146,8 +3154,7 @@ class Mechanism_Base(Mechanism):
 
         # is_finished should be checked after output ports ran
         is_finished_f = ctx.import_llvm_function(self, tags=tags.union({"is_finished"}))
-        is_finished_cond = builder.call(is_finished_f, [m_base_params, m_state, arg_in,
-                                                        arg_out])
+        is_finished_cond = builder.call(is_finished_f, [m_base_params, m_state, arg_in, arg_out])
         return builder, is_finished_cond
 
     def _gen_llvm_function_reset(self, ctx, builder, m_base_params, m_state, m_arg_in, m_arg_out, *, tags:frozenset):
@@ -3157,13 +3164,11 @@ class Mechanism_Base(Mechanism):
         reinit_in = builder.alloca(reinit_func.args[2].type.pointee, name="reinit_in")
         reinit_out = builder.alloca(reinit_func.args[3].type.pointee, name="reinit_out")
 
-        reinit_base_params = pnlvm.helpers.get_param_ptr(builder, self, m_base_params, "function")
+        reinit_base_params, reinit_state = ctx.get_param_or_state_ptr(builder, self, "function", param_struct_ptr=m_base_params, state_struct_ptr=m_state)
         reinit_params, builder = self._gen_llvm_param_ports_for_obj(
                 self.function, reinit_base_params, ctx, builder, m_base_params, m_state, m_arg_in)
-        reinit_state = pnlvm.helpers.get_state_ptr(builder, self, m_state, "function")
 
-        builder.call(reinit_func, [reinit_params, reinit_state, reinit_in,
-                                   reinit_out])
+        builder.call(reinit_func, [reinit_params, reinit_state, reinit_in, reinit_out])
 
         return builder
 
@@ -3201,20 +3206,17 @@ class Mechanism_Base(Mechanism):
         """
 
         assert "reset" not in tags
+        assert "is_finished" not in tags
 
         params, builder = self._gen_llvm_param_ports_for_obj(
                 self, base_params, ctx, builder, base_params, state, arg_in)
 
-        is_finished_flag_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
-                                                           "is_finished_flag")
-        is_finished_count_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
-                                                            "num_executions_before_finished")
-        is_finished_max_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                                          "max_executions_before_finished")
+        is_finished_flag_ptr = ctx.get_param_or_state_ptr(builder, self, "is_finished_flag", state_struct_ptr=state)
+        is_finished_count_ptr = ctx.get_param_or_state_ptr(builder, self, "num_executions_before_finished", state_struct_ptr=state)
+        is_finished_max_ptr = ctx.get_param_or_state_ptr(builder, self, "max_executions_before_finished", param_struct_ptr=params)
 
         # Reset the flag and counter
         # FIXME: Use int for flag
-        # FIXME: continue previous computation if not finished
         current_flag = builder.load(is_finished_flag_ptr)
         was_finished = builder.fcmp_ordered("==", current_flag, current_flag.type(1))
         with builder.if_then(was_finished):
@@ -3256,8 +3258,7 @@ class Mechanism_Base(Mechanism):
                                            is_finished_max)
 
         # Check if execute until finished mode is enabled
-        exec_until_fin_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                                         "execute_until_finished")
+        exec_until_fin_ptr = ctx.get_param_or_state_ptr(builder, self, "execute_until_finished", param_struct_ptr=params)
         exec_until_fin = builder.load(exec_until_fin_ptr)
         exec_until_off = builder.fcmp_ordered("==", exec_until_fin, exec_until_fin.type(0))
 
@@ -3267,8 +3268,7 @@ class Mechanism_Base(Mechanism):
 
         # Check if in integrator mode
         if hasattr(self, "integrator_mode"):
-            int_mode_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                                       "integrator_mode")
+            int_mode_ptr = ctx.get_param_or_state_ptr(builder, self, "integrator_mode", param_struct_ptr=params)
             int_mode = builder.load(int_mode_ptr)
             int_mode_off = builder.fcmp_ordered("==", int_mode, int_mode.type(0))
             iter_end = builder.or_(iter_end, int_mode_off)

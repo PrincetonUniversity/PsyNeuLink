@@ -34,6 +34,10 @@ when the CombinationFunction is used as the function of an InputPort or OutputPo
 import numbers
 
 import numpy as np
+try:
+    import torch
+except ImportError:
+    torch = None
 from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Literal
@@ -46,7 +50,7 @@ from psyneulink.core.globals.keywords import \
     PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT, REARRANGE_FUNCTION, REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, \
     PREFERENCE_SET_NAME
 from psyneulink.core.globals.utilities import convert_to_np_array, is_numeric, np_array_less_than_2d, ValidParamSpecType
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, ValidPrefSet, PreferenceEntry, PreferenceLevel
@@ -81,7 +85,7 @@ class CombinationFunction(Function_Base):
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
     def _gen_llvm_load_param(self, ctx, builder, params, param_name, index, default):
-        param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, param_name)
+        param_ptr = ctx.get_param_or_state_ptr(builder, self, param_name, param_struct_ptr=params)
         param_type = param_ptr.type.pointee
         if isinstance(param_type, pnlvm.ir.LiteralStructType):
             assert len(param_type) == 0
@@ -118,6 +122,9 @@ class Concatenate(CombinationFunction):  # -------------------------------------
 
     `function <Concatenate.function>` returns a 1d array with length equal to the sum of the lengths of the items
     in `variable <Concatenate.variable>`.
+
+    `derivative <Concatenate.derivative>` returns `scale <Concatenate.slope>`.
+
 
     Arguments
     ---------
@@ -288,6 +295,31 @@ class Concatenate(CombinationFunction):  # -------------------------------------
 
         return self.convert_output_type(result)
 
+    @handle_external_context()
+    def derivative(self, input=None, output=None, covariates=None, context=None):
+        """
+        derivative(input)
+
+        Derivative of `function <Concatenate._function>` at **input**.
+
+        Arguments
+        ---------
+
+        input : number
+            value of the input to the function at which derivative is to be taken.
+
+        covariates : 2d np.array : default class_defaults.variable[1:]
+            the input(s) to the Concatenate function other than the one for which the derivative is being
+            computed;  these are ignored and are accepted for consistency with other functions.
+
+        Returns
+        -------
+
+        Scale of function :  number or array
+
+        """
+
+        return self._get_current_parameter_value(SCALE, context)
 
 class Rearrange(CombinationFunction):  # ------------------------------------------------------------------------
     """
@@ -1228,13 +1260,18 @@ class LinearCombination(
                     old_length = 1
                 else:
                     old_length = len(variable[i - 1])
-                if isinstance(variable[i], numbers.Number):
+                if variable[i] is None:
+                    owner_str = f"'{self.owner.name}' " if self.owner else ''
+                    raise FunctionError(f"One of the elements of variable for {self.__class__.__name__} function "
+                                        f"of {owner_str}is None; variable: {variable}.")
+                elif isinstance(variable[i], numbers.Number):
                     new_length = 1
                 else:
                     new_length = len(variable[i])
                 if old_length != new_length:
-                    raise FunctionError("Length of all arrays in variable for {0} must be the same; variable: {1}".
-                                        format(self.__class__.__name__, variable))
+                    owner_str = f"'{self.owner.name }' " if self.owner else ''
+                    raise FunctionError(f"Length of all arrays in variable for {self.__class__.__name__} function "
+                                        f"of {owner_str}must be the same; variable: {variable}.")
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -1425,6 +1462,40 @@ class LinearCombination(
 
         return self.convert_output_type(result)
 
+    @handle_external_context()
+    def derivative(self, input=None, output=None, covariates=None, context=None):
+        """
+        derivative(input)
+
+        Derivative of `function <LinearCombination._function>` at **input**.
+
+        Arguments
+        ---------
+
+        output : 1d np.array : default class_defaults.variable[0]
+            value of the input to the Linear transform at which derivative is to be taken.
+           a single numeric array or multiple arrays being combined, and at which derivative is to be taken.
+
+           .. technical_note::
+              output arg is used for consistency with other derivatives used by BackPropagation, and is ignored.
+
+        covariates : 2d np.array : default class_defaults.variable[1:]
+            the input(s) to the LinearCombination function other than the one for which the derivative is being
+            computed;  these are used to calculate the Jacobian of the LinearCombination function.
+
+        Returns
+        -------
+
+        Scale :  number (if input is 1d) or array (if input is 2d)
+
+        """
+        if covariates is None or self.operation == SUM:
+            jacobian = self._get_current_parameter_value(SCALE, context)
+        else:
+            jacobian = np.prod(np.vstack(covariates), axis=0)  * self._get_current_parameter_value(SCALE, context)
+
+        return np.eye(len(output)) * jacobian
+
     def _get_input_struct_type(self, ctx):
         # FIXME: Workaround a special case of simple array.
         #        It should just pass through to modifiers, which matches what
@@ -1496,6 +1567,25 @@ class LinearCombination(
 
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
         builder.store(val, ptro)
+
+    def _gen_pytorch_fct(self, device, context=None):
+        weights = self._get_pytorch_fct_param_value('weights', device, context)
+        if weights is not None:
+            weights = torch.tensor(weights, device=device).double()
+        if self.operation == SUM:
+            if weights is not None:
+                return lambda x: torch.sum(torch.stack(x) * weights, 0)
+            else:
+                return lambda x: torch.sum(torch.stack(x), 0)
+        elif self.operation == PRODUCT:
+            if weights is not None:
+                return lambda x: torch.prod(torch.stack(x) * weights, 0)
+            else:
+                return lambda x: torch.prod(torch.stack(x), 0)
+        else:
+            from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
+            raise AutodiffCompositionError(f"The 'operation' parameter of {function.componentName} is not supported "
+                                           f"by AutodiffComposition; use 'SUM' or 'PRODUCT' if possible.")
 
 
 class CombineMeans(CombinationFunction):  # ------------------------------------------------------------------------

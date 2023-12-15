@@ -525,8 +525,8 @@ class TestCompositionRuntimeParams:
             np.array([[987]]),    # Trial 1: CM TARGET InputPort value    (999 - 2*3*2)
             np.array([[909]]),    # Trial 2: CM TARGET InputPort value + CM Inputports SAMPLE fct scale: (999 - 2*3*15)
             np.array([[-10]]),    # Trial 3: Both CM MappingProjections value, scale default (20*1.5 - 20*2)
-            np.array([[-54]]),    # Trial 4: Same as 3, but superceded by value for SAMPLE Projection (20*1.5 - 42*2)
-            np.array([[150]]),    # Trial 5: Same as 4, but superceded by value for TARGET Projection ((156*1.5-42*2))
+            np.array([[-54]]),    # Trial 4: Same as 3, but superseded by value for SAMPLE Projection (20*1.5 - 42*2)
+            np.array([[150]]),    # Trial 5: Same as 4, but superseded by value for TARGET Projection ((156*1.5-42*2))
         ])
 
     def test_params_for_modulatory_projection_in_parameter_port(self):

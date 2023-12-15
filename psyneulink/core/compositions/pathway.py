@@ -96,11 +96,35 @@ one specified in the Pathway `template's <Pathway_Template>` `name <Pathway.name
 *Pathway Specification*
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Pathway are specified as a list, each element of which is either a `Node <Composition_Nodes>` or set of Nodes,
-possibly intercolated with specifications of `Projections <Projection>` between them.  `Nodes <Composition_Nodes>`
-can be either a `Mechanism`, a `Composition`, or a tuple (Mechanism or Composition, `NodeRoles <NodeRole>`) that can
-be used to assign `required_roles` to the Nodes in the Composition (see `Composition_Nodes` for additional details).
-The Node(s) specified in each entry of the list project to the Node(s) specified in the next entry.
+A Pathway is specified as a list, each element of which is either a `Node <Composition_Nodes>` or set of Nodes,
+possibly intercolated with specifications of `Projections <Projection>` between them.  The specification of each
+is described in the two sections below.
+
+.. _Pathway_Specification_Nodes:
+
+*Node Specifications*
+^^^^^^^^^^^^^^^^^^^^^
+
+`Nodes <Composition_Nodes>` can be either a `Mechanism`, a `Composition`, or a tuple (Mechanism or Composition,
+`NodeRoles <NodeRole>`) that can be used to assign `required_roles` to the Nodes in the Composition (see
+`Composition_Nodes` for additional details). The Node(s) specified in each entry of the list project to the
+Node(s) specified in the next entry, with the exception of a `ControlMechanism`.
+
+**ControlMechanisms**. Any ControlMechanisms specified in a Pathway are automatically added as `Nodes
+<Composition_Nodes>` of the Composition. If a ControlMechanism follows another Node that is not a ControlMechanism,
+then a `MappingProjection` is created to it from that Node (as described `below <Pathway_Projections>`). However, *no*
+MappingProjections are created from the ControlMechanism to any that *follow* it in the Pathway specification.  This is
+because the efferent Projections of a ControlMechanism can only be `ModulatoryProjection`\\s (see `
+<ControlMechanism_ControlSignals>` for specification), and not MappingProjections.  Instead, if the ControlMechanism is
+the first Node in the Pathway specification, the Node that follows it is treated as an `INPUT` Node of the Composition
+(unless it receives a Projection from another Pathway);  if it is the last Node in the Pathway specification, the Node
+that precedes it is treated as an `OUTPUT` Node of the Composition (unless it sends a Projection to another Pathway);
+otherwise, a MappingProjection is created from the `primary OutputPort <OutputPort_Primary>` of the Node immediately
+preceding the ControlMechanism to the `primary InputPort <InputPort_Primary>` of the Node immediately following it.
+
+**Use of sets**.  A set of Nodes can be used to specify multiple Nodes, all of which should receive Projections
+from the same Node(s) in the preceding entry in the Pathway specification and send Projections to the same Node(s) in
+the following entry (see `below <Pathway_Projections>` for additional details).
 
     .. _Pathway_Projection_List_Note:
 
@@ -112,8 +136,8 @@ The Node(s) specified in each entry of the list project to the Node(s) specified
 
 .. _Pathway_Specification_Projections:
 
-*Pathway Projection Specifications*
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*Projection Specifications*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Where no Projections are specified between entries in the list, default Projections are created (using a
 `FULL_CONNECTIVITY_MATRIX`, or the Pathway's `default_projection <Pathway.default_projection_matrix>` if specified)

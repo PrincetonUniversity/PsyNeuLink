@@ -101,12 +101,14 @@ CONTENTS
 import collections
 import copy
 import inspect
+import itertools
 import logging
 import psyneulink
 import re
 import time
 import warnings
 import weakref
+import toposort
 import types
 import typing
 from beartype import beartype
@@ -420,6 +422,7 @@ def is_distance_metric(s):
 DistanceMetricLiteral = Literal[
     'max_abs_diff',
     'difference',
+    'dot_product',
     'normed_L0_similarity',
     'euclidean',
     'angle',
@@ -2059,3 +2062,30 @@ def get_function_sig_default_value(
         return sig.parameters[parameter].default
     except KeyError:
         return inspect._empty
+
+
+def toposort_key(
+    dependency_dict: typing.Dict[typing.Hashable, typing.Iterable[typing.Any]]
+) -> typing.Callable[[typing.Any], int]:
+    """
+    Creates a key function for python sorting that causes all items in
+    **dependency_dict** to be sorted after their dependencies
+
+    Args:
+        dependency_dict (typing.Dict[typing.Hashable, typing.Iterable[typing.Any]]):
+        a dictionary where values are the dependencies of keys
+
+    Returns:
+        typing.Callable[[typing.Any], int]: a key function for python
+        sorting
+    """
+    topo_ordering = list(toposort.toposort(dependency_dict))
+    topo_ordering = list(itertools.chain.from_iterable(topo_ordering))
+
+    def _generated_toposort_key(obj):
+        try:
+            return topo_ordering.index(obj)
+        except ValueError:
+            return -1
+
+    return _generated_toposort_key

@@ -1747,10 +1747,8 @@ class GridSearch(OptimizationFunction):
         # remove the attribute for 'samples_ptr'.
         samples_ptr.attributes.remove('nonnull')
 
-        random_state = pnlvm.helpers.get_state_ptr(builder, self, state,
-                                                   self.parameters.random_state.name)
-        select_random_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                                        self.parameters.select_randomly_from_optimal_values.name)
+        random_state = ctx.get_random_state_ptr(builder, self, state, params)
+        select_random_ptr = ctx.get_param_or_state_ptr(builder, self, self.parameters.select_randomly_from_optimal_values, param_struct_ptr=params)
 
         select_random_val = builder.load(select_random_ptr)
         select_random = builder.fcmp_ordered("!=", select_random_val,
@@ -1807,8 +1805,7 @@ class GridSearch(OptimizationFunction):
             gen_samples = builder.icmp_signed("==", samples_ptr, samples_ptr.type(None))
             with builder.if_else(gen_samples) as (b_true, b_false):
                 with b_true:
-                    search_space = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                                               self.parameters.search_space.name)
+                    search_space = ctx.get_param_or_state_ptr(builder, self, self.parameters.search_space.name, param_struct_ptr=params)
                     pnlvm.helpers.create_sample(b, min_sample_ptr, search_space, min_idx)
                 with b_false:
                     sample_ptr = builder.gep(samples_ptr, [min_idx])
@@ -1863,10 +1860,8 @@ class GridSearch(OptimizationFunction):
             extra_args = [comp_input, comp_args[2], num_inputs]
         else:
             obj_func = ctx.import_llvm_function(self.objective_function)
-            obj_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
-                                                        "objective_function")
-            obj_param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                                        "objective_function")
+            obj_param_ptr, obj_state_ptr = ctx.get_param_or_state_ptr(builder, self, "objective_function",
+                                                                      param_struct_ptr=params, state_struct_ptr=state)
             extra_args = []
 
         sample_t = obj_func.args[2].type.pointee
@@ -1876,8 +1871,7 @@ class GridSearch(OptimizationFunction):
         sample_ptr = builder.alloca(sample_t)
         value_ptr = builder.alloca(value_t)
 
-        search_space_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                                       self.parameters.search_space.name)
+        search_space_ptr = ctx.get_param_or_state_ptr(builder, self, self.parameters.search_space, param_struct_ptr=params)
 
         opt_count_ptr = builder.alloca(ctx.float_ty)
         builder.store(opt_count_ptr.type.pointee(0), opt_count_ptr)

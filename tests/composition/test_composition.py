@@ -1,6 +1,7 @@
 import collections
 import functools
 import logging
+import warnings
 from timeit import timeit
 
 import numpy as np
@@ -33,13 +34,17 @@ from psyneulink.core.compositions.composition import Composition, NodeRole, Comp
 from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, ALLOCATION_SAMPLES, BEFORE, DEFAULT, DISABLE, INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS, \
-    LEARNED_PROJECTIONS, RANDOM_CONNECTIVITY_MATRIX, CONTROL, \
-    NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OUTPUT_MECHANISM, OVERRIDE, SLOPE, TARGET_MECHANISM, VARIANCE
-from psyneulink.core.scheduling.condition import AtTimeStep, AtTrial, Never, TimeInterval
+    (ADDITIVE, ALLOCATION_SAMPLES, BEFORE, DEFAULT, DEFAULT_INPUT, DEFAULT_VARIABLE, DISABLE,
+     INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS,
+    LEARNED_PROJECTIONS, RANDOM_CONNECTIVITY_MATRIX, CONTROL,
+    NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OUTPUT_MECHANISM, OVERRIDE,
+     PARAMS, SLOPE, TARGET_MECHANISM,
+    VARIABLE, VARIANCE)
+from psyneulink.core.scheduling.condition import AtTimeStep, AtTrial, Never, TimeInterval, graph_structure_conditions_available, gsc_unavailable_message
 from psyneulink.core.scheduling.condition import EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import TimeScale
+from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism import LCControlMechanism
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
@@ -335,23 +340,43 @@ class TestAddProjection:
             comp.add_projection("projection")
         assert "Invalid projection" in str(error_text.value)
 
-    # KAM commented out this test 7/24/18 because it does not work. Should it work?
-    # Or should the add_projection method of Composition only consider composition nodes as senders and receivers
+    def test_add_proj_parallel_projections_from_sender_to_receiver(self):
+        comp = Composition()
+        A = TransferMechanism(name='composition-pytests-A',
+                              default_variable=[[0.], [0.]])
+        B = TransferMechanism(name='composition-pytests-B',
+                              default_variable=[[0.], [0.]])
+        comp.add_node(A)
+        comp.add_node(B)
+        comp.add_projection(sender=A.output_ports[0], receiver=B.input_ports[0])
+        comp.add_projection(sender=A.output_ports[1], receiver=B.input_ports[1])
+        comp.run(num_trials=2, inputs={A: [[1.0], [2.0]]})
+        np.testing.assert_allclose(comp.results, [[[1.], [2.]], [[1.], [2.]]])
 
-    # def test_add_proj_states_as_sender_and_receiver(self):
-    #     comp = Composition()
-    #     A = TransferMechanism(name='composition-pytests-A',
-    #                           default_variable=[[0.], [0.]])
-    #     B = TransferMechanism(name='composition-pytests-B',
-    #                           function=Linear(slope=2.0),
-    #                           default_variable=[[0.], [0.]])
-    #     comp.add_node(A)
-    #     comp.add_node(B)
-    #
-    #     comp.add_projection(sender=A.output_ports[0], receiver=B.input_ports[0])
-    #     comp.add_projection(sender=A.output_ports[1], receiver=B.input_ports[1])
-    #
-    #     print(comp.run(inputs={A: [[1.0], [2.0]]}))
+    def test_add_proj_with_no_receiver_specified(self):
+        comp = Composition()
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B',
+                              function=Linear(slope=2.0))
+        comp.add_node(A)
+        comp.add_node(B)
+        error_msg = "'Deferred Init MappingProjection' is missing a receiver specification.  " \
+                    "For a Projection to be added to a Composition, a receiver must be specified " \
+                    "either on the Projection or in the call to Composition.add_projection()."
+        with pytest.raises(CompositionError) as error_text:
+            comp.add_projection(sender=A)
+        assert error_msg in str(error_text.value)
+
+    def test_add_proj_for_receiver_not_in_comp(self):
+        comp = Composition()
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B')
+        comp.add_node(A)
+        error_msg = "'composition-pytests-B', specified as receiver of ''Deferred Init MappingProjection'' from " \
+                    "'composition-pytests-A', is not in 'Composition-0' or any Compositions nested within it."
+        with pytest.raises(CompositionError) as error_text:
+            comp.add_projection(sender=A, receiver=B)
+        assert error_msg in str(error_text.value)
 
     def test_add_proj_weights_only(self):
         comp = Composition()
@@ -518,11 +543,7 @@ class TestAddProjection:
                    'is incompatible with the positions of these Components in \'Composition-0\'.' == str(error.value)
 
     @pytest.mark.stress
-    @pytest.mark.parametrize(
-        'count', [
-            1000,
-        ]
-    )
+    @pytest.mark.parametrize('count', [1000,])
     def test_timing_stress(self, count):
         t = timeit('comp.add_projection(A, MappingProjection(), B)',
                    setup="""
@@ -575,9 +596,18 @@ comp.add_node(B)
         comp2 = Composition(name='COMP_2', pathways=[C, D])
         with pytest.warns(UserWarning) as warning:
             ocomp = Composition(name='OUTER COMPOSITION',pathways=[comp1, comp2])
+            icomp.verbosePref = PreferenceEntry(True, PreferenceLevel.INSTANCE)
+            comp1.verbosePref = PreferenceEntry(True, PreferenceLevel.INSTANCE)
+            comp2.verbosePref = PreferenceEntry(True, PreferenceLevel.INSTANCE)
             ocomp.run()
-        assert repr(warning[0].message.args[0]) == '"\\nThe following Projections were specified but are not being used by Nodes in \'iCOMP\':\\n\\tMappingProjection from A[OutputPort-0] to C[InputPort-0] (from \'A\' to \'C\')."'
-        assert repr(warning[1].message.args[0]) == '"\\nThe following Projections were specified but are not being used by Nodes in \'COMP_2\':\\n\\tMappingProjection from A[OutputPort-0] to C[InputPort-0] (to \'C\' from \'A\')."'
+        error_msg_1 = ('"\\nThe following Projections were specified but are not being used by Nodes '
+                       'in \'iCOMP\':\\n\\tMappingProjection from A[OutputPort-0] to C[InputPort-0] '
+                       '(from \'A\' to \'C\')."')
+        error_msg_2 = ('"\\nThe following Projections were specified but are not being used by Nodes '
+                       'in \'COMP_2\':\\n\\tMappingProjection from A[OutputPort-0] to C[InputPort-0] '
+                       '(to \'C\' from \'A\')."')
+        assert error_msg_1 in repr(warning[0].message.args[0])
+        assert error_msg_2 in repr(warning[1].message.args[0])
 
 
 @pytest.mark.pathways
@@ -792,7 +822,7 @@ class TestCompositionPathwayArgsAndAdditionMethods:
         c = Composition()
 
         regexp = "LearningFunction found in 'pathway' arg for "\
-                 "add_linear_procesing_pathway method .*"\
+                 "add_linear_processing_pathway method .*"\
                 r"Reinforcement'>; it will be ignored"
         with pytest.warns(UserWarning, match=regexp):
             c.add_linear_processing_pathway(pathway=p)
@@ -825,7 +855,7 @@ class TestCompositionPathwayArgsAndAdditionMethods:
         with pytest.raises(pnl.CompositionError) as error_text:
             c.add_linear_learning_pathway(pathway=p, learning_function=BackPropagation)
         assert ("Specification in 'pathway' arg for " in str(error_text.value) and
-                "add_linear_procesing_pathway method" in str(error_text.value) and
+                "add_linear_processing_pathway method" in str(error_text.value) and
                 "contains a tuple that specifies a different LearningFunction (Reinforcement)" in str(error_text.value)
                 and "than the one specified in its 'learning_function' arg (BackPropagation)" in str(error_text.value))
 
@@ -1108,7 +1138,7 @@ class TestCompositionPathwayArgsAndAdditionMethods:
         with pytest.raises(pnl.CompositionError) as error_text:
             C.add_linear_processing_pathway(pathway=[A,C])
         assert f"Attempt to add Composition as a Node to itself in 'pathway' arg for " \
-               f"add_linear_procesing_pathway method of '{C.name}'." in str(error_text.value)
+               f"add_linear_processing_pathway method of '{C.name}'." in str(error_text.value)
 
     def test_for_add_learning_pathway_recursion_error(self):
         A = TransferMechanism()
@@ -1116,7 +1146,7 @@ class TestCompositionPathwayArgsAndAdditionMethods:
         with pytest.raises(pnl.CompositionError) as error_text:
             C.add_backpropagation_learning_pathway(pathway=[A,C])
         assert f"Attempt to add Composition as a Node to itself in 'pathway' arg for " \
-               f"add_backpropagation_learning_pathway method of {C.name}." in str(error_text.value)
+               f"add_backpropagation_learning_pathway method of '{C.name}'." in str(error_text.value)
 
 
 @pytest.mark.pathways
@@ -1129,8 +1159,9 @@ class TestDuplicatePathwayWarnings:
         comp = Composition()
         comp.add_linear_processing_pathway(pathway=[A,P,B])
 
-        regexp = "Pathway specified in 'pathway' arg for add_linear_procesing_pathway method .*"\
-                f"already exists in {comp.name}"
+        regexp = f"Pathway specified in 'pathway' arg for add_linear_processing_pathway method of '{comp.name}' " \
+                 f"is identical to one already in '{comp.name}': .*; the latter will be used."
+
         with pytest.warns(UserWarning, match=regexp):
             comp.add_linear_processing_pathway(pathway=[A,P,B])
 
@@ -1141,23 +1172,32 @@ class TestDuplicatePathwayWarnings:
         comp = Composition()
         comp.add_linear_processing_pathway(pathway=[A,B,C])
 
-        regexp = "Pathway specified in 'pathway' arg for add_linear_procesing_pathway method .*"\
-                f"has same Nodes in same order as one already in {comp.name}"
+        regexp = f"Pathway specified in 'pathway' arg for add_linear_processing_pathway method of '{comp.name}' " \
+                 f"has same Nodes in same order as one already in '{comp.name}':.*; the latter will be used."
+
         with pytest.warns(UserWarning, match=regexp):
             comp.add_linear_processing_pathway(pathway=[A,B,C])
 
-    def test_add_processing_pathway_subset_duplicate_warning(self):
+    @pytest.mark.parametrize('verbosity', [True, False], ids=['verbose', 'silent'])
+    def test_add_processing_pathway_subset_duplicate_warning(self, verbosity):
         A = TransferMechanism()
         B = TransferMechanism()
         C = TransferMechanism()
         comp = Composition()
+
         comp.add_linear_processing_pathway(pathway=[A,B,C])
 
-        regexp = "Pathway specified in 'pathway' arg for add_linear_procesing_pathway method .*"\
-                 f"has same Nodes in same order as one already in {comp.name}"
-        with pytest.warns(UserWarning, match=regexp):
-            comp.add_linear_processing_pathway(pathway=[A,B])
-            assert True
+        # Test for warning if verbosePref is set to True
+        if verbosity:
+            regexp = f"Pathway specified in 'pathway' arg for add_linear_processing_pathway method of '{comp.name}' " \
+                     f"has a subset of nodes in a Pathway already in '{comp.name}': Pathway-0; the latter will be used."
+            with pytest.warns(UserWarning, match=regexp):
+                comp.verbosePref = PreferenceEntry(True, PreferenceLevel.INSTANCE)
+                comp.add_linear_processing_pathway(pathway=[A,B])
+        else:
+            # Test for suppression of warning if verbosePref not set
+            with pytest.warns(None):
+                comp.add_linear_processing_pathway(pathway=[A,B])
 
     def test_add_backpropagation_pathway_exact_duplicate_warning(self):
         A = TransferMechanism()
@@ -1166,8 +1206,8 @@ class TestDuplicatePathwayWarnings:
         comp = Composition()
         comp.add_backpropagation_learning_pathway(pathway=[A,P,B])
 
-        regexp = "Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method .*"\
-                f"already exists in {comp.name}"
+        regexp = f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method of " \
+                 f"'{comp.name}' is identical to one already in '{comp.name}': 'Pathway-0'; the latter will be used."
         with pytest.warns(UserWarning, match=regexp):
             comp.add_backpropagation_learning_pathway(pathway=[A,P,B])
 
@@ -1178,22 +1218,31 @@ class TestDuplicatePathwayWarnings:
         comp = Composition()
         comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
 
-        regexp = "Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method .*"\
-               f"has same Nodes in same order as one already in {comp.name}"
+        regexp = f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method of '{comp.name}' " \
+                 f"has same Nodes in same order as one already in '{comp.name}':.*; the latter will be used."
+
         with pytest.warns(UserWarning, match=regexp):
             comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
 
-    def test_add_backpropagation_pathway_contiguous_subset_duplicate_warning(self):
+    @pytest.mark.parametrize('verbosity', [True, False], ids=['verbose', 'silent'])
+    def test_add_backpropagation_pathway_contiguous_subset_duplicate_warning(self, verbosity):
         A = TransferMechanism()
         B = TransferMechanism()
         C = TransferMechanism()
         comp = Composition()
         comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
 
-        regexp = "Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method .*"\
-                 f"has same Nodes in same order as one already in {comp.name}"
-        with pytest.warns(UserWarning, match=regexp):
-            comp.add_backpropagation_learning_pathway(pathway=[A,B])
+        # Test for warning if verbosePref is set to True
+        if verbosity:
+            regexp = f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method of '{comp.name}'" \
+                     f" has a subset of nodes in a Pathway already in '{comp.name}':.*; the latter will be used."
+            with pytest.warns(UserWarning, match=regexp):
+                comp.verbosePref = PreferenceEntry(True, PreferenceLevel.INSTANCE)
+                comp.add_backpropagation_learning_pathway(pathway=[A,B])
+        else:
+            # Test for suppression of warning if verbosePref is not set
+            with pytest.warns(None):
+                comp.add_backpropagation_learning_pathway(pathway=[A,B])
 
     def test_add_processing_pathway_non_contiguous_subset_is_OK(self):
         A = TransferMechanism()
@@ -2092,11 +2141,11 @@ class TestGraph:
 class TestGraphCycles:
 
     def test_recurrent_transfer_mechanisms(self):
-        R1 = RecurrentTransferMechanism(auto=1.0)
-        R2 = RecurrentTransferMechanism(auto=1.0,
-                                        function=Linear(slope=2.0))
+        R1 = RecurrentTransferMechanism(auto=1.0, name='R1')
+        R2 = RecurrentTransferMechanism(auto=1.0, function=Linear(slope=2.0), name='R2')
         comp = Composition()
         comp.add_linear_processing_pathway(pathway=[R1, R2])
+        assert comp.get_nodes_by_role(NodeRole.OUTPUT) == [R2]
 
         # Trial 0:
         # input to R1 = 1.0, output from R1 = 1.0
@@ -2110,9 +2159,9 @@ class TestGraphCycles:
         # input to R1 = 1.0 + 2.0, output from R1 = 3.0
         # input to R2 = 3.0 + 8.0, output from R2 = 22.0
 
-
         output = comp.run(inputs={R1: [1.0]}, num_trials=3)
         np.testing.assert_allclose(output, [np.array([22.])])
+
 
 @pytest.mark.pathways
 class TestExecutionOrder:
@@ -2559,6 +2608,68 @@ class TestExecutionOrder:
         for i in range(len(comp.scheduler.consideration_queue)):
             assert comp.scheduler.consideration_queue[i] == expected_consideration_sets[i]
 
+    @pytest.mark.parametrize('position', range(4), ids=range(4))
+    # @pytest.mark.parametrize('position',d [1])
+    def test_order_of_ctl_mech_in_pathway(self, position):
+        ia = TransferMechanism(name='ia')
+        ib = TransferMechanism(name='ib')
+        ctl_mech = ControlMechanism(name='control_mechanism',
+                              control_signals=ControlSignal(projections=[(SLOPE, ib)]))
+        if position < 3:
+            pathway = [ia, ib]
+            pathway.insert(position, ctl_mech)
+        else:
+            pathway = [ia, ctl_mech, MappingProjection(sender=ia, receiver=ib), ib]
+
+        # [ctl_mech, ia, ib]
+        if position == 0:
+            warning_msg = ("'ia' may be an INPUT Node, since it followed a ControlMechanism "
+                           "('control_mechanism') that was the first Node in 'pathway' arg "
+                           "for add_linear_processing_pathway method of 'comp'.")
+            with pytest.warns(UserWarning) as warning:
+                comp = Composition(pathway,name='comp')
+            assert warning_msg in str(warning[0].message)
+            # Since ia follows ctl_mech, it doesn't get any MappingProjection
+            #  so it should be considered an INPUT Node along with ctl_mech
+            assert {ia,ctl_mech} == set(comp.get_nodes_by_role(NodeRole.INPUT))
+            assert ia.path_afferents[0].sender.owner == comp.input_CIM
+            assert comp.get_roles_by_node(ib) == {NodeRole.OUTPUT, NodeRole.TERMINAL}
+
+        # [ia, ctl_mech, ib]
+        elif position == 1:
+            warning_msg_1 = ("'ib' will not receive a MappingProjection from 'control_mechanism' (the entry that "
+                             "follows it in 'pathway' arg for add_linear_processing_pathway method of 'comp') "
+                             "since that is a  ControlMechanism, however it will still be dependent on it for "
+                             "(i.e. follow it in) execution.")
+            warning_msg_2 = ("'A MappingProjection has been created from 'ia' to ib' since the latter "
+                           "followed a ControlMechanism ('control_mechanism') in 'pathway' arg for "
+                           "add_linear_processing_pathway method of 'comp'.")
+            with pytest.warns(UserWarning) as warning:
+                comp = Composition(pathway,name='comp',
+                                   prefs={pnl.VERBOSE_PREF: PreferenceEntry(True, PreferenceLevel.INSTANCE)})
+            assert warning_msg_1 in str(warning[2].message)
+            assert warning_msg_2 in str(warning[3].message)
+            assert comp.get_roles_by_node(ia) == {NodeRole.INPUT, NodeRole.ORIGIN}
+            # A MappingProjection should have been added from ia to ib
+            assert ib.input_port.path_afferents[0].sender.owner == ia
+            assert ib not in comp.get_nodes_by_role(NodeRole.INPUT)
+            assert comp.get_roles_by_node(ib) == {NodeRole.OUTPUT, NodeRole.TERMINAL}
+            assert comp.get_roles_by_node(ctl_mech) == {NodeRole.INTERNAL}
+
+        # [ia, ib, clt_mech]
+        elif position == 2:
+            comp = Composition(pathway,name='comp')
+            assert ia in comp.get_nodes_by_role(NodeRole.INPUT)
+            assert ib in comp.get_nodes_by_role(NodeRole.OUTPUT)
+            assert [ctl_mech] == comp.get_nodes_by_role(NodeRole.TERMINAL)
+
+        # [ia, clt_mech, MappingProjection(ia,ib), ib]
+        elif position == 3:
+            comp = Composition(pathway,name='comp')
+            assert ia in comp.get_nodes_by_role(NodeRole.INPUT)
+            assert ib in comp.get_nodes_by_role(NodeRole.OUTPUT)
+            assert [ib] == comp.get_nodes_by_role(NodeRole.TERMINAL)
+
     def test_multiple_projections_along_pathway(self):
 
         comp = Composition()
@@ -2811,6 +2922,7 @@ class TestExecutionOrder:
         assert comp.scheduler.execution_list[comp.default_execution_id] == [{A, B}]
         assert comp.scheduler.execution_timestamps[comp.default_execution_id][0].absolute == 1 * pnl._unit_registry.ms
 
+
 @pytest.mark.pathways
 class TestGetMechanismsByRole:
 
@@ -2838,6 +2950,7 @@ class TestGetMechanismsByRole:
     def test_nonexistent_role(self):
         comp = Composition()
         comp.get_nodes_by_role(None)
+
 
 
 class TestInputPortSpecifications:
@@ -2985,6 +3098,7 @@ class TestInputPortSpecifications:
         np.testing.assert_allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
 
 
+
 class TestRunInputSpecifications:
 
     # def test_2_mechanisms_default_input_1(self):
@@ -3017,8 +3131,8 @@ class TestRunInputSpecifications:
          'are not INPUT Nodes of that Composition (nor InputPorts of them): \'OB\'."'
          ),
         ('non_input_port',
-         '"The following items specified in the \'inputs\' arg of the run() method for \'Composition-1\' '
-         'that are not a Mechanism, Composition, or an InputPort of one: \'OA[OutputPort-0]\'."'
+         "The following items specified in the 'inputs' arg of the run() method for 'Composition-1' "
+         "that are not a Mechanism, Composition, or an InputPort of one: 'OA[OutputPort-0]'."
          ),
         ('nested_non_input_node',
          '"The following items specified in the \'inputs\' arg of the run() method for \'Composition-1\' '
@@ -3086,6 +3200,47 @@ class TestRunInputSpecifications:
         else:
             ocomp._analyze_graph()
             icomp.run(inputs={ia:[1]})
+
+    def test_input_shape_errors(self):
+        # Mechanism with single InputPort
+        mech = pnl.TransferMechanism(name='input', size=2)
+        comp = pnl.Composition(mech, name='comp')
+
+        with pytest.raises(CompositionError) as error_text:
+            comp.run(inputs={mech: [1, 2, 3]})
+        assert "is wrong length for a Mechanism with a single InputPort" in str(error_text.value)
+        with pytest.raises(CompositionError) as error_text:
+            comp.run(inputs={mech: [1, 2, 3]})
+        assert "is wrong length for a Mechanism with a single InputPort" in str(error_text.value)
+        with pytest.raises(CompositionError) as error_text:
+            comp.run(inputs={mech: [[1, 2], [3, 4, 5]]})
+        assert "doesn't match the shape of its InputPorts" in str(error_text.value)
+        with pytest.raises(RunError) as error_text:
+            comp.run(inputs={mech: [[[1, 2]], [[3, 4, 5]]]})
+        assert "is incompatible with the shape of its external input" in str(error_text.value)
+        with pytest.raises(CompositionError) as error_text:
+            comp.run(inputs={mech: [[[1, 2], [3, 4, 5]]]})
+        assert "is incorrect for Mechanism with a single InputPort" in str(error_text.value)
+
+        # Mechanism with two InputPorts
+        mech2 = pnl.TransferMechanism(name='input', size=(2,2))
+        comp = pnl.Composition(mech2, name='comp')
+
+        with pytest.raises(CompositionError) as error_text:
+            comp.run(inputs={mech2: [1, 2]})
+        assert "should be a 2d list since Mechanism has more than one InputPort" in str(error_text.value)
+        with pytest.raises(CompositionError) as error_text:
+            comp.run(inputs={mech2: [1, 2, 3]})
+        assert "should be a 2d list since Mechanism has more than one InputPort" in str(error_text.value)
+        with pytest.raises(CompositionError) as error_text:
+            comp.run(inputs={mech2: [[[1, 2]], [[3,4,5]]]})
+        assert "badly shaped for multiple InputPorts" in str(error_text.value)
+        with pytest.raises(CompositionError) as error_text:
+            comp.run(inputs={mech2: [[1, 2], [3, 4, 5], [4]]})
+        assert "doesn't match the shape of its InputPorts" in str(error_text.value)
+        with pytest.raises(CompositionError) as error_text:
+            comp.run(inputs={mech2: [[1, 2]]})
+        assert "doesn't match the shape of its InputPorts" in str(error_text.value)
 
     def test_some_inputs_not_specified(self):
         comp = Composition()
@@ -3323,11 +3478,17 @@ class TestRunInputSpecifications:
             }
 
         t_g = test_generator()
+        c.run(inputs=t_g)
 
         try:
             c.run(inputs=t_g)
         except Exception as e:
             assert isinstance(e, pnl.CompositionError)
+        #
+        # with pytest.raises(pnl.CompositionError) as error_text:
+        #     c.run(inputs=t_g)
+        # assert ('Problem with input ([array([[1]]), array([[2]])]) for TransferMechanism-0.'
+        #         in str(error_text.value))
 
 
 class TestRun:
@@ -3622,7 +3783,7 @@ class TestRun:
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([A, A_to_B, B, C, D, E, C_to_E])
 
-        assert ("The last item in \'pathway\' arg for add_linear_procesing_pathway method" in str(error_text.value)
+        assert ("The last item in \'pathway\' arg for add_linear_processing_pathway method" in str(error_text.value)
                 and "cannot be a Projection:" in str(error_text.value))
 
     def test_LPP_two_projections_in_a_row(self):
@@ -3634,7 +3795,7 @@ class TestRun:
         B_to_C = MappingProjection(sender=B, receiver=C)
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([A, B_to_C, A_to_B, B, C])
-        assert ("A Projection specified in \'pathway\' arg for add_linear_procesing_pathway" in str(error_text.value)
+        assert ("A Projection specified in \'pathway\' arg for add_linear_processing_pathway" in str(error_text.value)
                 and "is not between two Nodes:" in str(error_text.value))
 
     def test_LPP_start_with_projection(self):
@@ -3644,7 +3805,7 @@ class TestRun:
         B = TransferMechanism(name="composition-pytests-B", function=Linear(slope=2.0))
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([Nonsense_Projection, A, B])
-        assert ("First item in 'pathway' arg for add_linear_procesing_pathway method" in str(error_text.value)
+        assert ("First item in 'pathway' arg for add_linear_processing_pathway method" in str(error_text.value)
                 and "must be a Node (Mechanism or Composition)" in str(error_text.value))
 
     def test_LPP_wrong_component(self):
@@ -3656,7 +3817,7 @@ class TestRun:
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([A, Nonsense, B])
         assert ("Bad Projection specification in \'pathway\' arg " in str(error_text.value)
-                and "for add_linear_procesing_pathway method" in str(error_text.value)
+                and "for add_linear_processing_pathway method" in str(error_text.value)
                 and "Attempt to assign Projection" in str(error_text.value)
                 and "using InputPort" in str(error_text.value)
                 and "that is in deferred init" in str(error_text.value))
@@ -3731,7 +3892,6 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = benchmark(comp.run, inputs={A: [[1.0]]}, scheduler=sched, execution_mode=comp_mode)
         np.testing.assert_allclose(25, output)
-
 
     @pytest.mark.skip
     @pytest.mark.composition
@@ -3839,7 +3999,6 @@ class TestRun:
         output = benchmark(comp.run, inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
         np.testing.assert_allclose([[150], [200]], output)
 
-
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Merge composition scalar MIMO")
     def test_3_mechanisms_2_origins_1_terminal_mimo_parallel(self, benchmark, comp_mode):
@@ -3867,7 +4026,6 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = benchmark(comp.run, inputs=inputs_dict, scheduler=sched, execution_mode=comp_mode)
         np.testing.assert_allclose([[300], [350]], output)
-
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Merge composition scalar MIMO")
@@ -4041,13 +4199,17 @@ class TestRun:
         A = ProcessingMechanism()
         B = ProcessingMechanism(input_ports=['OCCUPIED', 'UNOCCUPIED'])
         comp = Composition([A,B])
-        warning_type = UserWarning
-        warning_msg = '"InputPort (\'UNOCCUPIED\') of \'ProcessingMechanism-1\' ' \
-                      'doesn\'t have any afferent Projections."'
-        with pytest.raises(TypeError): # Caused by error on B at construction (with only one InputPort "occupied")
-            with pytest.warns(warning_type) as warning:
-                comp.run()
-        assert repr(warning[0].message.args[0]) == warning_msg
+        # warning_type = UserWarning
+        # warning_msg = '"InputPort (\'UNOCCUPIED\') of \'ProcessingMechanism-1\' ' \
+        #               'doesn\'t have any afferent Projections."'
+        # with pytest.raises(TypeError): # Caused by error on B at construction (with only one InputPort "occupied")
+        #     with pytest.warns(warning_type) as warning:
+        #         comp.run()
+        # assert repr(warning[0].message.args[0]) == warning_msg
+        with pytest.raises(pnl.FunctionError) as error: # Caused by error on B at construction (with only one InputPort
+            comp.run()
+        assert "Item 1 of variable passed to Linear Function" in str(error.value)
+        assert "may be due to missing afferent projection to input_ports[1]" in str(error.value)
 
     def test_missing_efferent_at_run_time(self):
         A = ProcessingMechanism()
@@ -4061,6 +4223,22 @@ class TestRun:
             comp.run()
         assert repr(warning[0].message.args[0]) == warning_msg
 
+    def test_one_time_warning_for_run_with_no_inputs(self):
+        mech_1 = ProcessingMechanism()
+        mech_2 = ProcessingMechanism()
+        comp = Composition([mech_1,mech_2])
+
+        # Should get warning on first run
+        warning_msg = ('No inputs provided in call to Composition-0.run(). The following defaults will be used for '
+                       'each INPUT Node:{(ProcessingMechanism ProcessingMechanism-0): [[[0.0]]]}')
+        with pytest.warns(UserWarning) as warning:
+            comp.run()
+        assert warning_msg in warning[0].message.args[0]
+
+        # Should *NOT* get a warning on the second
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            comp.run()
 
 class TestCallBeforeAfterTimescale:
 
@@ -5099,7 +5277,7 @@ class TestNestedCompositions:
         assert result == [4500]
 
     @pytest.mark.control
-    @pytest.mark.parametrize('nesting', ("unnested", "nested"))
+    @pytest.mark.parametrize('nesting', ("unnested","nested"))
     def test_partially_overlapping_local_and_control_mech_control_specs_in_unnested_and_nested_comp(self, nesting):
         pnl.clear_registry()
         samples = np.arange(0.1, 1.01, 0.3)
@@ -5194,13 +5372,13 @@ class TestImportComposition:
 
         c = Composition(nodes=[i1,i2, o1,o2])
         c.import_composition(em,
-                             get_input_from={i1:em.key_input_nodes[0],
+                             get_input_from={i1:em.query_input_nodes[0],
                                              i2:em.value_input_nodes[0]},
                              send_output_to={em.retrieved_nodes[0]:o1,
                                              em.retrieved_nodes[1]:o2})
 
         assert all(node in c.nodes for node in em.nodes)
-        assert i1 in [proj.sender.owner for proj in em.key_input_nodes[0].path_afferents]
+        assert i1 in [proj.sender.owner for proj in em.query_input_nodes[0].path_afferents]
         assert i2 in [proj.sender.owner for proj in em.value_input_nodes[0].path_afferents]
         assert o1 in [proj.receiver.owner for proj in em.retrieved_nodes[0].efferents]
         assert o2 in [proj.receiver.owner for proj in em.retrieved_nodes[1].efferents]
@@ -5208,6 +5386,7 @@ class TestImportComposition:
         assert all(entry in c.required_node_roles for entry in em.required_node_roles)
 
         c.run(execution_mode=comp_mode)
+
 
 class TestOverloadedCompositions:
     def test_mechanism_different_inputs(self):
@@ -5960,26 +6139,26 @@ class TestInputSpecifications:
              [1],
              [0]])
 
-        in_to_hidden_matrix = np.random.rand(2,10)
+        input_to_hidden_matrix = np.random.rand(2,10)
         hidden_to_out_matrix = np.random.rand(10,1)
 
-        input_comp = pnl.TransferMechanism(name='input_comp',
+        input_comp = pnl.TransferMechanism(name='input',
                                     default_variable=np.zeros(2))
 
-        hidden_comp = pnl.TransferMechanism(name='hidden_comp',
+        hidden_comp = pnl.TransferMechanism(name='hidden',
                                     default_variable=np.zeros(10),
                                     function=pnl.Logistic())
 
-        output_comp = pnl.TransferMechanism(name='output_comp',
+        output_comp = pnl.TransferMechanism(name='output',
                                     default_variable=np.zeros(1),
                                     function=pnl.Logistic())
 
-        in_to_hidden_comp = pnl.MappingProjection(name='in_to_hidden_comp',
-                                    matrix=in_to_hidden_matrix.copy(),
+        input_to_hidden_comp = pnl.MappingProjection(name='input_to_hidden',
+                                    matrix=input_to_hidden_matrix.copy(),
                                     sender=input_comp,
                                     receiver=hidden_comp)
 
-        hidden_to_out_comp = pnl.MappingProjection(name='hidden_to_out_comp',
+        hidden_to_out_comp = pnl.MappingProjection(name='hidden_to_output',
                                     matrix=hidden_to_out_matrix.copy(),
                                     sender=hidden_comp,
                                     receiver=output_comp)
@@ -5987,7 +6166,7 @@ class TestInputSpecifications:
         xor_comp = pnl.Composition()
 
         backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
-                                                                            in_to_hidden_comp,
+                                                                            input_to_hidden_comp,
                                                                             hidden_comp,
                                                                             hidden_to_out_comp,
                                                                             output_comp],
@@ -6872,6 +7051,33 @@ class TestNodeRoles:
         assert set(comp.get_nodes_by_role(NodeRole.OUTPUT)) == {A,C}
         assert set(comp.get_nodes_by_role(NodeRole.SINGLETON)) == {A}
 
+    def test_BIAS(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B', input_ports=[A,
+                                                       'external',
+                                                       {NAME:'bias',
+                                                        VARIABLE:21,
+                                                        PARAMS: {DEFAULT_INPUT: DEFAULT_VARIABLE}}])
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D', input_ports=[{NAME:'bias',
+                                                        VARIABLE:33,
+                                                        PARAMS: {DEFAULT_INPUT: DEFAULT_VARIABLE}},
+                                                       'recurrent'])
+        E = ProcessingMechanism(name='E')
+        MappingProjection(E,D.input_ports[1])
+        MappingProjection(D.output_ports[1],E)
+        # # FIX: INCLUSION OF A BELOW BLOCKS B FROM RECIEVING EXTERNAL INPUT ON UNOCCUPIED INPUTPORT
+        # comp = Composition(pathways=[[A,B],[B,C],[D,E,D]], name='comp')
+        comp = Composition(pathways=[[B,C],[D,E,D]], name='comp')
+        comp._analyze_graph()
+        comp.run()
+        assert B.value[2] == [21]
+        assert D.value[0] == [33]
+        assert set(comp.get_nodes_by_role(NodeRole.INPUT)) == {B,D,E}
+        assert set(comp.get_nodes_by_role(NodeRole.BIAS)) == {B,D}
+        assert set(comp.get_nodes_by_role(NodeRole.OUTPUT)) == {C,D,E}
+
+
     def test_INTERNAL(self):
         comp = Composition(name='comp')
         A = ProcessingMechanism(name='A')
@@ -6883,15 +7089,19 @@ class TestNodeRoles:
 
     def test_input_labels_and_results_by_node_and_no_orphaning_of_nested_output_nodes(self):
         """
-        Test that nested Composition with two outputs, one of which Projects to a node in the outer Composition is,
-        by virtue of its other output, still assigned as an OUTPUT Node of the outer Composition
-        Also test get_input_format and get_results_by_nodes methods
+        Test get_input_format and get_results_by_nodes methods
+
+        Also test that  a nested Composition with two outputs, one of which projects to a another node in the outer
+        Composition is, by virtue of its other output (that projects only to the output_CIM of the outer Composition)
+        is still assigned as an OUTPUT Node of the outer Composition, and that that output that projects to the other
+        Node does *NOT* project to the output_CIM of the outer Composition (meaning it's value  is not included in
+        the output_values of the outer Composition)
         """
         input_labels_dict = {0:{'red':0, 'green':1}}
         output_labels_dict = {0:{'red':0, 'green':1}}
         A = ProcessingMechanism(name='A', input_labels=input_labels_dict)
         B = ProcessingMechanism(name='B')
-        C = ProcessingMechanism(name='C')
+        C = ProcessingMechanism(name='C', output_labels=output_labels_dict)
         icomp = Composition(pathways=[[A,B,C]], name='INNER COMP')
 
         X = ProcessingMechanism(name='X')
@@ -6903,9 +7113,9 @@ class TestNodeRoles:
         O = ProcessingMechanism(name='O', input_ports=[Z])
         ocomp = Composition(name='OUTER COMP', nodes=[O, mcomp,Q])
 
-        len(ocomp.output_values)==3
+        assert len(ocomp.output_values)==3
         result = ocomp.run(inputs={mcomp:[[0],[0]]})
-        assert len(result)==4
+        assert len(result)==3
 
         input_format = ocomp.get_input_format(form=pnl.TEXT)
         assert repr(input_format) == '\'{\\n\\tMIDDLE COMP: [[0.0],[0.0]],\\n\\tQ: [[0.0]]\\n}\''
@@ -6917,22 +7127,21 @@ class TestNodeRoles:
         assert input_format == "\nInputs to (nested) INPUT Nodes of OUTER COMP for 2 trials:\n\tMIDDLE COMP: \n\t\tX: [ [[0.0]], [[0.0]] ]\n\t\tINNER COMP: \n\t\t\tA: [ ['red'], ['green'] ]\n\tQ: [ ['red'], ['green'] \n\nFormat as follows for inputs to run():\n{\n\tMIDDLE COMP: [ [[0.0],[0.0]], [[0.0],[0.0]] ],\n\tQ: [ [[0.0]], [[0.0]] ]\n}"
 
         result = ocomp.run(inputs={mcomp:[[.2],['green']], Q:[4.6]})
-        assert result == [[0.2], [0.2], [1.],[4.6]]
+        assert result == [[0.2], [1.],[4.6]]
         results_by_node = ocomp.get_results_by_nodes()
         assert results_by_node[O] == [0.2]
-        assert results_by_node[Z] == [0.2]
         assert results_by_node[C] == [1.0]
         assert results_by_node[Q] == [4.6]
         results_by_node = ocomp.get_results_by_nodes(use_names=True)
-        assert repr(results_by_node) == '{\'O\': [0.2], \'Z\': [0.2], \'C\': [1.0], \'Q\': [4.6]}'
+        assert repr(results_by_node) == '{\'O\': [0.2], \'C\': [1.0], \'Q\': [4.6]}'
         results_by_node = ocomp.get_results_by_nodes(use_names=True, use_labels=True)
-        assert repr(results_by_node) == '{\'O\': [[0.2]], \'Z\': [\'red\'], \'C\': [[1.0]], \'Q\': [[4.6]]}'
-        results_by_node = ocomp.get_results_by_nodes(nodes=[Q, Z])
-        assert repr(results_by_node) == '{(ProcessingMechanism Z): [0.2], (ProcessingMechanism Q): [4.6]}'
+        assert repr(results_by_node) == '{\'O\': [[0.2]], \'C\': [\'red\'], \'Q\': [[4.6]]}'
+        results_by_node = ocomp.get_results_by_nodes(nodes=[Q, C])
+        assert repr(results_by_node) == '{(ProcessingMechanism C): [1.0], (ProcessingMechanism Q): [4.6]}'
         results_by_node = ocomp.get_results_by_nodes(nodes=Q, use_names=True)
         assert repr(results_by_node) == '{\'Q\': [4.6]}'
-        results_by_node = ocomp.get_results_by_nodes(nodes=Z, use_labels=True)
-        assert repr(results_by_node) == '{(ProcessingMechanism Z): [\'red\']}'
+        results_by_node = ocomp.get_results_by_nodes(nodes=C, use_labels=True)
+        assert repr(results_by_node) == '{(ProcessingMechanism C): [\'red\']}'
 
         label_not_in_dict_error_msg = 'Inappropriate use of \'purple\' as a stimulus for A in MIDDLE COMP: ' \
                                       'it is not a label in its input_labels_dict.'
@@ -7061,6 +7270,8 @@ class TestNodeRoles:
         assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER)) == {C}
         assert set(comp.get_nodes_by_role(NodeRole.INTERNAL)) == {B}
         assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER)) == {A}
+        result = comp.run(inputs={A:[3]})
+        assert result == [3]
 
     def test_branch(self):
         a = TransferMechanism(default_variable=[0, 0])
@@ -7164,20 +7375,6 @@ class TestNodeRoles:
         comp._analyze_graph()
         assert set(comp.get_nodes_by_role(NodeRole.CYCLE)) == {A,B,C}
         assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))
-        result = comp.run(inputs={A:[3]})
-        assert True
-
-    def test_three_node_cycle_with_FEEDBACK(self):
-        A = TransferMechanism()
-        B = TransferMechanism()
-        C = TransferMechanism()
-        comp = Composition(pathways=[A, B, C])
-        comp.add_projection(sender=C, receiver=A, feedback=True)
-        comp._analyze_graph()
-        assert not set(comp.get_nodes_by_role(NodeRole.CYCLE))
-        assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER)) == {C}
-        assert set(comp.get_nodes_by_role(NodeRole.INTERNAL)) == {B}
-        assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER)) == {A}
         result = comp.run(inputs={A:[3]})
         assert True
 
@@ -7316,22 +7513,55 @@ class TestNodeRoles:
         # However, ctl_mech_B might also be;  depends on where feedback was assigned?
         assert ctl_mech_A in set(comp.get_nodes_by_role(NodeRole.TERMINAL))
 
+    def test_span_two_control_mechanisms_in_row(self):
+        mech_first = ProcessingMechanism(name='mech_first')
+        mech_last = ProcessingMechanism(name='mech_last')
+        ctl_mech_A = ControlMechanism(monitor_for_control=mech_first,
+                                      control_signals=ControlSignal(modulates=(INTERCEPT,mech_first),
+                                                                    cost_options=CostFunctions.INTENSITY),
+                                      name='ctl-mech_A')
+        ctl_mech_B = ControlMechanism(monitor_for_control=mech_first,
+                                      control_signals=ControlSignal(modulates=ctl_mech_A.control_signals[0],
+                                                                    modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM),
+                                      name='ctl-mech_B')
+        # comp = Composition(pathways=[mech, (ctl_mech_A, NodeRole.OUTPUT), (ctl_mech_B, NodeRole.OUTPUT)])
+        comp = Composition(pathways=[mech_first, ctl_mech_A, ctl_mech_B, mech_last])
+        assert all(role in comp.get_roles_by_node(mech_first) for role in {NodeRole.ORIGIN, NodeRole.INPUT})
+        assert all(role in comp.get_roles_by_node(mech_last) for role in {NodeRole.TERMINAL, NodeRole.OUTPUT})
+        assert mech_last.input_port.path_afferents[0].sender.owner is mech_first
+        assert not any(ctl_mech in comp.get_nodes_by_role(NodeRole.OUTPUT) for ctl_mech in {ctl_mech_A, ctl_mech_B})
+
+    def test_two_control_mechanisms_in_a_row_not_output(self):
+        mech = ProcessingMechanism(name='my_mech')
+        ctl_mech_A = ControlMechanism(monitor_for_control=mech,
+                                      control_signals=ControlSignal(modulates=(INTERCEPT,mech),
+                                                                    cost_options=CostFunctions.INTENSITY),
+                                      name='ctl-mech_A')
+        ctl_mech_B = ControlMechanism(monitor_for_control=mech,
+                                      control_signals=ControlSignal(modulates=ctl_mech_A.control_signals[0],
+                                                                    modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM),
+                                      name='ctl-mech_B')
+        # comp = Composition(pathways=[mech, (ctl_mech_A, NodeRole.OUTPUT), (ctl_mech_B, NodeRole.OUTPUT)])
+        comp = Composition(pathways=[mech, ctl_mech_A, ctl_mech_B])
+        assert all(role in comp.get_roles_by_node(mech) for role in {NodeRole.ORIGIN, NodeRole.INPUT, NodeRole.OUTPUT})
+        assert not any(ctl_mech in comp.get_nodes_by_role(NodeRole.OUTPUT) for ctl_mech in {ctl_mech_A, ctl_mech_B})
+        assert any(ctl_mech in comp.get_nodes_by_role(NodeRole.TERMINAL) for ctl_mech in {ctl_mech_A, ctl_mech_B})
+
     def test_force_two_control_mechanisms_as_OUTPUT(self):
         mech = ProcessingMechanism(name='my_mech')
         ctl_mech_A = ControlMechanism(monitor_for_control=mech,
                                       control_signals=ControlSignal(modulates=(INTERCEPT,mech),
-                                                                    cost_options=CostFunctions.INTENSITY))
+                                                                    cost_options=CostFunctions.INTENSITY),
+                                      name='ctl-mech_A')
         ctl_mech_B = ControlMechanism(monitor_for_control=mech,
                                       control_signals=ControlSignal(modulates=ctl_mech_A.control_signals[0],
-                                                                    modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM))
+                                                                    modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM),
+                                      name='ctl-mech_B')
+        # comp = Composition(pathways=[mech, (ctl_mech_A, NodeRole.OUTPUT), (ctl_mech_B, NodeRole.OUTPUT)])
         comp = Composition(pathways=[mech, (ctl_mech_A, NodeRole.OUTPUT), (ctl_mech_B, NodeRole.OUTPUT)])
         assert {mech, ctl_mech_A, ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.OUTPUT))
-        # Current instantiation always assigns ctl_mech_B as TERMINAL in this case;
-        # this is here to flag any violation of this in the future, in case that is not intended
         assert {mech} == set(comp.get_nodes_by_role(NodeRole.ORIGIN))
-        # assert {ctl_mech_A, ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.TERMINAL))
         assert {ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.TERMINAL))
-        assert {mech, ctl_mech_A, ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.OUTPUT))
 
     def test_LEARNING_hebbian(self):
         A = RecurrentTransferMechanism(name='A', size=2, enable_learning=True)
@@ -7440,6 +7670,23 @@ class TestNodeRoles:
             icomp: {NodeRole.INTERNAL},
             B: {NodeRole.TERMINAL, NodeRole.OUTPUT, NodeRole.FEEDBACK_SENDER},
         }
+
+    @pytest.mark.skipif(
+        not graph_structure_conditions_available,
+        reason=gsc_unavailable_message
+    )
+    def test_graph_structure_condition_role_changes(self):
+        A = pnl.ProcessingMechanism(name='A')
+        B = pnl.ProcessingMechanism(name='B')
+        C = pnl.ProcessingMechanism(name='C')
+
+        comp = Composition(pathways=[A, B, C])
+
+        comp.scheduler.add_condition(C, pnl.BeforeNode(A))
+
+        assert comp.nodes_to_roles[A] == {NodeRole.INPUT}
+        assert comp.nodes_to_roles[B] == {NodeRole.INTERNAL, NodeRole.TERMINAL}
+        assert comp.nodes_to_roles[C] == {NodeRole.OUTPUT, NodeRole.ORIGIN}
 
 
 class TestMisc:
@@ -7702,7 +7949,7 @@ class TestMisc:
         assert comp.scheduler.conditions[C].args == (A, 2)
 
         assert comp.scheduler.execution_list[comp.default_execution_id] == [{A}, {A, B}, {C}]
-        assert set(comp.scheduler._user_specified_conds.keys()) == {B, C}
+        assert set(comp.scheduler._user_specified_conds.conditions.keys()) == {B, C}
 
     def test_rebuild_scheduler_after_remove_node(self):
         A = ProcessingMechanism(name='A')
@@ -7722,7 +7969,7 @@ class TestMisc:
         assert comp.scheduler.conditions[C].args == (A, 2)
 
         assert comp.scheduler.execution_list[comp.default_execution_id] == [{A}, {A}, {C}]
-        assert set(comp.scheduler._user_specified_conds.keys()) == {C}
+        assert set(comp.scheduler._user_specified_conds.conditions.keys()) == {C}
 
 
 class TestInputSpecsDocumentationExamples:

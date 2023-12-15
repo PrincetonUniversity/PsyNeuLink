@@ -238,13 +238,14 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    ALL, BOLD, COMPONENT, COMPOSITION, CONDITIONS, FUNCTIONS, INSET, LABELS, MECHANISM, MECHANISMS, NESTED, \
-    PROJECTION, PROJECTIONS, ROLES, SIMULATIONS, VALUES
+    ALL, BOLD, COMPONENT, COMPOSITION, CONDITIONS, FUNCTIONS, INSET, LABELS, LEARNABLE, \
+    MECHANISM, MECHANISMS, NESTED, PROJECTION, PROJECTIONS, ROLES, SIMULATIONS, VALUES
 from psyneulink.core.globals.utilities import convert_to_list
 
 __all__ = ['DURATION', 'EXECUTION_SET', 'INITIAL_FRAME', 'MOVIE_DIR', 'MOVIE_NAME', 'MECH_FUNCTION_PARAMS',
            'NUM_TRIALS', 'NUM_RUNS', 'PORT_FUNCTION_PARAMS', 'SAVE_IMAGES',
-           'SHOW', 'SHOW_CIM', 'SHOW_CONTROLLER', 'SHOW_LEARNING', 'SHOW_PROJECTIONS_NOT_IN_COMPOSITION',
+           'SHOW', 'SHOW_CIM', 'SHOW_CONTROLLER', 'SHOW_JUST_LEARNING_PROJECTIONS', 'SHOW_LEARNING',
+           'SHOW_PROJECTIONS_NOT_IN_COMPOSITION',
            'ShowGraph', 'UNIT',]
 
 
@@ -265,6 +266,7 @@ SHOW_TYPES = 'show_types'
 SHOW_DIMENSIONS = 'show_dimensions'
 SHOW_PROJECTION_LABELS = 'show_projection_labels'
 SHOW_PROJECTIONS_NOT_IN_COMPOSITION = 'show_projections_not_in_composition'
+SHOW_JUST_LEARNING_PROJECTIONS = 'show_just_learning_projections'
 ACTIVE_ITEMS = 'active_items'
 OUTPUT_FMT = 'output_fmt'
 
@@ -500,7 +502,7 @@ class ShowGraph():
                    show_nested_args: Optional[Union[bool, dict, Literal['all']]] = 'all',
                    show_cim: bool = False,
                    show_controller: Union[bool, Literal['agent_rep']] = True,
-                   show_learning: bool = False,
+                   show_learning: Union[bool, Literal[ALL, LEARNABLE, SHOW_JUST_LEARNING_PROJECTIONS]] = False,
                    show_headers: bool = True,
                    show_types: bool = False,
                    show_dimensions: bool = False,
@@ -603,13 +605,16 @@ class ShowGraph():
             *AGENT_REP* also shows that.  All control-related items are displayed in the color specified for
             **controller_color**.
 
-        show_learning : bool or ALL : default False
+        show_learning : bool, LEARNABLE, SHOW_JUST_LEARNING_PROJECTIONS, or ALL : default False
             specifies whether or not to show the `learning components <Composition_Learning_Components>` of the
             `Composition`; they are all displayed in the color specified for **learning_color**.
             Projections that receive a `LearningProjection` are shown as a diamond-shaped node.
-            If set to *ALL*, all Projections associated with learning are shown:  the LearningProjections
-            as well as from `ProcessingMechanisms <ProcessingMechanism>` to `LearningMechanisms <LearningMechanism>`
-            that convey error and activation information;  if set to `True`, only the LearningProjections are shown.
+            If set to *LEARNABLE*, all `LearningMechanism`\\s are shown but only `LearningProjection`\\s that are
+            `enabled <LearningProjection.learning_enabled>` are shown; if set to True or *ALL*, all Projections
+            associated with learning are shown (that is, the LearningProjections as well as those from
+            `ProcessingMechanisms <ProcessingMechanism>` to `LearningMechanisms <LearningMechanism>`
+            that convey error and activation information;  if set to *SHOW_JUST_LEARNING_PROJECTIONS*,
+            the display is restricted to LearningProjections that are `enabled <LearningProjection.learning_enabled>`.
 
         show_projection_labels : bool : default False
             specifies whether or not to show names of projections.
@@ -681,6 +686,8 @@ class ShowGraph():
 
         enclosing_g = enclosing_comp._show_graph.G if enclosing_comp else None
         processing_graph = composition.graph_processing.dependency_dict
+        # IMPLEMENTATION_NOTE:  Take diff with following to get scheduling edges not in compostion graph:
+        # processing_graph = composition.scheduler.dependency_dict
 
         # Validate active_items  ~~~~~~~~~~~~~~~~~~~~~~~~~
         active_items = active_items or []
@@ -1717,6 +1724,14 @@ class ShowGraph():
         for control_signal in controller.control_signals:
             for ctl_proj in control_signal.efferents:
 
+                # # Allow MappingProjections to iconified rep of nested Composition to show as ControlProjection
+                # if (isinstance(ctl_proj, ControlProjection)
+                #         or (isinstance(ctl_proj.receiver.owner, CompositionInterfaceMechanism)
+                #             and (not show_cim or not show_nested))):
+                #     ctl_proj_arrowhead = self.control_projection_arrow
+                # else:  # This is to expose an errant MappingProjection if one slips in
+                #     ctl_proj_arrowhead = self.default_projection_arrow
+                #     ctl_proj_color = self.default_node_color
                 ctl_proj_arrowhead = self.control_projection_arrow
 
                 # Skip ControlProjections not in the Composition
@@ -2058,12 +2073,7 @@ class ShowGraph():
 
         # Get learning_components, with exception of INPUT (i.e. TARGET) nodes
         #    (i.e., allow TARGET node to continue to be marked as an INPUT node)
-        # # MODIFIED 6/13/20 OLD:
-        # learning_components = [node for node in composition.learning_components
-        #                        if not NodeRole.INPUT in composition.nodes_to_roles[node]]
-        # MODIFIED 6/13/20 NEW:  FIX - MODIFIED TO ALLOW TARGET TO BE MARKED AS INPUT
         learning_components = [node for node in composition.learning_components]
-        # MODIFIED 6/13/20 END
         # learning_components.extend([node for node in composition.nodes if
         #                             NodeRole.AUTOASSOCIATIVE_LEARNING in
         #                             composition.nodes_to_roles[node]])
@@ -2111,28 +2121,30 @@ class ShowGraph():
                        rank=self.learning_rank)
 
             # Implement sender edges
-            sndrs = processing_graph[rcvr]
-            self._assign_incoming_edges(g,
-                                        rcvr,
-                                        learning_rcvr_label,
-                                        sndrs,
-                                        active_items,
-                                        show_nested,
-                                        show_cim,
-                                        show_learning,
-                                        show_types,
-                                        show_dimensions,
-                                        show_node_structure,
-                                        show_projection_labels,
-                                        show_projections_not_in_composition,
-                                        enclosing_comp=enclosing_comp,
-                                        comp_hierarchy=comp_hierarchy,
-                                        nesting_level=nesting_level)
+            if show_learning is not SHOW_JUST_LEARNING_PROJECTIONS:
+                sndrs = processing_graph[rcvr]
+                self._assign_incoming_edges(g,
+                                            rcvr,
+                                            learning_rcvr_label,
+                                            sndrs,
+                                            active_items,
+                                            show_nested,
+                                            show_cim,
+                                            show_learning,
+                                            show_types,
+                                            show_dimensions,
+                                            show_node_structure,
+                                            show_projection_labels,
+                                            show_projections_not_in_composition,
+                                            enclosing_comp=enclosing_comp,
+                                            comp_hierarchy=comp_hierarchy,
+                                            nesting_level=nesting_level)
 
     def _render_projection_as_node(self,
                                    g,
                                    active_items,
                                    show_node_structure,
+                                   show_learning,
                                    show_types,
                                    show_dimensions,
                                    show_projection_labels,
@@ -2171,6 +2183,10 @@ class ShowGraph():
 
         # LearningProjection(s) to node
         # if proj in active_items or (proj_learning_in_execution_phase and proj_receiver in active_items):
+        if show_learning is LEARNABLE:
+            if not proj.learnable:
+                return True
+
         if proj in active_items:
             if self.active_color == BOLD:
                 learning_proj_color = self.learning_color
@@ -2251,7 +2267,9 @@ class ShowGraph():
             # HACK: FIX 6/13/20 - ADD USER-SPECIFIED TARGET NODE FOR INNER COMPOSITION (NOT IN processing_graph)
 
         def assign_sender_edge(sndr:Union[Mechanism, Composition],
-                               proj_color:str, proj_arrowhead:str
+                               proj:Projection,
+                               proj_color:str,
+                               proj_arrowhead:str
                                ) -> None:
             """Assign edge from sender to rcvr"""
 
@@ -2260,32 +2278,28 @@ class ShowGraph():
 
             # Skip any projections to ObjectiveMechanism for controller
             #   (those are handled in _assign_controller_components)
-            # FIX 6/2/20 MOVE TO BELOW FOLLOWING IF STATEMENT AND REPLACE proj.receiver.owner WITH rcvr?
-            # FIX 7/19/20 Can't exclude projections to composition.controller because that skips shadow projections
-            # to controller's input ports
             if (composition.controller and
                     proj.receiver.owner in {composition.controller.objective_mechanism}):
                 return
 
-            # FIX 6/6/20: ADD HANDLING OF parameter_CIM HERE??
             # Only consider Projections to the rcvr (or its CIM if rcvr is a Composition)
             if ((isinstance(rcvr, (Mechanism, Projection)) and proj.receiver.owner == rcvr)
                     or (isinstance(rcvr, Composition)
                         and proj.receiver.owner in {rcvr.input_CIM,
-                                                    # MODIFIED 6/6/20 NEW:
-                                                    rcvr.parameter_CIM
-                                                    # MODIFIED 6/6/20 END
-                                                    })):
+                                                    rcvr.parameter_CIM})):
                 if show_node_structure and isinstance(sndr, Mechanism):
-                    sndr_port = proj.sender if show_cim else sndr.output_port
+                    # If proj is a ControlProjection that comes from a parameter_CIM, get the port for the sender
+                    if (isinstance(proj, ControlProjection) and
+                            isinstance(proj.sender.owner, CompositionInterfaceMechanism)):
+                        sndr_port = sndr.output_port
+                    # Usual case: get port from Projection's sender
+                    else:
+                        sndr_port = proj.sender
                     sndr_port_owner = sndr_port.owner
                     if isinstance(sndr_port_owner, CompositionInterfaceMechanism) and rcvr is not composition.controller:
                         # Sender is input_CIM or parameter_CIM
                         if sndr_port_owner in {sndr_port_owner.composition.input_CIM,
-                                               # MODIFIED 6/6/20 NEW:
-                                               sndr_port_owner.composition.parameter_CIM
-                                               # MODIFIED 6/6/20 END
-                                               }:
+                                               sndr_port_owner.composition.parameter_CIM}:
                             # Get port for node of outer Composition that projects to it
                             sndr_port = [v[0] for k,v in sender.port_map.items()
                                          if k is proj.receiver][0].path_afferents[0].sender
@@ -2315,6 +2329,14 @@ class ShowGraph():
                             or (not show_cim and
                                 (show_nested is not NESTED)
                                 or (show_nested is False))):
+                        # # Allow MappingProjections to iconified rep of nested Composition to show as ControlProjection
+                        # if (isinstance(proj, ControlProjection)
+                        #         or (isinstance(proj.receiver.owner, CompositionInterfaceMechanism)
+                        #             and (not show_cim or not show_nested))):
+                        #     proj_arrowhead = self.control_projection_arrow
+                        # else:  # This is to expose an errant MappingProjection if one slips in
+                        #     proj_arrowhead = self.default_projection_arrow
+                        #     proj_color = self.default_node_color
                         proj_arrowhead = self.control_projection_arrow
                 # Check if Projection or its receiver is active
                 if any(item in active_items for item in {proj, proj.receiver.owner}):
@@ -2348,6 +2370,7 @@ class ShowGraph():
                     deferred = not self._render_projection_as_node(g,
                                                                    active_items,
                                                                    show_node_structure,
+                                                                   show_learning,
                                                                    show_types,
                                                                    show_dimensions,
                                                                    show_projection_labels,
@@ -2436,16 +2459,24 @@ class ShowGraph():
                                 if (isinstance(sndr, CompositionInterfaceMechanism) and
                                         rcvr is not enclosing_comp.controller
                                         and rcvr is not composition.controller
-                                        # MODIFIED 1/6/22 NEW:
                                         and not sndr.afferents and show_cim
-                                        # MODIFIED 1/6/22 END
                                         or self._is_composition_controller(sndr, enclosing_comp)):
                                     continue
                                 if sender is composition.parameter_CIM:
+                                    # # Allow MappingProjections to iconified rep of nested Composition
+                                    # # to show as ControlProjection
+                                    # if (isinstance(proj, ControlProjection)
+                                    #         or (isinstance(proj.receiver.owner, CompositionInterfaceMechanism)
+                                    #             and (not show_cim or not show_nested))):
+                                    #     proj_arrowhead = self.control_projection_arrow
+                                    #     proj_color = self.control_color
+                                    # else:   # This is to expose an errant MappingProjection if one slips in
+                                    #     proj_arrowhead = self.default_projection_arrow
+                                    #     proj_color = proj_color=self.default_node_color
                                     proj_color = self.control_color
                                     proj_arrowhead = self.control_projection_arrow
                                 assign_proj_to_enclosing_comp = True
-                                assign_sender_edge(sndr, proj_color, proj_arrowhead)
+                                assign_sender_edge(sndr, proj, proj_color, proj_arrowhead)
                             continue
 
                         # sender is output_CIM
@@ -2472,7 +2503,7 @@ class ShowGraph():
                     else:
                         sndr = sender
 
-                    assign_sender_edge(sndr, proj_color, proj_arrowhead)
+                    assign_sender_edge(sndr, proj, proj_color, proj_arrowhead)
 
     def _generate_output(self,
                          G,

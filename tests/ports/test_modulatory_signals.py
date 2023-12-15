@@ -26,7 +26,7 @@ class TestControlSignals:
         tMech2 = TransferMechanism()
         cMech1 = ControlMechanism(control_signals=ControlSignal(modulates=(SLOPE, tMech2)),
                                   objective_mechanism=ObjectiveMechanism(monitor=(RESULT, tMech2)))
-        comp1.add_nodes([tMech1, tMech2, cMech1])
+        # comp1.add_nodes([tMech1, tMech2, cMech1])
         comp1.add_linear_processing_pathway([cMech1, tMech1, tMech2])
         comp1.run(inputs=inputs)
         comp2 = Composition()
@@ -34,7 +34,7 @@ class TestControlSignals:
         tMech4 = TransferMechanism()
         cMech2 = ControlMechanism(control_signals=ControlSignal(projections=(SLOPE, tMech4)),
                                   objective_mechanism=ObjectiveMechanism(monitor=(RESULT, tMech4)))
-        comp2.add_nodes([tMech3, tMech4, cMech2])
+        # comp2.add_nodes([tMech3, tMech4, cMech2])
         comp2.add_linear_processing_pathway([cMech2, tMech3, tMech4])
         comp2.run(inputs=inputs)
         assert comp1.results == comp2.results
@@ -57,4 +57,5 @@ class TestGatingSignals:
         comp2.add_nodes([Tx2, Ty2, G2])
         comp2.add_linear_processing_pathway([Tx2, Ty2, G2, Tx2])
         comp2.run(inputs={Tx2: inputs})
+
         assert comp1.results == comp2.results

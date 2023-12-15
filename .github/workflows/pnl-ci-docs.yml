@@ -22,7 +22,7 @@ jobs:
       fail-fast: false
       # Matrix setup is a hacky way to include 'base' build in pull requests
       # The entire matrix is set up and 'base' builds are pruned based
-      # on event name and final configuration (ubuntu, python3.7).
+      # on event name and final configuration (ubuntu, python3.11).
       matrix:
         python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
         python-architecture: ['x64']
@@ -37,29 +37,29 @@ jobs:
             pnl-version: 'base'
           - os: windows-latest
             pnl-version: 'base'
+          - python-version: '3.7'
+            pnl-version: 'base'
           - python-version: '3.8'
             pnl-version: 'base'
           - python-version: '3.9'
             pnl-version: 'base'
           - python-version: '3.10'
             pnl-version: 'base'
-          - python-version: '3.11'
-            pnl-version: 'base'
 
     outputs:
       on_master: ${{ steps.on_master.outputs.on-branch }}
 
     steps:
-    # increased fetch-depth and tag checkout needed as in pnl-ci.yml
+    # Increased fetch-depth and tag checkout needed compared to pnl-ci.yml
     - name: Checkout sources
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       if: ${{ matrix.pnl-version == 'head' }}
       with:
         fetch-depth: 200
         ref: ${{ github.ref }}
 
     - name: Checkout pull base
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       if: ${{ matrix.pnl-version == 'base' }}
       with:
         fetch-depth: 200
@@ -76,7 +76,7 @@ jobs:
         branch: master
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         # Block python3.7.17 on macos. see:
         # https://github.com/actions/setup-python/issues/682
@@ -146,7 +146,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7]
+        python-version: [3.11]
         os: [ubuntu-latest]
 
     runs-on: ${{ matrix.os }}
@@ -163,7 +163,7 @@ jobs:
 
     steps:
     - name: Checkout docs
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         ref: gh-pages
 

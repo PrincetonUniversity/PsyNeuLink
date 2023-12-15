@@ -18,10 +18,10 @@ jobs:
       wheel: ${{ steps.create_dist.outputs.wheel }}
     steps:
     - name: Checkout sources
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -84,7 +84,7 @@ jobs:
         path: dist/
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -113,7 +113,7 @@ jobs:
       run: pip install dist/${{ needs.create-python-dist.outputs.sdist }}[dev]
 
     - name: Get tests from the repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Run tests
       shell: bash
@@ -181,7 +181,7 @@ jobs:
         path: dist/
 
     - name: Upload dist files to release
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       with:
         script: |
           const fs = require('fs')

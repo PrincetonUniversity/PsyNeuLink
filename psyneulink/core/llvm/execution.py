@@ -8,8 +8,6 @@
 
 # ********************************************* Binary Execution Wrappers **************************************************************
 
-from psyneulink.core.globals.context import Context
-
 from collections import Counter
 import concurrent.futures
 import copy
@@ -19,9 +17,11 @@ from inspect import isgenerator
 import os
 import sys
 import time
+from typing import Callable, Optional
 
 
 from psyneulink.core import llvm as pnlvm
+from psyneulink.core.globals.context import Context
 from . import helpers, jit_engine, builder_context
 from .debug import debug_env
 
@@ -114,7 +114,7 @@ class Execution:
         return struct
 
 
-    def writeback_params_to_pnl(self, params=None, ids:str=None, condition:callable=lambda p: True):
+    def writeback_params_to_pnl(self, params=None, ids:Optional[str]=None, condition:Callable=lambda p: True):
 
         assert (params is None) == (ids is None), "Either both 'params' and 'ids' have to be set or neither"
 
@@ -126,7 +126,7 @@ class Execution:
         self._copy_params_to_pnl(self._execution_contexts[0], self._obj, params, ids, condition)
 
 
-    def _copy_params_to_pnl(self, context, component, params, ids:str, condition:callable):
+    def _copy_params_to_pnl(self, context, component, params, ids:str, condition:Callable):
 
         for idx, attribute in enumerate(getattr(component, ids)):
             compiled_attribute_param = getattr(params, params._fields_[idx][0])

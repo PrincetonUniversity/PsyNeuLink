@@ -24,111 +24,108 @@ test_noise_arr = np.random.rand(SIZE)
 RAND1 = np.random.random(1)
 RAND2 = np.random.random()
 
-philox_var = np.random.rand(2, SIZE)
+# Use different size for Philox case,
+# to easily detect mixups
+philox_var = np.random.rand(2, SIZE - 1)
+philox_initializer = np.array([[philox_var[0] * 5, philox_var[1] * 4]])
 
 test_data = [
 # Default initializer does not work
 #    (Functions.Buffer, test_var, {'rate':RAND1}, [[0.0],[0.0]]),
     pytest.param(Functions.Buffer, test_var[0], {'history':512, 'rate':RAND1, 'initializer':[test_var[0]]},
-                 [[0.03841128, 0.05005587, 0.04218721, 0.0381362 , 0.02965146, 0.04520592, 0.03062659, 0.0624149 , 0.06744644, 0.02683695],
-                  [0.14519169, 0.18920736, 0.15946443, 0.1441519 , 0.11208025, 0.17087491, 0.11576615, 0.23592355, 0.25494239, 0.10144161]], id="Buffer"),
+                 # TODO: Why is the first result using rate^2 ?
+                 [test_var[0] * RAND1 * RAND1, test_var[0] * RAND1], id="Buffer"),
+
+    # Tests using Mersenne-Twister as function PRNG
     pytest.param(Functions.DictionaryMemory, test_var, {'seed': module_seed},
-                 [[0.5488135039273248, 0.7151893663724195, 0.6027633760716439, 0.5448831829968969, 0.4236547993389047, 0.6458941130666561, 0.4375872112626925, 0.8917730007820798, 0.9636627605010293, 0.3834415188257777],
-                  [0.7917250380826646, 0.5288949197529045, 0.5680445610939323, 0.925596638292661, 0.07103605819788694, 0.08712929970154071, 0.02021839744032572, 0.832619845547938, 0.7781567509498505, 0.8700121482468192 ]],
+                 [test_var[0], test_var[1]],
                  id="DictionaryMemory"),
     pytest.param(Functions.DictionaryMemory, test_var, {'rate':RAND1, 'seed': module_seed},
-                 [[0.5488135039273248, 0.7151893663724195, 0.6027633760716439, 0.5448831829968969, 0.4236547993389047, 0.6458941130666561, 0.4375872112626925, 0.8917730007820798, 0.9636627605010293, 0.3834415188257777],
-                  [0.7917250380826646, 0.5288949197529045, 0.5680445610939323, 0.925596638292661, 0.07103605819788694, 0.08712929970154071, 0.02021839744032572, 0.832619845547938, 0.7781567509498505, 0.8700121482468192]],
+                 [test_var[0] * RAND1, test_var[1]],
                  id="DictionaryMemory Rate"),
-    pytest.param(Functions.DictionaryMemory, test_var, {'initializer':test_initializer, 'rate':RAND1, 'seed': module_seed},
-                 [[0.5488135039273248, 0.7151893663724195, 0.6027633760716439, 0.5448831829968969, 0.4236547993389047, 0.6458941130666561, 0.4375872112626925, 0.8917730007820798, 0.9636627605010293, 0.3834415188257777],
-                  [0.7917250380826646, 0.5288949197529045, 0.5680445610939323, 0.925596638292661, 0.07103605819788694, 0.08712929970154071, 0.02021839744032572, 0.832619845547938, 0.7781567509498505, 0.8700121482468192]],
+    pytest.param(Functions.DictionaryMemory, test_var, {'initializer':test_initializer, 'seed': module_seed},
+                 [test_var[0], test_var[1]],
                  id="DictionaryMemory Initializer"),
-    pytest.param(Functions.DictionaryMemory, test_var, {'rate':RAND1, 'retrieval_prob':0.5, 'seed': module_seed},
-                 [[ 0. for i in range(SIZE) ],[ 0. for i in range(SIZE) ]],
+    pytest.param(Functions.DictionaryMemory, test_var, {'retrieval_prob':0.1, 'seed': module_seed},
+                 np.zeros_like(test_var),
                  id="DictionaryMemory Low Retrieval"),
-    pytest.param(Functions.DictionaryMemory, test_var, {'rate':RAND1, 'storage_prob':0.1, 'seed': module_seed},
-                 [[ 0. for i in range(SIZE) ],[ 0. for i in range(SIZE) ]],
+    pytest.param(Functions.DictionaryMemory, test_var, {'storage_prob':0.1, 'seed': module_seed},
+                 np.zeros_like(test_var),
                  id="DictionaryMemory Low Storage"),
-    pytest.param(Functions.DictionaryMemory, test_var, {'rate':RAND1, 'retrieval_prob':0.9, 'storage_prob':0.9, 'seed': module_seed},
-                 [[0.5488135039273248, 0.7151893663724195, 0.6027633760716439, 0.5448831829968969, 0.4236547993389047, 0.6458941130666561, 0.4375872112626925, 0.8917730007820798, 0.9636627605010293, 0.3834415188257777],
-                  [0.7917250380826646, 0.5288949197529045, 0.5680445610939323, 0.925596638292661, 0.07103605819788694, 0.08712929970154071, 0.02021839744032572, 0.832619845547938, 0.7781567509498505, 0.8700121482468192]],
+    pytest.param(Functions.DictionaryMemory, test_var, {'retrieval_prob':0.9, 'storage_prob':0.9, 'seed': module_seed},
+                 [test_var[0], test_var[1]],
                  id="DictionaryMemory High Storage/Retrieve"),
-# Disable noise tests for now as they trigger failure in DictionaryMemory lookup
-#    (Functions.DictionaryMemory, test_var, {'rate':RAND1, 'noise':RAND2}, [[
-#       0.79172504, 0.52889492, 0.56804456, 0.92559664, 0.07103606, 0.0871293 , 0.0202184 , 0.83261985, 0.77815675, 0.87001215 ],[
-#       1.3230471933615413, 1.4894230558066361, 1.3769970655058605, 1.3191168724311135, 1.1978884887731214, 1.4201278025008728, 1.2118209006969092, 1.6660066902162964, 1.737896449935246, 1.1576752082599944
-#]]),
-#    (Functions.DictionaryMemory, test_var, {'rate':RAND1, 'noise':[RAND2], 'retrieval_prob':0.5},
-#       [[ 0. for i in range(SIZE) ],[ 0. for i in range(SIZE) ]]),
-#    (Functions.DictionaryMemory, test_var, {'rate':RAND1, 'noise':RAND2, 'storage_prob':0.5},
-#       [[ 0. for i in range(SIZE) ],[ 0. for i in range(SIZE) ]]),
-#    (Functions.DictionaryMemory, test_var, {'initializer':test_initializer, 'rate':RAND1, 'noise':RAND2}, [[
-#       0.79172504, 0.52889492, 0.56804456, 0.92559664, 0.07103606, 0.0871293 , 0.0202184 , 0.83261985, 0.77815675, 0.87001215 ],[
-#       1.3230471933615413, 1.4894230558066361, 1.3769970655058605, 1.3191168724311135, 1.1978884887731214, 1.4201278025008728, 1.2118209006969092, 1.6660066902162964, 1.737896449935246, 1.1576752082599944
-#]]),
-    pytest.param(Functions.ContentAddressableMemory, test_var, {'rate':RAND1, 'retrieval_prob':0.5, 'seed': module_seed},
-                 [[ 0. for i in range(SIZE) ],[ 0. for i in range(SIZE) ]],
+    pytest.param(Functions.DictionaryMemory, test_var, {'noise':RAND2},
+                 [test_var[0] + RAND2, test_var[1]],
+                 id="DictionaryMemory NoiseScalar"),
+    pytest.param(Functions.DictionaryMemory, test_var, {'noise':RAND2, 'rate':RAND1},
+                 [test_var[0] * RAND1 + RAND2, test_var[1]],
+                 id="DictionaryMemory Rate NoiseScalar"),
+    pytest.param(Functions.DictionaryMemory, test_var, {'noise':[RAND2]},
+                 [test_var[0] + RAND2, test_var[1]],
+                 id="DictionaryMemory NoiseVec1"),
+    pytest.param(Functions.DictionaryMemory, test_var, {'noise':test_var / 2},
+                 [test_var[0] + test_var[0] / 2, test_var[1]],
+                 id="DictionaryMemory NoiseVecN"),
+
+    # ContentAddressableMemory
+    pytest.param(Functions.ContentAddressableMemory, test_var, {'rate':RAND1, 'retrieval_prob':0.1, 'seed': module_seed},
+                 np.zeros_like(test_var),
                  id="ContentAddressableMemory Low Retrieval"),
     pytest.param(Functions.ContentAddressableMemory, test_var, {'rate':RAND1, 'storage_prob':0.1, 'seed': module_seed},
-                 [[ 0. for i in range(SIZE) ],[ 0. for i in range(SIZE) ]],
+                 np.zeros_like(test_var),
                  id="ContentAddressableMemory Low Storage"),
     pytest.param(Functions.ContentAddressableMemory, test_var, {'rate':RAND1, 'retrieval_prob':0.9, 'storage_prob':0.9, 'seed': module_seed},
-                 [[0.5488135039273248, 0.7151893663724195, 0.6027633760716439, 0.5448831829968969, 0.4236547993389047, 0.6458941130666561, 0.4375872112626925, 0.8917730007820798, 0.9636627605010293, 0.3834415188257777],
-                  [0.7917250380826646, 0.5288949197529045, 0.5680445610939323, 0.925596638292661, 0.07103605819788694, 0.08712929970154071, 0.02021839744032572, 0.832619845547938, 0.7781567509498505, 0.8700121482468192]],
+                 [test_var[0], test_var[1]],
                  id="ContentAddressableMemory High Storage/Retrieval"),
     pytest.param(Functions.ContentAddressableMemory, test_var, {'initializer':test_initializer, 'rate':RAND1, 'seed': module_seed},
-                 [[0.5488135039273248, 0.7151893663724195, 0.6027633760716439, 0.5448831829968969, 0.4236547993389047, 0.6458941130666561, 0.4375872112626925, 0.8917730007820798, 0.9636627605010293, 0.3834415188257777],
-                  [0.7917250380826646, 0.5288949197529045, 0.5680445610939323, 0.925596638292661, 0.07103605819788694, 0.08712929970154071, 0.02021839744032572, 0.832619845547938, 0.7781567509498505, 0.8700121482468192]],
+                 [test_var[0], test_var[1]],
                  id="ContentAddressableMemory Initializer"),
+
+    # Tests using philox var
     pytest.param(Functions.DictionaryMemory, philox_var, {'seed': module_seed},
-                 [[0.45615033221654855, 0.5684339488686485, 0.018789800436355142, 0.6176354970758771, 0.6120957227224214, 0.6169339968747569, 0.9437480785146242, 0.6818202991034834, 0.359507900573786, 0.43703195379934145],
-                  [0.6976311959272649, 0.06022547162926983, 0.6667667154456677, 0.6706378696181594, 0.2103825610738409, 0.1289262976548533, 0.31542835092418386, 0.3637107709426226, 0.5701967704178796, 0.43860151346232035]],
+                 [philox_var[0], philox_var[1]],
                  id="DictionaryMemory Philox"),
     pytest.param(Functions.DictionaryMemory, philox_var, {'rate':RAND1, 'seed': module_seed},
-                 [[0.45615033221654855, 0.5684339488686485, 0.018789800436355142, 0.6176354970758771, 0.6120957227224214, 0.6169339968747569, 0.9437480785146242, 0.6818202991034834, 0.359507900573786, 0.43703195379934145],
-                  [0.6976311959272649, 0.06022547162926983, 0.6667667154456677, 0.6706378696181594, 0.2103825610738409, 0.1289262976548533, 0.31542835092418386, 0.3637107709426226, 0.5701967704178796, 0.43860151346232035]],
+                 [philox_var[0] * RAND1, philox_var[1]],
                  id="DictionaryMemory Rate Philox"),
-    pytest.param(Functions.DictionaryMemory, philox_var, {'initializer':test_initializer, 'rate':RAND1, 'seed': module_seed},
-                 [[0.45615033221654855, 0.5684339488686485, 0.018789800436355142, 0.6176354970758771, 0.6120957227224214, 0.6169339968747569, 0.9437480785146242, 0.6818202991034834, 0.359507900573786, 0.43703195379934145],
-                  [0.6976311959272649, 0.06022547162926983, 0.6667667154456677, 0.6706378696181594, 0.2103825610738409, 0.1289262976548533, 0.31542835092418386, 0.3637107709426226, 0.5701967704178796, 0.43860151346232035]],
+    pytest.param(Functions.DictionaryMemory, philox_var, {'initializer':philox_initializer, 'seed': module_seed},
+                 [philox_var[0], philox_var[1]],
                  id="DictionaryMemory Initializer Philox"),
-    pytest.param(Functions.DictionaryMemory, philox_var, {'rate':RAND1, 'retrieval_prob':0.01, 'seed': module_seed},
-                 [[ 0. for i in range(SIZE) ],[ 0. for i in range(SIZE) ]],
+    pytest.param(Functions.DictionaryMemory, philox_var, {'retrieval_prob':0.01, 'seed': module_seed},
+                 np.zeros_like(philox_var),
                  id="DictionaryMemory Low Retrieval Philox"),
-    pytest.param(Functions.DictionaryMemory, philox_var, {'rate':RAND1, 'storage_prob':0.01, 'seed': module_seed},
-                 [[ 0. for i in range(SIZE) ],[ 0. for i in range(SIZE) ]],
+    pytest.param(Functions.DictionaryMemory, philox_var, {'storage_prob':0.01, 'seed': module_seed},
+                 np.zeros_like(philox_var),
                  id="DictionaryMemory Low Storage Philox"),
-    pytest.param(Functions.DictionaryMemory, philox_var, {'rate':RAND1, 'retrieval_prob':0.95, 'storage_prob':0.95, 'seed': module_seed},
-                 [[0.45615033221654855, 0.5684339488686485, 0.018789800436355142, 0.6176354970758771, 0.6120957227224214, 0.6169339968747569, 0.9437480785146242, 0.6818202991034834, 0.359507900573786, 0.43703195379934145],
-                  [0.6976311959272649, 0.06022547162926983, 0.6667667154456677, 0.6706378696181594, 0.2103825610738409, 0.1289262976548533, 0.31542835092418386, 0.3637107709426226, 0.5701967704178796, 0.43860151346232035]],
+    pytest.param(Functions.DictionaryMemory, philox_var, {'retrieval_prob':0.98, 'storage_prob':0.98, 'seed': module_seed},
+                 [philox_var[0], philox_var[1]],
                  id="DictionaryMemory High Storage/Retrieve Philox"),
-# Disable noise tests for now as they trigger failure in DictionaryMemory lookup
-#    (Functions.DictionaryMemory, philox_var, {'rate':RAND1, 'noise':RAND2}, [[
-#       0.79172504, 0.52889492, 0.56804456, 0.92559664, 0.07103606, 0.0871293 , 0.0202184 , 0.83261985, 0.77815675, 0.87001215 ],[
-#       1.3230471933615413, 1.4894230558066361, 1.3769970655058605, 1.3191168724311135, 1.1978884887731214, 1.4201278025008728, 1.2118209006969092, 1.6660066902162964, 1.737896449935246, 1.1576752082599944
-#]]),
-#    (Functions.DictionaryMemory, philox_var, {'rate':RAND1, 'noise':[RAND2], 'retrieval_prob':0.5},
-#       [[ 0. for i in range(SIZE) ],[ 0. for i in range(SIZE) ]]),
-#    (Functions.DictionaryMemory, philox_var, {'rate':RAND1, 'noise':RAND2, 'storage_prob':0.5},
-#       [[ 0. for i in range(SIZE) ],[ 0. for i in range(SIZE) ]]),
-#    (Functions.DictionaryMemory, philox_var, {'initializer':test_initializer, 'rate':RAND1, 'noise':RAND2}, [[
-#       0.79172504, 0.52889492, 0.56804456, 0.92559664, 0.07103606, 0.0871293 , 0.0202184 , 0.83261985, 0.77815675, 0.87001215 ],[
-#       1.3230471933615413, 1.4894230558066361, 1.3769970655058605, 1.3191168724311135, 1.1978884887731214, 1.4201278025008728, 1.2118209006969092, 1.6660066902162964, 1.737896449935246, 1.1576752082599944
-#]]),
+    pytest.param(Functions.DictionaryMemory, philox_var, {'noise':RAND2},
+                 [philox_var[0] + RAND2, philox_var[1]],
+                 id="DictionaryMemory NoiseScalar Philox"),
+    pytest.param(Functions.DictionaryMemory, philox_var, {'noise':RAND2, 'rate':RAND1},
+                 [philox_var[0] * RAND1 + RAND2, philox_var[1]],
+                 id="DictionaryMemory Rate NoiseScalar Philox"),
+    pytest.param(Functions.DictionaryMemory, philox_var, {'noise':[RAND2]},
+                 [philox_var[0] + RAND2, philox_var[1]],
+                 id="DictionaryMemory NoiseVec1 Philox"),
+    pytest.param(Functions.DictionaryMemory, philox_var, {'noise':philox_var / 2},
+                 [philox_var[0] + philox_var[0] / 2, philox_var[1]],
+                 id="DictionaryMemory NoiseVecN Philox"),
+
+    # ContentAddressableMemory
     pytest.param(Functions.ContentAddressableMemory, philox_var, {'rate':RAND1, 'retrieval_prob':0.1, 'seed': module_seed},
-                 [[ 0. for i in range(SIZE) ],[ 0. for i in range(SIZE) ]],
+                 np.zeros_like(philox_var),
                  id="ContentAddressableMemory Low Retrieval Philox"),
     pytest.param(Functions.ContentAddressableMemory, philox_var, {'rate':RAND1, 'storage_prob':0.01, 'seed': module_seed},
-                 [[ 0. for i in range(SIZE) ],[ 0. for i in range(SIZE) ]],
+                 np.zeros_like(philox_var),
                  id="ContentAddressableMemory Low Storage Philox"),
-    pytest.param(Functions.ContentAddressableMemory, philox_var, {'rate':RAND1, 'retrieval_prob':0.9, 'storage_prob':0.9, 'seed': module_seed},
-                 [[0.45615033221654855, 0.5684339488686485, 0.018789800436355142, 0.6176354970758771, 0.6120957227224214, 0.6169339968747569, 0.9437480785146242, 0.6818202991034834, 0.359507900573786, 0.43703195379934145],
-                  [0.6976311959272649, 0.06022547162926983, 0.6667667154456677, 0.6706378696181594, 0.2103825610738409, 0.1289262976548533, 0.31542835092418386, 0.3637107709426226, 0.5701967704178796, 0.43860151346232035]],
+    pytest.param(Functions.ContentAddressableMemory, philox_var, {'rate':RAND1, 'retrieval_prob':0.98, 'storage_prob':0.98, 'seed': module_seed},
+                 [philox_var[0], philox_var[1]],
                  id="ContentAddressableMemory High Storage/Retrieval Philox"),
-    pytest.param(Functions.ContentAddressableMemory, philox_var, {'initializer':test_initializer, 'rate':RAND1, 'seed': module_seed},
-                 [[0.45615033221654855, 0.5684339488686485, 0.018789800436355142, 0.6176354970758771, 0.6120957227224214, 0.6169339968747569, 0.9437480785146242, 0.6818202991034834, 0.359507900573786, 0.43703195379934145],
-                  [0.6976311959272649, 0.06022547162926983, 0.6667667154456677, 0.6706378696181594, 0.2103825610738409, 0.1289262976548533, 0.31542835092418386, 0.3637107709426226, 0.5701967704178796, 0.43860151346232035]],
+    pytest.param(Functions.ContentAddressableMemory, philox_var, {'initializer':philox_initializer, 'rate':RAND1, 'seed': module_seed},
+                 [philox_var[0], philox_var[1]],
                  id="ContentAddressableMemory Initializer Philox"),
 ]
 
@@ -152,9 +149,19 @@ def test_basic(func, variable, params, expected, benchmark, func_mode):
     EX = pytest.helpers.get_func_execution(f, func_mode, writeback=False)
 
     EX(variable)
+
+    # Store value * 4 with a duplicate key
+    # This insertion should be ignored unless the function allows
+    # "duplicate_keys"
+    if len(variable) == 2:
+        EX([variable[0], variable[1] * 4])
     res = benchmark(EX, variable)
-    np.testing.assert_allclose(res[0], expected[0], rtol=1e-5, atol=1e-8)
-    np.testing.assert_allclose(res[1], expected[1], rtol=1e-5, atol=1e-8)
+
+    # This still needs to use "allclose" as the key gets manipulated before
+    # storage in some subtests. The rounding in that calculation might not
+    # match the one done for expected values above.
+    np.testing.assert_allclose(res[0], expected[0])
+    np.testing.assert_allclose(res[1], expected[1])
 
 #endregion
 
@@ -627,7 +634,7 @@ class TestContentAddressableMemory:
 
     # Note:  this warning is issued because the default distance_function is Distance(metric=COSINE)
     #        if the default is changed, this warning may not occur
-    distance_warning_msg = "and has at least one memory field that is a scalar"
+    distance_warning_msg = "always produce a distance of 0 (since angle of scalars is not defined)."
 
     test_vars = [
         # initializer:      expected_result (as list):
@@ -643,8 +650,9 @@ class TestContentAddressableMemory:
     @pytest.mark.parametrize('initializer, expected_memory, warning_msg', test_vars)
     def test_ContentAddressableMemory_allowable_initializer_shapes(self, initializer, expected_memory, warning_msg):
         if warning_msg:
-            with pytest.warns(UserWarning, match=warning_msg):
+            with pytest.warns(UserWarning) as warning:
                 c = ContentAddressableMemory(initializer=initializer)
+            assert warning_msg in str(warning[0].message)
         else:
             c = ContentAddressableMemory(initializer=initializer)
 
@@ -684,15 +692,22 @@ class TestContentAddressableMemory:
         assert c.distance == 2.5 * Distance(metric=COSINE)([retrieved,[[1,2,4],[4,5,9]]])
         np.testing.assert_allclose(c.distances_by_field, [2.5 * 0.00397616, 2.5 * 0.00160159], rtol=1e-5, atol=1e-8)
 
-        # Test with 0 as field weight
+        # Test with 0 as one field weight
         c.distance_field_weights=[1,0]
         retrieved = c([[1, 2, 3], [4, 5, 10]])
         np.testing.assert_equal(retrieved, [[1, 2, 3], [4, 5, 6]])
         assert c.distances_by_field == [0.0, 0.0]
 
+        # Test with 0 as the other field weight
         c.distance_field_weights=[0,1]
         retrieved = c([[1, 2, 3], [4, 5, 10]])
         np.testing.assert_equal(retrieved, [[1, 2, 10], [4, 5, 10]])
+        assert c.distances_by_field == [0.0, 0.0]
+
+        # Test with 0 as both field weights (equvialent to setting retrieval_prob=0, so should return 0's)
+        c.distance_field_weights=[0,0]
+        retrieved = c([[1, 2, 3], [4, 5, 10]])
+        np.testing.assert_equal(retrieved, [[0, 0, 0], [0, 0, 0]])
         assert c.distances_by_field == [0.0, 0.0]
 
         # Test with None as field weight
@@ -1142,6 +1157,22 @@ class TestContentAddressableMemory:
                            [[ 1,  2,  3],[ 4,  5,  6]]]
         np.testing.assert_allclose(c.memory, expected_memory)
 
+    def test_ContentAddressableMemory_weighted_retrieval(self):
+
+        c = ContentAddressableMemory(
+            initializer=[[[1,2], [4,5,6]],
+                         [[7,8], [10,11,12]]],
+            duplicate_entries_allowed=False,
+            storage_prob=0.0,
+            selection_function=SoftMax,
+            seed=module_seed,
+        )
+
+        result = c([[1,2],[4,5,6]])
+        expected = np.array([[4.06045099, 5.06045099], [7.06045099, 8.06045099, 9.06045099]], dtype=object)
+        c.selection_type = 'weighted',
+        assert not any(np.testing.assert_allclose(e,r,atol=1e-8) for e,r in zip(expected, result))
+
     def test_ContentAddressableMemory_overwrite_mode(self):
 
         c = ContentAddressableMemory(
@@ -1218,7 +1249,7 @@ class TestContentAddressableMemory:
 
         # Test constructor warnings and errors
 
-        text = "(the angle of scalars is not defined)."
+        text = "angle of scalars is not defined."
         with pytest.warns(UserWarning, match=text):
             clear_registry(FunctionRegistry)
             c = ContentAddressableMemory(
@@ -1295,19 +1326,19 @@ class TestContentAddressableMemory:
         with pytest.raises(ParameterError) as error_text:
             clear_registry(FunctionRegistry)
             c = ContentAddressableMemory(storage_prob=-1)
-        assert "Value (-1) assigned to parameter 'storage_prob' of (ContentAddressableMemory " \
-               "ContentAddressableMemory Function-0).parameters is not valid: " \
-               "must be a float in the interval [0,1]." in str(error_text.value)
+        assert f"Value (-1) assigned to parameter 'storage_prob' of (ContentAddressableMemory " \
+               f"ContentAddressableMemory Function-0).parameters is not valid: " \
+               f"must be a float in the interval [0,1]." in str(error_text.value)
 
-        text = "All weights in the 'distance_fields_weights' Parameter of ContentAddressableMemory Function-0 " \
-               "are set to '0', so all entries of its memory will be treated as duplicates."
-        with pytest.warns(UserWarning, match=text):
+        text = ("All weights in the 'distance_fields_weights' Parameter of ContentAddressableMemory Function-0 are "
+                "set to '0', no retrieval will occur (equivalent to setting 'retrieval_prob=0.0'.")
+        with pytest.warns(UserWarning) as warning:
             clear_registry(FunctionRegistry)
             c = ContentAddressableMemory(initializer=[[1,2],[1,2]],
                                          distance_field_weights=[0,0])
+            assert any(text in item.message.args[0] for item in warning.list)
 
         # Test storage and retrieval Function errors
-
         with pytest.raises(FunctionError) as error_text:
             clear_registry(FunctionRegistry)
             c = ContentAddressableMemory(initializer=[[1,1],[2,2]])
@@ -1373,6 +1404,19 @@ class TestContentAddressableMemory:
             c.add_to_memory([[[[1,2]]]])
         assert "The 'memories' arg for add_to_memory method of must be a list or array containing 1d or 2d arrays " \
                "(was 4d)." in str(error_text.value)
+
+        text = (f"Selection function (SoftMax Function) specified for ContentAddressableMemory Function-0 returns "
+                f"more than one item (3) while 'duplicate_entries_allowed'==True. If a weighted sum of entries is intended, "
+                f"set 'duplicate_entries_allowed'==False and use a selection function that returns a weighted sum "
+                f"(e.g., SoftMax with 'output='ALL').")
+        with pytest.warns(UserWarning) as warning:
+            clear_registry(FunctionRegistry)
+            c = ContentAddressableMemory(initializer=[[1,2],[1,2,3]],
+                                         distance_field_weights=[1,0],
+                                         duplicate_entries_allowed=True,
+                                         selection_function=SoftMax)
+            assert any(text in item.message.args[0] for item in warning.list)
+
 
     @pytest.mark.parametrize(
         'param_name',

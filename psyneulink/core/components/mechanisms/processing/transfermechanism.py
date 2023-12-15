@@ -1368,9 +1368,9 @@ class TransferMechanism(ProcessingMechanism_Base):
 
             if issubclass(transfer_function_class, Function):
                 if not issubclass(transfer_function_class, (TransferFunction, SelectionFunction, UserDefinedFunction)):
-                    raise TransferError(f"Function specified as {repr(FUNCTION)} param of {self.name} "
+                    raise TransferError(f"Function specified as {repr(FUNCTION)} param of '{self.name}' "
                                         f"({transfer_function_class.__name__}) must be a "
-                                        f"{' or '.join([TRANSFER_FUNCTION_TYPE, SELECTION_FUNCTION_TYPE])}.")
+                                        f"{' or '.join([TransferFunction.__name__,SelectionFunction.__name__])}.")
             elif not isinstance(transfer_function, (types.FunctionType, types.MethodType)):
                 raise TransferError(f"Unrecognized specification for {repr(FUNCTION)} param "
                                     f"of {self.name} ({transfer_function}).")
@@ -1501,7 +1501,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 for i, item in enumerate(self.defaults.variable):
                     output_ports.append({NAME: f'{RESULT}-{i}', VARIABLE: (OWNER_VALUE, i)})
             self.parameters.output_ports._set(output_ports, context)
-        super()._instantiate_output_ports(context=context)
+        super(ProcessingMechanism_Base, self)._instantiate_output_ports(context=context)
 
         # # Relabel first output_port:
         # #    default (assigned by Mechanism's OutputPort registry) is to name it "RESULT";
@@ -1530,21 +1530,18 @@ class TransferMechanism(ProcessingMechanism_Base):
         return current_input
 
     def _gen_llvm_is_finished_cond(self, ctx, builder, m_base_params, m_state, m_in):
-        current = pnlvm.helpers.get_state_ptr(builder, self, m_state, "value")
+        current = ctx.get_param_or_state_ptr(builder, self, "value", state_struct_ptr=m_state)
 
         m_params, builder = self._gen_llvm_param_ports_for_obj(
                 self, m_base_params, ctx, builder, m_base_params, m_state, m_in)
-        threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self, m_params,
-                                                    "termination_threshold")
+        threshold_ptr = ctx.get_param_or_state_ptr(builder, self, "termination_threshold", param_struct_ptr=m_params)
 
         if isinstance(threshold_ptr.type.pointee, pnlvm.ir.LiteralStructType):
             # Threshold is not defined, return the old value of finished flag
             assert len(threshold_ptr.type.pointee) == 0
-            is_finished_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state,
-                                                          "is_finished_flag")
+            is_finished_ptr = ctx.get_param_or_state_ptr(builder, self, "is_finished_flag", state_struct_ptr=m_state)
             is_finished_flag = builder.load(is_finished_ptr)
-            return builder.fcmp_ordered("!=", is_finished_flag,
-                                              is_finished_flag.type(0))
+            return builder.fcmp_ordered("!=", is_finished_flag, is_finished_flag.type(0))
 
         # If modulated, termination threshold is single element array.
         # Otherwise, it is scalar
@@ -1564,9 +1561,10 @@ class TransferMechanism(ProcessingMechanism_Base):
                 cond = b.fcmp_ordered(">=", test_val, max_val)
                 max_val = b.select(cond, test_val, max_val)
                 b.store(max_val, cmp_val_ptr)
+            assert "termination_measure" not in self.llvm_param_ids, "'termination_measure' in {}: {}".format(self.name, pnlvm.helpers.get_param_ptr(builder, self, m_base_params, "termination_measure").type.pointee)
 
         elif isinstance(self.termination_measure, Function):
-            prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state, "value", 1)
+            prev_val_ptr = ctx.get_param_or_state_ptr(builder, self, "value", state_struct_ptr=m_state, history=1)
             prev_val = builder.load(prev_val_ptr)
 
             expected = np.empty_like([self.defaults.value[0], self.defaults.value[0]])
@@ -1579,8 +1577,11 @@ class TransferMechanism(ProcessingMechanism_Base):
                 self.termination_measure.defaults.variable = expected
 
             func = ctx.import_llvm_function(self.termination_measure)
-            func_params = pnlvm.helpers.get_param_ptr(builder, self, m_base_params, "termination_measure")
-            func_state = pnlvm.helpers.get_state_ptr(builder, self, m_state, "termination_measure")
+            func_params, func_state = ctx.get_param_or_state_ptr(builder,
+                                                                 self,
+                                                                 "termination_measure",
+                                                                 param_struct_ptr=m_base_params,
+                                                                 state_struct_ptr=m_state)
             func_in = builder.alloca(func.args[2].type.pointee, name="is_finished_func_in")
             # Populate input
             func_in_current_ptr = builder.gep(func_in, [ctx.int32_ty(0),
@@ -1593,12 +1594,13 @@ class TransferMechanism(ProcessingMechanism_Base):
             builder.store(builder.extract_value(prev_val, 0), func_in_prev_ptr)
 
             builder.call(func, [func_params, func_state, func_in, cmp_val_ptr])
+
         elif isinstance(self.termination_measure, TimeScale):
-            ptr = builder.gep(pnlvm.helpers.get_state_ptr(builder, self, m_state, "num_executions"),
-                              [ctx.int32_ty(0), ctx.int32_ty(self.termination_measure.value)])
-            ptr_val = builder.sitofp(builder.load(ptr), threshold.type)
-            pnlvm.helpers.printf(builder, f"TERM MEASURE {self.termination_measure} %d %d\n",ptr_val, threshold)
-            builder.store(ptr_val, cmp_val_ptr)
+            num_executions_array_ptr = ctx.get_param_or_state_ptr(builder, self, "num_executions", state_struct_ptr=m_state)
+            elem_ptr = builder.gep(num_executions_array_ptr, [ctx.int32_ty(0), ctx.int32_ty(self.termination_measure.value)])
+            elem_val = builder.sitofp(builder.load(elem_ptr), threshold.type)
+            builder.store(elem_val, cmp_val_ptr)
+
         else:
             assert False, f"Not Supported: {self.termination_measure}."
 
@@ -1610,10 +1612,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                       m_state, m_in, m_val, ip_out, *, tags:frozenset):
 
         if self.integrator_mode:
-            if_state = pnlvm.helpers.get_state_ptr(builder, self, m_state,
-                                                   "integrator_function")
-            if_base_params = pnlvm.helpers.get_param_ptr(builder, self, m_base_params,
-                                                         "integrator_function")
+            if_base_params, if_state = ctx.get_param_or_state_ptr(builder, self, "integrator_function", param_struct_ptr=m_base_params, state_struct_ptr=m_state)
             if_params, builder = self._gen_llvm_param_ports_for_obj(
                     self.integrator_function, if_base_params, ctx, builder,
                     m_base_params, m_state, m_in)
@@ -1624,8 +1623,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         else:
             mf_in = ip_out
 
-        mf_state = pnlvm.helpers.get_state_ptr(builder, self, m_state, "function")
-        mf_base_params = pnlvm.helpers.get_param_ptr(builder, self, m_base_params, "function")
+        mf_base_params, mf_state = ctx.get_param_or_state_ptr(builder, self, "function", param_struct_ptr=m_base_params, state_struct_ptr=m_state)
         mf_params, builder = self._gen_llvm_param_ports_for_obj(
                 self.function, mf_base_params, ctx, builder, m_base_params, m_state, m_in)
 
@@ -1634,7 +1632,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                          mf_state, mf_in, m_val,
                                                          tags=tags)
 
-        clip_ptr = pnlvm.helpers.get_param_ptr(builder, self, m_params, "clip")
+        clip_ptr = ctx.get_param_or_state_ptr(builder, self, CLIP, param_struct_ptr=m_params)
         if len(clip_ptr.type.pointee) != 0:
             assert len(clip_ptr.type.pointee) == 2
             clip_lo = builder.load(builder.gep(clip_ptr, [ctx.int32_ty(0),

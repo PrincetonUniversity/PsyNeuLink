@@ -30,9 +30,10 @@ def _single_learn_results(composition, *args, **kwargs):
     composition.learn(*args, **kwargs)
     return composition.learning_results
 
+
 @pytest.mark.pytorch
-@pytest.mark.acconstructor
-class TestACConstructor:
+@pytest.mark.autodiff_constructor
+class TestAutodiffConstructor:
 
     def test_no_args(self):
         comp = AutodiffComposition()
@@ -66,6 +67,37 @@ class TestACConstructor:
         # comp = AutodiffComposition()
         # assert comp.patience == 10
 
+# Note: don't use @pytest.mark.composition here to force test of Autodiff without torch installed
+@pytest.mark.composition
+def test_autodiff_without_torch():
+    """Test Autodiff without torch installed"""
+
+    # Should run with ExecutionMode.Python no matter what
+    mech_A = TransferMechanism()
+    mech_B = TransferMechanism()
+    comp = AutodiffComposition([mech_A, mech_B])
+    comp.run()
+    result = comp.learn(inputs={mech_A:[[1], [2]]},
+                       epochs=3,
+               execution_mode = pnl.ExecutionMode.Python)
+    assert comp.pytorch_representation is None
+    np.testing.assert_allclose(result,[[1.95634283]], atol=1e-08, rtol=1e-08)
+
+    # If torch is not installed, should raise exception for learn() with ExecutionMode.Python
+    from psyneulink.library.compositions.autodiffcomposition import torch_available
+    if not torch_available:
+        mech_A = TransferMechanism()
+        mech_B = TransferMechanism()
+        comp = AutodiffComposition([mech_A, mech_B])
+        comp.run()
+        with pytest.raises(AutodiffCompositionError) as error:
+            result = comp.learn(inputs={mech_A:[[1], [2]]},
+                                epochs=3,
+                                execution_mode = pnl.ExecutionMode.PyTorch)
+            np.testing.assert_allclose(result,[[1.95634283]], atol=1e-08, rtol=1e-08)
+        assert (f"'autodiff_composition-1.learn()' has been called with ExecutionMode.Pytorch, "
+                f"but Pytorch module ('torch') is not installed. "
+                f"Please install it with `pip install torch` or `pip3 install torch`") in str(error.value)
 
 @pytest.mark.pytorch
 @pytest.mark.composition
@@ -833,10 +865,11 @@ class TestTrainingCorrectness:
 
 
         mnet.learn(
-                inputs=input_set,
-                minibatch_size=1,
-                patience=patience,
-                min_delta=min_delt
+            inputs=input_set,
+            minibatch_size=1,
+            patience=patience,
+            min_delta=min_delt,
+            execution_mode=pnl.ExecutionMode.PyTorch,
         )
 
         print(mnet.parameters.results.get(mnet))
@@ -1147,7 +1180,7 @@ class TestTrainingIdenticalness():
                    "targets": targets_dict,
                    "epochs": eps}
         g = g_f()
-        sem_net_autodiff.learn(inputs=g_f)
+        sem_net_autodiff.learn(inputs=g_f, execution_mode=pnl.ExecutionMode.PyTorch)
 
         # SET UP COMPOSITION
         sem_net_comp = Composition()
@@ -1219,70 +1252,1035 @@ class TestTrainingIdenticalness():
         np.testing.assert_allclose(map_h2_can.parameters.matrix.get(sem_net_autodiff),
                            map_h2_can_comp.get_mod_matrix(sem_net_comp))
 
-    def test_identicalness_of_input_types(self):
-        # SET UP MECHANISMS FOR COMPOSITION
-        from copy import copy
-        hid_map_mat = np.random.rand(2, 10)
-        out_map_mat = np.random.rand(10, 1)
-        xor_in_dict = TransferMechanism(name='xor_in',
-                                        default_variable=np.zeros(2))
 
-        xor_hid_dict = TransferMechanism(name='xor_hid',
-                                         default_variable=np.zeros(10),
-                                         function=Logistic())
+@pytest.mark.pytorch
+@pytest.mark.acnested
+@pytest.mark.composition
+class TestNestedNoLearning:
 
-        xor_out_dict = TransferMechanism(name='xor_out',
-                                         default_variable=np.zeros(1),
-                                         function=Logistic())
+    @pytest.mark.parametrize(
+        'num_epochs, learning_rate, patience, min_delta', [
+            (400, 4, 10, .00001),
+        ]
+    )
+    def test_xor_nested_train_then_no_train(self, num_epochs, learning_rate,
+                                            patience, min_delta, autodiff_mode):
+        # the inputs we will provide to the model
+        xor_inputs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
 
-        # SET UP PROJECTIONS FOR COMPOSITION
+        # the outputs we wish to see from the model
+        xor_targets = np.array([[0], [1], [1], [0]])
 
-        hid_map_dict = MappingProjection(name='hid_map',
-                                         matrix=copy(hid_map_mat),
-                                         sender=xor_in_dict,
-                                         receiver=xor_hid_dict)
+        # -----------------------------------------------------------------
 
-        out_map_dict = MappingProjection(name='out_map',
-                                         matrix=copy(out_map_mat),
-                                         sender=xor_hid_dict,
-                                         receiver=xor_out_dict)
+        xor_in = pnl.TransferMechanism(name='xor_in',
+                                       default_variable=np.zeros(2))
 
-        # SET UP COMPOSITION
+        xor_hid = pnl.TransferMechanism(name='xor_hid',
+                                        default_variable=np.zeros(10),
+                                        function=Logistic())
 
-        xor_dict = AutodiffComposition()
+        xor_out = pnl.TransferMechanism(name='xor_out',
+                                        default_variable=np.zeros(1),
+                                        function=Logistic())
 
-        xor_dict.add_node(xor_in_dict)
-        xor_dict.add_node(xor_hid_dict)
-        xor_dict.add_node(xor_out_dict)
+        hid_map = pnl.MappingProjection(name='input_to_hidden',
+                                        matrix=np.random.randn(2, 10) * 0.1,
+                                        sender=xor_in,
+                                        receiver=xor_hid)
 
-        xor_dict.add_projection(sender=xor_in_dict, projection=hid_map_dict, receiver=xor_hid_dict)
-        xor_dict.add_projection(sender=xor_hid_dict, projection=out_map_dict, receiver=xor_out_dict)
-        # SET UP INPUTS AND TARGETS
+        out_map = pnl.MappingProjection(name='hidden_to_output',
+                                        matrix=np.random.randn(10, 1) * 0.1,
+                                        sender=xor_hid,
+                                        receiver=xor_out)
 
-        xor_inputs_dict = np.array(  # the inputs we will provide to the model
-                [[0, 0],
-                 [0, 1],
-                 [1, 0],
-                 [1, 1]])
+        # -----------------------------------------------------------------
 
-        xor_targets_dict = np.array(  # the outputs we wish to see from the model
-                [[0],
-                 [1],
-                 [1],
-                 [0]])
+        xor_autodiff = AutodiffComposition(
+            learning_rate=learning_rate,
+        )
 
-        input_dict = {
-                "inputs": {
-                    xor_in_dict: xor_inputs_dict
-                },
-                "targets": {
-                    xor_out_dict: xor_targets_dict
-                }
-            }
+        xor_autodiff.add_node(xor_in)
+        xor_autodiff.add_node(xor_hid)
+        xor_autodiff.add_node(xor_out)
 
-        result_dict = xor_dict.learn(inputs=input_dict)
+        xor_autodiff.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+        xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
-        # SET UP MECHANISMS FOR COMPOSITION
+        # -----------------------------------------------------------------
+
+        no_training_input_dict = {xor_in: xor_inputs}
+        input_dict = {'inputs': {xor_in: xor_inputs }, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}
+
+        parentComposition = pnl.Composition()
+        parentComposition.add_node(xor_autodiff)
+
+        input = {xor_autodiff: input_dict}
+        no_training_input = {xor_autodiff: no_training_input_dict}
+
+        learning_context = Context()
+        xor_autodiff.learn(inputs=input_dict, execution_mode=autodiff_mode, epochs=num_epochs, context=learning_context, patience=patience, min_delta=min_delta)
+        result1 = np.array(xor_autodiff.learning_results).flatten()
+        np.testing.assert_allclose(result1, np.array(xor_targets).flatten(), atol=0.1)
+        result2 = parentComposition.run(inputs=no_training_input, execution_mode=autodiff_mode, context=learning_context)
+
+        np.testing.assert_allclose(result2, [[0]], atol=0.1)
+
+    @pytest.mark.parametrize(
+        'num_epochs, learning_rate, patience, min_delta', [
+            (400, 4, 10, .00001),
+        ]
+    )
+    def test_xor_nested_no_train_then_train(self, num_epochs, learning_rate,
+                                            patience, min_delta, autodiff_mode):
+        if autodiff_mode is not pnl.ExecutionMode.Python:
+            pytest.skip("")
+        # the inputs we will provide to the model
+        xor_inputs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+
+        # the outputs we wish to see from the model
+        xor_targets = np.array([[0], [1], [1], [0]])
+
+        # -----------------------------------------------------------------
+
+        xor_in = pnl.TransferMechanism(name='xor_in',
+                                       default_variable=np.zeros(2))
+
+        xor_hid = pnl.TransferMechanism(name='xor_hid',
+                                        default_variable=np.zeros(10),
+                                        function=Logistic())
+
+        xor_out = pnl.TransferMechanism(name='xor_out',
+                                        default_variable=np.zeros(1),
+                                        function=Logistic())
+
+        hid_map = pnl.MappingProjection(name='input_to_hidden',
+                                        matrix=np.random.randn(2, 10) * 0.1,
+                                        sender=xor_in,
+                                        receiver=xor_hid)
+
+        out_map = pnl.MappingProjection(name='hidden_to_output',
+                                        matrix=np.random.randn(10, 1) * 0.1,
+                                        sender=xor_hid,
+                                        receiver=xor_out)
+
+        # -----------------------------------------------------------------
+
+        xor_autodiff = AutodiffComposition(
+            learning_rate=learning_rate,
+        )
+
+        xor_autodiff.add_node(xor_in)
+        xor_autodiff.add_node(xor_hid)
+        xor_autodiff.add_node(xor_out)
+
+        xor_autodiff.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+        xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+
+        # -----------------------------------------------------------------
+
+        no_training_input_dict = {xor_in: xor_inputs}
+        input_dict = {'inputs': {xor_in: xor_inputs}, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}
+
+        parentComposition = pnl.Composition()
+        parentComposition.add_node(xor_autodiff)
+        input = {xor_autodiff: input_dict}
+        no_training_input = {xor_autodiff: no_training_input_dict}
+        learning_context = Context()
+        result1 = xor_autodiff.run(inputs=input[xor_autodiff]['inputs'], execution_mode=autodiff_mode, context=learning_context)
+        xor_autodiff.learn(inputs=input_dict, execution_mode=autodiff_mode, context=learning_context, patience=patience, min_delta=min_delta)
+        result2 = parentComposition.run(inputs=no_training_input, execution_mode=autodiff_mode, context=learning_context)
+
+        np.testing.assert_allclose(result2, [[0]], atol=0.1)
+
+    # CW 12/21/18: Test is failing due to bugs, will fix later
+    # @pytest.mark.parametrize(
+    #     'num_epochs, learning_rate, patience, min_delta', [
+    #         (2000, 4, 10, .00001),
+    #     ]
+    # )
+    # def test_xor_nest_not_origin_after_train(self, num_epochs, learning_rate, patience, min_delta):
+    #     xor_inputs = np.array(  # the inputs we will provide to the model
+    #         [[0, 0],
+    #          [0, 1],
+    #          [1, 0],
+    #          [1, 1]])
+    #
+    #     xor_targets = np.array(  # the outputs we wish to see from the model
+    #         [[0],
+    #          [1],
+    #          [1],
+    #          [0]])
+    #
+    #     # -----------------------------------------------------------------
+    #
+    #     xor_in = pnl.TransferMechanism(name='xor_in',
+    #                                    default_variable=np.zeros(2))
+    #
+    #     xor_hid = pnl.TransferMechanism(name='xor_hid',
+    #                                     default_variable=np.zeros(10),
+    #                                     function=pnl.core.components.functions.transferfunctions.Logistic())
+    #
+    #     xor_out = pnl.TransferMechanism(name='xor_out',
+    #                                     default_variable=np.zeros(1),
+    #                                     function=pnl.core.components.functions.transferfunctions.Logistic())
+    #
+    #     hid_map = pnl.MappingProjection(name='input_to_hidden',
+    #                                     matrix=np.random.randn(2, 10) * 0.1,
+    #                                     sender=xor_in,
+    #                                     receiver=xor_hid)
+    #
+    #     out_map = pnl.MappingProjection(name='hidden_to_output',
+    #                                     matrix=np.random.randn(10, 1) * 0.1,
+    #                                     sender=xor_hid,
+    #                                     receiver=xor_out)
+    #
+    #     # -----------------------------------------------------------------
+    #
+    #     xor_autodiff = AutodiffComposition(
+    #         patience=patience,
+    #         min_delta=min_delta,
+    #         learning_rate=learning_rate,
+    #         randomize=False,
+    #         learning_enabled=True
+    #     )
+    #
+    #     xor_autodiff.add_node(xor_in)
+    #     xor_autodiff.add_node(xor_hid)
+    #     xor_autodiff.add_node(xor_out)
+    #
+    #     xor_autodiff.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+    #     xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+    #
+    #     # -----------------------------------------------------------------
+    #
+    #     input_dict = {'inputs': {xor_in: xor_inputs}, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}
+    #     xor_autodiff.run(inputs = input_dict)
+    #     myTransfer = pnl.TransferMechanism(size = 2)
+    #     myMappingProj = pnl.MappingProjection(sender = myTransfer, receiver = xor_autodiff)
+    #
+    #     no_training_input_dict = {xor_in: xor_inputs}
+    #
+    #     parentComposition = pnl.Composition()
+    #     parentComposition.add_node(myTransfer)
+    #     parentComposition.add_node(xor_autodiff)
+    #     parentComposition.add_projection(myMappingProj, sender=myTransfer, receiver=xor_autodiff)
+    #     xor_autodiff.learning_enabled = False
+    #
+    #     no_training_input = {myTransfer: no_training_input_dict}
+    #
+    #     result = parentComposition.run(inputs=no_training_input)
+    #
+    #     np.testing.assert_allclose(result, [[0]], atol=0.1)
+
+    @pytest.mark.parametrize(
+        'eps, opt', [
+            (1, 'sgd'),
+        ]
+    )
+    def test_semantic_net_nested(self, eps, opt, autodiff_mode):
+
+        # SET UP MECHANISMS FOR SEMANTIC NET:
+
+        nouns_in = TransferMechanism(name="nouns_input",
+                                     default_variable=np.zeros(8))
+
+        rels_in = TransferMechanism(name="rels_input",
+                                    default_variable=np.zeros(3))
+
+        h1 = TransferMechanism(name="hidden_nouns",
+                               default_variable=np.zeros(8),
+                               function=Logistic())
+
+        h2 = TransferMechanism(name="hidden_mixed",
+                               default_variable=np.zeros(15),
+                               function=Logistic())
+
+        out_sig_I = TransferMechanism(name="sig_outs_I",
+                                      default_variable=np.zeros(8),
+                                      function=Logistic())
+
+        out_sig_is = TransferMechanism(name="sig_outs_is",
+                                       default_variable=np.zeros(12),
+                                       function=Logistic())
+
+        out_sig_has = TransferMechanism(name="sig_outs_has",
+                                        default_variable=np.zeros(9),
+                                        function=Logistic())
+
+        out_sig_can = TransferMechanism(name="sig_outs_can",
+                                        default_variable=np.zeros(9),
+                                        function=Logistic())
+
+        # SET UP MECHANISMS FOR SYSTEM
+
+        nouns_in_sys = TransferMechanism(name="nouns_input_sys",
+                                         default_variable=np.zeros(8))
+
+        rels_in_sys = TransferMechanism(name="rels_input_sys",
+                                        default_variable=np.zeros(3))
+
+        h1_sys = TransferMechanism(name="hidden_nouns_sys",
+                                   default_variable=np.zeros(8),
+                                   function=Logistic())
+
+        h2_sys = TransferMechanism(name="hidden_mixed_sys",
+                                   default_variable=np.zeros(15),
+                                   function=Logistic())
+
+        out_sig_I_sys = TransferMechanism(name="sig_outs_I_sys",
+                                          default_variable=np.zeros(8),
+                                          function=Logistic())
+
+        out_sig_is_sys = TransferMechanism(name="sig_outs_is_sys",
+                                           default_variable=np.zeros(12),
+                                           function=Logistic())
+
+        out_sig_has_sys = TransferMechanism(name="sig_outs_has_sys",
+                                            default_variable=np.zeros(9),
+                                            function=Logistic())
+
+        out_sig_can_sys = TransferMechanism(name="sig_outs_can_sys",
+                                            default_variable=np.zeros(9),
+                                            function=Logistic())
+
+        # SET UP PROJECTIONS FOR SEMANTIC NET
+
+        map_nouns_h1 = MappingProjection(matrix=np.random.rand(8,8),
+                                 name="map_nouns_h1",
+                                 sender=nouns_in,
+                                 receiver=h1)
+
+        map_rels_h2 = MappingProjection(matrix=np.random.rand(3,15),
+                                    name="map_relh2",
+                                    sender=rels_in,
+                                    receiver=h2)
+
+        map_h1_h2 = MappingProjection(matrix=np.random.rand(8,15),
+                                    name="map_h1_h2",
+                                    sender=h1,
+                                    receiver=h2)
+
+        map_h2_I = MappingProjection(matrix=np.random.rand(15,8),
+                                    name="map_h2_I",
+                                    sender=h2,
+                                    receiver=out_sig_I)
+
+        map_h2_is = MappingProjection(matrix=np.random.rand(15,12),
+                                    name="map_h2_is",
+                                    sender=h2,
+                                    receiver=out_sig_is)
+
+        map_h2_has = MappingProjection(matrix=np.random.rand(15,9),
+                                    name="map_h2_has",
+                                    sender=h2,
+                                    receiver=out_sig_has)
+
+        map_h2_can = MappingProjection(matrix=np.random.rand(15,9),
+                                    name="map_h2_can",
+                                    sender=h2,
+                                    receiver=out_sig_can)
+
+        # SET UP PROJECTIONS FOR SYSTEM
+
+        map_nouns_h1_sys = MappingProjection(matrix=map_nouns_h1.matrix.base.copy(),
+                                             name="map_nouns_h1_sys",
+                                             sender=nouns_in_sys,
+                                             receiver=h1_sys)
+
+        map_rels_h2_sys = MappingProjection(matrix=map_rels_h2.matrix.base.copy(),
+                                        name="map_relh2_sys",
+                                        sender=rels_in_sys,
+                                        receiver=h2_sys)
+
+        map_h1_h2_sys = MappingProjection(matrix=map_h1_h2.matrix.base.copy(),
+                                          name="map_h1_h2_sys",
+                                          sender=h1_sys,
+                                          receiver=h2_sys)
+
+        map_h2_I_sys = MappingProjection(matrix=map_h2_I.matrix.base.copy(),
+                                         name="map_h2_I_sys",
+                                         sender=h2_sys,
+                                         receiver=out_sig_I_sys)
+
+        map_h2_is_sys = MappingProjection(matrix=map_h2_is.matrix.base.copy(),
+                                          name="map_h2_is_sys",
+                                          sender=h2_sys,
+                                          receiver=out_sig_is_sys)
+
+        map_h2_has_sys = MappingProjection(matrix=map_h2_has.matrix.base.copy(),
+                                           name="map_h2_has_sys",
+                                           sender=h2_sys,
+                                           receiver=out_sig_has_sys)
+
+        map_h2_can_sys = MappingProjection(matrix=map_h2_can.matrix.base.copy(),
+                                           name="map_h2_can_sys",
+                                           sender=h2_sys,
+                                           receiver=out_sig_can_sys)
+
+        # SET UP COMPOSITION FOR SEMANTIC NET
+
+        sem_net = AutodiffComposition(learning_rate=0.5,
+                                      optimizer_type=opt)
+
+        sem_net.add_node(nouns_in)
+        sem_net.add_node(rels_in)
+        sem_net.add_node(h1)
+        sem_net.add_node(h2)
+        sem_net.add_node(out_sig_I)
+        sem_net.add_node(out_sig_is)
+        sem_net.add_node(out_sig_has)
+        sem_net.add_node(out_sig_can)
+
+        sem_net.add_projection(sender=nouns_in, projection=map_nouns_h1, receiver=h1)
+        sem_net.add_projection(sender=rels_in, projection=map_rels_h2, receiver=h2)
+        sem_net.add_projection(sender=h1, projection=map_h1_h2, receiver=h2)
+        sem_net.add_projection(sender=h2, projection=map_h2_I, receiver=out_sig_I)
+        sem_net.add_projection(sender=h2, projection=map_h2_is, receiver=out_sig_is)
+        sem_net.add_projection(sender=h2, projection=map_h2_has, receiver=out_sig_has)
+        sem_net.add_projection(sender=h2, projection=map_h2_can, receiver=out_sig_can)
+
+        # INPUTS & OUTPUTS FOR SEMANTIC NET:
+
+        nouns = ['oak', 'pine', 'rose', 'daisy', 'canary', 'robin', 'salmon', 'sunfish']
+        relations = ['is', 'has', 'can']
+        is_list = ['living', 'living thing', 'plant', 'animal', 'tree', 'flower', 'bird', 'fish', 'big', 'green', 'red',
+                   'yellow']
+        has_list = ['roots', 'leaves', 'bark', 'branches', 'skin', 'feathers', 'wings', 'gills', 'scales']
+        can_list = ['grow', 'move', 'swim', 'fly', 'breathe', 'breathe underwater', 'breathe air', 'walk', 'photosynthesize']
+
+        nouns_input = np.identity(len(nouns))
+
+        rels_input = np.identity(len(relations))
+
+        truth_nouns = np.identity(len(nouns))
+
+        truth_is = np.zeros((len(nouns), len(is_list)))
+
+        truth_is[0, :] = [1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0]
+        truth_is[1, :] = [1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0]
+        truth_is[2, :] = [1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+        truth_is[3, :] = [1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+        truth_is[4, :] = [1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1]
+        truth_is[5, :] = [1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1]
+        truth_is[6, :] = [1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0]
+        truth_is[7, :] = [1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0]
+
+        truth_has = np.zeros((len(nouns), len(has_list)))
+
+        truth_has[0, :] = [1, 1, 1, 1, 0, 0, 0, 0, 0]
+        truth_has[1, :] = [1, 1, 1, 1, 0, 0, 0, 0, 0]
+        truth_has[2, :] = [1, 1, 0, 0, 0, 0, 0, 0, 0]
+        truth_has[3, :] = [1, 1, 0, 0, 0, 0, 0, 0, 0]
+        truth_has[4, :] = [0, 0, 0, 0, 1, 1, 1, 0, 0]
+        truth_has[5, :] = [0, 0, 0, 0, 1, 1, 1, 0, 0]
+        truth_has[6, :] = [0, 0, 0, 0, 0, 0, 0, 1, 1]
+        truth_has[7, :] = [0, 0, 0, 0, 0, 0, 0, 1, 1]
+
+        truth_can = np.zeros((len(nouns), len(can_list)))
+
+        truth_can[0, :] = [1, 0, 0, 0, 0, 0, 0, 0, 1]
+        truth_can[1, :] = [1, 0, 0, 0, 0, 0, 0, 0, 1]
+        truth_can[2, :] = [1, 0, 0, 0, 0, 0, 0, 0, 1]
+        truth_can[3, :] = [1, 0, 0, 0, 0, 0, 0, 0, 1]
+        truth_can[4, :] = [1, 1, 0, 1, 1, 0, 1, 1, 0]
+        truth_can[5, :] = [1, 1, 0, 1, 1, 0, 1, 1, 0]
+        truth_can[6, :] = [1, 1, 1, 0, 1, 1, 0, 0, 0]
+        truth_can[7, :] = [1, 1, 1, 0, 1, 1, 0, 0, 0]
+
+        # SETTING UP DICTIONARY OF INPUTS/OUTPUTS FOR SEMANTIC NET
+
+        inputs_dict = {}
+        inputs_dict[nouns_in] = []
+        inputs_dict[rels_in] = []
+
+        targets_dict = {}
+        targets_dict[out_sig_I] = []
+        targets_dict[out_sig_is] = []
+        targets_dict[out_sig_has] = []
+        targets_dict[out_sig_can] = []
+
+        for i in range(len(nouns)):
+            for j in range(len(relations)):
+                inputs_dict[nouns_in].append(nouns_input[i])
+                inputs_dict[rels_in].append(rels_input[j])
+                targets_dict[out_sig_I].append(truth_nouns[i])
+                targets_dict[out_sig_is].append(truth_is[i])
+                targets_dict[out_sig_has].append(truth_has[i])
+                targets_dict[out_sig_can].append(truth_can[i])
+
+        # TRAIN COMPOSITION
+        input_dict = {"inputs": inputs_dict,
+                      "targets": targets_dict,
+                      "epochs": eps}
+
+        parentComposition = pnl.Composition()
+        parentComposition.add_node(sem_net)
+
+        input = {sem_net: input_dict}
+        no_training_input = {sem_net: inputs_dict.copy()}
+
+        sem_net.learn(inputs=input_dict, execution_mode=autodiff_mode)
+
+        if autodiff_mode is not pnl.ExecutionMode.Python:
+            #FIXME: Enable the rest of the test when recompilation is supported
+            return
+
+        parentComposition.run(inputs=no_training_input)
+
+
+@pytest.mark.pytorch
+@pytest.mark.acnested
+@pytest.mark.acidenticalness
+@pytest.mark.composition
+class TestNestedLearning:
+    """Test learning with nested AutodiffCompositions benchmarked against unnested versions using Composition"""
+
+    @pytest.fixture
+    def nodes_for_testing_nested_comps(self):
+        input_nodes = [pnl.ProcessingMechanism(name='input_1', size=2),
+                       pnl.ProcessingMechanism(name='input_2', size=3),
+                       pnl.ProcessingMechanism(name='input_3', size=3)]
+        hidden_nodes = [pnl.ProcessingMechanism(name='hidden_1', size=3),
+                        pnl.ProcessingMechanism(name='hidden_2', size=4),
+                        pnl.ProcessingMechanism(name='hidden_3', size=5),
+                        pnl.ProcessingMechanism(name='hidden_4', size=6)]
+        output_nodes = [pnl.ProcessingMechanism(name='output_1', size=3),
+                        pnl.ProcessingMechanism(name='output_2', size=5)]
+        def _get_nodes(num_input_nodes, num_hidden_nodes, num_output_nodes):
+            return (input_nodes[0:num_input_nodes],
+                    hidden_nodes[0:num_hidden_nodes],
+                    output_nodes[0:num_output_nodes])
+        return _get_nodes
+
+    @pytest.fixture
+    def execute_learning(self):
+        def _execute_learning(comp_type, execution_mode, pathways, inputs, learning_rate=.01, num_trials=5):
+
+            if comp_type == 'composition':
+                comp = Composition(name='comp')
+                for p in pathways:
+                    comp.add_backpropagation_learning_pathway(p)
+
+            elif comp_type == 'autodiff':
+                comp = AutodiffComposition(pathways, name='autodiff_comp')
+
+            else:
+                assert False, f'Invalid comp_type: {comp_type}'
+
+            comp.learn(inputs=inputs,
+                       learning_rate = learning_rate,
+                       num_trials=num_trials,
+                       execution_mode=execution_mode)
+            return comp.results
+        return _execute_learning
+
+    def test_1_nested_hidden(self, nodes_for_testing_nested_comps, execute_learning):
+        nodes = nodes_for_testing_nested_comps(1, 1, 1)
+        input_nodes, hidden_nodes, output_nodes = nodes
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
+
+        nested_hidden_1 = AutodiffComposition(name='nested', nodes=[hidden_nodes[0]])
+        autodiff_results = execute_learning(comp_type='autodiff',
+                                            execution_mode=pnl.ExecutionMode.PyTorch,
+                                            pathways=[input_nodes[0], nested_hidden_1, output_nodes[0]],
+                                            inputs=inputs)
+
+        comp_results = execute_learning(comp_type='composition',
+                                        execution_mode=pnl.ExecutionMode.Python,
+                                        pathways=[[input_nodes[0],hidden_nodes[0], output_nodes[0]]],
+                                        inputs=inputs)
+
+        np.testing.assert_allclose(comp_results, autodiff_results,  rtol=1e-8, atol=1e-8)
+
+    def test_2_sequential_nested_hidden(self, nodes_for_testing_nested_comps, execute_learning):
+        nodes = nodes_for_testing_nested_comps(1, 2, 1)
+        input_nodes, hidden_nodes, output_nodes = nodes
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
+
+        nested_hiddens = AutodiffComposition(name='nested', pathways=[hidden_nodes[0],
+                                                                      hidden_nodes[1]])
+        autodiff_results = execute_learning(comp_type='autodiff',
+                                            execution_mode=pnl.ExecutionMode.PyTorch,
+                                            pathways=[input_nodes[0], nested_hiddens, output_nodes[0]],
+                                            inputs=inputs)
+
+        comp_results = execute_learning(comp_type='composition',
+                                        execution_mode=pnl.ExecutionMode.Python,
+                                        pathways=[[input_nodes[0],
+                                                   hidden_nodes[0],
+                                                   hidden_nodes[1],
+                                                   output_nodes[0]]],
+                                        inputs=inputs)
+
+        np.testing.assert_allclose(comp_results, autodiff_results)
+
+    def test_2_level_nested(self, nodes_for_testing_nested_comps, execute_learning):
+
+        nodes = nodes_for_testing_nested_comps(1, 4, 1)
+        input_nodes, hidden_nodes, output_nodes = nodes
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
+
+        nested_b = AutodiffComposition(name='nested_b', pathways=[hidden_nodes[1],
+                                                                  hidden_nodes[2]])
+        nested_a = AutodiffComposition(name='nested_a', pathways=[hidden_nodes[0],
+                                                                  nested_b,
+                                                                  hidden_nodes[3]])
+        autodiff_results = execute_learning(comp_type='autodiff',
+                                            execution_mode=pnl.ExecutionMode.PyTorch,
+                                            pathways=[input_nodes[0], nested_a, output_nodes[0]],
+                                            inputs=inputs)
+
+        comp_results = execute_learning(comp_type='composition',
+                                        execution_mode=pnl.ExecutionMode.Python,
+                                        pathways=[[input_nodes[0],
+                                                   hidden_nodes[0],
+                                                   hidden_nodes[1],
+                                                   hidden_nodes[2],
+                                                   hidden_nodes[3],
+                                                   output_nodes[0]]],
+                                        inputs=inputs)
+
+        np.testing.assert_allclose(comp_results, autodiff_results)
+
+    def test_1_input_to_1_nested_hidden_with_2_output_ports(self, nodes_for_testing_nested_comps, execute_learning):
+        # Note: inputs provided for only one of the INPUT Nodes; other uses default inputs
+
+        nodes = nodes_for_testing_nested_comps(1, 1, 2)
+        input_nodes, hidden_nodes, output_nodes = nodes
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
+        hidden_with_two_output_ports = pnl.ProcessingMechanism(size=3, output_ports=['FIRST','SECOND'])
+
+        nested = AutodiffComposition([hidden_nodes[0], hidden_with_two_output_ports], name='nested')
+        pathway_a = [input_nodes[0],
+                     nested,
+                     MappingProjection(hidden_with_two_output_ports.output_ports[0], output_nodes[0]),
+                     output_nodes[0]]
+        pathway_b = [input_nodes[0],
+                     nested,
+                     MappingProjection(hidden_with_two_output_ports.output_ports[1], output_nodes[1]),
+                     output_nodes[1]]
+        autodiff_results = execute_learning(comp_type='autodiff',
+                                            execution_mode=pnl.ExecutionMode.PyTorch,
+                                            pathways=[pathway_a, pathway_b],
+                                            inputs=inputs)
+
+        # Note:
+        #  the MappingProjections are not needed, as they were actually implemented in the autodiff version
+        #  in infer_backpropagation_learning_pathways() (when flattening the nessted Composition)
+        pathway_a = [input_nodes[0], hidden_nodes[0], hidden_with_two_output_ports, output_nodes[0]]
+        pathway_b = [input_nodes[0], hidden_nodes[0], hidden_with_two_output_ports, output_nodes[1]]
+
+        comp_results = execute_learning(comp_type='composition',
+                                        execution_mode=pnl.ExecutionMode.Python,
+                                        pathways=[pathway_a, pathway_b],
+                                        inputs=inputs)
+
+        for i in range(len(autodiff_results)):
+            for j in range(len(autodiff_results[i])):
+                np.testing.assert_allclose(comp_results[i][j], autodiff_results[i][j])
+
+    def test_1_input_to_1_nested_hidden_one_to_many_2_outputs(self, nodes_for_testing_nested_comps, execute_learning):
+        # Note: inputs provided for only one of the INPUT Nodes; other uses default inputs
+
+        nodes = nodes_for_testing_nested_comps(1, 1, 2)
+        input_nodes, hidden_nodes, output_nodes = nodes
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
+
+        nested = AutodiffComposition([hidden_nodes[0]],name='nested')
+        pathway_a = [input_nodes[0], nested, output_nodes[0]]
+        pathway_b = [input_nodes[0], nested, output_nodes[1]]
+        autodiff_results = execute_learning(comp_type='autodiff',
+                                            execution_mode=pnl.ExecutionMode.PyTorch,
+                                            pathways=[pathway_a, pathway_b],
+                                            inputs=inputs)
+
+        # Note:
+        #  the MappingProjections are not needed, as they were actualy implemented in the autodiff version
+        #  in infer_backpropagation_learning_pathways() (when flattening the nessted Composition)
+        pathway_a = [input_nodes[0], hidden_nodes[0], output_nodes[0]]
+        pathway_b = [input_nodes[0], hidden_nodes[0], output_nodes[1]]
+
+        comp_results = execute_learning(comp_type='composition',
+                                        execution_mode=pnl.ExecutionMode.Python,
+                                        pathways=[pathway_a, pathway_b],
+                                        inputs=inputs)
+
+        for i in range(len(autodiff_results)):
+            for j in range(len(autodiff_results[i])):
+                np.testing.assert_allclose(comp_results[i][j], autodiff_results[i][j])
+
+    def test_1_input_to_2_nested_hidden_to_2_outputs(self, nodes_for_testing_nested_comps, execute_learning):
+        # Note: inputs provided for only one of the INPUT Nodes; other uses default inputs
+
+        nodes = nodes_for_testing_nested_comps(1, 2, 2)
+        input_nodes, hidden_nodes, output_nodes = nodes
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
+
+        nested = AutodiffComposition(nodes=[hidden_nodes[0], hidden_nodes[1]], name='nested')
+        pathway_a = [input_nodes[0],
+                     MappingProjection(input_nodes[0],hidden_nodes[0]),
+                     nested,
+                     MappingProjection(hidden_nodes[0],output_nodes[0]),
+                     output_nodes[0]]
+        pathway_b = [input_nodes[0],
+                     MappingProjection(input_nodes[0], hidden_nodes[1]),
+                     nested,
+                     MappingProjection(hidden_nodes[1],output_nodes[1]),
+                     output_nodes[1]]
+        autodiff_results = execute_learning(comp_type='autodiff',
+                                            execution_mode=pnl.ExecutionMode.PyTorch,
+                                            pathways=[pathway_a, pathway_b],
+                                            inputs=inputs)
+
+        # Note:
+        #  the MappingProjections are not needed, as they were actualy implemented in the autodiff version
+        #  in infer_backpropagation_learning_pathways() (when flattening the nessted Composition)
+        pathway_a = [input_nodes[0], hidden_nodes[0], output_nodes[0]]
+        pathway_b = [input_nodes[0], hidden_nodes[1], output_nodes[1]]
+
+        comp_results = execute_learning(comp_type='composition',
+                                        execution_mode=pnl.ExecutionMode.Python,
+                                        pathways=[pathway_a, pathway_b],
+                                        inputs=inputs)
+
+        for i in range(len(autodiff_results)):
+            for j in range(len(autodiff_results[i])):
+                np.testing.assert_allclose(comp_results[i][j], autodiff_results[i][j])
+
+    def test_2_inputs_to_2_input_ports_of_single_nested_hidden(self, nodes_for_testing_nested_comps, execute_learning):
+        # Note: inputs provided for only one of the INPUT Nodes; other uses default inputs
+
+        nodes = nodes_for_testing_nested_comps(2, 0, 1)
+        input_nodes, hidden_nodes, output_nodes = nodes
+        hidden_with_2_inputs = pnl.ProcessingMechanism(name='hidden_x', size=(3,3), function=pnl.LinearCombination)
+
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
+
+        nested = AutodiffComposition([hidden_with_2_inputs],name='nested')
+        pathway_a = [input_nodes[0],
+                     MappingProjection(input_nodes[0], hidden_with_2_inputs.input_ports[0]),
+                     nested,
+                     output_nodes[0]]
+        pathway_b = [input_nodes[1],
+                     MappingProjection(input_nodes[1], hidden_with_2_inputs.input_ports[1]),
+                     nested,
+                     output_nodes[0]]
+        autodiff_results = execute_learning(comp_type='autodiff',
+                                            execution_mode=pnl.ExecutionMode.PyTorch,
+                                            pathways=[pathway_a, pathway_b],
+                                            inputs=inputs)
+
+        # Note:
+        #  the MappingProjections are not needed, as they were actualy implemented in the autodiff version
+        #  in infer_backpropagation_learning_pathways() (when flattening the nessted Composition)
+        pathway_a = [input_nodes[0],
+                     # MappingProjection(input_nodes[0], hidden_with_2_inputs.input_ports[0]),
+                     hidden_with_2_inputs,
+                     output_nodes[0]]
+        pathway_b = [input_nodes[1],
+                     # MappingProjection(input_nodes[1], hidden_with_2_inputs.input_ports[1]),
+                     hidden_with_2_inputs,
+                     output_nodes[0]]
+
+        comp_results = execute_learning(comp_type='composition',
+                                        execution_mode=pnl.ExecutionMode.Python,
+                                        pathways=[pathway_a, pathway_b],
+                                        inputs=inputs)
+
+        np.testing.assert_allclose(comp_results, autodiff_results)
+
+    def test_2_inputs_one_to_one_to_2_nested_hidden_to_1_hidden(self, nodes_for_testing_nested_comps,execute_learning):
+        # Note: inputs provided for only one of the INPUT Nodes; other uses default inputs
+
+        nodes = nodes_for_testing_nested_comps(2, 3, 1)
+        input_nodes, hidden_nodes, output_nodes = nodes
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
+
+        nested = AutodiffComposition([[hidden_nodes[0], hidden_nodes[2]],
+                                      [hidden_nodes[1], hidden_nodes[2]]],
+                                     name='nested')
+        pathway_a = [input_nodes[0], MappingProjection(input_nodes[0], hidden_nodes[0]), nested, output_nodes[0]]
+        pathway_b = [input_nodes[1], MappingProjection(input_nodes[1], hidden_nodes[1]), nested, output_nodes[0]]
+        autodiff_results = execute_learning(comp_type='autodiff',
+                                            execution_mode=pnl.ExecutionMode.PyTorch,
+                                            pathways=[pathway_a, pathway_b],
+                                            inputs=inputs)
+
+        # Note:
+        #  the MappingProjections are not needed, as they were actualy implemented in the autodiff version
+        #  in infer_backpropagation_learning_pathways() (when flattening the nessted Composition)
+        pathway_a = [input_nodes[0], hidden_nodes[0], hidden_nodes[2], output_nodes[0]]
+        pathway_b = [input_nodes[1], hidden_nodes[1], hidden_nodes[2], output_nodes[0]]
+        comp_results = execute_learning(comp_type='composition',
+                                        execution_mode=pnl.ExecutionMode.Python,
+                                        pathways=[pathway_a, pathway_b],
+                                        inputs=inputs)
+
+        np.testing.assert_allclose(comp_results, autodiff_results)
+
+    def test_2_inputs_all_to_all_to_2_nested_hidden_to_1_hidden(self, nodes_for_testing_nested_comps, execute_learning):
+        # Note: inputs provided for only one of the INPUT Nodes; other uses default inputs
+
+        nodes = nodes_for_testing_nested_comps(2, 3, 1)
+        input_nodes, hidden_nodes, output_nodes = nodes
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
+
+        nested = AutodiffComposition([[hidden_nodes[0], hidden_nodes[2]],
+                                      [hidden_nodes[1], hidden_nodes[2]]],
+                                      name='nested')
+        pathway_a = [input_nodes[0], nested, output_nodes[0]]
+        pathway_b = [input_nodes[1], nested, output_nodes[0]]
+        autodiff_results = execute_learning(comp_type='autodiff',
+                                            execution_mode=pnl.ExecutionMode.PyTorch,
+                                            pathways=[pathway_a, pathway_b],
+                                            inputs=inputs)
+
+        # Note:
+        #  the MappingProjections are not needed, as they were actualy implemented in the autodiff version
+        #  in infer_backpropagation_learning_pathways() (when flattening the nessted Composition)
+        pathway_a = [input_nodes[0], hidden_nodes[0], hidden_nodes[2], output_nodes[0]]
+        pathway_b = [input_nodes[0], hidden_nodes[1], hidden_nodes[2], output_nodes[0]]
+        pathway_c = [input_nodes[1], hidden_nodes[0], hidden_nodes[2], output_nodes[0]]
+        pathway_d = [input_nodes[1], hidden_nodes[1], hidden_nodes[2], output_nodes[0]]
+        comp_results = execute_learning(comp_type='composition',
+                                        execution_mode=pnl.ExecutionMode.Python,
+                                        pathways=[pathway_a, pathway_b, pathway_c, pathway_d],
+                                        inputs=inputs)
+
+        np.testing.assert_allclose(comp_results, autodiff_results)
+
+    def test_2_inputs_to_2_parallel_nested_and_output_pathways(self, nodes_for_testing_nested_comps, execute_learning):
+        # Note: inputs provided for only one of the INPUT Nodes; other uses default inputs
+
+        nodes = nodes_for_testing_nested_comps(2, 2, 2)
+        input_nodes, hidden_nodes, output_nodes = nodes
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
+
+        nested = AutodiffComposition(nodes=[hidden_nodes[0], hidden_nodes[1]], name='nested')
+        pathway_a = [input_nodes[0],
+                     MappingProjection(input_nodes[0], hidden_nodes[0]),
+                     nested,
+                     MappingProjection(hidden_nodes[0], output_nodes[0]),
+                     output_nodes[0]]
+        pathway_b = [input_nodes[1],
+                     MappingProjection(input_nodes[1], hidden_nodes[1]),
+                     nested,
+                     MappingProjection(hidden_nodes[1], output_nodes[1]),
+                     output_nodes[1]]
+        autodiff_results = execute_learning(comp_type='autodiff',
+                                            execution_mode=pnl.ExecutionMode.PyTorch,
+                                            pathways=[pathway_a, pathway_b],
+                                            inputs=inputs)
+
+        # Note:
+        #  the MappingProjections are not needed, as they were actualy implemented in the autodiff version
+        #  in infer_backpropagation_learning_pathways() (when flattening the nessted Composition)
+        pathway_a = [input_nodes[0], hidden_nodes[0], output_nodes[0]]
+        pathway_b = [input_nodes[1], hidden_nodes[1], output_nodes[1]]
+        comp_results = execute_learning(comp_type='composition',
+                                        execution_mode=pnl.ExecutionMode.Python,
+                                        pathways=[pathway_a, pathway_b],
+                                        inputs=inputs)
+
+        for i in range(len(autodiff_results)):
+            for j in range(len(autodiff_results[i])):
+                np.testing.assert_allclose(comp_results[i][j], autodiff_results[i][j])
+
+    def test_direct_input_to_nested(self, nodes_for_testing_nested_comps, execute_learning):
+        nodes = nodes_for_testing_nested_comps(1, 1, 1)
+        input_nodes, hidden_nodes, output_nodes = nodes
+
+        nested = AutodiffComposition([input_nodes[0], hidden_nodes[0]],name='nested')
+        auto_diff_inputs = {nested:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
+        autodiff_results = execute_learning(comp_type='autodiff',
+                                            execution_mode=pnl.ExecutionMode.PyTorch,
+                                            pathways=[nested, output_nodes[0]],
+                                            inputs=auto_diff_inputs)
+
+        comp_inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
+        comp_results = execute_learning(comp_type='composition',
+                                        execution_mode=pnl.ExecutionMode.Python,
+                                        pathways=[[input_nodes[0],hidden_nodes[0], output_nodes[0]]],
+                                        inputs=comp_inputs)
+
+        np.testing.assert_allclose(comp_results, autodiff_results)
+
+    def test_asymmetric_inputs_to_nested_nodes_one_direct_one_via_node_in_outer_comp(
+            self,
+            nodes_for_testing_nested_comps,
+            execute_learning):
+        nodes = nodes_for_testing_nested_comps(1, 2, 2)
+        input_nodes, hidden_nodes, output_nodes = nodes
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
+
+        nested = AutodiffComposition(nodes=[hidden_nodes[0],hidden_nodes[1]],name='nested')
+        indirect = [input_nodes[0],
+                  MappingProjection(input_nodes[0], hidden_nodes[0]),
+                  nested,
+                  MappingProjection(hidden_nodes[0], output_nodes[0]),
+                  output_nodes[0]]
+        direct = [(nested, pnl.NodeRole.INPUT),
+                  MappingProjection(hidden_nodes[1], output_nodes[1]),
+                  output_nodes[1]]
+
+        autodiff_results = execute_learning(comp_type='autodiff',
+                                            execution_mode=pnl.ExecutionMode.PyTorch,
+                                            pathways=[indirect, direct],
+                                            inputs=inputs)
+
+        comp_results = execute_learning(comp_type='composition',
+                                        execution_mode=pnl.ExecutionMode.Python,
+                                        pathways=[[input_nodes[0],hidden_nodes[0], output_nodes[0]],
+                                                  [hidden_nodes[1], output_nodes[1]]],
+                                        inputs=inputs)
+
+        for i in range(len(autodiff_results)):
+            for j in range(len(autodiff_results[i])):
+                np.testing.assert_allclose(comp_results[i][j], autodiff_results[i][j])
+
+    def test_inputs_to_multiple_input_ports_and_INPUT_nodes(self, nodes_for_testing_nested_comps, execute_learning):
+        """Test asymmetric inputs to INPUT Nodes of a nested Composition
+        One direct input to one input_port of an INPUT Node of nested Composition,
+        One indirect (via Node in outer Composition) input to the other input_port of the nested INPUT Node
+        One direct input to a different INPUT Node of the nested Composition
+        """
+        nodes = nodes_for_testing_nested_comps(2, 1, 2)
+        input_nodes, hidden_nodes, output_nodes = nodes
+        hidden_node_x = pnl.ComparatorMechanism(name='hidden_node_x')
+
+        nested = AutodiffComposition(nodes=[hidden_nodes[0],hidden_node_x],name='nested')
+
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]]),
+                  hidden_node_x.input_ports[0]:[[1], [1], [0], [0]]}
+
+        direct_1 = [(nested, pnl.NodeRole.INPUT),
+                  MappingProjection(hidden_nodes[0], output_nodes[0]),
+                  output_nodes[0]]
+        direct_2 = [(nested, pnl.NodeRole.INPUT),
+                  MappingProjection(hidden_node_x, output_nodes[1]),
+                  output_nodes[1]]
+        indirect = [input_nodes[0],
+                      MappingProjection(input_nodes[0], hidden_node_x.input_ports[1]),
+                      nested]
+
+        autodiff_results = execute_learning(comp_type='autodiff',
+                                            execution_mode=pnl.ExecutionMode.PyTorch,
+                                            pathways=[indirect, direct_1, direct_2],
+                                            inputs=inputs)
+
+        comp_results = execute_learning(comp_type='composition',
+                                        execution_mode=pnl.ExecutionMode.Python,
+                                        pathways=[[hidden_nodes[0], output_nodes[0]],
+                                                  [input_nodes[0],
+                                                   # MappingProjection(input_nodes[0], hidden_node_x.input_ports[1]),
+                                                   (hidden_node_x, pnl.NodeRole.INPUT),
+                                                   output_nodes[1]]],
+                                        inputs=inputs)
+
+        for i in range(len(autodiff_results)):
+            for j in range(len(autodiff_results[i])):
+                np.testing.assert_allclose(comp_results[i][j], autodiff_results[i][j])
+
+    # def test_output_from_multiple_output_ports_and_OUTPUT_nodes(self, nodes_for_testing_nested_comps, execute_learning):
+    #     # FIX:  1) No input assigned to hidden_2d.input_port[1]
+    #     #       2) Output from hidden_2d.output_port[0] erroneously projects to output_nodes[1]
+    #     #          in addition to correctly projecting to output_nodes[0]
+    #     nodes = nodes_for_testing_nested_comps(1, 1, 2)
+    #     input_nodes, hidden_nodes, output_nodes = nodes
+    #     inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
+    #
+    #     hidden_2d = pnl.ProcessingMechanism(name='hidden 2d', size=(2,2))
+    #     nested = AutodiffComposition(nodes = [hidden_nodes[0], hidden_2d], name='nested')
+    #     pathway_a = [input_nodes[0],
+    #                  MappingProjection(input_nodes[0], hidden_2d),
+    #                  nested,
+    #                  MappingProjection(hidden_2d.output_ports[0], output_nodes[0]),
+    #                  output_nodes[0]]
+    #     pathway_b = [input_nodes[0], MappingProjection(input_nodes[0], hidden_nodes[0]), nested, output_nodes[1]]
+    #     # pathway_c = [nested,
+    #     #              MappingProjection(hidden_2d.output_ports[1], output_nodes[1]),
+    #     #              output_nodes[1]]
+    #
+    #     autodiff_results = execute_learning(comp_type='autodiff',
+    #                                         execution_mode=pnl.ExecutionMode.PyTorch,
+    #                                         pathways=[pathway_a, pathway_b],
+    #                                         inputs=inputs)
+    #
+    #     pathway_a = [input_nodes[0], hidden_nodes[0]]
+    #     pathway_b = [input_nodes[0], hidden_nodes[1]]
+    #     comp_results = execute_learning(comp_type='composition',
+    #                                     execution_mode=pnl.ExecutionMode.Python,
+    #                                     pathways=[pathway_a, pathway_b],
+    #                                     inputs=inputs)
+    #
+    #     for i in range(len(autodiff_results)):
+    #         for j in range(len(autodiff_results[i])):
+    #             np.testing.assert_allclose(comp_results[i][j], autodiff_results[i][j])
+    def test_2_direct_output_nodes_from_nested(self, nodes_for_testing_nested_comps, execute_learning):
+        nodes = nodes_for_testing_nested_comps(1, 2, 0)
+        input_nodes, hidden_nodes, output_nodes = nodes
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
+
+        nested = AutodiffComposition(nodes = [hidden_nodes[0], hidden_nodes[1]], name='nested')
+        pathway_a = [input_nodes[0], MappingProjection(input_nodes[0], hidden_nodes[0]), nested]
+        pathway_b = [input_nodes[0], MappingProjection(input_nodes[0], hidden_nodes[1]), nested]
+
+        autodiff_results = execute_learning(comp_type='autodiff',
+                                            execution_mode=pnl.ExecutionMode.PyTorch,
+                                            pathways=[pathway_a, pathway_b],
+                                            inputs=inputs)
+
+        pathway_a = [input_nodes[0], hidden_nodes[0]]
+        pathway_b = [input_nodes[0], hidden_nodes[1]]
+        comp_results = execute_learning(comp_type='composition',
+                                        execution_mode=pnl.ExecutionMode.Python,
+                                        pathways=[pathway_a, pathway_b],
+                                        inputs=inputs)
+
+        for i in range(len(autodiff_results)):
+            for j in range(len(autodiff_results[i])):
+                np.testing.assert_allclose(comp_results[i][j], autodiff_results[i][j])
+
+    def test_1_direct_and_1_ordinary_output_from_nested(self, nodes_for_testing_nested_comps, execute_learning):
+        nodes = nodes_for_testing_nested_comps(1, 2, 1)
+        input_nodes, hidden_nodes, output_nodes = nodes
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
+
+        nested = AutodiffComposition(nodes = [hidden_nodes[0], hidden_nodes[1]], name='nested')
+        pathway_a = [input_nodes[0], MappingProjection(input_nodes[0], hidden_nodes[0]), nested]
+        pathway_b = [input_nodes[0],
+                     MappingProjection(input_nodes[0], hidden_nodes[1]),
+                     nested,
+                     MappingProjection(hidden_nodes[1]),
+                     output_nodes[0]]
+
+        # error_msg = ("The output for 'hidden_2' Node of nested Composition 'nested' must project "
+        #              "to a node in the outer composition ('autodiff_comp') to be learnable.")
+        #
+        # with pytest.raises(AutodiffCompositionError) as error_text:
+        #     autodiff_results = execute_learning(comp_type='autodiff',
+        #                                         execution_mode=pnl.ExecutionMode.PyTorch,
+        #                                         pathways=[pathway_a, pathway_b],
+        #                                         inputs=inputs)
+        # assert error_msg in str(error_text.value)
+
+        autodiff_results = execute_learning(comp_type='autodiff',
+                                            execution_mode=pnl.ExecutionMode.PyTorch,
+                                            pathways=[pathway_a, pathway_b],
+                                            inputs=inputs)
+
+        pathway_a = [input_nodes[0], hidden_nodes[0]]
+        pathway_b = [input_nodes[0], hidden_nodes[1], output_nodes[0]]
+        comp_results = execute_learning(comp_type='composition',
+                                        execution_mode=pnl.ExecutionMode.Python,
+                                        pathways=[pathway_a, pathway_b],
+                                        inputs=inputs)
+
+        # np.testing.assert_allclose(comp_results, autodiff_results)
+
+    def test_nested_autodiff_learning_with_input_func(self):
+        """Note: this uses the same Composition and results as test_learning/test_identicalness_of_input_types"""
         xor_in_func = TransferMechanism(name='xor_in',
                                         default_variable=np.zeros(2))
 
@@ -1294,177 +2292,402 @@ class TestTrainingIdenticalness():
                                          default_variable=np.zeros(1),
                                          function=Logistic())
 
-        # SET UP PROJECTIONS FOR COMPOSITION
+        nested = AutodiffComposition([xor_hid_func], learning_rate=.001, name='nested')
+        xor_func = AutodiffComposition([xor_in_func,
+                                        MappingProjection(sender=xor_in_func,
+                                                          matrix=np.full((2, 10),.1),
+                                                          receiver=xor_hid_func),
+                                        nested,
+                                        MappingProjection(sender=xor_hid_func,
+                                                          matrix=np.full((10, 1),.1),
+                                                          receiver=xor_out_func),
+                                        # out_map_func,
+                                        xor_out_func],
+                                       learning_rate=.001,
+                                       name='outer')
 
-        hid_map_func = MappingProjection(name='hid_map',
-                                         matrix=copy(hid_map_mat),
-                                         sender=xor_in_func,
-                                         receiver=xor_hid_func)
+        xor_inputs_func = np.array([[0, 0],[0, 1],[1, 0],[1, 1]])
+        xor_targets_func = np.array([[0],[1],[1],[0]])
 
-        out_map_func = MappingProjection(name='out_map',
-                                         matrix=copy(out_map_mat),
-                                         sender=xor_hid_func,
-                                         receiver=xor_out_func)
+        def get_inputs_auto_diff(idx):
+            return {"inputs": {xor_in_func: xor_inputs_func[idx]},
+                    "targets": {xor_out_func: xor_targets_func[idx]}}
+        def get_inputs_comp(idx):
+            return {xor_in_func: xor_inputs_func[idx]}
+        def get_targets_comp(idx):
+            return {xor_out_func: xor_targets_func[idx]}
 
-        # SET UP COMPOSITION
+        xor_func.learn(inputs=get_inputs_auto_diff)
 
-        xor_func = AutodiffComposition()
+        results = xor_func.results
+        np.testing.assert_allclose(results, [[[0.62245933]],[[0.62813197]],[[0.6282438]],[[0.6341436]]])
 
-        xor_func.add_node(xor_in_func)
-        xor_func.add_node(xor_hid_func)
-        xor_func.add_node(xor_out_func)
+    # def test_nested_with_diff_learning_rates(self, nodes_for_testing_nested_comps, execute_learning):
+    #     nodes = nodes_for_testing_nested_comps(1, 0, 1)
+    #     input_nodes, hidden_nodes, output_nodes = nodes
+    #     inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
+    #
+    #     hidden_1 = pnl.ProcessingMechanism(name='hidden_1', size=3)
+    #     nested_01 = AutodiffComposition(name='nested_01', nodes=[hidden_1], learning_rate=.01)
+    #     autodiff_01_results = execute_learning(comp_type='autodiff',
+    #                                           execution_mode=pnl.ExecutionMode.PyTorch,
+    #                                           pathways=[input_nodes[0], nested_01, output_nodes[0]],
+    #                                           inputs=inputs)
+    #
+    #     hidden_2 = pnl.ProcessingMechanism(name='hidden_2', size=3)
+    #     nested_1 = AutodiffComposition(name='nested_2', nodes=[hidden_2], learning_rate=.1)
+    #     autodiff_1_results = execute_learning(comp_type='autodiff',
+    #                                           execution_mode=pnl.ExecutionMode.PyTorch,
+    #                                           pathways=[input_nodes[0], nested_1, output_nodes[0]],
+    #                                           inputs=inputs)
+    #
+    #     THIS SHOULD FAIL IF NESTED USED ITS OWN SPECIFIED LEARNING RATE:
+    #     np.testing.assert_allclose(autodiff_01_results, autodiff_1_results)
 
-        xor_func.add_projection(sender=xor_in_func, projection=hid_map_func, receiver=xor_hid_func)
-        xor_func.add_projection(sender=xor_hid_func, projection=out_map_func, receiver=xor_out_func)
+    def test_error_for_running_nested_learning_in_Python_mode(self):
+        input_mech = pnl.ProcessingMechanism(name='input_mech', size=2)
+        hidden_mech = pnl.ProcessingMechanism(name='hidden_mech', size=2)
+        output_mech = pnl.ProcessingMechanism(name='output_mech', size=2)
 
-        # SET UP INPUTS AND TARGETS
+        # Test for error on learning if nested is Composition
+        nested = pnl.Composition(name='nested', nodes=[hidden_mech])
+        autodiff = pnl.AutodiffComposition([input_mech, nested, output_mech], name='comp')
+        autodiff.run()
+        error_msg = (f"Unable execute learning for 'comp' because it contains nested Composition(s) "
+                     f"that are not AutodiffCompositions: 'nested'.")
+        with pytest.raises(AutodiffCompositionError) as error:
+            autodiff.learn(inputs={input_mech: [[0, 0]]})
+        assert error_msg in str(error.value)
 
-        xor_inputs_func = np.array(  # the inputs we will provide to the model
-                [[0, 0],
-                 [0, 1],
-                 [1, 0],
-                 [1, 1]])
+        # Test for error on learning if nested is AutodiffComposition but execution_mode is Python
+        nested = pnl.AutodiffComposition(name='nested', nodes=[hidden_mech])
+        autodiff = pnl.AutodiffComposition([input_mech, nested, output_mech], name='comp')
+        autodiff.run()
+        error_msg = ("Unable to execute learning in Python mode for 'comp-1' "
+                     "because it contains one or more nested Compositions: 'nested-1'.")
+        with pytest.raises(AutodiffCompositionError) as error:
+            autodiff.learn(inputs={input_mech: [[0, 0]]}, execution_mode=pnl.ExecutionMode.Python)
+        assert error_msg in str(error.value)
 
-        xor_targets_func = np.array(  # the outputs we wish to see from the model
-                [[0],
-                 [1],
-                 [1],
-                 [0]])
 
-        def get_inputs(idx):
-            return {
-                "inputs": {
-                    xor_in_func: xor_inputs_func[idx]
-                },
-                "targets": {
-                    xor_out_func: xor_targets_func[idx]
-                }
-            }
+# Names and objects for TestAutodiffMultipleOutput_ports
+INPUT_A = 'input_A'
+INPUT_B = 'input_B'
+INPUT_C = 'input_C'
+HIDDEN_A = 'hidden_A'
+HIDDEN_B = 'hidden_B'
+HIDDEN_C = 'hidden_C'
+OUTPUT_A = 'output_A'
+OUTPUT_B = 'output_B'
+def nodes_for_testing_nested_comps(sizes):
+    return {INPUT_A: pnl.ProcessingMechanism(name=INPUT_A, size=sizes.pop(INPUT_A, 2)),
+            INPUT_B: pnl.ProcessingMechanism(name=INPUT_B, size=sizes.pop(INPUT_B, 2)),
+            INPUT_C: pnl.ProcessingMechanism(name=INPUT_C, size=sizes.pop(INPUT_C, 2)),
+            HIDDEN_A: pnl.ProcessingMechanism(name=HIDDEN_A, size=sizes.pop(HIDDEN_A, 2)),
+            HIDDEN_B: pnl.ProcessingMechanism(name=HIDDEN_B, size=sizes.pop(HIDDEN_B, 2)),
+            HIDDEN_C: pnl.ProcessingMechanism(name=HIDDEN_C, size=sizes.pop(HIDDEN_C, 2)),
+            OUTPUT_A: pnl.ProcessingMechanism(name=OUTPUT_A, size=sizes.pop(OUTPUT_A, 2)),
+            OUTPUT_B: pnl.ProcessingMechanism(name=OUTPUT_B, size=sizes.pop(OUTPUT_B, 2))}
 
-        result_func = xor_func.learn(inputs=get_inputs)
 
-        # SET UP MECHANISMS FOR COMPOSITION
-        xor_in_gen = TransferMechanism(name='xor_in',
-                                       default_variable=np.zeros(2))
+@pytest.mark.pytorch
+class TestAutodiffMultipleOutput_ports:
 
-        xor_hid_gen = TransferMechanism(name='xor_hid',
-                                        default_variable=np.zeros(10),
-                                        function=Logistic())
+    def test_parallel_inputs_to_output_ports_converge_internal(self):
 
-        xor_out_gen = TransferMechanism(name='xor_out',
-                                        default_variable=np.zeros(1),
-                                        function=Logistic())
+        # Autodiff: PARALLEL PATHWAYS USING SEPARATE INPUT AND OUTPUT PORTS ON hidden_1
+        sizes = {HIDDEN_A: (2,3)}
+        nodes = nodes_for_testing_nested_comps(sizes)
+        input_A = nodes[INPUT_A]
+        input_B = nodes[INPUT_B]
+        hidden_A = nodes[HIDDEN_A]
+        hidden_B = nodes[HIDDEN_B]
+        output = nodes[OUTPUT_A]
+        autodiff = pnl.AutodiffComposition(pathways=[[input_A,
+                                                      pnl.MappingProjection(input_A, hidden_A.input_ports[0]),
+                                                      hidden_A,
+                                                      pnl.MappingProjection(hidden_A.output_ports[0],hidden_B),
+                                                      hidden_B,
+                                                      output],
+                                                     [input_B,
+                                                      pnl.MappingProjection(input_B, hidden_A.input_ports[1]),
+                                                      hidden_A,
+                                                      pnl.MappingProjection(hidden_A.output_ports[1],hidden_B),
+                                                      hidden_B,
+                                                      output]],
+                                           name='autodiff')
+        # autodiff.show_graph(show_all=True)
+        result_autodiff_ports = autodiff.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
+                                                       input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                                               learning_rate = .01, epochs=3)
 
-        # SET UP PROJECTIONS FOR COMPOSITION
+        # # Autodiff: PARALLEL PATHWAYS USING SEPARATE HIDDEN NODES (hidden_1 VS. hidden_2)
+        sizes = {HIDDEN_B: 3}
+        nodes = nodes_for_testing_nested_comps(sizes)
+        input_A = nodes[INPUT_A]
+        input_B = nodes[INPUT_B]
+        hidden_A = nodes[HIDDEN_A]
+        hidden_B = nodes[HIDDEN_B]
+        hidden_C = nodes[HIDDEN_C]
+        output = nodes[OUTPUT_A]
+        autodiff = pnl.AutodiffComposition(pathways=[[input_A,
+                                                  hidden_A,
+                                                  hidden_C,
+                                                  output],
+                                                 [input_B,
+                                                  hidden_B,
+                                                  hidden_C,
+                                                  output]],
+                                       name='autodiff')
 
-        hid_map_gen = MappingProjection(name='hid_map',
-                                        matrix=copy(hid_map_mat),
-                                        sender=xor_in_gen,
-                                        receiver=xor_hid_gen)
+        result_autodiff_nodes = autodiff.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
+                                        input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                                learning_rate = .01, epochs=3)
 
-        out_map_gen = MappingProjection(name='out_map',
-                                        matrix=copy(out_map_mat),
-                                        sender=xor_hid_gen,
-                                        receiver=xor_out_gen)
+        # # Composition: PARALLEL PATHWAYS USING SEPARATE INPUT AND OUTPUT PORTS ON hidden_1
+        sizes = {HIDDEN_A: (2,3)}
+        nodes = nodes_for_testing_nested_comps(sizes)
+        input_A = nodes[INPUT_A]
+        input_B = nodes[INPUT_B]
+        hidden_A = nodes[HIDDEN_A]
+        hidden_B = nodes[HIDDEN_B]
+        output = nodes[OUTPUT_A]
+        comp = Composition(name='comp')
+        comp.add_backpropagation_learning_pathway([input_A,
+                                                   pnl.MappingProjection(input_A, hidden_A.input_ports[0]),
+                                                   hidden_A,
+                                                   pnl.MappingProjection(hidden_A.output_ports[0],hidden_B),
+                                                   hidden_B,
+                                                   output])
+        comp.add_backpropagation_learning_pathway([input_B,
+                                                   pnl.MappingProjection(input_B, hidden_A.input_ports[1]),
+                                                   hidden_A,
+                                                   pnl.MappingProjection(hidden_A.output_ports[1],hidden_B),
+                                                   hidden_B,
+                                                   output])
+        result_comp_ports = comp.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
+                                      input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                              learning_rate = .01, epochs=3)
 
-        # SET UP COMPOSITION
+        # # Comp: PARALLEL PATHWAYS USING SEPARATE HIDDEN NODES (hidden_1 VS. hidden_2)
+        sizes = {HIDDEN_B: 3}
+        nodes = nodes_for_testing_nested_comps(sizes)
+        input_A = nodes[INPUT_A]
+        input_B = nodes[INPUT_B]
+        hidden_A = nodes[HIDDEN_A]
+        hidden_B = nodes[HIDDEN_B]
+        hidden_C = nodes[HIDDEN_C]
+        output = nodes[OUTPUT_A]
+        comp = Composition(name='comp')
+        comp.add_backpropagation_learning_pathway([input_A,
+                                                   hidden_A,
+                                                   hidden_C,
+                                                   output])
+        comp.add_backpropagation_learning_pathway([input_B,
+                                                   hidden_B,
+                                                   hidden_C,
+                                                   output])
+        result_comp_nodes = comp.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
+                                      input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                              learning_rate = .01, epochs=3)
 
-        xor_gen = AutodiffComposition()
+        expected = [[-0.14091702170015408, 0.11156579308015635]]
+        np.testing.assert_allclose(result_autodiff_ports, expected, rtol=1e-8, atol=1e-8)
+        np.testing.assert_allclose(result_autodiff_nodes, expected, rtol=1e-8, atol=1e-8)
+        np.testing.assert_allclose(result_comp_ports, expected, rtol=1e-8, atol=1e-8)
+        np.testing.assert_allclose(result_comp_nodes, expected, rtol=1e-8, atol=1e-8)
 
-        xor_gen.add_node(xor_in_gen)
-        xor_gen.add_node(xor_hid_gen)
-        xor_gen.add_node(xor_out_gen)
+    def test_single_input_to_multiple_output_ports_converge_internal(self):
 
-        xor_gen.add_projection(sender=xor_in_gen, projection=hid_map_gen, receiver=xor_hid_gen)
-        xor_gen.add_projection(sender=xor_hid_gen, projection=out_map_gen, receiver=xor_out_gen)
-        # SET UP INPUTS AND TARGETS
+        # Autodiff: DIVERGENT PATHWAY USING SEPARATE INPUT AND OUTPUT PORTS ON hidden_1
+        sizes = {HIDDEN_A: (2,3)}
+        nodes = nodes_for_testing_nested_comps(sizes)
+        input = nodes[INPUT_A]
+        hidden_A = nodes[HIDDEN_A]
+        hidden_B = nodes[HIDDEN_B]
+        output = nodes[OUTPUT_A]
+        autodiff = pnl.AutodiffComposition(pathways=[[input,
+                                                      pnl.MappingProjection(input, hidden_A.input_ports[0]),
+                                                      hidden_A,
+                                                      pnl.MappingProjection(hidden_A.output_ports[0],hidden_B),
+                                                      hidden_B,
+                                                      output],
+                                                     [input,
+                                                      pnl.MappingProjection(input, hidden_A.input_ports[1]),
+                                                      hidden_A,
+                                                      pnl.MappingProjection(hidden_A.output_ports[1],hidden_B),
+                                                      hidden_B,
+                                                      output]],
+                                           name='autodiff')
+        result_autodiff_ports = autodiff.learn(inputs={input: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                                               learning_rate = .01, epochs=3)
 
-        xor_inputs_gen = np.array(  # the inputs we will provide to the model
-                [[0, 0],
-                 [0, 1],
-                 [1, 0],
-                 [1, 1]])
+        # # Autodiff: DIVERGENT PATHWAY USING SEPARATE HIDDEN NODES (hidden_1 VS. hidden_2)
+        sizes = {HIDDEN_B: 3}
+        nodes = nodes_for_testing_nested_comps(sizes)
+        input = nodes[INPUT_A]
+        hidden_A = nodes[HIDDEN_A]
+        hidden_B = nodes[HIDDEN_B]
+        hidden_C = nodes[HIDDEN_C]
+        output = nodes[OUTPUT_A]
+        autodiff = pnl.AutodiffComposition(pathways=[[input, hidden_A, hidden_C, output],
+                                                     [input, hidden_B, hidden_C, output]],
+                                           name='autodiff')
+        result_autodiff_nodes = autodiff.learn(inputs={input: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                                               learning_rate = .01, epochs=3)
 
-        xor_targets_gen = np.array(  # the outputs we wish to see from the model
-                [[0],
-                 [1],
-                 [1],
-                 [0]])
+        # Composition: DIVERGENT PATHWAY USING SEPARATE INPUT AND OUTPUT PORTS ON hidden_1
+        sizes = {HIDDEN_A: (2,3)}
+        nodes = nodes_for_testing_nested_comps(sizes)
+        input = nodes[INPUT_A]
+        hidden_A = nodes[HIDDEN_A]
+        hidden_B = nodes[HIDDEN_B]
+        output = nodes[OUTPUT_A]
+        comp = Composition(name='comp')
+        comp.add_backpropagation_learning_pathway([input,
+                                                   pnl.MappingProjection(input, hidden_A.input_ports[0]),
+                                                   hidden_A,
+                                                   pnl.MappingProjection(hidden_A.output_ports[0],hidden_B),
+                                                   hidden_B,
+                                                   output])
+        comp.add_backpropagation_learning_pathway([input,
+                                                   pnl.MappingProjection(input, hidden_A.input_ports[1]),
+                                                   hidden_A,
+                                                   pnl.MappingProjection(hidden_A.output_ports[1],hidden_B),
+                                                   hidden_B,
+                                                   output])
+        result_comp_ports = comp.learn(inputs={input: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                                       learning_rate = .01, epochs=3)
 
-        def get_inputs_gen():
-            yield {
-                "inputs": {
-                    xor_in_gen: xor_inputs_gen
-                },
-                "targets": {
-                    xor_out_gen: xor_targets_gen
-                }
-            }
+        # Comp: DIVERGENT PATHWAY USING SEPARATE HIDDEN NODES (hidden_1 VS. hidden_2)
+        sizes = {HIDDEN_B: 3}
+        nodes = nodes_for_testing_nested_comps(sizes)
+        input = nodes[INPUT_A]
+        hidden_A = nodes[HIDDEN_A]
+        hidden_B = nodes[HIDDEN_B]
+        hidden_C = nodes[HIDDEN_C]
+        output = nodes[OUTPUT_A]
+        comp = Composition(name='comp')
+        comp.add_backpropagation_learning_pathway([input, hidden_A, hidden_C, output])
+        comp.add_backpropagation_learning_pathway([input, hidden_B, hidden_C, output])
+        result_comp_nodes = comp.learn(inputs={input: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                                       learning_rate = .01, epochs=3)
 
-        g = get_inputs_gen()
-        result_gen = xor_gen.learn(inputs=g)
+        expected = [[-0.5448706019245989, -0.45743872720005285]]
+        np.testing.assert_allclose(result_autodiff_ports, expected, rtol=1e-8, atol=1e-8)
+        np.testing.assert_allclose(result_autodiff_nodes, expected, rtol=1e-8, atol=1e-8)
+        np.testing.assert_allclose(result_comp_ports, expected, rtol=1e-8, atol=1e-8)
+        np.testing.assert_allclose(result_comp_nodes, expected, rtol=1e-8, atol=1e-8)
 
-        # SET UP MECHANISMS FOR COMPOSITION
-        xor_in_gen_func = TransferMechanism(name='xor_in',
-                                            default_variable=np.zeros(2))
+    def test_single_input_to_multiple_output_ports_converge_on_OUTPUT_Node(self):
 
-        xor_hid_gen_func = TransferMechanism(name='xor_hid',
-                                             default_variable=np.zeros(10),
-                                             function=Logistic())
+        # Autodiff: PARALLEL PATHWAYS USE SEPARATE INPUT AND OUTPUT PORTS ON hidden
+        sizes = {HIDDEN_A: (2,3)}
+        nodes = nodes_for_testing_nested_comps(sizes)
+        input = nodes[INPUT_A]
+        hidden = nodes[HIDDEN_A]
+        output = nodes[OUTPUT_A]
+        autodiff = pnl.AutodiffComposition(pathways=[[input,
+                                                  pnl.MappingProjection(input, hidden.input_ports[0]),
+                                                  hidden,
+                                                  pnl.MappingProjection(hidden.output_ports[0],output),
+                                                  output],
+                                                 [input,
+                                                  pnl.MappingProjection(input, hidden.input_ports[1]),
+                                                  hidden,
+                                                  pnl.MappingProjection(hidden.output_ports[1],output),
+                                                  output]                                         ],
+                                       name='autodiff')
+        result_autodiff_ports = autodiff.learn(inputs={input: [[0, 0], [0, 1], [1, 0], [1, 1]]},
+                                 learning_rate = .01, epochs=3)
 
-        xor_out_gen_func = TransferMechanism(name='xor_out',
-                                             default_variable=np.zeros(1),
-                                             function=Logistic())
+        # Autodiff: PARALLEL PATHWAYS USE SEPARATE HIDDEN NODES (hidden_1 VS. hidden_2)
+        sizes = {HIDDEN_B: 3}
+        nodes = nodes_for_testing_nested_comps(sizes)
+        input = nodes[INPUT_A]
+        hidden_A = nodes[HIDDEN_A]
+        hidden_B = nodes[HIDDEN_B]
+        output = nodes[OUTPUT_A]
+        autodiff = pnl.AutodiffComposition(pathways=[[input, hidden_A, output],
+                                                 [input, hidden_B, output]                                         ],
+                                       name='autodiff')
+        result_autodiff_nodes = autodiff.learn(inputs={input: [[0, 0], [0, 1], [1, 0], [1, 1]]},
+                                                learning_rate = .01, epochs=3)
 
-        # SET UP PROJECTIONS FOR COMPOSITION
+        # Comp: PARALLEL PATHWAYS USE SEPARATE HIDDEN NODES (hidden_1 VS. hidden_2)
+        sizes = {HIDDEN_B: 3}
+        nodes = nodes_for_testing_nested_comps(sizes)
+        input = nodes[INPUT_A]
+        hidden_A = nodes[HIDDEN_A]
+        hidden_B = nodes[HIDDEN_B]
+        output = nodes[OUTPUT_A]
+        comp = Composition(name='comp')
+        comp.add_backpropagation_learning_pathway([input, hidden_A, output])
+        comp.add_backpropagation_learning_pathway([input, hidden_B, output])
+        result_comp_nodes = comp.learn(inputs={input: [[0, 0], [0, 1], [1, 0], [1, 1]]},
+                               learning_rate = .01, epochs=3)
 
-        hid_map_gen_func = MappingProjection(name='hid_map',
-                                             matrix=copy(hid_map_mat),
-                                             sender=xor_in_gen_func,
-                                             receiver=xor_hid_gen_func)
+        # Comp: PARALLEL PATHWAYS USE SEPARATE INPUT AND OUTPUT PORTS ON hidden_c
+        sizes = {HIDDEN_A: (2,3)}
+        nodes = nodes_for_testing_nested_comps(sizes)
+        input = nodes[INPUT_A]
+        hidden = nodes[HIDDEN_A]
+        output = nodes[OUTPUT_A]
+        comp = Composition(name='comp')
+        comp.add_backpropagation_learning_pathway([input,
+                                                   pnl.MappingProjection(input, hidden.input_ports[0]),
+                                                   hidden,
+                                                   pnl.MappingProjection(hidden.output_ports[0],output),
+                                                   output])
+        comp.add_backpropagation_learning_pathway([input,
+                                                   pnl.MappingProjection(input, hidden.input_ports[1]),
+                                                   hidden,
+                                                   pnl.MappingProjection(hidden.output_ports[1],output),
+                                                   output])
+        result_comp_ports = comp.learn(inputs={input: [[0, 0], [0, 1], [1, 0], [1, 1]]},
+                                        learning_rate = .01, epochs=3)
 
-        out_map_gen_func = MappingProjection(name='out_map',
-                                             matrix=copy(out_map_mat),
-                                             sender=xor_hid_gen_func,
-                                             receiver=xor_out_gen_func)
+        expected = [[3.3178720430554267, 3.3245710462077773]]
+        np.testing.assert_allclose(result_autodiff_ports, expected, rtol=1e-8, atol=1e-8)
+        np.testing.assert_allclose(result_autodiff_nodes, expected, rtol=1e-8, atol=1e-8)
+        np.testing.assert_allclose(result_comp_ports, expected, rtol=1e-8, atol=1e-8)
+        np.testing.assert_allclose(result_comp_nodes, expected, rtol=1e-8, atol=1e-8)
 
-        # SET UP COMPOSITION
+    def test_two_output_ports_on_OUTPUT_Node(self):
 
-        xor_gen_func = AutodiffComposition()
+        # Autodiff: SEPARATE INPUT NODES TO ONE OUTPUT NODE WITH TWO OUTPUTPORTS
+        sizes = {OUTPUT_A: (2,3)}
+        nodes = nodes_for_testing_nested_comps(sizes)
+        input_A = nodes[INPUT_A]
+        input_B = nodes[INPUT_B]
+        output = nodes[OUTPUT_A]
+        autodiff = AutodiffComposition(pathways=[[input_A,
+                                                  MappingProjection(input_A, output.input_ports[0]),
+                                                  output],
+                                                 [input_B,
+                                                  MappingProjection(input_B, output.input_ports[1]),
+                                                  output]],
+                                       name='autodiff')
+        result_autodiff_ports = autodiff.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
+                                                       input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                                               learning_rate = .01, epochs=3)
 
-        xor_gen_func.add_node(xor_in_gen_func)
-        xor_gen_func.add_node(xor_hid_gen_func)
-        xor_gen_func.add_node(xor_out_gen_func)
-
-        xor_gen_func.add_projection(sender=xor_in_gen_func, projection=hid_map_gen_func, receiver=xor_hid_gen_func)
-        xor_gen_func.add_projection(sender=xor_hid_gen_func, projection=out_map_gen_func, receiver=xor_out_gen_func)
-        # SET UP INPUTS AND TARGETS
-
-        xor_inputs_gen_func = np.array(  # the inputs we will provide to the model
-                [[0, 0],
-                 [0, 1],
-                 [1, 0],
-                 [1, 1]])
-
-        xor_targets_gen_func = np.array(  # the outputs we wish to see from the model
-                [[0],
-                 [1],
-                 [1],
-                 [0]])
-
-        def get_inputs_gen_func():
-            yield {
-                "inputs": {
-                    xor_in_gen_func: xor_inputs_gen_func
-                },
-                "targets": {
-                    xor_out_gen_func: xor_targets_gen_func
-                }
-            }
-
-        result_gen_func = xor_gen_func.learn(inputs=get_inputs_gen_func)
-
-        assert result_dict == result_func == result_gen == result_gen_func
+        # Autodiff: SEPARATE INPUT NODES TO SEPARATE OUTPUT NODES WITH ONE OUTPUTPORT EACH
+        sizes = {OUTPUT_A: 2,
+                 OUTPUT_B: 3}
+        nodes = nodes_for_testing_nested_comps(sizes)
+        input_A = nodes[INPUT_A]
+        input_B = nodes[INPUT_B]
+        output_A = nodes[OUTPUT_A]
+        output_B = nodes[OUTPUT_B]
+        autodiff = AutodiffComposition(pathways=[[input_A, output_A],
+                                                 [input_B, output_B]],
+                                       name='autodiff')
+        result_autodiff_nodes = autodiff.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
+                                                       input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                                               learning_rate = .01, epochs=3)
+        for port, node in zip(result_autodiff_ports, result_autodiff_nodes):
+            np.testing.assert_allclose(port, node)
 
 
 @pytest.mark.pytorch
@@ -1572,11 +2795,14 @@ class TestMiscTrainingFunctionality:
         # np.testing.assert_allclose(pt_weights_hid_bp, pt_weights_hid_ap)
         # np.testing.assert_allclose(pt_weights_out_bp, pt_weights_out_ap)
 
+
     @pytest.mark.parametrize(
-        'loss, expected', [(Loss.MSE, [[[0.99330509]], [[0.99933169]], [[0.99933169]], [[0.9998504]]]),
-                           (Loss.L1, []),
-                           (Loss.POISSON_NLL, []),
-                           (Loss.CROSS_ENTROPY, [[[0.99330715]], [[0.99933202]], [[0.99933202]], [[0.99985049]]])]
+        'loss, expected', [
+            (Loss.MSE, [[[0.99330509]], [[0.99933169]], [[0.99933169]], [[0.9998504]]]),
+            (Loss.L1, []),
+            (Loss.POISSON_NLL, []),
+            (Loss.CROSS_ENTROPY, [[[0.99330715]], [[0.99933202]], [[0.99933202]], [[0.99985049]]])
+        ]
     )
     def test_loss_specs(self, loss, expected, autodiff_mode):
         if autodiff_mode is not pnl.ExecutionMode.Python and loss in [Loss.POISSON_NLL, Loss.L1]:
@@ -1776,20 +3002,6 @@ class TestMiscTrainingFunctionality:
         assert not np.allclose(pt_weights_hid, hid_map.parameters.matrix.get(None))
         assert not np.allclose(pt_weights_out, out_map.parameters.matrix.get(None))
 
-    def test_execution_mode_python_error(self):
-        A = TransferMechanism(name="learning-process-mech-A")
-        B = TransferMechanism(name="learning-process-mech-B")
-        adc = AutodiffComposition(name='AUTODIFFCOMP')
-        pway = adc.add_backpropagation_learning_pathway(pathway=[A,B])
-        # Call learn with default_variable specified for target (for comparison with missing target)
-        with pytest.raises(AutodiffCompositionError) as error:
-            adc.learn(inputs={A: 1.0,
-                              pway.target: 0.0},
-                      execution_mode=pnl.ExecutionMode.Python,
-                      num_trials=2)
-        assert error.value.error_value == 'AUTODIFFCOMP is an AutodiffComposition so its learn() ' \
-                                          'cannot be called with execution_mode = ExecutionMode.Python; ' \
-                                          'use ExecutionMode.PyTorch or ExecutionMode.LLVMRun.'
 
 @pytest.mark.pytorch
 @pytest.mark.actime
@@ -2350,10 +3562,10 @@ class TestACLogging:
         out_map.set_log_conditions('matrix', pnl.LogCondition.TRIAL)
 
         xor_inputs = np.array(  # the inputs we will provide to the model
-            [[0, 0],
-             [0, 1],
-             [1, 0],
-             [1, 1]])
+            [[[0, 0]],
+             [[0, 1]],
+             [[1, 0]],
+             [[1, 1]]])
 
         xor_targets = np.array(  # the outputs we wish to see from the model
             [[0],
@@ -2364,8 +3576,9 @@ class TestACLogging:
         # train model for a few epochs
         num_epochs = 10
         xor.learn(inputs={"inputs": {xor_in: xor_inputs},
-                        "targets": {xor_out: xor_targets},
-                        "epochs": num_epochs})
+                          "targets": {xor_out: xor_targets},
+                          "epochs": num_epochs},
+                  execution_mode=pnl.ExecutionMode.PyTorch)
 
         exec_id = xor.default_execution_id
 
@@ -2386,17 +3599,17 @@ class TestACLogging:
 
         np.testing.assert_equal(in_np_dict_vals[0:4], xor_inputs)
         np.testing.assert_equal(in_np_vals, in_np_dict_vals)
-        assert in_np_dict_vals.shape == (expected_length, xor_in.size)
+        assert in_np_dict_vals.shape == (expected_length, 1, xor_in.size)
 
         assert hid_map_np_dict_mats.shape == (expected_length, xor_in.size, xor_hid.size)
         np.testing.assert_equal(hid_map_np_mats, hid_map_np_dict_mats)
 
-        assert hid_np_dict_vals.shape == (expected_length, xor_hid.size)
+        assert hid_np_dict_vals.shape == (expected_length, 1, xor_hid.size)
 
         assert out_map_np_dict_mats.shape == (expected_length, xor_hid.size, xor_out.size)
         np.testing.assert_equal(out_map_np_mats, out_map_np_dict_mats)
 
-        assert out_np_dict_vals.shape == (expected_length, xor_out.size)
+        assert out_np_dict_vals.shape == (expected_length, 1, xor_out.size)
 
         xor_out.log.print_entries()
 
@@ -2440,7 +3653,8 @@ class TestACLogging:
         num_epochs = 100
         xor.learn(inputs={"inputs": {xor_in: xor_inputs},
                         "targets": {xor_out: xor_targets},
-                        "epochs": num_epochs})
+                        "epochs": num_epochs},
+                  execution_mode=pnl.ExecutionMode.PyTorch)
 
         losses = xor.losses
         # Since the losses track average losses per weight update, and weights are updated every minibatch,
@@ -2452,482 +3666,6 @@ class TestACLogging:
         # test clearing ad losses
         xor.clear_losses(context=xor)
         assert len(xor.losses) == 0
-
-
-@pytest.mark.pytorch
-@pytest.mark.acnested
-@pytest.mark.composition
-class TestNested:
-
-    @pytest.mark.parametrize(
-        'num_epochs, learning_rate, patience, min_delta', [
-            (400, 4, 10, .00001),
-        ]
-    )
-    def test_xor_nested_train_then_no_train(self, num_epochs, learning_rate,
-                                            patience, min_delta, autodiff_mode):
-        # the inputs we will provide to the model
-        xor_inputs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-
-        # the outputs we wish to see from the model
-        xor_targets = np.array([[0], [1], [1], [0]])
-
-        # -----------------------------------------------------------------
-
-        xor_in = pnl.TransferMechanism(name='xor_in',
-                                       default_variable=np.zeros(2))
-
-        xor_hid = pnl.TransferMechanism(name='xor_hid',
-                                        default_variable=np.zeros(10),
-                                        function=Logistic())
-
-        xor_out = pnl.TransferMechanism(name='xor_out',
-                                        default_variable=np.zeros(1),
-                                        function=Logistic())
-
-        hid_map = pnl.MappingProjection(name='input_to_hidden',
-                                        matrix=np.random.randn(2, 10) * 0.1,
-                                        sender=xor_in,
-                                        receiver=xor_hid)
-
-        out_map = pnl.MappingProjection(name='hidden_to_output',
-                                        matrix=np.random.randn(10, 1) * 0.1,
-                                        sender=xor_hid,
-                                        receiver=xor_out)
-
-        # -----------------------------------------------------------------
-
-        xor_autodiff = AutodiffComposition(
-            learning_rate=learning_rate,
-        )
-
-        xor_autodiff.add_node(xor_in)
-        xor_autodiff.add_node(xor_hid)
-        xor_autodiff.add_node(xor_out)
-
-        xor_autodiff.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
-        xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
-
-        # -----------------------------------------------------------------
-
-        no_training_input_dict = {xor_in: xor_inputs}
-        input_dict = {'inputs': {xor_in: xor_inputs }, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}
-
-        parentComposition = pnl.Composition()
-        parentComposition.add_node(xor_autodiff)
-
-        input = {xor_autodiff: input_dict}
-        no_training_input = {xor_autodiff: no_training_input_dict}
-
-        learning_context = Context()
-        xor_autodiff.learn(inputs=input_dict, execution_mode=autodiff_mode, epochs=num_epochs, context=learning_context, patience=patience, min_delta=min_delta)
-        result1 = np.array(xor_autodiff.learning_results).flatten()
-        np.testing.assert_allclose(result1, np.array(xor_targets).flatten(), atol=0.1)
-        result2 = parentComposition.run(inputs=no_training_input, execution_mode=autodiff_mode, context=learning_context)
-
-        np.testing.assert_allclose(result2, [[0]], atol=0.1)
-
-    @pytest.mark.parametrize(
-        'num_epochs, learning_rate, patience, min_delta', [
-            (400, 4, 10, .00001),
-        ]
-    )
-    def test_xor_nested_no_train_then_train(self, num_epochs, learning_rate,
-                                            patience, min_delta, autodiff_mode):
-        if autodiff_mode is not pnl.ExecutionMode.Python:
-            pytest.skip("")
-        # the inputs we will provide to the model
-        xor_inputs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-
-        # the outputs we wish to see from the model
-        xor_targets = np.array([[0], [1], [1], [0]])
-
-        # -----------------------------------------------------------------
-
-        xor_in = pnl.TransferMechanism(name='xor_in',
-                                       default_variable=np.zeros(2))
-
-        xor_hid = pnl.TransferMechanism(name='xor_hid',
-                                        default_variable=np.zeros(10),
-                                        function=Logistic())
-
-        xor_out = pnl.TransferMechanism(name='xor_out',
-                                        default_variable=np.zeros(1),
-                                        function=Logistic())
-
-        hid_map = pnl.MappingProjection(name='input_to_hidden',
-                                        matrix=np.random.randn(2, 10) * 0.1,
-                                        sender=xor_in,
-                                        receiver=xor_hid)
-
-        out_map = pnl.MappingProjection(name='hidden_to_output',
-                                        matrix=np.random.randn(10, 1) * 0.1,
-                                        sender=xor_hid,
-                                        receiver=xor_out)
-
-        # -----------------------------------------------------------------
-
-        xor_autodiff = AutodiffComposition(
-            learning_rate=learning_rate,
-        )
-
-        xor_autodiff.add_node(xor_in)
-        xor_autodiff.add_node(xor_hid)
-        xor_autodiff.add_node(xor_out)
-
-        xor_autodiff.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
-        xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
-
-        # -----------------------------------------------------------------
-
-        no_training_input_dict = {xor_in: xor_inputs}
-        input_dict = {'inputs': {xor_in: xor_inputs}, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}
-
-        parentComposition = pnl.Composition()
-        parentComposition.add_node(xor_autodiff)
-        input = {xor_autodiff: input_dict}
-        no_training_input = {xor_autodiff: no_training_input_dict}
-        learning_context = Context()
-        result1 = xor_autodiff.run(inputs=input[xor_autodiff]['inputs'], execution_mode=autodiff_mode, context=learning_context)
-        xor_autodiff.learn(inputs=input_dict, execution_mode=autodiff_mode, context=learning_context, patience=patience, min_delta=min_delta)
-        result2 = parentComposition.run(inputs=no_training_input, execution_mode=autodiff_mode, context=learning_context)
-
-        np.testing.assert_allclose(result2, [[0]], atol=0.1)
-
-    # CW 12/21/18: Test is failing due to bugs, will fix later
-    # @pytest.mark.parametrize(
-    #     'num_epochs, learning_rate, patience, min_delta', [
-    #         (2000, 4, 10, .00001),
-    #     ]
-    # )
-    # def test_xor_nest_not_origin_after_train(self, num_epochs, learning_rate, patience, min_delta):
-    #     xor_inputs = np.array(  # the inputs we will provide to the model
-    #         [[0, 0],
-    #          [0, 1],
-    #          [1, 0],
-    #          [1, 1]])
-    #
-    #     xor_targets = np.array(  # the outputs we wish to see from the model
-    #         [[0],
-    #          [1],
-    #          [1],
-    #          [0]])
-    #
-    #     # -----------------------------------------------------------------
-    #
-    #     xor_in = pnl.TransferMechanism(name='xor_in',
-    #                                    default_variable=np.zeros(2))
-    #
-    #     xor_hid = pnl.TransferMechanism(name='xor_hid',
-    #                                     default_variable=np.zeros(10),
-    #                                     function=pnl.core.components.functions.transferfunctions.Logistic())
-    #
-    #     xor_out = pnl.TransferMechanism(name='xor_out',
-    #                                     default_variable=np.zeros(1),
-    #                                     function=pnl.core.components.functions.transferfunctions.Logistic())
-    #
-    #     hid_map = pnl.MappingProjection(name='input_to_hidden',
-    #                                     matrix=np.random.randn(2, 10) * 0.1,
-    #                                     sender=xor_in,
-    #                                     receiver=xor_hid)
-    #
-    #     out_map = pnl.MappingProjection(name='hidden_to_output',
-    #                                     matrix=np.random.randn(10, 1) * 0.1,
-    #                                     sender=xor_hid,
-    #                                     receiver=xor_out)
-    #
-    #     # -----------------------------------------------------------------
-    #
-    #     xor_autodiff = AutodiffComposition(
-    #         patience=patience,
-    #         min_delta=min_delta,
-    #         learning_rate=learning_rate,
-    #         randomize=False,
-    #         learning_enabled=True
-    #     )
-    #
-    #     xor_autodiff.add_node(xor_in)
-    #     xor_autodiff.add_node(xor_hid)
-    #     xor_autodiff.add_node(xor_out)
-    #
-    #     xor_autodiff.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
-    #     xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
-    #
-    #     # -----------------------------------------------------------------
-    #
-    #     input_dict = {'inputs': {xor_in: xor_inputs}, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}
-    #     xor_autodiff.run(inputs = input_dict)
-    #     myTransfer = pnl.TransferMechanism(size = 2)
-    #     myMappingProj = pnl.MappingProjection(sender = myTransfer, receiver = xor_autodiff)
-    #
-    #     no_training_input_dict = {xor_in: xor_inputs}
-    #
-    #     parentComposition = pnl.Composition()
-    #     parentComposition.add_node(myTransfer)
-    #     parentComposition.add_node(xor_autodiff)
-    #     parentComposition.add_projection(myMappingProj, sender=myTransfer, receiver=xor_autodiff)
-    #     xor_autodiff.learning_enabled = False
-    #
-    #     no_training_input = {myTransfer: no_training_input_dict}
-    #
-    #     result = parentComposition.run(inputs=no_training_input)
-    #
-    #     np.testing.assert_allclose(result, [[0]], atol=0.1)
-
-    @pytest.mark.parametrize(
-        'eps, opt', [
-            (1, 'sgd'),
-        ]
-    )
-    def test_semantic_net_nested(self, eps, opt, autodiff_mode):
-
-        # SET UP MECHANISMS FOR SEMANTIC NET:
-
-        nouns_in = TransferMechanism(name="nouns_input",
-                                     default_variable=np.zeros(8))
-
-        rels_in = TransferMechanism(name="rels_input",
-                                    default_variable=np.zeros(3))
-
-        h1 = TransferMechanism(name="hidden_nouns",
-                               default_variable=np.zeros(8),
-                               function=Logistic())
-
-        h2 = TransferMechanism(name="hidden_mixed",
-                               default_variable=np.zeros(15),
-                               function=Logistic())
-
-        out_sig_I = TransferMechanism(name="sig_outs_I",
-                                      default_variable=np.zeros(8),
-                                      function=Logistic())
-
-        out_sig_is = TransferMechanism(name="sig_outs_is",
-                                       default_variable=np.zeros(12),
-                                       function=Logistic())
-
-        out_sig_has = TransferMechanism(name="sig_outs_has",
-                                        default_variable=np.zeros(9),
-                                        function=Logistic())
-
-        out_sig_can = TransferMechanism(name="sig_outs_can",
-                                        default_variable=np.zeros(9),
-                                        function=Logistic())
-
-        # SET UP MECHANISMS FOR SYSTEM
-
-        nouns_in_sys = TransferMechanism(name="nouns_input_sys",
-                                         default_variable=np.zeros(8))
-
-        rels_in_sys = TransferMechanism(name="rels_input_sys",
-                                        default_variable=np.zeros(3))
-
-        h1_sys = TransferMechanism(name="hidden_nouns_sys",
-                                   default_variable=np.zeros(8),
-                                   function=Logistic())
-
-        h2_sys = TransferMechanism(name="hidden_mixed_sys",
-                                   default_variable=np.zeros(15),
-                                   function=Logistic())
-
-        out_sig_I_sys = TransferMechanism(name="sig_outs_I_sys",
-                                          default_variable=np.zeros(8),
-                                          function=Logistic())
-
-        out_sig_is_sys = TransferMechanism(name="sig_outs_is_sys",
-                                           default_variable=np.zeros(12),
-                                           function=Logistic())
-
-        out_sig_has_sys = TransferMechanism(name="sig_outs_has_sys",
-                                            default_variable=np.zeros(9),
-                                            function=Logistic())
-
-        out_sig_can_sys = TransferMechanism(name="sig_outs_can_sys",
-                                            default_variable=np.zeros(9),
-                                            function=Logistic())
-
-        # SET UP PROJECTIONS FOR SEMANTIC NET
-
-        map_nouns_h1 = MappingProjection(matrix=np.random.rand(8,8),
-                                 name="map_nouns_h1",
-                                 sender=nouns_in,
-                                 receiver=h1)
-
-        map_rels_h2 = MappingProjection(matrix=np.random.rand(3,15),
-                                    name="map_relh2",
-                                    sender=rels_in,
-                                    receiver=h2)
-
-        map_h1_h2 = MappingProjection(matrix=np.random.rand(8,15),
-                                    name="map_h1_h2",
-                                    sender=h1,
-                                    receiver=h2)
-
-        map_h2_I = MappingProjection(matrix=np.random.rand(15,8),
-                                    name="map_h2_I",
-                                    sender=h2,
-                                    receiver=out_sig_I)
-
-        map_h2_is = MappingProjection(matrix=np.random.rand(15,12),
-                                    name="map_h2_is",
-                                    sender=h2,
-                                    receiver=out_sig_is)
-
-        map_h2_has = MappingProjection(matrix=np.random.rand(15,9),
-                                    name="map_h2_has",
-                                    sender=h2,
-                                    receiver=out_sig_has)
-
-        map_h2_can = MappingProjection(matrix=np.random.rand(15,9),
-                                    name="map_h2_can",
-                                    sender=h2,
-                                    receiver=out_sig_can)
-
-        # SET UP PROJECTIONS FOR SYSTEM
-
-        map_nouns_h1_sys = MappingProjection(matrix=map_nouns_h1.matrix.base.copy(),
-                                             name="map_nouns_h1_sys",
-                                             sender=nouns_in_sys,
-                                             receiver=h1_sys)
-
-        map_rels_h2_sys = MappingProjection(matrix=map_rels_h2.matrix.base.copy(),
-                                        name="map_relh2_sys",
-                                        sender=rels_in_sys,
-                                        receiver=h2_sys)
-
-        map_h1_h2_sys = MappingProjection(matrix=map_h1_h2.matrix.base.copy(),
-                                          name="map_h1_h2_sys",
-                                          sender=h1_sys,
-                                          receiver=h2_sys)
-
-        map_h2_I_sys = MappingProjection(matrix=map_h2_I.matrix.base.copy(),
-                                         name="map_h2_I_sys",
-                                         sender=h2_sys,
-                                         receiver=out_sig_I_sys)
-
-        map_h2_is_sys = MappingProjection(matrix=map_h2_is.matrix.base.copy(),
-                                          name="map_h2_is_sys",
-                                          sender=h2_sys,
-                                          receiver=out_sig_is_sys)
-
-        map_h2_has_sys = MappingProjection(matrix=map_h2_has.matrix.base.copy(),
-                                           name="map_h2_has_sys",
-                                           sender=h2_sys,
-                                           receiver=out_sig_has_sys)
-
-        map_h2_can_sys = MappingProjection(matrix=map_h2_can.matrix.base.copy(),
-                                           name="map_h2_can_sys",
-                                           sender=h2_sys,
-                                           receiver=out_sig_can_sys)
-
-        # SET UP COMPOSITION FOR SEMANTIC NET
-
-        sem_net = AutodiffComposition(learning_rate=0.5,
-                                      optimizer_type=opt)
-
-        sem_net.add_node(nouns_in)
-        sem_net.add_node(rels_in)
-        sem_net.add_node(h1)
-        sem_net.add_node(h2)
-        sem_net.add_node(out_sig_I)
-        sem_net.add_node(out_sig_is)
-        sem_net.add_node(out_sig_has)
-        sem_net.add_node(out_sig_can)
-
-        sem_net.add_projection(sender=nouns_in, projection=map_nouns_h1, receiver=h1)
-        sem_net.add_projection(sender=rels_in, projection=map_rels_h2, receiver=h2)
-        sem_net.add_projection(sender=h1, projection=map_h1_h2, receiver=h2)
-        sem_net.add_projection(sender=h2, projection=map_h2_I, receiver=out_sig_I)
-        sem_net.add_projection(sender=h2, projection=map_h2_is, receiver=out_sig_is)
-        sem_net.add_projection(sender=h2, projection=map_h2_has, receiver=out_sig_has)
-        sem_net.add_projection(sender=h2, projection=map_h2_can, receiver=out_sig_can)
-
-        # INPUTS & OUTPUTS FOR SEMANTIC NET:
-
-        nouns = ['oak', 'pine', 'rose', 'daisy', 'canary', 'robin', 'salmon', 'sunfish']
-        relations = ['is', 'has', 'can']
-        is_list = ['living', 'living thing', 'plant', 'animal', 'tree', 'flower', 'bird', 'fish', 'big', 'green', 'red',
-                   'yellow']
-        has_list = ['roots', 'leaves', 'bark', 'branches', 'skin', 'feathers', 'wings', 'gills', 'scales']
-        can_list = ['grow', 'move', 'swim', 'fly', 'breathe', 'breathe underwater', 'breathe air', 'walk', 'photosynthesize']
-
-        nouns_input = np.identity(len(nouns))
-
-        rels_input = np.identity(len(relations))
-
-        truth_nouns = np.identity(len(nouns))
-
-        truth_is = np.zeros((len(nouns), len(is_list)))
-
-        truth_is[0, :] = [1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0]
-        truth_is[1, :] = [1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0]
-        truth_is[2, :] = [1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0]
-        truth_is[3, :] = [1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0]
-        truth_is[4, :] = [1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1]
-        truth_is[5, :] = [1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1]
-        truth_is[6, :] = [1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0]
-        truth_is[7, :] = [1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0]
-
-        truth_has = np.zeros((len(nouns), len(has_list)))
-
-        truth_has[0, :] = [1, 1, 1, 1, 0, 0, 0, 0, 0]
-        truth_has[1, :] = [1, 1, 1, 1, 0, 0, 0, 0, 0]
-        truth_has[2, :] = [1, 1, 0, 0, 0, 0, 0, 0, 0]
-        truth_has[3, :] = [1, 1, 0, 0, 0, 0, 0, 0, 0]
-        truth_has[4, :] = [0, 0, 0, 0, 1, 1, 1, 0, 0]
-        truth_has[5, :] = [0, 0, 0, 0, 1, 1, 1, 0, 0]
-        truth_has[6, :] = [0, 0, 0, 0, 0, 0, 0, 1, 1]
-        truth_has[7, :] = [0, 0, 0, 0, 0, 0, 0, 1, 1]
-
-        truth_can = np.zeros((len(nouns), len(can_list)))
-
-        truth_can[0, :] = [1, 0, 0, 0, 0, 0, 0, 0, 1]
-        truth_can[1, :] = [1, 0, 0, 0, 0, 0, 0, 0, 1]
-        truth_can[2, :] = [1, 0, 0, 0, 0, 0, 0, 0, 1]
-        truth_can[3, :] = [1, 0, 0, 0, 0, 0, 0, 0, 1]
-        truth_can[4, :] = [1, 1, 0, 1, 1, 0, 1, 1, 0]
-        truth_can[5, :] = [1, 1, 0, 1, 1, 0, 1, 1, 0]
-        truth_can[6, :] = [1, 1, 1, 0, 1, 1, 0, 0, 0]
-        truth_can[7, :] = [1, 1, 1, 0, 1, 1, 0, 0, 0]
-
-        # SETTING UP DICTIONARY OF INPUTS/OUTPUTS FOR SEMANTIC NET
-
-        inputs_dict = {}
-        inputs_dict[nouns_in] = []
-        inputs_dict[rels_in] = []
-
-        targets_dict = {}
-        targets_dict[out_sig_I] = []
-        targets_dict[out_sig_is] = []
-        targets_dict[out_sig_has] = []
-        targets_dict[out_sig_can] = []
-
-        for i in range(len(nouns)):
-            for j in range(len(relations)):
-                inputs_dict[nouns_in].append(nouns_input[i])
-                inputs_dict[rels_in].append(rels_input[j])
-                targets_dict[out_sig_I].append(truth_nouns[i])
-                targets_dict[out_sig_is].append(truth_is[i])
-                targets_dict[out_sig_has].append(truth_has[i])
-                targets_dict[out_sig_can].append(truth_can[i])
-
-        # TRAIN COMPOSITION
-        input_dict = {"inputs": inputs_dict,
-                      "targets": targets_dict,
-                      "epochs": eps}
-
-        parentComposition = pnl.Composition()
-        parentComposition.add_node(sem_net)
-
-        input = {sem_net: input_dict}
-        no_training_input = {sem_net: inputs_dict.copy()}
-
-        sem_net.learn(inputs=input_dict, execution_mode=autodiff_mode)
-
-        if autodiff_mode is not pnl.ExecutionMode.Python:
-            #FIXME: Enable the rest of the test when recompilation is supported
-            return
-
-        parentComposition.run(inputs=no_training_input)
 
 
 @pytest.mark.pytorch

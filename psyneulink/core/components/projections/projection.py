@@ -271,16 +271,16 @@ of a Port are listed in its `projections <Port_Base.projections>` attribute.
     |                      |   *(attribute)*                       |  *(attribute)*                                   |
     +======================+=======================================+==================================================+
     | `MappingProjection`  | `OutputPort`                          | `InputPort`                                      |
-    |                      | (`efferents <Port.efferents>`)        | (`path_afferents <Port.path_afferents>`)         |
+    |                      | (`efferents <Port_Base.efferents>`)   | (`path_afferents <Port_Base.path_afferents>`)    |
     +----------------------+---------------------------------------+--------------------------------------------------+
     | `LearningProjection` | `LearningSignal`                      | `ParameterPort`                                  |
-    |                      | (`efferents <Port.efferents>`)        | (`mod_afferents <ParameterPort.mod_afferents>`)  |
+    |                      | (`efferents <Port_Base.efferents>`)   | (`mod_afferents <ParameterPort.mod_afferents>`)  |
     +----------------------+---------------------------------------+--------------------------------------------------+
     | `ControlProjection`  | `ControlSignal`                       | `InputPort`, `ParameterPort` or `OutputPort`     |
-    |                      | (`efferents <Port.efferents>`)        | (`mod_afferents <ParameterPort.mod_afferents>`)  |
+    |                      | (`efferents <Port_Base.efferents>`)   | (`mod_afferents <ParameterPort.mod_afferents>`)  |
     +----------------------+---------------------------------------+--------------------------------------------------+
     | `GatingProjection`   | `GatingSignal`                        | `InputPort` or `OutputPort`                      |
-    |                      | (`efferents <Port.efferents>`)        | (`mod_afferents <Port_Base.mod_afferents>`)      |
+    |                      | (`efferents <Port_Base.efferents>`)   | (`mod_afferents <Port_Base.mod_afferents>`)      |
     +----------------------+---------------------------------------+--------------------------------------------------+
 
 .. _Projection_Sender:
@@ -321,8 +321,8 @@ The `receiver <Projection_Base.receiver>` required by a Projection depends on it
     * GatingProjection: `InputPort` or OutputPort`
 
 A `MappingProjection` (as a `PathwayProjection <PathwayProjection>`) is assigned to the `path_afferents
-<Port.path_afferents>` attribute of its `receiver <Projection_Base.receiver>`.  The ModulatoryProjections are assigned
-to the `mod_afferents <Port.mod_afferents>` attribute of their `receiver <Projection_Base.receiver>`.
+<Port_Base.path_afferents>` attribute of its `receiver <Projection_Base.receiver>`.  The ModulatoryProjections are
+assigned to the `mod_afferents <Port.mod_afferents>` attribute of their `receiver <Projection_Base.receiver>`.
 
 A `receiver <Projection_Base.receiver>` can be specified as:
 
@@ -416,7 +416,8 @@ from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Pro
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.mdf import _get_variable_parameter_name
 from psyneulink.core.globals.keywords import \
-    CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FUNCTION_PARAMS, GATE, GATING_PROJECTION, GATING_SIGNAL, \
+    CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FEEDBACK, FUNCTION_PARAMS, \
+    GATE, GATING_PROJECTION, GATING_SIGNAL, \
     INPUT_PORT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, \
     MAPPING_PROJECTION, MATRIX, MECHANISM, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_RECEIVER_PORT, \
@@ -511,7 +512,8 @@ class Projection_Base(Projection):
     Projection_Base(           \
         sender=None,           \
         function=LinearMatrix, \
-        receiver=None          \
+        receiver=None,         \
+        feedback=None          \
         )
 
     Base class for all Projections.
@@ -549,12 +551,17 @@ class Projection_Base(Projection):
         <Projection_Base.sender>` `Port` to `variable <Port_Base.variable>` of `receiver <Projection_Base.receiver>`
         Port.
 
-    receiver: InputPort or Mechanism : default None
+    receiver : InputPort or Mechanism : default None
         specifies the destination of the Projection's output.  If a `Mechanism <Mechanism>` is specified, its
         `primary InputPort <InputPort_Primary>` will be used. If it is not specified, it will be assigned in
         the context in which the Projection is used, or its initialization will be `deferred
         <Projection_Deferred_Initialization>`.
 
+    feedback : bool or FEEDBACK : default None
+        specifies whether Projection is configured as a feedback edge in the graph of a `Composition` to which
+        it is assigned (see `Composition_Cycles_and_Feedback`); specifying True or the keyword *FEEDBACK* forces its
+        assignment as a *feedback* Projection, whereas False precludes it from being assigned as a feedback Projection;
+        None (the default) allows the Composition to determine whether it is assigned as a feedback Projection.
 
     Attributes
     ----------
@@ -646,6 +653,7 @@ class Projection_Base(Projection):
                  weight=None,
                  exponent=None,
                  function=None,
+                 feedback:Optional[Union[bool,Literal[FEEDBACK]]]=None,
                  exclude_in_autodiff=False,
                  params=None,
                  name=None,
@@ -710,6 +718,7 @@ class Projection_Base(Projection):
 
         self.receiver = receiver
         self._exclude_from_autodiff = exclude_in_autodiff
+        self._feedback = feedback # Assign to _feedback to avoid interference with vertex.feedback used in Composition
 
          # Register with ProjectionRegistry or create one
         register_category(entry=self,
@@ -927,13 +936,14 @@ class Projection_Base(Projection):
                 if dup.initialization_status == ContextFlags.DEFERRED_INIT:
                     del receiver.mod_afferents[receiver.mod_afferents.index(dup)]
                 else:
-                    raise DuplicateProjectionError(f"Attempt to assign {Projection.__name__} to {receiver.name} of "
-                                                   f"{receiver.owner.name} that already has an identical "
+                    raise DuplicateProjectionError(f"Attempt to assign {Projection.__name__} to '{receiver.name}' "
+                                                   f"of '{receiver.owner.name}' that already has an identical "
                                                    f"{Projection.__name__}.")
             self.sender.efferents.append(self)
         else:
-            raise DuplicateProjectionError(f"Attempt to assign {Projection.__name__} from {sender.name} of "
-                                           f"{sender.owner.name} that already has an identical {Projection.__name__}.")
+            raise DuplicateProjectionError(f"Attempt to assign {Projection.__name__} from '{sender.name}' of "
+                                           f"'{sender.owner.name}' that already has an identical "
+                                           f"{Projection.__name__}.")
 
     def _instantiate_attributes_after_function(self, context=None):
         from psyneulink.core.components.ports.parameterport import _instantiate_parameter_port
@@ -1849,7 +1859,7 @@ def _parse_connection_specs(connectee_port_type,
                                           f"not of a required type ({' ,'.join([pt.__name__ for pt in port_types])}).")
             except PortError as e:
                 raise ProjectionError(f"Problem with specification for {Port.__name__} in {Projection.__name__} "
-                                      f"specification{(' for ' + owner.name) if owner else ' '}: " + e.error_value)
+                                      f"specification{(' for ' + owner.name) if owner else ' '}: " + e.args[0])
 
             # Check compatibility with any Port(s) returned by _get_port_for_socket
 
@@ -2194,9 +2204,9 @@ def _add_projection_to(receiver, port, projection_spec, context=None):
         try:
             key = receiver.input_ports[port]
         except IndexError:
-            raise ProjectionError("Attempt to assign projection_spec ({0}) to InputPort {1} of {2} "
-                                 "but it has only {3} input_ports".
-                                 format(projection_spec.name, port, receiver.name, len(receiver.input_ports)))
+            raise ProjectionError(
+                f"Attempt to assign projection_spec ('{projection_spec.name}') to InputPort {'port'} "
+                f"of {'receiver.name'} but it has only {len(receiver.input_ports)} input_ports.")
         else:
             input_port = key
 
@@ -2310,9 +2320,8 @@ def _add_projection_from(sender, port, projection_spec, receiver, context=None):
         try:
             key = list(sender.output_ports.keys)[port]
         except IndexError:
-            raise ProjectionError("Attempt to assign projection_spec ({0}) to OutputPort {1} of {2} "
-                                 "but it has only {3} OutputPorts".
-                                 format(projection_spec.name, port, sender.name, len(sender.output_ports)))
+            raise ProjectionError(f"Attempt to assign projection_spec ('{projection_spec.name}') to OutputPort {port} "
+                                  f"of {'sender.name'}, but it has only {len(sender.output_ports)} OutputPorts.")
         else:
             output_port = key
 

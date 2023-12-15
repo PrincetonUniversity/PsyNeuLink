@@ -211,7 +211,7 @@ are listed in the ControlMechanism's `monitor_for_control <ControlMechanism.moni
 Note that the MappingProjections created by specification of a ControlMechanism's **monitor_for_control** `argument
 <ControlMechanism_Monitor_for_Control_Argument>` or the **monitor** argument in the constructor for an
 ObjectiveMechanism in the ControlMechanism's **objective_mechanism** `argument
-<ControlMechanism_Objective_Mechanism_Argument>` supercede any MappingProjections that would otherwise be created for
+<ControlMechanism_Objective_Mechanism_Argument>` supersede any MappingProjections that would otherwise be created for
 them when included in the **pathway** argument of a Composition's `add_linear_processing_pathway
 <Composition.add_linear_processing_pathway>` method.
 
@@ -627,10 +627,10 @@ from psyneulink.core.components.ports.port import Port, _parse_port_spec
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     AUTO_ASSIGN_MATRIX, COMBINE, CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, CONCATENATE, \
-    EID_SIMULATION, FUNCTION, GATING_SIGNAL, INIT_EXECUTE_METHOD_ONLY, INTERNAL_ONLY, NAME, \
+    EID_SIMULATION, FEEDBACK, FUNCTION, GATING_SIGNAL, INIT_EXECUTE_METHOD_ONLY, INTERNAL_ONLY, NAME, \
     MECHANISM, MULTIPLICATIVE, MODULATORY_SIGNALS, MONITOR_FOR_CONTROL, MONITOR_FOR_MODULATION, \
     OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PARAMS, PORT_TYPE, PRODUCT, PROJECTION_TYPE, PROJECTIONS, \
-    SEPARATE, SIZE
+    REFERENCE_VALUE, SEPARATE, SIZE, VALUE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
@@ -728,7 +728,8 @@ def _control_mechanism_costs_getter(owning_component=None, context=None):
 def _outcome_getter(owning_component=None, context=None):
     """Return array of values of outcome_input_ports"""
     try:
-        return np.array([port.parameters.value._get(context) for port in owning_component.outcome_input_ports])
+        return np.array([port.parameters.value._get(context) for port in owning_component.outcome_input_ports],
+                        dytpe=object)
     except (AttributeError, TypeError):
         return None
 
@@ -1520,7 +1521,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         # CONFIGURE FOR ASSIGNMENT TO COMPOSITION
 
-        # Insure that ObjectiveMechanism's input_ports are not assigned projections from a Composition's input_CIM
+        # Ensure that ObjectiveMechanism's input_ports are not assigned projections from a Composition's input_CIM
         for input_port in self.objective_mechanism.input_ports:
             input_port.internal_only = True
 
@@ -1551,7 +1552,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         other_input_ports = input_ports or []
 
-        # FIX 11/3/21: THIS SHOULD BE MADE A PARAMETER
         self.parameters.outcome_input_ports.set(ContentAddressableList(component_type=OutputPort),
                                                 override=True)
 
@@ -1582,7 +1582,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
             super()._instantiate_input_ports(context=context,
                                              input_ports=input_ports,
                                              reference_value=input_port_value_sizes)
-            # FIX: 11/3/21 NEED TO MODIFY ONCE OUTCOME InputPorts ARE MOVED
             self.outcome_input_ports.extend(self.input_ports[:len(outcome_input_port_specs)])
 
             # Instantiate Projections to outcome_input_ports from items specified in monitor_for_control
@@ -1598,15 +1597,9 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 else:
                     # The single outcome_input_port gets all the Projections
                     outcome_port_index = 0
-                self.aux_components.append(MappingProjection(sender=projection_specs[i],
-                                                             receiver=self.outcome_input_ports[outcome_port_index]))
 
         # Nothing has been specified, so just instantiate the default OUTCOME InputPort with any input_ports passed in
         else:
-            # # MODIFIED 1/30/21 OLD:
-            # super()._instantiate_input_ports(context=context)
-            # self.outcome_input_ports.append(self.input_ports[OUTCOME])
-            # MODIFIED 1/30/21 NEW:
             other_input_port_value_sizes  = self._handle_arg_input_ports(other_input_ports)[0]
             # Construct full list of InputPort specifications and sizes
             input_ports = self.input_ports + other_input_ports
@@ -1615,7 +1608,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                              input_ports=input_ports,
                                              reference_value=input_port_value_sizes)
             self.outcome_input_ports.append(self.input_ports[OUTCOME])
-            # MODIFIED 1/30/21 END
 
     def _parse_monitor_for_control_input_ports(self, context):
         """Get outcome_input_port specification dictionaries for items specified in monitor_for_control.
@@ -1632,9 +1624,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         monitored_ports = _parse_monitor_specs(self.monitor_for_control)
         port_value_sizes = self._handle_arg_input_ports(self.monitor_for_control)[0]
-
         outcome_input_ports_option = self.outcome_input_ports_option
-
         outcome_input_port_specs = []
 
         # SEPARATE outcome_input_ports OPTION:
@@ -1642,13 +1632,16 @@ class ControlMechanism(ModulatoryMechanism_Base):
         if outcome_input_ports_option == SEPARATE:
 
             # Construct port specification to assign its name
-            for i, monitored_port in enumerate(monitored_ports):
-                name = monitored_port.name
-                if isinstance(monitored_port, OutputPort):
-                    name = f"{monitored_port.owner.name}[{name.upper()}]"
+            for monitored_port in monitored_ports:
+                # Parse port_spec first (e.g., in case it is a (spec, feedback) tuple)
+                port_spec = _parse_port_spec(InputPort, self, port_spec = monitored_port)
+                port = port_spec['params']['projections'][0][0]
+                name = port.name
+                if isinstance(port, OutputPort):
+                    name = f"{port.owner.name}[{name.upper()}]"
                 name = 'MONITOR ' + name
-                outcome_input_port_specs.append({PORT_TYPE: InputPort,
-                                                 NAME: name})
+                port_spec[NAME] = name
+                outcome_input_port_specs.append(port_spec)
             # Return list of outcome_input_port specifications (and their sizes) for each monitored item
 
         # SINGLE outcome_input_port OPTIONS:
@@ -1666,12 +1659,14 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 assert False, f"PROGRAM ERROR:  Unrecognized option ({outcome_input_ports_option}) passed " \
                               f"to ControlMechanism._parse_monitor_for_control_input_ports() for {self.name}"
 
+            # Needs to be a list to be combined with other input_ports in _instantiate_input_ports
             port_value_sizes = [function().function(port_value_sizes)]
-
             # Return single outcome_input_port specification
-            outcome_input_port_specs.append({PORT_TYPE: InputPort,
-                                             NAME: 'OUTCOME',
-                                             FUNCTION: function})
+            port_spec = _parse_port_spec(InputPort, self, port_spec=monitored_ports, name='OUTCOME')
+            port_spec[FUNCTION] = function
+            port_spec[VALUE] = port_value_sizes[0]
+            port_spec[REFERENCE_VALUE] = port_value_sizes[0]  # Get reference_value for just this port
+            outcome_input_port_specs.append(port_spec)
 
         return outcome_input_port_specs, port_value_sizes, monitored_ports
 

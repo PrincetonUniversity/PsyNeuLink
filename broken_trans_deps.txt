@@ -12,6 +12,10 @@ ipython != 8.13.0; python_version < '3.9'
 # https://github.com/onnx/onnx/issues/5202
 onnx != 1.14.0
 
+# onnx >= 1.16.0 needs explicit setting of provider to use,
+# but modeci_mdf that's available for python 3.11 doesn't do that.
+onnxruntime != 1.16; python_version == '3.11'
+
 # torch wheels for win32 python3.10 are built against numpy>=1.23
 # https://github.com/pytorch/pytorch/issues/100690
 torch !=2.0.1, !=2.0.0, !=1.13.*, !=1.12.*; python_version == '3.10' and platform_system == 'Windows'
@@ -21,3 +25,7 @@ torch !=2.0.1, !=2.0.0, !=1.13.*, !=1.12.*; python_version == '3.10' and platfor
 # https://github.com/python-attrs/cattrs/issues/372
 # PNL is restricted to typing_extension <4 because of dependence on old rich<10.13
 cattrs != 23.1.1; python_version < '3.8'
+
+# cattrs==23.2.{1,2} breaks json serialization
+# https://github.com/python-attrs/cattrs/issues/453
+cattrs != 23.2.1, != 23.2.2
