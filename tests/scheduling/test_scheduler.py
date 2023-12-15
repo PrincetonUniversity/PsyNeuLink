@@ -1,5 +1,6 @@
 import fractions
 import logging
+import graph_scheduler
 import numpy as np
 import psyneulink as pnl
 import pytest
@@ -12,12 +13,24 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import Composition, EdgeType
 from psyneulink.core.globals.keywords import VALUE
-from psyneulink.core.scheduling.condition import AfterNCalls, AfterNPasses, AfterNTrials, AfterPass, All, AllHaveRun, Always, Any, AtPass, BeforeNCalls, BeforePass, EveryNCalls, EveryNPasses, JustRan, TimeInterval, WhenFinished, Never
+from psyneulink.core.scheduling.condition import AfterNCalls, AfterNPasses, AfterNTrials, AfterPass, All, AllHaveRun, Always, Any, AtPass, BeforeNCalls, BeforePass, EveryNCalls, EveryNPasses, JustRan, TimeInterval, WhenFinished, Never, graph_structure_conditions_available, gsc_unavailable_message
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
 
 logger = logging.getLogger(__name__)
+
+
+# mock graph structure conditions if not present (this causes errors on
+# collect due to being used in parametrizations, although the tests
+# using them will be skipped)
+if not graph_structure_conditions_available:
+    # only the conditions used in parametrization below
+    mock_gs_conditions = [
+        'AfterNodes', 'BeforeNode', 'BeforeNodes',
+    ]
+    for c in mock_gs_conditions:
+        setattr(pnl, c, lambda *args, **kwargs: None)
 
 
 class TestScheduler:
@@ -1685,3 +1698,134 @@ class TestAbsoluteTime:
             comp.scheduler.add_condition(eval(node), conditions[node])
 
         assert comp.scheduler._get_absolute_consideration_set_execution_unit() == interval
+
+
+@pytest.mark.skipif(
+    not graph_structure_conditions_available,
+    reason=gsc_unavailable_message
+)
+class TestGraphStructureConditions:
+    @pytest.mark.parametrize('add_method', ['add_graph_edge', 'add_condition_AddEdgeTo'])
+    @pytest.mark.parametrize('remove_method', ['remove_graph_edge', 'add_condition_RemoveEdgeFrom'])
+    def test_add_graph_structure_conditions(self, add_method, remove_method):
+        def add_condition(owner, condition):
+            if isinstance(condition, pnl.AddEdgeTo) and add_method == 'add_graph_edge':
+                return scheduler.add_graph_edge(owner, condition.node)
+            elif isinstance(condition, pnl.RemoveEdgeFrom) and remove_method == 'remove_graph_edge':
+                return scheduler.remove_graph_edge(condition.node, owner)
+            else:
+                scheduler.add_condition(owner, condition)
+                return condition
+
+        comp, _, mechanisms = pytest.helpers.composition_from_string_pathways(
+            [['A', 'B', 'C', 'D', 'E']]
+        )
+        A, B, C, D, E = mechanisms
+        scheduler = comp.scheduler
+        initial_conds = {A: pnl.AddEdgeTo(C)}
+        initial_graph = scheduler.graph
+        scheduler.add_condition_set(initial_conds)
+
+        assert scheduler.dependency_dict == {
+            **initial_graph,
+            **{C: {A, B}},
+        }
+        assert len(scheduler._graphs) == 2
+        assert scheduler._graphs[0] == initial_graph
+
+        addl_conditions = [
+            (B, pnl.AddEdgeTo(D)),
+            (B, pnl.AddEdgeTo(E)),
+            (C, pnl.AddEdgeTo(E)),
+            (E, pnl.RemoveEdgeFrom(B)),
+            (D, pnl.RemoveEdgeFrom(B)),
+        ]
+
+        for i, (owner, cond) in enumerate(addl_conditions):
+            added_cond = add_condition(owner, cond)
+            addl_conditions[i] = (owner, added_cond)
+
+        assert scheduler.dependency_dict == {
+            A: set(),
+            B: {A},
+            C: {A, B},
+            D: {C},
+            E: {C, D},
+        }
+        assert scheduler._last_handled_structural_condition_order == (
+            [initial_conds[A]] + [c[1] for c in addl_conditions]
+        )
+
+        # take only the first three elements in addl_conditions
+        addl_conds_sub_idx = 3
+        scheduler.conditions = pnl.ConditionSet({
+            **{
+                k: [
+                    addl_conditions[i][1] for i in range(addl_conds_sub_idx)
+                    if addl_conditions[i][0] == k
+                ]
+                for k in mechanisms
+            },
+            A: initial_conds[A],
+        })
+        assert scheduler.dependency_dict == {
+            A: set(),
+            B: {A},
+            C: {A, B},
+            D: {B, C},
+            E: {B, C, D},
+        }
+        assert scheduler._last_handled_structural_condition_order == (
+            [initial_conds[A]] + [c[1] for c in addl_conditions[:addl_conds_sub_idx]]
+        )
+
+    @pytest.mark.parametrize(
+        'pathways, conditions, expected_output',
+        [
+            ([['A', 'B', 'C']], {'C': pnl.BeforeNode('A')}, [{'C'}, {'A'}, {'B'}]),
+            ([['A', 'B', 'C']], {'B': pnl.AfterNodes('C')}, [{'A'}, {'C'}, {'B'}]),
+            ([['A', 'B', 'D'], ['C', 'D']], {'D': pnl.BeforeNodes('A', 'C')}, [{'D'}, {'A', 'C'}, {'B'}]),
+        ]
+    )
+    def test_run_graph_structure_conditions(self, pathways, conditions, expected_output):
+        comp, mechanisms, _ = pytest.helpers.composition_from_string_pathways(pathways)
+        comp.scheduler.add_condition_set(
+            {
+                mechanisms[owner]: type(cond)(*[mechanisms[n] for n in cond.nodes])
+                for owner, cond in conditions.items()
+            }
+        )
+        comp.run({n: [0] for n in mechanisms.values() if len(comp.scheduler._graphs[0][n]) == 0})
+        output = comp.scheduler.execution_list[comp.default_execution_id]
+
+        assert output == [{mechanisms[n] for n in eset} for eset in expected_output]
+
+    def test_gsc_creates_cyclic_graph(self):
+        comp, _, (A, B, C) = pytest.helpers.composition_from_string_pathways([['A', 'B', 'C']])
+        comp.scheduler.add_condition(B, pnl.EveryNCalls(A, 1))
+        comp.scheduler.add_condition(B, pnl.AfterNode(C))
+        with pytest.warns(UserWarning, match=r'for \(ProcessingMechanism B\) creates a cycle:'):
+            comp.scheduler.add_condition(B, pnl.BeforeNode(A, prune_cycles=False))
+
+        # If _build_consideration_queue failure not explicitly detected
+        # and handled while adding BeforeNode(A) for B, the new
+        # modified cyclic graph is pushed but the condition is not
+        # added, resulting in incorrect state of scheduler._graphs.
+        # Assert this doesn't happen.
+        assert len(comp.scheduler._graphs) == 3
+        assert len(comp.scheduler.conditions.structural_condition_order) == 2
+
+        with pytest.raises(graph_scheduler.SchedulerError, match='contains a cycle'):
+            comp.run({A: [0]})
+
+    def test_gsc_exact_time_warning(self):
+        A = pnl.ProcessingMechanism(name='A')
+        B = pnl.ProcessingMechanism(name='B')
+        comp = Composition(pathways=[[A], [B]])
+        comp.scheduler.add_condition(A, pnl.AfterNode(B))
+
+        with pytest.warns(
+            UserWarning,
+            match='In exact time mode, graph structure conditions will have no effect'
+        ):
+            comp.run(scheduling_mode=pnl.SchedulingMode.EXACT_TIME)

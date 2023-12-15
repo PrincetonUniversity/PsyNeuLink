@@ -40,7 +40,7 @@ from psyneulink.core.globals.keywords import \
     NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OUTPUT_MECHANISM, OVERRIDE,
      PARAMS, SLOPE, TARGET_MECHANISM,
     VARIABLE, VARIANCE)
-from psyneulink.core.scheduling.condition import AtTimeStep, AtTrial, Never, TimeInterval
+from psyneulink.core.scheduling.condition import AtTimeStep, AtTrial, Never, TimeInterval, graph_structure_conditions_available, gsc_unavailable_message
 from psyneulink.core.scheduling.condition import EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import TimeScale
@@ -7671,6 +7671,23 @@ class TestNodeRoles:
             B: {NodeRole.TERMINAL, NodeRole.OUTPUT, NodeRole.FEEDBACK_SENDER},
         }
 
+    @pytest.mark.skipif(
+        not graph_structure_conditions_available,
+        reason=gsc_unavailable_message
+    )
+    def test_graph_structure_condition_role_changes(self):
+        A = pnl.ProcessingMechanism(name='A')
+        B = pnl.ProcessingMechanism(name='B')
+        C = pnl.ProcessingMechanism(name='C')
+
+        comp = Composition(pathways=[A, B, C])
+
+        comp.scheduler.add_condition(C, pnl.BeforeNode(A))
+
+        assert comp.nodes_to_roles[A] == {NodeRole.INPUT}
+        assert comp.nodes_to_roles[B] == {NodeRole.INTERNAL, NodeRole.TERMINAL}
+        assert comp.nodes_to_roles[C] == {NodeRole.OUTPUT, NodeRole.ORIGIN}
+
 
 class TestMisc:
 
@@ -7932,7 +7949,7 @@ class TestMisc:
         assert comp.scheduler.conditions[C].args == (A, 2)
 
         assert comp.scheduler.execution_list[comp.default_execution_id] == [{A}, {A, B}, {C}]
-        assert set(comp.scheduler._user_specified_conds.keys()) == {B, C}
+        assert set(comp.scheduler._user_specified_conds.conditions.keys()) == {B, C}
 
     def test_rebuild_scheduler_after_remove_node(self):
         A = ProcessingMechanism(name='A')
@@ -7952,7 +7969,7 @@ class TestMisc:
         assert comp.scheduler.conditions[C].args == (A, 2)
 
         assert comp.scheduler.execution_list[comp.default_execution_id] == [{A}, {A}, {C}]
-        assert set(comp.scheduler._user_specified_conds.keys()) == {C}
+        assert set(comp.scheduler._user_specified_conds.conditions.keys()) == {C}
 
 
 class TestInputSpecsDocumentationExamples:

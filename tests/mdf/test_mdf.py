@@ -303,7 +303,8 @@ def test_mdf_equivalence_individual_functions(mech_type, function, runtime_param
         trial_termination_cond = eval(trial_termination_cond)
     except TypeError:
         pass
-    comp.scheduler.termination_conds = {pnl.TimeScale.TRIAL: trial_termination_cond}
+    if trial_termination_cond is not None:
+        comp.scheduler.termination_conds = {pnl.TimeScale.TRIAL: trial_termination_cond}
 
     comp.run(inputs={A: [[1.0]]}, runtime_params=eval(runtime_params))
 
