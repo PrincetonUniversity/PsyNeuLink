@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Pathway &mdash; PsyNeuLink 0+untagged.5.g424971b documentation</title>
+  <title>Pathway &mdash; PsyNeuLink 0+untagged.12.gf062be4 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.5.g424971b
+                  0+untagged.12.gf062be4
                 </div>
               
             
@@ -220,7 +220,7 @@
 <li><dl class="simple">
 <dt><a class="reference internal" href="#pathway-specification"><span class="std std-ref">Pathway Specification</span></a></dt><dd><ul>
 <li><p><a class="reference internal" href="#pathway-specification-formats"><span class="std std-ref">Pathway Specification Formats</span></a></p></li>
-<li><p><a class="reference internal" href="#pathway-specification-projections"><span class="std std-ref">Pathway Projection Specifications</span></a></p></li>
+<li><p><a class="reference internal" href="#pathway-specification-projections"><span class="std std-ref">Projection Specifications</span></a></p></li>
 <li><p><a class="reference internal" href="#pathway-specification-multiple"><span class="std std-ref">Multiple Pathway Specifications</span></a></p></li>
 </ul>
 </dd>
@@ -274,11 +274,28 @@ one specified in the Pathway <a class="reference internal" href="#pathway-templa
 </section>
 <section id="pathway-specification">
 <span id="id2"></span><h3><em>Pathway Specification</em><a class="headerlink" href="#pathway-specification" title="Permalink to this headline">¶</a></h3>
-<p>Pathway are specified as a list, each element of which is either a <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> or set of Nodes,
-possibly intercolated with specifications of <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> between them.  <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a>
-can be either a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, or a tuple (Mechanism or Composition, <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRoles</span></code></a>) that can
-be used to assign <code class="xref any docutils literal notranslate"><span class="pre">required_roles</span></code> to the Nodes in the Composition (see <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> for additional details).
-The Node(s) specified in each entry of the list project to the Node(s) specified in the next entry.</p>
+<p>A Pathway is specified as a list, each element of which is either a <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> or set of Nodes,
+possibly intercolated with specifications of <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> between them.  The specification of each
+is described in the two sections below.</p>
+<section id="node-specifications">
+<span id="pathway-specification-nodes"></span><h4><em>Node Specifications</em><a class="headerlink" href="#node-specifications" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> can be either a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, or a tuple (Mechanism or Composition,
+<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRoles</span></code></a>) that can be used to assign <code class="xref any docutils literal notranslate"><span class="pre">required_roles</span></code> to the Nodes in the Composition (see
+<a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> for additional details). The Node(s) specified in each entry of the list project to the
+Node(s) specified in the next entry, with the exception of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>.</p>
+<p><strong>ControlMechanisms</strong>. Any ControlMechanisms specified in a Pathway are automatically added as <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> of the Composition. If a ControlMechanism follows another Node that is not a ControlMechanism,
+then a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is created to it from that Node (as described <a class="reference internal" href="#pathway-projections"><span class="std std-ref">below</span></a>). However, <em>no</em>
+MappingProjections are created from the ControlMechanism to any that <em>follow</em> it in the Pathway specification.  This is
+because the efferent Projections of a ControlMechanism can only be <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a>s (see `
+&lt;ControlMechanism_ControlSignals&gt;` for specification), and not MappingProjections.  Instead, if the ControlMechanism is
+the first Node in the Pathway specification, the Node that follows it is treated as an <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> Node of the Composition
+(unless it receives a Projection from another Pathway);  if it is the last Node in the Pathway specification, the Node
+that precedes it is treated as an <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> Node of the Composition (unless it sends a Projection to another Pathway);
+otherwise, a MappingProjection is created from the <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> of the Node immediately
+preceding the ControlMechanism to the <a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary InputPort</span></a> of the Node immediately following it.</p>
+<p><strong>Use of sets</strong>.  A set of Nodes can be used to specify multiple Nodes, all of which should receive Projections
+from the same Node(s) in the preceding entry in the Pathway specification and send Projections to the same Node(s) in
+the following entry (see <a class="reference internal" href="#pathway-projections"><span class="std std-ref">below</span></a> for additional details).</p>
 <blockquote>
 <div><div class="admonition note" id="pathway-projection-list-note">
 <p class="admonition-title">Note</p>
@@ -288,8 +305,9 @@ Pathway specification, then it and all other entries are considered as separate,
 example <em>vii</em> in the <a class="reference internal" href="#pathway-figure"><span class="std std-ref">figure</span></a> below).</p>
 </div>
 </div></blockquote>
-<section id="pathway-projection-specifications">
-<span id="pathway-specification-projections"></span><h4><em>Pathway Projection Specifications</em><a class="headerlink" href="#pathway-projection-specifications" title="Permalink to this headline">¶</a></h4>
+</section>
+<section id="projection-specifications">
+<span id="pathway-specification-projections"></span><h4><em>Projection Specifications</em><a class="headerlink" href="#projection-specifications" title="Permalink to this headline">¶</a></h4>
 <p>Where no Projections are specified between entries in the list, default Projections are created (using a
 <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX" title="psyneulink.core.globals.keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">FULL_CONNECTIVITY_MATRIX</span></code></a>, or the Pathway’s <a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.default_projection_matrix" title="psyneulink.core.compositions.pathway.Pathway.default_projection_matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">default_projection</span></code></a> if specified)
 from each Node in the first entry, as the sender(s), to each Node in the second, as receiver(s) (described further
@@ -465,7 +483,7 @@ that correspond to the <code class="xref any docutils literal notranslate"><span
 those <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRoles</span></code></a> is assigned to a corresponding attribute on the Pathway.  If the Pathway does not belong
 to a Composition (i.e., it is a <a class="reference internal" href="#pathway-template"><span class="std std-ref">template</span></a>), then these attributes return None.</p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.default_projection_matrix" title="psyneulink.core.compositions.pathway.Pathway.default_projection_matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">default_projection_matrix</span></code></a> - matrix used as default for Projections that are
-not explicitly specified and for which no default is otherwise specified (see <a class="reference internal" href="#pathway-specification-projections"><span class="std std-ref">Pathway Projection Specifications</span></a>).</p></li>
+not explicitly specified and for which no default is otherwise specified (see <a class="reference internal" href="#pathway-specification-projections"><span class="std std-ref">Projection Specifications</span></a>).</p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.learning_function" title="psyneulink.core.compositions.pathway.Pathway.learning_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_function</span></code></a> - the LearningFunction assigned to the Pathway if it is a
 <a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning Pathway</span></a> that belongs to a Composition; otherwise it is None.</p></li>
 </ul>
@@ -535,7 +553,7 @@ and None if the Pathway is a <a class="reference internal" href="#pathway-templa
 <dt class="sig sig-object py" id="psyneulink.core.compositions.pathway.Pathway.default_projection_matrix">
 <span class="sig-name descname"><span class="pre">default_projection_matrix</span></span><a class="headerlink" href="#psyneulink.core.compositions.pathway.Pathway.default_projection_matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>matrix used for any unspecified Projections (overrides default matrix for <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>)
-if a default projection is not otherwise specified (see <a class="reference internal" href="#pathway-specification-projections"><span class="std std-ref">Pathway Projection Specifications</span></a>;
+if a default projection is not otherwise specified (see <a class="reference internal" href="#pathway-specification-projections"><span class="std std-ref">Projection Specifications</span></a>;
 see <a class="reference internal" href="MappingProjection.html#mappingprojection-matrix-specification"><span class="std std-ref">Specifying the Matrix Parameter</span></a> for details of specification).  A default_projection_matrix
 is specified by including it in a tuple specification in the <strong>pathways</strong> argument of the Pathway’s
 constructor (see <a class="reference internal" href="#pathway-specification-tuple"><span class="std std-ref">2 or 3-item tuple</span></a>).</p>
@@ -649,7 +667,7 @@ See <code class="xref any docutils literal notranslate"><span class="pre">note</
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.compositions.pathway.PathwayRole">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.compositions.pathway.</span></span><span class="sig-name descname"><span class="pre">PathwayRole</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.pathway.PathwayRole" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.compositions.pathway.</span></span><span class="sig-name descname"><span class="pre">PathwayRole</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.pathway.PathwayRole" title="Permalink to this definition">¶</a></dt>
 <dd><p>Roles assigned to the <a class="reference internal" href="#"><span class="doc">Pathway</span></a> of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.compositions.pathway.PathwayRole.ORIGIN">
@@ -747,7 +765,8 @@ See <code class="xref any docutils literal notranslate"><span class="pre">note</
 <li><a class="reference internal" href="#assigning-pathways-to-a-composition"><em>Assigning Pathways to a Composition</em></a></li>
 <li><a class="reference internal" href="#pathway-name"><em>Pathway Name</em></a></li>
 <li><a class="reference internal" href="#pathway-specification"><em>Pathway Specification</em></a><ul>
-<li><a class="reference internal" href="#pathway-projection-specifications"><em>Pathway Projection Specifications</em></a></li>
+<li><a class="reference internal" href="#node-specifications"><em>Node Specifications</em></a></li>
+<li><a class="reference internal" href="#projection-specifications"><em>Projection Specifications</em></a></li>
 <li><a class="reference internal" href="#pathway-specification-formats"><em>Pathway Specification Formats</em></a></li>
 <li><a class="reference internal" href="#multiple-pathway-specifications"><em>Multiple Pathway Specifications</em></a></li>
 </ul>

@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Migrating Learning Compositions from before PsyNeuLink 0.7.4 &mdash; PsyNeuLink 0+untagged.5.g424971b documentation</title>
+  <title>Migrating Learning Compositions from before PsyNeuLink 0.7.4 &mdash; PsyNeuLink 0+untagged.12.gf062be4 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.5.g424971b
+                  0+untagged.12.gf062be4
                 </div>
               
             
@@ -214,7 +214,7 @@ Pre 0.7.5 PsyNeuLink code to the new API.</p>
 <h2>Learning using Standard PsyNeuLink Compositions<a class="headerlink" href="#learning-using-standard-psyneulink-compositions" title="Permalink to this headline">¶</a></h2>
 <p>Learning using standard PsyNeuLink is largely unchanged. The two changes that impact this are:</p>
 <ol class="arabic simple">
-<li><p>The removal of the <code class="xref any docutils literal notranslate"><span class="pre">enable_learning</span></code> parameter of compositions, and</p></li>
+<li><p>The removal of the <a class="reference internal" href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition.enable_learning" title="psyneulink.library.compositions.emcomposition.EMComposition.enable_learning"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">enable_learning</span></code></a> parameter of compositions, and</p></li>
 <li><p>The addition of the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Composition.learn</span></code></a> method to swap to learning mode</p></li>
 </ol>
 <p>To demonstrate this by example, consider the two following code blocks which both implement a simple three-layer network that learns XOR</p>

@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Scheduler &mdash; PsyNeuLink 0+untagged.5.g424971b documentation</title>
+  <title>Scheduler &mdash; PsyNeuLink 0+untagged.12.gf062be4 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.5.g424971b
+                  0+untagged.12.gf062be4
                 </div>
               
             
@@ -236,12 +236,14 @@ used as the default order of executions, subject to any Conditions that have bee
 <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>) in the <strong>conditions</strong> argument of its constructor.  Individual Conditions and/or
 ConditionSets can also be added after the Scheduler has been created, using its <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.ConditionSet.add_condition" title="psyneulink.core.scheduling.condition.ConditionSet.add_condition"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_condition</span></code></a> and
 <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.ConditionSet.add_condition_set" title="psyneulink.core.scheduling.condition.ConditionSet.add_condition_set"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_condition_set</span></code></a> methods, respectively.</p>
+<p><a class="reference internal" href="Condition.html#condition-graph-structure-intro"><span class="std std-ref">Graph structure Conditions</span></a> are
+applied to the Scheduler’s graph in the order in which they are <a class="reference internal" href="#psyneulink.core.scheduling.scheduler.Scheduler.add_condition" title="psyneulink.core.scheduling.scheduler.Scheduler.add_condition"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">added</span></code></a>.</p>
 </section>
 <section id="algorithm">
 <span id="scheduler-algorithm"></span><h2>Algorithm<a class="headerlink" href="#algorithm" title="Permalink to this headline">¶</a></h2>
 <p id="consideration-set">When a Scheduler is created, it constructs a <a class="reference internal" href="#psyneulink.core.scheduling.scheduler.Scheduler.consideration_queue" title="psyneulink.core.scheduling.scheduler.Scheduler.consideration_queue"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">consideration_queue</span></code></a>:  a list of <code class="docutils literal notranslate"><span class="pre">consideration</span> <span class="pre">sets</span></code>
-that defines the order in which nodes are eligible to be executed.  This is based on the dependencies specified in the graph
-specification provided in the Scheduler’s constructor.  Each <code class="docutils literal notranslate"><span class="pre">consideration_set</span></code>
+that defines the order in which nodes are eligible to be executed. This
+is determined by the topological ordering of the <code class="xref any docutils literal notranslate"><span class="pre">graph</span></code> provided to the <a class="reference internal" href="#"><span class="doc">Scheduler's constructor</span></a>, which is then modified by any <a class="reference internal" href="Condition.html#condition-graph-structure-intro"><span class="std std-ref">graph structure conditions</span></a> that are <a class="reference internal" href="#psyneulink.core.scheduling.scheduler.Scheduler.add_condition" title="psyneulink.core.scheduling.scheduler.Scheduler.add_condition"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">added</span></code></a> to the Scheduler. Each <code class="docutils literal notranslate"><span class="pre">consideration_set</span></code>
 is a set of nodes that are eligible to execute at the same time/<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> (i.e.,
 that appear at the same “depth” in a sequence of dependencies, and among which there are no dependencies).  The first
 <code class="docutils literal notranslate"><span class="pre">consideration_set</span></code> consists of only <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.ORIGIN" title="psyneulink.core.compositions.composition.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ORIGIN</span></code></a> nodes. The second consists of all nodes
@@ -340,15 +342,18 @@ that may cause the Scheduler to terminate an <a class="reference internal" href=
 for a particular node or set of nodes is met). When the Scheduler terminates a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>, the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> begins processing the next input specified in the call to its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method. Thus, a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> is defined as the scope of processing associated with a given input to the Composition.</p>
 <section id="termination-conditions">
 <span id="scheduler-termination-conditions"></span><h3><em>Termination Conditions</em><a class="headerlink" href="#termination-conditions" title="Permalink to this headline">¶</a></h3>
-<p>Termination conditions are <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that specify when the open-ended units of time - <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> and <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> - have ended.  By default, the termination condition for an <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> is
+<p>Termination conditions are basic <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that specify
+when the open-ended units of time - <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> and <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> - have ended.  By default, the termination condition for an <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> is
 <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.AllHaveRun" title="psyneulink.core.scheduling.condition.AllHaveRun"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AllHaveRun</span></code></a>, which is satisfied when all nodes have run at least once within the environment state update, and the termination
-condition for an <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> is when all of its constituent environment state updates have terminated. These defaults may be overriden when running a Composition, by passing a dictionary mapping <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScales</span></code></a> to <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> in the <strong>termination_processing</strong> argument of a call to <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Composition.run</span></code></a> (to terminate the execution of processing):</p>
+condition for an <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> is when all of its constituent environment state updates have terminated. These defaults may be overriden when running a Composition, by passing a dictionary mapping <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScales</span></code></a> to <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> in the <strong>termination_processing</strong> argument of a call to <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Composition.run</span></code></a> (to terminate the execution of processing):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Composition</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
     <span class="o">...</span><span class="p">,</span>
     <span class="n">termination_processing</span><span class="o">=</span><span class="p">{</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">:</span> <span class="n">WhenFinished</span><span class="p">(</span><span class="n">ddm</span><span class="p">)}</span>
     <span class="p">)</span>
 </pre></div>
 </div>
+<p><a class="reference internal" href="Condition.html#condition-graph-structure-intro"><span class="std std-ref">Graph structure conditions</span></a> cannot
+be used as termination conditions.</p>
 </section>
 </section>
 <section id="absolute-time">
@@ -505,8 +510,17 @@ specification dictionary, possibly determined by a set of <a class="reference in
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>composition</strong> (<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a>) – specifies the <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> to be ordered for execution, and any dependencies among them,
 based on the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>'s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.graph_processing" title="psyneulink.core.compositions.composition.Composition.graph_processing"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">graph</span></code></a>.</p></li>
-<li><p><strong>graph</strong> (Dict[object: set(object)], <code class="xref any docutils literal notranslate"><span class="pre">networkx.DiGraph</span></code>) – a graph specification dictionary - each entry of the dictionary must be an object,
-and the value of each entry must be a set of zero or more objects that project directly to the key.</p></li>
+<li><p><strong>graph</strong> (Dict[object: set(object)], <code class="xref any docutils literal notranslate"><span class="pre">networkx.DiGraph</span></code>) – <dl>
+<dt>a directed acyclic graph (DAG). Specified as either:</dt><dd><ul>
+<li><p>a graph specification dictionary: each entry of the</p></li>
+</ul>
+<p>dictionary must be an object, and the value of each entry
+must be a set of zero or more objects that project directly
+to the key.
+- a <code class="xref any docutils literal notranslate"><span class="pre">networkx.DiGraph</span></code></p>
+</dd>
+</dl>
+</p></li>
 <li><p><strong>conditions</strong> (<a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.ConditionSet" title="psyneulink.core.scheduling.condition.ConditionSet"><em>ConditionSet</em></a>) – set of <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that specify when individual nodes in <strong>graph</strong>
 execute and any dependencies among them.</p></li>
 <li><p><strong>mode</strong> (<a class="reference internal" href="#psyneulink.core.scheduling.scheduler.SchedulingMode" title="psyneulink.core.scheduling.scheduler.SchedulingMode"><em>SchedulingMode</em></a><em>[</em><em>STANDARD</em><em>|</em><em>EXACT_TIME</em><em>] </em><em>: SchedulingMode.STANDARD</em>) – sets the mode of scheduling: <a class="reference internal" href="#scheduler-execution"><span class="std std-ref">standard</span></a> or
@@ -576,12 +590,13 @@ hashable.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.scheduling.scheduler.Scheduler.termination_conds">
 <span class="sig-name descname"><span class="pre">termination_conds</span></span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.termination_conds" title="Permalink to this definition">¶</a></dt>
-<dd><p>a mapping from <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScales</span></code></a> to <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that, when met, terminate the execution
+<dd><p>a mapping from <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScales</span></code></a> to <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.Condition" title="psyneulink.core.scheduling.condition.Condition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Conditions</span></code></a> that, when met, terminate
+the execution
 of the specified <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>. On set, update only for the
 <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>s specified in the argument.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>Dict[TimeScale: Condition]</p>
+<dd class="field-odd"><p>Dict[TimeScale: <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.Condition" title="psyneulink.core.scheduling.condition.Condition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Condition</span></code></a>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -619,15 +634,20 @@ specifies the absolute duration of a <a class="reference internal" href="Time.ht
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.scheduling.scheduler.Scheduler.add_condition">
 <span class="sig-name descname"><span class="pre">add_condition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.add_condition" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds a <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> to the Scheduler. If <strong>owner</strong> already has a Condition, it is overwritten
-with the new one. If you want to add multiple conditions to a single owner, use the
-<a class="reference internal" href="Condition.html#conditions-composite"><span class="std std-ref">composite Conditions</span></a> to accurately specify the desired behavior.</p>
+<dd><p>Adds a <a class="reference internal" href="Condition.html"><span class="doc">basic</span></a> or <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.GraphStructureCondition" title="psyneulink.core.scheduling.condition.GraphStructureCondition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">graph</span> <span class="pre">structure</span></code></a> Condition to the Scheduler.</p>
+<p>If <strong>condition</strong> is basic, it will overwrite the current basic
+Condition for <strong>owner</strong>, if present. If you want to add multiple
+basic Conditions to a single owner, instead add a single
+<a class="reference internal" href="Condition.html#conditions-composite"><span class="std std-ref">Composite Condition</span></a> to accurately
+specify the desired behavior.</p>
+<p>If <strong>condition</strong> is structural, it will be applied on top of
+<code class="xref any docutils literal notranslate"><span class="pre">Scheduler.graph</span></code> in the order it is added.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>owner</strong> (<code class="docutils literal notranslate"><span class="pre">node</span></code>) – specifies the node with which the <strong>condition</strong> should be associated. <strong>condition</strong>
 will govern the execution behavior of <strong>owner</strong></p></li>
-<li><p><strong>condition</strong> (<a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.Condition" title="psyneulink.core.scheduling.condition.Condition"><em>Condition</em></a>) – specifies the Condition, associated with the <strong>owner</strong> to be added to the ConditionSet.</p></li>
+<li><p><strong>condition</strong> (<a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.ConditionBase" title="psyneulink.core.scheduling.condition.ConditionBase"><em>ConditionBase</em></a>) – specifies the Condition, associated with the <strong>owner</strong> to be added to the ConditionSet.</p></li>
 </ul>
 </dd>
 </dl>
@@ -636,10 +656,16 @@ will govern the execution behavior of <strong>owner</strong></p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.scheduling.scheduler.Scheduler.add_condition_set">
 <span class="sig-name descname"><span class="pre">add_condition_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conditions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.add_condition_set" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds a set of <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> (in the form of a dict or another ConditionSet) to the Scheduler.
-Any Condition added here will overwrite an existing Condition for a given owner.
-If you want to add multiple conditions to a single owner, add a single <a class="reference internal" href="Condition.html#conditions-composite"><span class="std std-ref">Composite Condition</span></a>
-to accurately specify the desired behavior.</p>
+<dd><p>Adds a set of <a class="reference internal" href="Condition.html"><span class="doc">basic</span></a> or <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.GraphStructureCondition" title="psyneulink.core.scheduling.condition.GraphStructureCondition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">graph</span> <span class="pre">structure</span></code></a> Conditions (in the form of a dict or
+another ConditionSet) to the Scheduler.</p>
+<p>Any basic Condition added here will overwrite the current basic
+Condition for a given owner, if present. If you want to add
+multiple basic Conditions to a single owner, instead add a
+single <a class="reference internal" href="Condition.html#conditions-composite"><span class="std std-ref">Composite Condition</span></a> to
+accurately specify the desired behavior.</p>
+<p>Any structural Condition added here will be applied on top of
+<code class="xref any docutils literal notranslate"><span class="pre">Scheduler.graph</span></code> in the order they are returned by iteration
+over <strong>conditions</strong>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>conditions</strong> (dict[<code class="docutils literal notranslate"><span class="pre">node</span></code>: <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>], <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.ConditionSet" title="psyneulink.core.scheduling.condition.ConditionSet"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ConditionSet</span></code></a>) – <p>specifies collection of Conditions to be added to this ConditionSet,</p>
@@ -648,6 +674,30 @@ to accurately specify the desired behavior.</p>
 governed) to a <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a></p>
 </dd>
 </dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.scheduler.Scheduler.remove_condition">
+<span class="sig-name descname"><span class="pre">remove_condition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner_or_condition</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.remove_condition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the condition specified as or owned by
+<strong>owner_or_condition</strong>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>owner_or_condition</strong> (Union[Hashable, <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.ConditionBase" title="psyneulink.core.scheduling.condition.ConditionBase"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ConditionBase</span></code></a>]) – Either a condition or the owner of a condition</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The condition removed, or None if no condition removed</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.ConditionError" title="psyneulink.core.scheduling.condition.ConditionError"><strong>ConditionError</strong></a> – <ul class="simple">
+<li><p>when <strong>owner_or_condition</strong> is an owner and it owns
+      multiple conditions
+    - when <strong>owner_or_condition</strong> is a condition and its
+      owner is None</p></li>
+</ul>
 </p>
 </dd>
 </dl>
@@ -666,11 +716,55 @@ terminate the execution of the specified <a class="reference internal" href="Tim
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.scheduler.Scheduler.add_graph_edge">
+<span class="sig-name descname"><span class="pre">add_graph_edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">receiver</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.add_graph_edge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds an edge to the <code class="xref any docutils literal notranslate"><span class="pre">graph</span></code> from <strong>sender</strong> to
+<strong>receiver</strong>. Equivalent to <code class="docutils literal notranslate"><span class="pre">add_condition(sender,</span>
+<span class="pre">AddEdgeTo(receiver))</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sender</strong> (<em>Hashable</em>) – sender of the new edge</p></li>
+<li><p><strong>receiver</strong> (<em>Hashable</em>) – receiver of the new edge</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the new condition added to implement the edge</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.AddEdgeTo" title="psyneulink.core.scheduling.condition.AddEdgeTo">AddEdgeTo</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.scheduler.Scheduler.remove_graph_edge">
+<span class="sig-name descname"><span class="pre">remove_graph_edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">receiver</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.remove_graph_edge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes an edge from the <code class="xref any docutils literal notranslate"><span class="pre">graph</span></code> from
+<strong>sender</strong> to <strong>receiver</strong> if it exists. Equivalent to
+<code class="docutils literal notranslate"><span class="pre">add_condition(receiver,</span> <span class="pre">RemoveEdgeFrom(sender))</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sender</strong> (<em>Hashable</em>) – sender of the edge to be removed</p></li>
+<li><p><strong>receiver</strong> (<em>Hashable</em>) – receiver of the edge to be removed</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the new condition added to implement the edge</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.RemoveEdgeFrom" title="psyneulink.core.scheduling.condition.RemoveEdgeFrom">RemoveEdgeFrom</a></p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.scheduling.scheduler.SchedulingMode">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.scheduler.</span></span><span class="sig-name descname"><span class="pre">SchedulingMode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.SchedulingMode" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.scheduler.</span></span><span class="sig-name descname"><span class="pre">SchedulingMode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.SchedulingMode" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.scheduling.scheduler.SchedulingMode.STANDARD">
 <span class="sig-name descname"><span class="pre">STANDARD</span></span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.SchedulingMode.STANDARD" title="Permalink to this definition">¶</a></dt>

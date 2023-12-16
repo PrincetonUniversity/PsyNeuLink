@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutoAssociativeProjection &mdash; PsyNeuLink 0+untagged.5.g424971b documentation</title>
+  <title>AutoAssociativeProjection &mdash; PsyNeuLink 0+untagged.12.gf062be4 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.5.g424971b
+                  0+untagged.12.gf062be4
                 </div>
               
             
@@ -243,8 +243,8 @@ execution an AutoAssociativeProjection references parameters owned by its Recurr
 are <code class="xref any docutils literal notranslate"><span class="pre">auto</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">hetero</span></code>.</p>
 <section id="configurable-attributes">
 <span id="autoassociative-configurable-attributes"></span><h3><em>Configurable Attributes</em><a class="headerlink" href="#configurable-attributes" title="Permalink to this headline">¶</a></h3>
-<p>Due to its specialized nature, most parameters of the AutoAssociativeProjection are not configurable: the <a class="reference internal" href="ControlProjection.html#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.variable" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is
-determined by the format of the output of the RecurrentTransferMechanism, the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.function" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> is always LinearMatrix, and so
+<p>Due to its specialized nature, most parameters of the AutoAssociativeProjection are not configurable: the <a class="reference internal" href="LeabraMechanism.html#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction.variable" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is
+determined by the format of the output of the RecurrentTransferMechanism, the <a class="reference internal" href="LCControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> is always LinearMatrix, and so
 on. The only configurable parameter is the matrix, configured through the <strong>matrix</strong>, <strong>auto</strong>, and/or <strong>hetero</strong>
 arguments for a RecurrentTransferMechanism:</p>
 <ul class="simple" id="autoassociative-matrix">

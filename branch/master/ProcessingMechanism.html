@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ProcessingMechanism &mdash; PsyNeuLink 0+untagged.5.g424971b documentation</title>
+  <title>ProcessingMechanism &mdash; PsyNeuLink 0+untagged.12.gf062be4 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.5.g424971b
+                  0+untagged.12.gf062be4
                 </div>
               
             
@@ -212,9 +212,18 @@
 <span class="target" id="module-psyneulink.core.components.mechanisms.processing.processingmechanism"></span><section id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <blockquote>
-<div><ul class="simple">
+<div><ul>
 <li><p><a class="reference internal" href="#processingmechanism-overview"><span class="std std-ref">Overview</span></a></p></li>
-<li><p><a class="reference internal" href="#processingmechanism-creation"><span class="std std-ref">Creating a ProcessingMechanism</span></a></p></li>
+<li><p><a class="reference internal" href="#processingmechanism-creation"><span class="std std-ref">Creating a ProcessingMechanism</span></a>
+- <a class="reference internal" href="#processingmechanism-configuration"><span class="std std-ref">Configuring a ProcessingMechanism</span></a></p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="#processingmechanism-parallel-processing"><span class="std std-ref">Parallel Processing</span></a></p></li>
+<li><p><a class="reference internal" href="#processingmechanism-divergent-processing"><span class="std std-ref">Divergent Processing</span></a></p></li>
+<li><p><a class="reference internal" href="#processingmechanism-custom-processing"><span class="std std-ref">Custom Processing</span></a></p></li>
+</ul>
+</div></blockquote>
+</li>
 <li><p><a class="reference internal" href="#processingmechanism-structure"><span class="std std-ref">Structure</span></a></p></li>
 <li><p><a class="reference internal" href="#processingmechanism-execution"><span class="std std-ref">Execution</span></a></p></li>
 <li><p><a class="reference internal" href="#processingmechanism-class-reference"><span class="std std-ref">Class Reference</span></a></p></li>
@@ -223,23 +232,102 @@
 </section>
 <section id="overview">
 <span id="processingmechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A ProcessingMechanism is a type of <code class="xref any docutils literal notranslate"><span class="pre">Mechanism</span></code> that transforms its input in some way.  A ProcessingMechanism always
+<p>A ProcessingMechanism is a type of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that transforms its input in some way.  A ProcessingMechanism always
 receives its input either from another Mechanism, or from the input to a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> when it is
 executed.  Similarly, its output is generally conveyed to another Mechanism or used as the output for a Composition.</p>
-<p>The ProcessingMechanism is the simplest mechanism in PsyNeuLink. It does not have any extra arguments or
-specialized validation. Almost any PsyNeuLink Function, including the <a class="reference internal" href="UserDefinedFunction.html"><span class="doc">UserDefinedFunction</span></a>, may be the function of a
-ProcessingMechanism. Currently, the only exception is <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.BackPropagation" title="psyneulink.core.components.functions.learningfunctions.BackPropagation"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BackPropagation</span></code></a>. Subtypes of
-ProcessingMechanism have more specialized state_features, and often have restrictions on which Functions are allowed.</p>
+<p>The ProcessingMechanism is the simplest mechanism in PsyNeuLink. It does not have any extra arguments or specialized
+validation. Almost any PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Function</span></a>, including the <a class="reference internal" href="UserDefinedFunction.html"><span class="doc">UserDefinedFunction</span></a>, may be the function of a
+ProcessingMechanism. Currently, the only exception is <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.BackPropagation" title="psyneulink.core.components.functions.learningfunctions.BackPropagation"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BackPropagation</span></code></a>. Subtypes of ProcessingMechanism have more
+specialized features, and often have restrictions on which Functions are allowed.</p>
 <p>The output of a ProcessingMechanism may also be used by a <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanism</span></a> to modify the
-parameters of other components (or its own parameters). ProcessingMechanisms are always executed before all
-ModulatoryMechanisms in the Composition to which they belong, so that any modifications made by the ModulatoryMechanism
-are available to all ProcessingMechanisms in the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>.</p>
+parameters of other components (or its own parameters), as in the case of an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">Objective Mechanism</span></a>
+that is specialized for this purpose.</p>
 </section>
 <section id="creating-a-processingmechanism">
 <span id="processingmechanism-creation"></span><h2>Creating a ProcessingMechanism<a class="headerlink" href="#creating-a-processingmechanism" title="Permalink to this headline">¶</a></h2>
-<p>A ProcessingMechanism is created by calling its constructor.</p>
-<p>Its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> is specified in the <strong>function</strong> argument, which may be the name of a
-<a class="reference internal" href="Function.html"><span class="doc">Function</span></a> class:</p>
+<p>A ProcessingMechanism is created by calling its constructor. By default, a ProcessingMechanism is assigned:</p>
+<ul class="simple">
+<li><p>a single <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>, that receives (and sums the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>) of any <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>s to it;</p></li>
+<li><p><a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> as its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>;</p></li>
+<li><p>a single <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>, the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of which is the result of the linear transformation
+of its input (which, if no <a class="reference internal" href="Parameters.html"><span class="doc">parameters</span></a> are assigned to it function, is the same as its input).</p></li>
+</ul>
+<p>However, it can be configured otherwise, for various forms of processing, as described below.</p>
+<section id="configuring-a-processingmechanism">
+<span id="processingmechanism-configuration"></span><h3><em>Configuring a ProcessingMechanism</em><a class="headerlink" href="#configuring-a-processingmechanism" title="Permalink to this headline">¶</a></h3>
+<p>As with any <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, the number of InputPorts can be specified using the <strong>input_ports</strong>, <strong>default_variable</strong> or
+<strong>size</strong> arguments of the constructor (see <a class="reference internal" href="Mechanism.html#mechanism-inputports"><span class="std std-ref">InputPorts</span></a>), and OutputPorts can be specified using the
+<strong>output_ports</strong> argument (see <a class="reference internal" href="Mechanism.html#mechanism-outputports"><span class="std std-ref">OutputPorts</span></a>).  These can be used to configure processing in a variety of
+ways. Some common ones are described below (also see <a class="reference internal" href="#processingmechanism-examples"><span class="std std-ref">Examples</span></a>).</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>All of the configurations below assume that:</p>
+<ul class="simple">
+<li><p>the ProcessingMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> is a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.TransferFunction" title="psyneulink.core.components.functions.transferfunctions.TransferFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TransferFunction</span></code></a></p></li>
+<li><p>any specified <strong>InputPorts and/or OutputPorts</strong> use their <strong>default</strong> <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>,</p></li>
+<li><p>the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.variable" title="psyneulink.core.components.ports.outputport.OutputPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> of <strong>OutputPorts</strong> is <strong>not specified</strong>.</p></li>
+</ul>
+<p>If any of these is not the case, then the results may differ from those described below.</p>
+</div>
+</div></blockquote>
+<section id="parallel-processing">
+<span id="processingmechanism-parallel-processing"></span><h4>Parallel Processing<a class="headerlink" href="#parallel-processing" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p><em>Multiple InputPorts</em> and either <em>no or an equal number of OutputPorts</em>:
+one <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> is created for (and given the same name as) each <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>; the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of
+each is assigned the result of the transformation of the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of its corresponding InputPort.
+This exploits the property of a TransferFunction, which preserves the shape of its input, implementing parallel
+processing streams in which the same <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> is used to process the input to each
+InputPort independently of the others (including during <a class="reference internal" href="Composition.html#composition-learning"><span class="std std-ref">learning</span></a>)</p></li>
+</ul>
+</section>
+<section id="divergent-processing">
+<span id="processingmechanism-divergent-processing"></span><h4>Divergent Processing<a class="headerlink" href="#divergent-processing" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p><em>One InputPort</em> and <em>multiple outputPorts</em>:
+all OutputPorts receive the result of the ProcessingMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>
+applied to the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>.</p></li>
+</ul>
+</section>
+<section id="custom-processing">
+<span id="processingmechanism-custom-processing"></span><h4>Custom Processing<a class="headerlink" href="#custom-processing" title="Permalink to this headline">¶</a></h4>
+<ul>
+<li><p><em>Multiple</em> but an <em>unequal</em> number of <em>InputPorts and OutputPorts</em>:</p>
+<ul class="simple">
+<li><p>if there are <em>fewer</em> OutputPorts than InputPorts, each OutputPort is assigned a name and <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>
+corresponding to the name and result of processing of the input to the corresponding InputPort. In this case, the
+inputs to the additional InputPorts are ignored; however, this can be modified by explicitly specifying the
+<a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.variable" title="psyneulink.core.components.ports.outputport.OutputPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> for the OutputPort(s) (see <a class="reference internal" href="OutputPort.html#outputport-custom-variable"><span class="std std-ref">OutputPort variable</span></a>).</p></li>
+<li><p>if there are <em>more</em> OutputPorts than Inputports, then all are assigned a <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.name" title="psyneulink.core.components.ports.outputport.OutputPort.name"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">default</span> <span class="pre">name</span></code></a>,
+and a <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> that is the result of processing the input to the <em>first</em> (<a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary</span></a>) InputPort`; this can be modified by explicitly specifying the variable for the OutputPort(s)
+(see <a class="reference internal" href="OutputPort.html#outputport-custom-variable"><span class="std std-ref">OutputPort variable</span></a>).</p></li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>An unequal number of InputPorts and OutputPorts is not supported for <a class="reference internal" href="Composition.html#composition-learning"><span class="std std-ref">learning</span></a></p>
+</div>
+</li>
+</ul>
+</section>
+</section>
+</section>
+<section id="structure">
+<span id="processingmechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<p>A ProcessingMechanism has the same structure as a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, with the addition of several
+<a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">StandardOutputPorts</span></a> to its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.standard_output_ports" title="psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.standard_output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">standard_output_ports</span></code></a>
+attribute.</p>
+<p>See documentation for individual subtypes of ProcessingMechanism for more specific information about their structure.</p>
+</section>
+<section id="execution">
+<span id="processingmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>The execution of a ProcessingMechanism follows the same sequence of actions as a standard <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>
+(see <a class="reference internal" href="Mechanism.html#mechanism-execution"><span class="std std-ref">Execution</span></a>).</p>
+<p>See <a class="reference internal" href="#processingmechanism-parallel-processing"><span class="std std-ref">Parallel Processing</span></a> above for a description of how processing is affect by the number of
+InputPorts and OutputPorts.</p>
+<p class="rubric" id="processingmechanism-examples">Examples</p>
+<p>The <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of a ProcessingMechanism is specified in the <strong>function</strong> argument,
+which may be the name of a <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> class:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_processing_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">)</span>
 </pre></div>
@@ -250,17 +338,6 @@ for the Function’s parameters:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_logistic_processing_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Logistic</span><span class="p">(</span><span class="n">gain</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">bias</span><span class="o">=-</span><span class="mi">4</span><span class="p">))</span>
 </pre></div>
 </div>
-</section>
-<section id="structure">
-<span id="processingmechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<p>A ProcessingMechanism has the same structure as a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, with the addition of several
-<a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">StandardOutputPorts</span></a> to its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.standard_output_ports" title="psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.standard_output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">standard_output_ports</span></code></a> attribute.</p>
-<p>See documentation for individual subtypes of ProcessingMechanism for more specific information about their structure.</p>
-</section>
-<section id="execution">
-<span id="processingmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>The execution of a ProcessingMechanism follows the same sequence of actions as a standard <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>
-(see <a class="reference internal" href="Mechanism.html#mechanism-execution"><span class="std std-ref">Execution</span></a>).</p>
 </section>
 <section id="class-reference">
 <span id="processingmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
@@ -311,6 +388,13 @@ list to include additional <a class="reference internal" href="OutputPort.html#o
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism._instantiate_output_ports">
+<span class="sig-name descname"><span class="pre">_instantiate_output_ports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism._instantiate_output_ports" title="Permalink to this definition">¶</a></dt>
+<dd><p>If no OutputPorts have been specified, len(variable) &gt;1 and function is TransferFunction,
+create an OutputPort for each item of variable</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py exception">
@@ -358,7 +442,15 @@ list to include additional <a class="reference internal" href="OutputPort.html#o
 <li><a class="reference internal" href="#">ProcessingMechanism</a><ul>
 <li><a class="reference internal" href="#contents">Contents</a></li>
 <li><a class="reference internal" href="#overview">Overview</a></li>
-<li><a class="reference internal" href="#creating-a-processingmechanism">Creating a ProcessingMechanism</a></li>
+<li><a class="reference internal" href="#creating-a-processingmechanism">Creating a ProcessingMechanism</a><ul>
+<li><a class="reference internal" href="#configuring-a-processingmechanism"><em>Configuring a ProcessingMechanism</em></a><ul>
+<li><a class="reference internal" href="#parallel-processing">Parallel Processing</a></li>
+<li><a class="reference internal" href="#divergent-processing">Divergent Processing</a></li>
+<li><a class="reference internal" href="#custom-processing">Custom Processing</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a class="reference internal" href="#structure">Structure</a></li>
 <li><a class="reference internal" href="#execution">Execution</a></li>
 <li><a class="reference internal" href="#class-reference">Class Reference</a></li>

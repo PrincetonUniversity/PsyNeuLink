@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Time &mdash; PsyNeuLink 0+untagged.5.g424971b documentation</title>
+  <title>Time &mdash; PsyNeuLink 0+untagged.12.gf062be4 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.5.g424971b
+                  0+untagged.12.gf062be4
                 </div>
               
             
@@ -212,7 +212,7 @@
 <p><a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a>s maintain <code class="xref any docutils literal notranslate"><span class="pre">Clock</span></code> objects to track time. The current time in relation to a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> is stored in <a class="reference internal" href="#psyneulink.core.scheduling.time.Time" title="psyneulink.core.scheduling.time.Time"><code class="xref py py-class docutils literal notranslate"><span class="pre">Clock.time</span></code></a> or <code class="xref py py-class docutils literal notranslate"><span class="pre">Clock.simple_time</span></code></p>
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.scheduling.time.TimeScale">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.time.</span></span><span class="sig-name descname"><span class="pre">TimeScale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeScale" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.time.</span></span><span class="sig-name descname"><span class="pre">TimeScale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeScale" title="Permalink to this definition">¶</a></dt>
 <dd><p>Represents divisions of time used by the <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> and <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>.</p>
 <p>The values of TimeScale are defined as follows (in order of increasingly coarse granularity):</p>
 <dl class="py attribute">

@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Functions &mdash; PsyNeuLink 0+untagged.5.g424971b documentation</title>
+  <title>Functions &mdash; PsyNeuLink 0+untagged.12.gf062be4 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.5.g424971b
+                  0+untagged.12.gf062be4
                 </div>
               
             
@@ -387,9 +387,8 @@ for details).</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.ArgumentTherapy.Manner">
-<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">Manner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.Manner" title="Permalink to this definition">¶</a></dt>
-<dd><p>An enumeration.</p>
-</dd></dl>
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">Manner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.Manner" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.ArgumentTherapy._validate_variable">
@@ -570,6 +569,14 @@ this psyneulink Function</p>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.function.Function_Base._get_pytorch_fct_param_value">
+<span class="sig-name descname"><span class="pre">_get_pytorch_fct_param_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base._get_pytorch_fct_param_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the current value of param_name for the function
+Use default value if not yet assigned
+Convert using torch.tensor if val is an array</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -580,7 +587,7 @@ this psyneulink Function</p>
 Once constructed, the function must be called with two floats, <strong>sender_size</strong> and <strong>receiver_size</strong>,
 that specify the number of rows and columns of the matrix, respectively.</p>
 <p>Can be used to specify the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter of a <a class="reference internal" href="MappingProjection.html#mappingprojection-matrix-specification"><span class="std std-ref">MappingProjection</span></a>, and to specify a default matrix for Projections in the
-construction of a <a class="reference internal" href="Pathway.html"><span class="doc">Pathway</span></a> (see <a class="reference internal" href="Pathway.html#pathway-specification-projections"><span class="std std-ref">Pathway Projection Specifications</span></a>) or in a call to a Composition’s
+construction of a <a class="reference internal" href="Pathway.html"><span class="doc">Pathway</span></a> (see <a class="reference internal" href="Pathway.html#pathway-specification-projections"><span class="std std-ref">Projection Specifications</span></a>) or in a call to a Composition’s
 <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway" title="psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_linear_processing_pathway</span></code></a> method.</p>
 <div class="technical-note docutils container">
 <p>A call to the class calls <code class="xref any docutils literal notranslate"><span class="pre">random_matrix</span></code>, passing <strong>sender_size</strong> and

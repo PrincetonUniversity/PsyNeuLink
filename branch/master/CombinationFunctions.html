@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>CombinationFunctions &mdash; PsyNeuLink 0+untagged.5.g424971b documentation</title>
+  <title>CombinationFunctions &mdash; PsyNeuLink 0+untagged.12.gf062be4 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.5.g424971b
+                  0+untagged.12.gf062be4
                 </div>
               
             
@@ -224,6 +224,7 @@ when the CombinationFunction is used as the function of an InputPort or OutputPo
 optionally scaling and/or adding an offset to the result after concatenating.</p>
 <p><code class="xref any docutils literal notranslate"><span class="pre">function</span></code> returns a 1d array with length equal to the sum of the lengths of the items
 in <code class="xref any docutils literal notranslate"><span class="pre">variable</span></code>.</p>
+<p><a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.Concatenate.derivative" title="psyneulink.core.components.functions.combinationfunctions.Concatenate.derivative"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">derivative</span></code></a> returns <code class="xref any docutils literal notranslate"><span class="pre">scale</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -350,6 +351,27 @@ arguments of the constructor.</p></li>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.combinationfunctions.Concatenate.derivative">
+<span class="sig-name descname"><span class="pre">derivative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Concatenate.derivative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Derivative of <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.Concatenate._function" title="psyneulink.core.components.functions.combinationfunctions.Concatenate._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> at <strong>input</strong>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input</strong> (<em>number</em>) – value of the input to the function at which derivative is to be taken.</p></li>
+<li><p><strong>covariates</strong> (<em>2d np.array : default class_defaults.variable</em><em>[</em><em>1:</em><em>]</em>) – the input(s) to the Concatenate function other than the one for which the derivative is being
+computed;  these are ignored and are accepted for consistency with other functions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>Scale of function</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>number or array</p>
 </dd>
 </dl>
 </dd></dl>
@@ -563,7 +585,7 @@ or a list containing either or both.  Each integer must be an index of an item i
 1d array, and that 1d array is included in the resulting 2d array in the order it appears in <strong>arrangement</strong>.
 If <strong>arrangement</strong> is specified, then only the items of <code class="xref any docutils literal notranslate"><span class="pre">variable</span></code> referenced in the
 specification are included in the result; if <strong>arrangement</strong> is not specified, all of the items of <code class="xref any docutils literal notranslate"><span class="pre">variable</span></code> are concatenated into a single 1d array (i.e., it functions identically to <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.Concatenate" title="psyneulink.core.components.functions.combinationfunctions.Concatenate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Concatenate</span></code></a>).</p>
-<p><code class="xref any docutils literal notranslate"><span class="pre">function</span></code> returns a 2d array with the items of <a class="reference internal" href="ControlProjection.html#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.variable" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> rearranged
+<p><code class="xref any docutils literal notranslate"><span class="pre">function</span></code> returns a 2d array with the items of <a class="reference internal" href="LeabraMechanism.html#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction.variable" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> rearranged
 (and possibly concatenated) as specified by <strong>arrangement</strong>.</p>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">Rearrange</span><span class="p">(</span><span class="n">arrangement</span><span class="o">=</span><span class="p">[(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">),(</span><span class="mi">0</span><span class="p">)])</span>
@@ -1085,6 +1107,32 @@ arguments of the constructor.</p></li>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>1d array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.combinationfunctions.LinearCombination.derivative">
+<span class="sig-name descname"><span class="pre">derivative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination.derivative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Derivative of <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination._function" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> at <strong>input</strong>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> (<em>1d np.array : default class_defaults.variable</em><em>[</em><em>0</em><em>]</em>) – <p>value of the input to the Linear transform at which derivative is to be taken.
+a single numeric array or multiple arrays being combined, and at which derivative is to be taken.</p>
+<div class="technical-note docutils container">
+<p>output arg is used for consistency with other derivatives used by BackPropagation, and is ignored.</p>
+</div>
+</p></li>
+<li><p><strong>covariates</strong> (<em>2d np.array : default class_defaults.variable</em><em>[</em><em>1:</em><em>]</em>) – the input(s) to the LinearCombination function other than the one for which the derivative is being
+computed;  these are used to calculate the Jacobian of the LinearCombination function.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>Scale</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>number (if input is 1d) or array (if input is 2d)</p>
 </dd>
 </dl>
 </dd></dl>

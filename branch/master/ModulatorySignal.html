@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ModulatorySignal &mdash; PsyNeuLink 0+untagged.5.g424971b documentation</title>
+  <title>ModulatorySignal &mdash; PsyNeuLink 0+untagged.12.gf062be4 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.5.g424971b
+                  0+untagged.12.gf062be4
                 </div>
               
             
@@ -406,7 +406,7 @@ parameter</p></td>
 </table>
 <p>It is important to emphasize that, although the purpose of a ModulatorySignal is to modify the functioning of a
 <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, it does this indirectly by modifying a Port that determines the input
-or output of a Mechanism, or the parameters of a Mechanism or Projection’s <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.function" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, rather than directly modifying
+or output of a Mechanism, or the parameters of a Mechanism or Projection’s <a class="reference internal" href="LCControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, rather than directly modifying
 the function of the Mechanism or Projection itself.  This is shown in the following figure, and described in greater
 detail under <a class="reference internal" href="#modulatorysignal-implementation"><span class="std std-ref">Implementation of Modulation</span></a>.</p>
 <p id="modulatorysignal-anatomy-figure"><strong>Anatomy of Modulation</strong></p>
@@ -458,7 +458,7 @@ specify a <a class="reference internal" href="Functions.html#function-modulatory
 </div></blockquote>
 <p>The default type of modulation for <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a> and <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignals</span></a> is
 <em>MULTIPLICATIVE</em>.  The default for <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignals</span></a> is <em>ADDITIVE</em> (which additively modifies the
-<code class="xref any docutils literal notranslate"><span class="pre">value</span></code> of the LearningSignal (i.e., the weight changes computed by the <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a>)
+<a class="reference internal" href="LearningSignal.html#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.value" title="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the LearningSignal (i.e., the weight changes computed by the <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a>)
 to the Port’s <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.variable" title="psyneulink.core.components.ports.port.Port_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> (i.e., the current weight <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> for
 the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> being learned).</p>
 </section>

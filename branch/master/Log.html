@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Log &mdash; PsyNeuLink 0+untagged.5.g424971b documentation</title>
+  <title>Log &mdash; PsyNeuLink 0+untagged.12.gf062be4 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.5.g424971b
+                  0+untagged.12.gf062be4
                 </div>
               
             
@@ -225,7 +225,7 @@ values of a Component.  The key for each entry is a string that is the name of t
 of <code class="xref any docutils literal notranslate"><span class="pre">LogEntry</span></code> tuples recording its values.  Each <code class="xref any docutils literal notranslate"><span class="pre">LogEntry</span></code> tuple has three items:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><em>time</em> – the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>, <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>, <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PASS</span></code></a>, and <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> in which the value of the item was
+<li><p><em>time</em> – the <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>, <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>, <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PASS</span></code></a>, and <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> in which the value of the item was
 recorded;</p></li>
 <li><p><em>context</em> – a string indicating the context in which the value was recorded;</p></li>
 <li><p><em>value</em> – the value of the item.</p></li>
@@ -332,7 +332,7 @@ To log its <a class="reference internal" href="Component.html#psyneulink.core.co
 <span id="log-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>The value of a Component is recorded to a Log when the condition assigned to its <code class="xref any docutils literal notranslate"><span class="pre">logPref</span></code> is met.
 This is specified as a <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LogCondition</span></code></a> or a boolean combination of them (see <a class="reference internal" href="#log-conditions"><span class="std std-ref">Logging Conditions</span></a>).  The default LogCondition
-is <a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput.OFF" title="psyneulink.core.compositions.report.ReportOutput.OFF"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OFF</span></code></a>.</p>
+is <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.OFF" title="psyneulink.core.globals.log.LogCondition.OFF"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OFF</span></code></a>.</p>
 <p class="rubric" id="log-examples">Examples</p>
 <p>The following example creates a Composition with two <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanisms</span></a>, one that projects to
 another, and logs the <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">noise</span></code></a> and <em>RESULT</em> <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of the first and the
@@ -608,7 +608,7 @@ if the context strings are long and/or the values are arrays).</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.Log.nparray">
-<span class="sig-name descname"><span class="pre">nparray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contexts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">NotImplemented</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_sims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log.nparray" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">nparray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report_all_executions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_sims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contexts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">NotImplemented</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log.nparray" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a 2d numpy array with headers (optional) and values for the specified entries.</p>
 <p>Each row (axis 0) is a time series, with each item in each row the data for the corresponding time point.
 Rows are ordered in the same order as Components are specified in the <strong>entries</strong> argument.</p>
@@ -617,11 +617,11 @@ then the first four rows are time indices for the run, trial, pass, and time_ste
 respectively. Each subsequent row is the times series of data for a given entry.  If there is no data for a
 given entry at a given time point, it is entered as <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>.</p>
 <p>If any of the data for any entry does not have a time value (e.g., if that Component was not run within a
-System), then all of the entries must have the same number of data (LogEntry) items, and the first row is a
-sequential index (starting with 0) that simply designates the data item number.</p>
+Composition), then all of the entries must have the same number of data (LogEntry) items, and the first row
+is a sequential index (starting with 0) that simply designates the data item number.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>For data without time stamps, the nth items in each entry correspond (i.e., ones in the same column)
+<p>For data without time stamps, the nth items in each entry (i.e., ones in the same column)
 are not guaranteed to have been logged at the same time point.</p>
 </div>
 <p>If header is <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>, the first item of each row is a header field: for time indices it is either “Run”,
@@ -632,20 +632,18 @@ of the Component logged in that entry (see <strong>owner_name</strong> argument 
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>entries</strong> (<em>string</em><em>, </em><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a><em> or </em><em>list containing either : default ALL</em>) – specifies the entries of the Log to be included in the output;  they must be <a class="reference internal" href="#id0" title="psyneulink.core.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">loggable_items</span></code></a> of the Log that have been logged (i.e., are also <a class="reference internal" href="#id2" title="psyneulink.core.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">logged_items</span></code></a>).
 If <strong>entries</strong> is <em>ALL</em> or is not specified, then all <a class="reference internal" href="#id2" title="psyneulink.core.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">logged_items</span></code></a> are included.</p></li>
+<li><p><strong>report_all_executions</strong> (<em>bool : default False</em>) – specifies whether to report all executions within a given <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> (if True)
+or just the last (if False, the default). This in only relevant for Mechanisms that can be executed
+multiple times within a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> (e.g., <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> and <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a>) when
+their <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.execute_until_finished" title="psyneulink.core.components.component.Component.execute_until_finished"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">execute_until_finished</span></code></a> attribute is set to True (see
+<code class="xref any docutils literal notranslate"><span class="pre">Component_Execute_Until_Finished</span></code> for additional details).</p></li>
+<li><p><strong>exclude_sims</strong> – set to True to exclude from output any values logged during <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-model-based"><span class="std std-ref">simulations</span></a>
+:default value: False
+:type: bool</p></li>
 <li><p><strong>header</strong> (<em>bool : default True</em>) – specifies whether or not to include a header in each row with the name of the Component for that entry.</p></li>
 <li><p><strong>owner_name</strong> (<em>bool : default False</em>) – specifies whether or not to include the Log’s <a class="reference internal" href="#psyneulink.core.globals.log.Log.owner" title="psyneulink.core.globals.log.Log.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> in the header of each field;
 if it is True, the format of the header for each field is “&lt;Owner name&gt;[&lt;entry name&gt;]”;
 otherwise, it is “&lt;entry name&gt;”.</p></li>
-<li><p><strong>exclude_sims</strong> – <p>set to True to exclude from output any values logged during <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-model-based"><span class="std std-ref">simulations</span></a></p>
-<dl class="field-list simple">
-<dt class="field-odd">default value</dt>
-<dd class="field-odd"><p>False</p>
-</dd>
-<dt class="field-even">type</dt>
-<dd class="field-even"><p>bool</p>
-</dd>
-</dl>
-</p></li>
 <li><p><strong>Returns</strong> – 2d np.array</p></li>
 </ul>
 </dd>
@@ -654,7 +652,7 @@ otherwise, it is “&lt;entry name&gt;”.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.Log.nparray_dictionary">
-<span class="sig-name descname"><span class="pre">nparray_dictionary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log.nparray_dictionary" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">nparray_dictionary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report_all_executions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_sims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log.nparray_dictionary" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns an <a class="reference external" href="https://docs.python.org/3.5/library/collections.html#collections.OrderedDict">OrderedDict</a></p>
 <p><em>Keys:</em></p>
 <blockquote>
@@ -691,6 +689,11 @@ is not guaranteed to have been logged at the same time point across all keys (Co
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>entries</strong> (<em>string</em><em>, </em><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a><em> or </em><em>list containing either : default ALL</em>) – specifies the entries of the Log to be included in the output;  they must be <a class="reference internal" href="#id0" title="psyneulink.core.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">loggable_items</span></code></a> of the Log that have been logged (i.e., are also <a class="reference internal" href="#id2" title="psyneulink.core.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">logged_items</span></code></a>).
 If <strong>entries</strong> is <em>ALL</em> or is not specified, then all <a class="reference internal" href="#id2" title="psyneulink.core.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">logged_items</span></code></a> are included.</p></li>
+<li><p><strong>report_all_executions</strong> (<em>bool : default False</em>) – specifies whether to report all executions within a given <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> (if True)
+or just the last (if False, the default). This in only relevant for Mechanisms that can be executed
+multiple times within a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> (e.g., <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> and <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a>) when
+their <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.execute_until_finished" title="psyneulink.core.components.component.Component.execute_until_finished"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">execute_until_finished</span></code></a> attribute is set to True (see
+<code class="xref any docutils literal notranslate"><span class="pre">Component_Execute_Until_Finished</span></code> for additional details).</p></li>
 <li><p><strong>exclude_sims</strong> – <p>set to True to exclude from output any values logged during <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-model-based"><span class="std std-ref">simulations</span></a></p>
 <dl class="field-list simple">
 <dt class="field-odd">default value</dt>
@@ -796,7 +799,7 @@ property of its class, and its own <a class="reference internal" href="Component
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.LogCondition">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.globals.log.</span></span><span class="sig-name descname"><span class="pre">LogCondition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.globals.log.</span></span><span class="sig-name descname"><span class="pre">LogCondition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition" title="Permalink to this definition">¶</a></dt>
 <dd><p>Used to specify the context in which a value of the Component or its attribute is <a class="reference internal" href="#log-conditions"><span class="std std-ref">logged</span></a>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>

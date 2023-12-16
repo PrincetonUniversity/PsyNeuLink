@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Contributors Guide &mdash; PsyNeuLink 0+untagged.5.g424971b documentation</title>
+  <title>Contributors Guide &mdash; PsyNeuLink 0+untagged.12.gf062be4 documentation</title>
   
 
   
@@ -100,7 +100,7 @@
               
               
                 <div class="version">
-                  0+untagged.5.g424971b
+                  0+untagged.12.gf062be4
                 </div>
               
             
@@ -268,7 +268,7 @@
 <section id="components-overview">
 <span id="id5"></span><h2>Components Overview<a class="headerlink" href="#components-overview" title="Permalink to this headline">¶</a></h2>
 <p>Most PsyNeuLink objects are <a class="reference internal" href="Component.html"><span class="doc">Components</span></a>. All <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a>, <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>, and <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a> are subclasses of Component. These subclasses use and override many functions from the Component class, so they are initialized and executed in similar ways.</p>
-<p>The subclasses of Component should override Component’s functions to implement their own functionality. However, function overrides must call the overridden function using <code class="xref any docutils literal notranslate"><span class="pre">super()</span></code>, while passing the same arguments. For example, to instantiate a Projection’s receiver after instantiating its function, the Projection_Base class overrides the <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism._instantiate_attributes_after_function" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism._instantiate_attributes_after_function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">_instantiate_attributes_after_function</span></code></a> as follows:</p>
+<p>The subclasses of Component should override Component’s functions to implement their own functionality. However, function overrides must call the overridden function using <code class="xref any docutils literal notranslate"><span class="pre">super()</span></code>, while passing the same arguments. For example, to instantiate a Projection’s receiver after instantiating its function, the Projection_Base class overrides the <a class="reference internal" href="KohonenMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism._instantiate_attributes_after_function" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism._instantiate_attributes_after_function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">_instantiate_attributes_after_function</span></code></a> as follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Projection_Base</span><span class="p">(</span><span class="n">Projection</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">_instantiate_attributes_after_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_instantiate_receiver</span><span class="p">(</span><span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">)</span>

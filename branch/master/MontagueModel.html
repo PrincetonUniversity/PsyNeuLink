@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Dopamine and Temporal Differences Learning (Montague, Dayan &amp; Sejnowski, 1996) &mdash; PsyNeuLink 0+untagged.5.g424971b documentation</title>
+  <title>Dopamine and Temporal Differences Learning (Montague, Dayan &amp; Sejnowski, 1996) &mdash; PsyNeuLink 0+untagged.12.gf062be4 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0+untagged.5.g424971b
+                  0+untagged.12.gf062be4
                 </div>
               
             
@@ -251,7 +251,7 @@ the learning aspect of the model.</p>
 <p>The <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> represents the weights; thus, the
 projection’s matrix is initialized to all zeros. The
 <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> is initialized with
-<a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.TDLearning" title="psyneulink.core.components.functions.learningfunctions.TDLearning"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TDLearning</span></code></a> as its <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.learning_function" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.learning_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_function</span></code></a>; this directs the process
+<a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.TDLearning" title="psyneulink.core.components.functions.learningfunctions.TDLearning"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TDLearning</span></code></a> as its <a class="reference internal" href="KohonenMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learning_function" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learning_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_function</span></code></a>; this directs the process
 containing this LearningProjection to initialize a
 <a class="reference internal" href="PredictionErrorMechanism.html"><span class="doc">PredictionErrorMechanism</span></a> instead of a regular
 <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a>. All of the functions in the script

@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DDM &mdash; PsyNeuLink 0+untagged.5.g424971b documentation</title>
+  <title>DDM &mdash; PsyNeuLink 0+untagged.12.gf062be4 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0+untagged.5.g424971b
+                  0+untagged.12.gf062be4
                 </div>
               
             
@@ -384,12 +384,11 @@ ISSN 0022-2496,
 <dd><p>Implements a drift diffusion process (also known as the <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2474742/">Diffusion Decision Model</a>, either by calculating an <a class="reference internal" href="#ddm-analytic-mode"><span class="std std-ref">analytic solution</span></a> or carrying out <a class="reference internal" href="#ddm-integration-mode"><span class="std std-ref">step-wise numerical integration</span></a>.
 See <a class="reference internal" href="Mechanism.html#mechanism-class-reference"><span class="std std-ref">Mechanism</span></a> for additional arguments and attributes.</p>
 <p>The default behaviour for the DDM is to reset its integration state on each new trial, this can be overridden by
-setting the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.reset_stateful_function_when" title="psyneulink.core.components.component.Component.reset_stateful_function_when"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">reset_stateful_function_when</span></code></a> attribute to a different condition.
-In addition, unlike <code class="xref any docutils literal notranslate"><span class="pre">TransferMechamism</span></code>, the DDM’s
-<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.execute_until_finished" title="psyneulink.core.components.component.Component.execute_until_finished"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">execute_until_finished</span></code></a>
-attribute is set to <code class="code docutils literal notranslate"><span class="pre">True</span></code> by default. This will cause the DDM to execute multiple time steps per
-call to its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.execute" title="psyneulink.core.components.component.Component.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a>  method until the decision threshold is reached. This default behavior can
-be changed by setting <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.execute_until_finished" title="psyneulink.core.components.component.Component.execute_until_finished"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">execute_until_finished</span></code></a> to <code class="code docutils literal notranslate"><span class="pre">False</span></code>.</p>
+setting the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.reset_stateful_function_when" title="psyneulink.core.components.component.Component.reset_stateful_function_when"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">reset_stateful_function_when</span></code></a> attribute to a different
+condition. In addition, unlike <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>, the DDM’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.execute_until_finished" title="psyneulink.core.components.component.Component.execute_until_finished"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">execute_until_finished</span></code></a> attribute is set to <code class="xref any docutils literal notranslate"><span class="pre">True</span></code> by default. This will cause the DDM to execute
+multiple time steps per call to its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.execute" title="psyneulink.core.components.component.Component.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a>  method until the decision threshold is reached.
+This default behavior can be changed by setting <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.execute_until_finished" title="psyneulink.core.components.component.Component.execute_until_finished"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">execute_until_finished</span></code></a> to
+<code class="xref any docutils literal notranslate"><span class="pre">False</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -529,28 +528,29 @@ process resulted in crossing the upper threshold, and the 2nd if it crossed the 
 element is set to 0.</p></li>
 <li><p><a class="reference internal" href="#ddm-integration-mode"><span class="std std-ref">integration mode</span></a>: the value of the element in the stimulus array based on the
 decision variable (1st item of the DDM’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.value" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>) at the current TIME_STEP of execution:
-it is assigned to the 1st element if the decision variable is closer to the upper threshold, and to the  2nd
-element if the decision variable is closer to the lower threshold; the other element is set to 0.</p></li>
+it is assigned to the 1st element if the decision variable is closer to the upper threshold, and to the
+2nd element if the decision variable is closer to the lower threshold; the other element is set to 0.</p></li>
 </ul>
 </dd>
 </dl>
 <dl id="ddm-response-time">
-<dt><em>RESPONSE_TIME</em><span class="classifier">float</span></dt><dd><ul class="simple">
+<dt><em>RESPONSE_TIME</em><span class="classifier">float</span></dt><dd><ul>
 <li><p><a class="reference internal" href="#ddm-analytic-mode"><span class="std std-ref">analytic mode</span></a>: mean time (in seconds) for the decision variable to reach the positive
 or negative value of the DDM <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>’s threshold attribute as estimated by the analytic
 solution calculated by the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>);</p></li>
-<li><p><a class="reference internal" href="#ddm-integration-mode"><span class="std std-ref">integration mode</span></a>: the number of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> that have occurred since the DDM began
-to execute in the current <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> or, if it has reached the positive or negative value of
-the DDM <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>’s threshold attribute, the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> at which that occurred.</p></li>
-</ul>
+<li><p><a class="reference internal" href="#ddm-integration-mode"><span class="std std-ref">integration mode</span></a>: the number of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a>s that have occurred since the DDM
+began to execute in the current <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> or, if it has reached the positive or negative
+value of the DDM <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>’s threshold attribute, the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> at which that occurred.</p>
 <p>Corresponds to the 2nd item of the DDM’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.value" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>.</p>
+</li>
+</ul>
 </dd>
 </dl>
 <dl class="simple" id="ddm-decision-outcome">
 <dt><em>DECISION_OUTCOME</em><span class="classifier">float</span></dt><dd><ul class="simple">
-<li><p><a class="reference internal" href="#ddm-analytic-mode"><span class="std std-ref">analytic mode</span></a>: 1.0 if the value of the threshold crossed by the decision variable on the
-current TRIAL (which is either the value of the DDM <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>’s threshold attribute or its
-negative) is positive, 0 otherwise.</p></li>
+<li><p><a class="reference internal" href="#ddm-analytic-mode"><span class="std std-ref">analytic mode</span></a>: 1.0 if the value of the threshold crossed by the decision variable on
+the current TRIAL (which is either the value of the DDM <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>’s threshold attribute or
+its negative) is positive, 0 otherwise.</p></li>
 <li><p><a class="reference internal" href="#ddm-integration-mode"><span class="std std-ref">integration mode</span></a>: 1if the value of the decision variable at the current
 TIME_STEP of execution is positive, 0 otherwise.</p></li>
 </ul>
