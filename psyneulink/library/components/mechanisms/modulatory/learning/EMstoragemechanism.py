@@ -503,6 +503,9 @@ class EMStorageMechanism(LearningMechanism):
                                 parse_spec=True,
                                 constructor_argument='fields',
                                 )
+        fields = Parameter(
+            [], stateful=False, loggable=False, read_only=True, structural=True
+        )
         field_types = Parameter([],stateful=False,
                                 loggable=False,
                                 read_only=True,
