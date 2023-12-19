@@ -617,20 +617,19 @@ class UserDefinedFunction(Function_Base):
             p._set(p.default_value, context, skip_history=True)
 
     def _function(self, variable, context=None, **kwargs):
+        call_params = self.cust_fct_params.copy()
 
         # Update value of parms in cust_fct_params
-        for param in self.cust_fct_params:
+        for param in call_params:
 
             # First check for value passed in params as runtime param:
             if PARAMS in kwargs and kwargs[PARAMS] is not None and param in kwargs[PARAMS]:
-                self.cust_fct_params[param] = kwargs[PARAMS][param]
+                call_params[param] = kwargs[PARAMS][param]
             elif param in kwargs:
-                self.cust_fct_params[param] = kwargs[param]
+                call_params[param] = kwargs[param]
             else:
                 # Otherwise, get current value from ParameterPort (in case it is being modulated by ControlSignal(s)
-                self.cust_fct_params[param] = self._get_current_parameter_value(param, context)
-
-        call_params = self.cust_fct_params.copy()
+                call_params[param] = self._get_current_parameter_value(param, context)
 
         # # MODIFIED 3/6/19 NEW: [JDC]
         # Add any of these that were included in the definition of the custom function:
