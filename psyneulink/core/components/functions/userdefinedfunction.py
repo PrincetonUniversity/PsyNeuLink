@@ -606,15 +606,14 @@ class UserDefinedFunction(Function_Base):
     def _validate_params(self, request_set, target_set=None, context=None):
         pass
 
-    def _instantiate_attributes_before_function(self, function=None, context=None):
-        super()._instantiate_attributes_before_function(function=function, context=context)
-        # create transient Parameters objects for custom function params
-        # done here because they need to be present before _instantiate_value which calls self.function
+    def _initialize_parameters(self, context=None, **param_defaults):
+        # pass custom parameter values here so they can be created as
+        # Parameters in Component._initialize_parameters and
+        # automatically handled as if they were normal Parameters
         for param_name in self.cust_fct_params:
-            p = Parameter(self.cust_fct_params[param_name], modulable=True)
-            setattr(self.parameters, param_name, p)
+            param_defaults[param_name] = Parameter(self.cust_fct_params[param_name], modulable=True)
 
-            p._set(p.default_value, context, skip_history=True)
+        super()._initialize_parameters(context, **param_defaults)
 
     def _function(self, variable, context=None, **kwargs):
         call_params = self.cust_fct_params.copy()
