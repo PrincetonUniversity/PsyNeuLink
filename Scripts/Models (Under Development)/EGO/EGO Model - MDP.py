@@ -145,12 +145,12 @@ NUM_PRED_TRIALS = 10           # Number of trials (ROLL OUTS) to run in PREDICTI
 
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = (                      # Only one of the following can be uncommented:
-    None                             # suppress display of model
-    # {}                               # show simple visual display of model
+    # None                             # suppress display of model
+    {}                               # show simple visual display of model
     # {'show_node_structure': True}    # show detailed view of node structures and projections
 )
-RUN_MODEL = True                       # True => run the model
-# RUN_MODEL = False                      # False => don't run the model
+# RUN_MODEL = True                       # True => run the model
+RUN_MODEL = False                      # False => don't run the model
 ANALYZE_RESULTS = False                # True => output analysis of results of run
 REPORT_OUTPUT = ReportOutput.FULL     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run

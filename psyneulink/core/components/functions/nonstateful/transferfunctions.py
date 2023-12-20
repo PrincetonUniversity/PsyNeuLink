@@ -70,6 +70,10 @@ from enum import Flag, auto
 from math import e, pi, sqrt
 
 import numpy as np
+try:
+    import torch
+except ImportError:
+    torch = None
 from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Callable
@@ -135,8 +139,6 @@ class TransferFunction(Function_Base):
 
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        # Pretend we have one huge array to work on
-        # TODO: should this be invoked in parts?
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
         assert arg_in.type == arg_out.type
 
@@ -273,6 +275,9 @@ class Identity(TransferFunction):  # -------------------------------------------
         builder.store(val, arg_out)
         return builder
 
+    def _gen_pytorch_fct(self, device, context=None):
+        return lambda x: x
+
 
 # **********************************************************************************************************************
 #                                                    Linear
@@ -408,27 +413,6 @@ class Linear(TransferFunction):  # ---------------------------------------------
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
-        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-        slope_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SLOPE)
-        intercept_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, INTERCEPT)
-
-        slope = pnlvm.helpers.load_extract_scalar_array_one(builder, slope_ptr)
-        intercept = pnlvm.helpers.load_extract_scalar_array_one(builder, intercept_ptr)
-
-
-        if "derivative" in tags:
-            # f'(x) = m
-            val = slope
-        else:
-            # f(x) = mx + b
-            val = builder.load(ptri)
-            val = builder.fmul(val, slope)
-            val = builder.fadd(val, intercept)
-
-        builder.store(val, ptro)
-
     def _function(self,
                  variable=None,
                  context=None,
@@ -456,7 +440,6 @@ class Linear(TransferFunction):  # ---------------------------------------------
         slope = self._get_current_parameter_value(SLOPE, context)
         intercept = self._get_current_parameter_value(INTERCEPT, context)
 
-        # MODIFIED 11/9/17 NEW:
         try:
             # By default, result should be returned as np.ndarray with same dimensionality as input
             result = variable * slope + intercept
@@ -466,9 +449,21 @@ class Linear(TransferFunction):  # ---------------------------------------------
                 if variable.dtype == object:
                     result = np.zeros_like(variable)
                     for i, item in enumerate(variable):
-                        result[i] = variable[i] * slope + intercept
+                        try:
+                            result[i] = variable[i] * slope + intercept
+                        except TypeError:
+                            owner_str = f" of '{self.owner.name}'" if self.owner else ""
+                            if variable[i] is None:
+                                err_msg = (f"Item {i} of {VARIABLE} passed to {self.name}{owner_str} is 'None'; "
+                                           f"may be due to missing afferent projection to input_ports[{i}]")
+                            else:
+                                err_msg = (f"Unrecognized type for item {i} of {VARIABLE} (variable[i]) "
+                                           f"passed to {self.name}{owner_str}.")
+                            raise FunctionError(err_msg)
                 else:
-                    raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
+                    owner_str = f"'{self.owner.name}'" if self.owner else ""
+                    raise FunctionError(f"Unrecognized type for {VARIABLE} ({variable}) "
+                                        f"passed to {self.name}{owner_str}.")
             # KAM 6/28/18: If the variable does not have a "dtype" attr but made it to this line, then it must be of a
             # type that even np does not recognize -- typically a custom OutputPort variable with items of different
             # shapes (e.g. variable = [[0.0], [0.0], array([[0.0, 0.0]])] )
@@ -511,6 +506,32 @@ class Linear(TransferFunction):  # ---------------------------------------------
             intercept = self.parameters.intercept._get(context)
 
         return slope == 1 and intercept == 0
+
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+        slope_ptr = ctx.get_param_or_state_ptr(builder, self, SLOPE, param_struct_ptr=params)
+        intercept_ptr = ctx.get_param_or_state_ptr(builder, self, INTERCEPT, param_struct_ptr=params)
+
+        slope = pnlvm.helpers.load_extract_scalar_array_one(builder, slope_ptr)
+        intercept = pnlvm.helpers.load_extract_scalar_array_one(builder, intercept_ptr)
+
+
+        if "derivative" in tags:
+            # f'(x) = m
+            val = slope
+        else:
+            # f(x) = mx + b
+            val = builder.load(ptri)
+            val = builder.fmul(val, slope)
+            val = builder.fadd(val, intercept)
+
+        builder.store(val, ptro)
+
+    def _gen_pytorch_fct(self, device, context=None):
+        slope = self._get_pytorch_fct_param_value('slope', device, context)
+        intercept = self._get_pytorch_fct_param_value('intercept', device, context)
+        return lambda x: x * slope + intercept
 
 
 # **********************************************************************************************************************
@@ -672,37 +693,6 @@ class Exponential(TransferFunction):  # ----------------------------------------
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
-        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-
-        rate_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, RATE)
-        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
-        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
-        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
-
-        rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_ptr)
-        bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
-        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
-        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
-
-        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
-        val = builder.load(ptri)
-        val = builder.fmul(val, rate)
-        val = builder.fadd(val, bias)
-        val = builder.call(exp_f, [val])
-
-        if "derivative" in tags:
-            # f'(x) = s*r*e^(r*x + b)
-            val = builder.fmul(val, scale)
-            val = builder.fmul(val, rate)
-        else:
-            # f(x) = s*e^(r*x + b) + o
-            val = builder.fmul(val, scale)
-            val = builder.fadd(val, offset)
-
-        builder.store(val, ptro)
-
     def _function(self,
                  variable=None,
                  context=None,
@@ -760,6 +750,45 @@ class Exponential(TransferFunction):  # ----------------------------------------
         bias = self._get_current_parameter_value(BIAS, context)
 
         return rate * scale * e**(rate * input + bias)
+
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        rate_ptr = ctx.get_param_or_state_ptr(builder, self, RATE, param_struct_ptr=params)
+        bias_ptr = ctx.get_param_or_state_ptr(builder, self, BIAS, param_struct_ptr=params)
+        scale_ptr = ctx.get_param_or_state_ptr(builder, self, SCALE, param_struct_ptr=params)
+        offset_ptr = ctx.get_param_or_state_ptr(builder, self, OFFSET, param_struct_ptr=params)
+
+        rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_ptr)
+        bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
+        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
+        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
+
+        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
+        val = builder.load(ptri)
+        val = builder.fmul(val, rate)
+        val = builder.fadd(val, bias)
+        val = builder.call(exp_f, [val])
+
+        if "derivative" in tags:
+            # f'(x) = s*r*e^(r*x + b)
+            val = builder.fmul(val, scale)
+            val = builder.fmul(val, rate)
+        else:
+            # f(x) = s*e^(r*x + b) + o
+            val = builder.fmul(val, scale)
+            val = builder.fadd(val, offset)
+
+        builder.store(val, ptro)
+
+    def _gen_pytorch_fct(self, device, context=None):
+        rate = self._get_pytorch_fct_param_value('rate', device, context)
+        scale = self._get_pytorch_fct_param_value('scale', device, context)
+        bias = self._get_pytorch_fct_param_value('bias', device, context)
+
+        return rate * scale * torch.exp(rate * input + bias)
+
 
 # **********************************************************************************************************************
 #                                                   Logistic
@@ -963,45 +992,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
-        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-
-        gain_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, GAIN)
-        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
-        x_0_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, X_0)
-        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
-        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
-
-        gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
-        bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
-        x_0 = pnlvm.helpers.load_extract_scalar_array_one(builder, x_0_ptr)
-        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
-        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
-
-        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
-        val = builder.load(ptri)
-
-        if "derivative_out" not in tags:
-            val = builder.fadd(val, bias)
-            val = builder.fsub(val, x_0)
-            val = builder.fmul(val, gain)
-            val = builder.fsub(offset, val)
-            val = builder.call(exp_f, [val])
-            val = builder.fadd(ctx.float_ty(1), val)
-            val = builder.fdiv(ctx.float_ty(1), val)
-            val = builder.fmul(val, scale)
-
-        if "derivative" in tags or "derivative_out" in tags:
-            # f(x) = g * s * o * (1-o)
-            function_val = val
-            val = builder.fsub(ctx.float_ty(1), function_val)
-            val = builder.fmul(function_val, val)
-            val = builder.fmul(gain, val)
-            val = builder.fmul(scale, val)
-
-        builder.store(val, ptro)
-
     def _function(self,
                  variable=None,
                  context=None,
@@ -1080,6 +1070,51 @@ class Logistic(TransferFunction):  # -------------------------------------------
             output = self.function(input, context=context)
 
         return gain * scale * output * (1 - output)
+
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        gain_ptr = ctx.get_param_or_state_ptr(builder, self, GAIN, param_struct_ptr=params)
+        bias_ptr = ctx.get_param_or_state_ptr(builder, self, BIAS, param_struct_ptr=params)
+        x_0_ptr = ctx.get_param_or_state_ptr(builder, self, X_0, param_struct_ptr=params)
+        scale_ptr = ctx.get_param_or_state_ptr(builder, self, SCALE, param_struct_ptr=params)
+        offset_ptr = ctx.get_param_or_state_ptr(builder, self, OFFSET, param_struct_ptr=params)
+
+        gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
+        bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
+        x_0 = pnlvm.helpers.load_extract_scalar_array_one(builder, x_0_ptr)
+        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
+        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
+
+        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
+        val = builder.load(ptri)
+
+        if "derivative_out" not in tags:
+            val = builder.fadd(val, bias)
+            val = builder.fsub(val, x_0)
+            val = builder.fmul(val, gain)
+            val = builder.fsub(offset, val)
+            val = builder.call(exp_f, [val])
+            val = builder.fadd(ctx.float_ty(1), val)
+            val = builder.fdiv(ctx.float_ty(1), val)
+            val = builder.fmul(val, scale)
+
+        if "derivative" in tags or "derivative_out" in tags:
+            # f(x) = g * s * o * (1-o)
+            function_val = val
+            val = builder.fsub(ctx.float_ty(1), function_val)
+            val = builder.fmul(function_val, val)
+            val = builder.fmul(gain, val)
+            val = builder.fmul(scale, val)
+
+        builder.store(val, ptro)
+
+    def _gen_pytorch_fct(self, device, context=None):
+        gain = self._get_pytorch_fct_param_value('gain', device, context)
+        bias = self._get_pytorch_fct_param_value('bias', device, context)
+        offset = self._get_pytorch_fct_param_value('offset', device, context)
+        return lambda x: 1 / (1 + torch.exp(-gain * (x + bias) + offset))
 
     def as_mdf_model(self):
         model = super().as_mdf_model()
@@ -1281,58 +1316,6 @@ class Tanh(TransferFunction):  # -----------------------------------------------
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
-        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-
-        gain_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, GAIN)
-        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
-        x_0_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, X_0)
-        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
-        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
-
-        gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
-        bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
-        x_0 = pnlvm.helpers.load_extract_scalar_array_one(builder, x_0_ptr)
-        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
-        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
-
-        variable = builder.load(ptri)
-        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
-
-        if "derivative" in tags:
-            exponent = builder.fadd(variable, bias)
-            exponent = builder.fsub(exponent, x_0)
-            exponent = builder.fmul(gain, exponent)
-            exponent = builder.fadd(exponent, offset)
-            exponent = builder.fmul(exponent.type(-2), exponent)
-
-            mult = builder.fmul(gain, scale)
-            mult = builder.fmul(mult.type(-2), mult)
-
-            exp_val = builder.call(exp_f, [exponent])
-            numerator = builder.fmul(exp_val.type(-2), exp_val)
-
-            denominator = builder.fadd(exp_val.type(1), exp_val)
-            denominator = builder.fmul(denominator, denominator)
-
-            val = builder.fdiv(numerator, denominator)
-            val = builder.fmul(val, mult)
-        else:
-            exp_val = builder.fadd(variable, bias)
-            exp_val = builder.fsub(exp_val, x_0)
-            exp_val = builder.fmul(exp_val, gain)
-            exp_val = builder.fadd(exp_val, offset)
-            exp_val = builder.fmul(exp_val.type(-2), exp_val)
-
-            val = builder.call(exp_f, [exp_val])
-            val1 = builder.fsub(val.type(1), val)
-            val2 = builder.fadd(val.type(1), val)
-            val = builder.fdiv(val1, val2)
-            val = builder.fmul(val, scale)
-
-        builder.store(val, ptro)
-
     def _function(self,
                  variable=None,
                  context=None,
@@ -1403,6 +1386,63 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 
         return mult * (numerator / denominator)
 
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        gain_ptr = ctx.get_param_or_state_ptr(builder, self, GAIN, param_struct_ptr=params)
+        bias_ptr = ctx.get_param_or_state_ptr(builder, self, BIAS, param_struct_ptr=params)
+        x_0_ptr = ctx.get_param_or_state_ptr(builder, self, X_0, param_struct_ptr=params)
+        offset_ptr = ctx.get_param_or_state_ptr(builder, self, OFFSET, param_struct_ptr=params)
+        scale_ptr = ctx.get_param_or_state_ptr(builder, self, SCALE, param_struct_ptr=params)
+
+        gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
+        bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
+        x_0 = pnlvm.helpers.load_extract_scalar_array_one(builder, x_0_ptr)
+        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
+        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
+
+        variable = builder.load(ptri)
+        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
+
+        if "derivative" in tags:
+            exponent = builder.fadd(variable, bias)
+            exponent = builder.fsub(exponent, x_0)
+            exponent = builder.fmul(gain, exponent)
+            exponent = builder.fadd(exponent, offset)
+            exponent = builder.fmul(exponent.type(-2), exponent)
+
+            mult = builder.fmul(gain, scale)
+            mult = builder.fmul(mult.type(-2), mult)
+
+            exp_val = builder.call(exp_f, [exponent])
+            numerator = builder.fmul(exp_val.type(-2), exp_val)
+
+            denominator = builder.fadd(exp_val.type(1), exp_val)
+            denominator = builder.fmul(denominator, denominator)
+
+            val = builder.fdiv(numerator, denominator)
+            val = builder.fmul(val, mult)
+        else:
+            exp_val = builder.fadd(variable, bias)
+            exp_val = builder.fsub(exp_val, x_0)
+            exp_val = builder.fmul(exp_val, gain)
+            exp_val = builder.fadd(exp_val, offset)
+            exp_val = builder.fmul(exp_val.type(-2), exp_val)
+
+            val = builder.call(exp_f, [exp_val])
+            val1 = builder.fsub(val.type(1), val)
+            val2 = builder.fadd(val.type(1), val)
+            val = builder.fdiv(val1, val2)
+            val = builder.fmul(val, scale)
+
+        builder.store(val, ptro)
+
+    def _gen_pytorch_fct(self, device, context=None):
+        gain = self._get_pytorch_fct_param_value('gain', device, context)
+        bias = self._get_pytorch_fct_param_value('bias', device, context)
+        offset = self._get_pytorch_fct_param_value('offset', device, context)
+        return lambda x: 1 / (1 + torch.exp(-gain * (x + bias) + offset))
 
 # **********************************************************************************************************************
 #                                                    ReLU
@@ -1574,37 +1614,6 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         return self.convert_output_type(result)
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
-        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-
-        gain_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, GAIN)
-        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
-        leak_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, LEAK)
-
-        gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
-        bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
-        leak = pnlvm.helpers.load_extract_scalar_array_one(builder, leak_ptr)
-
-        # Maxnum for some reason needs full function prototype
-        max_f = ctx.get_builtin("maxnum", [ctx.float_ty])
-        var = builder.load(ptri)
-        if "derivative_out" in tags:
-            val = builder.fdiv(var, gain)
-        else:
-            val = builder.fsub(var, bias)
-
-        if "derivative" in tags or "derivative_out" in tags:
-            predicate = builder.fcmp_ordered('>', val, val.type(0))
-            val = builder.select(predicate, gain, builder.fmul(gain, leak))
-        else:
-            val1 = builder.fmul(val, gain)
-            val2 = builder.fmul(val1, leak)
-
-            val = builder.call(max_f, [val1, val2])
-
-        builder.store(val, ptro)
-
     @handle_external_context()
     def derivative(self, input=None, output=None, context=None):
         """
@@ -1638,6 +1647,44 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         value = np.where(variable > 0, gain, gain * leak)
         return value
+
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        gain_ptr = ctx.get_param_or_state_ptr(builder, self, GAIN, param_struct_ptr=params)
+        bias_ptr = ctx.get_param_or_state_ptr(builder, self, BIAS, param_struct_ptr=params)
+        leak_ptr = ctx.get_param_or_state_ptr(builder, self, LEAK, param_struct_ptr=params)
+
+        gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
+        bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
+        leak = pnlvm.helpers.load_extract_scalar_array_one(builder, leak_ptr)
+
+        # Maxnum for some reason needs full function prototype
+        max_f = ctx.get_builtin("maxnum", [ctx.float_ty])
+        var = builder.load(ptri)
+        if "derivative_out" in tags:
+            val = builder.fdiv(var, gain)
+        else:
+            val = builder.fsub(var, bias)
+
+        if "derivative" in tags or "derivative_out" in tags:
+            predicate = builder.fcmp_ordered('>', val, val.type(0))
+            val = builder.select(predicate, gain, builder.fmul(gain, leak))
+        else:
+            val1 = builder.fmul(val, gain)
+            val2 = builder.fmul(val1, leak)
+
+            val = builder.call(max_f, [val1, val2])
+
+        builder.store(val, ptro)
+
+    def _gen_pytorch_fct(self, device, context=None):
+        gain = self._get_pytorch_fct_param_value('gain', device, context)
+        bias = self._get_pytorch_fct_param_value('bias', device, context)
+        leak = self._get_pytorch_fct_param_value('leak', device, context)
+        return lambda x: (torch.max(input=(x - bias), other=torch.tensor([0], device=device).double()) * gain +
+                            torch.min(input=(x - bias), other=torch.tensor([0], device=device).double()) * leak)
 
 
 # **********************************************************************************************************************
@@ -2057,10 +2104,10 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        standard_deviation_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, STANDARD_DEVIATION)
-        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
-        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
-        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
+        standard_deviation_ptr = ctx.get_param_or_state_ptr(builder, self, STANDARD_DEVIATION, param_struct_ptr=params)
+        bias_ptr = ctx.get_param_or_state_ptr(builder, self, BIAS, param_struct_ptr=params)
+        scale_ptr = ctx.get_param_or_state_ptr(builder, self, SCALE, param_struct_ptr=params)
+        offset_ptr = ctx.get_param_or_state_ptr(builder, self, OFFSET, param_struct_ptr=params)
 
         standard_deviation = pnlvm.helpers.load_extract_scalar_array_one(builder, standard_deviation_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -2334,10 +2381,10 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        variance_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, VARIANCE)
-        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
-        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
-        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
+        variance_ptr = ctx.get_param_or_state_ptr(builder, self, VARIANCE, param_struct_ptr=params)
+        bias_ptr = ctx.get_param_or_state_ptr(builder, self, BIAS, param_struct_ptr=params)
+        scale_ptr = ctx.get_param_or_state_ptr(builder, self, SCALE, param_struct_ptr=params)
+        offset_ptr = ctx.get_param_or_state_ptr(builder, self, OFFSET, param_struct_ptr=params)
 
         variance = pnlvm.helpers.load_extract_scalar_array_one(builder, variance_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -2553,7 +2600,7 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        p_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, 'p')
+        p_ptr = ctx.get_param_or_state_ptr(builder, self, 'p', param_struct_ptr=params)
         p = builder.load(p_ptr)
         mod_p = builder.fsub(p.type(1), p)
         p_mod_ptr = builder.alloca(mod_p.type)
@@ -2768,13 +2815,6 @@ class Dropout(TransferFunction):  #
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
-        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-
-        val = builder.load(ptri)
-        builder.store(val, ptro)
-
     def _function(self,
                  variable=None,
                  context=None,
@@ -2813,14 +2853,6 @@ class Dropout(TransferFunction):  #
 
         return self.convert_output_type(result)
 
-    def _is_identity(self, context=None, defaults=False):
-        if defaults:
-            p = self.defaults.p
-        else:
-            p = self.parameters.p._get(context)
-
-        return (context.run_mode != ContextFlags.LEARNING_MODE) or (p == 0.0)
-
     @handle_external_context()
     def derivative(self, input=None, output=None, context=None):
         # raise FunctionError(f"Derivative of Dropout not yet supported.")
@@ -2844,6 +2876,25 @@ class Dropout(TransferFunction):  #
         # FIX: ?WHICH IS CORRECT:
         # return self._get_current_parameter_value(VARIABLE, context)
         return 1.0
+
+    def _is_identity(self, context=None, defaults=False):
+        if defaults:
+            p = self.defaults.p
+        else:
+            p = self.parameters.p._get(context)
+
+        return (context.run_mode != ContextFlags.LEARNING_MODE) or (p == 0.0)
+
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        val = builder.load(ptri)
+        builder.store(val, ptro)
+
+    def _gen_pytorch_fct(self, device, context=None):
+        prob = self._get_pytorch_fct_param_value('p')
+        return lambda x: (torch.dropout(input=x, p=prob, train=False))
 
 
 # **********************************************************************************************************************
@@ -2999,7 +3050,7 @@ class SoftMax(TransferFunction):
         bounds = (0, 1)
         output = ALL
         per_item = Parameter(True, pnl_internal=True)
-        one_hot_function = Parameter(OneHot, stateful=False, loggable=False)
+        one_hot_function = Parameter(None, stateful=False, loggable=False)
 
         def _validate_output(self, output):
             options = {ALL, MAX_VAL, MAX_INDICATOR, PROB}
@@ -3063,158 +3114,6 @@ class SoftMax(TransferFunction):
                 return self.class_defaults.variable
 
         return np.asarray(variable)
-
-    def __gen_llvm_exp_sum(self, builder, index, ctx, vi, gain, exp_sum_ptr):
-        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-
-        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
-        orig_val = builder.load(ptri)
-        val = builder.fmul(orig_val, gain)
-        exp_val = builder.call(exp_f, [val])
-
-        exp_sum = builder.load(exp_sum_ptr)
-        new_exp_sum = builder.fadd(exp_sum, exp_val)
-        builder.store(new_exp_sum, exp_sum_ptr)
-
-    def __gen_llvm_exp_div(self, builder, index, ctx, vi, vo, gain, exp_sum):
-        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
-        orig_val = builder.load(ptri)
-        val = builder.fmul(orig_val, gain)
-        val = builder.call(exp_f, [val])
-        val = builder.fdiv(val, exp_sum)
-
-        builder.store(val, ptro)
-
-    def __gen_llvm_apply(self, ctx, builder, params, state, arg_in, arg_out, output_type, tags:frozenset):
-        exp_sum_ptr = builder.alloca(ctx.float_ty)
-        builder.store(exp_sum_ptr.type.pointee(0), exp_sum_ptr)
-
-        gain_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, GAIN)
-        gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
-
-        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_sum_max") as args:
-            self.__gen_llvm_exp_sum(*args, ctx=ctx, vi=arg_in, gain=gain,
-                                    exp_sum_ptr=exp_sum_ptr)
-
-        exp_sum = builder.load(exp_sum_ptr)
-
-        if output_type == ALL:
-            with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as args:
-                self.__gen_llvm_exp_div(ctx=ctx, vi=arg_in, vo=arg_out,
-                                        gain=gain, exp_sum=exp_sum, *args)
-            return builder
-
-        one_hot_f = ctx.import_llvm_function(self.one_hot_function, tags=tags)
-        one_hot_p = pnlvm.helpers.get_param_ptr(builder, self, params, 'one_hot_function')
-        one_hot_s = pnlvm.helpers.get_state_ptr(builder, self, state, 'one_hot_function')
-
-        assert one_hot_f.args[3].type == arg_out.type
-        one_hot_out = arg_out
-        one_hot_in = builder.alloca(one_hot_f.args[2].type.pointee)
-
-        if output_type in {MAX_VAL, MAX_INDICATOR}:
-            with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as (b, i):
-                self.__gen_llvm_exp_div(ctx=ctx, vi=arg_in, vo=one_hot_in,
-                                        gain=gain, exp_sum=exp_sum, builder=b, index=i)
-
-            builder.call(one_hot_f, [one_hot_p, one_hot_s, one_hot_in, one_hot_out])
-
-        elif output_type in PROB:
-            one_hot_in_data = builder.gep(one_hot_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            one_hot_in_dist = builder.gep(one_hot_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
-
-            with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as (b, i):
-                self.__gen_llvm_exp_div(ctx=ctx, vi=arg_in, vo=one_hot_in_dist,
-                                        gain=gain, exp_sum=exp_sum, builder=b, index=i)
-
-                dist_in = b.gep(arg_in, [ctx.int32_ty(0), i])
-                dist_out = b.gep(one_hot_in_data, [ctx.int32_ty(0), i])
-                b.store(b.load(dist_in), dist_out)
-
-
-            builder.call(one_hot_f, [one_hot_p, one_hot_s, one_hot_in, one_hot_out])
-        else:
-            assert False, "Unsupported output in {}: {}".format(self, output_type)
-
-        return builder
-
-    def _gen_llvm_function_derivative_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        assert "derivative" in tags or "derivative_out" in tags
-        assert arg_in.type == arg_out.type
-        forward_tags = tags.difference({"derivative", "derivative_out"})
-
-        # SoftMax derivative is calculated from the "ALL" results.
-        # Those can provided from outside, but we don't support receiving data in arg_out
-        if "derivative_out" in tags:
-            all_out = arg_in
-        else:
-            all_out = builder.alloca(arg_out.type.pointee)
-            builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, all_out, output_type=ALL, tags=forward_tags)
-
-        if self.parameters.per_item.get():
-            assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
-            assert isinstance(arg_out.type.pointee.element, pnlvm.ir.ArrayType)
-            for i in range(arg_in.type.pointee.count):
-                inner_all_out = builder.gep(all_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
-                inner_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
-                builder = self.__gen_llvm_apply_derivative(ctx, builder, params, state, inner_all_out, inner_out, tags=tags)
-            return builder
-        else:
-            return self.__gen_llvm_apply_derivative(ctx, builder, params, state, all_out, arg_out, tags=tags)
-
-    def __gen_llvm_apply_derivative(self, ctx, builder, params, state, all_out, arg_out, *, tags:frozenset):
-
-        assert self.output in {MAX_VAL, MAX_INDICATOR}, \
-            "Derivative of SoftMax is only implemented for MAX_VAL and MAX_INDICATOR! ({})".format(self.output)
-
-        max_pos_ptr = builder.alloca(ctx.int32_ty)
-        builder.store(max_pos_ptr.type.pointee(-1), max_pos_ptr)
-        max_val_ptr = builder.alloca(arg_out.type.pointee.element)
-        builder.store(max_val_ptr.type.pointee(float("NaN")), max_val_ptr)
-
-        with pnlvm.helpers.array_ptr_loop(builder, all_out, id="max") as (b, idx):
-            val_ptr = b.gep(all_out, [ctx.int32_ty(0), idx])
-            val = b.load(val_ptr)
-            max_val = b.load(max_val_ptr)
-            new_max = b.fcmp_unordered(">", val, max_val)
-            with b.if_then(new_max):
-                b.store(val, max_val_ptr)
-                b.store(idx, max_pos_ptr)
-
-        max_val = builder.load(max_val_ptr)
-        max_pos = builder.load(max_pos_ptr)
-
-        with pnlvm.helpers.array_ptr_loop(builder, all_out, id="derivative") as (b, idx):
-            val_ptr = b.gep(all_out, [ctx.int32_ty(0), idx])
-            val = b.load(val_ptr)
-            is_max_pos = b.icmp_unsigned("==", idx, max_pos)
-
-            d = b.select(is_max_pos, val.type(1), val.type(0))
-            dv = b.fsub(d, max_val)
-            val = b.fmul(val, dv)
-
-            out_ptr = b.gep(arg_out, [ctx.int32_ty(0), idx])
-            b.store(val, out_ptr)
-
-        return builder
-
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, output_type=None, *, tags:frozenset):
-        output_type = self.output if output_type is None else output_type
-        if "derivative" in tags or "derivative_out" in tags:
-            return self._gen_llvm_function_derivative_body(ctx, builder, params, state, arg_in, arg_out, tags=tags)
-
-        if self.parameters.per_item.get():
-            assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
-            assert isinstance(arg_out.type.pointee.element, pnlvm.ir.ArrayType)
-            for i in range(arg_in.type.pointee.count):
-                inner_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
-                inner_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
-                builder = self.__gen_llvm_apply(ctx, builder, params, state, inner_in, inner_out, output_type, tags=tags)
-            return builder
-        else:
-            return self.__gen_llvm_apply(ctx, builder, params, state, arg_in, arg_out, output_type, tags=tags)
 
     def apply_softmax(self, input_value, gain, output_type):
         # Modulate input_value by gain
@@ -3341,6 +3240,165 @@ class SoftMax(TransferFunction):
 
         assert per_item or len(result) == 1
         return result[0] if not per_item or np.array(result).ndim == 3 else result
+
+    def __gen_llvm_exp_sum(self, builder, index, ctx, vi, gain, exp_sum_ptr):
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+
+        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
+        orig_val = builder.load(ptri)
+        val = builder.fmul(orig_val, gain)
+        exp_val = builder.call(exp_f, [val])
+
+        exp_sum = builder.load(exp_sum_ptr)
+        new_exp_sum = builder.fadd(exp_sum, exp_val)
+        builder.store(new_exp_sum, exp_sum_ptr)
+
+    def __gen_llvm_exp_div(self, builder, index, ctx, vi, vo, gain, exp_sum):
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
+        orig_val = builder.load(ptri)
+        val = builder.fmul(orig_val, gain)
+        val = builder.call(exp_f, [val])
+        val = builder.fdiv(val, exp_sum)
+
+        builder.store(val, ptro)
+
+    def __gen_llvm_apply(self, ctx, builder, params, state, arg_in, arg_out, output_type, tags:frozenset):
+        exp_sum_ptr = builder.alloca(ctx.float_ty)
+        builder.store(exp_sum_ptr.type.pointee(0), exp_sum_ptr)
+
+        gain_ptr = ctx.get_param_or_state_ptr(builder, self, GAIN, param_struct_ptr=params)
+        gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
+
+        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_sum_max") as args:
+            self.__gen_llvm_exp_sum(*args, ctx=ctx, vi=arg_in, gain=gain,
+                                    exp_sum_ptr=exp_sum_ptr)
+
+        exp_sum = builder.load(exp_sum_ptr)
+
+        if output_type == ALL:
+            one_hot_p = ctx.get_param_or_state_ptr(builder, self, 'one_hot_function', param_struct_ptr=params, state_struct_ptr=state)
+
+            # Derivative first gets the output_type == ALL result even if the selected output type is different.
+            assert self.output != output_type or one_hot_p.type.pointee.elements == (), \
+                "OneHot parameter should be empty for output_type == ALL: {}".format(one_hot_p)
+            with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as args:
+                self.__gen_llvm_exp_div(ctx=ctx, vi=arg_in, vo=arg_out,
+                                        gain=gain, exp_sum=exp_sum, *args)
+            return builder
+
+        one_hot_p, one_hot_s = ctx.get_param_or_state_ptr(builder, self, 'one_hot_function', param_struct_ptr=params, state_struct_ptr=state)
+        one_hot_f = ctx.import_llvm_function(self.one_hot_function, tags=tags)
+
+        assert one_hot_f.args[3].type == arg_out.type
+        one_hot_out = arg_out
+        one_hot_in = builder.alloca(one_hot_f.args[2].type.pointee)
+
+        if output_type in {MAX_VAL, MAX_INDICATOR}:
+            with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as (b, i):
+                self.__gen_llvm_exp_div(ctx=ctx, vi=arg_in, vo=one_hot_in,
+                                        gain=gain, exp_sum=exp_sum, builder=b, index=i)
+
+            builder.call(one_hot_f, [one_hot_p, one_hot_s, one_hot_in, one_hot_out])
+
+        elif output_type in PROB:
+            one_hot_in_data = builder.gep(one_hot_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            one_hot_in_dist = builder.gep(one_hot_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
+
+            with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as (b, i):
+                self.__gen_llvm_exp_div(ctx=ctx, vi=arg_in, vo=one_hot_in_dist,
+                                        gain=gain, exp_sum=exp_sum, builder=b, index=i)
+
+                dist_in = b.gep(arg_in, [ctx.int32_ty(0), i])
+                dist_out = b.gep(one_hot_in_data, [ctx.int32_ty(0), i])
+                b.store(b.load(dist_in), dist_out)
+
+
+            builder.call(one_hot_f, [one_hot_p, one_hot_s, one_hot_in, one_hot_out])
+        else:
+            assert False, "Unsupported output in {}: {}".format(self, output_type)
+
+        return builder
+
+    def _gen_llvm_function_derivative_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+        assert "derivative" in tags or "derivative_out" in tags
+        assert arg_in.type == arg_out.type
+        forward_tags = tags.difference({"derivative", "derivative_out"})
+
+        # SoftMax derivative is calculated from the "ALL" results.
+        if "derivative_out" in tags:
+            all_out = arg_in
+        else:
+            all_out = builder.alloca(arg_out.type.pointee)
+            builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, all_out, output_type=ALL, tags=forward_tags)
+
+        if self.parameters.per_item.get():
+            assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
+            assert isinstance(arg_out.type.pointee.element, pnlvm.ir.ArrayType)
+            for i in range(arg_in.type.pointee.count):
+                inner_all_out = builder.gep(all_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
+                inner_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
+                builder = self.__gen_llvm_apply_derivative(ctx, builder, params, state, inner_all_out, inner_out, tags=tags)
+            return builder
+        else:
+            return self.__gen_llvm_apply_derivative(ctx, builder, params, state, all_out, arg_out, tags=tags)
+
+    def __gen_llvm_apply_derivative(self, ctx, builder, params, state, all_out, arg_out, *, tags:frozenset):
+
+        assert self.output in {MAX_VAL, MAX_INDICATOR}, \
+            "Derivative of SoftMax is only implemented for MAX_VAL and MAX_INDICATOR! ({})".format(self.output)
+
+        max_pos_ptr = builder.alloca(ctx.int32_ty)
+        builder.store(max_pos_ptr.type.pointee(-1), max_pos_ptr)
+        max_val_ptr = builder.alloca(arg_out.type.pointee.element)
+        builder.store(max_val_ptr.type.pointee(float("NaN")), max_val_ptr)
+
+        with pnlvm.helpers.array_ptr_loop(builder, all_out, id="max") as (b, idx):
+            val_ptr = b.gep(all_out, [ctx.int32_ty(0), idx])
+            val = b.load(val_ptr)
+            max_val = b.load(max_val_ptr)
+            new_max = b.fcmp_unordered(">", val, max_val)
+            with b.if_then(new_max):
+                b.store(val, max_val_ptr)
+                b.store(idx, max_pos_ptr)
+
+        max_val = builder.load(max_val_ptr)
+        max_pos = builder.load(max_pos_ptr)
+
+        with pnlvm.helpers.array_ptr_loop(builder, all_out, id="derivative") as (b, idx):
+            val_ptr = b.gep(all_out, [ctx.int32_ty(0), idx])
+            val = b.load(val_ptr)
+            is_max_pos = b.icmp_unsigned("==", idx, max_pos)
+
+            d = b.select(is_max_pos, val.type(1), val.type(0))
+            dv = b.fsub(d, max_val)
+            val = b.fmul(val, dv)
+
+            out_ptr = b.gep(arg_out, [ctx.int32_ty(0), idx])
+            b.store(val, out_ptr)
+
+        return builder
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, output_type=None, *, tags:frozenset):
+        output_type = self.output if output_type is None else output_type
+        if "derivative" in tags or "derivative_out" in tags:
+            return self._gen_llvm_function_derivative_body(ctx, builder, params, state, arg_in, arg_out, tags=tags)
+
+        if self.parameters.per_item.get():
+            assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
+            assert isinstance(arg_out.type.pointee.element, pnlvm.ir.ArrayType)
+            for i in range(arg_in.type.pointee.count):
+                inner_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
+                inner_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
+                builder = self.__gen_llvm_apply(ctx, builder, params, state, inner_in, inner_out, output_type, tags=tags)
+            return builder
+        else:
+            return self.__gen_llvm_apply(ctx, builder, params, state, arg_in, arg_out, output_type, tags=tags)
+
+    def _gen_pytorch_fct(self, device, context=None):
+        gain = self._get_pytorch_fct_param_value('gain', device, context)
+        return lambda x: (torch.softmax(gain * x, 0))
 
 
 # **********************************************************************************************************************
@@ -3841,8 +3899,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                           pnlvm.PNLCompilerWarning)
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-        matrix = pnlvm.helpers.get_param_ptr(builder, self, params, MATRIX)
-        normalize = pnlvm.helpers.get_param_ptr(builder, self, params, NORMALIZE)
+        matrix = ctx.get_param_or_state_ptr(builder, self, MATRIX, param_struct_ptr=params)
+        normalize = ctx.get_param_or_state_ptr(builder, self, NORMALIZE, param_struct_ptr=params)
 
         # Convert array pointer to pointer to the fist element
         matrix = builder.gep(matrix, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -4874,27 +4932,34 @@ class TransferWithCosts(TransferFunction):
         # Run transfer function first
         transfer_f = self.parameters.transfer_fct
         trans_f = ctx.import_llvm_function(transfer_f.get())
-        trans_p = pnlvm.helpers.get_param_ptr(builder, self, params, transfer_f.name)
-        trans_s = pnlvm.helpers.get_state_ptr(builder, self, state, transfer_f.name)
+        trans_p, trans_s = ctx.get_param_or_state_ptr(builder,
+                                                      self,
+                                                      transfer_f.name,
+                                                      param_struct_ptr=params,
+                                                      state_struct_ptr=state)
         trans_in = arg_in
         trans_out = arg_out
         builder.call(trans_f, [trans_p, trans_s, trans_in, trans_out])
-        intensity_ptr = pnlvm.helpers.get_state_space(builder, self, state, self.parameters.intensity.name)
+        intensity_ptr = ctx.get_state_space(builder, self, state, self.parameters.intensity)
 
         costs = [(self.parameters.intensity_cost_fct, CostFunctions.INTENSITY, self.parameters.intensity_cost),
                  (self.parameters.adjustment_cost_fct, CostFunctions.ADJUSTMENT, self.parameters.adjustment_cost),
                  (self.parameters.duration_cost_fct, CostFunctions.DURATION, self.parameters.duration_cost)]
 
-        for (func, flag, out) in costs:
+        for (func, flag, res_param) in costs:
+
+            cost_in = trans_out
+            cost_out = ctx.get_state_space(builder, self, state, res_param)
 
             # The check for enablement is structural and has to be done in Python.
             # If a cost function is not enabled the cost parameter is None
             if flag in self.parameters.enabled_cost_functions.get():
                 cost_f = ctx.import_llvm_function(func.get())
-                cost_p = pnlvm.helpers.get_param_ptr(builder, self, params, func.name)
-                cost_s = pnlvm.helpers.get_state_ptr(builder, self, state, func.name)
-                cost_out = pnlvm.helpers.get_state_space(builder, self, state, out.name)
-                cost_in = trans_out
+                cost_p, cost_s = ctx.get_param_or_state_ptr(builder,
+                                                            self,
+                                                            func,
+                                                            param_struct_ptr=params,
+                                                            state_struct_ptr=state)
 
                 if flag == CostFunctions.ADJUSTMENT:
                     old_intensity = pnlvm.helpers.load_extract_scalar_array_one(builder, intensity_ptr)
@@ -4908,9 +4973,21 @@ class TransferWithCosts(TransferFunction):
                     builder.store(adjustment, builder.gep(cost_in, [ctx.int32_ty(0), ctx.int32_ty(0)]))
 
                 builder.call(cost_f, [cost_p, cost_s, cost_in, cost_out])
+            else:
+                # Intensity is [1] when the cost function is disabled but other cost functions are enabled
+                # https://github.com/PrincetonUniversity/PsyNeuLink/issues/2711
+                exp_out_len = 0 if self.parameters.enabled_cost_functions.get() == CostFunctions.NONE or flag != CostFunctions.INTENSITY else 1
+                assert len(cost_out.type.pointee) == exp_out_len, "Unexpected out sturct for {}: {}".format(flag, cost_out.type.pointee)
+
 
         # TODO: combine above costs via a call to combine_costs_fct
         # depends on: https://github.com/PrincetonUniversity/PsyNeuLink/issues/2712
+        # This function is still used in OCM so track both state and parameters
+        combine_p, combine_s = ctx.get_param_or_state_ptr(builder,
+                                                          self,
+                                                          self.parameters.combine_costs_fct,
+                                                          param_struct_ptr=params,
+                                                          state_struct_ptr=state)
 
         builder.store(builder.load(trans_out), intensity_ptr)
 

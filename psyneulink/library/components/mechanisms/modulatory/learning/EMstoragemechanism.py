@@ -167,19 +167,16 @@ from psyneulink._typing import Optional, Union, Callable, Literal
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.nonstateful.learningfunctions import EMStorage
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
-    ACTIVATION_INPUT, LearningMechanism, LearningMechanismError, LearningTiming, LearningType
+    LearningMechanism, LearningMechanismError, LearningTiming, LearningType
 from psyneulink.core.components.projections.projection import Projection, projection_keywords
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, EM_STORAGE_MECHANISM, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNALS, MULTIPLICATIVE, MODULATION, \
-    NAME, OVERRIDE, OWNER_VALUE, PROJECTIONS, REFERENCE_VALUE, VARIABLE
-from psyneulink.core.globals.parameters import Parameter, check_user_specified
+    (ADDITIVE, EM_STORAGE_MECHANISM, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNALS, MULTIPLICATIVE,
+     MULTIPLICATIVE_PARAM, MODULATION, NAME, OVERRIDE, OWNER_VALUE, PROJECTIONS, REFERENCE_VALUE, VARIABLE)
+from psyneulink.core.globals.parameters import Parameter, check_user_specified, FunctionParameter
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric, ValidParamSpecType, all_within_range
@@ -196,12 +193,6 @@ projection_keywords.update({LEARNING_PROJECTION, LEARNING})
 MEMORY_MATRIX = 'memory_matrix'
 FIELDS = 'fields'
 FIELD_TYPES = 'field_types'
-
-# def _memory_matrix_getter(owning_component=None, context=None):
-#     if context.composition:
-#         return context.composition.parameters.memory._get(context)
-#     else:
-#         return None
 
 def _memory_matrix_getter(owning_component=None, context=None)->list:
     """Return list of memories in which rows (outer dimension) are memories for each field.
@@ -529,7 +520,14 @@ class EMStorageMechanism(LearningMechanism):
                                        read_only=True,
                                        structural=True)
         function = Parameter(EMStorage, stateful=False, loggable=False)
-        storage_prob = Parameter(1.0, modulable=True, stateful=True)
+        # storage_prob = Parameter(1.0, modulable=True, stateful=True)
+        storage_prob = FunctionParameter(1.0,
+                                         function_name='function',
+                                         function_parameter_name='storage_prob',
+                                         primary=True,
+                                         modulable=True,
+                                         aliases=[MULTIPLICATIVE_PARAM],
+                                         stateful=True)
         decay_rate = Parameter(0.0, modulable=True, stateful=True)
         memory_matrix = Parameter(None, getter=_memory_matrix_getter, read_only=True, structural=True)
         modulation = OVERRIDE
@@ -690,7 +688,7 @@ class EMStorageMechanism(LearningMechanism):
 
     def _instantiate_input_ports(self, input_ports=None, reference_value=None, context=None):
         """Override LearningMechanism to instantiate an InputPort for each field"""
-        input_ports = [{NAME: f"KEY_INPUT_{i}" if self.field_types[i] == 1 else f"VALUE_INPUT_{i}",
+        input_ports = [{NAME: f"QUERY_INPUT_{i}" if self.field_types[i] == 1 else f"VALUE_INPUT_{i}",
                         VARIABLE: self.variable[i],
                         PROJECTIONS: field}
                        for i, field in enumerate(self.input_ports)]
@@ -723,13 +721,13 @@ class EMStorageMechanism(LearningMechanism):
                  variable=None,
                  context=None,
                  runtime_params=None):
-        """Execute EMStorageMechanism. function and return learning_signals
+        """Execute EMStorageMechanism.function and return learning_signals
 
-        For each node in key_input_nodes and value_input_nodes,
+        For each node in query_input_nodes and value_input_nodes,
         assign its value to afferent weights of corresponding retrieved_node.
         - memory = matrix of entries made up vectors for each field in each entry (row)
-        - memory_full_vectors = matrix of entries made up vectors concatentated across all fields (used for norm)
-        - entry_to_store = key_input or value_input to store
+        - memory_full_vectors = matrix of entries made up of vectors concatentated across all fields (used for norm)
+        - entry_to_store = query_input or value_input to store
         - field_memories = weights of Projections for each field
 
         DIVISION OF LABOR BETWEEN MECHANISM AND FUNCTION:
@@ -767,7 +765,10 @@ class EMStorageMechanism(LearningMechanism):
                                               f"must include '{MEMORY_MATRIX}' in params arg.")
 
         # Get least used slot (i.e., weakest memory = row of matrix with lowest weights) computed across all fields
-        field_norms = np.array([np.linalg.norm(field, axis=1) for field in [row for row in memory]])
+        field_norms = np.empty((len(memory),len(memory[0])))
+        for row in range(len(memory)):
+            for col in range(len(memory[0])):
+                field_norms[row][col] = np.linalg.norm(memory[row][col])
         if field_weights is not None:
             field_norms *= field_weights
         row_norms = np.sum(field_norms, axis=1)
@@ -779,7 +780,7 @@ class EMStorageMechanism(LearningMechanism):
             if i < num_match_fields:
                 # For match matrices,
                 #   get entry to store from variable of Projection matrix (memory_field)
-                #   to match_node in which memory will be store (this is to accomodate concatenation_node)
+                #   to match_node in which memory will be stored (this is to accomodate concatenation_node)
                 axis = 0
                 entry_to_store = field_projection.variable
                 if concatenation_node is None:

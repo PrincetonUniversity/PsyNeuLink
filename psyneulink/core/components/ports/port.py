@@ -3247,13 +3247,8 @@ def _parse_port_spec(port_type=None,
 
                 mech = port_specific_args[MECHANISM]
                 if not isinstance(mech, Mechanism):
-                    raise PortError("Value of the {} entry ({}) in the "
-                                     "specification dictionary for {} of {} is "
-                                     "not a {}".format(MECHANISM,
-                                                       mech,
-                                                       port_type.__name__,
-                                                       owner.name,
-                                                       Mechanism.__name__))
+                    raise PortError(f"Value of the {MECHANISM} entry ('{mech.name}') in the specification dictionary "
+                                    f"for {port_type.__name__} of '{owner.name}' is not a {Mechanism.__name__}.")
 
                 # For Ports with which the one being specified can connect:
                 for PORTS in port_type.connectsWithAttribute:

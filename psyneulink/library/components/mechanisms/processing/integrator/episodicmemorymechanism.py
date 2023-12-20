@@ -421,7 +421,7 @@ from psyneulink.core.components.functions.stateful.memoryfunctions import \
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort
-from psyneulink.core.globals.keywords import EPISODIC_MEMORY_MECHANISM, NAME, OWNER_VALUE, PARAMS, VARIABLE
+from psyneulink.core.globals.keywords import EPISODIC_MEMORY_MECHANISM,MULTIPLICATIVE_PARAM, NAME, OWNER_VALUE, VARIABLE
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import deprecation_warning, convert_to_np_array, convert_all_elements_to_np_array

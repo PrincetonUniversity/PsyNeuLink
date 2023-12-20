@@ -34,6 +34,10 @@ when the CombinationFunction is used as the function of an InputPort or OutputPo
 import numbers
 
 import numpy as np
+try:
+    import torch
+except ImportError:
+    torch = None
 from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Literal
@@ -81,7 +85,7 @@ class CombinationFunction(Function_Base):
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
     def _gen_llvm_load_param(self, ctx, builder, params, param_name, index, default):
-        param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, param_name)
+        param_ptr = ctx.get_param_or_state_ptr(builder, self, param_name, param_struct_ptr=params)
         param_type = param_ptr.type.pointee
         if isinstance(param_type, pnlvm.ir.LiteralStructType):
             assert len(param_type) == 0
@@ -1563,6 +1567,25 @@ class LinearCombination(
 
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
         builder.store(val, ptro)
+
+    def _gen_pytorch_fct(self, device, context=None):
+        weights = self._get_pytorch_fct_param_value('weights', device, context)
+        if weights is not None:
+            weights = torch.tensor(weights, device=device).double()
+        if self.operation == SUM:
+            if weights is not None:
+                return lambda x: torch.sum(torch.stack(x) * weights, 0)
+            else:
+                return lambda x: torch.sum(torch.stack(x), 0)
+        elif self.operation == PRODUCT:
+            if weights is not None:
+                return lambda x: torch.prod(torch.stack(x) * weights, 0)
+            else:
+                return lambda x: torch.prod(torch.stack(x), 0)
+        else:
+            from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
+            raise AutodiffCompositionError(f"The 'operation' parameter of {function.componentName} is not supported "
+                                           f"by AutodiffComposition; use 'SUM' or 'PRODUCT' if possible.")
 
 
 class CombineMeans(CombinationFunction):  # ------------------------------------------------------------------------
