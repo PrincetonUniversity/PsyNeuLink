@@ -805,5 +805,4 @@ class EMStorageMechanism(LearningMechanism):
                                                                  decay_rate=decay_rate,
                                                                  context=context,
                                                                  runtime_params=runtime_params))
-        self.parameters.value._set(value, context)
         return value
