@@ -785,7 +785,7 @@ class EMStorageMechanism(LearningMechanism):
                 #   get entry to store from variable of Projection matrix (memory_field)
                 #   to match_node in which memory will be stored (this is to accomodate concatenation_node)
                 axis = 0
-                entry_to_store = field_projection.variable
+                entry_to_store = field_projection.parameters.variable._get(context)
                 if concatenation_node is None:
                     assert np.all(entry_to_store == variable[i]),\
                         f"PROGRAM ERROR: misalignment between inputs and fields for storing them"
