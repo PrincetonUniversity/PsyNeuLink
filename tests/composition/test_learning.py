@@ -36,8 +36,9 @@ def xor_network():
                                              matrix=np.full((10,1), 0.1),
                                              sender=hidden_layer,
                                              receiver=output_layer)
-    inputs = np.array([[0, 0],[0, 1],[1, 0],[1, 1]])
-    targets = np.array([[0],[1],[1],[0]])
+    inputs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+    targets = np.array([[0], [1], [1], [0]])
+
     def _get_comp_type(comp_type, comp_learning_rate, pathway_learning_rate):
         if comp_type == 'composition':
             xor = Composition(learning_rate=comp_learning_rate)
@@ -65,18 +66,15 @@ def xor_network():
 class TestInputAndTargetSpecs:
 
     @pytest.mark.pytorch
-    @pytest.mark.parametrize('input_type', ['dict', 'func', 'gen', 'gen_func'],
-                             ids=['dict', 'func', 'gen', 'gen_func'])
+    @pytest.mark.parametrize('input_type', ['dict', 'func', 'gen', 'gen_func'])
     @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.PyTorch,
                                            pnl.ExecutionMode.LLVMRun,
-                                           pnl.ExecutionMode.Python],
-                             ids=['PyTorch', 'LLVM', 'Python'])
-    @pytest.mark.parametrize('comp_type', ['composition', 'autodiff'],
-                             ids=['composition', 'autodiff'])
-    def node_spec_types(self, xor_network, comp_type, input_type, exec_mode):
+                                           pnl.ExecutionMode.Python])
+    @pytest.mark.parametrize('comp_type', ['composition', 'autodiff'])
+    def test_node_spec_types(self, xor_network, comp_type, input_type, exec_mode):
 
         if comp_type == 'composition' and exec_mode != pnl.ExecutionMode.Python:
-            pytest.skip(f"Execution mode {exec_mode} not relevant for Composition")
+            pytest.skip(f"Execution mode {exec_mode} not relevant for Composition learn")
 
         comp, input_layer, hidden_layer, output_layer, target_mechanism, stims, targets =\
             xor_network(comp_type, 0.001, None)
@@ -113,12 +111,8 @@ class TestInputAndTargetSpecs:
         else:
             assert False, f"Unrecognized input_type: {input_type}"
 
-        expected_results = [[0.6341436044849351]]
-        if comp_type is 'composition':
-            results = comp.learn(inputs=inputs)
-        else:
-            results = comp.learn(inputs=inputs, execution_mode=exec_mode)
-        np.testing.assert_allclose(results, expected_results)
+        results = comp.learn(inputs=inputs, execution_mode=exec_mode)
+        np.testing.assert_allclose(results, [[0.6341436044849351]])
 
     @pytest.mark.composition
     @pytest.mark.pytorch
