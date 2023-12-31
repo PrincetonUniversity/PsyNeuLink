@@ -3833,7 +3833,10 @@ class TestRun:
         inner_comp = Composition(pathways=[m_inner])
         m_outer = ProcessingMechanism(size=2)
         outer_comp = Composition(pathways=[m_outer, inner_comp])
-        result = outer_comp.run(execution_mode=mode)
+
+        with pytest.warns(UserWarning, match="No inputs provided in call"):
+            result = outer_comp.run(execution_mode=mode)
+
         np.testing.assert_allclose(result, [[0.0, 0.0]])
 
     @pytest.mark.composition
@@ -3842,7 +3845,10 @@ class TestRun:
         inner_comp = Composition(pathways=[m_inner])
         m_outer = ProcessingMechanism(size=2)
         outer_comp = Composition(pathways=[m_outer, inner_comp])
-        result = outer_comp.run(execution_mode=comp_mode)
+
+        with pytest.warns(UserWarning, match="No inputs provided in call"):
+            result = outer_comp.run(execution_mode=comp_mode)
+
         np.testing.assert_allclose(result, [[0.0, 0.0]])
 
     def test_lpp_invalid_matrix_keyword(self):
