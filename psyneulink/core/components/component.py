@@ -1426,7 +1426,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "randomization_dimension", "save_values", "save_samples",
                      "max_iterations", "duplicate_keys",
                      "search_termination_function", "state_feature_function",
-                     "search_function", "weight", "exponent",
+                     "search_function", "weight", "exponent", "gating_signal_params",
                      # not used in compiled learning
                      "learning_results", "learning_signal", "learning_signals",
                      "error_matrix", "error_signal", "activation_input",
