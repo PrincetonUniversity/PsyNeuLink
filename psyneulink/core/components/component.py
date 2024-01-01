@@ -1301,7 +1301,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "intensity"}
         # Prune subcomponents (which are enabled by type rather than a list)
         # that should be omitted
-        blacklist = { "objective_mechanism", "agent_rep", "projections"}
+        blacklist = { "objective_mechanism", "agent_rep", "projections", "shadow_inputs"}
 
         # Only mechanisms use "value" state, can execute 'until finished',
         # and need to track executions
