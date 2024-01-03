@@ -1301,7 +1301,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "intensity"}
         # Prune subcomponents (which are enabled by type rather than a list)
         # that should be omitted
-        blacklist = { "objective_mechanism", "agent_rep", "projections"}
+        blacklist = { "objective_mechanism", "agent_rep", "projections", "shadow_inputs"}
 
         # Only mechanisms use "value" state, can execute 'until finished',
         # and need to track executions
@@ -1426,7 +1426,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "randomization_dimension", "save_values", "save_samples",
                      "max_iterations", "duplicate_keys",
                      "search_termination_function", "state_feature_function",
-                     "search_function",
+                     "search_function", "weight", "exponent", "gating_signal_params",
+                     "retain_old_simulation_data",
                      # not used in compiled learning
                      "learning_results", "learning_signal", "learning_signals",
                      "error_matrix", "error_signal", "activation_input",

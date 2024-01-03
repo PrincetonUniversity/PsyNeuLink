@@ -891,10 +891,10 @@ class LCControlMechanism(ControlMechanism):
             m_val = builder.alloca(mech_out_ty, name="mechanism_out")
 
         # Load mechanism parameters
-        scaling_factor_ptr = pnlvm.helpers.get_param_ptr(builder, self, m_params,
-                                                         "scaling_factor_gain")
-        base_factor_ptr = pnlvm.helpers.get_param_ptr(builder, self, m_params,
-                                                      "base_level_gain")
+        scaling_factor_ptr = ctx.get_param_or_state_ptr(builder, self, "scaling_factor_gain",
+                                                        param_struct_ptr=m_params)
+        base_factor_ptr = ctx.get_param_or_state_ptr(builder, self, "base_level_gain",
+                                                     param_struct_ptr=m_params)
 
         # If modulated, parameters are single element array
         scaling_factor = pnlvm.helpers.load_extract_scalar_array_one(builder, scaling_factor_ptr)

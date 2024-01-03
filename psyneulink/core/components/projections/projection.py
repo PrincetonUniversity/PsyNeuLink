@@ -1117,8 +1117,11 @@ class Projection_Base(Projection):
             builder.store(builder.load(arg_in), arg_out)
             return builder
 
-        mf_state = pnlvm.helpers.get_state_ptr(builder, self, state, self.parameters.function.name)
-        mf_params = pnlvm.helpers.get_param_ptr(builder, self, params, self.parameters.function.name)
+        mf_params, mf_state = ctx.get_param_or_state_ptr(builder,
+                                                         self,
+                                                         self.parameters.function,
+                                                         param_struct_ptr=params,
+                                                         state_struct_ptr=state)
         main_function = ctx.import_llvm_function(self.function)
         builder.call(main_function, [mf_params, mf_state, arg_in, arg_out])
 

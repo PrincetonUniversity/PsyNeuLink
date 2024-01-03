@@ -90,10 +90,11 @@ class AdamOptimizer(Optimizer):
         name = self._composition.name + "_ADAM_STEP"
 
         args = [self._get_optimizer_struct_type(ctx).as_pointer(),
+                ctx.get_state_struct_type(self._composition).as_pointer(),
                 ctx.get_param_struct_type(self._composition).as_pointer()]
         builder = ctx.create_llvm_function(args, self, name)
         llvm_func = builder.function
-        optim_struct, params = llvm_func.args
+        optim_struct, state, params = llvm_func.args
 
         # setup values
         zero = ctx.int32_ty(0)
@@ -182,7 +183,7 @@ class AdamOptimizer(Optimizer):
             pnlvm.helpers.printf_float_matrix(builder, delta_w_ptr, prefix=f"grad val: {proj.sender._mechanism} -> {proj.receiver._mechanism}\n", override_debug=False)
 
             # this is messy - #TODO - cleanup this
-            weights_llvmlite = proj._extract_llvm_matrix(ctx, builder, params)
+            weights_llvmlite = proj._extract_llvm_matrix(ctx, builder, state, params)
             dim_x, dim_y = proj.matrix.shape
 
             weight_row = None
@@ -233,10 +234,11 @@ class SGDOptimizer(Optimizer):
         name = self._composition.name + "_SGD_STEP"
 
         args = [self._get_optimizer_struct_type(ctx).as_pointer(),
+                ctx.get_state_struct_type(self._composition).as_pointer(),
                 ctx.get_param_struct_type(self._composition).as_pointer()]
         builder = ctx.create_llvm_function(args, self, name)
         llvm_func = builder.function
-        optim_struct, params = llvm_func.args
+        optim_struct, state, params = llvm_func.args
 
         zero = ctx.int32_ty(0)
         delta_w = builder.gep(optim_struct, [zero, ctx.int32_ty(self._DELTA_W_NUM)])
@@ -246,7 +248,7 @@ class SGDOptimizer(Optimizer):
         # update weights
         for idx, proj in enumerate(self._pytorch_model.projection_wrappers):
             delta_w_ptr = builder.gep(delta_w, [zero, ctx.int32_ty(idx)])
-            weights_llvmlite = proj._extract_llvm_matrix(ctx, builder, params)
+            weights_llvmlite = proj._extract_llvm_matrix(ctx, builder, state, params)
 
             multiplied_delta_w = gen_inject_mat_scalar_mult(ctx, builder, delta_w_ptr, lr)
             gen_inject_mat_sub(ctx, builder, weights_llvmlite, multiplied_delta_w, weights_llvmlite)

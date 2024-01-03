@@ -2360,8 +2360,11 @@ class Port_Base(Port):
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         port_f = ctx.import_llvm_function(self.function)
 
-        base_params = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                                  "function")
+        base_params, f_state = ctx.get_param_or_state_ptr(builder,
+                                                          self,
+                                                          "function",
+                                                          param_struct_ptr=params,
+                                                          state_struct_ptr=state)
 
         if any(a.sender.modulation != OVERRIDE for a in self.mod_afferents):
             # Create a local copy of the function parameters only if
@@ -2426,12 +2429,13 @@ class Port_Base(Port):
         if arg_out.type != port_f.args[3].type:
             assert len(arg_out.type.pointee) == 1
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
         # Extract the data part of input
         if len(self.mod_afferents) == 0:
             f_input = arg_in
         else:
             f_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        f_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
+
         builder.call(port_f, [f_params, f_state, f_input, arg_out])
         return builder
 
