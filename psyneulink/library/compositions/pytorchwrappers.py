@@ -690,10 +690,14 @@ class PytorchMechanismWrapper():
                                          ctx.int32_ty(0),
                                          ctx.int32_ty(self._idx)])
 
-        f_params_ptr = pnlvm.helpers.get_param_ptr(builder, self._mechanism, mech_params, "function")
+        f_params, f_state = ctx.get_param_or_state_ptr(builder,
+                                                       self._mechanism,
+                                                       "function",
+                                                       param_struct_ptr=mech_params,
+                                                       state_struct_ptr=mech_state)
+
         f_params, builder = self._mechanism._gen_llvm_param_ports_for_obj(
-                self._mechanism.function, f_params_ptr, ctx, builder, mech_params, mech_state, mech_input)
-        f_state = pnlvm.helpers.get_state_ptr(builder, self._mechanism, mech_state, "function")
+                self._mechanism.function, f_params, ctx, builder, mech_params, mech_state, mech_input)
 
         output, _ = self._mechanism._gen_llvm_invoke_function(ctx, builder, self._mechanism.function,
                                                               f_params, f_state, mech_input, None,
@@ -775,8 +779,19 @@ class PytorchProjectionWrapper():
         proj_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(self._idx)])
 
         dim_x, dim_y = self.matrix.detach().numpy().shape
-        proj_func = pnlvm.helpers.get_param_ptr(builder, self._projection, proj_params, "function")
-        proj_matrix = pnlvm.helpers.get_param_ptr(builder, self._projection.function, proj_func, "matrix")
+
+        func_p, func_s = ctx.get_param_or_state_ptr(builder,
+                                                    self._projection,
+                                                    self._projection.parameters.function,
+                                                    param_struct_ptr=proj_params,
+                                                    state_struct_ptr=proj_state)
+
+        proj_matrix = ctx.get_param_or_state_ptr(builder,
+                                                 self._projection.function,
+                                                 self._projection.function.parameters.matrix,
+                                                 param_struct_ptr=func_p,
+                                                 state_struct_ptr=func_s)
+
         proj_matrix = builder.bitcast(proj_matrix, pnlvm.ir.types.ArrayType(
             pnlvm.ir.types.ArrayType(ctx.float_ty, dim_y), dim_x).as_pointer())
 
