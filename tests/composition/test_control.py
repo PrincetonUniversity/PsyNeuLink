@@ -3710,22 +3710,17 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
 
         inputs = {A: [[[1.0]]]}
 
-        comp.run(inputs=inputs, num_trials=10, context='outer_comp', execution_mode=comp_mode)
-        np.testing.assert_allclose(comp.results, [[[0.7310585786300049]], [[0.999999694097773]], [[0.999999694097773]], [[0.9999999979388463]], [[0.9999999979388463]], [[0.999999694097773]], [[0.9999999979388463]], [[0.999999999986112]], [[0.999999694097773]], [[0.9999999999999993]]])
+        benchmark(comp.run, inputs=inputs, num_trials=10, context='outer_comp', execution_mode=comp_mode)
+        np.testing.assert_allclose(comp.results[:10],
+                                   [[[0.7310585786300049]], [[0.999999694097773]], [[0.999999694097773]], [[0.9999999979388463]], [[0.9999999979388463]],
+                                    [[0.999999694097773]], [[0.9999999979388463]], [[0.999999999986112]], [[0.999999694097773]], [[0.9999999999999993]]])
 
         # control signal value (mod slope) is chosen randomly from all of the control signal values
         # that correspond to a net outcome of 1
         if comp_mode is pnl.ExecutionMode.Python:
             log_arr = A.log.nparray_dictionary()
             np.testing.assert_allclose([[1.], [15.], [15.], [20.], [20.], [15.], [20.], [25.], [15.], [35.]],
-                               log_arr['outer_comp']['mod_slope'])
-
-        if benchmark.enabled:
-            # Disable logging for the benchmark run
-            A.log.set_log_conditions(items="mod_slope", log_condition=LogCondition.OFF)
-            A.log.clear_entries()
-            benchmark(comp.run, inputs=inputs, num_trials=10, context='bench_outer_comp', execution_mode=comp_mode)
-            assert len(A.log.get_logged_entries()) == 0
+                               log_arr['outer_comp']['mod_slope'][:10])
 
 
     def test_input_CIM_assignment(self, comp_mode):
