@@ -377,7 +377,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         efferent_node = proj.receiver
                         efferent_node_error = error_dict[efferent_node]
 
-                        weights_llvmlite = proj._extract_llvm_matrix(ctx, builder, params)
+                        weights_llvmlite = proj._extract_llvm_matrix(ctx, builder, state, params)
 
                         if proj_idx == 0:
                             gen_inject_vxm_transposed(
@@ -406,7 +406,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 afferent_node_activation = builder.gep(model_output, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(proj.sender._idx), ctx.int32_ty(0)])
 
                 # get dimensions of weight matrix
-                weights_llvmlite = proj._extract_llvm_matrix(ctx, builder, params)
+                weights_llvmlite = proj._extract_llvm_matrix(ctx, builder, state, params)
                 pnlvm.helpers.printf_float_matrix(builder, weights_llvmlite, prefix= f"{proj.sender._mechanism} -> {proj.receiver._mechanism}\n", override_debug=False)
                 # update delta_W
                 node_delta_w = builder.gep(delta_w, [ctx.int32_ty(0), ctx.int32_ty(proj._idx)])
@@ -454,7 +454,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         builder.call(optimizer_zero_grad, [optimizer_struct])
         builder.call(backprop, [state, params, data,
                                 optimizer_struct])
-        builder.call(optimizer_step_f, [optimizer_struct, params])
+        builder.call(optimizer_step_f, [optimizer_struct, state, params])
 
     def _get_compiled_optimizer(self):
         # setup optimizer
@@ -770,10 +770,9 @@ class PytorchProjectionWrapper():
             self._projection.parameters.matrix._set(detached_matrix, context=self._context)
             self._projection.parameter_ports['matrix'].parameters.value._set(detached_matrix, context=self._context)
 
-    def _extract_llvm_matrix(self, ctx, builder, params):
-        proj_params = builder.gep(params, [ctx.int32_ty(0),
-                                           ctx.int32_ty(1),
-                                           ctx.int32_ty(self._idx)])
+    def _extract_llvm_matrix(self, ctx, builder, state, params):
+        proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(self._idx)])
+        proj_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(self._idx)])
 
         dim_x, dim_y = self.matrix.detach().numpy().shape
         proj_func = pnlvm.helpers.get_param_ptr(builder, self._projection, proj_params, "function")
@@ -784,7 +783,7 @@ class PytorchProjectionWrapper():
         return proj_matrix
 
     def _gen_llvm_execute(self, ctx, builder, state, params, data):
-        proj_matrix = self._extract_llvm_matrix(ctx, builder, params)
+        proj_matrix = self._extract_llvm_matrix(ctx, builder, state, params)
 
         input_vec = builder.gep(data, [ctx.int32_ty(0),
                                        ctx.int32_ty(0),
