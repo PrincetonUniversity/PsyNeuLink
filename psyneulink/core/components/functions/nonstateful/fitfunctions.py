@@ -798,9 +798,10 @@ class PECOptimizationFunction(OptimizationFunction):
 
                     progress.update(opt_task, advance=1)
 
-                # We need to hook into Optuna's random number generator here so that we can allow PsyNeuLink's RNS to
-                # determine the seed for Optuna's RNG. Pretty hacky unfortunately.
-                opt_func._rng = np.random.RandomState(self.owner.initial_seed)
+                # We need to hook into Optuna's random number generator. We set the seed and make sure to call
+                # reseed_rng method.
+                opt_func.seed = self.owner.initial_seed
+                opt_func.reseed_rng()
 
                 # Turn off optuna logging except for errors or warnings, it doesn't work well with our PNL progress bar
                 optuna.logging.set_verbosity(optuna.logging.WARNING)
