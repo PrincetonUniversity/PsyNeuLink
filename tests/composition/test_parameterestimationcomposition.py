@@ -129,9 +129,9 @@ def test_pec_run_input_formats(inputs_dict, error_msg):
     [
         ("differential_evolution", [0.010363518438648106]),
         (optuna.samplers.RandomSampler(), [0.01]),
-        (optuna.samplers.CmaEsSampler(), [0.01]),
+        (optuna.samplers.QMCSampler(), [0.01]),
     ],
-    ids=["differential_evolultion", "optuna_random_sampler", "optuna_cmaes_sampler"],
+    ids=["differential_evolultion", "optuna_random_sampler", "optuna_qmc_sampler"],
 )
 def test_parameter_optimization_ddm(func_mode, opt_method, result):
     """Test parameter optimization of a DDM in integrator mode"""
