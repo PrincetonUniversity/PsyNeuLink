@@ -15,7 +15,7 @@ optuna<3.4.0
 packaging<24.0
 pandas<2.1.5
 pillow<10.3.0
-pint<0.22.0
+pint<0.24.0
 protobuf<3.20.4
 rich>=10.1, <10.13
 toposort<1.11
