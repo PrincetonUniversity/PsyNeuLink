@@ -653,7 +653,8 @@ class UserDefinedFunction(Function_Base):
                 value = eval(self.custom_function, kwargs)
 
         if self.stateful_parameter is not None and not self.is_initializing:
-            getattr(self.parameters, self.stateful_parameter)._set(value, context)
+            # use external set here because we don't control custom_function
+            getattr(self.parameters, self.stateful_parameter).set(value, context)
 
         return self.convert_output_type(value)
 
