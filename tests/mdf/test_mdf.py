@@ -76,6 +76,57 @@ json_results_parametrization = [
 ]
 
 
+def read_defined_model_script(filename):
+    filename = os.path.join(os.path.dirname(__file__), filename)
+
+    with open(filename, 'r') as orig_file:
+        model_input = orig_file.read()
+
+    return model_input
+
+
+def get_loaded_model_state(model_input: str):
+    _globals = copy.copy(globals())
+    _locals = copy.copy(locals())
+
+    exec(model_input, _globals, _locals)
+
+    return _globals, _locals
+
+
+def run_compositions_in_state(
+    composition_input_strs, _globals, _locals, extra_run_args_str=''
+):
+    results = {}
+
+    for comp_name, inputs in composition_input_strs.items():
+        exec(f'{comp_name}.run(inputs={inputs}, {extra_run_args_str})', _globals, _locals)
+        results[comp_name] = eval(f'{comp_name}.results', _globals, _locals)
+
+    return results, _globals, _locals
+
+
+def get_model_results_and_state(
+    model_input: str, composition_input_strs, extra_run_args_str=''
+):
+    _globals, _locals = get_loaded_model_state(model_input)
+    return run_compositions_in_state(
+        composition_input_strs, _globals, _locals, extra_run_args_str
+    )
+
+
+def assert_result_equality(orig_results, new_results):
+    # compositions
+    assert orig_results.keys() == new_results.keys()
+
+    for comp_name in orig_results:
+        np.testing.assert_allclose(
+            orig_results[comp_name],
+            new_results[comp_name],
+            err_msg=f"Results for composition '{comp_name}' are not equal:"
+        )
+
+
 @pytest.mark.parametrize(
     'filename, composition_name, input_dict_str, simple_edge_format',
     json_results_parametrization
@@ -86,21 +137,25 @@ def test_json_results_equivalence(
     input_dict_str,
     simple_edge_format,
 ):
+    comp_inputs = {composition_name: input_dict_str}
+
     # Get python script from file and execute
-    filename = os.path.join(os.path.dirname(__file__), filename)
-    with open(filename, 'r') as orig_file:
-        exec(orig_file.read())
-        exec(f'{composition_name}.run(inputs={input_dict_str})')
-        orig_results = eval(f'{composition_name}.results')
+    orig_script = read_defined_model_script(filename)
+    orig_results, orig_globals, orig_locals = get_model_results_and_state(
+        orig_script, comp_inputs
+    )
 
     # reset random seed
     pnl.core.globals.utilities.set_global_seed(0)
     # Generate python script from JSON summary of composition and execute
-    json_summary = pnl.generate_json(eval(f'{composition_name}'), simple_edge_format=simple_edge_format)
-    exec(pnl.generate_script_from_json(json_summary))
-    exec(f'{composition_name}.run(inputs={input_dict_str})')
-    new_results = eval(f'{composition_name}.results')
-    assert pnl.safe_equals(orig_results, new_results)
+    json_summary = pnl.generate_json(
+        eval(f'{composition_name}', orig_globals, orig_locals),
+        simple_edge_format=simple_edge_format
+    )
+    new_script = pnl.generate_script_from_json(json_summary)
+    new_results, _, _ = get_model_results_and_state(new_script, comp_inputs)
+
+    assert_result_equality(orig_results, new_results)
 
 
 @pytest.mark.parametrize(
@@ -113,24 +168,29 @@ def test_write_json_file(
     input_dict_str,
     simple_edge_format,
 ):
+    comp_inputs = {composition_name: input_dict_str}
+
     # Get python script from file and execute
-    filename = os.path.join(os.path.dirname(__file__), filename)
-    with open(filename, 'r') as orig_file:
-        exec(orig_file.read())
-        exec(f'{composition_name}.run(inputs={input_dict_str})')
-        orig_results = eval(f'{composition_name}.results')
+    orig_script = read_defined_model_script(filename)
+    orig_results, orig_globals, orig_locals = get_model_results_and_state(
+        orig_script, comp_inputs
+    )
 
     # reset random seed
     pnl.core.globals.utilities.set_global_seed(0)
 
     # Save json_summary of Composition to file and read back in.
     json_filename = filename.replace('.py','.json')
-    exec(f'pnl.write_json_file({composition_name}, "{json_filename}", simple_edge_format={simple_edge_format})')
-    exec(pnl.generate_script_from_json(json_filename))
-    # exec(f'{composition_name}.run(inputs={input_dict_str})')
-    exec(f'pnl.get_compositions()[0].run(inputs={input_dict_str})')
-    final_results = eval(f'{composition_name}.results')
-    assert pnl.safe_equals(orig_results, final_results)
+    exec(
+        f'pnl.write_json_file({composition_name}, "{json_filename}", simple_edge_format={simple_edge_format})',
+        orig_globals,
+        orig_locals,
+    )
+
+    new_script = pnl.generate_script_from_json(json_filename)
+    new_results, _, _ = get_model_results_and_state(new_script, comp_inputs)
+
+    assert_result_equality(orig_results, new_results)
 
 
 @pytest.mark.parametrize(
@@ -148,30 +208,27 @@ def test_write_json_file_multiple_comps(
     filename,
     input_dict_strs,
 ):
-    orig_results = {}
-
     # Get python script from file and execute
-    filename = os.path.join(os.path.dirname(__file__), filename)
-    with open(filename, 'r') as orig_file:
-        exec(orig_file.read())
-
-        for composition_name in input_dict_strs:
-            exec(f'{composition_name}.run(inputs={input_dict_strs[composition_name]})')
-            orig_results[composition_name] = eval(f'{composition_name}.results')
-
+    orig_script = read_defined_model_script(filename)
+    orig_results, orig_globals, orig_locals = get_model_results_and_state(
+        orig_script, input_dict_strs
+    )
     # reset random seed
     pnl.core.globals.utilities.set_global_seed(0)
 
     # Save json_summary of Composition to file and read back in.
     json_filename = filename.replace('.py', '.json')
 
-    exec(f'pnl.write_json_file([{",".join(input_dict_strs)}], "{json_filename}")')
-    exec(pnl.generate_script_from_json(json_filename))
+    exec(
+        f'pnl.write_json_file([{",".join(input_dict_strs)}], "{json_filename}")',
+        orig_globals,
+        orig_locals
+    )
 
-    for composition_name in input_dict_strs:
-        exec(f'{composition_name}.run(inputs={input_dict_strs[composition_name]})')
-        final_results = eval(f'{composition_name}.results')
-        assert orig_results[composition_name] == final_results, f'{composition_name}:'
+    new_script = pnl.generate_script_from_json(json_filename)
+    new_results, _, _ = get_model_results_and_state(new_script, input_dict_strs)
+
+    assert_result_equality(orig_results, new_results)
 
 
 def _get_mdf_model_results(evaluable_graph, composition=None):
@@ -254,24 +311,24 @@ def test_mdf_equivalence(filename, composition_name, input_dict, simple_edge_for
     from modeci_mdf.utils import load_mdf
     import modeci_mdf.execution_engine as ee
 
+    comp_inputs = {composition_name: input_dict}
+
     # Get python script from file and execute
-    filename = os.path.join(os.path.dirname(__file__), filename)
-    with open(filename, 'r') as orig_file:
-        exec(orig_file.read())
-        inputs_str = str(input_dict).replace("'", '')
-        exec(f'{composition_name}.run(inputs={inputs_str}, {run_args})')
-        orig_results = eval(f'{composition_name}.results')
+    orig_script = read_defined_model_script(filename)
+    orig_results, orig_globals, orig_locals = get_model_results_and_state(
+        orig_script, comp_inputs, run_args
+    )
 
     # Save json_summary of Composition to file and read back in.
     json_filename = filename.replace('.py', '.json')
-    composition = eval(composition_name)
+    composition = eval(composition_name, orig_globals, orig_locals)
     pnl.write_json_file(composition, json_filename, simple_edge_format=simple_edge_format)
 
     m = load_mdf(json_filename)
     eg = ee.EvaluableGraph(m.graphs[0], verbose=True)
     eg.evaluate(initializer={f'{node}_InputPort_0': i for node, i in input_dict.items()})
 
-    np.testing.assert_array_equal(orig_results, _get_mdf_model_results(eg, composition))
+    assert_result_equality(orig_results, {composition_name: _get_mdf_model_results(eg, composition)})
 
 
 ddi_termination_conds = [
@@ -349,13 +406,11 @@ def test_mdf_equivalence_individual_functions(mech_type, function, runtime_param
 )
 @pytest.mark.parametrize('fmt', ['json', 'yml'])
 def test_generate_script_from_mdf(filename, composition_name, fmt):
-    filename = os.path.join(os.path.dirname(__file__), filename)
+    orig_file = read_defined_model_script(filename)
+    exec(orig_file)
+    serialized = eval(f'pnl.get_mdf_serialized({composition_name}, fmt="{fmt}")')
+
     outfi = filename.replace('.py', f'.{fmt}')
-
-    with open(filename, 'r') as orig_file:
-        exec(orig_file.read())
-        serialized = eval(f'pnl.get_mdf_serialized({composition_name}, fmt="{fmt}")')
-
     with open(outfi, 'w') as f:
         f.write(serialized)
 
