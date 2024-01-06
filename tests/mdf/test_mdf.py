@@ -72,7 +72,7 @@ json_results_parametrization = [
         str(stroop_stimuli).replace("'", ''),
         False
     ),
-    ('model_backprop.py', 'comp', '{a: [1, 2, 3]}', False),
+    ('model_backprop.py', 'comp', '{A: [1, 2, 3]}', False),
 ]
 
 
