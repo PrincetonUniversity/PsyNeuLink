@@ -1395,10 +1395,11 @@ def generate_script_from_mdf(model_input, outfile=None):
     for i in range(len(comp_strs)):
         # greedy and non-greedy
         for cs in comp_strs[i]:
-            potential_module_names = set([
+            cs_potential_names = set([
                 *re.findall(r'([A-Za-z_\.]+)\.', cs),
                 *re.findall(r'([A-Za-z_\.]+?)\.', cs)
             ])
+            potential_module_names.update(cs_potential_names)
 
         for module in potential_module_names:
             if module not in component_identifiers:
