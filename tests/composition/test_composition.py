@@ -4928,7 +4928,7 @@ class TestNestedCompositions:
                                                    allocation_samples=pnl.SampleSpec(start=1.0, stop=5.0, num=5))])
         )
         assert not ocomp._check_for_existing_projections(sender=ib, receiver=ocomp_objective_mechanism)
-        return ocomp
+
     # # Does not work yet due to initialize_cycle_values bug that causes first recurrent projection to pass different values
     # # to TranfserMechanism version vs Logistic fn + AdaptiveIntegrator fn version
     # def test_recurrent_transfer_mechanism_composition(self):
