@@ -125,7 +125,7 @@ def test_write_json_file(
 
     # Save json_summary of Composition to file and read back in.
     json_filename = filename.replace('.py','.json')
-    exec(f'pnl.write_json_file({composition_name}, json_filename, simple_edge_format=simple_edge_format)')
+    exec(f'pnl.write_json_file({composition_name}, "{json_filename}", simple_edge_format={simple_edge_format})')
     exec(pnl.generate_script_from_json(json_filename))
     # exec(f'{composition_name}.run(inputs={input_dict_str})')
     exec(f'pnl.get_compositions()[0].run(inputs={input_dict_str})')
@@ -165,7 +165,7 @@ def test_write_json_file_multiple_comps(
     # Save json_summary of Composition to file and read back in.
     json_filename = filename.replace('.py', '.json')
 
-    exec(f'pnl.write_json_file([{",".join(input_dict_strs)}], json_filename)')
+    exec(f'pnl.write_json_file([{",".join(input_dict_strs)}], "{json_filename}")')
     exec(pnl.generate_script_from_json(json_filename))
 
     for composition_name in input_dict_strs:
@@ -316,15 +316,20 @@ def test_mdf_equivalence_individual_functions(mech_type, function, runtime_param
     assert pnl.safe_equals(comp.results, _get_mdf_model_results(eg))
 
 
-@pytest.mark.parametrize('filename', ['model_basic.py'])
+@pytest.mark.parametrize(
+    'filename, composition_name',
+    [
+        ('model_basic.py', 'comp'),
+    ]
+)
 @pytest.mark.parametrize('fmt', ['json', 'yml'])
-def test_generate_script_from_mdf(filename, fmt):
+def test_generate_script_from_mdf(filename, composition_name, fmt):
     filename = os.path.join(os.path.dirname(__file__), filename)
     outfi = filename.replace('.py', f'.{fmt}')
 
     with open(filename, 'r') as orig_file:
         exec(orig_file.read())
-        serialized = eval(f'pnl.get_mdf_serialized(comp, fmt="{fmt}")')
+        serialized = eval(f'pnl.get_mdf_serialized({composition_name}, fmt="{fmt}")')
 
     with open(outfi, 'w') as f:
         f.write(serialized)
