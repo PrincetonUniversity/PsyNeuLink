@@ -1,5 +1,5 @@
+import contextlib
 import re
-
 import numpy as np
 import pytest
 
@@ -3587,27 +3587,27 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                                            intensity_cost_function=pnl.Linear(slope=0.))
 
         objective_mech = pnl.ObjectiveMechanism(monitor=[B])
-        warning_type = None
+        warning_msg = f"'OptimizationControlMechanism-0' has 'num_estimates = {num_estimates}' specified, " \
+                      f"but its 'agent_rep' \\('comp'\\) has no random variables: " \
+                      f"'RANDOMIZATION_CONTROL_SIGNAL' will not be created, and num_estimates set to None."
+
         if num_estimates and not rand_var:
-            warning_type = UserWarning
-        warning_msg = f'"\'OptimizationControlMechanism-0\' has \'num_estimates = {num_estimates}\' specified, ' \
-                      f'but its \'agent_rep\' (\'comp\') has no random variables: ' \
-                      f'\'RANDOMIZATION_CONTROL_SIGNAL\' will not be created, and num_estimates set to None."'
-        with pytest.warns(warning_type) as warnings:
+            warning_context = pytest.warns(UserWarning, match=warning_msg)
+        else:
+            warning_context = contextlib.nullcontext()
+
+        with warning_context:
             ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
                                                    state_features=[A.input_port],
                                                    objective_mechanism=objective_mech,
                                                    function=pnl.GridSearch(),
                                                    num_estimates=num_estimates,
                                                    control_signals=[control_signal])
-            if warning_type:
-                assert any(warning_msg == repr(w.message.args[0]) for w in warnings)
 
         comp.add_controller(ocm)
         inputs = {A: [[[1.0]]]}
 
-        comp.run(inputs=inputs,
-                 num_trials=2)
+        comp.run(inputs=inputs, num_trials=2)
 
         if not num_estimates or not rand_var:
             assert pnl.RANDOMIZATION_CONTROL_SIGNAL not in comp.controller.control_signals # Confirm no estimates

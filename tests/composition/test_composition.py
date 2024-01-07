@@ -1185,19 +1185,22 @@ class TestDuplicatePathwayWarnings:
         C = TransferMechanism()
         comp = Composition()
 
-        comp.add_linear_processing_pathway(pathway=[A,B,C])
+        comp.add_linear_processing_pathway(pathway=[A, B, C])
+        comp.verbosePref = PreferenceEntry(verbosity, PreferenceLevel.INSTANCE)
 
-        # Test for warning if verbosePref is set to True
+        with warnings.catch_warnings(record=True) as msgs:
+            comp.add_linear_processing_pathway(pathway=[A, B])
+
         if verbosity:
-            regexp = f"Pathway specified in 'pathway' arg for add_linear_processing_pathway method of '{comp.name}' " \
-                     f"has a subset of nodes in a Pathway already in '{comp.name}': Pathway-0; the latter will be used."
-            with pytest.warns(UserWarning, match=regexp):
-                comp.verbosePref = PreferenceEntry(True, PreferenceLevel.INSTANCE)
-                comp.add_linear_processing_pathway(pathway=[A,B])
+            # Test for warning if verbosePref is set to True
+            warning = f"Pathway specified in 'pathway' arg for add_linear_processing_pathway method of '{comp.name}' " \
+                      f"has a subset of nodes in a Pathway already in '{comp.name}': Pathway-0; the latter will be used."
+
+            # The above issues 2 warnings, but we only test for one of them here
+            assert any(str(m.message) == warning for m in msgs), list(str(m.message) for m in msgs)
         else:
-            # Test for suppression of warning if verbosePref not set
-            with pytest.warns(None):
-                comp.add_linear_processing_pathway(pathway=[A,B])
+            # Test for suppression of warning if verbosePref is not set
+            assert len(msgs) == 0
 
     def test_add_backpropagation_pathway_exact_duplicate_warning(self):
         A = TransferMechanism()
@@ -1230,19 +1233,24 @@ class TestDuplicatePathwayWarnings:
         B = TransferMechanism()
         C = TransferMechanism()
         comp = Composition()
-        comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
+        comp.add_backpropagation_learning_pathway(pathway=[A, B, C])
 
-        # Test for warning if verbosePref is set to True
+        comp.verbosePref = PreferenceEntry(verbosity, PreferenceLevel.INSTANCE)
+
+        with warnings.catch_warnings(record=True) as msgs:
+            comp.add_backpropagation_learning_pathway(pathway=[A, B])
+
         if verbosity:
-            regexp = f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method of '{comp.name}'" \
-                     f" has a subset of nodes in a Pathway already in '{comp.name}':.*; the latter will be used."
-            with pytest.warns(UserWarning, match=regexp):
-                comp.verbosePref = PreferenceEntry(True, PreferenceLevel.INSTANCE)
-                comp.add_backpropagation_learning_pathway(pathway=[A,B])
+            # Test for warning if verbosePref is set to True
+            warning = f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method of '{comp.name}'" \
+                      f" has a subset of nodes in a Pathway already in '{comp.name}': Pathway-0; the latter will be used."
+
+            # The above issues 2 warnings, but we only test for one of them here
+            assert any(str(m.message) == warning for m in msgs), list(str(m.message) for m in msgs)
         else:
             # Test for suppression of warning if verbosePref is not set
-            with pytest.warns(None):
-                comp.add_backpropagation_learning_pathway(pathway=[A,B])
+            assert len(msgs) == 0
+
 
     def test_add_processing_pathway_non_contiguous_subset_is_OK(self):
         A = TransferMechanism()
