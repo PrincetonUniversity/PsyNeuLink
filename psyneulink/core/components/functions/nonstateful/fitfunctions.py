@@ -806,7 +806,7 @@ class PECOptimizationFunction(OptimizationFunction):
                 optuna.logging.set_verbosity(optuna.logging.WARNING)
 
                 study = optuna.create_study(
-                    sampler=self.method, direction=self.direction
+                    sampler=opt_func, direction=self.direction
                 )
                 study.optimize(
                     objfunc_wrapper_wrapper,

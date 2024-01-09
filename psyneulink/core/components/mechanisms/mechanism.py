@@ -3053,7 +3053,7 @@ class Mechanism_Base(Mechanism):
             if name == OWNER_VALUE:
                 data = value
             elif name in self.llvm_state_ids:
-                data = pnlvm.helpers.get_state_ptr(builder, self, mech_state, name)
+                data = ctx.get_param_or_state_ptr(builder, self, name, state_struct_ptr=mech_state)
             else:
                 data = None
 

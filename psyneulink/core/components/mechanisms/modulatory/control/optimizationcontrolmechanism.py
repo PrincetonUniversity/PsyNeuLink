@@ -3358,13 +3358,15 @@ class OptimizationControlMechanism(ControlMechanism):
 
         nodes_params = pnlvm.helpers.get_param_ptr(builder, self.composition,
                                                    params, "nodes")
-        my_idx = self.composition._get_node_index(self)
-        my_params = builder.gep(nodes_params, [ctx.int32_ty(0),
-                                               ctx.int32_ty(my_idx)])
-        num_trials_per_estimate_ptr = pnlvm.helpers.get_param_ptr(builder, self,
-                                                                  my_params, "num_trials_per_estimate")
+        controller_idx = self.composition._get_node_index(self)
+        controller_params = builder.gep(nodes_params,
+                                        [ctx.int32_ty(0), ctx.int32_ty(controller_idx)])
+        num_trials_per_estimate_ptr = ctx.get_param_or_state_ptr(builder,
+                                                                 self,
+                                                                 "num_trials_per_estimate",
+                                                                 param_struct_ptr=controller_params)
         func_params = pnlvm.helpers.get_param_ptr(builder, self,
-                                                  my_params, "function")
+                                                  controller_params, "function")
         search_space = pnlvm.helpers.get_param_ptr(builder, self.function,
                                                    func_params, "search_space")
 
@@ -3428,7 +3430,7 @@ class OptimizationControlMechanism(ControlMechanism):
         assert self.composition.controller is self
         assert self.composition is self.agent_rep
         nodes_states = pnlvm.helpers.get_state_ptr(builder, self.composition,
-                                                   comp_state, "nodes", None)
+                                                   comp_state, "nodes")
         nodes_params = pnlvm.helpers.get_param_ptr(builder, self.composition,
                                                    comp_params, "nodes")
 
@@ -3442,15 +3444,16 @@ class OptimizationControlMechanism(ControlMechanism):
         assert len(self.output_ports) == len(allocation_sample.type.pointee)
         controller_out = builder.gep(comp_data, [ctx.int32_ty(0), ctx.int32_ty(0),
                                                  ctx.int32_ty(controller_idx)])
-        all_op_state = pnlvm.helpers.get_state_ptr(builder, self,
-                                                   controller_state, "output_ports")
-        all_op_params = pnlvm.helpers.get_param_ptr(builder, self,
-                                                    controller_params, "output_ports")
+        all_op_params, all_op_states = ctx.get_param_or_state_ptr(builder,
+                                                                  self,
+                                                                  "output_ports",
+                                                                  param_struct_ptr=controller_params,
+                                                                  state_struct_ptr=controller_state)
         for i, op in enumerate(self.output_ports):
             op_idx = ctx.int32_ty(i)
 
             op_f = ctx.import_llvm_function(op, tags=frozenset({"simulation"}))
-            op_state = builder.gep(all_op_state, [ctx.int32_ty(0), op_idx])
+            op_state = builder.gep(all_op_states, [ctx.int32_ty(0), op_idx])
             op_params = builder.gep(all_op_params, [ctx.int32_ty(0), op_idx])
             op_in = builder.alloca(op_f.args[2].type.pointee)
             op_out = builder.gep(controller_out, [ctx.int32_ty(0), op_idx])
@@ -3483,9 +3486,10 @@ class OptimizationControlMechanism(ControlMechanism):
 
 
         # Determine simulation counts
-        num_trials_per_estimate_ptr = pnlvm.helpers.get_param_ptr(builder, self,
-                                                        controller_params,
-                                                        "num_trials_per_estimate")
+        num_trials_per_estimate_ptr = ctx.get_param_or_state_ptr(builder,
+                                                                 self,
+                                                                 "num_trials_per_estimate",
+                                                                 param_struct_ptr=controller_params)
 
         num_trials_per_estimate = builder.load(num_trials_per_estimate_ptr, "num_trials_per_estimate")
 

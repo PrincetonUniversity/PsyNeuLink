@@ -128,8 +128,8 @@ def test_pec_run_input_formats(inputs_dict, error_msg):
     "opt_method, result",
     [
         ("differential_evolution", [0.010363518438648106]),
-        (optuna.samplers.RandomSampler(), [0.01]),
-        (optuna.samplers.CmaEsSampler(), [0.01]),
+        (optuna.samplers.RandomSampler(seed=0), [0.01]),
+        (optuna.samplers.CmaEsSampler(seed=0), [0.01]),
     ],
     ids=["differential_evolultion", "optuna_random_sampler", "optuna_cmaes_sampler"],
 )
