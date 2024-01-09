@@ -268,7 +268,7 @@ class PECOptimizationFunction(OptimizationFunction):
 
             - 'differential_evolution' : Differential evolution as implemented by scipy.optimize.differential_evolution
             - optuna.samplers: Pass any instance of an optuna sampler to use optuna for optimization.
-            - type[optuna.samplers.BaseSampler]: Pass a class of type optuna.samplers.BaseSampler to use optuna
+            - Type[optuna.samplers.BaseSampler]: Pass a class of type optuna.samplers.BaseSampler to use optuna
             for optimization. In this case, the random seed used for the sampler will be the same as the seed used
             as the intial_seed passed to PEC at contruction. Additonal desired keyword arguments can be passed to the
             sampler via the optuna_kwargs argument.
@@ -302,7 +302,7 @@ class PECOptimizationFunction(OptimizationFunction):
     @beartype
     def __init__(
         self,
-        method: Union[Literal["differential_evolution"], optuna.samplers.BaseSampler, type[optuna.samplers.BaseSampler]],
+        method: Union[Literal["differential_evolution"], optuna.samplers.BaseSampler, Type[optuna.samplers.BaseSampler]],
         optuna_kwargs: Optional[Dict] = None,
         objective_function: Optional[Callable] = None,
         search_space=None,
