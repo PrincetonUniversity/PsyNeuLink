@@ -125,15 +125,16 @@ def test_pec_run_input_formats(inputs_dict, error_msg):
 
 
 @pytest.mark.parametrize(
-    "opt_method, result",
+    "opt_method, optuna_kwargs, result",
     [
-        ("differential_evolution", [0.010363518438648106]),
-        (optuna.samplers.RandomSampler(), [0.01]),
-        (optuna.samplers.QMCSampler(), [0.01]),
+        ("differential_evolution", None, [0.010363518438648106]),
+        (optuna.samplers.RandomSampler(seed=0), None, [0.01]),
+        (optuna.samplers.QMCSampler(seed=0), None, [0.01]),
+        (optuna.samplers.RandomSampler, {'seed': 0}, [0.01]),
     ],
-    ids=["differential_evolultion", "optuna_random_sampler", "optuna_qmc_sampler"],
+    ids=["differential_evolution", "optuna_random_sampler", "optuna_qmc_sampler", "optuna_random_sampler_with_kwargs"],
 )
-def test_parameter_optimization_ddm(func_mode, opt_method, result):
+def test_parameter_optimization_ddm(func_mode, opt_method, optuna_kwargs, result):
     """Test parameter optimization of a DDM in integrator mode"""
 
     if func_mode == "Python":
@@ -186,7 +187,7 @@ def test_parameter_optimization_ddm(func_mode, opt_method, result):
         ],
         objective_function=reward_rate,
         optimization_function=PECOptimizationFunction(
-            method=opt_method, max_iterations=50, direction="maximize"
+            method=opt_method, optuna_kwargs=optuna_kwargs, max_iterations=50, direction="maximize"
         ),
         num_estimates=num_estimates,
         initial_seed=42,

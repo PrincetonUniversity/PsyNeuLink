@@ -268,6 +268,15 @@ class PECOptimizationFunction(OptimizationFunction):
 
             - 'differential_evolution' : Differential evolution as implemented by scipy.optimize.differential_evolution
             - optuna.samplers: Pass any instance of an optuna sampler to use optuna for optimization.
+            - type[optuna.samplers.BaseSampler]: Pass a class of type optuna.samplers.BaseSampler to use optuna
+            for optimization. In this case, the random seed used for the sampler will be the same as the seed used
+            as the intial_seed passed to PEC at contruction. Additonal desired keyword arguments can be passed to the
+            sampler via the optuna_kwargs argument.
+
+    optuna_kwargs :
+        A dictionary of keyword arguments to pass to the optuna sampler. This is only used if method is an class of
+        type optuna.samplers.BaseSampler. Note: this argument is ignored if method is an already instantiated instance
+        of an optuna sampler.
 
     objective_function :
         The objective function to use for optimization. This is the function that defines the optimization problem the
@@ -293,7 +302,8 @@ class PECOptimizationFunction(OptimizationFunction):
     @beartype
     def __init__(
         self,
-        method: Union[Literal["differential_evolution"], optuna.samplers.BaseSampler],
+        method: Union[Literal["differential_evolution"], optuna.samplers.BaseSampler, type[optuna.samplers.BaseSampler]],
+        optuna_kwargs: Optional[Dict] = None,
         objective_function: Optional[Callable] = None,
         search_space=None,
         save_samples: Optional[bool] = None,
@@ -303,6 +313,8 @@ class PECOptimizationFunction(OptimizationFunction):
         **kwargs,
     ):
         self.method = method
+        self._optuna_kwargs = {} if optuna_kwargs is None else optuna_kwargs
+
         self.direction = direction
 
         # The outcome variables to select from the composition's output need to be specified. These will be
@@ -542,8 +554,28 @@ class PECOptimizationFunction(OptimizationFunction):
         if self.method == "differential_evolution":
             return self._fit_differential_evolution(obj_func, display_iter)
         elif isinstance(self.method, optuna.samplers.BaseSampler):
+
+            if self.owner.initial_seed is not None:
+                warnings.warn("initial_seed on PEC is not None, but instantiated optuna sampler is being used. If you "
+                              "want deterministic behavior, make sure to specify seed on optuna sampler as well")
+
             return self._fit_optuna(
                 obj_func=obj_func, opt_func=self.method, display_iter=display_iter
+            )
+        # If this is a class of type base sampler, instantiate it and pass it to _fit_optuna
+        elif isinstance(self.method, type) and issubclass(self.method, optuna.samplers.BaseSampler):
+
+            if self.owner.initial_seed is not None:
+                if "seed" in self._optuna_kwargs:
+                    warnings.warn(
+                        f"Overriding seed passed to optuna sampler with seed passed to PEC. "
+                        f"Optuna sampler seed: {self._optuna_kwargs['seed']}, PEC.initial_seed: {self.owner.initial_seed}"
+                    )
+
+                self._optuna_kwargs["seed"] = self.owner.initial_seed
+
+            return self._fit_optuna(
+                obj_func=obj_func, opt_func=self.method(**self._optuna_kwargs), display_iter=display_iter
             )
         else:
             raise ValueError(f"Invalid optimization_function method: {self.method}")
@@ -802,7 +834,7 @@ class PECOptimizationFunction(OptimizationFunction):
                 optuna.logging.set_verbosity(optuna.logging.WARNING)
 
                 study = optuna.create_study(
-                    sampler=self.method, direction=self.direction
+                    sampler=opt_func, direction=self.direction
                 )
                 study.optimize(
                     objfunc_wrapper_wrapper,
