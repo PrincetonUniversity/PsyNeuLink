@@ -1,6 +1,7 @@
 import copy
 import numpy as np
 import os
+import sys
 import psyneulink as pnl
 import pytest
 
@@ -74,6 +75,28 @@ json_results_parametrization = [
     ),
     ('model_backprop.py', 'comp', '{A: [1, 2, 3]}', False),
 ]
+
+
+def get_mdf_output_file(orig_filename, tmp_path, format='json'):
+    """
+    Returns:
+        tuple(pathlib.Path, str, str):
+            - a pytest tmp_path temp file using **orig_filename** and
+              **format**
+            - the full path to the temp file
+            - the full path to the temp file formatted so that it can be
+              used in an exec/eval string
+    """
+    mdf_file = tmp_path / orig_filename.replace('.py', f'.{format}')
+    mdf_fname = str(mdf_file.absolute())
+
+    # need to escape backslash to use a filename in exec on windows
+    if sys.platform.startswith('win'):
+        mdf_exec_fname = mdf_fname.replace('\\', '\\\\')
+    else:
+        mdf_exec_fname = mdf_fname
+
+    return mdf_file, mdf_fname, mdf_exec_fname
 
 
 def read_defined_model_script(filename):
@@ -167,6 +190,7 @@ def test_write_json_file(
     composition_name,
     input_dict_str,
     simple_edge_format,
+    tmp_path,
 ):
     comp_inputs = {composition_name: input_dict_str}
 
@@ -180,9 +204,9 @@ def test_write_json_file(
     pnl.core.globals.utilities.set_global_seed(0)
 
     # Save MDF serialization of Composition to file and read back in.
-    mdf_fname = filename.replace('.py', '.json')
+    _, mdf_fname, mdf_exec_fname = get_mdf_output_file(filename, tmp_path)
     exec(
-        f'pnl.write_mdf_file({composition_name}, "{mdf_fname}", simple_edge_format={simple_edge_format})',
+        f'pnl.write_mdf_file({composition_name}, "{mdf_exec_fname}", simple_edge_format={simple_edge_format})',
         orig_globals,
         orig_locals,
     )
@@ -207,6 +231,7 @@ def test_write_json_file(
 def test_write_json_file_multiple_comps(
     filename,
     input_dict_strs,
+    tmp_path,
 ):
     # Get python script from file and execute
     orig_script = read_defined_model_script(filename)
@@ -217,10 +242,9 @@ def test_write_json_file_multiple_comps(
     pnl.core.globals.utilities.set_global_seed(0)
 
     # Save MDF serialization of Composition to file and read back in.
-    mdf_fname = filename.replace('.py', '.json')
-
+    _, mdf_fname, mdf_exec_fname = get_mdf_output_file(filename, tmp_path)
     exec(
-        f'pnl.write_mdf_file([{",".join(input_dict_strs)}], "{mdf_fname}")',
+        f'pnl.write_mdf_file([{",".join(input_dict_strs)}], "{mdf_exec_fname}")',
         orig_globals,
         orig_locals
     )
@@ -307,7 +331,7 @@ integrators_runtime_params = (
         ('model_integrators.py', 'comp', {'A': 1.0}, False, integrators_runtime_params),
     ]
 )
-def test_mdf_equivalence(filename, composition_name, input_dict, simple_edge_format, run_args):
+def test_mdf_equivalence(filename, composition_name, input_dict, simple_edge_format, run_args, tmp_path):
     from modeci_mdf.utils import load_mdf
     import modeci_mdf.execution_engine as ee
 
@@ -320,7 +344,7 @@ def test_mdf_equivalence(filename, composition_name, input_dict, simple_edge_for
     )
 
     # Save MDF serialization of Composition to file and read back in.
-    mdf_fname = filename.replace('.py', '.json')
+    _, mdf_fname, _ = get_mdf_output_file(filename, tmp_path)
     composition = eval(composition_name, orig_globals, orig_locals)
     pnl.write_mdf_file(composition, mdf_fname, simple_edge_format=simple_edge_format)
 
@@ -405,14 +429,12 @@ def test_mdf_equivalence_individual_functions(mech_type, function, runtime_param
     ]
 )
 @pytest.mark.parametrize('fmt', ['json', 'yml'])
-def test_generate_script_from_mdf(filename, composition_name, fmt):
+def test_generate_script_from_mdf(filename, composition_name, fmt, tmp_path):
     orig_file = read_defined_model_script(filename)
     exec(orig_file)
     serialized = eval(f'pnl.get_mdf_serialized({composition_name}, fmt="{fmt}")')
 
-    outfi = filename.replace('.py', f'.{fmt}')
-    with open(outfi, 'w') as f:
-        f.write(serialized)
+    mdf_file, mdf_fname, _ = get_mdf_output_file(filename, tmp_path, fmt)
+    mdf_file.write_text(serialized)
 
-    with open(outfi, 'r') as f:
-        assert pnl.generate_script_from_mdf(f.read()) == pnl.generate_script_from_mdf(outfi)
+    assert pnl.generate_script_from_mdf(mdf_file.read_text()) == pnl.generate_script_from_mdf(mdf_fname)
