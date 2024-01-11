@@ -1556,7 +1556,9 @@ def write_mdf_file(compositions, filename: str, path: str = None, fmt: str = Non
                 not specified then the current directory is used.
 
             fmt : str
-                specifies file format of output. Current options ('json', 'yml'/'yaml')
+                specifies file format of output. Auto-detect based on
+                **filename** extension if None.
+                Current options: 'json', 'yml'/'yaml'
 
             simple_edge_format : bool
                 specifies use of
