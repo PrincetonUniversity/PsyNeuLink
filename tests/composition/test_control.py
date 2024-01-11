@@ -851,7 +851,7 @@ class TestControlSpecification:
                                            search_space=[[1],[1],[1]])
         ocomp.add_controller(ocm)
         result = ocomp.run({oa: [[1]], ob: [[2]]})
-        assert result == [[2.], [1.]]
+        np.testing.assert_array_equal(result, [[2.], [1.]])
         assert len(ocomp.controller.state_input_ports) == 2
         assert all([node in [input_port.shadow_inputs.owner for input_port in ocomp.controller.state_input_ports]
                     for node in {oa, ob}])
