@@ -36,7 +36,7 @@ stroop_stimuli = {
 }
 
 
-json_results_parametrization = [
+pnl_mdf_results_parametrization = [
     ('model_basic.py', 'comp', '{A: 1}', True),
     ('model_basic.py', 'comp', '{A: 1}', False),
     ('model_basic_non_identity.py', 'comp', '{A: 1}', True),
@@ -152,9 +152,9 @@ def assert_result_equality(orig_results, new_results):
 
 @pytest.mark.parametrize(
     'filename, composition_name, input_dict_str, simple_edge_format',
-    json_results_parametrization
+    pnl_mdf_results_parametrization
 )
-def test_json_results_equivalence(
+def test_get_mdf_serialized_results_equivalence_pnl_only(
     filename,
     composition_name,
     input_dict_str,
@@ -183,9 +183,9 @@ def test_json_results_equivalence(
 
 @pytest.mark.parametrize(
     'filename, composition_name, input_dict_str, simple_edge_format',
-    json_results_parametrization
+    pnl_mdf_results_parametrization
 )
-def test_write_json_file(
+def test_write_mdf_file_results_equivalence_pnl_only(
     filename,
     composition_name,
     input_dict_str,
@@ -228,7 +228,7 @@ def test_write_json_file(
         ('model_with_two_disjoint_comps.py', {'comp': '{A: 1}', 'comp2': '{C: 1}'}),
     ]
 )
-def test_write_json_file_multiple_comps(
+def test_write_mdf_file_results_equivalence_pnl_only_multiple_comps(
     filename,
     input_dict_strs,
     tmp_path,
@@ -331,7 +331,7 @@ integrators_runtime_params = (
         ('model_integrators.py', 'comp', {'A': 1.0}, False, integrators_runtime_params),
     ]
 )
-def test_mdf_equivalence(filename, composition_name, input_dict, simple_edge_format, run_args, tmp_path):
+def test_mdf_pnl_results_equivalence(filename, composition_name, input_dict, simple_edge_format, run_args, tmp_path):
     from modeci_mdf.utils import load_mdf
     import modeci_mdf.execution_engine as ee
 
@@ -399,7 +399,7 @@ individual_functions_fhn_test_data = [
         *individual_functions_fhn_test_data,
     ]
 )
-def test_mdf_equivalence_individual_functions(mech_type, function, runtime_params, trial_termination_cond):
+def test_mdf_pnl_results_equivalence_individual_functions(mech_type, function, runtime_params, trial_termination_cond):
     import modeci_mdf.execution_engine as ee
 
     A = mech_type(name='A', function=copy.deepcopy(function))
