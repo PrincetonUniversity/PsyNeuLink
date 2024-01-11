@@ -147,12 +147,12 @@ def test_json_results_equivalence(
 
     # reset random seed
     pnl.core.globals.utilities.set_global_seed(0)
-    # Generate python script from JSON summary of composition and execute
-    json_summary = pnl.generate_json(
+    # Generate python script from MDF serialization of composition and execute
+    mdf_data = pnl.get_mdf_serialized(
         eval(f'{composition_name}', orig_globals, orig_locals),
         simple_edge_format=simple_edge_format
     )
-    new_script = pnl.generate_script_from_json(json_summary)
+    new_script = pnl.generate_script_from_mdf(mdf_data)
     new_results, _, _ = get_model_results_and_state(new_script, comp_inputs)
 
     assert_result_equality(orig_results, new_results)
@@ -179,15 +179,15 @@ def test_write_json_file(
     # reset random seed
     pnl.core.globals.utilities.set_global_seed(0)
 
-    # Save json_summary of Composition to file and read back in.
-    json_filename = filename.replace('.py','.json')
+    # Save MDF serialization of Composition to file and read back in.
+    mdf_fname = filename.replace('.py', '.json')
     exec(
-        f'pnl.write_json_file({composition_name}, "{json_filename}", simple_edge_format={simple_edge_format})',
+        f'pnl.write_mdf_file({composition_name}, "{mdf_fname}", simple_edge_format={simple_edge_format})',
         orig_globals,
         orig_locals,
     )
 
-    new_script = pnl.generate_script_from_json(json_filename)
+    new_script = pnl.generate_script_from_mdf(mdf_fname)
     new_results, _, _ = get_model_results_and_state(new_script, comp_inputs)
 
     assert_result_equality(orig_results, new_results)
@@ -216,16 +216,16 @@ def test_write_json_file_multiple_comps(
     # reset random seed
     pnl.core.globals.utilities.set_global_seed(0)
 
-    # Save json_summary of Composition to file and read back in.
-    json_filename = filename.replace('.py', '.json')
+    # Save MDF serialization of Composition to file and read back in.
+    mdf_fname = filename.replace('.py', '.json')
 
     exec(
-        f'pnl.write_json_file([{",".join(input_dict_strs)}], "{json_filename}")',
+        f'pnl.write_mdf_file([{",".join(input_dict_strs)}], "{mdf_fname}")',
         orig_globals,
         orig_locals
     )
 
-    new_script = pnl.generate_script_from_json(json_filename)
+    new_script = pnl.generate_script_from_mdf(mdf_fname)
     new_results, _, _ = get_model_results_and_state(new_script, input_dict_strs)
 
     assert_result_equality(orig_results, new_results)
@@ -319,12 +319,12 @@ def test_mdf_equivalence(filename, composition_name, input_dict, simple_edge_for
         orig_script, comp_inputs, run_args
     )
 
-    # Save json_summary of Composition to file and read back in.
-    json_filename = filename.replace('.py', '.json')
+    # Save MDF serialization of Composition to file and read back in.
+    mdf_fname = filename.replace('.py', '.json')
     composition = eval(composition_name, orig_globals, orig_locals)
-    pnl.write_json_file(composition, json_filename, simple_edge_format=simple_edge_format)
+    pnl.write_mdf_file(composition, mdf_fname, simple_edge_format=simple_edge_format)
 
-    m = load_mdf(json_filename)
+    m = load_mdf(mdf_fname)
     eg = ee.EvaluableGraph(m.graphs[0], verbose=True)
     eg.evaluate(initializer={f'{node}_InputPort_0': i for node, i in input_dict.items()})
 
