@@ -1569,8 +1569,8 @@ def write_mdf_file(compositions, filename: str, path: str = None, fmt: str = Non
 
     if fmt is None:
         try:
-            fmt = re.match(r'(.*)\.(.*)$', filename).groups(1)
-        except AttributeError:
+            fmt = re.match(r'(.*)\.(.*)$', filename).groups()[1]
+        except (AttributeError, IndexError):
             fmt = 'json'
 
     if path is not None:
