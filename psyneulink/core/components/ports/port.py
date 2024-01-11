@@ -3002,7 +3002,7 @@ def _parse_port_spec(port_type=None,
     port_type_name = port_type.__name__
 
     proj_is_feedback = False
-    if isinstance(port_specification, tuple) and port_specification[1] == FEEDBACK:
+    if isinstance(port_specification, tuple) and str(port_specification[1]) == FEEDBACK:
         port_specification = port_specification[0]
         proj_is_feedback = True
 
