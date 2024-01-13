@@ -100,6 +100,7 @@ CONTENTS
 
 import collections
 import copy
+import functools
 import inspect
 import itertools
 import logging
@@ -114,7 +115,7 @@ import typing
 from beartype import beartype
 
 from numbers import Number
-from psyneulink._typing import Optional, Union, Literal, Type, List, Tuple
+from psyneulink._typing import Any, Callable, Optional, Union, Literal, Type, List, Tuple
 
 from enum import Enum, EnumMeta, IntEnum
 from collections.abc import Mapping
@@ -134,7 +135,7 @@ from psyneulink.core.globals.keywords import \
 
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_list', 'convert_to_np_array',
-    'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'get_class_attributes', 'flatten_list',
+    'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'get_class_attributes', 'extended_array_equal', 'flatten_list',
     'get_all_explicit_arguments', 'get_modulationOperation_name', 'get_value_from_array',
     'insert_list', 'is_matrix_keyword', 'all_within_range',
     'is_comparison_operator',  'iscompatible', 'is_component', 'is_distance_metric', 'is_iterable', 'is_matrix',
@@ -2151,3 +2152,86 @@ def try_extract_0d_array_item(arr: np.ndarray):
     except AttributeError:
         pass
     return arr
+
+
+def _extended_array_compare(a, b, comparison_fct: Callable[[Any, Any], bool]) -> bool:
+    """
+    Recursively determine equality of **a** and **b** using
+    **comparison_fct** as an equality function. Shape and size of nested
+    arrays must be the same for equality.
+
+    Args:
+        a (np.ndarray-like)
+        b (np.ndarray-like)
+        comparison_fct (Callable[[Any, Any], bool]): a comparison
+        function to be called on **a** and **b**. For example,
+        numpy.array_equal
+
+    Returns:
+        bool: result of comparison_fct(**a**, **b**)
+    """
+    try:
+        a_ndim = a.ndim
+    except AttributeError:
+        a_ndim = None
+
+    try:
+        b_ndim = b.ndim
+    except AttributeError:
+        b_ndim = None
+
+    # a or b is not a numpy array
+    if a_ndim is None or b_ndim is None:
+        return comparison_fct(a, b)
+
+    if a_ndim != b_ndim:
+        return False
+
+    # b_ndim is also 0
+    if a_ndim == 0:
+        return comparison_fct(a, b)
+
+    if len(a) != len(b):
+        return False
+
+    if a.dtype != b.dtype:
+        return False
+
+    # safe to use standard numpy comparison here because not ragged
+    if a.dtype != object:
+        return comparison_fct(a, b)
+
+    for i in range(len(a)):
+        if not _extended_array_compare(a[i], b[i], comparison_fct):
+            return False
+
+    return True
+
+
+def extended_array_equal(a, b, equal_nan: bool = False) -> bool:
+    """
+    Tests equality like numpy.array_equal, while recursively checking
+    object-dtype arrays.
+
+    Args:
+        a (np.ndarray-like)
+        b (np.ndarray-like)
+        equal_nan (bool, optional): Whether to consider NaN as equal.
+            See numpy.array_equal. Defaults to False.
+
+    Returns:
+        bool: **a** and **b** are equal.
+
+    Example:
+        `X = np.array([np.array([0]), np.array([0, 0])], dtype=object)`
+
+        | a | b | np.array_equal | extended_array_equal |
+        |---|---|----------------|----------------------|
+        | X | X | False          | True                 |
+    """
+    a = convert_all_elements_to_np_array(a)
+    b = convert_all_elements_to_np_array(b)
+
+    return _extended_array_compare(
+        a, b, functools.partial(np.array_equal, equal_nan=equal_nan)
+    )
