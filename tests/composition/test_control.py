@@ -521,9 +521,15 @@ class TestControlSpecification:
                 [[15.], [15.0], [0.0], [3.84279648], [0.81637827]]]
 
         for simulation in range(len(expected_sim_results_array)):
-            np.testing.assert_allclose(expected_sim_results_array[simulation],
-                               # Note: Skip decision variable OutputPort
-                               comp.simulation_results[simulation][0:3] + comp.simulation_results[simulation][4:6])
+            # Note: Skip decision variable OutputPort
+            np.testing.assert_allclose(
+                expected_sim_results_array[simulation][:3],
+                comp.simulation_results[simulation][:3]
+            )
+            np.testing.assert_allclose(
+                expected_sim_results_array[simulation][3:],
+                comp.simulation_results[simulation][4:]
+            )
 
         expected_results_array = [
             [[20.0], [20.0], [0.0], [1.0], [2.378055160151634], [0.9820137900379085]],
@@ -2857,9 +2863,15 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         ]
 
         for simulation in range(len(expected_sim_results_array)):
-            np.testing.assert_allclose(expected_sim_results_array[simulation],
-                               # Note: Skip decision variable OutputPort
-                               comp.simulation_results[simulation][0:3] + comp.simulation_results[simulation][4:6])
+            # Note: Skip decision variable OutputPort
+            np.testing.assert_allclose(
+                expected_sim_results_array[simulation][:3],
+                comp.simulation_results[simulation][:3]
+            )
+            np.testing.assert_allclose(
+                expected_sim_results_array[simulation][3:],
+                comp.simulation_results[simulation][4:]
+            )
 
         expected_results_array = [
             [[20.0], [20.0], [0.0], [1.0], [2.378055160151634], [0.9820137900379085]],
@@ -3146,10 +3158,14 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         ]
 
         for simulation in range(len(expected_sim_results_array)):
+            # Note: Skip decision variable OutputPort
             np.testing.assert_allclose(
-                expected_sim_results_array[simulation],
-                # Note: Skip decision variable OutputPort
-                comp.simulation_results[simulation][0:3] + comp.simulation_results[simulation][4:6]
+                expected_sim_results_array[simulation][:3],
+                comp.simulation_results[simulation][:3]
+            )
+            np.testing.assert_allclose(
+                expected_sim_results_array[simulation][3:],
+                comp.simulation_results[simulation][4:]
             )
 
         expected_results_array = [
@@ -3283,10 +3299,14 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         ]
 
         for simulation in range(len(expected_sim_results_array)):
+            # Note: Skip decision variable OutputPort
             np.testing.assert_allclose(
-                expected_sim_results_array[simulation],
-                # Note: Skip decision variable OutputPort
-                comp.simulation_results[simulation][0:3] + comp.simulation_results[simulation][4:6]
+                expected_sim_results_array[simulation][:3],
+                comp.simulation_results[simulation][:3]
+            )
+            np.testing.assert_allclose(
+                expected_sim_results_array[simulation][3:],
+                comp.simulation_results[simulation][4:]
             )
 
         expected_results_array = [
