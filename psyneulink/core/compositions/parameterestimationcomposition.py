@@ -802,7 +802,7 @@ class ParameterEstimationComposition(Composition):
     def run(self, *args, **kwargs):
         # Clear any old results from the composition
         if self.results is not None:
-            self.results.clear()
+            self.results = []
 
         context = kwargs.get("context", None)
         self._assign_execution_ids(context)
