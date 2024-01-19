@@ -72,14 +72,18 @@ class CompositionRunner():
             for i in range(0, num_trials, batch_size):
                 if call_before_minibatch:
                     call_before_minibatch()
-                curr_indices = indices[i:i + batch_size]
-                for idx in curr_indices:
-                    chunk = {}
-                    for k, v in inputs.items():
-                        chunk[k] = v[idx % len(v)]
+
+                if batch_size == 1:
+                    curr_indices = indices[i:i + batch_size]
+                    for idx in curr_indices:
+                        chunk = {}
+                        for k, v in inputs.items():
+                            chunk[k] = v[idx % len(v)]
+                        yield chunk
+                else:
+                    chunk = {k: v[i:i + batch_size] for k, v in inputs.items()}
                     yield chunk
-                # # chunk = {k: v[i:i + batch_size] for k, v in inputs.items()}
-                # yield chunk
+
                 if call_after_minibatch:
                     call_after_minibatch()
 
