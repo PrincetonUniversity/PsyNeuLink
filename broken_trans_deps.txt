@@ -29,3 +29,15 @@ cattrs != 23.1.1; python_version < '3.8'
 # cattrs==23.2.{1,2} breaks json serialization
 # https://github.com/python-attrs/cattrs/issues/453
 cattrs != 23.2.1, != 23.2.2
+
+# The following need at least sphinx-5 without indicating it in dependencies:
+# * sphinxcontrib-applehelp >=1.0.8,
+# * sphinxcontrib-devhelp >=1.0.6,
+# * sphinxcontrib-htmlhelp >=2.0.5,
+# * sphinxcontrib-serializinghtml >=1.1.10,
+# * sphinxcontrib-qthelp >=1.0.7
+sphinxcontrib-applehelp <1.0.8
+sphinxcontrib-devhelp <1.0.6
+sphinxcontrib-htmlhelp <2.0.5
+sphinxcontrib-serializinghtml <1.1.10
+sphinxcontrib-qthelp <1.0.7
