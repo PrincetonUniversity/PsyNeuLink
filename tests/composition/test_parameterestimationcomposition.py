@@ -131,8 +131,13 @@ def test_pec_run_input_formats(inputs_dict, error_msg):
         (optuna.samplers.RandomSampler(seed=0), None, [0.01]),
         (optuna.samplers.QMCSampler(seed=0), None, [0.01]),
         (optuna.samplers.RandomSampler, {'seed': 0}, [0.01]),
+        (optuna.samplers.RandomSampler(), None, None)
     ],
-    ids=["differential_evolution", "optuna_random_sampler", "optuna_qmc_sampler", "optuna_random_sampler_with_kwargs"],
+    ids=["differential_evolution",
+         "optuna_random_sampler",
+         "optuna_qmc_sampler",
+         "optuna_random_sampler_with_kwargs",
+         "optuna_random_sampler_no_seed"],
 )
 def test_parameter_optimization_ddm(func_mode, opt_method, optuna_kwargs, result):
     """Test parameter optimization of a DDM in integrator mode"""
@@ -211,9 +216,37 @@ def test_parameter_optimization_ddm(func_mode, opt_method, optuna_kwargs, result
 
     inputs_dict = {decision: trial_inputs}
 
-    ret = pec.run(inputs={comp: trial_inputs})
+    # If we are testing an instantiated optuna sampler, make sure the warning is generated about
+    # random seeds
+    if isinstance(opt_method, optuna.samplers.RandomSampler):
+        with pytest.warns(UserWarning) as record:
+            pec.run(inputs=inputs_dict)
 
-    np.testing.assert_allclose(pec.optimized_parameter_values, result)
+        # Search through the warnings to make sure the one we are looking for is there
+        found_warning = False
+        for warning in record:
+            if "initial_seed on PEC is not None, but instantiated optuna sampler is being used." in str(warning.message):
+                found_warning = True
+
+        if not found_warning:
+            raise AssertionError("Did not find warning about random seed")
+    elif isinstance(opt_method, type) and issubclass(opt_method, optuna.samplers.BaseSampler):
+        with pytest.warns(UserWarning) as record:
+            pec.run(inputs=inputs_dict)
+
+        # Search through the warnings to make sure the one we are looking for is there
+        found_warning = False
+        for warning in record:
+            if "Overriding seed passed to optuna sampler with seed passed to PEC." in str(warning.message):
+                found_warning = True
+
+        if not found_warning:
+            raise AssertionError("Did not find warning about overriding seed passed")
+    else:
+        pec.run(inputs={comp: trial_inputs})
+
+    if result is not None:
+        np.testing.assert_allclose(pec.optimized_parameter_values, result)
 
 
 # func_mode is a hacky wa to get properly marked; Python, LLVM, and CUDA
