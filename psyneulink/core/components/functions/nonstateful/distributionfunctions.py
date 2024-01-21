@@ -26,6 +26,7 @@ Functions that return one or more samples from a distribution.
 
 import numpy as np
 from beartype import beartype
+from scipy.special import erfinv
 
 from psyneulink._typing import Optional
 
@@ -370,11 +371,6 @@ class UniformToNormalDist(DistributionFunction):
                  context=None,
                  params=None,
                  ):
-
-        try:
-            from scipy.special import erfinv
-        except:
-            raise FunctionError("The UniformToNormalDist function requires the SciPy package.")
 
         mean = self._get_current_parameter_value(DIST_MEAN, context)
         standard_deviation = self._get_current_parameter_value(STANDARD_DEVIATION, context)
