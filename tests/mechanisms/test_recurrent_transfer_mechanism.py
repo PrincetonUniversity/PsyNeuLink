@@ -820,7 +820,7 @@ class TestRecurrentTransferMechanismInComposition:
                                        )
         # Test that all of these are the same:
         np.testing.assert_allclose(
-            R.recurrent_projection.mod_matrix,
+            R.recurrent_projection.matrix.modulated,
             [
                 [0.1,  0.1, 0.1, 0.1],
                 [0.1, 0.1, 0.1, 0.1],
@@ -880,8 +880,8 @@ class TestRecurrentTransferMechanismInComposition:
                     [1.1, 0., 1.1, 1.1],
                     [1.1, 1.1, 0., 1.1],
                     [1.1, 1.1, 1.1, 0.]]
-        np.testing.assert_allclose(R.recurrent_projection.mod_matrix, matrix_1)
-        print(R.recurrent_projection.mod_matrix)
+        np.testing.assert_allclose(R.recurrent_projection.get_mod_matrix(c), matrix_1)
+        print(R.recurrent_projection.get_mod_matrix(c))
         R.learning_rate.base = 0.9
 
         assert R.learning_rate.base == 0.9
@@ -892,8 +892,8 @@ class TestRecurrentTransferMechanismInComposition:
                     [1.911125, 0., 1.911125, 1.911125],
                     [1.911125, 1.911125, 0., 1.911125],
                     [1.911125, 1.911125, 1.911125, 0.]]
-        # np.testing.assert_allclose(R.recurrent_projection.mod_matrix, matrix_2)
-        print(R.recurrent_projection.mod_matrix)
+        # np.testing.assert_allclose(R.recurrent_projection.get_mod_matrix(c), matrix_2)
+        print(R.recurrent_projection.get_mod_matrix(c))
 
     def test_learning_of_orthognal_inputs(self):
         size=4
