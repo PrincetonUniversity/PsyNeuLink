@@ -299,33 +299,19 @@ class TestDistributionFunctions:
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_uniform_to_normal_noise(self):
-        try:
-            import scipy
-        except ModuleNotFoundError:
-            with pytest.raises(FunctionError) as error_text:
-                T = TransferMechanism(
-                    name='T',
-                    default_variable=[0, 0, 0, 0],
-                    function=Linear(),
-                    noise=UniformToNormalDist(),
-                    integration_rate=1.0
-                )
-            assert "The UniformToNormalDist function requires the SciPy package." in str(error_text.value)
-        else:
-            T = TransferMechanism(
-                name='T',
-                default_variable=[0, 0, 0, 0],
-                function=Linear(),
-                noise=UniformToNormalDist(),
-                integration_rate=1.0
-            )
-            # This is equivalent to
-            # T.noise.base.parameters.random_state.get(None).seed([22])
-            T.noise.parameters.seed.set(22, None)
-            val = T.execute([0, 0, 0, 0])
-            np.testing.assert_allclose(val, [[1.73027452, -1.07866481, -1.98421126,  2.99564032]])
 
-
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0, 0, 0, 0],
+            function=Linear(),
+            noise=UniformToNormalDist(),
+            integration_rate=1.0
+        )
+        # This is equivalent to
+        # T.noise.base.parameters.random_state.get(None).seed([22])
+        T.noise.parameters.seed.set(22, None)
+        val = T.execute([0, 0, 0, 0])
+        np.testing.assert_allclose(val, [[1.73027452, -1.07866481, -1.98421126,  2.99564032]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
