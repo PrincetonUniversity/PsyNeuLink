@@ -444,7 +444,7 @@ class TestDictionaryMemory:
 
     def test_DictionaryMemory_with_duplicate_entry_in_initializer_warning(self):
 
-        regexp = r'Attempt to initialize memory of DictionaryMemory with an entry \([[1 2 3]'
+        regexp = r'Attempt to initialize memory of DictionaryMemory with an entry \(\[\[1 2 3\]'
         with pytest.warns(UserWarning, match=regexp):
             em = EpisodicMemoryMechanism(
                     name='EPISODIC MEMORY MECH',
@@ -1034,7 +1034,7 @@ class TestContentAddressableMemory:
 
     def test_ContentAddressableMemory_with_duplicate_entry_in_initializer_warning(self):
 
-        regexp = r'Attempt to initialize memory of ContentAddressableMemory with an entry \([[1 2 3]'
+        regexp = r'Attempt to initialize memory of ContentAddressableMemory with an entry \(\[\[1 2 3\]'
         with pytest.warns(UserWarning, match=regexp):
             c = ContentAddressableMemory(
                 initializer=np.array([[[1,2,3], [4,5,6]],

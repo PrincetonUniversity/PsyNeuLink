@@ -77,7 +77,7 @@ class TestReset:
 
         # reset only decision variable
         D.function.initializer = 1.0
-        D.function.non_decision_time = 0.0
+        D.function.non_decision_time.base = 0.0
         D.reset()
         np.testing.assert_allclose(D.function.value[0], 1.0)
         np.testing.assert_allclose(D.function.parameters.previous_value.get(), 1.0)
