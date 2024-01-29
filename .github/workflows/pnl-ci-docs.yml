@@ -131,11 +131,13 @@ jobs:
         path: docs/build/html
 
     - name: Store PR number
-      if: ${{ github.event_name == 'pull_request' }}
+      # The 'base' variant runs only on pull requests and has only one job
+      if: ${{ matrix.pnl-version == 'base' }}
       run: echo ${{ github.event.pull_request.number }} > ./pr_number.txt
 
     - name: Upload PR number for other workflows
-      if: ${{ github.event_name == 'pull_request' }}
+      # The 'base' variant runs only on pull requests and has only one job
+      if: ${{ matrix.pnl-version == 'base' }}
       uses: actions/upload-artifact@v3
       with:
           name: pr_number
