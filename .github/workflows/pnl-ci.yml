@@ -203,6 +203,7 @@ jobs:
 
     - name: Upload dist packages
       uses: actions/upload-artifact@v3
+      if: matrix.version-restrict == ''
       with:
         name: dist-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
         path: dist/
