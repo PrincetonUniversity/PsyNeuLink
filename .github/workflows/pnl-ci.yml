@@ -178,7 +178,7 @@ jobs:
     - name: Upload test results
       uses: actions/upload-artifact@v3
       with:
-        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
+        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}-${{ matrix.version-restrict }}
         path: tests_out.xml
         retention-days: 5
       if: (success() || failure()) && ! contains(matrix.extra-args, 'forked')
@@ -203,6 +203,7 @@ jobs:
 
     - name: Upload dist packages
       uses: actions/upload-artifact@v3
+      if: matrix.version-restrict == ''
       with:
         name: dist-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
         path: dist/
