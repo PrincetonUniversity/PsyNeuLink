@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferMechanism &mdash; PsyNeuLink 0+untagged.12.gf062be4 documentation</title>
+  <title>TransferMechanism &mdash; PsyNeuLink 0.15.0.0+5.g9b68ab824 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.12.gf062be4
+                  0.15.0.0+5
                 </div>
               
             
@@ -563,7 +563,7 @@ the value is simply added to the result, as shown in the example below, that use
 the result is the same as the input, plus the value specified for <strong>noise</strong>.  A list can also be used to specify
 <strong>noise</strong> (it must be the same length as the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>), in which case each
 element is applied Hadamard (elementwise) to the result, as shown here:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span><span class="o">.</span><span class="n">noise</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">1.2</span><span class="p">,</span><span class="mf">.9</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span><span class="o">.</span><span class="n">noise</span><span class="o">.</span><span class="n">base</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">1.2</span><span class="p">,</span><span class="mf">.9</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
 <span class="go">array([[2. , 2.2, 1.9]])</span>
 </pre></div>
