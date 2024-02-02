@@ -443,7 +443,7 @@ the result is the same as the input, plus the value specified for **noise**.  A 
 **noise** (it must be the same length as the Mechanism's `variable <Mechanism_Base.variable>`), in which case each
 element is applied Hadamard (elementwise) to the result, as shown here::
 
-    >>> my_linear_tm.noise = [1.0,1.2,.9]
+    >>> my_linear_tm.noise.base = [1.0,1.2,.9]
     >>> my_linear_tm.execute([1.0, 1.0, 1.0])
     array([[2. , 2.2, 1.9]])
 

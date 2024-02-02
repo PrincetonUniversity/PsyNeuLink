@@ -1,5 +1,5 @@
+import contextlib
 import re
-
 import numpy as np
 import pytest
 
@@ -3587,27 +3587,27 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                                            intensity_cost_function=pnl.Linear(slope=0.))
 
         objective_mech = pnl.ObjectiveMechanism(monitor=[B])
-        warning_type = None
+        warning_msg = f"'OptimizationControlMechanism-0' has 'num_estimates = {num_estimates}' specified, " \
+                      f"but its 'agent_rep' \\('comp'\\) has no random variables: " \
+                      f"'RANDOMIZATION_CONTROL_SIGNAL' will not be created, and num_estimates set to None."
+
         if num_estimates and not rand_var:
-            warning_type = UserWarning
-        warning_msg = f'"\'OptimizationControlMechanism-0\' has \'num_estimates = {num_estimates}\' specified, ' \
-                      f'but its \'agent_rep\' (\'comp\') has no random variables: ' \
-                      f'\'RANDOMIZATION_CONTROL_SIGNAL\' will not be created, and num_estimates set to None."'
-        with pytest.warns(warning_type) as warnings:
+            warning_context = pytest.warns(UserWarning, match=warning_msg)
+        else:
+            warning_context = contextlib.nullcontext()
+
+        with warning_context:
             ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
                                                    state_features=[A.input_port],
                                                    objective_mechanism=objective_mech,
                                                    function=pnl.GridSearch(),
                                                    num_estimates=num_estimates,
                                                    control_signals=[control_signal])
-            if warning_type:
-                assert any(warning_msg == repr(w.message.args[0]) for w in warnings)
 
         comp.add_controller(ocm)
         inputs = {A: [[[1.0]]]}
 
-        comp.run(inputs=inputs,
-                 num_trials=2)
+        comp.run(inputs=inputs, num_trials=2)
 
         if not num_estimates or not rand_var:
             assert pnl.RANDOMIZATION_CONTROL_SIGNAL not in comp.controller.control_signals # Confirm no estimates
@@ -3710,22 +3710,17 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
 
         inputs = {A: [[[1.0]]]}
 
-        comp.run(inputs=inputs, num_trials=10, context='outer_comp', execution_mode=comp_mode)
-        np.testing.assert_allclose(comp.results, [[[0.7310585786300049]], [[0.999999694097773]], [[0.999999694097773]], [[0.9999999979388463]], [[0.9999999979388463]], [[0.999999694097773]], [[0.9999999979388463]], [[0.999999999986112]], [[0.999999694097773]], [[0.9999999999999993]]])
+        benchmark(comp.run, inputs=inputs, num_trials=10, context='outer_comp', execution_mode=comp_mode)
+        np.testing.assert_allclose(comp.results[:10],
+                                   [[[0.7310585786300049]], [[0.999999694097773]], [[0.999999694097773]], [[0.9999999979388463]], [[0.9999999979388463]],
+                                    [[0.999999694097773]], [[0.9999999979388463]], [[0.999999999986112]], [[0.999999694097773]], [[0.9999999999999993]]])
 
         # control signal value (mod slope) is chosen randomly from all of the control signal values
         # that correspond to a net outcome of 1
         if comp_mode is pnl.ExecutionMode.Python:
             log_arr = A.log.nparray_dictionary()
             np.testing.assert_allclose([[1.], [15.], [15.], [20.], [20.], [15.], [20.], [25.], [15.], [35.]],
-                               log_arr['outer_comp']['mod_slope'])
-
-        if benchmark.enabled:
-            # Disable logging for the benchmark run
-            A.log.set_log_conditions(items="mod_slope", log_condition=LogCondition.OFF)
-            A.log.clear_entries()
-            benchmark(comp.run, inputs=inputs, num_trials=10, context='bench_outer_comp', execution_mode=comp_mode)
-            assert len(A.log.get_logged_entries()) == 0
+                               log_arr['outer_comp']['mod_slope'][:10])
 
 
     def test_input_CIM_assignment(self, comp_mode):

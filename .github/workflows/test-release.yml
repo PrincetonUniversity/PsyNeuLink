@@ -38,7 +38,7 @@ jobs:
         echo "wheel=$(ls *.whl)" >> $GITHUB_OUTPUT
 
     - name: Upload Python dist files
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Python-dist-files
         path: dist/
@@ -78,7 +78,7 @@ jobs:
 
     steps:
     - name: Download dist files
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: Python-dist-files
         path: dist/
@@ -126,7 +126,7 @@ jobs:
         pytest  --junit-xml=tests_out.xml --verbosity=0 -n auto tests
 
     - name: Upload test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: test-results-${{ matrix.os }}-${{ matrix.python-version }}
         path: tests_out.xml
@@ -141,7 +141,7 @@ jobs:
 
     steps:
     - name: Download dist files
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: Python-dist-files
         path: dist/
@@ -175,7 +175,7 @@ jobs:
 
     steps:
     - name: Download dist files
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: Python-dist-files
         path: dist/

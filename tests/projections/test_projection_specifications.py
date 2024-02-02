@@ -462,25 +462,23 @@ class TestProjectionSpecificationFormats:
         # assert 'Primary OutputPort of ControlMechanism-1 (ControlSignal-0) ' \
         #        'cannot be used as a sender of a Projection to OutputPort of T2' in error_text.value.args[0]
 
+    @pytest.mark.filterwarnings("error:elementwise comparison failed; returning scalar instead:")
     def test_no_warning_when_matrix_specified(self):
 
-        with pytest.warns(None) as w:
-            c = pnl.Composition()
-            m0 = pnl.ProcessingMechanism(
-                default_variable=[0, 0, 0, 0]
-            )
-            p0 = pnl.MappingProjection(
-                matrix=[[0, 0, 0, 0],
-                        [0, 0, 0, 0],
-                        [0, 0, 0, 0],
-                        [0, 0, 0, 0]]
-            )
-            m1 = pnl.TransferMechanism(
-                default_variable=[0, 0, 0, 0]
-            )
-            c.add_linear_processing_pathway([m0, p0, m1])
-            for warn in w:
-                assert 'elementwise comparison failed; returning scalar instead' not in warn.message.args[0]
+        c = pnl.Composition()
+        m0 = pnl.ProcessingMechanism(
+            default_variable=[0, 0, 0, 0]
+        )
+        p0 = pnl.MappingProjection(
+            matrix=[[0, 0, 0, 0],
+                    [0, 0, 0, 0],
+                    [0, 0, 0, 0],
+                    [0, 0, 0, 0]]
+        )
+        m1 = pnl.TransferMechanism(
+            default_variable=[0, 0, 0, 0]
+        )
+        c.add_linear_processing_pathway([m0, p0, m1])
 
     # KDM: this is a good candidate for pytest.parametrize
     def test_masked_mapping_projection(self):

@@ -820,7 +820,8 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
         for idx, node in enumerate(composition._all_nodes):
             node_state = builder.gep(nodes_states, [ctx.int32_ty(0),
                                                     ctx.int32_ty(idx)])
-            num_exec_locs[node] = helpers.get_state_ptr(builder, node,
+            num_exec_locs[node] = helpers.get_state_ptr(builder,
+                                                        node,
                                                         node_state,
                                                         "num_executions")
 
@@ -1056,7 +1057,7 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
         node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
         num_executions_ptr = helpers.get_state_ptr(builder, node, node_state, "num_executions")
         num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.RUN.value)])
-        builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
+        builder.store(num_exec_time_ptr.type.pointee(None), num_exec_time_ptr)
 
     # Allocate and initialize condition structure
     cond_gen = helpers.ConditionGenerator(ctx, composition)

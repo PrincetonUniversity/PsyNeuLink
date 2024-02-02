@@ -185,12 +185,14 @@ class TestLCA:
         comp = Composition()
         comp.add_node(lca)
 
-        result = comp.run(inputs={lca:[0,1,2]}, execution_mode=comp_mode)
-        np.testing.assert_allclose(result, [[0.19153799, 0.5, 0.80846201]])
+        def func(*args, **kwargs):
+            res = comp.run(*args, **kwargs)
+            return (res, lca.num_executions_before_finished)
+
+        results = benchmark(func, inputs={lca:[0,1,2]}, execution_mode=comp_mode)
+        np.testing.assert_allclose(results[0], [[0.19153799, 0.5, 0.80846201]])
         if comp_mode is pnl.ExecutionMode.Python:
-            assert lca.num_executions_before_finished == 18
-        if benchmark.enabled:
-            benchmark(comp.run, inputs={lca:[0,1,2]}, execution_mode=comp_mode)
+            assert results[1] == 18
 
     @pytest.mark.composition
     @pytest.mark.lca_mechanism

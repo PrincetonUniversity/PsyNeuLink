@@ -92,7 +92,7 @@ jobs:
         echo "pip_cache_dir=$(python -m pip cache dir)" | tee -a $GITHUB_OUTPUT
 
     - name: Wheels cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ${{ steps.pip_cache.outputs.pip_cache_dir }}/wheels
         key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-${{ hashFiles('requirements.txt', 'doc_requirements.txt') }}-${{ github.sha }}
@@ -124,19 +124,21 @@ jobs:
       run: git tag -d 'v0.0.0.0'
 
     - name: Upload Documentation
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Documentation-${{matrix.pnl-version}}-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
         retention-days: 1
         path: docs/build/html
 
     - name: Store PR number
-      if: ${{ github.event_name == 'pull_request' }}
+      # The 'base' variant runs only on pull requests and has only one job
+      if: ${{ matrix.pnl-version == 'base' }}
       run: echo ${{ github.event.pull_request.number }} > ./pr_number.txt
 
     - name: Upload PR number for other workflows
-      if: ${{ github.event_name == 'pull_request' }}
-      uses: actions/upload-artifact@v3
+      # The 'base' variant runs only on pull requests and has only one job
+      if: ${{ matrix.pnl-version == 'base' }}
+      uses: actions/upload-artifact@v4
       with:
           name: pr_number
           path: ./pr_number.txt
@@ -168,7 +170,7 @@ jobs:
         ref: gh-pages
 
     - name: Download branch docs
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: Documentation-head-${{ matrix.os }}-${{ matrix.python-version }}-x64
         path: _built_docs/${{ github.ref }}
@@ -185,7 +187,7 @@ jobs:
       if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/devel' || github.ref == 'refs/heads/docs'
 
     - name: Download main docs
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: Documentation-head-${{ matrix.os }}-${{ matrix.python-version }}-x64
         # This overwrites files in current directory
