@@ -1482,6 +1482,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 # Check if the value type is valid for compilation
                 return not isinstance(val, (str, ComponentsMeta,
                                             type(max),
+                                            type(np.sum),
                                             type(_is_compilation_param),
                                             type(self._get_compilation_params)))
             return False
