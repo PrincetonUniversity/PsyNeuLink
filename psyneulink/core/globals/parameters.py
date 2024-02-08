@@ -498,8 +498,7 @@ class ParametersTemplate:
         self._owner = owner
         self._parent = parent
         if isinstance(self._parent, ParametersTemplate):
-            # using weakref to allow garbage collection of unused children
-            self._parent._children.add(weakref.ref(self))
+            self._parent._children.add(self)
 
         # create list of params currently existing
         self._params = set()
@@ -512,7 +511,7 @@ class ParametersTemplate:
             if self._is_parameter(k):
                 self._params.add(k)
 
-        self._children = set()
+        self._children = weakref.WeakSet()
 
     def __repr__(self):
         return '{0} :\n{1}'.format(super().__repr__(), str(self))
@@ -531,12 +530,6 @@ class ParametersTemplate:
         memo[id(self)] = newone
         return newone
 
-    def __del__(self):
-        try:
-            self._parent._children.remove(weakref.ref(self))
-        except (AttributeError, KeyError):
-            pass
-
     def __contains__(self, item):
         return item in itertools.chain.from_iterable(self.values(show_all=True).items())
 
@@ -554,16 +547,9 @@ class ParametersTemplate:
 
     def _register_parameter(self, param_name):
         self._params.add(param_name)
-        to_remove = set()
 
         for child in self._children:
-            if child() is None:
-                to_remove.add(child)
-            else:
-                child()._register_parameter(param_name)
-
-        for rem in to_remove:
-            self._children.remove(rem)
+            child._register_parameter(param_name)
 
     def values(self, show_all=False):
         """
@@ -1213,22 +1199,14 @@ class Parameter(ParameterBase):
             else:
                 # This is a rare operation, so we can just immediately
                 # trickle down sources without performance issues.
-                # Children are stored as weakref.ref, so call to deref
                 children = [*self._owner._children]
                 while len(children) > 0:
-                    next_child_ref = children.pop()
-                    next_child = next_child_ref()
+                    next_child = children.pop()
+                    next_child = getattr(next_child, self.name)
 
-                    if next_child is None:
-                        # child must have been garbage collected, remove
-                        # here optionally
-                        pass
-                    else:
-                        next_child = getattr(next_child, self.name)
-
-                        if next_child._inherited:
-                            next_child._inherit_from(self)
-                            children.extend(next_child._owner._children)
+                    if next_child._inherited:
+                        next_child._inherit_from(self)
+                        children.extend(next_child._owner._children)
 
                 self._restore_inherited_attrs()
 
