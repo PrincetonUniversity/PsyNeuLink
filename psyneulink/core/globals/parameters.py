@@ -547,9 +547,16 @@ class ParametersTemplate:
 
     def _register_parameter(self, param_name):
         self._params.add(param_name)
+        self._nonexistent_attr_cache.discard(param_name)
 
         for child in self._children:
             child._register_parameter(param_name)
+
+    def _invalidate_nonexistent_attr_cache(self, attr):
+        self._nonexistent_attr_cache.discard(attr)
+
+        for child in self._children:
+            child._invalidate_nonexistent_attr_cache(attr)
 
     def values(self, show_all=False):
         """
@@ -2087,6 +2094,7 @@ class ParametersBase(ParametersTemplate):
 
     def __init__(self, owner, parent=None):
         self._initializing = True
+        self._nonexistent_attr_cache = set()
 
         super().__init__(owner=owner, parent=parent)
 
@@ -2154,16 +2162,22 @@ class ParametersBase(ParametersTemplate):
                 f"No attribute '{attr}' exists in the parameter hierarchy{owner_string}."
             ) from None
 
-        # underscored attributes don't need special handling because
-        # they're not Parameter objects. This includes parsing and
-        # validation methods
-        if attr[0] == '_':
+        if (
+            attr in self._nonexistent_attr_cache
+            # attr can't be in __dict__ or __getattr__ would not be called
+            or (
+                self._parent is not None
+                and attr in self._parent._nonexistent_attr_cache
+            )
+        ):
+            self._nonexistent_attr_cache.add(attr)
             throw_error()
-        else:
-            try:
-                return getattr(self._parent, attr)
-            except AttributeError:
-                throw_error()
+
+        try:
+            return getattr(self._parent, attr)
+        except AttributeError:
+            self._nonexistent_attr_cache.add(attr)
+            throw_error()
 
     def __setattr__(self, attr, value):
         # handles parsing: Parameter or ParameterAlias housekeeping if assigned, or creation of a Parameter
@@ -2259,6 +2273,18 @@ class ParametersBase(ParametersTemplate):
 
             self._validate(attr, getattr(self, attr).default_value)
             self._register_parameter(attr)
+
+        if (
+            (
+                attr[0] != '_'
+                or attr.startswith(self._parsing_method_prefix)
+                or attr.startswith(self._validation_method_prefix)
+            )
+            and not self._initializing
+        ):
+            # below does happen during deepcopy, but that should only
+            # happen on instances, which won't have _children
+            self._invalidate_nonexistent_attr_cache(attr)
 
     def _reconcile_value_with_init_default(self, attr, value):
         constructor_default = get_init_signature_default_value(self._owner, attr)
