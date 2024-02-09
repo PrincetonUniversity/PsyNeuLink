@@ -551,6 +551,8 @@ class ParametersTemplate:
     def _is_parameter(self, param_name):
         if param_name[0] == '_':
             return False
+        elif param_name in self._params:
+            return True
         else:
             try:
                 return not isinstance(getattr(self, param_name), (types.MethodType, types.BuiltinMethodType))
