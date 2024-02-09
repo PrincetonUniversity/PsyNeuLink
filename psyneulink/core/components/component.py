@@ -4011,7 +4011,12 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                     value = None
                 else:
                     value = value.__qualname__
-            elif isinstance(value, types.FunctionType):
+
+            # numpy functions are no longer "FunctionType" since numpy
+            # moved dispatch implementation from Python to C in
+            # https://github.com/numpy/numpy/commit/60a858a372b14b73547baacf4a472eccfade1073
+            # Use np.sum as a representative of these functions
+            elif isinstance(value, (types.FunctionType, type(np.sum))):
                 if functions_as_dill:
                     value = base64.encodebytes(dill.dumps(value)).decode('utf-8')
                 elif '.' in value.__qualname__:
