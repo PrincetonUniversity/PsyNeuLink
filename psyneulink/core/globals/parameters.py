@@ -2229,11 +2229,9 @@ class ParametersBase(ParametersTemplate):
                     for alias in value.aliases:
                         # there is a conflict if a non-ParameterAlias exists
                         # with the same name as the planned alias
-                        try:
+                        if alias in self:
                             if not isinstance(getattr(self, alias), ParameterAlias):
                                 conflicts.append(alias)
-                        except AttributeError:
-                            pass
 
                         super().__setattr__(alias, ParameterAlias(source=getattr(self, attr), name=alias))
                         self._register_parameter(alias)
