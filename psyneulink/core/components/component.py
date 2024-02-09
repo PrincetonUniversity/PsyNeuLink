@@ -2250,9 +2250,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 if name in alias_names:
                     continue
 
-                try:
+                if name in self.parameters._params:
                     parameter_obj = getattr(self.parameters, name)
-                except AttributeError:
+                else:
                     # name in param_defaults does not correspond to a Parameter
                     continue
 
