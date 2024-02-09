@@ -1765,6 +1765,14 @@ class Parameter(ParameterBase):
             value = self._parse(value)
         super().__setattr__('spec', value)
 
+    @property
+    def source(self):
+        return self
+
+    @property
+    def final_source(self):
+        return self
+
 
 class _ParameterAliasMeta(type):
     # these will not be taken from the source
@@ -2007,7 +2015,7 @@ class SharedParameter(Parameter):
     @property
     def final_source(self):
         base_param = self
-        while hasattr(base_param, 'source'):
+        while isinstance(base_param, SharedParameter):
             base_param = base_param.source
 
         return base_param
