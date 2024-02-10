@@ -406,7 +406,7 @@ class PECOptimizationFunction(OptimizationFunction):
                     f"{SampleIterator.__name__} must have a value for its 'num' attribute."
                 )
 
-        self.num_iterations = np.product([i.num for i in search_space])
+        self.num_iterations = np.prod([i.num for i in search_space])
 
     def _run_simulations(self, *args, context=None):
         """

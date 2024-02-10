@@ -2192,7 +2192,7 @@ class Port_Base(Port):
         aliases = getattr(self.function.parameters, mod_param_name).aliases
 
         if comb_fct==MULTIPLICATIVE or any(mod_spec in aliases for mod_spec in {MULTIPLICATIVE, MULTIPLICATIVE_PARAM}):
-            return np.product(np.array(values), axis=0)
+            return np.prod(np.array(values), axis=0)
         if comb_fct==ADDITIVE or any(mod_spec in aliases for mod_spec in {MULTIPLICATIVE, ADDITIVE_PARAM}):
             return np.sum(np.array(values), axis=0)
         elif isinstance(comb_fct, is_function_type):

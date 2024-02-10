@@ -1607,7 +1607,7 @@ class GridSearch(OptimizationFunction):
         except TypeError:
             pass
 
-        self.num_iterations = 1 if search_space is None else np.product([i.num for i in search_space])
+        self.num_iterations = 1 if search_space is None else np.prod([i.num for i in search_space])
         # self.tolerance = tolerance
 
         super().__init__(
@@ -1664,7 +1664,7 @@ class GridSearch(OptimizationFunction):
                 raise OptimizationFunctionError(f"Invalid {repr(SEARCH_SPACE)} arg for {self.name}{owner_str}; each "
                                                 f"{SampleIterator.__name__} must have a value for its 'num' attribute.")
 
-        self.num_iterations = np.product([i.num for i in sample_iterators])
+        self.num_iterations = np.prod([i.num for i in sample_iterators])
 
     def _get_optimized_controller(self):
         # self.objective_function may be a bound method of
