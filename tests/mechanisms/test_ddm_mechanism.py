@@ -266,8 +266,8 @@ def test_DDM_Integrator_Bogacz(benchmark, mech_mode, prng):
     ex = pytest.helpers.get_mech_execution(T, mech_mode)
 
     ex(stim)
-    val = benchmark(ex, stim)[0]
-    np.testing.assert_allclose(val, [1.0])
+    val = benchmark(ex, stim)
+    np.testing.assert_allclose(val, [[1.0], [0.3]])
 
 # ------------------------------------------------------------------------------------------------
 # # TEST 3
@@ -284,8 +284,8 @@ def test_DDM_Integrator_Bogacz(benchmark, mech_mode, prng):
 #         name='DDM',
 #         function=NavarroAndFuss()
 #     )
-#     val = float(T.execute(stim)[0])
-#     assert val == 10
+#     val = T.execute(stim)
+#     np.testing.assert_array_equal(val, [[10]])
 
 
 # ======================================= NOISE TESTS ============================================
@@ -339,7 +339,7 @@ def test_DDM_noise_invalid(noise):
                 time_step_size=1.0
             ),
         )
-        float(T.execute(stim)[0])
+        T.execute(stim)
     assert "DriftDiffusionIntegrator requires noise parameter to be a float" in str(error_text.value)
 
 # ======================================= INPUT TESTS ============================================
@@ -362,8 +362,8 @@ def test_DDM_input(stim):
         ),
         execute_until_finished=False,
     )
-    val = float(T.execute(stim)[0])
-    assert val == 10
+    val = T.execute(stim)
+    np.testing.assert_array_equal(val, [[10], [1]])
 
 # ------------------------------------------------------------------------------------------------
 
@@ -388,7 +388,7 @@ def test_DDM_input_list_len_2():
             ),
             execute_until_finished=False,
         )
-        float(T.execute(stim)[0])
+        T.execute(stim)
     assert "single numeric item" in str(error_text.value)
 
 # ------------------------------------------------------------------------------------------------
@@ -413,7 +413,7 @@ def test_DDM_input_fn():
             ),
             execute_until_finished=False,
         )
-        float(T.execute(stim))
+        T.execute(stim)
     assert 'Input to \'DDM\' ([(NormalDist Normal Distribution Function' in str(error_text.value)
     assert 'is incompatible with its corresponding InputPort (DDM[InputPort-0]): ' \
            '\'unsupported operand type(s) for *: \'NormalDist\' and \'float\'.\'' in str(error_text.value)
@@ -445,8 +445,8 @@ def test_DDM_rate(benchmark, rate, expected, mech_mode):
     ex = pytest.helpers.get_mech_execution(T, mech_mode)
 
     ex(stim)
-    val = float(benchmark(ex, stim)[0][0])
-    assert val == expected
+    val = benchmark(ex, stim)
+    np.testing.assert_array_equal(val, [[expected], [2]])
 
 # ------------------------------------------------------------------------------------------------
 # INVALID RATES:
@@ -475,7 +475,7 @@ def test_DDM_rate_fn():
             ),
             execute_until_finished=False,
         )
-        float(T.execute(stim)[0])
+        T.execute(stim)
     assert "incompatible value" in str(error_text.value)
 
 # ------------------------------------------------------------------------------------------------
