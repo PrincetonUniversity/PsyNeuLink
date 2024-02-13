@@ -3418,9 +3418,14 @@ class TestRunInputSpecifications:
 
         c.run(inputs=test_function,
               num_trials=10)
-        assert c.parameters.results.get(c) == [[np.array([0.])], [np.array([1.])], [np.array([2.])], [np.array([3.])],
-                                               [np.array([4.])], [np.array([5.])], [np.array([6.])], [np.array([7.])],
-                                               [np.array([8.])], [np.array([9.])]]
+        np.testing.assert_array_equal(
+            c.parameters.results.get(c),
+            [
+                [np.array([0.])], [np.array([1.])], [np.array([2.])], [np.array([3.])],
+                [np.array([4.])], [np.array([5.])], [np.array([6.])], [np.array([7.])],
+                [np.array([8.])], [np.array([9.])]
+            ]
+        )
 
     @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python,
                                       pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
@@ -3444,9 +3449,14 @@ class TestRunInputSpecifications:
         t_g = test_generator()
 
         c.run(inputs=t_g, execution_mode=mode)
-        assert c.parameters.results.get(c) == [[np.array([0.])], [np.array([1.])], [np.array([2.])], [np.array([3.])],
-                                               [np.array([4.])], [np.array([5.])], [np.array([6.])], [np.array([7.])],
-                                               [np.array([8.])], [np.array([9.])]]
+        np.testing.assert_array_equal(
+            c.parameters.results.get(c),
+            [
+                [np.array([0.])], [np.array([1.])], [np.array([2.])], [np.array([3.])],
+                [np.array([4.])], [np.array([5.])], [np.array([6.])], [np.array([7.])],
+                [np.array([8.])], [np.array([9.])]
+            ]
+        )
 
     @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python,
                                       pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
@@ -5177,7 +5187,7 @@ class TestNestedCompositions:
         c1.add_projection(MappingProjection(), sender=p1, receiver=p3b)
 
         result = c1.run([5])
-        assert result == [5, 5]
+        np.testing.assert_array_equal(result, [[5], [5]])
 
     @pytest.mark.pathways
     def test_three_level_deep_modulation_routing_single_mech(self):
@@ -5207,7 +5217,7 @@ class TestNestedCompositions:
         c1 = Composition(name='c1', pathways=[[(c2, NodeRole.INPUT)], [ctrl1]])
 
         result = c1.run({c2: [[2], [2]], ctrl1: [5]})
-        assert result == [10, 10]
+        np.testing.assert_array_equal(result, [[10], [10]])
 
     @pytest.mark.pathways
     @pytest.mark.state_features
@@ -6134,9 +6144,15 @@ class TestInputSpecifications:
 
         c.run(inputs=test_function,
               num_trials=10)
-        assert c.parameters.results.get(c) == [[np.array([0.])], [np.array([1.])], [np.array([2.])], [np.array([3.])],
-                                               [np.array([4.])], [np.array([5.])], [np.array([6.])], [np.array([7.])],
-                                               [np.array([8.])], [np.array([9.])]]
+
+        np.testing.assert_array_equal(
+            c.parameters.results.get(c),
+            [
+                [np.array([0.])], [np.array([1.])], [np.array([2.])], [np.array([3.])],
+                [np.array([4.])], [np.array([5.])], [np.array([6.])], [np.array([7.])],
+                [np.array([8.])], [np.array([9.])]
+            ]
+        )
 
     def test_function_as_learning_input(self):
         num_epochs=2
@@ -6196,10 +6212,10 @@ class TestInputSpecifications:
     @pytest.mark.control
     @pytest.mark.parametrize(
         "controllers, results",[
-            ('none', [[-2], [1]]),
-            ('inner',  [[-2], [10]]),
-            ('outer',  [[-2], [10]]),
-            ('inner_and_outer', [[-2], [100]]),
+            ('none', [[[-2]], [[1]]]),
+            ('inner',  [[[-2]], [[10]]]),
+            ('outer',  [[[-2]], [[10]]]),
+            ('inner_and_outer', [[[-2]], [[100]]]),
         ]
     )
     @pytest.mark.parametrize(
@@ -6307,7 +6323,7 @@ class TestInputSpecifications:
 
         # run Composition with all three input types and assert that results are as expected.
         ocomp.run(inputs=inputs_source)
-        assert ocomp.results == results
+        np.testing.assert_array_equal(ocomp.results, results)
 
     expected_format_strings = \
         [
@@ -6729,7 +6745,10 @@ class TestInitialize:
 
         # Run 1 --> Execution 1: 1 + 2 = 3    |    Execution 2: 3 + 2 = 5    |    Execution 3: 5 + 3 = 8
         # Run 2 --> Execution 1: 8 + 1 = 9    |    Execution 2: 9 + 2 = 11    |    Execution 3: 11 + 3 = 14
-        assert abc_Composition.results == [[[3]], [[5]], [[8]], [[9]], [[11]], [[14]]]
+        np.testing.assert_array_equal(
+            abc_Composition.results,
+            [[[3]], [[5]], [[8]], [[9]], [[11]], [[14]]]
+        )
 
     def test_initialize_cycle_values_warning(self):
         A = ProcessingMechanism(name='A')
@@ -6764,7 +6783,10 @@ class TestInitialize:
 
         # Run 1 --> Execution 1: 1 + 2 = 3    |    Execution 2: 3 + 2 = 5    |    Execution 3: 5 + 3 = 8
         # Run 2 --> Execution 1: 8 + 1 = 9    |    Execution 2: 9 + 2 = 11    |    Execution 3: 11 + 3 = 14
-        assert abc_Composition.results == [[[3]], [[5]], [[8]], [[9]], [[11]], [[14]]]
+        np.testing.assert_array_equal(
+            abc_Composition.results,
+            [[[3]], [[5]], [[8]], [[9]], [[11]], [[14]]]
+        )
 
     def test_initialize_cycles_excluding_unspecified_nodes(self):
         A = ProcessingMechanism(name='A')
@@ -7141,7 +7163,7 @@ class TestNodeRoles:
         assert input_format == "\nInputs to (nested) INPUT Nodes of OUTER COMP for 2 trials:\n\tMIDDLE COMP: \n\t\tX: [ [[0.0]], [[0.0]] ]\n\t\tINNER COMP: \n\t\t\tA: [ ['red'], ['green'] ]\n\tQ: [ ['red'], ['green'] \n\nFormat as follows for inputs to run():\n{\n\tMIDDLE COMP: [ [[0.0],[0.0]], [[0.0],[0.0]] ],\n\tQ: [ [[0.0]], [[0.0]] ]\n}"
 
         result = ocomp.run(inputs={mcomp:[[.2],['green']], Q:[4.6]})
-        assert result == [[0.2], [1.],[4.6]]
+        np.testing.assert_array_equal(result, [[0.2], [1.], [4.6]])
         results_by_node = ocomp.get_results_by_nodes()
         assert results_by_node[O] == [0.2]
         assert results_by_node[C] == [1.0]
