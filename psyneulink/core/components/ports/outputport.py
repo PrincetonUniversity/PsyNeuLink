@@ -634,7 +634,7 @@ from psyneulink.core.globals.keywords import \
     OWNER_VALUE, PARAMS, PARAMS_DICT, PROJECTION, PROJECTIONS, RECEIVER, REFERENCE_VALUE, STANDARD_OUTPUT_PORTS, PORT, \
     VALUE, VARIABLE, \
     output_port_spec_to_parameter_name, INPUT_PORT_VARIABLES, SHARED_COMPONENT_TYPES
-from psyneulink.core.globals.parameters import Parameter, check_user_specified
+from psyneulink.core.globals.parameters import Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -752,7 +752,7 @@ def _parse_output_port_variable(variable, owner, context=None, output_port_name=
     if fct_variable is not None:
         fct_variable = convert_all_elements_to_np_array(fct_variable)
 
-    return fct_variable
+    return copy_parameter_value(fct_variable)
 
 
 def _output_port_variable_getter(owning_component=None, context=None, output_port_name=None):

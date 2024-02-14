@@ -800,7 +800,7 @@ from psyneulink.core.globals.keywords import \
     RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, STANDARD_OUTPUT_PORTS, \
     PORT, PORT_COMPONENT_CATEGORY, PORT_CONTEXT, Port_Name, port_params, PORT_PREFS, PORT_TYPE, port_value, \
     VALUE, VARIABLE, WEIGHT
-from psyneulink.core.globals.parameters import Parameter, check_user_specified
+from psyneulink.core.globals.parameters import Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category
@@ -1506,7 +1506,7 @@ class Port_Base(Port):
 
                 # assign identical default variable to function if it can be modified
                 if self.function._variable_shape_flexibility is DefaultsFlexibility.FLEXIBLE:
-                    self.function.defaults.variable = self.defaults.variable.copy()
+                    self.function.defaults.variable = copy_parameter_value(self.defaults.variable)
                 elif (
                     self.function._variable_shape_flexibility is DefaultsFlexibility.INCREASE_DIMENSION
                     and np.array([self.function.defaults.variable]).shape == self.defaults.variable.shape
@@ -1937,17 +1937,22 @@ class Port_Base(Port):
         # Copy all items in outer level of params to local_params (i.e., excluding its subdicts)
         local_params = defaultdict(lambda:{}, {k:v for k,v in params.items() if not isinstance(v,dict)})
         # Get rid of items in params specific to this Port
-        for entry in params[PORT_SPECIFIC_PARAMS].copy():
+        for entry in copy_parameter_value(params[PORT_SPECIFIC_PARAMS]):
             if entry in {self, self.name}:
                 # Move param from params to local_params
                 local_params.update(params[PORT_SPECIFIC_PARAMS].pop(entry))
 
         # Put copy of all type-specific Projection dicts from params into local_params
         # FIX: ON FIRST PASS ALSO CREATES THOSE DICTS IN params IF THEY DON'T ALREADY EXIST
-        projection_params = defaultdict(lambda:{}, {proj_type:params[proj_type].copy()
-                                                    for proj_type in projection_param_keywords()})
+        projection_params = defaultdict(
+            lambda: {},
+            {
+                proj_type: copy_parameter_value(params[proj_type])
+                for proj_type in projection_param_keywords()
+            },
+        )
 
-        for entry in params[PROJECTION_SPECIFIC_PARAMS].copy():
+        for entry in copy_parameter_value(params[PROJECTION_SPECIFIC_PARAMS]):
             if self.all_afferents and entry in self.all_afferents + [p.name for p in self.all_afferents]:
                 if isinstance(entry, str):
                     projection_type = next(p for p in self.all_afferents if p.name ==entry).componentType
@@ -2023,7 +2028,7 @@ class Port_Base(Port):
 
             # Get type-specific params that apply for type of current
             projection_params_keyword = projection_param_keyword_mapping()[projection.componentType]
-            projection_type_params = projection_params[projection_params_keyword].copy()
+            projection_type_params = copy_parameter_value(projection_params[projection_params_keyword])
 
             # Get Projection's variable and/or value if specified in runtime_port_params
             projection_variable = projection_type_params.pop(VARIABLE, None)
@@ -2156,7 +2161,7 @@ class Port_Base(Port):
             # KDM 8/2/19: double check the relevance of this branch
             if variable is None:
                 if hasattr(self, DEFAULT_INPUT) and self.default_input == DEFAULT_VARIABLE:
-                    return self.defaults.variable
+                    return copy_parameter_value(self.defaults.variable)
                 return None
 
         return super()._execute(
@@ -2536,7 +2541,7 @@ def _instantiate_port_list(owner,
     # If no Ports were passed in, instantiate a default port_type using reference_value
     if not port_list:
         # assign reference_value as single item in a list, to be used as port_spec below
-        port_list = reference_value
+        port_list = copy_parameter_value(reference_value)
 
         # issue warning if in VERBOSE mode:
         if owner.prefs.verbosePref:
@@ -2895,6 +2900,8 @@ def _parse_port_spec(port_type=None,
     from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
     from psyneulink.core.components.projections.projection import _get_projection_value_shape
 
+    value = copy_parameter_value(value)
+
     # Get all of the standard arguments passed from _instantiate_port (i.e., those other than port_spec) into a dict
     standard_args = get_args(inspect.currentframe())
 
@@ -2961,7 +2968,7 @@ def _parse_port_spec(port_type=None,
             # Use the value of any standard args specified in the Port specification dictionary
             #    to replace those explicitly specified in the call to _instantiate_port (i.e., passed in standard_args)
             #    (use copy so that items in port_spec dict are not deleted when called from _validate_params)
-            port_specific_args = port_spec[PORT_SPEC_ARG].copy()
+            port_specific_args = copy_parameter_value(port_spec[PORT_SPEC_ARG])
             standard_args.update({key: port_specific_args[key]
                                   for key in port_specific_args
                                   if key in standard_args and port_specific_args[key] is not None})
@@ -2999,8 +3006,8 @@ def _parse_port_spec(port_type=None,
     context = port_dict.pop(CONTEXT, None)
     owner = port_dict[OWNER]
     port_type = port_dict[PORT_TYPE]
-    reference_value = port_dict[REFERENCE_VALUE]
-    variable = port_dict[VARIABLE]
+    reference_value = copy_parameter_value(port_dict[REFERENCE_VALUE])
+    variable = copy_parameter_value(port_dict[VARIABLE])
     params = port_specific_args
 
     # Validate that port_type is a Port class

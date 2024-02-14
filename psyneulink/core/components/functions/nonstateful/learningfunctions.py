@@ -349,7 +349,7 @@ class EMStorage(LearningFunction):
         storage_prob = Parameter(1.0, modulable=True)
         decay_rate = Parameter(0.0, modulable=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
 
     def _validate_storage_prob(self, storage_prob):
         storage_prob = float(storage_prob)
@@ -767,7 +767,7 @@ class BayesGLM(LearningFunction):
                     :type: ``int``
         """
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
         variable = Parameter([np.array([0, 0, 0]),
                               np.array([0])],
                              read_only=True,

@@ -530,7 +530,7 @@ from psyneulink.core.globals.keywords import \
     RESET_STATEFUL_FUNCTION_WHEN, SIZE, VALUE, VARIABLE, SHARED_COMPONENT_TYPES
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.parameters import \
-    Defaults, SharedParameter, Parameter, ParameterAlias, ParameterError, ParametersBase, check_user_specified, copy_parameter_value
+    Defaults, SharedParameter, Parameter, ParameterAlias, ParameterError, ParametersBase, check_user_specified, copy_parameter_value, is_array_like
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import \
     PreferenceLevel, PreferenceSet, _assign_prefs
@@ -539,7 +539,7 @@ from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared, \
     is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, \
-    get_all_explicit_arguments, is_numeric, call_with_pruned_args, safe_equals, safe_len, parse_valid_identifier, try_extract_0d_array_item
+    get_all_explicit_arguments, is_numeric, call_with_pruned_args, safe_equals, safe_len, parse_valid_identifier, try_extract_0d_array_item, contains_type
 from psyneulink.core.scheduling.condition import Never
 from psyneulink.core.scheduling.time import Time, TimeScale
 
@@ -660,7 +660,16 @@ def make_parameter_property(param):
             assert p.modulable
             return getattr(self, _get_parametervalue_attr(p))
         else:
-            return p._get(self.most_recent_context)
+            # _get does handle stateful case, but checking here avoids
+            # extra overhead for most_recent_context and external get.
+            # external get is being used so that dot-notation returns a
+            # copy of stored numpy arrays. dot-notation is also often
+            # used internally for non-stateful parameters, like
+            # function, input_ports, output_ports, etc.
+            if not p.stateful:
+                return p._get()
+            else:
+                return p.get(self.most_recent_context)
 
     def setter(self, value):
         p = getattr(self.parameters, param.name)
@@ -1139,8 +1148,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             default_variable = self.defaults.variable
         else:
             default_variable = var
-            self.defaults.variable = copy.deepcopy(default_variable)
             self.parameters.variable._user_specified = True
+
+        self.defaults.variable = copy.deepcopy(default_variable)
 
         self.parameters.variable._set(
             copy_parameter_value(default_variable),
@@ -1908,11 +1918,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         # If function is called without any arguments, get default for variable
         if variable is None:
-            try:
-                # assigned by the Function class init when initializing
-                variable = self.defaults.variable
-            except AttributeError:
-                variable = self.class_defaults.variable
+            variable = self.defaults.variable
 
             variable = copy_parameter_value(variable)
 
@@ -1961,6 +1967,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 raise ComponentError(err_msg)
 
         if isinstance(runtime_params, dict):
+            runtime_params = copy_parameter_value(runtime_params)
             for param_name in runtime_params:
                 if not isinstance(param_name, str):
                     generate_error(param_name)
@@ -1969,8 +1976,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                         generate_error(param_name)
                     if context.execution_id not in self._runtime_params_reset:
                         self._runtime_params_reset[context.execution_id] = {}
-                    self._runtime_params_reset[context.execution_id][param_name] = getattr(self.parameters,
-                                                                                           param_name)._get(context)
+                    self._runtime_params_reset[context.execution_id][param_name] = copy_parameter_value(
+                        getattr(self.parameters, param_name)._get(context)
+                    )
                     if is_numeric(runtime_params[param_name]):
                         runtime_value = convert_all_elements_to_np_array(runtime_params[param_name])
                     else:
@@ -2328,9 +2336,21 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 if p._user_specified:
                     val = param_defaults[p.name]
 
+                    # ideally, this would include deepcopying any
+                    # Function objects with a non-None owner in val.
+                    # Avoiding universal deep copy for iterables
+                    # containing Functions here ensures that a list (ex.
+                    # noise) containing other objects and a Function
+                    # will use the actual Function passed in and not a
+                    # copy. Not copying - as was done prior to this
+                    # comment - should only be a problem if internal
+                    # code passes such an object that is also used
+                    # elsewhere
                     if isinstance(val, Function):
                         if val.owner is not None:
                             val = copy.deepcopy(val)
+                    elif not contains_type(val, Function):
+                        val = copy_parameter_value(val, shared_types=shared_types)
                 else:
                     val = copy_parameter_value(
                         p.default_value,
@@ -4419,10 +4439,13 @@ class ParameterValue:
         # because the port existing doesn't necessarily mean modulation
         # is actually happening
         if self._parameter.port is not None:
-            return self._parameter.port.owner._get_current_parameter_value(
+            res = self._parameter.port.owner._get_current_parameter_value(
                 self._parameter,
                 self._owner.most_recent_context
             )
+            if is_array_like(res):
+                res = copy_parameter_value(res)
+            return res
         else:
             warnings.warn(
                 f'{self._parameter.name} is not currently modulated in most'

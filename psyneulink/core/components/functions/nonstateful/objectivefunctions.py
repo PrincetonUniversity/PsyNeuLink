@@ -34,7 +34,7 @@ from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DOT_PRODUCT, \
     ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, NORMALIZE, \
     NORMED_L0_SIMILARITY, OBJECTIVE_FUNCTION_TYPE, SIZE, STABILITY_FUNCTION
-from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
+from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import DistanceMetricLiteral, safe_len, convert_to_np_array, convert_all_elements_to_np_array
 from psyneulink.core.globals.utilities import is_iterable
@@ -388,7 +388,7 @@ class Stability(ObjectiveFunction):
         elif isinstance(matrix, ParameterPort):
             pass
         else:
-            matrix = get_matrix(self.defaults.matrix, size, size)
+            matrix = get_matrix(copy_parameter_value(self.defaults.matrix), size, size)
 
         self.parameters.matrix._set(matrix, context)
 

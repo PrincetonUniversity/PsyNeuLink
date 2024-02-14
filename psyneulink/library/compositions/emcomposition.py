@@ -1315,7 +1315,7 @@ class EMComposition(AutodiffComposition):
         learn_field_weights = Parameter(True, structural=True)
         learning_rate = Parameter(.001, modulable=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, setter=_seed_setter)
 
         def _validate_memory_template(self, memory_template):
             if isinstance(memory_template, tuple):

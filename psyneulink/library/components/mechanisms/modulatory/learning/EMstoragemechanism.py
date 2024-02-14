@@ -176,7 +176,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     (ADDITIVE, EM_STORAGE_MECHANISM, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNALS, MULTIPLICATIVE,
      MULTIPLICATIVE_PARAM, MODULATION, NAME, OVERRIDE, OWNER_VALUE, PROJECTIONS, REFERENCE_VALUE, VARIABLE)
-from psyneulink.core.globals.parameters import Parameter, check_user_specified, FunctionParameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified, FunctionParameter, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric, all_within_range
@@ -804,7 +804,7 @@ class EMStorageMechanism(LearningMechanism):
             # pass in field_projection matrix to EMStorage function
             res = super(LearningMechanism, self)._execute(
                 variable=entry_to_store,
-                memory_matrix=field_memory_matrix,
+                memory_matrix=copy_parameter_value(field_memory_matrix),
                 axis=axis,
                 storage_location=idx_of_weakest_memory,
                 storage_prob=storage_prob,

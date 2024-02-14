@@ -279,6 +279,8 @@ def test_transfer_with_costs(cost_functions, func_mode, benchmark):
     ex = pytest.helpers.get_func_execution(f, func_mode)
 
     res = ex(10)
+    if func_mode != 'Python':
+        ex.__self__.writeback_state_to_pnl()
     total_cost = (f.intensity_cost or 0) + (f.adjustment_cost or 0) + (f.duration_cost or 0)
 
     assert res == [10]
@@ -300,6 +302,8 @@ def test_transfer_with_costs(cost_functions, func_mode, benchmark):
 
     # Second run with positive adjustment
     res = ex(15)
+    if func_mode != 'Python':
+        ex.__self__.writeback_state_to_pnl()
     total_cost = (f.intensity_cost or 0) + (f.adjustment_cost or 0) + (f.duration_cost or 0)
 
     assert res == [15]
@@ -321,6 +325,8 @@ def test_transfer_with_costs(cost_functions, func_mode, benchmark):
 
     # Third run with negative adjustment
     res = ex(7)
+    if func_mode != 'Python':
+        ex.__self__.writeback_state_to_pnl()
     total_cost = (f.intensity_cost or 0) + (f.adjustment_cost or 0) + (f.duration_cost or 0)
 
     assert res == [7]

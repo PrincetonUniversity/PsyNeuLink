@@ -2450,6 +2450,8 @@ class Mechanism_Base(Mechanism):
                 return_value = self._execute(variable=copy_parameter_value(self.defaults.variable),
                                              context=context,
                                              runtime_params=runtime_params)
+                if context.source is ContextFlags.COMMAND_LINE:
+                    return_value = copy_parameter_value(return_value)
 
                 # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
                 #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
@@ -2618,6 +2620,10 @@ class Mechanism_Base(Mechanism):
                        context=context,
                        node=self)
 
+        # return copy on external call so users can store it directly
+        # without it changing
+        if context.source is ContextFlags.COMMAND_LINE:
+            value = copy_parameter_value(value)
         return value
 
     def _get_variable_from_input(self, input, context=None):

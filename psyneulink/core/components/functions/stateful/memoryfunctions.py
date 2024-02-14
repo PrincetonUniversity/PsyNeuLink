@@ -50,7 +50,7 @@ from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, \
     ContentAddressableMemory_FUNCTION, DictionaryMemory_FUNCTION, \
     MIN_INDICATOR, MULTIPLICATIVE_PARAM, NEWEST, NOISE, OLDEST, OVERWRITE, RATE, RANDOM, SINGLE, WEIGHTED
-from psyneulink.core.globals.parameters import Parameter, check_user_specified
+from psyneulink.core.globals.parameters import Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import \
     all_within_range, convert_all_elements_to_np_array, convert_to_np_array, convert_to_list, is_numeric_scalar
@@ -361,7 +361,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
             maxlen=maxlen.item() if maxlen is not None else None
         )
 
-        previous_value.append(variable)
+        previous_value.append(copy_parameter_value(variable))
 
         self.parameters.previous_value._set(previous_value, context)
         return self.convert_output_type(previous_value)
@@ -1191,7 +1191,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         )
         max_entries = Parameter(1000)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False, dependencies='distance_function')
         distance = Parameter(0, stateful=True, read_only=True)
@@ -1495,7 +1495,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         # Retrieve entry from memory that best matches variable
         if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.uniform()):
-            entry = self.get_memory(variable, distance_field_weights, context).copy()
+            entry = copy_parameter_value(self.get_memory(variable, distance_field_weights, context))
         else:
             # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OutputPort FROM LAST TRIAL)?
             #           CURRENT PROBLEM WITH LATTER IS THAT IT CAUSES CRASH ON INIT, SINCE NOT OUTPUT_PORT
@@ -1859,7 +1859,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         fields = convert_to_list(fields)
 
         existing_memory = self.parameters.previous_value._get(context)
-        pruned_memory = existing_memory.copy()
+        pruned_memory = copy_parameter_value(existing_memory)
         for entry, memory in product(entries, existing_memory):
             if (np.all(entry == memory)
                     or fields and all(entry[f] == memory[f] for f in fields)):
@@ -2252,7 +2252,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         )
         max_entries = Parameter(1000)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
 
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)

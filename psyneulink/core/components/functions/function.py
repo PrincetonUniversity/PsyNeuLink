@@ -183,8 +183,12 @@ __all__ = [
 ]
 
 EPSILON = np.finfo(float).eps
+
+
 # numeric to allow modulation, invalid to identify unseeded state
-DEFAULT_SEED = np.array(-1)
+def DEFAULT_SEED():
+    return np.array(-1)
+
 
 FunctionRegistry = {}
 
@@ -344,7 +348,7 @@ def _output_type_setter(value, owning_component):
 
 def _seed_setter(value, owning_component, context):
     value = try_extract_0d_array_item(value)
-    if value is None or value == DEFAULT_SEED:
+    if value is None or value == DEFAULT_SEED():
         value = get_global_seed()
 
     # Remove any old PRNG state
@@ -367,7 +371,7 @@ def _random_state_getter(self, owning_component, context, modulated=False):
     else:
         seed_value = [int(seed_param._get(context=context))]
 
-    if seed_value == [DEFAULT_SEED]:
+    if seed_value == [DEFAULT_SEED()]:
         raise FunctionError(
             "Invalid seed for {} in context: {} ({})".format(
                 owning_component, context.execution_id, seed_param
@@ -678,7 +682,7 @@ class Function_Base(Function):
                 # functions with "random_state" param must have "seed" parameter
                 for ctx in new.parameters.seed.values:
                     new.parameters.seed.set(
-                        DEFAULT_SEED, ctx, skip_log=True, skip_history=True
+                        DEFAULT_SEED(), ctx, skip_log=True, skip_history=True
                     )
 
         return new

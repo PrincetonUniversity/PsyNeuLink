@@ -301,7 +301,7 @@ from psyneulink.core.globals.keywords import \
     MAPPING_PROJECTION, MATRIX, \
     OUTPUT_PORT, VALUE
 from psyneulink.core.globals.log import ContextFlags
-from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
+from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -553,7 +553,7 @@ class MappingProjection(PathwayProjection_Base):
         except TypeError:
             mapping_output_len = 1
 
-        matrix_spec = self.defaults.matrix
+        matrix_spec = copy_parameter_value(self.defaults.matrix)
 
         if (type(matrix_spec) == str and
                 matrix_spec == AUTO_ASSIGN_MATRIX):
