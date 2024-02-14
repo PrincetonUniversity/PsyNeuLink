@@ -624,7 +624,7 @@ class TestDictionaryMemory:
 
 def retrieve_label_helper(retrieved, stimuli):
     return [k for k,v in stimuli.items()
-            if all(np.alltrue(a)
+            if all(all(a)
                    for a in np.equal(np.array(retrieved, dtype=object),
                                      np.array(v, dtype=object),
                                      dtype=object))] or [None]
@@ -975,7 +975,7 @@ class TestContentAddressableMemory:
         retrieved_label = retrieve_label_helper(retrieved, stimuli)
         assert retrieved_label == [None]
         expected = np.array([np.array([0,0,0]),np.array([0,0,0])])
-        assert all(np.alltrue(x) for x in np.equal(expected,retrieved, dtype=object))
+        assert all(all(x) for x in np.equal(expected,retrieved, dtype=object))
 
     def test_ContentAddressableMemory_without_initializer_and_diff_field_sizes(self):
 
