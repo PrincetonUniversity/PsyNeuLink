@@ -151,7 +151,7 @@ __all__ = [
     'scalar_distance', 'sinusoid',
     'tensor_power', 'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy', 'create_union_set', 'merge_dictionaries',
-    'contains_type', 'is_numeric_scalar', 'try_extract_0d_array_item',
+    'contains_type', 'is_numeric_scalar', 'try_extract_0d_array_item', 'fill_array',
 ]
 
 logger = logging.getLogger(__name__)
@@ -2155,6 +2155,22 @@ def toposort_key(
             return -1
 
     return _generated_toposort_key
+
+
+def fill_array(arr: np.ndarray, value: Any):
+    """
+    Fills all elements of **arr** with **value**, maintaining embedded
+    shapes of object-dtype arrays
+
+    Args:
+        arr (np.ndarray)
+        value (Any)
+    """
+    if arr.ndim != 0 and arr.dtype == object:
+        for item in arr:
+            fill_array(item, value)
+    else:
+        arr.fill(value)
 
 
 # np.isscalar returns true on non-numeric items
