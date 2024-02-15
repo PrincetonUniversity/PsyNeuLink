@@ -1129,13 +1129,10 @@ class Parameter(ParameterBase):
             inherited_source = None
 
         if (
-            self._parent is not None
-            and (
-                inherited_source is None
-                # this condition indicates the cache was invalidated
-                # since it was set
-                or inherited_source._is_invalid_source
-            )
+            inherited_source is None
+            # this condition indicates the cache was invalidated
+            # since it was set
+            or inherited_source._is_invalid_source
         ):
             next_parent = self._parent
             while next_parent is not None:
@@ -1145,10 +1142,11 @@ class Parameter(ParameterBase):
                     break
                 next_parent = next_parent._parent
 
-        try:
-            return getattr(inherited_source, attr)
-        except AttributeError:
-            raise AttributeError("Parameter '%s' has no attribute '%s'" % (self.name, attr)) from None
+        if inherited_source is None:
+            # will fail, use default behavior
+            return self.__getattribute__(attr)
+        else:
+            return inherited_source.__getattribute__(attr)
 
     def __setattr__(self, attr, value):
         if attr in self._additional_param_attr_properties:
