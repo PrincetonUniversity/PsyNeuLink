@@ -441,17 +441,24 @@ DistanceMetricLiteral = Literal[
 ]
 
 
-def is_iterable(x):
+def is_iterable(x: Any, exclude_str: bool = False) -> bool:
     """
+    Args:
+        x (Any)
+        exclude_str (bool, optional): if True, **x** of type str will
+            return False. Defaults to False.
+
     Returns
     -------
         True - if **x** can be iterated on
         False - otherwise
     """
-    if isinstance(x, np.ndarray) and x.ndim == 0:
+    try:
+        iter(x)
+    except TypeError:
         return False
     else:
-        return isinstance(x, collections.abc.Iterable)
+        return not exclude_str or not isinstance(x, str)
 
 
 kwCompatibilityType = "type"
