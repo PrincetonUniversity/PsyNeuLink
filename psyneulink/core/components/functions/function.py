@@ -166,7 +166,7 @@ from psyneulink.core.globals.keywords import (
     MODEL_SPEC_ID_MDF_VARIABLE, MatrixKeywordLiteral, ZEROS_MATRIX
 )
 from psyneulink.core.globals.mdf import _get_variable_parameter_name
-from psyneulink.core.globals.parameters import Parameter, check_user_specified
+from psyneulink.core.globals.parameters import Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF, ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
@@ -690,6 +690,9 @@ class Function_Base(Function):
                  params=None,
                  target_set=None,
                  **kwargs):
+
+        if ContextFlags.COMMAND_LINE in context.source:
+            variable = copy_parameter_value(variable)
 
         # IMPLEMENTATION NOTE:
         # The following is a convenience feature that supports specification of params directly in call to function
