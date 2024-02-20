@@ -1914,6 +1914,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             except AttributeError:
                 variable = self.class_defaults.variable
 
+            variable = copy_parameter_value(variable)
+
         # If the variable is a function, call it
         if callable(variable):
             variable = variable()
