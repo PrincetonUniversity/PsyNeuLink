@@ -413,6 +413,8 @@ class OptimizationFunction(Function_Base):
         saved_samples = Parameter([], read_only=True, pnl_internal=True)
         saved_values = Parameter([], read_only=True, pnl_internal=True)
 
+        grid = Parameter(None)
+
     @check_user_specified
     @beartype
     def __init__(
@@ -840,11 +842,11 @@ class OptimizationFunction(Function_Base):
 
         return outcomes, num_evals
 
-    def reset_grid(self):
+    def reset_grid(self, context):
         """Reset iterators in `search_space <GridSearch.search_space>`"""
         for s in self.search_space:
             s.reset()
-        self.grid = itertools.product(*[s for s in self.search_space])
+        self.parameters.grid._set(itertools.product(*[s for s in self.search_space]), context)
 
     def _traverse_grid(self, variable, sample_num, context=None):
         """Get next sample from grid.
@@ -853,7 +855,7 @@ class OptimizationFunction(Function_Base):
         if self.is_initializing:
             return convert_to_np_array([signal._start for signal in self.search_space])
         try:
-            sample = np.asarray(next(self.grid))
+            sample = np.asarray(next(self.parameters.grid._get(context)))
         except StopIteration:
             raise OptimizationFunctionError("Expired grid in {} run from {} "
                                             "(execution_count: {}; num_iterations: {})".
@@ -1602,7 +1604,6 @@ class GridSearch(OptimizationFunction):
                     :default value: True
                     :type: ``bool``
         """
-        grid = Parameter(None)
         save_samples = Parameter(False, pnl_internal=True)
         save_values = Parameter(False, pnl_internal=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
@@ -1984,7 +1985,7 @@ class GridSearch(OptimizationFunction):
             in the order they were evaluated; otherwise it is empty.
         """
 
-        self.reset_grid()
+        self.reset_grid(context)
         return_all_samples = return_all_values = []
 
         direction = self.parameters.direction._get(context)

@@ -454,7 +454,7 @@ class PECOptimizationFunction(OptimizationFunction):
                 raise ValueError("Too many arguments passed to run_simulations")
 
         # Reset the search grid
-        self.reset_grid()
+        self.reset_grid(context)
 
         # Evaluate objective_function for each sample
         last_sample, last_value, all_samples, all_values = self._evaluate(
