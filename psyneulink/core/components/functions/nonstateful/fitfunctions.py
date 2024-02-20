@@ -1,4 +1,5 @@
 import copy
+import re
 
 import optuna.samplers
 from fastkde import fastKDE
@@ -438,29 +439,6 @@ class PECOptimizationFunction(OptimizationFunction):
 
         # Set the search space to the control allocation. The only thing evaluate is actually "searching" over is the
         # randomization dimension, which should be the last sample iterator in the search space list.
-        search_space = self.parameters.search_space._get(context)
-        for i, arg in enumerate(args):
-            # Map the args in order of the fittable parameters
-            len_search_space = (
-                len(search_space)
-                if self.owner.num_estimates is None
-                else len(search_space) - 1
-            )
-            if i < len_search_space:
-                assert search_space[i].num == 1, (
-                    "Search space for this dimension must be a single value, during search "
-                    "we will change the value but not the shape."
-                )
-
-                # All of this code is required to set the value of the singleton search space without creating a new
-                # object. It seems cleaner to just use search_space[i] = SampleIterator([arg]) but this seems to cause
-                # problems for Jan in compilation. Need to confirm this, maybe its ok as long as size doesn't change.
-                # We can protect against this with the above assert.
-                search_space[i].specification = [arg]
-                search_space[i].generator = search_space[i].specification
-                search_space[i].start = arg
-            else:
-                raise ValueError("Too many arguments passed to run_simulations")
 
         # Reset the search grid
         self.reset_grid()
@@ -859,11 +837,12 @@ class PECOptimizationFunction(OptimizationFunction):
     def fit_param_names(self) -> List[str]:
         """Get a unique name for each parameter in the fit."""
         if self.owner is not None:
-            return [
-                cs.efferents[0].receiver.name
-                for i, cs in enumerate(self.owner.control_signals)
-                if i != self.randomization_dimension
-            ]
+            # Go through each parameter and create a unique name for it
+            # If the mechanism name has an invalid character (for a python identifiter), we need to replace
+            # it with an underscore.
+            names = [(param_name, re.sub(r"\W|^(?=\d)",'_', mech.name))
+                     for param_name, mech in self.owner.fit_parameters.keys()]
+            return [f"{mech_name}_{param_name}" for param_name, mech_name in names]
         else:
             return None
 
@@ -879,16 +858,11 @@ class PECOptimizationFunction(OptimizationFunction):
         """
 
         if self.owner is not None:
-            acs = [
-                cs.specification
-                for i, cs in enumerate(self._full_search_space)
-                if i != self.randomization_dimension
-            ]
 
-            bounds = [(float(min(s)), float(max(s))) for s in acs]
+            bounds = [(float(min(s)), float(max(s))) for s in self.owner.fit_parameters.values()]
 
             # Get the step size for each parameter.
-            steps = [np.unique(np.diff(s).round(decimals=5)) for s in acs]
+            steps = [np.unique(np.diff(s).round(decimals=5)) for s in self.owner.fit_parameters.values()]
 
             # We also check if step size is constant, if not we raise an error
             for s in steps:

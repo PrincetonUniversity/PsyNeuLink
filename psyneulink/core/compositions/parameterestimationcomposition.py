@@ -170,6 +170,7 @@ from psyneulink._typing import Optional, Union, Dict, List, Callable, Literal
 import psyneulink.core.llvm as pnllvm
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.compositions.composition import Composition, CompositionError
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import (
     OptimizationControlMechanism,
 )
@@ -557,6 +558,13 @@ class ParameterEstimationComposition(Composition):
 
         self.optimized_parameter_values = []
 
+        pec_mechs = {}
+        for (pname, mech), values in parameters.items():
+            pec_mechs[(pname, mech)] = ControlMechanism(name=f"{pname}_control",
+                                                       control_signals=[(pname, mech)],
+                                                       modulation=OVERRIDE)
+            self.model.add_node(pec_mechs[(pname, mech)])
+
         super().__init__(
             name=name,
             controller_mode=BEFORE,
@@ -757,16 +765,6 @@ class ParameterEstimationComposition(Composition):
         same_seed_for_all_parameter_combinations,
         context=None,
     ):
-        # # Parse **parameters** into ControlSignals specs
-        control_signals = []
-        for param, allocation in parameters.items():
-            control_signals.append(
-                ControlSignal(
-                    modulates=param,
-                    modulation=OVERRIDE,
-                    allocation_samples=allocation,
-                )
-            )
 
         # For the PEC, the objective mechanism is not needed because in context of optimization of data fitting
         # we require all trials (and number of estimates) to compute the scalar objective value. In data fitting
@@ -821,9 +819,12 @@ class ParameterEstimationComposition(Composition):
         # indices it needs from composition output. This needs to be passed down from the PEC.
         optimization_function.outcome_variable_indices = self._outcome_variable_indices
 
+        control_signals = None
+        outcome_variables = None
         ocm = PEC_OCM(
             agent_rep=agent_rep,
             monitor_for_control=outcome_variables,
+            fit_parameters=parameters,
             allow_probes=True,
             objective_mechanism=objective_mechanism,
             function=optimization_function,
@@ -855,9 +856,17 @@ class ParameterEstimationComposition(Composition):
 
         # Capture the input passed to run and pass it on to the OCM
         assert self.controller is not None
-        self.controller.set_pec_inputs_cache(
-            kwargs.get("inputs", None if not args else args[0])
-        )
+
+        # Get the inputs
+        inputs = kwargs.get("inputs", None if not args else args[0])
+
+        # Since we are passing fitting\optimazation parameters as inputs we need add them to the inputs
+        if inputs:
+            params_input = [np.array([v[0]]) for v in self.fit_parameters.values()]
+            inputs = {self.model: [[trial] + params_input for trial in inputs[self.model]]}
+
+        self.controller.set_pec_inputs_cache(inputs)
+
         # We need to set the inputs for the composition during simulation, by assigning the inputs dict passed in
         # PEC run() to its controller's state_feature_values (this is in order to accomodate multi-trial inputs
         # without having the PEC provide them one-by-one to the simulated composition. This assumes that the inputs
@@ -1013,7 +1022,24 @@ class PEC_OCM(OptimizationControlMechanism):
 
     def __init__(self, *args, **kwargs):
         self._pec_input_values = None
+
+        if 'fit_parameters' in kwargs:
+            self.fit_parameters = kwargs['fit_parameters']
+            del kwargs['fit_parameters']
+        else:
+            raise ValueError("PEC_OCM requires that the PEC parameters be passed down to it.")
+
         super().__init__(*args, **kwargs)
+
+    def _instantiate_output_ports(self, context=None):
+        """Assign CostFunctions.DEFAULTS as default for cost_option of ControlSignals.
+        """
+
+        # The only control signal that we need for the PEC is the randomization control signal. All other parameter
+        # values will be passed through the inputs. This allows for trial-wise conditional parameter values to be
+        # passed to the composition being fit or optimized.
+        self.parameters.output_ports._set([], context)
+        self._create_randomization_control_signal(context)
 
     def set_pec_inputs_cache(self, inputs_dict: dict) -> dict:
         """Cache input values passed to the last call of run for the composition that this OCM controls.
