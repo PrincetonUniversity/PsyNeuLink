@@ -2729,9 +2729,10 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         #    - return
         if variable is None:
             try:
-                return self.defaults.variable
+                variable = self.defaults.variable
             except AttributeError:
-                return self.class_defaults.variable
+                variable = self.class_defaults.variable
+            return copy_parameter_value(variable)
 
         # Otherwise, do some checking on variable before converting to np.ndarray
 
