@@ -3183,7 +3183,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 # update it here if needed
                 if MATRIX in kwargs_to_instantiate:
                     try:
-                        kwargs_to_instantiate[MATRIX] = self.parameter_ports[MATRIX].defaults.value
+                        kwargs_to_instantiate[MATRIX] = copy_parameter_value(self.parameter_ports[MATRIX].defaults.value)
                     except (AttributeError, KeyError, TypeError):
                         pass
 
