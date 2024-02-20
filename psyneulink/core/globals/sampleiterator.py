@@ -360,7 +360,7 @@ class SampleIterator(Iterator, metaclass=SampleMeta):
             self.num = len(specification)
             self.generator = specification                       # the list
 
-            def generate_current_value():                        # index into the list
+            def _generate_current_value(self):                        # index into the list
                 # KDM 12/11/19: for currently unknown and unreplicable
                 # reasons, the checks in __next__ will fail to ensure
                 # that self.current_step is less than the length of
@@ -379,9 +379,10 @@ class SampleIterator(Iterator, metaclass=SampleMeta):
                 # Assumes receiver of SampleIterator will get this and know what to do with it,
                 #   therefore no other attributes are needed and, to avoid confusion, they should not be available;
                 #   so just return.
-                return
+                def _generate_current_value(self):
+                    return
 
-            if specification.function is None:
+            elif specification.function is None:
                 self.start = specification.start
                 self.stop = specification.stop
                 # self.step = Fraction(specification.step)
@@ -389,7 +390,7 @@ class SampleIterator(Iterator, metaclass=SampleMeta):
                 self.num = specification.num
                 self.generator = None                    # ??
 
-                def generate_current_value():   # return next value in range
+                def _generate_current_value(self):   # return next value in range
                     # Save global precision for later restoration
                     _global_precision = getcontext().prec
                     # Set SampleSpec precision
@@ -408,7 +409,7 @@ class SampleIterator(Iterator, metaclass=SampleMeta):
                 self.head = self.start
                 self.generator = specification.function
 
-                def generate_current_value():  # call function
+                def _generate_current_value(self):  # call function
                     return self.generator()
 
             else:
@@ -423,7 +424,10 @@ class SampleIterator(Iterator, metaclass=SampleMeta):
 
         self.current_step = 0
         self.head = self.start
-        self.generate_current_value = generate_current_value
+        self._generate_current_value = _generate_current_value
+
+    def generate_current_value(self):
+        return self._generate_current_value(self)
 
     def __next__(self):
         """
