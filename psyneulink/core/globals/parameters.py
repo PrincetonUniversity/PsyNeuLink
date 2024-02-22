@@ -2118,8 +2118,13 @@ class ParametersBase(ParametersTemplate):
 
         super().__init__(owner=owner, parent=parent)
 
-        aliases_to_create = set()
-        for param_name, param_value in self.values(show_all=True).items():
+        aliases_to_create = {}
+        for param_name in copy.copy(self._params):
+            try:
+                param_value = getattr(self, param_name)
+            except AttributeError:
+                param_value = NotImplemented
+
             constructor_default = get_init_signature_default_value(self._owner, param_name)
 
             if (
@@ -2139,7 +2144,7 @@ class ParametersBase(ParametersTemplate):
                     # the param that the alias is going to refer to may not have been created yet
                     # (the alias then may refer to the parent Parameter instead of the Parameter associated with this
                     # Parameters class)
-                    aliases_to_create.add(param_name)
+                    aliases_to_create[param_name] = parent_param.source.name
                 else:
                     new_param = copy.deepcopy(parent_param)
                     new_param._owner = self
@@ -2147,8 +2152,10 @@ class ParametersBase(ParametersTemplate):
 
                     setattr(self, param_name, new_param)
 
-        for alias_name in aliases_to_create:
-            setattr(self, alias_name, ParameterAlias(name=alias_name, source=getattr(self, alias_name).source))
+        for alias_name, source_name in aliases_to_create.items():
+            # getattr here and not above, because the alias may be
+            # iterated over before the source
+            setattr(self, alias_name, ParameterAlias(name=alias_name, source=getattr(self, source_name)))
 
         values = self.values(show_all=True)
         for param, value in values.items():
@@ -2183,7 +2190,8 @@ class ParametersBase(ParametersTemplate):
 
     def __getattr__(self, attr):
         if (
-            attr in self._nonexistent_attr_cache
+            attr in self._params
+            or attr in self._nonexistent_attr_cache
             # attr can't be in __dict__ or __getattr__ would not be called
             or (
                 self._parent is not None
@@ -2228,7 +2236,12 @@ class ParametersBase(ParametersTemplate):
                         # there is a conflict if a non-ParameterAlias exists
                         # with the same name as the planned alias
                         if alias in self:
-                            if not isinstance(getattr(self, alias), ParameterAlias):
+                            try:
+                                alias_param = getattr(self, alias)
+                            except AttributeError:
+                                continue
+
+                            if not isinstance(alias_param, ParameterAlias):
                                 conflicts.append(alias)
 
                         super().__setattr__(alias, ParameterAlias(source=getattr(self, attr), name=alias))
