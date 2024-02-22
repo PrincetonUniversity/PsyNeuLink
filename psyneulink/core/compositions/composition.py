@@ -3958,7 +3958,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         simulation_results = Parameter([], loggable=False, pnl_internal=True)
         retain_old_simulation_data = Parameter(False, stateful=False, loggable=False, pnl_internal=True)
         input_specification = Parameter(None, stateful=False, loggable=False, pnl_internal=True)
-
+        value = Parameter(NotImplemented, read_only=True)  # replaces deletion in constructor below
 
     class _CompilationData(ParametersBase):
         execution = None
@@ -4109,7 +4109,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # should be used instead - in the long run, we should look into possibly
         # populating both values and results, as it would be more consistent with
         # the behavior of components
-        del self.parameters.value
+        # del self.parameters.value
 
         # Call with context = COMPOSITION to avoid calling _check_initialization_status again
         self._analyze_graph(context=context)
