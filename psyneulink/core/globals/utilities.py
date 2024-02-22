@@ -855,7 +855,7 @@ def get_deepcopy_with_shared(shared_keys=frozenset()):
         except AttributeError:
             ordered_dict_keys = self.__dict__
 
-        for k in ordered_dict_keys:
+        for k in copy.copy(ordered_dict_keys):
             v = self.__dict__[k]
             if k in shared_keys:
                 res_val = v
