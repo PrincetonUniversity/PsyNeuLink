@@ -1113,7 +1113,12 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         threshold = Parameter(1.0, modulable=True)
         noise = Parameter(0.5, modulable=True, setter=_noise_setter)
         non_decision_time = Parameter(.200, modulable=True)
-        bias = Parameter(0.5, read_only=True, getter=_DriftDiffusionAnalytical_bias_getter)
+        bias = Parameter(
+            0.5,
+            read_only=True,
+            getter=_DriftDiffusionAnalytical_bias_getter,
+            dependencies=['starting_value', 'threshold']
+        )
         # this is read only because conversion is disabled for this function
         # this occurs in other places as well
         enable_output_type_conversion = Parameter(
