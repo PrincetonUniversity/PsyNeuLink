@@ -437,8 +437,18 @@ class PECOptimizationFunction(OptimizationFunction):
                 f"Expected {len(self.fit_param_names)} arguments, got {len(args)}"
             )
 
-        # Set the search space to the control allocation. The only thing evaluate is actually "searching" over is the
-        # randomization dimension, which should be the last sample iterator in the search space list.
+        # Parameter values are passed through the input data.
+        # Since we are passing fitting\optimization parameters as inputs we need add them to the inputs
+        # params_input = [np.array([v[0]]) for v in self.fit_parameters.values()]
+        # inputs = {self.model: [[trial] + params_input for trial in inputs[self.model]]}
+        #
+        # self.controller.set_pec_inputs_cache(inputs)
+        inputs_array = list(self.owner.composition.controller._pec_input_values.values())[0]
+        for trial in range(len(inputs_array)):
+            for i, name in enumerate(self.fit_param_names):
+                start_index = len(inputs_array[trial]) - len(self.fit_param_names)
+                inputs_array[trial][start_index+i] = np.array([args[i]])
+
 
         # Reset the search grid
         self.reset_grid()

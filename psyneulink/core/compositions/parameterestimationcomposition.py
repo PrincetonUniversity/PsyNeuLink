@@ -168,8 +168,10 @@ from beartype import beartype
 from psyneulink._typing import Optional, Union, Dict, List, Callable, Literal
 
 import psyneulink.core.llvm as pnllvm
+from psyneulink.core.globals.utilities import ContentAddressableList
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.compositions.composition import Composition, CompositionError
+from psyneulink.core.components.ports.port import Port_Base
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import (
     OptimizationControlMechanism,
@@ -189,6 +191,8 @@ from psyneulink.core.globals.context import (
 from psyneulink.core.globals.keywords import BEFORE, OVERRIDE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.utilities import convert_to_list
+from psyneulink.core.globals.defaults import defaultControlAllocation
+
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.components.ports.outputport import OutputPort
 
@@ -1038,7 +1042,8 @@ class PEC_OCM(OptimizationControlMechanism):
         # The only control signal that we need for the PEC is the randomization control signal. All other parameter
         # values will be passed through the inputs. This allows for trial-wise conditional parameter values to be
         # passed to the composition being fit or optimized.
-        self.parameters.output_ports._set([], context)
+        output_ports = ContentAddressableList(component_type=Port_Base)
+        self.parameters.output_ports._set(output_ports, context)
         self._create_randomization_control_signal(context)
 
     def set_pec_inputs_cache(self, inputs_dict: dict) -> dict:
@@ -1096,3 +1101,66 @@ class PEC_OCM(OptimizationControlMechanism):
             inputs_dict = {model: input_values}
 
         self._pec_input_values = inputs_dict
+
+    def _execute(self, variable=None, context=None, runtime_params=None)->np.ndarray:
+        """Return control_allocation that optimizes net_outcome of agent_rep.evaluate().
+        """
+
+        if self.is_initializing:
+            return [defaultControlAllocation]
+
+        # Assign default control_allocation if it is not yet specified (presumably first trial)
+        control_allocation = self.parameters.control_allocation._get(context)
+        if control_allocation is None:
+            control_allocation = [c.defaults.variable for c in self.control_signals]
+
+        # Give the agent_rep a chance to adapt based on last trial's state_feature_values and control_allocation
+        if hasattr(self.agent_rep, "adapt"):
+            # KAM 4/11/19 switched from a try/except to hasattr because in the case where we don't
+            # have an adapt method, we also don't need to call the net_outcome getter
+            net_outcome = self.parameters.net_outcome._get(context)
+
+            self.agent_rep.adapt(self.parameters.state_feature_values._get(context),
+                                 control_allocation,
+                                 net_outcome,
+                                 context=context)
+
+        # freeze the values of current context, because they can be changed in between simulations,
+        # and the simulations must start from the exact spot
+        frozen_context = self._get_frozen_context(context)
+
+        alt_controller = None
+        if self.agent_rep.controller is None:
+            try:
+                alt_controller = context.composition.controller
+            except AttributeError:
+                pass
+
+        self.agent_rep._initialize_as_agent_rep(
+            frozen_context, base_context=context, alt_controller=alt_controller
+        )
+
+        # Get control_allocation that optimizes net_outcome using OptimizationControlMechanism's function
+        # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
+        optimal_control_allocation, optimal_net_outcome, saved_samples, saved_values = \
+                                                super(ControlMechanism,self)._execute(
+                                                    variable=control_allocation,
+                                                    num_estimates=self.parameters.num_estimates._get(context),
+                                                    context=context,
+                                                    runtime_params=runtime_params
+                                                )
+
+        # clean up frozen values after execution
+        self.agent_rep._clean_up_as_agent_rep(frozen_context, alt_controller=alt_controller)
+
+        if self.function.save_samples:
+            self.saved_samples = saved_samples
+        if self.function.save_values:
+            self.saved_values = saved_values
+
+        self.optimal_control_allocation = optimal_control_allocation
+        self.optimal_net_outcome = optimal_net_outcome
+
+        # Return optimal control_allocation formatted as 2d array
+        return [defaultControlAllocation]
+
