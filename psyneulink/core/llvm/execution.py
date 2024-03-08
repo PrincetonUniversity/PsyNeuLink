@@ -815,13 +815,19 @@ class CompExecution(CUDAExecution):
 
         parallel_start = time.time()
         with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as ex:
+
+            # Create input and result typed casts once, they are the same
+            # for every submitted job.
+            input_param = ctypes.cast(ctypes.byref(ct_inputs), self.__bin_func.c_func.argtypes[5])
+            results_param = ctypes.cast(ct_results, self.__bin_func.c_func.argtypes[4])
+
             # There are 7 arguments to evaluate_alloc_range:
             # comp_param, comp_state, from, to, results, input, comp_data
             results = [ex.submit(self.__bin_func, ct_param, ct_state,
                                  int(i * evals_per_job),
                                  min((i + 1) * evals_per_job, num_evaluations),
-                                 ctypes.cast(ct_results, self.__bin_func.c_func.argtypes[4]),
-                                 ctypes.cast(ctypes.byref(ct_inputs), self.__bin_func.c_func.argtypes[5]),
+                                 results_param,
+                                 input_param,
                                  ct_data,
                                  ct_num_inputs)
                        for i in range(jobs)]
