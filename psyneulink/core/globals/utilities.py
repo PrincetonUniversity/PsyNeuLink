@@ -2064,11 +2064,14 @@ def contains_type(
         **arr** itself if needed
     """
     try:
-        for a in arr:
-            if isinstance(a, typ) or (a is not arr and contains_type(a, typ)):
-                return True
+        arr_items = iter(arr)
     except TypeError:
-        pass
+        return False
+
+    recurse = not isinstance(arr, np.matrix)
+    for a in arr_items:
+        if isinstance(a, typ) or (a is not arr and recurse and contains_type(a, typ)):
+            return True
 
     return False
 
