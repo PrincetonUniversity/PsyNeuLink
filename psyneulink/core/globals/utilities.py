@@ -867,7 +867,23 @@ def get_deepcopy_with_shared(shared_keys=frozenset()):
     return __deepcopy__
 
 
-def copy_iterable_with_shared(obj, shared_types=None, memo=None):
+def _copy_shared_iterable_elementwise_as_list(obj, shared_types, memo, result_obj=None):
+    result = result_obj or list()
+
+    for item in obj:
+        try:
+            new_item = copy_iterable_with_shared(item, shared_types, memo)
+        except TypeError:
+            if isinstance(item, shared_types):
+                new_item = item
+            else:
+                new_item = copy.deepcopy(item, memo)
+        result.append(new_item)
+
+    return result
+
+
+def copy_iterable_with_shared(obj, shared_types=type(None), memo=None):
     try:
         shared_types = tuple(shared_types)
     except TypeError:
@@ -927,14 +943,7 @@ def copy_iterable_with_shared(obj, shared_types=None, memo=None):
         else:
             result = obj.__class__()
 
-        for item in obj:
-            if isinstance(item, all_types_using_recursion):
-                new_item = copy_iterable_with_shared(item, shared_types, memo)
-            elif isinstance(item, shared_types):
-                new_item = item
-            else:
-                new_item = copy.deepcopy(item, memo)
-            result.append(new_item)
+        result = _copy_shared_iterable_elementwise_as_list(obj, shared_types, memo, result)
 
         if is_tuple:
             try:
@@ -942,6 +951,14 @@ def copy_iterable_with_shared(obj, shared_types=None, memo=None):
             except TypeError:
                 # handle namedtuple
                 result = obj.__class__(*result)
+    elif isinstance(obj, np.ndarray) and obj.dtype == object:
+        if obj.ndim > 0:
+            result = _copy_shared_iterable_elementwise_as_list(obj, shared_types, memo)
+            result = safe_create_np_array(result)
+        elif isinstance(obj, shared_types):
+            result = np.array(obj)
+        else:
+            result = copy.deepcopy(obj)
     else:
         raise TypeError
 
@@ -1017,6 +1034,44 @@ def np_array_less_than_2d(array):
     else:
         return False
 
+
+def safe_create_np_array(value):
+    with warnings.catch_warnings():
+
+        # If we have a torch tensor, allow it to pass through unchanged
+        if torch and torch.is_tensor(value):
+            return value
+
+        warnings.filterwarnings('error', category=np.VisibleDeprecationWarning)
+        # NOTE: this will raise a ValueError in the future.
+        # See https://numpy.org/neps/nep-0034-infer-dtype-is-object.html
+        try:
+            try:
+                return np.asarray(value)
+            except np.VisibleDeprecationWarning:
+                return np.asarray(value, dtype=object)
+            except ValueError as e:
+                # numpy 1.24 removed the above deprecation and raises
+                # ValueError instead. Note that the below call can still
+                # raise other ValueErrors
+                if 'The requested array has an inhomogeneous shape' in str(e):
+                    return np.asarray(value, dtype=object)
+                raise
+
+        except ValueError as e:
+            msg = str(e)
+            if 'cannot guess the desired dtype from the input' in msg:
+                return np.asarray(value, dtype=object)
+            # KDM 6/29/20: this case handles a previously noted case
+            # by KAM 6/28/18, #877:
+            # [[0.0], [0.0], np.array([[0.0, 0.0]])]
+            # but was only handled for dimension=1
+            elif 'could not broadcast' in msg:
+                return convert_all_elements_to_np_array(value)
+            else:
+                raise
+
+
 def convert_to_np_array(value, dimension=None):
     """
         Converts value to np.ndarray if it is not already. Handles
@@ -1033,42 +1088,6 @@ def convert_to_np_array(value, dimension=None):
         Returns:
             value : np.ndarray
     """
-    def safe_create_np_array(value):
-        with warnings.catch_warnings():
-
-            # If we have a torch tensor, allow it to pass through unchanged
-            if torch and torch.is_tensor(value):
-                return value
-
-            warnings.filterwarnings('error', category=np.VisibleDeprecationWarning)
-            # NOTE: this will raise a ValueError in the future.
-            # See https://numpy.org/neps/nep-0034-infer-dtype-is-object.html
-            try:
-                try:
-                    return np.asarray(value)
-                except np.VisibleDeprecationWarning:
-                    return np.asarray(value, dtype=object)
-                except ValueError as e:
-                    # numpy 1.24 removed the above deprecation and raises
-                    # ValueError instead. Note that the below call can still
-                    # raise other ValueErrors
-                    if 'The requested array has an inhomogeneous shape' in str(e):
-                        return np.asarray(value, dtype=object)
-                    raise
-
-            except ValueError as e:
-                msg = str(e)
-                if 'cannot guess the desired dtype from the input' in msg:
-                    return np.asarray(value, dtype=object)
-                # KDM 6/29/20: this case handles a previously noted case
-                # by KAM 6/28/18, #877:
-                # [[0.0], [0.0], np.array([[0.0, 0.0]])]
-                # but was only handled for dimension=1
-                elif 'could not broadcast' in msg:
-                    return convert_all_elements_to_np_array(value)
-                else:
-                    raise
-
     value = safe_create_np_array(value)
 
     if dimension == 1:
