@@ -603,8 +603,8 @@ class ParameterEstimationComposition(Composition):
                 index = in_comp.output_ports.index(in_comp.output_CIM.port_map[outcome_var][1])
 
                 self._outcome_variable_indices.append(index)
-            except ValueError:
-                raise ValueError(
+            except KeyError:
+                raise KeyError(
                     f"Could not find outcome variable {outcome_var.full_name} in the output ports of "
                     f"the composition being fitted to data ({self.nodes[0]}). A current limitation of the "
                     f"PEC data fitting API is that any output port of composition that should be fit to "

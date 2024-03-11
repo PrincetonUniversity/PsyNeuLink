@@ -359,7 +359,7 @@ def test_pec_bad_outcome_var_spec():
         ("threshold", decision): np.linspace(0.5, 1.0, 1000),
     }
 
-    with pytest.raises(ValueError) as ex:
+    with pytest.raises(KeyError) as ex:
         pnl.ParameterEstimationComposition(
             name="pec",
             nodes=[comp],
