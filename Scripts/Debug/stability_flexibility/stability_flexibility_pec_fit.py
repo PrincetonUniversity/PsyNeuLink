@@ -16,9 +16,9 @@ set_global_seed(pnl_seed)
 trial_seq_seed = 0
 
 # High-level parameters the impact performance of the test
-num_trials = 12
+num_trials = 50
 time_step_size = 0.01
-num_estimates = 3
+num_estimates = 10000
 
 sf_params = dict(
     gain=3.0,
@@ -104,7 +104,7 @@ pec = pnl.ParameterEstimationComposition(
     num_estimates=num_estimates,
 )
 
-# pec.controller.parameters.comp_execution_mode.set("LLVM")
+pec.controller.parameters.comp_execution_mode.set("LLVM")
 pec.controller.function.parameters.save_values.set(True)
 
 print("Running the PEC")
