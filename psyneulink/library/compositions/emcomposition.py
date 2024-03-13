@@ -1494,9 +1494,12 @@ class EMComposition(AutodiffComposition):
             self.exclude_node_roles(node, NodeRole.OUTPUT)
 
         # Warn if divide by zero will occur due to memory initialization
-        if not np.any([np.any([self.memory[i][j]
-                               for i in range(self.memory_capacity)])
-                       for j in range(self.num_keys)]):
+        memory = self.memory
+        memory_capacity = self.memory_capacity
+        if not np.any([
+            np.any([memory[i][j] for i in range(memory_capacity)])
+            for j in range(self.num_keys)
+        ]):
             warnings.warn(f"Memory initialized with at least one field that has all zeros; "
                           f"a divide by zero will occur if 'normalize_memories' is True. "
                           f"This can be avoided by using 'memory_fill' to initialize memories with non-zero values.")
