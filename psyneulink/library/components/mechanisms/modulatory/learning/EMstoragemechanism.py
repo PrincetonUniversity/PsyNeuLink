@@ -212,11 +212,11 @@ def _memory_matrix_getter(owning_component=None, context=None)->list:
     # Get memory from learning_signals that project to retrieved_nodes
     if owning_component.is_initializing:
         # If initializing, learning_signals are still MappingProjections used to specify them, so get from them
-        memory = [retrieved_learning_signal.parameters.matrix.get(context)
+        memory = [retrieved_learning_signal.parameters.matrix._get(context)
                   for retrieved_learning_signal in learning_signals_for_retrieved]
     else:
         # Otherwise, get directly from the learning_signals
-        memory = [retrieved_learning_signal.efferents[0].receiver.owner.parameters.matrix.get(context)
+        memory = [retrieved_learning_signal.efferents[0].receiver.owner.parameters.matrix._get(context)
                   for retrieved_learning_signal in learning_signals_for_retrieved]
 
     # Get memory capacity from first length of first matrix (can use full set since might be ragged array)
@@ -751,7 +751,7 @@ class EMStorageMechanism(LearningMechanism):
 
         decay_rate = self.parameters.decay_rate._get(context)      # modulable, so use getter
         storage_prob = self.parameters.storage_prob._get(context)  # modulable, so use getter
-        field_weights = self.parameters.field_weights.get(context) # modulable, so use getter
+        field_weights = self.parameters.field_weights._get(context)  # modulable, so use getter
         concatenation_node = self.concatenation_node
         num_match_fields = 1 if concatenation_node else len([i for i in self.field_types if i==1])
 
@@ -760,7 +760,7 @@ class EMStorageMechanism(LearningMechanism):
             if self.is_initializing:
                 # Return existing matrices for field_memories  # FIX: THE FOLLOWING DOESN'T TEST FUNCTION:
                 return convert_all_elements_to_np_array([
-                    learning_signal.receiver.path_afferents[0].parameters.matrix.get()
+                    learning_signal.receiver.path_afferents[0].parameters.matrix._get(context)
                     for learning_signal in self.learning_signals
                 ])
             # Raise exception if not initializing and memory is not specified
@@ -799,7 +799,7 @@ class EMStorageMechanism(LearningMechanism):
                 axis = 1
                 entry_to_store = variable[i - num_match_fields]
             # Get matrix containing memories for the field from the Projection
-            field_memory_matrix = field_projection.parameters.matrix.get(context)
+            field_memory_matrix = field_projection.parameters.matrix._get(context)
 
             value.append(super(LearningMechanism, self)._execute(variable=entry_to_store,
                                                                  memory_matrix=field_memory_matrix,
