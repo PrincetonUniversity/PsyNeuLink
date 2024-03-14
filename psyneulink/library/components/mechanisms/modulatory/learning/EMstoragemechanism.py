@@ -801,12 +801,18 @@ class EMStorageMechanism(LearningMechanism):
             # Get matrix containing memories for the field from the Projection
             field_memory_matrix = field_projection.parameters.matrix._get(context)
 
-            value.append(super(LearningMechanism, self)._execute(variable=entry_to_store,
-                                                                 memory_matrix=field_memory_matrix,
-                                                                 axis=axis,
-                                                                 storage_location=idx_of_weakest_memory,
-                                                                 storage_prob=storage_prob,
-                                                                 decay_rate=decay_rate,
-                                                                 context=context,
-                                                                 runtime_params=runtime_params))
+            # pass in field_projection matrix to EMStorage function
+            res = super(LearningMechanism, self)._execute(
+                variable=entry_to_store,
+                memory_matrix=field_memory_matrix,
+                axis=axis,
+                storage_location=idx_of_weakest_memory,
+                storage_prob=storage_prob,
+                decay_rate=decay_rate,
+                context=context,
+                runtime_params=runtime_params
+            )
+            value.append(res)
+            # assign modified field_memory_matrix back
+            field_projection.parameters.matrix._set(res, context)
         return convert_all_elements_to_np_array(value)
