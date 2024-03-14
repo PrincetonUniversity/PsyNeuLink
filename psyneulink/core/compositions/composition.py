@@ -3919,7 +3919,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     _model_spec_generic_type_name = 'graph'
 
 
-    class Parameters(ParametersBase):
+    class Parameters(Composition_Base.Parameters):
         """
             Attributes
             ----------
