@@ -240,3 +240,6 @@ class MaskedMappingProjection(MappingProjection):
                 matrix **= mask
 
         self.parameters.matrix._set(matrix, context)
+        # must manually update parameter port because super
+        # _update_parameter_ports already happened above
+        self.parameter_ports["matrix"].parameters.value._set(matrix, context)
