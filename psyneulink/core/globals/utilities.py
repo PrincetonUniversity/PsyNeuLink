@@ -625,17 +625,7 @@ def iscompatible(candidate, reference=None, **kargs):
                         else:
                             return True
                 else:
-                    if not is_number(value):
-                        try:
-                            # True for autograd ArrayBox (and maybe other types?)
-                            # if isinstance(value._value, Number):
-                            from autograd.numpy.numpy_boxes import ArrayBox
-                            if isinstance(value, ArrayBox):
-                                return True
-                        except:
-                            return False
-                    else:
-                        return True
+                    return is_number(value)
             # Test copy since may need to convert matrix to array (see above)
             if not recursively_check_elements_for_numeric(candidate.copy()):
                 return False
