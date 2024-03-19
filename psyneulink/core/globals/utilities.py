@@ -1049,7 +1049,8 @@ def convert_to_np_array(value, dimension=None):
             except RuntimeError as e:
 
                 # If we get a RuntimeError, it is probably because we are trying to convert a torch tensor.
-                # We can't convert to a numpy array without breaking autograd, so we need to return the original value
+                # We can't convert to a numpy array without breaking pytorch autograd, so we need to return the
+                # original value
                 if "call numpy() on Tensor" in str(e) and torch:
                     return value
                 else:

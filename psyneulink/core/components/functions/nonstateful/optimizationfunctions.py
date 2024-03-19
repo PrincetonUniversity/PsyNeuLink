@@ -951,8 +951,9 @@ class GradientOptimization(OptimizationFunction):
     which should be the derivative of the `objective_function <GradientOptimization.objective_function>`
     with respect to `variable <GradientOptimization.variable>` at its current value:
     :math:`\\frac{d(objective\\_function(variable))}{d(variable)}`.  If the **gradient_function* argument of the
-    constructor is not specified, then an attempt is made to use `Autograd's <https://github.com/HIPS/autograd>`_ `grad
-    <autograd.grad>` method to generate `gradient_function <GradientOptimization.gradient_function>`.  If that fails,
+    constructor is not specified, then an attempt is made to use PyTorch functional
+    `autograd's <https://pytorch.org/docs/stable/generated/torch.func.grad.html>`_ `grad <torch.func.grad>`
+    method to generate `gradient_function <GradientOptimization.gradient_function>`.  If that fails,
     an error occurs.  The **search_space** argument can be used to specify lower and/or upper bounds for each dimension
     of the sample; if the gradient causes a value of the sample to exceed a bound along a dimenson, the value of the
     bound is used for that dimension, unless/until the gradient shifts and causes it to return back within the bound.
@@ -972,7 +973,7 @@ class GradientOptimization(OptimizationFunction):
     gradient_function : function
         specifies function used to compute the gradient in each iteration of the `optimization process
         <GradientOptimization_Procedure>`;  if it is not specified, an attempt is made to compute it using
-        `autograd.grad <https://github.com/HIPS/autograd>`_.
+        `PyTorch autograd's <https://pytorch.org/docs/stable/generated/torch.func.grad.html>`_ `grad <torch.func.grad>`.
 
     direction : ASCENT or DESCENT : default ASCENT
         specifies the direction of gradient optimization: if *ASCENT*, movement is attempted in the positive direction
