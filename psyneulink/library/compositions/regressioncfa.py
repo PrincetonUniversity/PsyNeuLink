@@ -633,23 +633,23 @@ class RegressionCFA(CompositionFunctionApproximator):
             computed_terms[PV.F] = f = self.terms[PV.F.value]
 
             # Compute value of each control_signal from its variable
-            c = [None] * len(control_allocation)
+            c = np.zeros((len(control_allocation), ))
             for i, var in enumerate(control_allocation):
                 c[i] = self.control_signal_functions[i](var, context=context)
-            computed_terms[PV.C] = c = np.array(c)
+            computed_terms[PV.C] = c
 
             # Compute costs for new control_signal values
             if PV.COST in terms:
                 # computed_terms[PV.COST] = -(np.exp(0.25*c-3))
                 # computed_terms[PV.COST] = -(np.exp(0.25*c-3) + (np.exp(0.25*np.abs(c-self.control_signal_change)-3)))
-                costs = [None] * len(c)
+                costs = np.zeros((len(control_allocation),))
                 for i, val in enumerate(c):
                     # MODIFIED 11/9/18 OLD:
                     costs[i] = -(self._compute_costs[i](val, context=context))
                     # # MODIFIED 11/9/18 NEW: [JDC]
                     # costs[i] = -(self._compute_costs[i](val, ref_variables[i]))
                     # MODIFIED 11/9/18 END
-                computed_terms[PV.COST] = np.array(costs)
+                computed_terms[PV.COST] = costs
 
             # Compute terms interaction that are used
             if any(term in terms for term in [PV.FF, PV.FFC, PV.FFCC]):

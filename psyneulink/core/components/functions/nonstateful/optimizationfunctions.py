@@ -31,6 +31,15 @@ import warnings
 from numbers import Number
 
 import numpy as np
+
+# Conditionally import torch
+try:
+    import torch
+    from torch.func import grad
+except ImportError:
+    torch = None
+    grad = None
+
 from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Callable, Literal
@@ -1249,13 +1258,34 @@ class GradientOptimization(OptimizationFunction):
 
         # Differentiate objective_function using autograd.grad()
         if objective_function is not None and not self.gradient_function:
+
+            if torch is None:
+                raise ValueError("PyTorch is not installed. Please install PyTorch to use GradientOptimization without "
+                                 "specifying a gradient_function.")
+
+            if grad is None:
+                raise ValueError("PyTorch version is too old. Please upgrade PyTorch to use GradientOptimization without "
+                                 "specifying a gradient_function.")
+
             try:
-                from autograd import grad
-                self.parameters.gradient_function._set(grad(self.objective_function), context)
-            except:
-                raise OptimizationFunctionError("Unable to use autograd with {} specified for {} Function: {}.".
+                # Need to wrap objective_function in a lambda to pass to grad because it needs to return a torch tensor
+                def func_wrapper(x, context):
+                    return torch.tensor(self.objective_function(x, context))
+
+                # Get the gradient of the objective function with pytorch autograd
+                gradient_func = torch.func.grad(func_wrapper)
+
+                # We need to wrap the gradient function in a lambda as well because we need to convert back to numpy
+                def gradient_func_wrapper(x, context):
+                    return gradient_func(torch.from_numpy(x), context).detach().numpy()
+
+                self.parameters.gradient_function._set(gradient_func_wrapper, context)
+
+            except Exception as ex:
+
+                raise OptimizationFunctionError("Unable to use PyTorch autograd with {} specified for {} Function: {}.".
                                                 format(repr(OBJECTIVE_FUNCTION), self.__class__.__name__,
-                                                       objective_function.__name__))
+                                                       objective_function.__name__)) from ex
         search_space = self.search_space
         bounds = None
 
