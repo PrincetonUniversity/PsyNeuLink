@@ -1840,6 +1840,7 @@ class TestControlMechanisms:
 
         assert len(lvoc.input_ports) == 5
 
+    @pytest.mark.pytorch
     def test_lvoc_features_function(self):
         m1 = pnl.TransferMechanism(input_ports=["InputPort A", "InputPort B"])
         m2 = pnl.TransferMechanism()
