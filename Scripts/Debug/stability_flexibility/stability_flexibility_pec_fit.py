@@ -8,7 +8,7 @@ from psyneulink.core.globals.utilities import set_global_seed
 
 sys.path.append(".")
 
-from stability_flexibility import make_stab_flex, generate_trial_sequence
+from stability_flexibility_v2 import make_stab_flex, generate_trial_sequence
 
 # Let's make things reproducible
 pnl_seed = 0
@@ -16,16 +16,16 @@ set_global_seed(pnl_seed)
 trial_seq_seed = 0
 
 # High-level parameters the impact performance of the test
-num_trials = 50
+num_trials = 240
 time_step_size = 0.01
-num_estimates = 10000
+num_estimates = 1000
 
 sf_params = dict(
     gain=3.0,
     leak=3.0,
     competition=2.0,
     lca_time_step_size=time_step_size,
-    non_decision_time=0.2,
+    non_decision_time=0.3,
     automaticity=0.01,
     starting_value=0.0,
     threshold=0.1,
@@ -73,6 +73,15 @@ data_to_fit = pd.DataFrame(
 )
 data_to_fit["decision"] = data_to_fit["decision"].astype("category")
 
+def plot_rts(data):
+    # Plot histograms of reaction times for correct and error trials
+    import seaborn as sns
+    import matplotlib.pyplot as plt
+
+    sns.displot(data_to_fit, x="response_time", hue="decision").set(xlim=(0))
+    plt.show()
+
+# plot_rts(data_to_fit)
 #%%
 
 # Create a parameter estimation composition to fit the data we just generated and hopefully recover the
@@ -85,10 +94,10 @@ decisionGate = comp.nodes["DECISION_GATE"]
 responseGate = comp.nodes["RESPONSE_GATE"]
 
 fit_parameters = {
-    ("gain", controlModule): np.linspace(1.0, 10.0, 1000),  # Gain
-    ("slope", congruenceWeighting): np.linspace(0.0, 0.1, 1000),  # Automaticity
+    # ("gain", controlModule): np.linspace(1.0, 10.0, 1000),  # Gain
+    # ("slope", congruenceWeighting): np.linspace(0.0, 0.1, 1000),  # Automaticity
     ("threshold", decisionMaker): np.linspace(0.01, 0.5, 1000),  # Threshold
-    ("non_decision_time", decisionMaker): np.linspace(0.1, 0.4, 1000),  # Threshold
+    # ("non_decision_time", decisionMaker): np.linspace(0.1, 0.4, 1000),  # Threshold
 }
 
 pec = pnl.ParameterEstimationComposition(
