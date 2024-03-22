@@ -16,7 +16,7 @@ set_global_seed(pnl_seed)
 trial_seq_seed = 0
 
 # High-level parameters the impact performance of the test
-num_trials = 240
+num_trials = 50
 time_step_size = 0.01
 num_estimates = 1000
 
