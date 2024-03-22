@@ -848,6 +848,9 @@ class ParameterEstimationComposition(Composition):
         if self.results is not None:
             self.results.clear()
 
+        # Turn off any warnings about running with no inputs, this is expected behavior for the PEC
+        self.warned_about_run_with_no_inputs = True
+
         context = kwargs.get("context", None)
         self._assign_execution_ids(context)
 
