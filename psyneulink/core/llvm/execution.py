@@ -114,16 +114,13 @@ class Execution:
         return struct
 
 
-    def writeback_params_to_pnl(self, params=None, ids:Optional[str]=None, condition:Callable=lambda p: True):
+    def writeback_state_to_pnl(self, condition:Callable=lambda p: True):
 
-        assert (params is None) == (ids is None), "Either both 'params' and 'ids' have to be set or neither"
-
-        if params is None:
-            # Default to stateful params
-            params = self._state_struct
-            ids = "llvm_state_ids"
-
-        self._copy_params_to_pnl(self._execution_contexts[0], self._obj, params, ids, condition)
+        self._copy_params_to_pnl(self._execution_contexts[0],
+                                 self._obj,
+                                 self._state_struct,
+                                 "llvm_state_ids",
+                                 condition)
 
 
     def _copy_params_to_pnl(self, context, component, params, ids:str, condition:Callable):
