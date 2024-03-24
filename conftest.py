@@ -235,11 +235,25 @@ def get_mech_execution(mech, mech_mode):
 
 @pytest.helpers.register
 def numpy_uses_avx512():
-    out = io.StringIO()
-    with contextlib.redirect_stdout(out):
-        np.show_config()
 
-    return re.search('  found = .*AVX512.*', out.getvalue()) is not None
+    try:
+        # numpy >= 1.26 can return config info in a dictionary
+        config = np.show_config(mode="dicts")
+
+    except TypeError:
+        # Numpy >=1.21 < 1.26 doesn't support 'mode' argument and
+        # prints CPU extensions in one line per category:
+        # baseline = ...
+        # found = ...
+        # not found = ...
+        out = io.StringIO()
+
+        with contextlib.redirect_stdout(out):
+            np.show_config()
+
+        return re.search('  found = .*AVX512.*', out.getvalue()) is not None
+    else:
+        return any(ext.startswith("AVX512") for ext in config['SIMD Extensions']['found'])
 
 @pytest.helpers.register
 def expand_np_ndarray(arr):
