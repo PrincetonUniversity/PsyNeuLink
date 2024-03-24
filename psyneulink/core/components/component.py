@@ -1366,6 +1366,10 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         if hasattr(self.parameters, 'duplicate_keys'):
             blacklist.add("previous_value")
 
+        # Matrices of learnable projections are stateful
+        if getattr(self, 'owner', None) and getattr(self.owner, 'learnable', False):
+            whitelist.add('matrix')
+
         def _is_compilation_state(p):
             # FIXME: This should use defaults instead of 'p.get'
             return p.name not in blacklist and \
@@ -1388,7 +1392,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     def _get_state_initializer(self, context):
         def _convert(p):
             x = p.get(context)
-            if isinstance(x, np.random.RandomState):
+            if p.name == 'matrix': # Flatten matrix
+                val = tuple(np.asfarray(x).flatten())
+            elif isinstance(x, np.random.RandomState):
                 # Skip first element of random state (id string)
                 val = pnlvm._tupleize((*x.get_state()[1:], x.used_seed[0]))
             elif isinstance(x, np.random.Generator):
@@ -1489,6 +1495,10 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 blacklist.add('adjustment_cost_fct')
             if cost_functions.DURATION not in cost_functions:
                 blacklist.add('duration_cost_fct')
+
+        # Matrices of learnable projections are stateful
+        if getattr(self, 'owner', None) and getattr(self.owner, 'learnable', False):
+            blacklist.add('matrix')
 
         def _is_compilation_param(p):
             return p.name not in blacklist and self._is_compilable_param(p)

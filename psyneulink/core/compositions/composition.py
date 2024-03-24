@@ -11251,10 +11251,8 @@ _
                     self.parameters.results._set(results, context)
 
                     if self._is_learning(context):
-                        # copies back matrix to pnl from param struct (after learning)
-                        _comp_ex.writeback_params_to_pnl(params=_comp_ex._param_struct,
-                                                         ids="llvm_param_ids",
-                                                         condition=lambda p: p.name == "matrix")
+                        # copies back matrix to pnl from state struct after learning
+                        _comp_ex.writeback_params_to_pnl(condition=lambda p: p.name == "matrix")
 
                     self._propagate_most_recent_context(context)
 

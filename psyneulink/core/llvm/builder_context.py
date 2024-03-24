@@ -479,6 +479,8 @@ class LLVMBuilderContext:
                 return self.get_state_struct_type(val)
             if isinstance(val, ContentAddressableList):
                 return ir.LiteralStructType(self.get_state_struct_type(x) for x in val)
+            if p.name == 'matrix':   # Flatten matrix
+                val = np.asfarray(val).flatten()
             struct = self.convert_python_struct_to_llvm_ir(val)
             return ir.ArrayType(struct, p.history_min_length + 1)
 
