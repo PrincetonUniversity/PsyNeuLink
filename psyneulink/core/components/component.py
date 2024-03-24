@@ -1431,11 +1431,11 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "learning_results", "learning_signal", "learning_signals",
                      "error_matrix", "error_signal", "activation_input",
                      "activation_output", "error_sources", "covariates_sources",
-                     "target", "sample",
+                     "target", "sample", "learning_function"
                      }
         # Mechanism's need few extra entries:
         # * matrix -- is never used directly, and is flatened below
-        # * integration rate -- shape mismatch with param port input
+        # * integration_rate -- shape mismatch with param port input
         # * initializer -- only present on DDM and never used
         # * search_space -- duplicated between OCM and its function
         if hasattr(self, 'ports'):
@@ -1479,7 +1479,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 # FIXME: this should use defaults
                 val = p.get()
                 # Check if the value type is valid for compilation
-                return not isinstance(val, (str, ComponentsMeta,
+                return not isinstance(val, (str,
                                             type(max),
                                             type(np.sum),
                                             type(_is_compilation_param),
