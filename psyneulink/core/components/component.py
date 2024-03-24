@@ -1292,6 +1292,27 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     # ------------------------------------------------------------------------------------------------------------------
     # Compilation support
     # ------------------------------------------------------------------------------------------------------------------
+    def _is_compilable_param(self, p):
+
+        # User only parameters are not compiled.
+        if p.read_only and p.getter is not None:
+            return False
+
+        # Shared and aliased parameters are for user conveniecne and not compiled.
+        if isinstance(p, (ParameterAlias, SharedParameter)):
+            return False
+
+        # TODO this should use default value
+        val = p.get()
+
+        # Strings, builtins, functions, and methods are not compilable
+        return not isinstance(val, (str,
+                                    type(max),
+                                    type(np.sum),
+                                    type(make_parameter_property),
+                                    type(self._get_compilation_params)))
+
+
     def _get_compilation_state(self):
         # FIXME: MAGIC LIST, Use stateful tag for this
         whitelist = {"previous_time", "previous_value", "previous_v",
@@ -1299,23 +1320,27 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "input_ports", "output_ports",
                      "adjustment_cost", "intensity_cost", "duration_cost",
                      "intensity"}
+
         # Prune subcomponents (which are enabled by type rather than a list)
         # that should be omitted
         blacklist = { "objective_mechanism", "agent_rep", "projections", "shadow_inputs"}
 
-        # Only mechanisms use "value" state, can execute 'until finished',
-        # and need to track executions
+        # Mechanisms;
+        # * use "value" state
+        # * can execute 'until finished'
+        # * need to track number of executions
         if hasattr(self, 'ports'):
             whitelist.update({"value", "num_executions_before_finished",
                               "num_executions", "is_finished_flag"})
 
-            # If both the mechanism and its functoin use random_state it's DDM
-            # with integrator function. The mechanism's random_state is not used.
+            # If both the mechanism and its function use random_state.
+            # it's DDM with integrator function.
+            # The mechanism's random_state is not used.
             if hasattr(self.parameters, 'random_state') and hasattr(self.function.parameters, 'random_state'):
                 whitelist.remove('random_state')
 
 
-        # Only mechanisms and compositions need 'num_executions'
+        # Compositions need to track number of executions
         if hasattr(self, 'nodes'):
             whitelist.add("num_executions")
 
@@ -1344,8 +1369,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         def _is_compilation_state(p):
             # FIXME: This should use defaults instead of 'p.get'
             return p.name not in blacklist and \
-                   not isinstance(p, (ParameterAlias, SharedParameter)) and \
-                   (p.name in whitelist or isinstance(p.get(), Component))
+                   (p.name in whitelist or isinstance(p.get(), Component)) and \
+                   self._is_compilable_param(p)
 
         return filter(_is_compilation_state, self.parameters)
 
@@ -1466,25 +1491,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 blacklist.add('duration_cost_fct')
 
         def _is_compilation_param(p):
-            def _is_user_only_param(p):
-                if p.read_only and p.getter is not None:
-                    return True
-                if isinstance(p, (ParameterAlias, SharedParameter)):
-                    return True
-
-                return False
-
-
-            if p.name not in blacklist and not _is_user_only_param(p):
-                # FIXME: this should use defaults
-                val = p.get()
-                # Check if the value type is valid for compilation
-                return not isinstance(val, (str,
-                                            type(max),
-                                            type(np.sum),
-                                            type(_is_compilation_param),
-                                            type(self._get_compilation_params)))
-            return False
+            return p.name not in blacklist and self._is_compilable_param(p)
 
         return filter(_is_compilation_param, self.parameters)
 
