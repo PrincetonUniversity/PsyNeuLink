@@ -1362,7 +1362,6 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
     def _get_state_initializer(self, context):
         def _convert(p):
-            # FIXME: This should use defaults instead of 'p.get'
             x = p.get(context)
             if isinstance(x, np.random.RandomState):
                 # Skip first element of random state (id string)
