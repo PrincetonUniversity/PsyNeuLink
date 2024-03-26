@@ -199,7 +199,7 @@ def get_func_execution(func, func_mode, *, writeback:bool=True):
         # with numpy instances that share memory with the binary
         # structure used by the compiled function
         if writeback:
-            ex.writeback_params_to_pnl()
+            ex.writeback_state_to_pnl()
 
         return ex.execute
 
@@ -210,7 +210,7 @@ def get_func_execution(func, func_mode, *, writeback:bool=True):
         # with numpy instances that share memory with the binary
         # structure used by the compiled function
         if writeback:
-            ex.writeback_params_to_pnl()
+            ex.writeback_state_to_pnl()
 
         return ex.cuda_execute
 
