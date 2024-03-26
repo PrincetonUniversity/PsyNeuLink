@@ -146,7 +146,6 @@ Dependencies that are automatically installed (except those noted as optional) i
    * pillow
    * llvmlite
    * mpi4py (optional)
-   * autograd (optional)
 
 Lists of required packages for PsyNeuLink, developing PsyNeuLink, and running the PsyNeuLink tutorial are also
 stored in pip-style `requirements.txt`, `dev_requirements.txt`, and `tutorial_requirements.txt` in the source code.

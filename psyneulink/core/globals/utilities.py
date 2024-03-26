@@ -123,6 +123,12 @@ from itertools import chain, combinations
 
 import numpy as np
 
+# Conditionally import torch
+try:
+    import torch
+except ImportError:
+    torch = None
+
 from psyneulink.core.globals.keywords import \
     comparison_operators, DISTANCE_METRICS, EXPONENTIAL, GAUSSIAN, LINEAR, MATRIX_KEYWORD_VALUES, NAME, SINUSOID, VALUE
 
@@ -619,17 +625,7 @@ def iscompatible(candidate, reference=None, **kargs):
                         else:
                             return True
                 else:
-                    if not is_number(value):
-                        try:
-                            # True for autograd ArrayBox (and maybe other types?)
-                            # if isinstance(value._value, Number):
-                            from autograd.numpy.numpy_boxes import ArrayBox
-                            if isinstance(value, ArrayBox):
-                                return True
-                        except:
-                            return False
-                    else:
-                        return True
+                    return is_number(value)
             # Test copy since may need to convert matrix to array (see above)
             if not recursively_check_elements_for_numeric(candidate.copy()):
                 return False
@@ -1050,10 +1046,29 @@ def convert_to_np_array(value, dimension=None):
                 else:
                     raise
 
+            except RuntimeError as e:
+
+                # If we get a RuntimeError, it is probably because we are trying to convert a torch tensor.
+                # We can't convert to a numpy array without breaking pytorch autograd, so we need to return the
+                # original value
+                if "call numpy() on Tensor" in str(e) and torch:
+                    return value
+                else:
+                    raise e
+
     value = safe_create_np_array(value)
 
     if dimension == 1:
-        value = np.atleast_1d(value)
+        try:
+            value = np.atleast_1d(value)
+        except RuntimeError as e:
+            # If we get a RuntimeError, this is probably a BatchedTensorImpl from torch\vmap
+            # We can't convert to a numpy array and use np.atleast_2d, so we need to use
+            # torch's atleast_2d function instead
+            if torch:
+                value = torch.atleast_1d(value)
+            else:
+                raise e
     elif dimension == 2:
         # Array is made up of non-uniform elements, so treat as 2d array and pass
         if (
@@ -1063,7 +1078,17 @@ def convert_to_np_array(value, dimension=None):
         ):
             pass
         else:
-            value = np.atleast_2d(value)
+            try:
+                value = np.atleast_2d(value)
+            except RuntimeError as e:
+                # If we get a RuntimeError, this is probably a BatchedTensorImpl from torch\vmap
+                # We can't convert to a numpy array and use np.atleast_2d, so we need to use
+                # torch's atleast_2d function instead
+                if torch:
+                    value = torch.atleast_2d(value)
+                else:
+                    raise e
+
     elif dimension is not None:
         raise UtilitiesError("dimension param ({0}) must be None, 1, or 2".format(dimension))
 
