@@ -4264,6 +4264,93 @@ class TestRun:
             warnings.simplefilter("error")
             comp.run()
 
+    def _check_comp_ex(self, comp, comparison, comp_mode, context=None, is_not=False):
+        if comp_mode == pnl.ExecutionMode.Python:
+            return
+
+        if context is None:
+            context = comp
+
+        comp_ex = comp._compilation_data.execution.get(context)
+        if is_not:
+            assert comp_ex is not comparison
+        else:
+            assert comp_ex is comparison
+
+    @pytest.mark.composition
+    def test_multiple_runs_with_parameter_change(self, comp_mode):
+        A = TransferMechanism(size=2)
+        comp = Composition([A])
+
+        inputs_dict = {A: [1, 1]}
+        output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
+        np.testing.assert_allclose([[1, 1]], output)
+        orig_comp_ex = comp._compilation_data.execution.get(comp)
+
+        # assign int to float, can reuse compilation
+        A.function.slope.base = 2
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode)
+
+        output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
+        np.testing.assert_allclose([[2, 2]], output)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode)
+
+        # assign float to float, can reuse compilation
+        A.function.slope.base = 2.1
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode)
+
+        output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
+        np.testing.assert_allclose([[2.1, 2.1]], output)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode)
+
+        # assign array with len 2 to float, must recompile
+        A.function.intercept.base = [3, 3]
+        self._check_comp_ex(comp, None, comp_mode)
+        # vectorized intercept not supported in LLVM modes
+        A.function.intercept.base = 3
+
+        output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
+        np.testing.assert_allclose([[5.1, 5.1]], output)
+        self._check_comp_ex(comp, None, comp_mode, is_not=True)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, is_not=True)
+
+    @pytest.mark.composition
+    def test_multiple_runs_with_parameter_change_arr(self, comp_mode):
+        A = TransferMechanism(size=2, integrator_mode=True)
+        comp = Composition([A])
+
+        inputs_dict = {A: [1, 1]}
+        output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
+        np.testing.assert_allclose([[0.5, 0.5]], output)
+        orig_comp_ex = comp._compilation_data.execution.get(comp)
+
+        # assign int to float, can reuse compilation
+        A.integrator_function.previous_value = [[1, 1]]
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode)
+
+        output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
+        np.testing.assert_allclose([[1.0, 1.0]], output)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode)
+
+        # assign float to float, can reuse compilation
+        A.integrator_function.previous_value = [[1.1, 1.1]]
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode)
+
+        output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
+        np.testing.assert_allclose([[1.05, 1.05]], output)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode)
+
+        # assign array with extra dim, must recompile
+        A.integrator_function.previous_value = [[[1.1, 1.1]]]
+        self._check_comp_ex(comp, None, comp_mode)
+        A.integrator_function.previous_value = [[1.1, 1.1]]
+
+        output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
+        np.testing.assert_allclose([[1.05, 1.05]], output)
+        self._check_comp_ex(comp, None, comp_mode, is_not=True)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, is_not=True)
+
+
 class TestCallBeforeAfterTimescale:
 
     def test_call_before_record_timescale(self):

@@ -13165,6 +13165,9 @@ _
         else:
             return pnlvm.codegen.gen_composition_exec(ctx, self, tags=tags)
 
+    def _delete_compilation_data(self, context):
+        self._compilation_data.execution.delete(context)
+
     def enable_logging(self):
         for item in self.nodes + self.projections:
             if isinstance(item, Composition):

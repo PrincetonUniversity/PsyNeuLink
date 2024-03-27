@@ -517,6 +517,12 @@ def is_array_like(obj: typing.Any) -> bool:
     return hasattr(obj, 'dtype')
 
 
+# used in Parameter._set_value. Parameter names where a change in
+# shape/type should cause deletion of corresponding compiled structs
+# even if the values are not synced
+addl_unsynced_parameter_names = {'value'}
+
+
 class ParametersTemplate:
     _deepcopy_shared_keys = ['_parent', '_params', '_owner_ref', '_children']
     _values_default_excluded_attrs = {'user': False}
@@ -1025,6 +1031,7 @@ class Parameter(ParameterBase):
         _inherited_source=None,
         _user_specified=False,
         _scalar_converted=False,
+        _tracking_compiled_struct=False,
         **kwargs
     ):
         if isinstance(aliases, str):
@@ -1087,6 +1094,7 @@ class Parameter(ParameterBase):
             _user_specified=_user_specified,
             _temp_uninherited=set(),
             _scalar_converted=_scalar_converted,
+            _tracking_compiled_struct=_tracking_compiled_struct,
             **kwargs
         )
 
@@ -1530,6 +1538,7 @@ class Parameter(ParameterBase):
         skip_history=False,
         skip_log=False,
         skip_delivery=False,
+        compilation_sync=False,
         **kwargs,
     ):
         if not self.stateful:
@@ -1558,6 +1567,7 @@ class Parameter(ParameterBase):
             skip_history=skip_history,
             skip_log=skip_log,
             skip_delivery=skip_delivery,
+            compilation_sync=compilation_sync,
         )
         return value
 
@@ -1569,6 +1579,7 @@ class Parameter(ParameterBase):
         skip_history=False,
         skip_log=False,
         skip_delivery=False,
+        compilation_sync=False,
     ):
         value_is_array_like = is_array_like(value)
         # store history
@@ -1598,20 +1609,41 @@ class Parameter(ParameterBase):
                 self._deliver_value(value_for_log, context)
 
         value_updated = False
-        try:
-            update_array_in_place(self.values[execution_id], value)
-        except (KeyError, TypeError, ValueError):
-            # no self.values for execution_id
-            # failure during attempted update
-            pass
-        except RuntimeError:
-            # torch tensor
-            pass
-        else:
-            value_updated = True
+        if not compilation_sync:
+            try:
+                update_array_in_place(self.values[execution_id], value)
+            except (KeyError, TypeError, ValueError):
+                # no self.values for execution_id
+                # failure during attempted update
+                pass
+            except RuntimeError:
+                # torch tensor
+                pass
+            else:
+                value_updated = True
 
         if not value_updated:
             self.values[execution_id] = value
+
+            if compilation_sync:
+                self._tracking_compiled_struct = True
+            elif (
+                value_is_array_like
+                and (
+                    self._tracking_compiled_struct
+                    or self.name in addl_unsynced_parameter_names
+                )
+            ):
+                # recompilation is needed for arrays that could not be
+                # updated in place
+                try:
+                    owner_comps = self._owner._owner.compositions
+                except AttributeError:
+                    pass
+                else:
+                    for comp in owner_comps:
+                        comp._delete_compilation_data(context)
+                self._tracking_compiled_struct = False
 
     @handle_external_context()
     def delete(self, context=None):
