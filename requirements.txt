@@ -16,7 +16,7 @@ packaging<25.0
 pandas<2.2.2
 pillow<10.3.0
 pint<0.22.0
-protobuf<3.20.4
+protobuf<5.26.2
 rich>=10.1, <10.13
 scipy<1.12
 toposort<1.11
