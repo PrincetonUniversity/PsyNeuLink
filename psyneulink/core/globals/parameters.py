@@ -1489,6 +1489,7 @@ class Parameter(ParameterBase):
         context,
         skip_history=False,
         skip_log=False,
+        skip_delivery=False,
         **kwargs,
     ):
         if not self.stateful:
@@ -1516,6 +1517,7 @@ class Parameter(ParameterBase):
             context=context,
             skip_history=skip_history,
             skip_log=skip_log,
+            skip_delivery=skip_delivery,
         )
         return value
 
