@@ -1483,7 +1483,14 @@ class Parameter(ParameterBase):
 
         return value
 
-    def _set(self, value, context, skip_history=False, skip_log=False, **kwargs):
+    def _set(
+        self,
+        value,
+        context,
+        skip_history=False,
+        skip_log=False,
+        **kwargs,
+    ):
         if not self.stateful:
             execution_id = None
         else:
@@ -1503,10 +1510,24 @@ class Parameter(ParameterBase):
             }
             value = call_with_pruned_args(self.setter, value, context=context, **kwargs)
 
-        self._set_value(value, execution_id=execution_id, context=context, skip_history=skip_history, skip_log=skip_log)
+        self._set_value(
+            value,
+            execution_id=execution_id,
+            context=context,
+            skip_history=skip_history,
+            skip_log=skip_log,
+        )
         return value
 
-    def _set_value(self, value, execution_id=None, context=None, skip_history=False, skip_log=False, skip_delivery=False):
+    def _set_value(
+        self,
+        value,
+        execution_id=None,
+        context=None,
+        skip_history=False,
+        skip_log=False,
+        skip_delivery=False,
+    ):
         # store history
         if not skip_history:
             if execution_id in self.values:
