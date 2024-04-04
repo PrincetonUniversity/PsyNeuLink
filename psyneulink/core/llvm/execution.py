@@ -158,6 +158,14 @@ class Execution:
                                              ids=ids,
                                              condition=condition)
             else:
+                # TODO: Reconstruct Python RandomState
+                if attribute == "random_state":
+                    continue
+
+                # TODO: Reconstruct Python memory storage
+                if attribute == "ring_memory":
+                    continue
+
                 # Handle PNL parameters
                 pnl_param = getattr(component.parameters, attribute)
                 pnl_value = pnl_param.get(context=context)
@@ -182,10 +190,6 @@ class Execution:
 
                 # Writeback parameter value if the condition matches
                 elif condition(pnl_param):
-
-                    # TODO: Reconstruct Python RandomState
-                    if attribute == "random_state":
-                        continue
 
                     # Replace empty structures with None
                     if ctypes.sizeof(compiled_attribute_param) == 0:
