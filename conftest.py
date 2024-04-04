@@ -191,15 +191,14 @@ def cuda_param(val):
     return pytest.param(val, marks=[pytest.mark.llvm, pytest.mark.cuda])
 
 @pytest.helpers.register
-def get_func_execution(func, func_mode, *, writeback:bool=True):
+def get_func_execution(func, func_mode):
     if func_mode == 'LLVM':
         ex = pnlvm.execution.FuncExecution(func)
 
         # Calling writeback here will replace parameter values
         # with numpy instances that share memory with the binary
         # structure used by the compiled function
-        if writeback:
-            ex.writeback_state_to_pnl()
+        ex.writeback_state_to_pnl()
 
         return ex.execute
 
@@ -209,8 +208,7 @@ def get_func_execution(func, func_mode, *, writeback:bool=True):
         # Calling writeback here will replace parameter values
         # with numpy instances that share memory with the binary
         # structure used by the compiled function
-        if writeback:
-            ex.writeback_state_to_pnl()
+        ex.writeback_state_to_pnl()
 
         return ex.cuda_execute
 

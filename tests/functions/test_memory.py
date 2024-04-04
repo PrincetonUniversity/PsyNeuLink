@@ -144,9 +144,7 @@ def test_basic(func, variable, params, expected, benchmark, func_mode):
     if variable is philox_var:
         f.parameters.random_state.set(_SeededPhilox([module_seed]))
 
-    # Do not allow writeback. "ring_memory" used by DictionaryMemory is a
-    # custom structure, not a PNL parameter
-    EX = pytest.helpers.get_func_execution(f, func_mode, writeback=False)
+    EX = pytest.helpers.get_func_execution(f, func_mode)
 
     EX(variable)
 
