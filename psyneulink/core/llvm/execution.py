@@ -213,7 +213,7 @@ class Execution:
                         if hasattr(old_value, 'shape'):
                             value = value.reshape(old_value.shape)
 
-                    pnl_param.set(value, context=context)
+                    pnl_param.set(value, context=context, override=True)
 
 
 class CUDAExecution(Execution):

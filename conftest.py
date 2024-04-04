@@ -220,9 +220,25 @@ def get_func_execution(func, func_mode):
 @pytest.helpers.register
 def get_mech_execution(mech, mech_mode):
     if mech_mode == 'LLVM':
-        return pnlvm.execution.MechExecution(mech).execute
+        ex = pnlvm.execution.MechExecution(mech)
+
+        # Calling writeback here will replace parameter values
+        # with numpy instances that share memory with the binary
+        # structure used by the compiled function
+        ex.writeback_state_to_pnl()
+
+        return ex.execute
+
     elif mech_mode == 'PTX':
-        return pnlvm.execution.MechExecution(mech).cuda_execute
+        ex = pnlvm.execution.MechExecution(mech)
+
+        # Calling writeback here will replace parameter values
+        # with numpy instances that share memory with the binary
+        # structure used by the compiled function
+        ex.writeback_state_to_pnl()
+
+        return ex.cuda_execute
+
     elif mech_mode == 'Python':
         def mech_wrapper(x):
             mech.execute(x)
