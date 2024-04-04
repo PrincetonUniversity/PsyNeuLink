@@ -166,6 +166,13 @@ class Execution:
                 if attribute == "ring_memory":
                     continue
 
+                # "old_val" is a helper storage in compiled RecurrentTransferMechanism
+                # to workaround the fact that compiled projections do no pull values
+                # from their source output ports
+                # recurrent projection of RTM is not a PNL parameter.
+                if attribute in {"old_val", "recurrent_projection"}:
+                    continue
+
                 # Handle PNL parameters
                 pnl_param = getattr(component.parameters, attribute)
                 pnl_value = pnl_param.get(context=context)
