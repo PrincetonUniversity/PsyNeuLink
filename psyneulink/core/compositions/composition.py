@@ -12212,7 +12212,7 @@ _
                         if clamp_input:
                             if node in hard_clamp_inputs:
                                 # clamp = HARD_CLAMP --> "turn off" recurrent projection
-                                if hasattr(node, "recurrent_projection"):
+                                if node.recurrent_projection is not None:
                                     node.recurrent_projection.sender.parameters.value._set([0.0], context)
                             elif node in no_clamp_inputs:
                                 for input_port in node.input_ports:

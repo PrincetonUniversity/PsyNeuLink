@@ -181,7 +181,6 @@ Class Reference
 """
 
 import copy
-import itertools
 import numbers
 import types
 import warnings
@@ -275,7 +274,7 @@ def _recurrent_transfer_mechanism_matrix_setter(value, owning_component=None, co
     # the existing behavior. Unsure if this is actually correct though
     # KDM 8/7/18: removing the below because it has bad side effects for _instantiate_from_context, and it's not clear
     # that it's the correct behavior. Similar reason for removing/not implementing auto/hetero setters
-    # if hasattr(owning_component, "recurrent_projection"):
+    # if owning_component.recurrent_projection is not None:
     #     owning_component.recurrent_projection.parameter_ports["matrix"].function.parameters.previous_value._set(value, base_execution_id)
 
     try:
@@ -636,6 +635,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             read_only=True,
             structural=True,
         )
+        recurrent_projection = Parameter(None, stateful=False, loggable=False, structural=True)
 
     standard_output_ports = TransferMechanism.standard_output_ports.copy()
     standard_output_ports.extend([{NAME:ENERGY_OUTPUT_PORT_NAME}, {NAME:ENTROPY_OUTPUT_PORT_NAME}])
@@ -1014,7 +1014,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         # KDM 10/12/18: removing below because it doesn't seem to be correct, and also causes
         # unexpected values to be set to previous_value
         # KDM 7/1/19: reinstating below
-        if hasattr(self, "recurrent_projection"):
+        if self.recurrent_projection is not None:
             self.recurrent_projection.parameter_ports["matrix"].function.previous_value = val
             self.recurrent_projection.parameter_ports["matrix"].function.reset = val
 
@@ -1028,7 +1028,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     def auto(self, val):
         self.parameters.auto._set(val, self.most_recent_context)
 
-        if hasattr(self, "recurrent_projection") and 'hetero' in self._parameter_ports:
+        if self.recurrent_projection is not None and 'hetero' in self._parameter_ports:
             self.recurrent_projection.parameter_ports["matrix"].function.previous_value = self.matrix
 
     @property
@@ -1039,7 +1039,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     def hetero(self, val):
         self.parameters.hetero._set(val, self.most_recent_context)
 
-        if hasattr(self, "recurrent_projection") and 'auto' in self._parameter_ports:
+        if self.recurrent_projection is not None and 'auto' in self._parameter_ports:
             self.recurrent_projection.parameter_ports["matrix"].function.previous_value = self.matrix_param
 
     @property
@@ -1356,10 +1356,3 @@ class RecurrentTransferMechanism(TransferMechanism):
         prev_val_ptr = ctx.get_param_or_state_ptr(builder, self, "old_val", state_struct_ptr=mech_state)
         builder.store(builder.load(mech_out), prev_val_ptr)
         return ret
-
-    @property
-    def _dependent_components(self):
-        return list(itertools.chain(
-            super()._dependent_components,
-            [self.recurrent_projection],
-        ))
