@@ -876,6 +876,11 @@ def copy_iterable_with_shared(obj, shared_types=None, memo=None):
     tuple_types = (tuple, set, weakref.WeakSet)
     all_types_using_recursion = dict_types + list_types + tuple_types
 
+    # ContentAddressableList
+    cal_component_type = getattr(obj, 'component_type', None)
+    if cal_component_type and issubclass(cal_component_type, shared_types):
+        return copy.copy(obj)
+
     if isinstance(obj, dict_types):
         result = copy.copy(obj)
         del_keys = set()
