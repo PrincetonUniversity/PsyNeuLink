@@ -1243,36 +1243,21 @@ class RecurrentTransferMechanism(TransferMechanism):
         """
         return self.output_port
 
-    def _get_param_ids(self):
-        return super()._get_param_ids() + ["recurrent_projection"]
-
-    def _get_param_struct_type(self, ctx):
-        transfer_t = ctx.get_param_struct_type(super())
-        projection_t = ctx.get_param_struct_type(self.recurrent_projection)
-        return pnlvm.ir.LiteralStructType([*transfer_t.elements, projection_t])
-
     def _get_state_ids(self):
-        return super()._get_state_ids() + ["old_val", "recurrent_projection"]
+        return super()._get_state_ids() + ["old_val"]
 
     def _get_state_struct_type(self, ctx):
         transfer_t = ctx.get_state_struct_type(super())
-        projection_t = ctx.get_state_struct_type(self.recurrent_projection)
         return_t = ctx.get_output_struct_type(self)
-        return pnlvm.ir.LiteralStructType([*transfer_t.elements, return_t, projection_t])
-
-    def _get_param_initializer(self, context):
-        transfer_params = super()._get_param_initializer(context)
-        projection_params = self.recurrent_projection._get_param_initializer(context)
-        return (*transfer_params, projection_params)
+        return pnlvm.ir.LiteralStructType([*transfer_t.elements, return_t])
 
     def _get_state_initializer(self, context):
         transfer_init = super()._get_state_initializer(context)
-        projection_init = self.recurrent_projection._get_state_initializer(context)
 
         # Initialize to OutputPort defaults.
         # That is what the recurrent projection finds.
         retval_init = (tuple(op.parameters.value.get(context)) if not np.isscalar(op.parameters.value.get(context)) else op.parameters.value.get(context) for op in self.output_ports)
-        return (*transfer_init, tuple(retval_init), projection_init)
+        return (*transfer_init, tuple(retval_init))
 
     def _gen_llvm_function_reset(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "reset" in tags
