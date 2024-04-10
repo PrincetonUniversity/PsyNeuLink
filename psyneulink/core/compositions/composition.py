@@ -13052,12 +13052,21 @@ _
 
     @property
     def _inner_projections(self):
-        # PNL considers afferent projections to input_CIM to be part
-        # of the nested composition. Filter them out.
+        # Filter out projections not used in compiled variant of this composition:
+        # * afferent projections to input_CIM and parameter_CIM.
+        #   These are included in node wrapper of the nested composition node,
+        #   and included in outer composition
+        # * efferent projections from output_CIM.
+        #   Same as above, they are considered part of the outer composition,
+        #   and are executed in node wrappers of the receiving nodes
+        # * Autoassociative projections (RTM, LCA)
+        #   These are executed as part of their respective mechanism and are
+        #   included in the compiled structures of their respective mechanisms.
         return (p for p in self.projections
-                  if p.receiver.owner is not self.input_CIM and
-                     p.receiver.owner is not self.parameter_CIM and
-                     p.sender.owner is not self.output_CIM)
+                if p.receiver.owner is not self.input_CIM and
+                   p.receiver.owner is not self.parameter_CIM and
+                   p.sender.owner is not self.output_CIM and
+                   p.sender.owner is not p.receiver.owner)
 
     def _get_param_ids(self):
         return ["nodes", "projections"] + super()._get_param_ids()
