@@ -151,7 +151,7 @@ __all__ = [
     'scalar_distance', 'sinusoid',
     'tensor_power', 'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy', 'create_union_set', 'merge_dictionaries',
-    'contains_type', 'is_numeric_scalar', 'try_extract_0d_array_item', 'fill_array',
+    'contains_type', 'is_numeric_scalar', 'try_extract_0d_array_item', 'fill_array', 'update_array_in_place',
 ]
 
 logger = logging.getLogger(__name__)
@@ -2283,4 +2283,94 @@ def extended_array_equal(a, b, equal_nan: bool = False) -> bool:
 
     return _extended_array_compare(
         a, b, functools.partial(np.array_equal, equal_nan=equal_nan)
+    )
+
+
+def _check_array_attr_equiv(a, b, attr):
+    err_msg = '{0} is not a numpy.ndarray'
+
+    try:
+        a_val = getattr(a, attr)
+    except AttributeError:
+        raise ValueError(err_msg.format(a))
+
+    try:
+        b_val = getattr(b, attr)
+    except AttributeError:
+        raise ValueError(err_msg.format(b))
+
+    if a_val != b_val:
+        raise ValueError(f'{attr}s {a_val} and {b_val} differ')
+
+
+def _update_array_in_place(
+    target: np.ndarray,
+    source: np.ndarray,
+    casting: Literal['no', 'equiv', 'safe', 'same_kind', 'unsafe'],
+    _dry_run: bool,
+    _in_object_dtype: bool,
+):
+    # enforce dtype equivalence when recursing in an object-dtype target
+    # array, because we won't know if np.copyto will succeed on every
+    # element until we try
+    if _in_object_dtype:
+        _check_array_attr_equiv(target, source, 'dtype')
+
+    # enforce shape equivalence so that we know when the python-side
+    # values become incompatible with compiled structs
+    _check_array_attr_equiv(target, source, 'shape')
+
+    if target.dtype == object:
+        len_target = len(target)
+        len_source = len(source)
+
+        if len_source != len_target:
+            raise ValueError(f'lengths {len_target} and {len_source} differ')
+
+        # check all elements before update to avoid partial update
+        if not _dry_run:
+            for i in range(len_target):
+                _update_array_in_place(
+                    target[i],
+                    source[i],
+                    casting=casting,
+                    _dry_run=True,
+                    _in_object_dtype=True,
+                )
+
+        for i in range(len_target):
+            _update_array_in_place(
+                target[i],
+                source[i],
+                casting=casting,
+                _dry_run=_dry_run,
+                _in_object_dtype=True,
+            )
+    else:
+        np.broadcast(source, target)  # only here to throw error if broadcast fails
+        if not _dry_run:
+            np.copyto(target, source, casting=casting)
+
+
+def update_array_in_place(
+    target: np.ndarray,
+    source: np.ndarray,
+    casting: Literal['no', 'equiv', 'safe', 'same_kind', 'unsafe'] = 'same_kind',
+):
+    """
+    Copies the values in **source** to **target**, supporting ragged
+    object-dtype arrays.
+
+    Args:
+        target (numpy.ndarray): array receiving values
+        source (numpy.ndarray): array providing values
+        casting (Literal["no", "equiv", "safe", "same_kind", "unsafe"],
+            optional): See `numpy.copyto`. Defaults to 'same_kind'.
+    """
+    _update_array_in_place(
+        target=target,
+        source=source,
+        casting=casting,
+        _dry_run=False,
+        _in_object_dtype=False
     )
