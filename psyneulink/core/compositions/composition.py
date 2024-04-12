@@ -11271,11 +11271,6 @@ _
 
                     # Update the parameter for results
                     self.parameters.results._set(convert_to_np_array(results), context)
-
-                    if self._is_learning(context):
-                        # copies back matrix to pnl from state struct after learning
-                        _comp_ex.writeback_state_to_pnl(condition=lambda p: p.name == "matrix")
-
                     self._propagate_most_recent_context(context)
 
                     report(self,
