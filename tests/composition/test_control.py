@@ -1843,11 +1843,8 @@ class TestControlMechanisms:
     @pytest.mark.pytorch
     def test_lvoc_features_function(self):
 
-        # Skip if pytorch is not available. For some reason the pytest.mark.pytorch is not working as expected for this
-        # test, so we are checking for the availability of torch here and skipping the test if it is not available.
-        from psyneulink import torch_available
-        if not torch_available:
-            pytest.skip("Pytorch is not installed")
+
+
 
         m1 = pnl.TransferMechanism(input_ports=["InputPort A", "InputPort B"])
         m2 = pnl.TransferMechanism()
@@ -1855,13 +1852,28 @@ class TestControlMechanisms:
         c.add_node(m1, required_roles=pnl.NodeRole.INPUT)
         c.add_node(m2, required_roles=pnl.NodeRole.INPUT)
         c._analyze_graph()
-        lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.RegressionCFA,
+
+
+        ocm_kwargs = dict(agent_rep=pnl.RegressionCFA,
                                                 state_features=[m1.input_ports[0], m1.input_ports[1], m2.input_port, m2],
                                                 state_feature_function=pnl.LinearCombination(offset=10.0),
                                                 objective_mechanism=pnl.ObjectiveMechanism(
                                                     monitor=[m1, m2]),
                                                 function=pnl.GradientOptimization(max_iterations=1),
                                                 control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
+
+        try:
+            from torch.func import grad
+            lvoc = pnl.OptimizationControlMechanism(**ocm_kwargs)
+
+        # If pytorch is too old (< 2.0), GradientOptimization will raise an error to upgrade pytorch to have support for
+        # torch.func.grad.
+        except ImportError:
+            with pytest.raises(ValueError):
+                lvoc = pnl.OptimizationControlMechanism(**ocm_kwargs)
+
+            return
+
         c.add_node(lvoc)
         input_dict = {m1: [[1], [1]], m2: [1]}
 

@@ -32,12 +32,16 @@ from numbers import Number
 
 import numpy as np
 
-# Conditionally import torch
 try:
     import torch
-    from torch.func import grad
 except ImportError:
     torch = None
+
+# Conditionally import torch, this is a bit more strict than the usual conditional import of pytorch. This is because
+# GradientOptimization needs torch.func.grad, which is not available in pytorch versions less than 2.0.0.
+try:
+    from torch.func import grad
+except ImportError:
     grad = None
 
 from beartype import beartype
@@ -1265,8 +1269,8 @@ class GradientOptimization(OptimizationFunction):
                                  "specifying a gradient_function.")
 
             if grad is None:
-                raise ValueError("PyTorch version is too old. Please upgrade PyTorch to use GradientOptimization without "
-                                 "specifying a gradient_function.")
+                raise ValueError("PyTorch version is too old. Please upgrade PyTorch to >= 2.0 to use "
+                                 "GradientOptimization without specifying a gradient_function.")
 
             try:
                 # Need to wrap objective_function in a lambda to pass to grad because it needs to return a torch tensor
