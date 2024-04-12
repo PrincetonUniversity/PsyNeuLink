@@ -114,16 +114,13 @@ class Execution:
         return struct
 
 
-    def writeback_params_to_pnl(self, params=None, ids:Optional[str]=None, condition:Callable=lambda p: True):
+    def writeback_state_to_pnl(self, condition:Callable=lambda p: True):
 
-        assert (params is None) == (ids is None), "Either both 'params' and 'ids' have to be set or neither"
-
-        if params is None:
-            # Default to stateful params
-            params = self._state_struct
-            ids = "llvm_state_ids"
-
-        self._copy_params_to_pnl(self._execution_contexts[0], self._obj, params, ids, condition)
+        self._copy_params_to_pnl(self._execution_contexts[0],
+                                 self._obj,
+                                 self._state_struct,
+                                 "llvm_state_ids",
+                                 condition)
 
 
     def _copy_params_to_pnl(self, context, component, params, ids:str, condition:Callable):
@@ -161,6 +158,20 @@ class Execution:
                                              ids=ids,
                                              condition=condition)
             else:
+                # TODO: Reconstruct Python RandomState
+                if attribute == "random_state":
+                    continue
+
+                # TODO: Reconstruct Python memory storage
+                if attribute == "ring_memory":
+                    continue
+
+                # "old_val" is a helper storage in compiled RecurrentTransferMechanism
+                # to workaround the fact that compiled projections do no pull values
+                # from their source output ports
+                if attribute == "old_val":
+                    continue
+
                 # Handle PNL parameters
                 pnl_param = getattr(component.parameters, attribute)
                 pnl_value = pnl_param.get(context=context)
@@ -186,10 +197,6 @@ class Execution:
                 # Writeback parameter value if the condition matches
                 elif condition(pnl_param):
 
-                    # TODO: Reconstruct Python RandomState
-                    if attribute == "random_state":
-                        continue
-
                     # Replace empty structures with None
                     if ctypes.sizeof(compiled_attribute_param) == 0:
                         value = None
@@ -205,7 +212,7 @@ class Execution:
                         if hasattr(old_value, 'shape'):
                             value = value.reshape(old_value.shape)
 
-                    pnl_param.set(value, context=context)
+                    pnl_param.set(value, context=context, override=True)
 
 
 class CUDAExecution(Execution):

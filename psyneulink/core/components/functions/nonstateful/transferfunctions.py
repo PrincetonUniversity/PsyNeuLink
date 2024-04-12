@@ -3877,7 +3877,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             return np.array(specification)
 
 
-    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags:frozenset):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         # Restrict to 1d arrays
         if self.defaults.variable.ndim != 1:
             warnings.warn("Shape mismatch: {} (in {}) got 2D input: {}".format(
@@ -3890,7 +3890,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                           pnlvm.PNLCompilerWarning)
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-        matrix = ctx.get_param_or_state_ptr(builder, self, MATRIX, param_struct_ptr=params)
+        matrix = ctx.get_param_or_state_ptr(builder, self, MATRIX, param_struct_ptr=params, state_struct_ptr=state)
         normalize = ctx.get_param_or_state_ptr(builder, self, NORMALIZE, param_struct_ptr=params)
 
         # Convert array pointer to pointer to the fist element

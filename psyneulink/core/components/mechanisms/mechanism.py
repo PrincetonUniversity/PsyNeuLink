@@ -2836,34 +2836,50 @@ class Mechanism_Base(Mechanism):
     def _get_param_ids(self):
         if len(self._parameter_ports) == 0:
             return super()._get_param_ids()
+
         # FIXME: parameter ports should be part of generated params
         return ["_parameter_ports"] + super()._get_param_ids()
 
     def _get_param_struct_type(self, ctx):
-        ports_params = (ctx.get_param_struct_type(s) for s in self._parameter_ports)
-        ports_param_struct = pnlvm.ir.LiteralStructType(ports_params)
         mech_param_struct = ctx.get_param_struct_type(super())
         if len(self._parameter_ports) == 0:
             return mech_param_struct
 
-        return pnlvm.ir.LiteralStructType((ports_param_struct,
-                                           *mech_param_struct))
+        ports_params = (ctx.get_param_struct_type(s) for s in self._parameter_ports)
+        ports_param_struct = pnlvm.ir.LiteralStructType(ports_params)
+        return pnlvm.ir.LiteralStructType((ports_param_struct, *mech_param_struct))
+
+    def _get_param_initializer(self, context):
+        mech_param_init = super()._get_param_initializer(context)
+        if len(self._parameter_ports) == 0:
+            return mech_param_init
+
+        port_param_init = tuple(s._get_param_initializer(context) for s in self._parameter_ports)
+        return (port_param_init, *mech_param_init)
 
     def _get_state_ids(self):
         if len(self._parameter_ports) == 0:
             return super()._get_state_ids()
+
         # FIXME: parameter ports should be part of generated state
         return ["_parameter_ports"] + super()._get_state_ids()
 
     def _get_state_struct_type(self, ctx):
-        ports_state = (ctx.get_state_struct_type(s) for s in self._parameter_ports)
-        ports_state_struct = pnlvm.ir.LiteralStructType(ports_state)
         mech_state_struct = ctx.get_state_struct_type(super())
         if len(self._parameter_ports) == 0:
             return mech_state_struct
 
-        return pnlvm.ir.LiteralStructType((ports_state_struct,
-                                           *mech_state_struct))
+        ports_state = (ctx.get_state_struct_type(s) for s in self._parameter_ports)
+        ports_state_struct = pnlvm.ir.LiteralStructType(ports_state)
+        return pnlvm.ir.LiteralStructType((ports_state_struct, *mech_state_struct))
+
+    def _get_state_initializer(self, context):
+        mech_state_init = super()._get_state_initializer(context)
+        if len(self._parameter_ports) == 0:
+            return mech_state_init
+
+        port_state_init = tuple(s._get_state_initializer(context) for s in self._parameter_ports)
+        return (port_state_init, *mech_state_init)
 
     def _get_output_struct_type(self, ctx):
         output_type_list = (ctx.get_output_struct_type(port) for port in self.output_ports)
@@ -2888,22 +2904,6 @@ class Mechanism_Base(Mechanism):
             return pnlvm.ir.ArrayType(input_type_list[0], len(input_type_list))
 
         return pnlvm.ir.LiteralStructType(input_type_list)
-
-    def _get_param_initializer(self, context):
-        port_param_init = tuple(s._get_param_initializer(context) for s in self._parameter_ports)
-        mech_param_init = super()._get_param_initializer(context)
-        if len(self._parameter_ports) == 0:
-            return mech_param_init
-
-        return (port_param_init, *mech_param_init)
-
-    def _get_state_initializer(self, context):
-        port_state_init = tuple(s._get_state_initializer(context) for s in self._parameter_ports)
-        mech_state_init = super()._get_state_initializer(context)
-        if len(self._parameter_ports) == 0:
-            return mech_state_init
-
-        return (port_state_init, *mech_state_init)
 
     def _gen_llvm_ports(self, ctx, builder, ports, group,
                         get_output_ptr, get_input_data_ptr,
@@ -2931,6 +2931,7 @@ class Mechanism_Base(Mechanism):
                     array_1d = pnlvm.ir.ArrayType(p_input_data.type.pointee, 1)
                     assert array_1d == p_function.args[2].type.pointee, \
                         "{} vs. {}".format(p_function.args[2].type.pointee, p_input_data.type.pointee)
+
                     # restrict shape matching to casting 1d values to 2d arrays
                     # for Control/Gating signals
                     assert len(p_function.args[2].type.pointee) == 1
