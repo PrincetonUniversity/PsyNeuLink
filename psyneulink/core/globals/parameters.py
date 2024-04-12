@@ -1642,7 +1642,7 @@ class Parameter(ParameterBase):
                     pass
                 else:
                     for comp in owner_comps:
-                        comp._delete_compilation_data(context)
+                        comp._delete_compilation_data(context, self)
                 self._tracking_compiled_struct = False
 
     @handle_external_context()

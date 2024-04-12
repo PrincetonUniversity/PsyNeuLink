@@ -4264,21 +4264,29 @@ class TestRun:
             warnings.simplefilter("error")
             comp.run()
 
-    def _check_comp_ex(self, comp, comparison, comp_mode, context=None, is_not=False):
+    def _check_comp_ex(self, comp, comparison, comp_mode, struct_name, context=None, is_not=False):
         if comp_mode == pnl.ExecutionMode.Python:
             return
 
         if context is None:
             context = comp
 
-        comp_ex = comp._compilation_data.execution.get(context)
-        if is_not:
-            assert comp_ex is not comparison
-        else:
-            assert comp_ex is comparison
+        execution_dict = comp._compilation_data.execution.get(context)
+        for tag, execution in execution_dict.items():
+            if comparison is None:
+                comparison_val = None
+            else:
+                comparison_val = comparison[tag]
+
+            if is_not:
+                assert getattr(execution, struct_name) is not comparison_val
+            else:
+                assert getattr(execution, struct_name) is comparison_val
 
     @pytest.mark.composition
     def test_multiple_runs_with_parameter_change(self, comp_mode):
+        struct_name = '_param'
+
         A = TransferMechanism(size=2)
         comp = Composition([A])
 
@@ -4286,36 +4294,43 @@ class TestRun:
         output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
         np.testing.assert_allclose([[1, 1]], output)
         orig_comp_ex = comp._compilation_data.execution.get(comp)
+        if orig_comp_ex is not None:
+            orig_comp_ex = {
+                tag: getattr(ex, struct_name)
+                for tag, ex in orig_comp_ex.items()
+            }
 
         # assign int to float, can reuse compilation
         A.function.slope.base = 2
-        self._check_comp_ex(comp, orig_comp_ex, comp_mode)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name)
 
         output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
         np.testing.assert_allclose([[2, 2]], output)
-        self._check_comp_ex(comp, orig_comp_ex, comp_mode)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name)
 
         # assign float to float, can reuse compilation
         A.function.slope.base = 2.1
-        self._check_comp_ex(comp, orig_comp_ex, comp_mode)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name)
 
         output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
         np.testing.assert_allclose([[2.1, 2.1]], output)
-        self._check_comp_ex(comp, orig_comp_ex, comp_mode)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name)
 
         # assign array with len 2 to float, must recompile
         A.function.intercept.base = [3, 3]
-        self._check_comp_ex(comp, None, comp_mode)
+        self._check_comp_ex(comp, None, comp_mode, struct_name)
         # vectorized intercept not supported in LLVM modes
         A.function.intercept.base = 3
 
         output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
         np.testing.assert_allclose([[5.1, 5.1]], output)
-        self._check_comp_ex(comp, None, comp_mode, is_not=True)
-        self._check_comp_ex(comp, orig_comp_ex, comp_mode, is_not=True)
+        self._check_comp_ex(comp, None, comp_mode, struct_name, is_not=True)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name, is_not=True)
 
     @pytest.mark.composition
     def test_multiple_runs_with_parameter_change_arr(self, comp_mode):
+        struct_name = '_state'
+
         A = TransferMechanism(size=2, integrator_mode=True)
         comp = Composition([A])
 
@@ -4323,32 +4338,83 @@ class TestRun:
         output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
         np.testing.assert_allclose([[0.5, 0.5]], output)
         orig_comp_ex = comp._compilation_data.execution.get(comp)
+        if orig_comp_ex is not None:
+            orig_comp_ex = {
+                tag: getattr(ex, struct_name)
+                for tag, ex in orig_comp_ex.items()
+            }
 
         # assign int to float, can reuse compilation
         A.integrator_function.previous_value = [[1, 1]]
-        self._check_comp_ex(comp, orig_comp_ex, comp_mode)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name)
 
         output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
         np.testing.assert_allclose([[1.0, 1.0]], output)
-        self._check_comp_ex(comp, orig_comp_ex, comp_mode)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name)
 
         # assign float to float, can reuse compilation
         A.integrator_function.previous_value = [[1.1, 1.1]]
-        self._check_comp_ex(comp, orig_comp_ex, comp_mode)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name)
 
         output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
         np.testing.assert_allclose([[1.05, 1.05]], output)
-        self._check_comp_ex(comp, orig_comp_ex, comp_mode)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name)
 
         # assign array with extra dim, must recompile
         A.integrator_function.previous_value = [[[1.1, 1.1]]]
-        self._check_comp_ex(comp, None, comp_mode)
+        self._check_comp_ex(comp, None, comp_mode, struct_name)
         A.integrator_function.previous_value = [[1.1, 1.1]]
 
         output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
         np.testing.assert_allclose([[1.05, 1.05]], output)
-        self._check_comp_ex(comp, None, comp_mode, is_not=True)
-        self._check_comp_ex(comp, orig_comp_ex, comp_mode, is_not=True)
+        self._check_comp_ex(comp, None, comp_mode, struct_name, is_not=True)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name, is_not=True)
+
+    @pytest.mark.composition
+    def test_multiple_runs_with_parameter_change_from_data_struct(self, comp_mode):
+        # NOTE: values in value.set calls below do not affect results,
+        # they are arbitrary and used just to check existence or
+        # non-existence of compiled structures after set
+        struct_name = '_data'
+
+        A = TransferMechanism(size=2, integrator_mode=True)
+        comp = Composition([A])
+
+        inputs_dict = {A: [1, 1]}
+        output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
+        np.testing.assert_allclose([[0.5, 0.5]], output)
+        orig_comp_ex = comp._compilation_data.execution.get(comp)
+        if orig_comp_ex is not None:
+            orig_comp_ex = {
+                tag: getattr(ex, struct_name)
+                for tag, ex in orig_comp_ex.items()
+            }
+
+        # assign int to float, can reuse compilation
+        A.integrator_function.parameters.value.set([[1, 1]], comp, override=True)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name)
+
+        output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
+        np.testing.assert_allclose([[0.75, 0.75]], output)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name)
+
+        # assign float to float, can reuse compilation
+        A.integrator_function.parameters.value.set([[1.0, 1.0]], comp, override=True)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name)
+
+        output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
+        np.testing.assert_allclose([[0.875, 0.875]], output)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name)
+
+        # assign array with extra dim, must recompile
+        A.integrator_function.parameters.value.set([[[1.0, 1.0]]], comp, override=True)
+        self._check_comp_ex(comp, None, comp_mode, struct_name)
+        A.integrator_function.parameters.value.set([[1.0, 1.0]], comp, override=True)
+
+        output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
+        np.testing.assert_allclose([[0.9375, 0.9375]], output)
+        self._check_comp_ex(comp, None, comp_mode, struct_name, is_not=True)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name, is_not=True)
 
 
 class TestCallBeforeAfterTimescale:

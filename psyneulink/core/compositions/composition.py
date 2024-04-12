@@ -13165,8 +13165,24 @@ _
         else:
             return pnlvm.codegen.gen_composition_exec(ctx, self, tags=tags)
 
-    def _delete_compilation_data(self, context):
-        self._compilation_data.execution.delete(context)
+    def _delete_compilation_data(self, context: Context, from_parameter: Parameter = None):
+        if from_parameter is None:
+            self._compilation_data.execution.delete(context)
+        else:
+            execution_dict = self._compilation_data.execution.get(context)
+            if execution_dict is None:
+                return
+
+            param_owner = from_parameter._owner._owner
+            if from_parameter.name in param_owner.llvm_param_ids:
+                struct_attr = '_param'
+            elif from_parameter.name in param_owner.llvm_state_ids:
+                struct_attr = '_state'
+            else:
+                struct_attr = '_data'
+
+            for execution in execution_dict.values():
+                setattr(execution, struct_attr, None)
 
     def enable_logging(self):
         for item in self.nodes + self.projections:
