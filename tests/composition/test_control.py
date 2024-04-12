@@ -1853,14 +1853,13 @@ class TestControlMechanisms:
         c.add_node(m2, required_roles=pnl.NodeRole.INPUT)
         c._analyze_graph()
 
-
         ocm_kwargs = dict(agent_rep=pnl.RegressionCFA,
-                                                state_features=[m1.input_ports[0], m1.input_ports[1], m2.input_port, m2],
-                                                state_feature_function=pnl.LinearCombination(offset=10.0),
-                                                objective_mechanism=pnl.ObjectiveMechanism(
-                                                    monitor=[m1, m2]),
-                                                function=pnl.GradientOptimization(max_iterations=1),
-                                                control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
+                          state_features=[m1.input_ports[0], m1.input_ports[1], m2.input_port, m2],
+                          state_feature_function=pnl.LinearCombination(offset=10.0),
+                          objective_mechanism=pnl.ObjectiveMechanism(
+                              monitor=[m1, m2]),
+                          function=pnl.GradientOptimization(max_iterations=1),
+                          control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
 
         try:
             from torch.func import grad
