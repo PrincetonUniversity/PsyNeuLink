@@ -1842,6 +1842,13 @@ class TestControlMechanisms:
 
     @pytest.mark.pytorch
     def test_lvoc_features_function(self):
+
+        # Skip if pytorch is not available. For some reason the pytest.mark.pytorch is not working as expected for this
+        # test, so we are checking for the availability of torch here and skipping the test if it is not available.
+        from psyneulink import torch_available
+        if not torch_available:
+            pytest.skip("Pytorch is not installed")
+
         m1 = pnl.TransferMechanism(input_ports=["InputPort A", "InputPort B"])
         m2 = pnl.TransferMechanism()
         c = pnl.Composition()
