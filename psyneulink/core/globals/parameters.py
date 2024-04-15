@@ -260,12 +260,13 @@ You should avoid using `dot notation <Parameter_Dot_Notation>` in internal code,
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
 |      getter      |     None      |hook that allows overriding the retrieval of|kwargs self, owning_component, and       |
 |                  |               |values based on a supplied method           |context will be passed in if your        |
-|                  |               |(e.g. _output_port_variable_getter)        |method uses them. self - the Parameter    |
-|                  |               |                                            |calling the setter; owning_component -   |
-|                  |               |                                            |the Component to which the Parameter     |
-|                  |               |                                            |belongs; context - the context           |
-|                  |               |                                            |the setter is called with; should return |
-|                  |               |                                            |the value                                |
+|                  |               |(e.g. _output_port_variable_getter)         |method uses them.                        |
+|                  |               |                                            |self: the Parameter calling the setter   |
+|                  |               |                                            |owning_component: the Component to which |
+|                  |               |                                            |    the Parameter belongs                |
+|                  |               |                                            |context: the context the setter is called|
+|                  |               |                                            |    with                                 |
+|                  |               |                                            |Getters must return the resulting value  |
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
 |      setter      |     None      |hook that allows overriding the setting of  |should take a positional argument; kwargs|
 |                  |               |values based on a supplied method (e.g.     |self, owning_component, and context      |
@@ -497,8 +498,7 @@ class ParametersTemplate:
         self._owner = owner
         self._parent = parent
         if isinstance(self._parent, ParametersTemplate):
-            # using weakref to allow garbage collection of unused children
-            self._parent._children.add(weakref.ref(self))
+            self._parent._children.add(self)
 
         # create list of params currently existing
         self._params = set()
@@ -511,7 +511,7 @@ class ParametersTemplate:
             if self._is_parameter(k):
                 self._params.add(k)
 
-        self._children = set()
+        self._children = weakref.WeakSet()
 
     def __repr__(self):
         return '{0} :\n{1}'.format(super().__repr__(), str(self))
@@ -530,14 +530,20 @@ class ParametersTemplate:
         memo[id(self)] = newone
         return newone
 
-    def __del__(self):
-        try:
-            self._parent._children.remove(weakref.ref(self))
-        except (AttributeError, KeyError):
-            pass
-
     def __contains__(self, item):
-        return item in itertools.chain.from_iterable(self.values(show_all=True).items())
+        if item in self._params:
+            return True
+
+        for p in self._params:
+            try:
+                p_attr = getattr(self, p)
+            except AttributeError:
+                return False
+            else:
+                if item is p_attr:
+                    return True
+
+        return False
 
     def __iter__(self):
         return iter([getattr(self, k) for k in self.values(show_all=True).keys()])
@@ -545,6 +551,8 @@ class ParametersTemplate:
     def _is_parameter(self, param_name):
         if param_name[0] == '_':
             return False
+        elif param_name in self._params:
+            return True
         else:
             try:
                 return not isinstance(getattr(self, param_name), (types.MethodType, types.BuiltinMethodType))
@@ -553,16 +561,16 @@ class ParametersTemplate:
 
     def _register_parameter(self, param_name):
         self._params.add(param_name)
-        to_remove = set()
+        self._nonexistent_attr_cache.discard(param_name)
 
         for child in self._children:
-            if child() is None:
-                to_remove.add(child)
-            else:
-                child()._register_parameter(param_name)
+            child._register_parameter(param_name)
 
-        for rem in to_remove:
-            self._children.remove(rem)
+    def _invalidate_nonexistent_attr_cache(self, attr):
+        self._nonexistent_attr_cache.discard(attr)
+
+        for child in self._children:
+            child._invalidate_nonexistent_attr_cache(attr)
 
     def values(self, show_all=False):
         """
@@ -978,7 +986,7 @@ class Parameter(ParameterBase):
         reference=False,
         dependencies=None,
         initializer=None,
-        port=None,
+        port=None,  # if modulated, set to the ParameterPort
         mdf_name=None,
         specify_none=False,
         _owner=None,
@@ -988,7 +996,6 @@ class Parameter(ParameterBase):
         # attributes will be taken from
         _inherited_source=None,
         _user_specified=False,
-        # if modulated, set to the ParameterPort
         **kwargs
     ):
         if isinstance(aliases, str):
@@ -1092,6 +1099,17 @@ class Parameter(ParameterBase):
             _inherited=self._inherited,
             _user_specified=self._user_specified,
         )
+        # TODO: this is a quick fix to make sure default values are
+        # always copied. should be integrated with future changes to
+        # deepcopy
+        # None indicates was not already deepcopied above
+        if shared_types is None and not self._inherited:
+            # use of memo here relies on the fact that
+            # copy_parameter_value does not currently add
+            # self.default_value. Otherwise it would reuse the shared
+            # value from above
+            result._set_default_value(copy.deepcopy(self.default_value, memo), directly=True)
+
         memo[id(self)] = result
 
         return result
@@ -1111,13 +1129,10 @@ class Parameter(ParameterBase):
             inherited_source = None
 
         if (
-            self._parent is not None
-            and (
-                inherited_source is None
-                # this condition indicates the cache was invalidated
-                # since it was set
-                or inherited_source._is_invalid_source
-            )
+            inherited_source is None
+            # this condition indicates the cache was invalidated
+            # since it was set
+            or inherited_source._is_invalid_source
         ):
             next_parent = self._parent
             while next_parent is not None:
@@ -1127,10 +1142,11 @@ class Parameter(ParameterBase):
                     break
                 next_parent = next_parent._parent
 
-        try:
-            return getattr(inherited_source, attr)
-        except AttributeError:
-            raise AttributeError("Parameter '%s' has no attribute '%s'" % (self.name, attr)) from None
+        if inherited_source is None:
+            # will fail, use default behavior
+            return self.__getattribute__(attr)
+        else:
+            return inherited_source.__getattribute__(attr)
 
     def __setattr__(self, attr, value):
         if attr in self._additional_param_attr_properties:
@@ -1202,22 +1218,14 @@ class Parameter(ParameterBase):
             else:
                 # This is a rare operation, so we can just immediately
                 # trickle down sources without performance issues.
-                # Children are stored as weakref.ref, so call to deref
                 children = [*self._owner._children]
                 while len(children) > 0:
-                    next_child_ref = children.pop()
-                    next_child = next_child_ref()
+                    next_child = children.pop()
+                    next_child = getattr(next_child, self.name)
 
-                    if next_child is None:
-                        # child must have been garbage collected, remove
-                        # here optionally
-                        pass
-                    else:
-                        next_child = getattr(next_child, self.name)
-
-                        if next_child._inherited:
-                            next_child._inherit_from(self)
-                            children.extend(next_child._owner._children)
+                    if next_child._inherited:
+                        next_child._inherit_from(self)
+                        children.extend(next_child._owner._children)
 
                 self._restore_inherited_attrs()
 
@@ -1246,7 +1254,7 @@ class Parameter(ParameterBase):
                 attr not in exclusions
                 and getattr(self, attr) is getattr(self._parent, attr)
             ):
-                setattr(self, attr, self._inherited_attrs_cache[attr])
+                super().__setattr__(attr, self._inherited_attrs_cache[attr])
 
     @property
     def _parent(self):
@@ -1475,7 +1483,15 @@ class Parameter(ParameterBase):
 
         return value
 
-    def _set(self, value, context, skip_history=False, skip_log=False, **kwargs):
+    def _set(
+        self,
+        value,
+        context,
+        skip_history=False,
+        skip_log=False,
+        skip_delivery=False,
+        **kwargs,
+    ):
         if not self.stateful:
             execution_id = None
         else:
@@ -1495,10 +1511,25 @@ class Parameter(ParameterBase):
             }
             value = call_with_pruned_args(self.setter, value, context=context, **kwargs)
 
-        self._set_value(value, execution_id=execution_id, context=context, skip_history=skip_history, skip_log=skip_log)
+        self._set_value(
+            value,
+            execution_id=execution_id,
+            context=context,
+            skip_history=skip_history,
+            skip_log=skip_log,
+            skip_delivery=skip_delivery,
+        )
         return value
 
-    def _set_value(self, value, execution_id=None, context=None, skip_history=False, skip_log=False, skip_delivery=False):
+    def _set_value(
+        self,
+        value,
+        execution_id=None,
+        context=None,
+        skip_history=False,
+        skip_log=False,
+        skip_delivery=False,
+    ):
         # store history
         if not skip_history:
             if execution_id in self.values:
@@ -1686,8 +1717,6 @@ class Parameter(ParameterBase):
                 pass
 
     def _initialize_from_context(self, context=None, base_context=Context(execution_id=None), override=True):
-        from psyneulink.core.components.component import Component, ComponentsMeta
-
         try:
             try:
                 cur_val = self.values[context.execution_id]
@@ -1705,13 +1734,7 @@ class Parameter(ParameterBase):
                 except KeyError:
                     new_history = NotImplemented
 
-                shared_types = (Component, ComponentsMeta, types.MethodType, types.ModuleType)
-
-                if isinstance(new_val, (dict, list)):
-                    new_val = copy_iterable_with_shared(new_val, shared_types)
-                elif not isinstance(new_val, shared_types):
-                    new_val = copy.deepcopy(new_val)
-
+                new_val = copy_parameter_value(new_val)
                 self.values[context.execution_id] = new_val
 
                 if new_history is None:
@@ -1726,9 +1749,18 @@ class Parameter(ParameterBase):
     # KDM 7/30/18: the below is weird like this in order to use this like a property, but also include it
     # in the interface for user simplicity: that is, inheritable (by this Parameter's children or from its parent),
     # visible in a Parameter's repr, and easily settable by the user
-    def _set_default_value(self, value):
-        value = self._parse(value)
-        self._validate(value)
+    def _set_default_value(self, value, directly=False):
+        """
+        Set default_value
+
+        Args:
+            value: new default_value
+            directly (bool, optional): if False, passes **value**
+                through parse and validation steps. Defaults to False.
+        """
+        if not directly:
+            value = self._parse(value)
+            self._validate(value)
 
         super().__setattr__('default_value', value)
 
@@ -1759,6 +1791,14 @@ class Parameter(ParameterBase):
         if self.parse_spec:
             value = self._parse(value)
         super().__setattr__('spec', value)
+
+    @property
+    def source(self):
+        return self
+
+    @property
+    def final_source(self):
+        return self
 
 
 class _ParameterAliasMeta(type):
@@ -2002,7 +2042,7 @@ class SharedParameter(Parameter):
     @property
     def final_source(self):
         base_param = self
-        while hasattr(base_param, 'source'):
+        while isinstance(base_param, SharedParameter):
             base_param = base_param.source
 
         return base_param
@@ -2089,11 +2129,17 @@ class ParametersBase(ParametersTemplate):
 
     def __init__(self, owner, parent=None):
         self._initializing = True
+        self._nonexistent_attr_cache = set()
 
         super().__init__(owner=owner, parent=parent)
 
-        aliases_to_create = set()
-        for param_name, param_value in self.values(show_all=True).items():
+        aliases_to_create = {}
+        for param_name in copy.copy(self._params):
+            try:
+                param_value = getattr(self, param_name)
+            except AttributeError:
+                param_value = NotImplemented
+
             constructor_default = get_init_signature_default_value(self._owner, param_name)
 
             if (
@@ -2113,7 +2159,7 @@ class ParametersBase(ParametersTemplate):
                     # the param that the alias is going to refer to may not have been created yet
                     # (the alias then may refer to the parent Parameter instead of the Parameter associated with this
                     # Parameters class)
-                    aliases_to_create.add(param_name)
+                    aliases_to_create[param_name] = parent_param.source.name
                 else:
                     new_param = copy.deepcopy(parent_param)
                     new_param._owner = self
@@ -2121,8 +2167,10 @@ class ParametersBase(ParametersTemplate):
 
                     setattr(self, param_name, new_param)
 
-        for alias_name in aliases_to_create:
-            setattr(self, alias_name, ParameterAlias(name=alias_name, source=getattr(self, alias_name).source))
+        for alias_name, source_name in aliases_to_create.items():
+            # getattr here and not above, because the alias may be
+            # iterated over before the source
+            setattr(self, alias_name, ParameterAlias(name=alias_name, source=getattr(self, source_name)))
 
         values = self.values(show_all=True)
         for param, value in values.items():
@@ -2136,36 +2184,43 @@ class ParametersBase(ParametersTemplate):
 
         self._initializing = False
 
+    def _throw_attr_error(self, attr):
+        try:
+            param_owner = self._owner
+            if isinstance(param_owner, type):
+                owner_string = f' of {param_owner}'
+            else:
+                owner_string = f' of {param_owner.name}'
+
+            if hasattr(param_owner, 'owner') and param_owner.owner:
+                owner_string += f' for {param_owner.owner.name}'
+                if hasattr(param_owner.owner, 'owner') and param_owner.owner.owner:
+                    owner_string += f' of {param_owner.owner.owner.name}'
+        except AttributeError:
+            owner_string = ''
+
+        raise AttributeError(
+            f"No attribute '{attr}' exists in the parameter hierarchy{owner_string}."
+        ) from None
+
     def __getattr__(self, attr):
-        def throw_error():
-            try:
-                param_owner = self._owner
-                if isinstance(param_owner, type):
-                    owner_string = f' of {param_owner}'
-                else:
-                    owner_string = f' of {param_owner.name}'
+        if (
+            attr in self._params
+            or attr in self._nonexistent_attr_cache
+            # attr can't be in __dict__ or __getattr__ would not be called
+            or (
+                self._parent is not None
+                and attr in self._parent._nonexistent_attr_cache
+            )
+        ):
+            self._nonexistent_attr_cache.add(attr)
+            self._throw_attr_error(attr)
 
-                if hasattr(param_owner, 'owner') and param_owner.owner:
-                    owner_string += f' for {param_owner.owner.name}'
-                    if hasattr(param_owner.owner, 'owner') and param_owner.owner.owner:
-                        owner_string += f' of {param_owner.owner.owner.name}'
-            except AttributeError:
-                owner_string = ''
-
-            raise AttributeError(
-                f"No attribute '{attr}' exists in the parameter hierarchy{owner_string}."
-            ) from None
-
-        # underscored attributes don't need special handling because
-        # they're not Parameter objects. This includes parsing and
-        # validation methods
-        if attr[0] == '_':
-            throw_error()
-        else:
-            try:
-                return getattr(self._parent, attr)
-            except AttributeError:
-                throw_error()
+        try:
+            return getattr(self._parent, attr)
+        except AttributeError:
+            self._nonexistent_attr_cache.add(attr)
+            self._throw_attr_error(attr)
 
     def __setattr__(self, attr, value):
         # handles parsing: Parameter or ParameterAlias housekeeping if assigned, or creation of a Parameter
@@ -2195,11 +2250,14 @@ class ParametersBase(ParametersTemplate):
                     for alias in value.aliases:
                         # there is a conflict if a non-ParameterAlias exists
                         # with the same name as the planned alias
-                        try:
-                            if not isinstance(getattr(self, alias), ParameterAlias):
+                        if alias in self:
+                            try:
+                                alias_param = getattr(self, alias)
+                            except AttributeError:
+                                continue
+
+                            if not isinstance(alias_param, ParameterAlias):
                                 conflicts.append(alias)
-                        except AttributeError:
-                            pass
 
                         super().__setattr__(alias, ParameterAlias(source=getattr(self, attr), name=alias))
                         self._register_parameter(alias)
@@ -2261,6 +2319,18 @@ class ParametersBase(ParametersTemplate):
 
             self._validate(attr, getattr(self, attr).default_value)
             self._register_parameter(attr)
+
+        if (
+            (
+                attr[0] != '_'
+                or attr.startswith(self._parsing_method_prefix)
+                or attr.startswith(self._validation_method_prefix)
+            )
+            and not self._initializing
+        ):
+            # below does happen during deepcopy, but that should only
+            # happen on instances, which won't have _children
+            self._invalidate_nonexistent_attr_cache(attr)
 
     def _reconcile_value_with_init_default(self, attr, value):
         constructor_default = get_init_signature_default_value(self._owner, attr)
