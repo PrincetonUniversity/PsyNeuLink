@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameters &mdash; PsyNeuLink 0.15.1.0+49.gd53cb41d4 documentation</title>
+  <title>Parameters &mdash; PsyNeuLink 0.15.1.0+71.g6d08715c6 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+49
+                  0.15.1.0+71
                 </div>
               
             
@@ -490,16 +490,22 @@ different execution contexts</p></td>
 </tr>
 <tr class="row-even"><td><p>getter</p></td>
 <td><p>None</p></td>
-<td colspan="2"><p>hook that allows overriding the retrieval of|kwargs self, owning_component, and
-values based on a supplied method           <a href="#id3"><span class="problematic" id="id4">|</span></a>context will be passed in if your
-(e.g. _output_port_variable_getter)        <a href="#id5"><span class="problematic" id="id6">|</span></a>method uses them. self - the Parameter</p>
+<td><p>hook that allows overriding the retrieval of
+values based on a supplied method
+(e.g. _output_port_variable_getter)</p></td>
+<td><p>kwargs self, owning_component, and
+context will be passed in if your
+method uses them.
+self: the Parameter calling the setter
+owning_component: the Component to which</p>
 <blockquote>
-<div><p><a href="#id7"><span class="problematic" id="id8">|</span></a>calling the setter; owning_component -
-<a href="#id9"><span class="problematic" id="id10">|</span></a>the Component to which the Parameter
-<a href="#id11"><span class="problematic" id="id12">|</span></a>belongs; context - the context
-<a href="#id13"><span class="problematic" id="id14">|</span></a>the setter is called with; should return
-<a href="#id15"><span class="problematic" id="id16">|</span></a>the value</p>
+<div><p>the Parameter belongs</p>
 </div></blockquote>
+<dl class="simple">
+<dt>context: the context the setter is called</dt><dd><p>with</p>
+</dd>
+</dl>
+<p>Getters must return the resulting value</p>
 </td>
 </tr>
 <tr class="row-odd"><td><p>setter</p></td>
@@ -1075,6 +1081,21 @@ If no context is specified, attributes on the associated <a class="reference int
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>contexts</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context" title="psyneulink.core.globals.context.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">Context</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context" title="psyneulink.core.globals.context.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">Context</span></code></a>]]) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.globals.parameters.Parameter._set_default_value">
+<span class="sig-name descname"><span class="pre">_set_default_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directly</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter._set_default_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set default_value</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> – new default_value</p></li>
+<li><p><strong>directly</strong> (<em>bool</em><em>, </em><em>optional</em>) – if False, passes <strong>value</strong>
+through parse and validation steps. Defaults to False.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
