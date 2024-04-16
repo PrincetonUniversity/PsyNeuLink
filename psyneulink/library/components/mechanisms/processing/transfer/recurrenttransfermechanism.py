@@ -785,9 +785,9 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         if HETERO in target_set:
             hetero_param = target_set[HETERO]
-            if hetero_param is not None and not isinstance(hetero_param, (np.matrix, np.ndarray, list, numbers.Number)):
+            if hetero_param is not None and not isinstance(hetero_param, (np.ndarray, list, numbers.Number)):
                 raise RecurrentTransferError("hetero parameter ({}) of {} is of incompatible type: it should be a "
-                                             "number, None, or a 2D numeric matrix or array".format(hetero_param, self))
+                                             "number, None, or a 2D numeric array".format(hetero_param, self))
             hetero_shape = np.array(hetero_param).shape
             if hetero_shape != (1,) and hetero_shape != (1, 1):
                 if isinstance(hetero_param, (np.ndarray, list, np.matrix)) and (hetero_param.ndim > 0 and hetero_shape[0] != self.size[0]):

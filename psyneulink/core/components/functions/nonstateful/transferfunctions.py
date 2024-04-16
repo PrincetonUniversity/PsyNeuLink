@@ -3750,7 +3750,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                     # format(param_value, self.__class__.__name__, error_msg))
                                     format(param_value, self.name, self.owner_name, error_msg))
 
-                    # string used to describe matrix, so convert to np.matrix and pass to validation of matrix below
+                    # string used to describe matrix, so convert to np.array and pass to validation of matrix below
                     elif isinstance(param_value, str):
                         try:
                             param_value = np.atleast_2d(param_value)
@@ -3763,12 +3763,12 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     # function so:
                     # - assume it uses random.rand()
                     # - call with two args as place markers for cols and rows
-                    # -  validate that it returns an array or np.matrix
+                    # -  validate that it returns an array
                     elif isinstance(param_value, types.FunctionType):
                         test = param_value(1, 1)
-                        if not isinstance(test, (np.ndarray, np.matrix)):
+                        if not isinstance(test, np.ndarray):
                             raise FunctionError("A function is specified for the matrix of the {} function of {}: {}) "
-                                                "that returns a value ({}) that is neither a matrix nor an array".
+                                                "that returns a value ({}) that is not an array".
                                                 # format(param_value, self.__class__.__name__, test))
                                                 format(self.name, self.owner_name, param_value, test))
 

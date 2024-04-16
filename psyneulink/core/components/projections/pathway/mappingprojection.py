@@ -468,7 +468,7 @@ class MappingProjection(PathwayProjection_Base):
         # Assign matrix to function_params for use as matrix param of MappingProjection.function
         # (7/12/17 CW) this is a PATCH to allow the user to set matrix as an np.matrix... I still don't know why
         # it wasn't working.
-        if isinstance(matrix, (np.matrix, list)):
+        if isinstance(matrix, list):
             matrix = np.array(matrix)
 
         self.learning_mechanism = None

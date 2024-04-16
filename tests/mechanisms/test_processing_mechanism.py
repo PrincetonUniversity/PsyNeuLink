@@ -279,7 +279,7 @@ class TestLinearMatrixFunction:
 
         np.testing.assert_allclose(PM_2d_array.value, 4.0)
 
-        PM_matrix = ProcessingMechanism(function=LinearMatrix(matrix=np.matrix([[4.0]])))
+        PM_matrix = ProcessingMechanism(function=LinearMatrix(matrix=np.array([[4.0]])))
         PM_matrix.execute(1.0)
 
         np.testing.assert_allclose(PM_matrix.value, 4.0)
