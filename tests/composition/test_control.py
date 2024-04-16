@@ -1840,6 +1840,7 @@ class TestControlMechanisms:
 
         assert len(lvoc.input_ports) == 5
 
+    @pytest.mark.pytorch
     def test_lvoc_features_function(self):
         m1 = pnl.TransferMechanism(input_ports=["InputPort A", "InputPort B"])
         m2 = pnl.TransferMechanism()
@@ -1847,22 +1848,33 @@ class TestControlMechanisms:
         c.add_node(m1, required_roles=pnl.NodeRole.INPUT)
         c.add_node(m2, required_roles=pnl.NodeRole.INPUT)
         c._analyze_graph()
-        lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.RegressionCFA,
-                                                state_features=[m1.input_ports[0], m1.input_ports[1], m2.input_port, m2],
-                                                state_feature_function=pnl.LinearCombination(offset=10.0),
-                                                objective_mechanism=pnl.ObjectiveMechanism(
-                                                    monitor=[m1, m2]),
-                                                function=pnl.GradientOptimization(max_iterations=1),
-                                                control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
-        c.add_node(lvoc)
-        input_dict = {m1: [[1], [1]], m2: [1]}
 
-        c.run(inputs=input_dict)
+        ocm_kwargs = dict(agent_rep=pnl.RegressionCFA,
+                          state_features=[m1.input_ports[0], m1.input_ports[1], m2.input_port, m2],
+                          state_feature_function=pnl.LinearCombination(offset=10.0),
+                          objective_mechanism=pnl.ObjectiveMechanism(
+                              monitor=[m1, m2]),
+                          function=pnl.GradientOptimization(max_iterations=1),
+                          control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
 
-        assert len(lvoc.input_ports) == 5
+        import torch
+        if 'func' in dir(torch):
+            lvoc = pnl.OptimizationControlMechanism(**ocm_kwargs)
 
-        for i in range(1,5):
-            assert lvoc.input_ports[i].function.offset == 10.0
+            c.add_node(lvoc)
+            input_dict = {m1: [[1], [1]], m2: [1]}
+
+            c.run(inputs=input_dict)
+
+            assert len(lvoc.input_ports) == 5
+
+            for i in range(1, 5):
+                assert lvoc.input_ports[i].function.offset == 10.0
+
+        else:
+            with pytest.raises(ValueError):
+                pnl.OptimizationControlMechanism(**ocm_kwargs)
+
 
     @pytest.mark.control
     @pytest.mark.composition

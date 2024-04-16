@@ -31,6 +31,13 @@ import warnings
 from numbers import Number
 
 import numpy as np
+
+# Conditionally import torch
+try:
+    import torch
+except ImportError:
+    torch = None
+
 from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Callable, Literal
@@ -942,8 +949,9 @@ class GradientOptimization(OptimizationFunction):
     which should be the derivative of the `objective_function <GradientOptimization.objective_function>`
     with respect to `variable <GradientOptimization.variable>` at its current value:
     :math:`\\frac{d(objective\\_function(variable))}{d(variable)}`.  If the **gradient_function* argument of the
-    constructor is not specified, then an attempt is made to use `Autograd's <https://github.com/HIPS/autograd>`_ `grad
-    <autograd.grad>` method to generate `gradient_function <GradientOptimization.gradient_function>`.  If that fails,
+    constructor is not specified, then an attempt is made to use PyTorch functional
+    `autograd's <https://pytorch.org/docs/stable/generated/torch.func.grad.html>`_ `grad <torch.func.grad>`
+    method to generate `gradient_function <GradientOptimization.gradient_function>`.  If that fails,
     an error occurs.  The **search_space** argument can be used to specify lower and/or upper bounds for each dimension
     of the sample; if the gradient causes a value of the sample to exceed a bound along a dimenson, the value of the
     bound is used for that dimension, unless/until the gradient shifts and causes it to return back within the bound.
@@ -963,7 +971,7 @@ class GradientOptimization(OptimizationFunction):
     gradient_function : function
         specifies function used to compute the gradient in each iteration of the `optimization process
         <GradientOptimization_Procedure>`;  if it is not specified, an attempt is made to compute it using
-        `autograd.grad <https://github.com/HIPS/autograd>`_.
+        `PyTorch autograd's <https://pytorch.org/docs/stable/generated/torch.func.grad.html>`_ `grad <torch.func.grad>`.
 
     direction : ASCENT or DESCENT : default ASCENT
         specifies the direction of gradient optimization: if *ASCENT*, movement is attempted in the positive direction
@@ -1247,15 +1255,37 @@ class GradientOptimization(OptimizationFunction):
             **kwargs
         )
 
-        # Differentiate objective_function using autograd.grad()
+        # Differentiate objective_function using torch.func.grad()
         if objective_function is not None and not self.gradient_function:
+
+            if torch is None:
+                raise ValueError("PyTorch is not installed. Please install PyTorch to use GradientOptimization without "
+                                 "specifying a gradient_function.")
+
+            if 'func' not in dir(torch):
+                raise ValueError("torch.func.grad not found. PyTorch version is probably too old. Please upgrade "
+                                 "PyTorch to >= 2.0 to use GradientOptimization without specifying a "
+                                 "gradient_function.")
+
             try:
-                from autograd import grad
-                self.parameters.gradient_function._set(grad(self.objective_function), context)
-            except:
-                raise OptimizationFunctionError("Unable to use autograd with {} specified for {} Function: {}.".
+                # Need to wrap objective_function in a lambda to pass to grad because it needs to return a torch tensor
+                def func_wrapper(x, context):
+                    return torch.tensor(self.objective_function(x, context))
+
+                # Get the gradient of the objective function with pytorch autograd
+                gradient_func = torch.func.grad(func_wrapper)
+
+                # We need to wrap the gradient function in a lambda as well because we need to convert back to numpy
+                def gradient_func_wrapper(x, context):
+                    return gradient_func(torch.from_numpy(x), context).detach().numpy()
+
+                self.parameters.gradient_function._set(gradient_func_wrapper, context)
+
+            except Exception as ex:
+
+                raise OptimizationFunctionError("Unable to use PyTorch autograd with {} specified for {} Function: {}.".
                                                 format(repr(OBJECTIVE_FUNCTION), self.__class__.__name__,
-                                                       objective_function.__name__))
+                                                       objective_function.__name__)) from ex
         search_space = self.search_space
         bounds = None
 
