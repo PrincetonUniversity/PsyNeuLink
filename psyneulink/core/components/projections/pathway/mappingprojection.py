@@ -84,8 +84,8 @@ its `matrix <MappingProjection.matrix>` parameter.  This is used by the MappingP
 <Projection_Base.value>` provided to its `receiver <MappingProjection.receiver>`. It can be specified in any of the
 following ways:
 
-  * **List, array or matrix**  -- if it is a list, each item must be a list or 1d np.array of numbers;  otherwise,
-    it must be a 2d np.array or np.matrix.  In each case, the outer dimension (outer list items, array axis 0,
+  * **List or array**  -- if it is a list, each item must be a list or 1d np.array of numbers;  otherwise,
+    it must be a 2d np.array.  In each case, the outer dimension (outer list items, array axis 0,
     or matrix rows) corresponds to the elements of the `sender <MappingProjection.sender>`, and the inner dimension
     (inner list items, array axis 1, or matrix columns) corresponds to the weighting of the contribution that a
     given `sender <MappingProjection.sender>` makes to the `receiver <MappingProjection.receiver>` (the number of which
@@ -357,7 +357,7 @@ class MappingProjection(PathwayProjection_Base):
         the context in which the Projection is used, or its initialization will be `deferred
         <MappingProjection_Deferred_Initialization>`.
 
-    matrix : list, np.ndarray, np.matrix, function, `RandomMatrix` or keyword : default DEFAULT_MATRIX
+    matrix : list, np.ndarray, function, `RandomMatrix` or keyword : default DEFAULT_MATRIX
         specifies the matrix used by `function <Projection_Base.function>` (default: `LinearCombination`) to
         transform the `value <Projection_Base.value>` of the `sender <MappingProjection.sender>` into a form suitable
         for the `variable <InputPort.variable>` of its `receiver <MappingProjection.receiver>` `InputPort`

@@ -109,7 +109,7 @@ class MaskedMappingProjection(MappingProjection):
     Arguments
     ---------
 
-    mask : int, float, list, np.ndarray or np.matrix : default None
+    mask : int, float, list, np.ndarray : default None
         specifies a mask to be applied to the `matrix <MaskedMappingProjection.matrix>` each time the Projection is
         executed, in a manner specified by the **mask_operation** argument.
 
@@ -121,7 +121,7 @@ class MaskedMappingProjection(MappingProjection):
     Attributes
     ----------
 
-    mask : int, float, list, np.ndarray or np.matrix : default None
+    mask : int, float, list, np.ndarray : default None
         mask applied to the `matrix <MaskedMappingProjection.matrix>` each time the Projection is executed,
         in a manner specified by `mask_operation <MaskedMappingProjection.mask_operation>`.
 

@@ -886,7 +886,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         is assigned as the `value <OutputPort.value>` of the LearningMechanism's *ERROR_SIGNAL* `OutputPort
         <LearningMechanism_Output_Error_Signal>`.
 
-    learning_signal : number, ndarray or matrix
+    learning_signal : number or ndarray
         one of two values returned by the LearningMechanism's `function <LearningMechanism.function>`, that specifies
         the changes to the weights of the `matrix <MappingProjection.matrix>` parameter for the LearningMechanism's
         `learned_projections <LearningMechanism.learned_projections>`;  it is calculated to reduce the error signal

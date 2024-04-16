@@ -3455,7 +3455,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         specifies a template for the value to be transformed; length must equal the number of rows of `matrix
         <LinearMatrix.matrix>`.
 
-    matrix : number, list, 1d or 2d np.ndarray, np.matrix, function, or matrix keyword : default IDENTITY_MATRIX
+    matrix : number, list, 1d or 2d np.ndarray, function, or matrix keyword : default IDENTITY_MATRIX
         specifies matrix used to transform `variable <LinearMatrix.variable>`
         (see `matrix <LinearMatrix.matrix>` for specification details).
 
@@ -3505,7 +3505,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         matrix used to transform `variable <LinearMatrix.variable>`.
         Can be specified as any of the following:
             * number - used as the filler value for all elements of the :keyword:`matrix` (call to np.fill);
-            * list of arrays, 2d array or np.matrix - assigned as the value of :keyword:`matrix`;
+            * list of arrays, 2d array - assigned as the value of :keyword:`matrix`;
             * matrix keyword - see `MatrixKeywords` for list of options.
         Rows correspond to elements of the input array (outer index), and
         columns correspond to elements of the output array (inner index).
@@ -3561,7 +3561,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     #         return True
     #     if m in MATRIX_KEYWORD_VALUES:
     #         return True
-    #     if isinstance(m, (list, np.ndarray, np.matrix, types.FunctionType)):
+    #     if isinstance(m, (list, np.ndarray, types.FunctionType)):
     #         return True
     #     return False
 
@@ -3812,7 +3812,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                         "LinearMatrix function. When the LinearMatrix function is implemented in a "
                                         "mechanism, such as {}, the correct matrix cannot be determined from a "
                                         "keyword. Instead, the matrix must be fully specified as a float, list, "
-                                        "np.ndarray, or np.matrix".
+                                        "np.ndarray".
                                         format(param_value, self.name, self.owner.name))
 
                 # The only remaining valid option is matrix = None (sorted out in instantiate_attribs_before_fn)
@@ -4009,7 +4009,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 # def is_matrix_spec(m):
 #     if m is None:
 #         return True
-#     if isinstance(m, (list, np.ndarray, np.matrix, types.FunctionType)):
+#     if isinstance(m, (list, np.ndarray, types.FunctionType)):
 #         return True
 #     if m in MATRIX_KEYWORD_VALUES:
 #         return True

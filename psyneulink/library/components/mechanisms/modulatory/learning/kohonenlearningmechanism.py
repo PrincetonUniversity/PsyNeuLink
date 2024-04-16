@@ -173,8 +173,10 @@ class KohonenLearningMechanism(LearningMechanism):
     function : LearningFunction or function : default Kohonen
         specifies the function used to calculate the KohonenLearningMechanism's `learning_signal
         <KohonenLearningMechanism.learning_signal>` attribute.  It must take as its **variable** argument a
-        list of three items (two 1d arrays and one 2d array, all of numeric values) and return a list, 2d np.array or
-        np.matrix that is a square matrix with the same dimensions as the third item of the **variable** arugment).
+        list of three items (two 1d arrays and one 2d array, all of
+        numeric values) and return a list, 2d np.array that is a square
+        matrix with the same dimensions as the third item of the
+        **variable** arugment).
 
     learning_rate : float : default None
         specifies the learning rate for the KohonenLearningMechanism. (see `learning_rate
@@ -208,10 +210,10 @@ class KohonenLearningMechanism(LearningMechanism):
         the function used to calculate the `learning_signal <KohonenLearningMechanism.learning_signal>`
         (assigned to the KohonenLearningMechanism's `LearningSignal(s) <LearningMechanism_LearningSignal>`).
         It's `variable <Function_Base.variable>` must be a list of three items (two 1d arrays and one 2d array, all of
-        numeric values);  returns a list, 2d np.array or np.matrix that is a square matrix with the same dimensions
+        numeric values);  returns a list, 2d np.array that is a square matrix with the same dimensions
         as the third item of its `variable <Kohonen.variable>`).
 
-    learning_rate : float, 1d or 2d np.array, or np.matrix of numeric values : default None
+    learning_rate : float, 1d or 2d np.array of numeric values : default None
         determines the learning rate used by the KohonenLearningMechanism's `function
         <KohonenLearningMechanism.function>` to scale the weight change matrix it returns. If it is a scalar, it is
         used to multiply the weight change matrix;  if it is a 2d array or matrix,

@@ -293,12 +293,12 @@ class EMStorageMechanism(LearningMechanism):
         specifies the function used to assign each item of the `variable <EMStorageMechanism.variable>` to the
         corresponding `field <EMStorageMechanism_Fields>` of the `memory_matrix <EMStorageMechanism.memory_matrix>`.
         It must take as its `variable <EMStorage.variable>` argument a list or 1d array of numeric values
-        (the "activity vector"); a ``memory_matrix`` argument that is a 2d array or matrix to which
+        (the "activity vector"); a ``memory_matrix`` argument that is a 2d array to which
         the `variable <EMStorageMechanism.variable>` is assigned; ``axis`` and ``storage_location`` arguments that
         determine where in ``memory_matrix`` the `variable <EMStorageMechanism.variable>` is stored; and optional
         ``storage_prob`` and ``decay_rate`` arguments that determine the probability with which storage occurs and
         the rate at which the `memory_matrix <EMStorageMechanism.memory_matrix>` decays, respectively.  The function
-        must return a list, 2d np.array or np.matrix for the corresponding `field <EMStorageMechanism_Fields>` of the
+        must return a list, 2d np.array for the corresponding `field <EMStorageMechanism_Fields>` of the
         `memory_matrix <EMStorageMechanism.memory_matrix>` that is updated (see `EMStorage` for additional details).
 
     learning_signals : List[ParameterPort, Projection, tuple[str, Projection] or dict] : default None
@@ -360,9 +360,10 @@ class EMStorageMechanism(LearningMechanism):
     function : LearningFunction or function : default EMStorage
         the function used to assign the value of each `field <EMStorageMechanism.fields>` to the corresponding entry
         in `memory_matrix <EMStorageMechanism.memory_matrix>`.  It must take as its `variable <EMSorage.variable>`
-        argument a list or 1d array of numeric values (an `entry <EMStorage.entry`) and return a list, 2d np.array or
-        np.matrix assigned to the corresponding `field <EMStorageMechanism_Fields>` of the `memory_matrix
-        <EMStorageMechanism.memory_matrix>`.
+        argument a list or 1d array of numeric values (an `entry
+        <EMStorage.entry`) and return a list, 2d np.array assigned to
+        the corresponding `field <EMStorageMechanism_Fields>` of the
+        `memory_matrix <EMStorageMechanism.memory_matrix>`.
 
     storage_prob : float
         specifies the probability with which the current entry is stored in the EMSorageMechanism's `memory_matrix
