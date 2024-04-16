@@ -1017,15 +1017,17 @@ def convert_to_np_array(value, dimension=None):
     """
     def safe_create_np_array(value):
         with warnings.catch_warnings():
+
+            # If we have a torch tensor, allow it to pass through unchanged
+            if torch and torch.is_tensor(value):
+                return value
+
             warnings.filterwarnings('error', category=np.VisibleDeprecationWarning)
             # NOTE: this will raise a ValueError in the future.
             # See https://numpy.org/neps/nep-0034-infer-dtype-is-object.html
             try:
                 try:
-                    if torch and torch.is_tensor(value):
-                        return value
-                    else:
-                        return np.asarray(value)
+                    return np.asarray(value)
                 except np.VisibleDeprecationWarning:
                     return np.asarray(value, dtype=object)
                 except ValueError as e:
