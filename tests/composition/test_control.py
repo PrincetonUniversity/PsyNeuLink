@@ -1842,10 +1842,6 @@ class TestControlMechanisms:
 
     @pytest.mark.pytorch
     def test_lvoc_features_function(self):
-
-
-
-
         m1 = pnl.TransferMechanism(input_ports=["InputPort A", "InputPort B"])
         m2 = pnl.TransferMechanism()
         c = pnl.Composition()
@@ -1861,27 +1857,24 @@ class TestControlMechanisms:
                           function=pnl.GradientOptimization(max_iterations=1),
                           control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
 
-        try:
-            from torch.func import grad
+        import torch
+        if 'grad' in dir(torch.func):
             lvoc = pnl.OptimizationControlMechanism(**ocm_kwargs)
 
-        # If pytorch is too old (< 2.0), GradientOptimization will raise an error to upgrade pytorch to have support for
-        # torch.func.grad.
-        except ImportError:
+            c.add_node(lvoc)
+            input_dict = {m1: [[1], [1]], m2: [1]}
+
+            c.run(inputs=input_dict)
+
+            assert len(lvoc.input_ports) == 5
+
+            for i in range(1, 5):
+                assert lvoc.input_ports[i].function.offset == 10.0
+
+        else:
             with pytest.raises(ValueError):
                 pnl.OptimizationControlMechanism(**ocm_kwargs)
 
-            return
-
-        c.add_node(lvoc)
-        input_dict = {m1: [[1], [1]], m2: [1]}
-
-        c.run(inputs=input_dict)
-
-        assert len(lvoc.input_ports) == 5
-
-        for i in range(1,5):
-            assert lvoc.input_ports[i].function.offset == 10.0
 
     @pytest.mark.control
     @pytest.mark.composition
