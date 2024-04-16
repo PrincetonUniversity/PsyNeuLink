@@ -1869,7 +1869,7 @@ class TestControlMechanisms:
         # torch.func.grad.
         except ImportError:
             with pytest.raises(ValueError):
-                lvoc = pnl.OptimizationControlMechanism(**ocm_kwargs)
+                pnl.OptimizationControlMechanism(**ocm_kwargs)
 
             return
 
