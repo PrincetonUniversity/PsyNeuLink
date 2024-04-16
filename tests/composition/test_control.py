@@ -1858,7 +1858,7 @@ class TestControlMechanisms:
                           control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
 
         import torch
-        if 'grad' in dir(torch.func):
+        if 'func' in dir(torch):
             lvoc = pnl.OptimizationControlMechanism(**ocm_kwargs)
 
             c.add_node(lvoc)

@@ -1262,7 +1262,7 @@ class GradientOptimization(OptimizationFunction):
                 raise ValueError("PyTorch is not installed. Please install PyTorch to use GradientOptimization without "
                                  "specifying a gradient_function.")
 
-            if 'grad' not in dir(torch.func):
+            if 'func' not in dir(torch):
                 raise ValueError("torch.func.grad not found. PyTorch version is probably too old. Please upgrade "
                                  "PyTorch to >= 2.0 to use GradientOptimization without specifying a "
                                  "gradient_function.")
