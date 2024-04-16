@@ -504,6 +504,7 @@ class ParameterEstimationComposition(Composition):
         ],
         model: Optional[Composition] = None,
         data: Optional[pd.DataFrame] = None,
+        likelihood_include_mask: Optional[np.ndarray] = None,
         data_categorical_dims=None,
         objective_function: Optional[Callable] = None,
         num_estimates: int = 1,
@@ -615,6 +616,22 @@ class ParameterEstimationComposition(Composition):
         # the data is compatible with outcome variables determined above
         if self.data is not None:
             self._validate_data()
+
+            if likelihood_include_mask is not None:
+
+                # Make sure the length is correct
+                if len(likelihood_include_mask) != len(self.data):
+                    raise ValueError(
+                        "Likelihood include mask must be the same length as the number of rows in the data!")
+
+                # If the include mask is 2D, make it 1D
+                if likelihood_include_mask.ndim == 2:
+                    likelihood_include_mask = likelihood_include_mask.flatten()
+
+                self.likelihood_include_mask = likelihood_include_mask
+
+            else:
+                self.likelihood_include_mask = np.ones(len(self.data), dtype=bool)
 
         # Store the parameters specified for fitting
         self.fit_parameters = parameters
@@ -792,7 +809,7 @@ class ParameterEstimationComposition(Composition):
                     categorical_dims=self.data_categorical_dims,
                 )
 
-                return np.sum(np.log(like))
+                return np.sum(np.log(like[self.likelihood_include_mask]))
 
             objective_function = f
 
