@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationFunctions &mdash; PsyNeuLink 0.15.1.0+72.ge2f96f004 documentation</title>
+  <title>OptimizationFunctions &mdash; PsyNeuLink 0.15.1.0+90.g017052242 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+72
+                  0.15.1.0+90
                 </div>
               
             
@@ -641,8 +641,9 @@ depending on whether <a class="reference internal" href="#psyneulink.core.compon
 which should be the derivative of the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_function</span></code></a>
 with respect to <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.variable" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> at its current value:
 <span class="math notranslate nohighlight">\(\frac{d(objective\_function(variable))}{d(variable)}\)</span>.  If the <strong>gradient_function* argument of the
-constructor is not specified, then an attempt is made to use `Autograd’s &lt;https://github.com/HIPS/autograd&gt;`_ `grad
-&lt;autograd.grad&gt;` method to generate `gradient_function &lt;GradientOptimization.gradient_function&gt;`.  If that fails,
+constructor is not specified, then an attempt is made to use PyTorch functional
+`autograd’s &lt;https://pytorch.org/docs/stable/generated/torch.func.grad.html&gt;`_ `grad &lt;torch.func.grad&gt;`
+method to generate `gradient_function &lt;GradientOptimization.gradient_function&gt;`.  If that fails,
 an error occurs.  The **search_space</strong> argument can be used to specify lower and/or upper bounds for each dimension
 of the sample; if the gradient causes a value of the sample to exceed a bound along a dimenson, the value of the
 bound is used for that dimension, unless/until the gradient shifts and causes it to return back within the bound.</p>
@@ -655,7 +656,7 @@ bound is used for that dimension, unless/until the gradient shifts and causes it
 in each iteration of the <a class="reference internal" href="#gradientoptimization-procedure"><span class="std std-ref">optimization process</span></a>;
 it must be specified and it must return a scalar value.</p></li>
 <li><p><strong>gradient_function</strong> (<em>function</em>) – specifies function used to compute the gradient in each iteration of the <a class="reference internal" href="#gradientoptimization-procedure"><span class="std std-ref">optimization process</span></a>;  if it is not specified, an attempt is made to compute it using
-<a class="reference external" href="https://github.com/HIPS/autograd">autograd.grad</a>.</p></li>
+<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.func.grad.html">PyTorch autograd’s</a> <code class="xref any docutils literal notranslate"><span class="pre">grad</span></code>.</p></li>
 <li><p><strong>direction</strong> (<em>ASCENT</em><em> or </em><em>DESCENT : default ASCENT</em>) – specifies the direction of gradient optimization: if <em>ASCENT</em>, movement is attempted in the positive direction
 (i.e., “up” the gradient);  if <em>DESCENT</em>, movement is attempted in the negative direction (i.e. “down”
 the gradient).</p></li>
