@@ -1,5 +1,5 @@
+import contextlib
 import re
-
 import numpy as np
 import pytest
 
@@ -851,7 +851,7 @@ class TestControlSpecification:
                                            search_space=[[1],[1],[1]])
         ocomp.add_controller(ocm)
         result = ocomp.run({oa: [[1]], ob: [[2]]})
-        assert result == [[2.], [1.]]
+        np.testing.assert_array_equal(result, [[2.], [1.]])
         assert len(ocomp.controller.state_input_ports) == 2
         assert all([node in [input_port.shadow_inputs.owner for input_port in ocomp.controller.state_input_ports]
                     for node in {oa, ob}])
@@ -1840,6 +1840,7 @@ class TestControlMechanisms:
 
         assert len(lvoc.input_ports) == 5
 
+    @pytest.mark.pytorch
     def test_lvoc_features_function(self):
         m1 = pnl.TransferMechanism(input_ports=["InputPort A", "InputPort B"])
         m2 = pnl.TransferMechanism()
@@ -1847,22 +1848,33 @@ class TestControlMechanisms:
         c.add_node(m1, required_roles=pnl.NodeRole.INPUT)
         c.add_node(m2, required_roles=pnl.NodeRole.INPUT)
         c._analyze_graph()
-        lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.RegressionCFA,
-                                                state_features=[m1.input_ports[0], m1.input_ports[1], m2.input_port, m2],
-                                                state_feature_function=pnl.LinearCombination(offset=10.0),
-                                                objective_mechanism=pnl.ObjectiveMechanism(
-                                                    monitor=[m1, m2]),
-                                                function=pnl.GradientOptimization(max_iterations=1),
-                                                control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
-        c.add_node(lvoc)
-        input_dict = {m1: [[1], [1]], m2: [1]}
 
-        c.run(inputs=input_dict)
+        ocm_kwargs = dict(agent_rep=pnl.RegressionCFA,
+                          state_features=[m1.input_ports[0], m1.input_ports[1], m2.input_port, m2],
+                          state_feature_function=pnl.LinearCombination(offset=10.0),
+                          objective_mechanism=pnl.ObjectiveMechanism(
+                              monitor=[m1, m2]),
+                          function=pnl.GradientOptimization(max_iterations=1),
+                          control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
 
-        assert len(lvoc.input_ports) == 5
+        import torch
+        if 'func' in dir(torch):
+            lvoc = pnl.OptimizationControlMechanism(**ocm_kwargs)
 
-        for i in range(1,5):
-            assert lvoc.input_ports[i].function.offset == 10.0
+            c.add_node(lvoc)
+            input_dict = {m1: [[1], [1]], m2: [1]}
+
+            c.run(inputs=input_dict)
+
+            assert len(lvoc.input_ports) == 5
+
+            for i in range(1, 5):
+                assert lvoc.input_ports[i].function.offset == 10.0
+
+        else:
+            with pytest.raises(ValueError):
+                pnl.OptimizationControlMechanism(**ocm_kwargs)
+
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -3587,27 +3599,27 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                                            intensity_cost_function=pnl.Linear(slope=0.))
 
         objective_mech = pnl.ObjectiveMechanism(monitor=[B])
-        warning_type = None
+        warning_msg = f"'OptimizationControlMechanism-0' has 'num_estimates = {num_estimates}' specified, " \
+                      f"but its 'agent_rep' \\('comp'\\) has no random variables: " \
+                      f"'RANDOMIZATION_CONTROL_SIGNAL' will not be created, and num_estimates set to None."
+
         if num_estimates and not rand_var:
-            warning_type = UserWarning
-        warning_msg = f'"\'OptimizationControlMechanism-0\' has \'num_estimates = {num_estimates}\' specified, ' \
-                      f'but its \'agent_rep\' (\'comp\') has no random variables: ' \
-                      f'\'RANDOMIZATION_CONTROL_SIGNAL\' will not be created, and num_estimates set to None."'
-        with pytest.warns(warning_type) as warnings:
+            warning_context = pytest.warns(UserWarning, match=warning_msg)
+        else:
+            warning_context = contextlib.nullcontext()
+
+        with warning_context:
             ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
                                                    state_features=[A.input_port],
                                                    objective_mechanism=objective_mech,
                                                    function=pnl.GridSearch(),
                                                    num_estimates=num_estimates,
                                                    control_signals=[control_signal])
-            if warning_type:
-                assert any(warning_msg == repr(w.message.args[0]) for w in warnings)
 
         comp.add_controller(ocm)
         inputs = {A: [[[1.0]]]}
 
-        comp.run(inputs=inputs,
-                 num_trials=2)
+        comp.run(inputs=inputs, num_trials=2)
 
         if not num_estimates or not rand_var:
             assert pnl.RANDOMIZATION_CONTROL_SIGNAL not in comp.controller.control_signals # Confirm no estimates
@@ -3710,22 +3722,17 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
 
         inputs = {A: [[[1.0]]]}
 
-        comp.run(inputs=inputs, num_trials=10, context='outer_comp', execution_mode=comp_mode)
-        np.testing.assert_allclose(comp.results, [[[0.7310585786300049]], [[0.999999694097773]], [[0.999999694097773]], [[0.9999999979388463]], [[0.9999999979388463]], [[0.999999694097773]], [[0.9999999979388463]], [[0.999999999986112]], [[0.999999694097773]], [[0.9999999999999993]]])
+        benchmark(comp.run, inputs=inputs, num_trials=10, context='outer_comp', execution_mode=comp_mode)
+        np.testing.assert_allclose(comp.results[:10],
+                                   [[[0.7310585786300049]], [[0.999999694097773]], [[0.999999694097773]], [[0.9999999979388463]], [[0.9999999979388463]],
+                                    [[0.999999694097773]], [[0.9999999979388463]], [[0.999999999986112]], [[0.999999694097773]], [[0.9999999999999993]]])
 
         # control signal value (mod slope) is chosen randomly from all of the control signal values
         # that correspond to a net outcome of 1
         if comp_mode is pnl.ExecutionMode.Python:
             log_arr = A.log.nparray_dictionary()
             np.testing.assert_allclose([[1.], [15.], [15.], [20.], [20.], [15.], [20.], [25.], [15.], [35.]],
-                               log_arr['outer_comp']['mod_slope'])
-
-        if benchmark.enabled:
-            # Disable logging for the benchmark run
-            A.log.set_log_conditions(items="mod_slope", log_condition=LogCondition.OFF)
-            A.log.clear_entries()
-            benchmark(comp.run, inputs=inputs, num_trials=10, context='bench_outer_comp', execution_mode=comp_mode)
-            assert len(A.log.get_logged_entries()) == 0
+                               log_arr['outer_comp']['mod_slope'][:10])
 
 
     def test_input_CIM_assignment(self, comp_mode):
@@ -3919,7 +3926,7 @@ class TestControlTimeScales:
         #
         assert c.value == [4]
         assert c.execution_count == 4
-        assert comp.results == [[2], [4]]
+        np.testing.assert_array_equal(comp.results, [[[2]], [[4]]])
 
     def test_time_step_after(self):
         a = pnl.ProcessingMechanism()
@@ -3947,7 +3954,7 @@ class TestControlTimeScales:
         #
         assert c.value == [4]
         assert c.execution_count == 4
-        assert comp.results == [[1], [3]]
+        np.testing.assert_array_equal(comp.results, [[[1]], [[3]]])
 
     def test_pass_before(self):
         a = pnl.ProcessingMechanism()
@@ -3987,7 +3994,7 @@ class TestControlTimeScales:
         #       a   b
         assert c.value == [6]
         assert c.execution_count == 6
-        assert comp.results == [[3], [6]]
+        np.testing.assert_array_equal(comp.results, [[[3]], [[6]]])
 
     def test_pass_after(self):
         a = pnl.ProcessingMechanism()
@@ -4033,7 +4040,7 @@ class TestControlTimeScales:
         #       (C-6)
         assert c.value == [6]
         assert c.execution_count == 6
-        assert comp.results == [[2], [5]]
+        np.testing.assert_array_equal(comp.results, [[[2]], [[5]]])
 
     def test_trial_before(self):
         a = pnl.ProcessingMechanism()
@@ -4061,7 +4068,7 @@ class TestControlTimeScales:
         #
         assert c.value == [2]
         assert c.execution_count == 2
-        assert comp.results == [[1], [2]]
+        np.testing.assert_array_equal(comp.results, [[[1]], [[2]]])
 
     def test_trial_after(self):
         a = pnl.ProcessingMechanism()
@@ -4091,7 +4098,7 @@ class TestControlTimeScales:
         #
         assert c.value == [2]
         assert c.execution_count == 2
-        assert comp.results == [[1], [1]]
+        np.testing.assert_array_equal(comp.results, [[[1]], [[1]]])
 
     def test_run_before(self):
         a = pnl.ProcessingMechanism()
@@ -4126,7 +4133,7 @@ class TestControlTimeScales:
         #      a  b
         assert c.value == [2]
         assert c.execution_count == 2
-        assert comp.results == [[1], [1], [2], [2]]
+        np.testing.assert_array_equal(comp.results, [[[1]], [[1]], [[2]], [[2]]])
 
     def test_run_after(self):
         a = pnl.ProcessingMechanism()
@@ -4161,4 +4168,4 @@ class TestControlTimeScales:
         #      a  b
         assert c.value == [2]
         assert c.execution_count == 2
-        assert comp.results == [[1], [1], [1], [1]]
+        np.testing.assert_allclose(comp.results, [[[1]], [[1]], [[1]], [[1]]])

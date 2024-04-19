@@ -3918,8 +3918,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     _model_spec_generic_type_name = 'graph'
 
-
-    class Parameters(ParametersBase):
+    class Parameters(Composition_Base.Parameters):
         """
             Attributes
             ----------
@@ -11251,10 +11250,8 @@ _
                     self.parameters.results._set(results, context)
 
                     if self._is_learning(context):
-                        # copies back matrix to pnl from param struct (after learning)
-                        _comp_ex.writeback_params_to_pnl(params=_comp_ex._param_struct,
-                                                         ids="llvm_param_ids",
-                                                         condition=lambda p: p.name == "matrix")
+                        # copies back matrix to pnl from state struct after learning
+                        _comp_ex.writeback_state_to_pnl(condition=lambda p: p.name == "matrix")
 
                     self._propagate_most_recent_context(context)
 
@@ -12214,7 +12211,7 @@ _
                         if clamp_input:
                             if node in hard_clamp_inputs:
                                 # clamp = HARD_CLAMP --> "turn off" recurrent projection
-                                if hasattr(node, "recurrent_projection"):
+                                if node.recurrent_projection is not None:
                                     node.recurrent_projection.sender.parameters.value._set([0.0], context)
                             elif node in no_clamp_inputs:
                                 for input_port in node.input_ports:
@@ -13054,12 +13051,21 @@ _
 
     @property
     def _inner_projections(self):
-        # PNL considers afferent projections to input_CIM to be part
-        # of the nested composition. Filter them out.
+        # Filter out projections not used in compiled variant of this composition:
+        # * afferent projections to input_CIM and parameter_CIM.
+        #   These are included in node wrapper of the nested composition node,
+        #   and included in outer composition
+        # * efferent projections from output_CIM.
+        #   Same as above, they are considered part of the outer composition,
+        #   and are executed in node wrappers of the receiving nodes
+        # * Autoassociative projections (RTM, LCA)
+        #   These are executed as part of their respective mechanism and are
+        #   included in the compiled structures of their respective mechanisms.
         return (p for p in self.projections
-                  if p.receiver.owner is not self.input_CIM and
-                     p.receiver.owner is not self.parameter_CIM and
-                     p.sender.owner is not self.output_CIM)
+                if p.receiver.owner is not self.input_CIM and
+                   p.receiver.owner is not self.parameter_CIM and
+                   p.sender.owner is not self.output_CIM and
+                   p.sender.owner is not p.receiver.owner)
 
     def _get_param_ids(self):
         return ["nodes", "projections"] + super()._get_param_ids()

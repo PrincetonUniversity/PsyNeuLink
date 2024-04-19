@@ -131,7 +131,7 @@ class TestControlMechanism:
         assert Tz.parameter_ports[pnl.SLOPE].mod_afferents[0].sender.owner == C
         assert C.parameters.control_allocation.get() == [1]
         result = comp.run(inputs={Tx:[1,1], Ty:[4,4]})
-        assert comp.results == [[[4.], [4.]], [[4.], [4.]]]
+        np.testing.assert_array_equal(comp.results, [[[4.], [4.]], [[4.], [4.]]])
 
 
     def test_identicalness_of_control_and_gating(self):

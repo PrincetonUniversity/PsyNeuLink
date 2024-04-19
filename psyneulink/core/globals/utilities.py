@@ -123,6 +123,12 @@ from itertools import chain, combinations
 
 import numpy as np
 
+# Conditionally import torch
+try:
+    import torch
+except ImportError:
+    torch = None
+
 from psyneulink.core.globals.keywords import \
     comparison_operators, DISTANCE_METRICS, EXPONENTIAL, GAUSSIAN, LINEAR, MATRIX_KEYWORD_VALUES, NAME, SINUSOID, VALUE
 
@@ -619,17 +625,7 @@ def iscompatible(candidate, reference=None, **kargs):
                         else:
                             return True
                 else:
-                    if not is_number(value):
-                        try:
-                            # True for autograd ArrayBox (and maybe other types?)
-                            # if isinstance(value._value, Number):
-                            from autograd.numpy.numpy_boxes import ArrayBox
-                            if isinstance(value, ArrayBox):
-                                return True
-                        except:
-                            return False
-                    else:
-                        return True
+                    return is_number(value)
             # Test copy since may need to convert matrix to array (see above)
             if not recursively_check_elements_for_numeric(candidate.copy()):
                 return False
@@ -1021,6 +1017,11 @@ def convert_to_np_array(value, dimension=None):
     """
     def safe_create_np_array(value):
         with warnings.catch_warnings():
+
+            # If we have a torch tensor, allow it to pass through unchanged
+            if torch and torch.is_tensor(value):
+                return value
+
             warnings.filterwarnings('error', category=np.VisibleDeprecationWarning)
             # NOTE: this will raise a ValueError in the future.
             # See https://numpy.org/neps/nep-0034-infer-dtype-is-object.html
@@ -1053,7 +1054,11 @@ def convert_to_np_array(value, dimension=None):
     value = safe_create_np_array(value)
 
     if dimension == 1:
-        value = np.atleast_1d(value)
+        if torch and torch.is_tensor(value):
+            value = torch.atleast_1d(value)
+        else:
+            value = np.atleast_1d(value)
+
     elif dimension == 2:
         # Array is made up of non-uniform elements, so treat as 2d array and pass
         if (
@@ -1063,7 +1068,11 @@ def convert_to_np_array(value, dimension=None):
         ):
             pass
         else:
-            value = np.atleast_2d(value)
+            if torch and torch.is_tensor(value):
+                value = torch.atleast_2d(value)
+            else:
+                value = np.atleast_2d(value)
+
     elif dimension is not None:
         raise UtilitiesError("dimension param ({0}) must be None, 1, or 2".format(dimension))
 

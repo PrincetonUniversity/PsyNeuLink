@@ -722,8 +722,6 @@ class Exponential(TransferFunction):  # ----------------------------------------
         scale = self._get_current_parameter_value(SCALE, context)
         offset = self._get_current_parameter_value(OFFSET, context)
 
-        # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
-        # result = scale * np.exp(rate * variable + bias) + offset
         result = scale * e**(rate * variable + bias) + offset
         return self.convert_output_type(result)
 
@@ -1022,8 +1020,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
         offset = self._get_current_parameter_value(OFFSET, context)
         scale = self._get_current_parameter_value(SCALE, context)
 
-        # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
-        # result = 1. / (1 + np.exp(-gain * (variable - bias) + offset))
         result = scale * (1. / (1 + e**(-gain * (variable + bias - x_0) + offset)))
 
         return self.convert_output_type(result)
@@ -1346,9 +1342,6 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         offset = self._get_current_parameter_value(OFFSET, context)
         scale = self._get_current_parameter_value(SCALE, context)
 
-        # The following probably doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
-        #   (since np.exp doesn't work)
-        # result = 1. / (1 + np.tanh(-gain * (variable - bias) + offset))
         exponent = -2 * (gain * (variable + bias - x_0) + offset)
         result = scale * (1 - e**exponent)/ (1 + e**exponent)
 
@@ -2437,7 +2430,6 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         offset = self._get_current_parameter_value(OFFSET, context)
         random_state = self._get_current_parameter_value('random_state', context)
 
-        # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         result = scale * random_state.normal(variable + bias, variance) + offset
 
         return self.convert_output_type(result)
@@ -2846,7 +2838,6 @@ class Dropout(TransferFunction):  #
             result = variable
 
         else:
-            # ??Not sure whether the following works with autograd (https://github.com/HIPS/autograd/issues/416)
             p = p or self.defaults.p
             self.binomial_distort.parameters.p.set(p, context)
             result = self.binomial_distort(variable) * (1 / (1 - p))
@@ -3886,7 +3877,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             return np.array(specification)
 
 
-    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags:frozenset):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         # Restrict to 1d arrays
         if self.defaults.variable.ndim != 1:
             warnings.warn("Shape mismatch: {} (in {}) got 2D input: {}".format(
@@ -3899,7 +3890,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                           pnlvm.PNLCompilerWarning)
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-        matrix = ctx.get_param_or_state_ptr(builder, self, MATRIX, param_struct_ptr=params)
+        matrix = ctx.get_param_or_state_ptr(builder, self, MATRIX, param_struct_ptr=params, state_struct_ptr=state)
         normalize = ctx.get_param_or_state_ptr(builder, self, NORMALIZE, param_struct_ptr=params)
 
         # Convert array pointer to pointer to the fist element

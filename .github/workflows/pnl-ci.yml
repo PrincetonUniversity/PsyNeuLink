@@ -143,7 +143,7 @@ jobs:
         echo "pip_cache_dir=$(python -m pip cache dir)" | tee -a $GITHUB_OUTPUT
 
     - name: Wheels cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ${{ steps.pip_cache.outputs.pip_cache_dir }}/wheels
         key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt') }}-${{ github.sha }}
@@ -163,22 +163,28 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-    - name: Print test machine/env info
+    - name: Print numpy info
       shell: bash
       run: |
         python -c "import numpy; numpy.show_config()"
+
+    - name: Print machine info
+      shell: bash
+      run: |
         case "$RUNNER_OS" in
-          Linux*) lscpu;;
+          Linux*) lscpu; lsmem;;
+          macOS*) sysctl -a | grep '^hw' ;;
+          Windows*) wmic cpu get description,currentclockspeed,NumberOfCores,NumberOfEnabledCore,NumberOfLogicalProcessors; wmic memorychip get capacity,speed,status,manufacturer ;;
         esac
 
     - name: Test with pytest
       timeout-minutes: 180
-      run: pytest --junit-xml=tests_out.xml --verbosity=0 -n auto ${{ matrix.extra-args }}
+      run: pytest --junit-xml=tests_out.xml --verbosity=0 -n logical ${{ matrix.extra-args }}
 
     - name: Upload test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
+        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}-${{ matrix.version-restrict }}
         path: tests_out.xml
         retention-days: 5
       if: (success() || failure()) && ! contains(matrix.extra-args, 'forked')
@@ -202,7 +208,8 @@ jobs:
         python setup.py sdist bdist_wheel
 
     - name: Upload dist packages
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
+      if: matrix.version-restrict == ''
       with:
         name: dist-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
         path: dist/

@@ -1207,7 +1207,8 @@ class Distance(ObjectiveFunction):
             # MODIFIED CW 3/20/18: avoid divide by zero error by plugging in two zeros
             # FIX: unsure about desired behavior when v2 = 0 and v1 != 0
             # JDC: returns [inf]; leave, and let it generate a warning or error message for user
-            result = -np.sum(np.where(np.logical_and(v1 == 0, v2 == 0), 0.0, v1 * np.log(v2)))
+            both_zero = np.logical_and(v1 == 0, v2 == 0)
+            result = -np.sum(v1 * np.where(both_zero, 0.0, np.log(v2, where=np.logical_not(both_zero))))
 
         # Energy
         elif self.metric == ENERGY:

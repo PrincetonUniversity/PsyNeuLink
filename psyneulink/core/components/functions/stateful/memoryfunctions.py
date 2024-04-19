@@ -301,7 +301,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         if previous_value is None:
             previous_value = self._get_current_parameter_value("initializer", context)
 
-        if previous_value is None or previous_value == []:
+        if previous_value is None or np.asarray(previous_value).size == 0:
             self.parameters.previous_value._get(context).clear()
             value = deque([], maxlen=self.parameters.history.get(context))
 
@@ -1752,7 +1752,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             field_weights = self._get_current_parameter_value('distance_field_weights', context)
         # Set any items in field_weights to None if they are None or an empty list:
         field_weights = np.atleast_1d([None if
-                                       fw is None or fw == [] or isinstance(fw, np.ndarray) and fw.tolist()==[]
+                                       fw is None or np.asarray(fw).size == 0
                                        else fw
                                        for fw in field_weights])
         if granularity == 'per_field':
@@ -1763,7 +1763,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             if len(field_weights)==1:
                 field_weights = np.full(num_fields, field_weights[0])
             for i in range(num_fields):
-                if not any([item is None or item == [] or isinstance(item, np.ndarray) and item.tolist() == []
+                if not any([item is None or np.asarray(item).size == 0
                             for item in [cue[i], candidate[i], field_weights[i]]]):
                     distances_by_field[i] = distance_fct([cue[i], candidate[i]]) * field_weights[i]
             return list(distances_by_field)
@@ -2623,7 +2623,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         if previous_value is None:
             previous_value = self._get_current_parameter_value("initializer", context)
 
-        if previous_value == []:
+        if np.asarray(previous_value).size == 0:
             value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
             self.parameters.previous_value._set(copy.deepcopy(value), context)
 

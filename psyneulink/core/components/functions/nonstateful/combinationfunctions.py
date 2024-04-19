@@ -911,7 +911,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             # result = np.sum(np.atleast_2d(variable), axis=0) * scale + offset
             result = np.sum(np.atleast_2d(variable), axis=1) * scale + offset
         elif operation == PRODUCT:
-            result = np.product(np.atleast_2d(variable), axis=1) * scale + offset
+            result = np.prod(np.atleast_2d(variable), axis=1) * scale + offset
         else:
             raise FunctionError("Unrecognized operator ({0}) for Reduce function".
                                 format(self._get_current_parameter_value(OPERATION, context)))
@@ -1438,11 +1438,12 @@ class LinearCombination(
         if operation == SUM:
             combination = np.sum(variable, axis=0)
         elif operation == PRODUCT:
-            combination = np.product(variable, axis=0)
+            combination = np.prod(variable, axis=0)
         elif operation == CROSS_ENTROPY:
             v1 = variable[0]
             v2 = variable[1]
-            combination = np.where(np.logical_and(v1 == 0, v2 == 0), 0.0, v1 * np.log(v2))
+            both_zero = np.logical_and(v1 == 0, v2 == 0)
+            combination = v1 * np.where(both_zero, 0.0, np.log(v2, where=np.logical_not(both_zero)))
         else:
             raise FunctionError("Unrecognized operator ({0}) for LinearCombination function".
                                 format(operation.self.Operation.SUM))
@@ -1451,7 +1452,7 @@ class LinearCombination(
             product = combination * scale
         else:
             # Hadamard scale
-            product = np.product([combination, scale], axis=0)
+            product = np.prod([combination, scale], axis=0)
 
         if isinstance(offset, numbers.Number):
             # scalar offset
@@ -1996,7 +1997,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
             result = np.sum(means, axis=0) * scale + offset
 
         elif operation == PRODUCT:
-            result = np.product(means, axis=0) * scale + offset
+            result = np.prod(means, axis=0) * scale + offset
 
         else:
             raise FunctionError("Unrecognized operator ({0}) for CombineMeans function".

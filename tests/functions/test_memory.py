@@ -144,9 +144,7 @@ def test_basic(func, variable, params, expected, benchmark, func_mode):
     if variable is philox_var:
         f.parameters.random_state.set(_SeededPhilox([module_seed]))
 
-    # Do not allow writeback. "ring_memory" used by DictionaryMemory is a
-    # custom structure, not a PNL parameter
-    EX = pytest.helpers.get_func_execution(f, func_mode, writeback=False)
+    EX = pytest.helpers.get_func_execution(f, func_mode)
 
     EX(variable)
 
@@ -444,7 +442,7 @@ class TestDictionaryMemory:
 
     def test_DictionaryMemory_with_duplicate_entry_in_initializer_warning(self):
 
-        regexp = r'Attempt to initialize memory of DictionaryMemory with an entry \([[1 2 3]'
+        regexp = r'Attempt to initialize memory of DictionaryMemory with an entry \(\[\[1 2 3\]'
         with pytest.warns(UserWarning, match=regexp):
             em = EpisodicMemoryMechanism(
                     name='EPISODIC MEMORY MECH',
@@ -624,7 +622,7 @@ class TestDictionaryMemory:
 
 def retrieve_label_helper(retrieved, stimuli):
     return [k for k,v in stimuli.items()
-            if all(np.alltrue(a)
+            if all(all(a)
                    for a in np.equal(np.array(retrieved, dtype=object),
                                      np.array(v, dtype=object),
                                      dtype=object))] or [None]
@@ -975,7 +973,7 @@ class TestContentAddressableMemory:
         retrieved_label = retrieve_label_helper(retrieved, stimuli)
         assert retrieved_label == [None]
         expected = np.array([np.array([0,0,0]),np.array([0,0,0])])
-        assert all(np.alltrue(x) for x in np.equal(expected,retrieved, dtype=object))
+        assert all(all(x) for x in np.equal(expected,retrieved, dtype=object))
 
     def test_ContentAddressableMemory_without_initializer_and_diff_field_sizes(self):
 
@@ -1034,7 +1032,7 @@ class TestContentAddressableMemory:
 
     def test_ContentAddressableMemory_with_duplicate_entry_in_initializer_warning(self):
 
-        regexp = r'Attempt to initialize memory of ContentAddressableMemory with an entry \([[1 2 3]'
+        regexp = r'Attempt to initialize memory of ContentAddressableMemory with an entry \(\[\[1 2 3\]'
         with pytest.warns(UserWarning, match=regexp):
             c = ContentAddressableMemory(
                 initializer=np.array([[[1,2,3], [4,5,6]],
