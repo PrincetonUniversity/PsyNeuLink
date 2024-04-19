@@ -249,8 +249,12 @@ def test_parameter_optimization_ddm(func_mode, opt_method, optuna_kwargs, result
         np.testing.assert_allclose(pec.optimized_parameter_values, result)
 
 
+@pytest.mark.parametrize('likelihood_include_mask', [
+    pytest.param('include', id='likelihood_include_mask'),
+    pytest.param(None, id='no_likelihood_include_mask'),]
+)
 # func_mode is a hacky wa to get properly marked; Python, LLVM, and CUDA
-def test_parameter_estimation_ddm_mle(func_mode):
+def test_parameter_estimation_ddm_mle(func_mode, likelihood_include_mask):
     """Test parameter estimation of a DDM in integrator mode with MLE."""
 
     if func_mode == "Python":
@@ -313,6 +317,9 @@ def test_parameter_estimation_ddm_mle(func_mode):
     )
     data_to_fit["decision"] = data_to_fit["decision"].astype("category")
 
+    if likelihood_include_mask == 'include':
+        likelihood_include_mask = np.ones((len(data_to_fit),), dtype=bool)
+
     # Create a parameter estimation composition to fit the data we just generated and hopefully recover the
     # parameters of the DDM.
 
@@ -331,6 +338,7 @@ def test_parameter_estimation_ddm_mle(func_mode):
             decision.output_ports[pnl.RESPONSE_TIME],
         ],
         data=data_to_fit,
+        likelihood_include_mask=likelihood_include_mask,
         optimization_function=PECOptimizationFunction(
             method="differential_evolution", max_iterations=1
         ),
