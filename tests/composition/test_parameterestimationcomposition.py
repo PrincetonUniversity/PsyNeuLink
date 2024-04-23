@@ -9,6 +9,44 @@ from psyneulink.core.components.functions.nonstateful.fitfunctions import (
     PECOptimizationFunction,
 )
 
+def _run_ddm_with_params(
+    starting_value,
+    rate,
+    noise,
+    threshold,
+    non_decision_time,
+    time_step_size,
+    trial_inputs,
+):
+    """Create a composition with DDM and run it with the given parameters."""
+
+    # Create a simple one mechanism composition containing a DDM in integrator mode.
+    decision = pnl.DDM(
+        function=pnl.DriftDiffusionIntegrator(
+            starting_value=starting_value,
+            rate=rate,
+            noise=noise,
+            threshold=threshold,
+            non_decision_time=non_decision_time,
+            time_step_size=time_step_size,
+        ),
+        output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME],
+        name="DDM",
+    )
+
+    comp = pnl.Composition(pathways=decision)
+
+    # Run the composition to generate some data to fit
+    comp.run(inputs={decision: trial_inputs})
+    results = comp.results
+
+    data_to_fit = pd.DataFrame(
+        np.squeeze(np.array(results)), columns=["decision", "response_time"]
+    )
+    data_to_fit["decision"] = data_to_fit["decision"].astype("category")
+
+    return comp, data_to_fit
+
 
 # input_node_1 = pnl.ProcessingMechanism(size=1)
 # input_node_2 = pnl.ProcessingMechanism(size=2)
@@ -249,6 +287,30 @@ def test_parameter_optimization_ddm(func_mode, opt_method, optuna_kwargs, result
         np.testing.assert_allclose(pec.optimized_parameter_values, result)
 
 
+def test_parameter_estimation_ddm_cond(func_mode):
+    if func_mode == "Python":
+        pytest.skip(
+            "Test not yet implemented for Python. Parameter estimate is too slow."
+        )
+
+    # High-level parameters the impact performance of the test
+    num_trials = 50
+    time_step_size = 0.01
+    num_estimates = 1000
+
+    ddm_params = dict(
+        starting_value=0.0,
+        rate=0.3,
+        noise=1.0,
+        threshold=0.6,
+        non_decision_time=0.15,
+        time_step_size=time_step_size,
+    )
+
+    # We will generate a dataset that is comprised of two different conditions. Each condition will have a different
+    # drift rate and non_decision_time.
+
+
 @pytest.mark.parametrize('likelihood_include_mask', [
     pytest.param('include', id='likelihood_include_mask'),
     pytest.param(None, id='no_likelihood_include_mask'),]
@@ -276,15 +338,6 @@ def test_parameter_estimation_ddm_mle(func_mode, likelihood_include_mask):
         time_step_size=time_step_size,
     )
 
-    # Create a simple one mechanism composition containing a DDM in integrator mode.
-    decision = pnl.DDM(
-        function=pnl.DriftDiffusionIntegrator(**ddm_params),
-        output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME],
-        name="DDM",
-    )
-
-    comp = pnl.Composition(pathways=decision)
-
     # Let's generate an "experimental" dataset to fit. This is a parameter recovery test
     # Lets make 10% of the trials have a positive stimulus drift rate, and the other 90%
     # have a negative stimulus drift rate.
@@ -300,22 +353,8 @@ def test_parameter_estimation_ddm_mle(func_mode, likelihood_include_mask):
     trial_inputs[0] = np.abs(trial_inputs[0])
     trial_inputs[-1] = np.abs(trial_inputs[-1])
 
-    inputs_dict = {decision: trial_inputs}
-
-    # Store the results of this "experiment" as a numpy array. This should be a
-    # 2D array of shape (len(input), 2). The first column being a discrete variable
-    # specifying whether the upper or lower decision boundary is reached and the second column is the
-    # reaction time. We will put the data into a pandas DataFrame, this makes it
-    # easier to specify which columns in the data are categorical or not.
-
-    # Run the composition to generate some data to fit
-    comp.run(inputs=inputs_dict)
-    results = comp.results
-
-    data_to_fit = pd.DataFrame(
-        np.squeeze(np.array(results)), columns=["decision", "response_time"]
-    )
-    data_to_fit["decision"] = data_to_fit["decision"].astype("category")
+    # Creat and run the composition to generate some data to fit
+    comp, data_to_fit = _run_ddm_with_params(**ddm_params, trial_inputs=trial_inputs)
 
     if likelihood_include_mask == 'include':
         likelihood_include_mask = np.ones((len(data_to_fit),), dtype=bool)
@@ -324,9 +363,9 @@ def test_parameter_estimation_ddm_mle(func_mode, likelihood_include_mask):
     # parameters of the DDM.
 
     fit_parameters = {
-        ("rate", decision): np.linspace(-0.5, 0.5, 1000),
-        ("threshold", decision): np.linspace(0.5, 1.0, 1000),
-        ("non_decision_time", decision): np.linspace(0.0, 1.0, 1000),
+        ("rate", comp.nodes['DDM']): np.linspace(-0.5, 0.5, 1000),
+        ("threshold", comp.nodes['DDM']): np.linspace(0.5, 1.0, 1000),
+        ("non_decision_time", comp.nodes['DDM']): np.linspace(0.0, 1.0, 1000),
     }
 
     pec = pnl.ParameterEstimationComposition(
@@ -334,8 +373,8 @@ def test_parameter_estimation_ddm_mle(func_mode, likelihood_include_mask):
         nodes=[comp],
         parameters=fit_parameters,
         outcome_variables=[
-            decision.output_ports[pnl.DECISION_OUTCOME],
-            decision.output_ports[pnl.RESPONSE_TIME],
+            comp.nodes['DDM'].output_ports[pnl.DECISION_OUTCOME],
+            comp.nodes['DDM'].output_ports[pnl.RESPONSE_TIME],
         ],
         data=data_to_fit,
         likelihood_include_mask=likelihood_include_mask,
