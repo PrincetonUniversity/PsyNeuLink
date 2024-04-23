@@ -460,6 +460,7 @@ class PECOptimizationFunction(OptimizationFunction):
             params=None,
             fit_evaluate=True,
         )
+        # print(f"Evaluate results: {all_values}")
 
         # We need to swap the simulation (randomization dimension) with the output dimension so things
         # are in the right order passing to the objective_function call signature.

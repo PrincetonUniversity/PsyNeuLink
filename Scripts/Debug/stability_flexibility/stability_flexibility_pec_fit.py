@@ -16,9 +16,9 @@ set_global_seed(pnl_seed)
 trial_seq_seed = 0
 
 # High-level parameters the impact performance of the test
-num_trials = 50
+num_trials = 5
 time_step_size = 0.01
-num_estimates = 1000
+num_estimates = 2
 
 sf_params = dict(
     gain=3.0,
@@ -94,9 +94,9 @@ decisionGate = comp.nodes["DECISION_GATE"]
 responseGate = comp.nodes["RESPONSE_GATE"]
 
 fit_parameters = {
-    # ("gain", controlModule): np.linspace(1.0, 10.0, 1000),  # Gain
+    # ("gain", controlModule): np.linspace(3.0, 3.0, 2),  # Gain
     # ("slope", congruenceWeighting): np.linspace(0.0, 0.1, 1000),  # Automaticity
-    ("threshold", decisionMaker): np.linspace(0.01, 0.5, 1000),  # Threshold
+    ("threshold", decisionMaker): np.linspace(0.5, 0.5, 2),  # Threshold
     # ("non_decision_time", decisionMaker): np.linspace(0.1, 0.4, 1000),  # Threshold
 }
 
@@ -109,7 +109,7 @@ pec = pnl.ParameterEstimationComposition(
         responseGate.output_ports[0],
     ],
     data=data_to_fit,
-    optimization_function='differential_evolution',
+    optimization_function=pnl.PECOptimizationFunction(method="differential_evolution", max_iterations=1),
     num_estimates=num_estimates,
 )
 

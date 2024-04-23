@@ -842,4 +842,6 @@ class CompExecution(CUDAExecution):
         exceptions = [r.exception() for r in results]
         assert all(e is None for e in exceptions), "Not all jobs finished sucessfully: {}".format(exceptions)
 
+        print("Evaluate results:", np.ctypeslib.as_array(ct_results))
+
         return ct_results
