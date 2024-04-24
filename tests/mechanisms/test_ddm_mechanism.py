@@ -735,7 +735,8 @@ def test_ddm_is_finished(comp_mode, noise, threshold, expected_results):
     np.testing.assert_array_equal(results, expected_results)
 
 @pytest.mark.parametrize("until_finished", ["until_finished", "not_until_finished"])
-def test_ddm_is_finished_with_dependency(comp_mode, until_finished):
+@pytest.mark.parametrize("threshold_mod", ["threshold_modulated", "threshold_not_modulated"])
+def test_ddm_is_finished_with_dependency(comp_mode, until_finished, threshold_mod):
 
     # 3/5/2021 - DDM' default behaviour now requires resetting stateful
     # functions after each trial. This is not supported in LLVM execution mode.
@@ -756,9 +757,20 @@ def test_ddm_is_finished_with_dependency(comp_mode, until_finished):
     comp.add_linear_processing_pathway([ddm, dep])
     comp.scheduler.add_condition(dep, pnl.WhenFinished(ddm))
 
-    results = comp.run([4], execution_mode=comp_mode)
+    inputs = {ddm: [4]}
+    expected_results = [[100]]
 
-    np.testing.assert_array_equal(results, [[100]])
+    if threshold_mod == "threshold_modulated":
+        control = pnl.ControlMechanism(control_signals=[(pnl.THRESHOLD, ddm)])
+        comp.add_node(control)
+
+        # reduce the threshold by half
+        inputs[control] = 0.5
+        expected_results = [[50]]
+
+    results = comp.run(inputs, execution_mode=comp_mode)
+
+    np.testing.assert_array_equal(results, expected_results)
 
 def test_sequence_of_DDM_mechs_in_Composition_Pathway():
     myMechanism = DDM(
