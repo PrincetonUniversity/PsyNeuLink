@@ -734,6 +734,31 @@ def test_ddm_is_finished(comp_mode, noise, threshold, expected_results):
 
     np.testing.assert_array_equal(results, expected_results)
 
+@pytest.mark.parametrize("until_finished", ["until_finished", "not_until_finished"])
+def test_ddm_is_finished_with_dependency(comp_mode, until_finished):
+
+    # 3/5/2021 - DDM' default behaviour now requires resetting stateful
+    # functions after each trial. This is not supported in LLVM execution mode.
+    # See: https://github.com/PrincetonUniversity/PsyNeuLink/issues/1935
+    # Moreover, evaluating scheduler conditions in Python is not supported
+    # for compiled execution
+    if comp_mode == pnl.ExecutionMode.LLVM:
+        pytest.xfail(reason="DDM' default behaviour now requires resetting stateful functions after each trial. "
+                            "This is not supported in LLVM execution mode. "
+                            "See: https://github.com/PrincetonUniversity/PsyNeuLink/issues/1935")
+
+    comp = Composition()
+    ddm = DDM(function=DriftDiffusionIntegrator(),
+              # Use only the decision variable in this test
+              output_ports=[pnl.DECISION_VARIABLE],
+              execute_until_finished=until_finished == "until_finished")
+    dep = pnl.ProcessingMechanism()
+    comp.add_linear_processing_pathway([ddm, dep])
+    comp.scheduler.add_condition(dep, pnl.WhenFinished(ddm))
+
+    results = comp.run([4], execution_mode=comp_mode)
+
+    np.testing.assert_array_equal(results, [[100]])
 
 def test_sequence_of_DDM_mechs_in_Composition_Pathway():
     myMechanism = DDM(
