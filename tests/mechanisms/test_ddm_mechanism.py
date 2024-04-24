@@ -710,10 +710,10 @@ def test_DDM_threshold_modulation_integrator(comp_mode):
 
 @pytest.mark.composition
 @pytest.mark.parametrize(["noise", "threshold", "expected_results"],[
-                            (1.0, 0.0, (0.0, 1.0)),
-                            (1.5, 2, (-2.0, 1.0)),
-                            (10.0, 10.0, (10.0, 29.0)),
-                            (100.0, 100.0, (100.0, 76.0)),
+                            (1.0, 0.0, [[0.0], [1.0]]),
+                            (1.5, 2, [[-2.0], [1.0]]),
+                            (10.0, 10.0, [[10.0], [29.0]]),
+                            (100.0, 100.0, [[100.0], [76.0]]),
                         ])
 def test_ddm_is_finished(comp_mode, noise, threshold, expected_results):
 
@@ -732,8 +732,7 @@ def test_ddm_is_finished(comp_mode, noise, threshold, expected_results):
 
     results = comp.run([0], execution_mode=comp_mode)
 
-    results = [x for x in np.array(results).flatten()] #HACK: The result is an object dtype in Python comp_mode for some reason?
-    np.testing.assert_allclose(results, np.array(expected_results).flatten())
+    np.testing.assert_array_equal(results, expected_results)
 
 
 def test_sequence_of_DDM_mechs_in_Composition_Pathway():
