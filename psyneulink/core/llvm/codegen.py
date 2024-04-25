@@ -633,12 +633,10 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
         # and the entire call should be optimized out.
         node_in = builder.alloca(node_function.args[2].type.pointee,
                                  name="mechanism_node_input")
-        incoming_projections = node.mod_afferents if "reset" in tags else node.afferents
-
-    # Checking if node is finished doesn't need projections
-    # FIXME: Can the values used in the check be modulated?
-    if "is_finished" in tags:
-        incoming_projections = []
+        if {"reset", "is_finished"}.intersection(tags):
+            incoming_projections = node.mod_afferents
+        else:
+            incoming_projections = node.afferents
 
     if "reset" in tags:
         proj_func_tags = func_tags.difference({"reset"}).union({"passthrough"})
