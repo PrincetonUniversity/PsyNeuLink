@@ -13,7 +13,6 @@ import graph_scheduler
 import torch
 import torch.nn as nn
 
-from psyneulink.core.components.component import Component, ComponentsMeta
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, PRODUCT, SUM
 from psyneulink.core.compositions.composition import NodeRole, CompositionInterfaceMechanism
 from psyneulink.library.compositions.pytorchllvmhelper import *
@@ -238,7 +237,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         self._regenerate_paramlist()
 
-    __deepcopy__ = get_deepcopy_with_shared(shared_types=(Component, ComponentsMeta))
+    __deepcopy__ = get_deepcopy_with_shared()
 
     def _regenerate_paramlist(self):
         """Add Projection matrices to Pytorch Module's parameter list"""

@@ -527,7 +527,7 @@ from psyneulink.core.globals.keywords import \
     MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
     MODEL_SPEC_ID_MDF_VARIABLE, \
     MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, OWNER, PARAMS, PREFS_ARG, \
-    RESET_STATEFUL_FUNCTION_WHEN, SIZE, VALUE, VARIABLE
+    RESET_STATEFUL_FUNCTION_WHEN, SIZE, VALUE, VARIABLE, SHARED_COMPONENT_TYPES
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.parameters import \
     Defaults, SharedParameter, Parameter, ParameterAlias, ParameterError, ParametersBase, check_user_specified, copy_parameter_value
@@ -1264,15 +1264,16 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         return self.name < other.name
 
     def __deepcopy__(self, memo):
-        if 'no_shared' in memo and memo['no_shared']:
-            shared_types = tuple()
-        else:
-            shared_types = (Component, ComponentsMeta)
+        if SHARED_COMPONENT_TYPES in memo:
+            if (
+                memo[SHARED_COMPONENT_TYPES]
+                and isinstance(self, memo[SHARED_COMPONENT_TYPES])
+            ):
+                return self
+        elif 'no_shared' not in memo or not memo['no_shared']:
+            memo[SHARED_COMPONENT_TYPES] = (Component,)
 
-        fun = get_deepcopy_with_shared(
-            self._deepcopy_shared_keys,
-            shared_types
-        )
+        fun = get_deepcopy_with_shared(self._deepcopy_shared_keys)
         newone = fun(self, memo)
 
         if newone.parameters is not newone.class_parameters:
