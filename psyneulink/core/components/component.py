@@ -1089,7 +1089,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     #                      insuring that assignment by one instance will not affect the value of others.
     name = None
 
-    _deepcopy_shared_keys = frozenset([])
+    _deepcopy_shared_keys = frozenset(['owner'])
 
     @check_user_specified
     def __init__(self,
