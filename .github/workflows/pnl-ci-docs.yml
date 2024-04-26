@@ -17,12 +17,7 @@ concurrency:
 
 jobs:
   docs-build:
-    # Python 3.7 x64 on macos-14 (arm64) images is broken [0]
-    # and arm64 version is not available [1].
-    # Restrict python 3.7 macos runs to macos-13
-    # [0] https://github.com/actions/setup-python/issues/855
-    # [1] https://github.com/actions/setup-python/issues/856
-    runs-on: ${{ (matrix.os == 'macos-latest' && matrix.python-version == '3.7') && 'macos-13' || matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       # Matrix setup is a hacky way to include 'base' build in pull requests
@@ -49,6 +44,20 @@ jobs:
             pnl-version: 'base'
           - python-version: '3.10'
             pnl-version: 'base'
+
+            # Python 3.7 x64 on macos-14 (arm64) images is broken [0]
+            # and arm64 version is not available [1].
+            # Restrict python 3.7 macos runs to macos-13
+            # [0] https://github.com/actions/setup-python/issues/855
+            # [1] https://github.com/actions/setup-python/issues/856
+          - python-version: '3.7'
+            os: macos-latest
+
+        include:
+          - python-version: '3.7'
+            os: macos-13
+            pnl-version: 'head'
+            event: 'push'
 
     outputs:
       on_master: ${{ steps.on_master.outputs.on-branch }}
