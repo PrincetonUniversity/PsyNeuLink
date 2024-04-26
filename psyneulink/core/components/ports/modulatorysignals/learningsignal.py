@@ -44,7 +44,7 @@ the MappingProjection(s) being learned.
 .. _LearningSignal_Creation:
 
 Creating a LearningSignal
-------------------------
+-------------------------
 
 A LearningSignal is created automatically whenever a `MappingProjection` is `specified for learning
 <LearningMechanism_Creation>` and the Projection belongs to the same `Composition <Composition>` as the

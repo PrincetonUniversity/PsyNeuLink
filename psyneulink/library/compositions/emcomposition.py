@@ -507,7 +507,7 @@ and `value_input_nodes <EMComposition.value_input_nodes>` attributes, respective
 .. _EMComposition_Memory:
 
 *Memory*
-~~~~~~~
+~~~~~~~~
 
 The `memory <EMComposition.memory>` attribute contains a record of the entries in the EMComposition's memory. This is
 in the form of a 2d array, in which rows (axis 0) are entries and columns (axis 1) are fields.  The number of fields
@@ -534,7 +534,7 @@ and the number of entries is determined by the `memory_capacity <EMComposition_M
 .. _EMComposition_Output:
 
 *Output*
-~~~~~~~
+~~~~~~~~
 
 The outputs corresponding to retrieved value for each field are represented as `OUTPUT <NodeRole.INPUT>` `Nodes
 <Composition_Nodes>` of the EMComposition, listed in its `retrieved_nodes <EMComposition.retrieved_nodes>` attribute.

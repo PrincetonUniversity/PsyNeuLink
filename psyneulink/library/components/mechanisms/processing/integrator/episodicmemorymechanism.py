@@ -339,7 +339,7 @@ of different sizes).
 .. _EpisodicMemoryMechanism_Examples_Memory_Init_Function:
 
 *Initialize memory in function*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The contents of `memory <EpisodicMemoryMechanism.memory>` can also be initialized using the **initializer** argument
 in the constructor for the EpisodicMemoryMechanism's `function <EpisodicMemoryMechanism.function>`::
