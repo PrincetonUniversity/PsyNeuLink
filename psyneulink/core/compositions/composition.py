@@ -8214,7 +8214,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                            learning_update: Union[bool, Literal['online', 'after']] = 'online',
                                            default_projection_matrix=None,
                                            name: Optional[str] = None):
-        """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Reinforcement`
+        """Convenience method that calls `add_linear_learning_pathway` with **learning_function** = `Reinforcement`
 
         Arguments
         ---------
@@ -8271,7 +8271,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 learning_update: Union[bool, Literal['online', 'after']] = 'online',
                                 default_projection_matrix=None,
                                 name: Optional[str] = None):
-        """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`TDLearning`
+        """Convenience method that calls `add_linear_learning_pathway` with **learning_function** = `TDLearning`
 
         Arguments
         ---------
@@ -8327,7 +8327,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                              learning_update: Optional[Union[bool, Literal['online', 'after']]] = 'after',
                                              default_projection_matrix=None,
                                              name: str = None):
-        """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Backpropagation`
+        """Convenience method that calls `add_linear_learning_pathway` with **learning_function** = `Backpropagation`
 
         Arguments
         ---------
@@ -12525,7 +12525,7 @@ _
             if True, shows labels instead of values for Mechanisms that have an `input_label_dict
             <Mechanism_Base.input_labels_dict>`.  For **num_trials** = 1, a representative label is
             shown; for **num_trials** > 1, a different label is used for each trial shown, cycling
-            through the set if **num_trials** is greater than the number of labels.  If **num_trials = *FULL*,
+            through the set if **num_trials** is greater than the number of labels.  If **num_trials** = *FULL*,
             trials will be included.
 
             it is set to the number of labels in the largest list specified in any `input_label_dict

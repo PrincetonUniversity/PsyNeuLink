@@ -166,7 +166,7 @@ which provides a comparison of the different modes of execution for an AutodiffC
 *PyTorch mode*
 ~~~~~~~~~~~~~~
 
-This is the default for an AutodiffComposition, but, can be specified explicitly by setting **execution_mode =
+This is the default for an AutodiffComposition, but, can be specified explicitly by setting **execution_mode** =
 `ExecutionMode.PyTorch` in the `learn <Composition.learn>` method (see `example <BasicsAndPrimer_Rumelhart_Model>`
 in `BasicsAndPrimer`).  In this mode, the AutodiffComposition is automatically translated to a `PyTorch
 <https://pytorch.org>`_ model for learning.  This is comparable in speed to `LLVM compilation

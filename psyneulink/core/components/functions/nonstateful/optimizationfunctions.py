@@ -168,7 +168,7 @@ class OptimizationFunction(Function_Base):
         relevant argument(s) as `NotImplemented`.
 
     .. technical_note::
-       - Constructors of subclasses should include **kwargs in their constructor method, to accommodate arguments
+       - Constructors of subclasses should include ``**kwargs`` in their constructor method, to accommodate arguments
          required by some subclasses but not others (e.g., search_space needed by `GridSearch` but not
          `GradientOptimization`) so that subclasses can be used interchangeably by OptimizationControlMechanism.
 
@@ -907,7 +907,7 @@ class GradientOptimization(OptimizationFunction):
 
     Sample variable by following gradient with respect to the value of `objective_function
     <GradientOptimization.objective_function>` it generates, and return the sample that generates either the
-    highest (**direction=*ASCENT*) or lowest (**direction=*DESCENT*) value.
+    highest (**direction** = *ASCENT*) or lowest (**direction** = *DESCENT*) value.
 
     .. _GradientOptimization_Procedure:
 

@@ -3703,7 +3703,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
     @property
     def state_feature_sources(self):
-        """Dict with {InputPort: source} for all INPUT Nodes of agent_rep, and sources in **state_feature_specs.
+        """Dict with {InputPort: source} for all INPUT Nodes of agent_rep, and sources in **state_feature_specs**.
         Used by state_distal_sources_and_destinations_dict()
         """
         state_dict = {}

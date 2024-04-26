@@ -57,7 +57,7 @@ of a `MappingProjection` to the next Mechanism in the pathway, or to the Process
 if the Mechanism is a `TERMINAL` Mechanism for that Process. Other configurations can also easily be specified using
 a Mechanism's **output_ports** argument (see `OutputPort_Specification` below).  If it is created using its
 constructor, and a Mechanism is specified in the **owner** argument, it is automatically assigned to that Mechanism.
-If its **owner* is not specified, `initialization is deferred.
+If its **owner** is not specified, `initialization is deferred.
 
 .. _OutputPort_Deferred_Initialization:
 
