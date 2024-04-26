@@ -329,9 +329,9 @@ type of Port, listed below (and shown in the `table <Port_Projections_Table>`):
    ============================================ ============================================================
    *Attribute*                                  *Projection Type and Port(s)*
    ============================================ ============================================================
-   `path_afferents <Port_Base.path_afferents>` `MappingProjections <MappingProjection>` to `InputPort`
-   `mod_afferents <Port_Base.mod_afferents>`   `ModulatoryProjections <ModulatoryProjection>` to any Port
-   `efferents <Port_Base.efferents>`           `MappingProjections <MappingProjection>` from `OutputPort`
+   `path_afferents <Port_Base.path_afferents>`  `MappingProjections <MappingProjection>` to `InputPort`
+   `mod_afferents <Port_Base.mod_afferents>`    `ModulatoryProjections <ModulatoryProjection>` to any Port
+   `efferents <Port_Base.efferents>`            `MappingProjections <MappingProjection>` from `OutputPort`
    ============================================ ============================================================
 
 In addition to these attributes, all of the Projections sent and received by a Port are listed in its `projections

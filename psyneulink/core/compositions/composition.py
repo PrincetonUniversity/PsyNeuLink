@@ -1098,19 +1098,19 @@ that execution only.
 .. table::
    :widths: 5 34 33 33
 
-   +--------------------+------------------------------------+--------------------------------------------------------+
-   |                    |**Composition**                     |**AutodiffComposition**                                 |
-   +--------------------+------------------------------------+--------------------------+-----------------------------+
-   |                    |*Python*                            |`AutodiffComposition_LLVM`|`AutodiffComposition_PyTorch`|
-   |                    |                                    |(*Direct Compilation*)    |                             |
-   +====================+====================================+==========================+=============================+
-   |execution_mode=     |`ExecutionMode.Python`              |`ExecutionMode.LLVMRun`   |`ExecutionMode.PyTorch       |
-   +--------------------+------------------------------------+--------------------------+-----------------------------+
-   |`learn()            |                                    |                          |                             |
-   |<Composition.learn>`|Python interpreted                  |LLVM compiled             |PyTorch compiled             |
-   |                    |                                    |                          |                             |
-   |`run()              |                                    |                          |                             |
-   |<Composition.run>`  |Python interpreted                  |LLVM compiled             |Python interpreted           |
+   +--------------------+------------------------------------+---------------------------------------------------------+
+   |                    |**Composition**                     |**AutodiffComposition**                                  |
+   +--------------------+------------------------------------+--------------------------+------------------------------+
+   |                    |*Python*                            |`AutodiffComposition_LLVM`|`AutodiffComposition_PyTorch` |
+   |                    |                                    |(*Direct Compilation*)    |                              |
+   +====================+====================================+==========================+==============================+
+   |execution_mode=     |`ExecutionMode.Python`              |`ExecutionMode.LLVMRun`   |`ExecutionMode.PyTorch        |
+   +--------------------+------------------------------------+--------------------------+------------------------------+
+   |`learn()            |                                    |                          |                              |
+   |<Composition.learn>`|Python interpreted                  |LLVM compiled             |PyTorch compiled              |
+   |                    |                                    |                          |                              |
+   |`run()              |                                    |                          |                              |
+   |<Composition.run>`  |Python interpreted                  |LLVM compiled             |Python interpreted            |
    +--------------------+------------------------------------+--------------------------+------------------------------+
    |*Speed:*            |slow                                |fastest                   |fast                          |
    +--------------------+------------------------------------+--------------------------+------------------------------+
