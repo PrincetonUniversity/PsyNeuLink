@@ -107,8 +107,8 @@ jobs:
 
           # add python 3.8 build on macos since 3.7 is broken
           # https://github.com/actions/virtual-environments/issues/4230
+          # use default python-architecture
           - python-version: '3.8'
-            python-architecture: 'x64'
             os: macos
 
         exclude:
