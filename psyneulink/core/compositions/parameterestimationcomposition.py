@@ -141,7 +141,7 @@ requires that the **objective_function** argument be specified:
 Supported Optimizers
 --------------------
 
-- `DifferentialEvolution <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.differential_evolution.html`_
+- `DifferentialEvolution <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.differential_evolution.html>`_
 
 Structure
 ---------
