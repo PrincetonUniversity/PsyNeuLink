@@ -4059,7 +4059,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
             +---------------------------------------+------------------------------------------------+----------------------------------------------+------------------------------------+---------------------------------------------------------------+
             |**FitzHughNagumoIntegrator Parameter** |`threshold <FitzHughNagumoIntegrator.threshold>`|`variable <FitzHughNagumoIntegrator.variable>`|`f_v <FitzHughNagumoIntegrator.f_v>`|`time_constant_v <FitzHughNagumoIntegrator.time_constant_v>`   |
             +---------------------------------------+------------------------------------------------+----------------------------------------------+-------------------------+--------------------------------------------------------------------------+
-            |**Gilzenrat Parameter**                |a                                               |:math:`f(X_1)`                                |:math:`w_{vX_1}`                    |:math:`T_{v}`                                                  |
+            |**Gilzenrat Parameter**                |a                                               | :math:`f(X_1)`                               | :math:`w_{vX_1}`                   | :math:`T_{v}`                                                 |
             +---------------------------------------+------------------------------------------------+----------------------------------------------+------------------------------------+---------------------------------------------------------------+
 
             The following FitzHughNagumoIntegrator parameter values must be set in the equation for :math:`\\frac{dw}{dt}`:
