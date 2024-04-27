@@ -988,7 +988,7 @@ or its `name <Port_Base.name>` as the key, and a dictionary containing parameter
        Projections will not be executed (see `Lazy Evaluation <Component_Lazy_Updating>`), but its `function
        <Port_Base.function>` will be.
 
-     - If the `value <Port_Base.value>` of a Port is specified, *neither its `afferent Projections <Port_Projections>`
+     - If the `value <Port_Base.value>` of a Port is specified, *neither* its `afferent Projections <Port_Projections>`
        nor it `function <Port_Base.function>` will be executed.
 
      - If the `variable <Port_base.variable>` and/or `value <Port_Base.value>` is specified for *all* of the

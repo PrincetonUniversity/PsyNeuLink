@@ -173,7 +173,7 @@ class OptimizationFunction(Function_Base):
          `GradientOptimization`) so that subclasses can be used interchangeably by OptimizationControlMechanism.
 
        - Subclasses with attributes that depend on one of the OptimizationFunction's parameters should implement the
-         `reset <OptimizationFunction.reset>` method, that calls super().reset(*args) and then
+         `reset <OptimizationFunction.reset>` method, that calls ``super().reset(*args)`` and then
          reassigns the values of the dependent attributes accordingly.  If an argument is not needed for the subclass,
          `NotImplemented` should be passed as the argument's value in the call to super (i.e.,
          the OptimizationFunction's
