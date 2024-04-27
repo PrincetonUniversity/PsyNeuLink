@@ -1940,7 +1940,7 @@ class OptimizationControlMechanism(ControlMechanism):
     def _instantiate_input_ports(self, context=None):
         """Instantiate InputPorts for state_features (with state_feature_function if specified).
 
-        This instantiates the OptimizationControlMechanism's `state_input_ports;
+        This instantiates the OptimizationControlMechanism's `state_input_ports`;
              these are used to provide input to the agent_rep when its evaluate method is called
         The OptimizationControlMechanism's outcome_input_ports are instantiated by
             ControlMechanism._instantiate_input_ports in the call to super().

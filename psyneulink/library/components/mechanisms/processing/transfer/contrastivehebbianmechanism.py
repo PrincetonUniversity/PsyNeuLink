@@ -634,8 +634,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         condition for that phase is specified as *CONVERGENCE*.  Compares the value of `current_activity
         <ContrastiveHebbianMechanism.current_activity>` with the
         previous `value <Mechanism_Base.value>`; result is
-        assigned as the value of `delta
-        <ContrastiveHebbianMechanism.delta>.
+        assigned as the value of `delta <ContrastiveHebbianMechanism.delta>`.
 
     minus_phase_termination_condition : CONVERGENCE or COUNT: default CONVERGENCE
         determines the type of condition used to terminate the `minus_phase <ContrastiveHebbian_Minus_Phase>` of

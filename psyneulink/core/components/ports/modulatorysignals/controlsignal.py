@@ -21,7 +21,7 @@ Contents:
       - `ControlSignal_Modulation`
       - `ControlSignal_Allocation_and_Intensity`
       - `ControlSignal_Costs`
-  * `ControlSignal_Execution`d
+  * `ControlSignal_Execution`
   * `ControlSignal_Examples`
   * `ControlSignal_Class_Reference`
 

@@ -839,7 +839,7 @@ class OptimizationFunction(Function_Base):
         return outcomes, num_evals
 
     def reset_grid(self):
-        """Reset iterators in `search_space <GridSearch.search_space>"""
+        """Reset iterators in `search_space <GridSearch.search_space>`"""
         for s in self.search_space:
             s.reset()
         self.grid = itertools.product(*[s for s in self.search_space])
@@ -1680,7 +1680,7 @@ class GridSearch(OptimizationFunction):
 
     @handle_external_context(fallback_most_recent=True)
     def reset(self, search_space, context=None, **kwargs):
-        """Assign size of `search_space <GridSearch.search_space>"""
+        """Assign size of `search_space <GridSearch.search_space>`"""
         super(GridSearch, self).reset(search_space=search_space, context=context, **kwargs)
         sample_iterators = search_space
         owner_str = ''

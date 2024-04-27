@@ -920,7 +920,7 @@ class Port_Base(Port):
     efferents : Optional[List[Projection]]
         list of outgoing Projections from the Port (i.e., for which is a `sender <Projection_Base.sender>`;
         note:  only `OutputPorts <OutputPort>`, and members of its `ModulatoryProjection <ModulatoryProjection>`
-        subclass (`LearningProjection, ControlProjection and GatingProjection) have efferents;  the list is empty for
+        subclass (`LearningProjection`, `ControlProjection` and `GatingProjection`) have efferents;  the list is empty for
         InputPorts and ParameterPorts.
 
     function : TransferFunction : default determined by type

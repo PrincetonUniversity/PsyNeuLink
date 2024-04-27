@@ -87,7 +87,7 @@ These can be specified using any of the following arguments:
     .. hint::
        Use **default_variable** rather than **memory** to specify the shape of memory but keep it empty
        until the first entry is stored; note, however, that since retrieval is executed before storage
-       (see `EpisodicMemoryMechanism_Execution ), the first execution will return an entry of zeros.
+       (see `EpisodicMemoryMechanism_Execution`), the first execution will return an entry of zeros.
 
   * **memory** -- specifies a set of entries to be stored in `memory <EpisodicMemoryMechanism.memory>`;  it is passed
     to the constructor for the EpisodicMemoryMechanism's `function <EpisodicMemoryMechanism.function>`) as its

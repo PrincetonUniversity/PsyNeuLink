@@ -135,7 +135,7 @@ The following arguments of the Composition's constructor can be used to add Comp
         values as the **projections** argument of that method.  In general, this is not neded -- default Projections
         are created for Pathways and/or Nodes added to the Composition using the methods described above; however
         it can be useful for custom configurations, including the implementation of specific Projection `matrices
-         <MappingProjection.matrix>`.
+        <MappingProjection.matrix>`.
 
    .. _Composition_Controller_Arg:
 
@@ -1000,7 +1000,7 @@ COMMENT:
 Add explanation of how learning_rate applies to Unsupervised forms of learning
 COMMENT
 The rate at which learning occurs in a `learning pathway <Composition_Learning_Pathway>` is determined by the
-`learning_rate <LearningMechanism_Learning_Rate> Parameter of the `LearningMechanism(s) <LearningMechanism>` in that
+`learning_rate <LearningMechanism_Learning_Rate>` Parameter of the `LearningMechanism(s) <LearningMechanism>` in that
 Pathway.  If it is not specified, then the `default value <Parameter_Defaults>` for the LearningMechanism's `function
 <LearningMechanism.function>` is used, which is determined by the kind of learning in that Pathway. However, the
 learning_rate can be specified in several other ways, both at construction and/or execution.  At construction, it can
@@ -1104,7 +1104,7 @@ that execution only.
    |                    |*Python*                            |`AutodiffComposition_LLVM`|`AutodiffComposition_PyTorch` |
    |                    |                                    |(*Direct Compilation*)    |                              |
    +====================+====================================+==========================+==============================+
-   |execution_mode=     |`ExecutionMode.Python`              |`ExecutionMode.LLVMRun`   |`ExecutionMode.PyTorch        |
+   |execution_mode=     |`ExecutionMode.Python`              |`ExecutionMode.LLVMRun`   |`ExecutionMode.PyTorch`       |
    +--------------------+------------------------------------+--------------------------+------------------------------+
    |`learn()            |                                    |                          |                              |
    |<Composition.learn>`|Python interpreted                  |LLVM compiled             |PyTorch compiled              |
@@ -12542,7 +12542,7 @@ _
         Returns
         -------
 
-        Either a dict formatted appropriately for assignment as the **inputs** argument of the Composition's `run()
+        Either a dict formatted appropriately for assignment as the **inputs** argument of the Composition's `run()`
         method (form = *DICT*, the default), or string showing the format required by the **inputs** argument
         <Composition.run>` (form = *TEXT*).
 
