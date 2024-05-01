@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EMComposition &mdash; PsyNeuLink 0.15.1.0+116.g924530ada documentation</title>
+  <title>EMComposition &mdash; PsyNeuLink 0.15.1.0+125.g022c5b7b1 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+116
+                  0.15.1.0+125
                 </div>
               
             
@@ -713,9 +713,9 @@ while the last two should be used as values:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">em</span><span class="o">.</span><span class="n">show_graph</span><span class="p">()</span>
 </pre></div>
 </div>
-<figure class="align-default" id="id13">
+<figure class="align-default" id="id1">
 <span id="emcomposition-example-field-weights-equal-fig"></span><img alt="_images/EMComposition_field_weights_equal_fig.svg" src="_images/EMComposition_field_weights_equal_fig.svg" /><figcaption>
-<p><span class="caption-text"><strong>Use of field_weights to specify keys and values.</strong></span><a class="headerlink" href="#id13" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text"><strong>Use of field_weights to specify keys and values.</strong></span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>Note that the figure now shows <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.field_weight_nodes" title="psyneulink.library.compositions.emcomposition.EMComposition.field_weight_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RETRIEVAL</span> <span class="pre">WEIGHTING</span></code></a> <code class="xref any docutils literal notranslate"><span class="pre">nodes</span></code>,
@@ -1338,13 +1338,13 @@ and from the value_input_node to the retrieved_node for values. The <code class=
 of the <code class="xref any docutils literal notranslate"><span class="pre">EMSorageMechanism</span></code> that takes the following arguments:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><a href="#id1"><span class="problematic" id="id2">**</span></a>variable* – template for an <a class="reference internal" href="#emcomposition-memory"><span class="std std-ref">entry</span></a> in <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>;</p></li>
-<li><p><a href="#id3"><span class="problematic" id="id4">**</span></a>fields* – the <code class="xref any docutils literal notranslate"><span class="pre">input_nodes</span></code> for the corresponding <a class="reference internal" href="#emcomposition-fields"><span class="std std-ref">fields</span></a> of an <code class="xref any docutils literal notranslate"><span class="pre">entry</span></code> in <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>;</p></li>
-<li><p><a href="#id5"><span class="problematic" id="id6">**</span></a>field_types* – a list of the same length as <code class="docutils literal notranslate"><span class="pre">fields</span></code>, containing 1’s for key fields and 0’s for
+<li><p><strong>variable</strong> – template for an <a class="reference internal" href="#emcomposition-memory"><span class="std std-ref">entry</span></a> in <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>;</p></li>
+<li><p><strong>fields</strong> – the <code class="xref any docutils literal notranslate"><span class="pre">input_nodes</span></code> for the corresponding <a class="reference internal" href="#emcomposition-fields"><span class="std std-ref">fields</span></a> of an <code class="xref any docutils literal notranslate"><span class="pre">entry</span></code> in <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>;</p></li>
+<li><p><strong>field_types</strong> – a list of the same length as <code class="docutils literal notranslate"><span class="pre">fields</span></code>, containing 1’s for key fields and 0’s for
 value fields;</p></li>
-<li><p><a href="#id7"><span class="problematic" id="id8">**</span></a>concatenate_keys_node* – node used to concatenate keys (if <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.concatenate_keys" title="psyneulink.library.compositions.emcomposition.EMComposition.concatenate_keys"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">concatenate_keys</span></code></a> is <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>) or None;</p></li>
-<li><p><a href="#id9"><span class="problematic" id="id10">**</span></a>memory_matrix* – <code class="xref any docutils literal notranslate"><span class="pre">memory_template</span></code>);</p></li>
-<li><p><a href="#id11"><span class="problematic" id="id12">**</span></a>learning_signals* – list of ` <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>s (or their ParameterPort`s) that store each
+<li><p><strong>concatenate_keys_node</strong> – node used to concatenate keys (if <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.concatenate_keys" title="psyneulink.library.compositions.emcomposition.EMComposition.concatenate_keys"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">concatenate_keys</span></code></a> is <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>) or None;</p></li>
+<li><p><strong>memory_matrix</strong> – <code class="xref any docutils literal notranslate"><span class="pre">memory_template</span></code>);</p></li>
+<li><p><strong>learning_signals</strong> – list of ` <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>s (or their ParameterPort`s) that store each
 <a class="reference internal" href="#emcomposition-fields"><span class="std std-ref">field</span></a> of <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>;</p></li>
 <li><p><strong>decay_rate</strong> – rate at which entries in the <code class="xref any docutils literal notranslate"><span class="pre">memory_matrix</span></code> decay;</p></li>
 <li><p><strong>storage_prob</strong> – probability for storing an entry in <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.</p></li>

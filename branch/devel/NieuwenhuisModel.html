@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Locus Coeruleus and Attentional Blink (Nieuwenhuis, et al, 2005) &mdash; PsyNeuLink 0.15.1.0+116.g924530ada documentation</title>
+  <title>Locus Coeruleus and Attentional Blink (Nieuwenhuis, et al, 2005) &mdash; PsyNeuLink 0.15.1.0+125.g022c5b7b1 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+116
+                  0.15.1.0+125
                 </div>
               
             
@@ -247,16 +247,16 @@ associated <a class="reference internal" href="ObjectiveMechanism.html"><span cl
 <img alt="Nieuwenhuis System Graph" src="_images/Nieuwenhuis2005_System_Graph.svg" /></figure>
 <section id="behavioral-network-subsystem">
 <h3>Behavioral Network Subsystem<a class="headerlink" href="#behavioral-network-subsystem" title="Permalink to this headline">¶</a></h3>
-<p><strong>INPUT LAYER</strong>:  a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> with <a href="#id1"><span class="problematic" id="id2">**</span></a>size**=3 (one element for the input to the T1, T2 and distractor units
-of the <em>DECISION LAYER</em>, respectively), and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> function with <a href="#id3"><span class="problematic" id="id4">**</span></a>slope**=1.0 and <a href="#id5"><span class="problematic" id="id6">**</span></a>intercept**=0.0.</p>
-<p><strong>DECISION LAYER</strong>: an <a class="reference internal" href="LCAMechanism.html"><span class="doc">LCAMechanism</span></a> Mechanism of <a href="#id7"><span class="problematic" id="id8">**</span></a>size**=3 (one element each for the T1, T2 and distractor units),
+<p><strong>INPUT LAYER</strong>:  a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> with <strong>size</strong>=3 (one element for the input to the T1, T2 and distractor units
+of the <em>DECISION LAYER</em>, respectively), and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> function with <strong>slope</strong>=1.0 and <strong>intercept</strong>=0.0.</p>
+<p><strong>DECISION LAYER</strong>: an <a class="reference internal" href="LCAMechanism.html"><span class="doc">LCAMechanism</span></a> Mechanism of <strong>size</strong>=3 (one element each for the T1, T2 and distractor units),
 and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> Function with a slope=1.0 and intercept=0.0.  Each element has a self-excitatory connection
-with a weight specified by <a href="#id9"><span class="problematic" id="id10">**</span></a>self_excitation**=2.5, a <a href="#id11"><span class="problematic" id="id12">**</span></a>leak**=-1.0, and every element is connected to every other
-element by mutually inhibitory connections with a weight specified by <a href="#id13"><span class="problematic" id="id14">**</span></a>competition**=1.0.  An ordinary differential
+with a weight specified by <strong>self_excitation</strong>=2.5, a <strong>leak</strong>=-1.0, and every element is connected to every other
+element by mutually inhibitory connections with a weight specified by <strong>competition</strong> =1.0.  An ordinary differential
 equation describes the change in state over time, implemented in the LCAMechanism mechanism by setting
-<a href="#id15"><span class="problematic" id="id16">**</span></a>integrator_mode**=`True` and <a href="#id17"><span class="problematic" id="id18">**</span></a>time_step_size**=0.02.</p>
-<p><strong>RESPONSE LAYER</strong>: an <a class="reference internal" href="LCAMechanism.html"><span class="doc">LCAMechanism</span></a> Mechanism of <a href="#id19"><span class="problematic" id="id20">**</span></a>size**=2, with one element each for the response to T1 and T2,
-respectively, <a href="#id21"><span class="problematic" id="id22">**</span></a>self_excitation**=2.0, <a href="#id23"><span class="problematic" id="id24">**</span></a>leak**=-1.0, and no mutually inhibitory weights (<a href="#id25"><span class="problematic" id="id26">**</span></a>competition**=0).</p>
+<strong>integrator_mode</strong> = <code class="xref any docutils literal notranslate"><span class="pre">True</span></code> and <strong>time_step_size</strong>=0.02.</p>
+<p><strong>RESPONSE LAYER</strong>: an <a class="reference internal" href="LCAMechanism.html"><span class="doc">LCAMechanism</span></a> Mechanism of <strong>size</strong>=2, with one element each for the response to T1 and T2,
+respectively, <strong>self_excitation</strong>=2.0, <strong>leak</strong>=-1.0, and no mutually inhibitory weights (<strong>competition</strong>=0).</p>
 <p><strong>PROJECTIONS</strong>:  The weights of the behavioral network are implemented as <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>.
 The <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter for the one from the <em>INPUT_LAYER</em> to the <em>DECISION_LAYER</em> uses a
 numpy array with a value of 1.5 for the diagonal elements and a value of 0.33 for the off-diagonal elements; the one

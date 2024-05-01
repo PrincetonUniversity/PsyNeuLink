@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Gating Mechanism &mdash; PsyNeuLink 0.15.1.0+116.g924530ada documentation</title>
+  <title>Gating Mechanism &mdash; PsyNeuLink 0.15.1.0+125.g022c5b7b1 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+116
+                  0.15.1.0+125
                 </div>
               
             
@@ -322,7 +322,7 @@ reflect the influence of its <a class="reference internal" href="GatingSignal.ht
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.gating.gatingmechanism.GatingMechanism">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.mechanisms.modulatory.gating.gatingmechanism.</span></span><span class="sig-name descname"><span class="pre">GatingMechanism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_gating_allocation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor_for_gating</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_allocation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modulation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.gating.gatingmechanism.GatingMechanism" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subclass of <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanism</span></a> that gates (modulates) the value(s) of one or more <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a>.  See <a class="reference internal" href="Mechanism.html#mechanism-class-reference"><span class="std std-ref">Mechanism</span></a> for additional arguments and attributes.</p>
+<dd><p>Subclass of <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanism</span></a> that gates (modulates) the value(s) of one or more <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a>. See <a class="reference internal" href="Mechanism.html#mechanism-class-reference"><span class="std std-ref">Mechanism</span></a> for additional arguments and attributes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -349,7 +349,7 @@ which the <strong>default_allocation</strong> was not specified in its construct
 <li><p><strong>gate</strong> (<em>list</em><em>[</em><a class="reference internal" href="GatingSignal.html#psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal" title="psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal"><em>GatingSignal</em></a><em>, </em><a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort" title="psyneulink.core.components.ports.inputport.InputPort"><em>InputPort</em></a><em>, </em><a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort"><em>OutputPort</em></a><em>, </em><em>Mechanism</em><em>, </em><em>tuple</em><em>[</em><em>str</em><em>, </em><em>Mechanism</em><em>]</em><em>, or </em><em>dict</em><em>]</em>) – specifies the <a class="reference internal" href="InputPort.html"><span class="doc">InputPorts</span></a> and/or <code class="xref any docutils literal notranslate"><span class="pre">OutputPorts</span></code> to be gated by the
 GatingMechanism; the number of items must equal the length of the <strong>default_gating_allocation</strong>
 argument; if a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> is specified, its <a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary InputPort</span></a>
-is used (see <a href="#id1"><span class="problematic" id="id2">`</span></a>GatingMechanism_GatingSignals for details).</p></li>
+is used (see <a class="reference internal" href="#gatingmechanism-gatingsignals"><span class="std std-ref">GatingSignals</span></a> for details).</p></li>
 <li><p><strong>modulation</strong> (<em>str : MULTIPLICATIVE</em>) – specifies the default form of modulation used by the GatingMechanism’s <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignals</span></a>,
 unless they are <a class="reference internal" href="GatingSignal.html#gatingsignal-specification"><span class="std std-ref">individually specified</span></a>.</p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters

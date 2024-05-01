@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.15.1.0+116.g924530ada documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.15.1.0+125.g022c5b7b1 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+116
+                  0.15.1.0+125
                 </div>
               
             
@@ -325,7 +325,7 @@ These are each described in greater detail below, and summarized in this <a clas
 which provides a comparison of the different modes of execution for an AutodiffComposition and standard <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.</p>
 <section id="pytorch-mode">
 <span id="autodiffcomposition-pytorch"></span><h3><em>PyTorch mode</em><a class="headerlink" href="#pytorch-mode" title="Permalink to this headline">¶</a></h3>
-<p>This is the default for an AutodiffComposition, but, can be specified explicitly by setting <a href="#id1"><span class="problematic" id="id2">**</span></a>execution_mode =
+<p>This is the default for an AutodiffComposition, but, can be specified explicitly by setting <strong>execution_mode</strong> =
 <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="psyneulink.core.llvm.__init__.ExecutionMode.PyTorch"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.PyTorch</span></code></a> in the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method (see <a class="reference internal" href="BasicsAndPrimer.html#basicsandprimer-rumelhart-model"><span class="std std-ref">example</span></a>
 in <a class="reference internal" href="BasicsAndPrimer.html"><span class="doc">Basics and Primer</span></a>).  In this mode, the AutodiffComposition is automatically translated to a <a class="reference external" href="https://pytorch.org">PyTorch</a> model for learning.  This is comparable in speed to <code class="xref any docutils literal notranslate"><span class="pre">LLVM</span> <span class="pre">compilation</span></code>, but provides greater flexiblity, including the ability to include nested
 AutoDiffCompositions in learning. Although it is best suited for use with <a class="reference internal" href="Composition.html#composition-learning-supervised"><span class="std std-ref">supervised learning</span></a>, it can also be used for some forms of <a class="reference internal" href="Composition.html#composition-learning-unsupervised"><span class="std std-ref">unsupervised learning</span></a> that are supported in PyTorch (e.g., <a class="reference external" href="https://github.com/giannisnik/som">self-organized maps</a>).</p>
