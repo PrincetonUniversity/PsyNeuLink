@@ -135,7 +135,7 @@ The following arguments of the Composition's constructor can be used to add Comp
         values as the **projections** argument of that method.  In general, this is not neded -- default Projections
         are created for Pathways and/or Nodes added to the Composition using the methods described above; however
         it can be useful for custom configurations, including the implementation of specific Projection `matrices
-         <MappingProjection.matrix>`.
+        <MappingProjection.matrix>`.
 
    .. _Composition_Controller_Arg:
 
@@ -1000,7 +1000,7 @@ COMMENT:
 Add explanation of how learning_rate applies to Unsupervised forms of learning
 COMMENT
 The rate at which learning occurs in a `learning pathway <Composition_Learning_Pathway>` is determined by the
-`learning_rate <LearningMechanism_Learning_Rate> Parameter of the `LearningMechanism(s) <LearningMechanism>` in that
+`learning_rate <LearningMechanism_Learning_Rate>` Parameter of the `LearningMechanism(s) <LearningMechanism>` in that
 Pathway.  If it is not specified, then the `default value <Parameter_Defaults>` for the LearningMechanism's `function
 <LearningMechanism.function>` is used, which is determined by the kind of learning in that Pathway. However, the
 learning_rate can be specified in several other ways, both at construction and/or execution.  At construction, it can
@@ -1098,19 +1098,19 @@ that execution only.
 .. table::
    :widths: 5 34 33 33
 
-   +--------------------+------------------------------------+--------------------------------------------------------+
-   |                    |**Composition**                     |**AutodiffComposition**                                 |
-   +--------------------+------------------------------------+--------------------------+-----------------------------+
-   |                    |*Python*                            |`AutodiffComposition_LLVM`|`AutodiffComposition_PyTorch`|
-   |                    |                                    |(*Direct Compilation*)    |                             |
-   +====================+====================================+==========================+=============================+
-   |execution_mode=     |`ExecutionMode.Python`              |`ExecutionMode.LLVMRun`   |`ExecutionMode.PyTorch       |
-   +--------------------+------------------------------------+--------------------------+-----------------------------+
-   |`learn()            |                                    |                          |                             |
-   |<Composition.learn>`|Python interpreted                  |LLVM compiled             |PyTorch compiled             |
-   |                    |                                    |                          |                             |
-   |`run()              |                                    |                          |                             |
-   |<Composition.run>`  |Python interpreted                  |LLVM compiled             |Python interpreted           |
+   +--------------------+------------------------------------+---------------------------------------------------------+
+   |                    |**Composition**                     |**AutodiffComposition**                                  |
+   +--------------------+------------------------------------+--------------------------+------------------------------+
+   |                    |*Python*                            |`AutodiffComposition_LLVM`|`AutodiffComposition_PyTorch` |
+   |                    |                                    |(*Direct Compilation*)    |                              |
+   +====================+====================================+==========================+==============================+
+   |execution_mode=     |`ExecutionMode.Python`              |`ExecutionMode.LLVMRun`   |`ExecutionMode.PyTorch`       |
+   +--------------------+------------------------------------+--------------------------+------------------------------+
+   |`learn()            |                                    |                          |                              |
+   |<Composition.learn>`|Python interpreted                  |LLVM compiled             |PyTorch compiled              |
+   |                    |                                    |                          |                              |
+   |`run()              |                                    |                          |                              |
+   |<Composition.run>`  |Python interpreted                  |LLVM compiled             |Python interpreted            |
    +--------------------+------------------------------------+--------------------------+------------------------------+
    |*Speed:*            |slow                                |fastest                   |fast                          |
    +--------------------+------------------------------------+--------------------------+------------------------------+
@@ -8214,7 +8214,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                            learning_update: Union[bool, Literal['online', 'after']] = 'online',
                                            default_projection_matrix=None,
                                            name: Optional[str] = None):
-        """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Reinforcement`
+        """Convenience method that calls `add_linear_learning_pathway` with **learning_function** = `Reinforcement`
 
         Arguments
         ---------
@@ -8271,7 +8271,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 learning_update: Union[bool, Literal['online', 'after']] = 'online',
                                 default_projection_matrix=None,
                                 name: Optional[str] = None):
-        """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`TDLearning`
+        """Convenience method that calls `add_linear_learning_pathway` with **learning_function** = `TDLearning`
 
         Arguments
         ---------
@@ -8327,7 +8327,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                              learning_update: Optional[Union[bool, Literal['online', 'after']]] = 'after',
                                              default_projection_matrix=None,
                                              name: str = None):
-        """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Backpropagation`
+        """Convenience method that calls `add_linear_learning_pathway` with **learning_function** = `Backpropagation`
 
         Arguments
         ---------
@@ -12525,7 +12525,7 @@ _
             if True, shows labels instead of values for Mechanisms that have an `input_label_dict
             <Mechanism_Base.input_labels_dict>`.  For **num_trials** = 1, a representative label is
             shown; for **num_trials** > 1, a different label is used for each trial shown, cycling
-            through the set if **num_trials** is greater than the number of labels.  If **num_trials = *FULL*,
+            through the set if **num_trials** is greater than the number of labels.  If **num_trials** = *FULL*,
             trials will be included.
 
             it is set to the number of labels in the largest list specified in any `input_label_dict
@@ -12542,7 +12542,7 @@ _
         Returns
         -------
 
-        Either a dict formatted appropriately for assignment as the **inputs** argument of the Composition's `run()
+        Either a dict formatted appropriately for assignment as the **inputs** argument of the Composition's `run()`
         method (form = *DICT*, the default), or string showing the format required by the **inputs** argument
         <Composition.run>` (form = *TEXT*).
 

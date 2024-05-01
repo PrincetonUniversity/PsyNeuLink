@@ -329,9 +329,9 @@ type of Port, listed below (and shown in the `table <Port_Projections_Table>`):
    ============================================ ============================================================
    *Attribute*                                  *Projection Type and Port(s)*
    ============================================ ============================================================
-   `path_afferents <Port_Base.path_afferents>` `MappingProjections <MappingProjection>` to `InputPort`
-   `mod_afferents <Port_Base.mod_afferents>`   `ModulatoryProjections <ModulatoryProjection>` to any Port
-   `efferents <Port_Base.efferents>`           `MappingProjections <MappingProjection>` from `OutputPort`
+   `path_afferents <Port_Base.path_afferents>`  `MappingProjections <MappingProjection>` to `InputPort`
+   `mod_afferents <Port_Base.mod_afferents>`    `ModulatoryProjections <ModulatoryProjection>` to any Port
+   `efferents <Port_Base.efferents>`            `MappingProjections <MappingProjection>` from `OutputPort`
    ============================================ ============================================================
 
 In addition to these attributes, all of the Projections sent and received by a Port are listed in its `projections
@@ -920,7 +920,7 @@ class Port_Base(Port):
     efferents : Optional[List[Projection]]
         list of outgoing Projections from the Port (i.e., for which is a `sender <Projection_Base.sender>`;
         note:  only `OutputPorts <OutputPort>`, and members of its `ModulatoryProjection <ModulatoryProjection>`
-        subclass (`LearningProjection, ControlProjection and GatingProjection) have efferents;  the list is empty for
+        subclass (`LearningProjection`, `ControlProjection` and `GatingProjection`) have efferents;  the list is empty for
         InputPorts and ParameterPorts.
 
     function : TransferFunction : default determined by type

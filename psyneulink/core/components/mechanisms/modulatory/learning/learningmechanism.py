@@ -843,7 +843,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         the values of the InputPorts to which the `covariates_sources <LearningMechanism.covariates_sources>` project;
         passed to the LearningMechanism's `function <LearningMechanism.function>` as the *COVARIATES* item of its
         `variable <LearningMechanism.variable>`, and assigned as the `value <InputPort.value>` of the LearningMechanism's
-        *COVARIATES* `InputPort <LearningMechanism_Covariates>`s.
+        *COVARIATES* `InputPorts <LearningMechanism_Covariates>`.
 
     error_sources : list[ComparatorMechanism or LearningMechanism]
         the Mechanism(s) that calculate the error signal(s) provided to the

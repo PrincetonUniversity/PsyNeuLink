@@ -138,7 +138,7 @@ A ContrastiveHebbianMechanism always has two, and possibly three `InputPorts <In
     * *RECURRENT:* receives the `value <Projection_Base.value>` of the Mechanism's `recurrent_projection
       <ContrastiveHebbianMechanism.recurrent_projection>`;
     ..
-    * *TARGET:* only implemented if **target_size** is specified, **separated = `True` (default), and
+    * *TARGET:* only implemented if **target_size** is specified, **separated** = `True` (default), and
       mode is not `SIMPLE_HEBBIAN <ContrastiveHebbian_SIMPLE_HEBBIAN>`;  receives the `target <Run.target>`
       specified in the `run <System.run>` method of any `Composition` to which the Mechanism belongs.
 
@@ -634,8 +634,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         condition for that phase is specified as *CONVERGENCE*.  Compares the value of `current_activity
         <ContrastiveHebbianMechanism.current_activity>` with the
         previous `value <Mechanism_Base.value>`; result is
-        assigned as the value of `delta
-        <ContrastiveHebbianMechanism.delta>.
+        assigned as the value of `delta <ContrastiveHebbianMechanism.delta>`.
 
     minus_phase_termination_condition : CONVERGENCE or COUNT: default CONVERGENCE
         determines the type of condition used to terminate the `minus_phase <ContrastiveHebbian_Minus_Phase>` of

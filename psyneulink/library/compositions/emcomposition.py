@@ -507,7 +507,7 @@ and `value_input_nodes <EMComposition.value_input_nodes>` attributes, respective
 .. _EMComposition_Memory:
 
 *Memory*
-~~~~~~~
+~~~~~~~~
 
 The `memory <EMComposition.memory>` attribute contains a record of the entries in the EMComposition's memory. This is
 in the form of a 2d array, in which rows (axis 0) are entries and columns (axis 1) are fields.  The number of fields
@@ -534,7 +534,7 @@ and the number of entries is determined by the `memory_capacity <EMComposition_M
 .. _EMComposition_Output:
 
 *Output*
-~~~~~~~
+~~~~~~~~
 
 The outputs corresponding to retrieved value for each field are represented as `OUTPUT <NodeRole.INPUT>` `Nodes
 <Composition_Nodes>` of the EMComposition, listed in its `retrieved_nodes <EMComposition.retrieved_nodes>` attribute.
@@ -2110,20 +2110,20 @@ class EMComposition(AutodiffComposition):
         and from the value_input_node to the retrieved_node for values. The `function <EMStorageMechanism.function>`
         of the `EMSorageMechanism` that takes the following arguments:
 
-         - **variable* -- template for an `entry <EMComposition_Memory>` in `memory<EMComposition.memory>`;
+         - **variable** -- template for an `entry <EMComposition_Memory>` in `memory<EMComposition.memory>`;
 
-         - **fields* -- the `input_nodes <EMComposition.input_nodes>` for the corresponding `fields
+         - **fields** -- the `input_nodes <EMComposition.input_nodes>` for the corresponding `fields
            <EMComposition_Fields>` of an `entry <EMCmposition_Memory>` in `memory <EMComposition.memory>`;
 
-         - **field_types* -- a list of the same length as ``fields``, containing 1's for key fields and 0's for
+         - **field_types** -- a list of the same length as ``fields``, containing 1's for key fields and 0's for
            value fields;
 
-         - **concatenate_keys_node* -- node used to concatenate keys (if `concatenate_keys
+         - **concatenate_keys_node** -- node used to concatenate keys (if `concatenate_keys
            <EMComposition.concatenate_keys>` is `True`) or None;
 
-         - **memory_matrix* -- `memory_template <EMComposition.memory_template>`);
+         - **memory_matrix** -- `memory_template <EMComposition.memory_template>`);
 
-         - **learning_signals* -- list of ` `MappingProjection`\\s (or their ParameterPort`\\s) that store each
+         - **learning_signals** -- list of ` `MappingProjection`\\s (or their ParameterPort`\\s) that store each
            `field <EMComposition_Fields>` of `memory <EMComposition.memory>`;
 
          - **decay_rate** -- rate at which entries in the `memory_matrix <EMComposition.memory_matrix>` decay;

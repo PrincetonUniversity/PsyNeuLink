@@ -144,7 +144,7 @@ class KohonenMechanism(TransferMechanism):
 
     learning_function : LearningFunction, function or method : default Kohonen(distance_function=GUASSIAN)
         specifies function used by `learning_mechanism <KohonenMechanism.learning_mechanism>` to update `matrix
-        <MappingProjection.matrix>` of `learned_projection <KohonenMechanism.learned_projection>.
+        <MappingProjection.matrix>` of `learned_projection <KohonenMechanism.learned_projection>`.
 
 
     Attributes
@@ -179,7 +179,7 @@ class KohonenMechanism(TransferMechanism):
 
     learning_function : LearningFunction, function or method
         function used by `learning_mechanism <KohonenMechanism.learning_mechanism>` to update `matrix
-        <MappingProjection.matrix>` of `learned_projection <KohonenMechanism.learned_projection>.
+        <MappingProjection.matrix>` of `learned_projection <KohonenMechanism.learned_projection>`.
 
     learning_mechanism : LearningMechanism
         created automatically if `learning is specified <KohonenMechanism_Learning>`, and used to train the

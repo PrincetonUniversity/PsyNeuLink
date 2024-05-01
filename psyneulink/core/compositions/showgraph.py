@@ -664,7 +664,7 @@ class ShowGraph():
         -------
 
         `pdf` or Graphviz graph object :
-            determined by **output_fmt:
+            determined by **output_fmt**:
             - ``pdf`` -- PDF: (placed in current directory);
             - ``gv`` or ``jupyter`` -- Graphviz graph object;
             - ``gif`` -- gif

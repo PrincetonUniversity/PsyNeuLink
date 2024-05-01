@@ -258,7 +258,7 @@ COMMENT
    <Component>`, that can be created using a constructor; a *function* is an attribute that contains a callable method
    belonging to a Function, and that is executed when the Component to which the Function belongs is executed.
    Functions are used to assign, store, and apply parameter values associated with their function (see `Function
-   <Function_Overview> for a more detailed explanation).
+   <Function_Overview>` for a more detailed explanation).
 
 The parameters of a Mechanism's `function <Mechanism_Base.function>` are attributes of its `function
 <Component.function>`, and can be accessed using standard "dot" notation for that object.  For
@@ -988,12 +988,12 @@ or its `name <Port_Base.name>` as the key, and a dictionary containing parameter
        Projections will not be executed (see `Lazy Evaluation <Component_Lazy_Updating>`), but its `function
        <Port_Base.function>` will be.
 
-     - If the `value <Port_Base.value>` of a Port is specified, *neither its `afferent Projections <Port_Projections>`
+     - If the `value <Port_Base.value>` of a Port is specified, *neither* its `afferent Projections <Port_Projections>`
        nor it `function <Port_Base.function>` will be executed.
 
      - If the `variable <Port_base.variable>` and/or `value <Port_Base.value>` is specified for *all* of the
        OutputPorts of a Mechanism, then it's function will not be executed, and the `value <Mechanism_Base.value>`
-       will retain its previous value (again in accord with `Lazy Evaluation <Component_Lazy_Updating>), though its
+       will retain its previous value (again in accord with `Lazy Evaluation <Component_Lazy_Updating>`), though its
        OutputPorts *will* be executed using the assigned values, and it's `execution_count <Component_Execution_Count>`
        and `num_executions <Component_Num_Executions>` attributes will be incremented (since the OutputPorts --
        Components of the Mechanism -- executed).
@@ -1012,7 +1012,7 @@ key for each type of projecction is its `componentType <Component_Type>` appende
 *MAPPING_PROJECTION_PARAMS*, *CONTROL_PROJECTION_PARAMS*, etc.).  The sub-dictionary can contain specifications that
 apply to *all* Projections of that type and/or individual Projections. If the key of an entryis the name of a parameter
 of the Projection (or its `function <Port_Base.function>`), the specified value applies to *all* Projections of that
-type. Parameters for individual Projections are specified using the Projections or its `name <Projection_Base.name>
+type. Parameters for individual Projections are specified using the Projections or its `name <Projection_Base.name>`
 as the key, and a dictionary containing parameter specifications as its value.
 
    .. note::
@@ -2358,7 +2358,7 @@ class Mechanism_Base(Mechanism):
         .. technical_note::
             Execution sequence:
 
-            * Handle initialization if `initialization_status <Compoonent.initialization_status> is
+            * Handle initialization if `initialization_status <Compoonent.initialization_status>` is
               *ContextFlags.INITIALIZING*
             * Assign any `Port-specific runtime params <_Mechanism_Runtime_Port_and_Projection_Param_Specification>`
               to corresponding `runtime_params <Mechanism_Base.runtime_params>` dict.

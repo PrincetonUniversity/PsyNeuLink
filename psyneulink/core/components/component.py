@@ -113,7 +113,7 @@ with the one exception of `prefs <Component_Prefs>`.
 
   .. note::
      The size attribute serves a role similar to
-     `shape <https://numpy.org/doc/stable/reference/generated/numpy.shape.html> in Numpy`_, with the difference that
+     `shape in Numpy <https://numpy.org/doc/stable/reference/generated/numpy.shape.html>`_, with the difference that
      size permits the specification of `ragged arrays <https://en.wikipedia.org/wiki/Jagged_array>`_ -- that is, ones
      that have elements of varying lengths, such as [[1,2],[3,4,5]].
 

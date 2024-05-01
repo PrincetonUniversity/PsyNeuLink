@@ -129,7 +129,7 @@ depending on the `function <DDM.function>` that has been assigned to the DDM, as
 +                                    +----------------------------+----------------------------+
 |                                    | `DriftDiffusionAnalytical` | `DriftDiffusionIntegrator` |
 |                                    |   (`analytic               |   (`path integration)      |
-| **OutputPorts:**                  |   <DDM_Analytic_Mode>`)    |   <DDM_Integration_Mode>`) |
+| **OutputPorts:**                   |   <DDM_Analytic_Mode>`)    |   <DDM_Integration_Mode>`) |
 +------------------------------------+----------------------------+----------------------------+
 | `DECISION_VARIABLE                 |                            |                            |
 | <DDM_DECISION_VARIABLE>`           |       X                    |          X                 |

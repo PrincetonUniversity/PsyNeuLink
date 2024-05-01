@@ -168,12 +168,12 @@ class OptimizationFunction(Function_Base):
         relevant argument(s) as `NotImplemented`.
 
     .. technical_note::
-       - Constructors of subclasses should include **kwargs in their constructor method, to accommodate arguments
+       - Constructors of subclasses should include ``**kwargs`` in their constructor method, to accommodate arguments
          required by some subclasses but not others (e.g., search_space needed by `GridSearch` but not
          `GradientOptimization`) so that subclasses can be used interchangeably by OptimizationControlMechanism.
 
        - Subclasses with attributes that depend on one of the OptimizationFunction's parameters should implement the
-         `reset <OptimizationFunction.reset>` method, that calls super().reset(*args) and then
+         `reset <OptimizationFunction.reset>` method, that calls ``super().reset(*args)`` and then
          reassigns the values of the dependent attributes accordingly.  If an argument is not needed for the subclass,
          `NotImplemented` should be passed as the argument's value in the call to super (i.e.,
          the OptimizationFunction's
@@ -839,7 +839,7 @@ class OptimizationFunction(Function_Base):
         return outcomes, num_evals
 
     def reset_grid(self):
-        """Reset iterators in `search_space <GridSearch.search_space>"""
+        """Reset iterators in `search_space <GridSearch.search_space>`"""
         for s in self.search_space:
             s.reset()
         self.grid = itertools.product(*[s for s in self.search_space])
@@ -907,7 +907,7 @@ class GradientOptimization(OptimizationFunction):
 
     Sample variable by following gradient with respect to the value of `objective_function
     <GradientOptimization.objective_function>` it generates, and return the sample that generates either the
-    highest (**direction=*ASCENT*) or lowest (**direction=*DESCENT*) value.
+    highest (**direction** = *ASCENT*) or lowest (**direction** = *DESCENT*) value.
 
     .. _GradientOptimization_Procedure:
 
@@ -1680,7 +1680,7 @@ class GridSearch(OptimizationFunction):
 
     @handle_external_context(fallback_most_recent=True)
     def reset(self, search_space, context=None, **kwargs):
-        """Assign size of `search_space <GridSearch.search_space>"""
+        """Assign size of `search_space <GridSearch.search_space>`"""
         super(GridSearch, self).reset(search_space=search_space, context=context, **kwargs)
         sample_iterators = search_space
         owner_str = ''

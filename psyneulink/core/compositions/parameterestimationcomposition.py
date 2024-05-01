@@ -69,7 +69,7 @@ that describe arguments specific to each.
       <ParameterEstimationComposition.model>`, the `values <Mechanism_Base.value>` of which are used to evaluate the
       fit of the different combinations of `parameter <ParameterEstimationComposition.parameters>` values sampled. An
       important limitation of the PEC is that the `outcome_variables <ParameterEstimationComposition.outcome_variables>`
-      must be a subset of the output ports of the `model <ParameterEstimationComposition.model>`'s `terminal Mechanism.
+      must be a subset of the output ports of the `model <ParameterEstimationComposition.model>`'s terminal Mechanism.
 
     * **optimization_function** - specifies the function used to search over the combinations of `parameter
       <ParameterEstimationComposition.parameters>` values to be estimated. This must be either an instance of
@@ -141,7 +141,7 @@ requires that the **objective_function** argument be specified:
 Supported Optimizers
 --------------------
 
-- `DifferentialEvolution <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.differential_evolution.html`_
+- `DifferentialEvolution <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.differential_evolution.html>`_
 
 Structure
 ---------
@@ -266,7 +266,7 @@ class ParameterEstimationComposition(Composition):
         <ParameterEstimationComposition.model>`, the `values <Mechanism_Base.value>` of which are used to evaluate the
         fit of the different combinations of `parameter <ParameterEstimationComposition.parameters>` values sampled. An
         important limitation of the PEC is that the `outcome_variables <ParameterEstimationComposition.outcome_variables>`
-        must be a subset of the output ports of the `model <ParameterEstimationComposition.model>`'s `terminal Mechanism.
+        must be a subset of the output ports of the `model <ParameterEstimationComposition.model>`'s terminal `Mechanism`.
 
     model :
         specifies an external `Composition` for which parameters are to be `fit to data
@@ -299,7 +299,7 @@ class ParameterEstimationComposition(Composition):
     optimization_function : OptimizationFunction, function or method : default or MaximumLikelihood or GridSearch
         specifies the function used to search over the combinations of `parameter
         <ParameterEstimationComposition.parameters>` values to be estimated. This must be either an instance of
-      `PECOptimizationFunction` or a string name of one of the supported optimizers.
+        `PECOptimizationFunction` or a string name of one of the supported optimizers.
 
     num_estimates : int : default 1
         specifies the number of estimates made for a each combination of `parameter <ParameterEstimationComposition>`

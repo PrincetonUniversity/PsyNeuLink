@@ -3913,7 +3913,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
     .. _FitzHughNagumoIntegrator:
 
     `function <FitzHughNagumoIntegrator._function>` returns one time step of integration of the `Fitzhugh-Nagumo model
-    https://en.wikipedia.org/wiki/FitzHugh–Nagumo_model>`_ of an excitable oscillator:
+    <https://en.wikipedia.org/wiki/FitzHugh–Nagumo_model>`_ of an excitable oscillator:
 
     .. math::
             time\\_constant_v \\frac{dv}{dt} = a_v * v^3 + (1 + threshold) * b_v * v^2 + (- threshold) * c_v * v^2 +
@@ -4059,7 +4059,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
             +---------------------------------------+------------------------------------------------+----------------------------------------------+------------------------------------+---------------------------------------------------------------+
             |**FitzHughNagumoIntegrator Parameter** |`threshold <FitzHughNagumoIntegrator.threshold>`|`variable <FitzHughNagumoIntegrator.variable>`|`f_v <FitzHughNagumoIntegrator.f_v>`|`time_constant_v <FitzHughNagumoIntegrator.time_constant_v>`   |
             +---------------------------------------+------------------------------------------------+----------------------------------------------+-------------------------+--------------------------------------------------------------------------+
-            |**Gilzenrat Parameter**                |a                                               |:math:`f(X_1)`                                |:math:`w_{vX_1}`                    |:math:`T_{v}`                                                  |
+            |**Gilzenrat Parameter**                |a                                               | :math:`f(X_1)`                               | :math:`w_{vX_1}`                   | :math:`T_{v}`                                                 |
             +---------------------------------------+------------------------------------------------+----------------------------------------------+------------------------------------+---------------------------------------------------------------+
 
             The following FitzHughNagumoIntegrator parameter values must be set in the equation for :math:`\\frac{dw}{dt}`:
