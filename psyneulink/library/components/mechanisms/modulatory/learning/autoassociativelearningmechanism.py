@@ -76,9 +76,9 @@ Execution
 ---------
 
 An AutoAssociativeLearningMechanism executes in the same manner as standard `LearningMechanism`, with two exceptions:
-* 1) its execution can be enabled or disabled by setting the `learning_enabled
-  <RecurrentTransferMechanism.learning_enabled>` attribute of the `RecurrentTransferMechanism` with which it is
-  associated (identified in its `activity_source <AutoAssociativeLearningMechanism.activity_source>` attribute).
+* 1) its execution can be enabled or disabled by setting the `learning_enabled <RecurrentTransferMechanism.learning_enabled>`
+  attribute of the `RecurrentTransferMechanism` with which it is associated (identified in its
+  `activity_source <AutoAssociativeLearningMechanism.activity_source>` attribute).
 * 2) it is executed during the `execution phase <Composition_Execution>` of the Composition's execution.  Note that this is
   different from the behavior of supervised learning algorithms (such as `Reinforcement` and `BackPropagation`),
   that are executed during the `learning phase <Composition_Execution>` of a Composition's execution

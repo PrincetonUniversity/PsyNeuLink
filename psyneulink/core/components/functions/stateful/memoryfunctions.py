@@ -661,7 +661,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     Since `memory <ContentAddressableMemory.memory>` was not intialized, the first call to the Function returns an
     array of zeros, formatted as specified in **defaul_variable**.  However, the input in the call to the Function
-    (``[[1,2]]``) is stored as an entry in `memory <EpisodicMemoryMechanism.memory>`::
+    (``[[1,2]]``) is stored as an entry in `memory <EpisodicMemoryMechanism.memory>`:
 
         >>> c.memory
         array([[[1., 2.]]])
@@ -833,7 +833,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     noise : float, list, 2d array, or Function : default 0.0
         specifies random value(s) added to `variable <ContentAddressableMemory.variable>` before storing in
         `memory <ContentAddressableMemory.memory>`;  if a list or 2d array, it must be the same shape as `variable
-         ContentAddressableMemory.variable>` (see `noise <ContentAddressableMemory.noise>` for details).
+        ContentAddressableMemory.variable>` (see `noise <ContentAddressableMemory.noise>` for details).
 
     initializer : 3d array or list : default None
         specifies an initial set of entries for `memory <ContentAddressableMemory.memory>` (see
@@ -1028,8 +1028,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     Returns
     -------
 
-    entry from `memory <ContentAddressableMemory.memory>` that best matches `variable
-    <ContentAddressableMemory.variable>` : 2d array
+    entry from `memory <ContentAddressableMemory.memory>` that best matches `variable <ContentAddressableMemory.variable>` : 2d array
         if no retrieval occurs, an appropriately shaped zero-valued array is returned.
 
     """
@@ -1993,7 +1992,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
     .. math::
         variable[1] * rate + noise
 
-    If the number of entries exceeds `max_entries <DictionaryMemory.max_entries>, the first (oldest) item in
+    If the number of entries exceeds `max_entries <DictionaryMemory.max_entries>`, the first (oldest) item in
     memory is deleted.
 
     Arguments
@@ -2012,11 +2011,11 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
     rate : float, list, or array : default 1.0
         specifies a value used to multiply key (first item of `variable <DictionaryMemory.variable>`) before
-        storing in `memory <DictionaryMemory.memory>` (see `rate <DictionaryMemory.noise> for details).
+        storing in `memory <DictionaryMemory.memory>` (see `rate <DictionaryMemory.rate>` for details).
 
     noise : float, list, array, or Function : default 0.0
         specifies a random value added to key (first item of `variable <DictionaryMemory.variable>`) before
-        storing in `memory <DictionaryMemory.memory>` (see `noise <DictionaryMemory.noise> for details).
+        storing in `memory <DictionaryMemory.memory>` (see `noise <DictionaryMemory.noise>` for details).
 
     initializer : 3d array or list : default None
         specifies an initial set of entries for `memory <DictionaryMemory.memory>`. It must be of the following

@@ -113,7 +113,7 @@ with the one exception of `prefs <Component_Prefs>`.
 
   .. note::
      The size attribute serves a role similar to
-     `shape <https://numpy.org/doc/stable/reference/generated/numpy.shape.html> in Numpy`_, with the difference that
+     `shape in Numpy <https://numpy.org/doc/stable/reference/generated/numpy.shape.html>`_, with the difference that
      size permits the specification of `ragged arrays <https://en.wikipedia.org/wiki/Jagged_array>`_ -- that is, ones
      that have elements of varying lengths, such as [[1,2],[3,4,5]].
 
@@ -2217,6 +2217,12 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         return parameter_values, function_params
 
     def _initialize_parameters(self, context=None, **param_defaults):
+        """
+        Args:
+            **param_defaults: maps Parameter names to their default
+            values. Sets instance-level Parameters dynamically for any
+            name that maps to a Parameter object.
+        """
         from psyneulink.core.components.shellclasses import (
             Composition_Base, Function, Mechanism, Port, Process_Base,
             Projection, System_Base
@@ -2249,6 +2255,14 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             for name, value in copy.copy(param_defaults).items():
                 if name in alias_names:
                     continue
+
+                if isinstance(value, Parameter):
+                    setattr(self.parameters, name, value)
+                    try:
+                        value = copy.copy(value.default_value)
+                    except TypeError:
+                        value = value.default_value
+                    param_defaults[name] = value
 
                 if name in self.parameters._params:
                     parameter_obj = getattr(self.parameters, name)

@@ -24,7 +24,7 @@ class, and are used to validate compatibility between this instance and other Ps
       ``t.defaults.noise.defaults.noise``)
 
     - class defaults are accessible by ``t.class_defaults`` or ``TransferMechanism.defaults`` (e.g.,
-    ``t.class_defaults.noise`` or `TransferMechanism.defaults.noise)
+      ``t.class_defaults.noise`` or `TransferMechanism.defaults.noise`)
 
 .. note::
     ``t.defaults.noise`` is shorthand for ``t.parameters.noise.default_value``, and they both refer to the default
