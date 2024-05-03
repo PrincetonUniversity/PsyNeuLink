@@ -100,6 +100,7 @@ CONTENTS
 
 import collections
 import copy
+import functools
 import inspect
 import itertools
 import logging
@@ -114,7 +115,7 @@ import typing
 from beartype import beartype
 
 from numbers import Number
-from psyneulink._typing import Optional, Union, Literal, Type, List, Tuple
+from psyneulink._typing import Any, Callable, Optional, Union, Literal, Type, List, Tuple
 
 from enum import Enum, EnumMeta, IntEnum
 from collections.abc import Mapping
@@ -134,7 +135,7 @@ from psyneulink.core.globals.keywords import \
 
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_list', 'convert_to_np_array',
-    'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'get_class_attributes', 'flatten_list',
+    'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'get_class_attributes', 'extended_array_equal', 'flatten_list',
     'get_all_explicit_arguments', 'get_modulationOperation_name', 'get_value_from_array',
     'insert_list', 'is_matrix_keyword', 'all_within_range',
     'is_comparison_operator',  'iscompatible', 'is_component', 'is_distance_metric', 'is_iterable', 'is_matrix',
@@ -150,7 +151,7 @@ __all__ = [
     'scalar_distance', 'sinusoid',
     'tensor_power', 'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy', 'create_union_set', 'merge_dictionaries',
-    'contains_type'
+    'contains_type', 'is_numeric_scalar', 'try_extract_0d_array_item',
 ]
 
 logger = logging.getLogger(__name__)
@@ -618,7 +619,13 @@ def iscompatible(candidate, reference=None, **kargs):
                 # Matrices can't be checked recursively, so convert to array
                 if isinstance(value, np.matrix):
                     value = value.A
-                if isinstance(value, (list, np.ndarray)):
+                if isinstance(value, (list, np.ndarray)) and not is_numeric_scalar(value):
+                    try:
+                        if value.ndim == 0:
+                            return recursively_check_elements_for_numeric(value.item())
+                    except AttributeError:
+                        pass
+
                     for item in value:
                         if not recursively_check_elements_for_numeric(item):
                             return False
@@ -744,6 +751,8 @@ def convert_to_list(l):
     elif isinstance(l, ContentAddressableList):
         return list(l)
     elif isinstance(l, set):
+        return list(l)
+    elif isinstance(l, np.ndarray) and l.ndim > 0:
         return list(l)
     else:
         return [l]
@@ -1621,30 +1630,41 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
         -------
         a numpy array containing the converted **arr**
     """
-    if isinstance(arr, np.ndarray) and arr.dtype != object:
-        if cast_from is not None and arr.dtype == cast_from:
-            return np.asarray(arr, dtype=cast_to)
-        else:
+    def recurse(arr):
+        if isinstance(arr, np.ndarray):
+            if cast_from is not None and arr.dtype == cast_from:
+                return np.asarray(arr, dtype=cast_to)
+            elif arr.ndim == 0 or arr.dtype != object:
+                return arr
+
+        if isinstance(arr, np.number):
+            return np.asarray(arr)
+
+        if cast_from is not None and isinstance(arr, cast_from):
+            return cast_to(arr)
+
+        if not isinstance(arr, collections.abc.Iterable) or isinstance(arr, str):
             return arr
 
-    if cast_from is not None and isinstance(arr, cast_from):
-        return np.asarray(arr, dtype=cast_to)
+        if isinstance(arr, np.matrix):
+            if arr.dtype == object:
+                return np.asarray([recurse(arr.item(i)) for i in range(arr.size)])
+            else:
+                return arr
 
-    if not isinstance(arr, collections.abc.Iterable) or isinstance(arr, str):
-        return np.array(arr)
+        subarr = [recurse(x) for x in arr]
 
-    if isinstance(arr, np.matrix):
-        if arr.dtype == object:
-            return np.asarray([convert_all_elements_to_np_array(arr.item(i), cast_from, cast_to) for i in range(arr.size)])
-        else:
-            return arr
+        with warnings.catch_warnings():
+            warnings.filterwarnings('error', message='.*ragged.*', category=np.VisibleDeprecationWarning)
+            try:
+                # the elements are all uniform in shape, so we can use numpy's standard behavior
+                return np.asarray(subarr)
+            except np.VisibleDeprecationWarning:
+                pass
+            except ValueError as e:
+                if 'The requested array has an inhomogeneous shape' not in str(e):
+                    raise
 
-    subarr = [convert_all_elements_to_np_array(x, cast_from, cast_to) for x in arr]
-
-    if all([subarr[i].shape == subarr[0].shape for i in range(1, len(subarr))]):
-        # the elements are all uniform in shape, so we can use numpy's standard behavior
-        return np.asarray(subarr)
-    else:
         # the elements are nonuniform, so create an array that just wraps them individually
         # numpy cannot easily create arrays with subarrays of certain dimensions, workaround here
         # https://stackoverflow.com/q/26885508/3131666
@@ -1654,6 +1674,12 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
             elementwise_subarr[i] = subarr[i]
 
         return elementwise_subarr
+
+    if not isinstance(arr, collections.abc.Iterable) or isinstance(arr, str):
+        # only wrap a noniterable if it's the outermost value
+        return np.asarray(arr)
+    else:
+        return recurse(arr)
 
 # Seeds and randomness
 
@@ -2098,3 +2124,116 @@ def toposort_key(
             return -1
 
     return _generated_toposort_key
+
+
+# np.isscalar returns true on non-numeric items
+def is_numeric_scalar(obj) -> bool:
+    """
+        Returns:
+            True if **obj** is a numbers.Number or a numpy ndarray
+                containing a single numeric value
+            False otherwise
+    """
+
+    try:
+        # getting .item() and checking type is significantly slower
+        return obj.ndim == 0 and obj.dtype.kind in {'i', 'f'}
+    except (AttributeError, ValueError):
+        return isinstance(obj, Number)
+
+
+def try_extract_0d_array_item(arr: np.ndarray):
+    """
+        Returns:
+            the single item in **arr** if **arr** is a 0-dimensional
+            numpy ndarray, otherwise **arr**
+    """
+    try:
+        if arr.ndim == 0:
+            return arr.item()
+    except AttributeError:
+        pass
+    return arr
+
+
+def _extended_array_compare(a, b, comparison_fct: Callable[[Any, Any], bool]) -> bool:
+    """
+    Recursively determine equality of **a** and **b** using
+    **comparison_fct** as an equality function. Shape and size of nested
+    arrays must be the same for equality.
+
+    Args:
+        a (np.ndarray-like)
+        b (np.ndarray-like)
+        comparison_fct (Callable[[Any, Any], bool]): a comparison
+        function to be called on **a** and **b**. For example,
+        numpy.array_equal
+
+    Returns:
+        bool: result of comparison_fct(**a**, **b**)
+    """
+    try:
+        a_ndim = a.ndim
+    except AttributeError:
+        a_ndim = None
+
+    try:
+        b_ndim = b.ndim
+    except AttributeError:
+        b_ndim = None
+
+    # a or b is not a numpy array
+    if a_ndim is None or b_ndim is None:
+        return comparison_fct(a, b)
+
+    if a_ndim != b_ndim:
+        return False
+
+    # b_ndim is also 0
+    if a_ndim == 0:
+        return comparison_fct(a, b)
+
+    if len(a) != len(b):
+        return False
+
+    if a.dtype != b.dtype:
+        return False
+
+    # safe to use standard numpy comparison here because not ragged
+    if a.dtype != object:
+        return comparison_fct(a, b)
+
+    for i in range(len(a)):
+        if not _extended_array_compare(a[i], b[i], comparison_fct):
+            return False
+
+    return True
+
+
+def extended_array_equal(a, b, equal_nan: bool = False) -> bool:
+    """
+    Tests equality like numpy.array_equal, while recursively checking
+    object-dtype arrays.
+
+    Args:
+        a (np.ndarray-like)
+        b (np.ndarray-like)
+        equal_nan (bool, optional): Whether to consider NaN as equal.
+            See numpy.array_equal. Defaults to False.
+
+    Returns:
+        bool: **a** and **b** are equal.
+
+    Example:
+        `X = np.array([np.array([0]), np.array([0, 0])], dtype=object)`
+
+        | a | b | np.array_equal | extended_array_equal |
+        |---|---|----------------|----------------------|
+        | X | X | False          | True                 |
+    """
+    a = convert_all_elements_to_np_array(a)
+    b = convert_all_elements_to_np_array(b)
+
+    return _extended_array_compare(
+        a, b, functools.partial(np.array_equal, equal_nan=equal_nan)
+    )

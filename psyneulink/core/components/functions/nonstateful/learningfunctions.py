@@ -47,7 +47,7 @@ from psyneulink.core.globals.keywords import \
     MATRIX, Loss
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
-from psyneulink.core.globals.utilities import is_numeric, scalar_distance, convert_to_np_array, all_within_range
+from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric, scalar_distance, convert_to_np_array, all_within_range, safe_len, is_numeric_scalar
 
 __all__ = ['LearningFunction', 'Kohonen', 'Hebbian', 'ContrastiveHebbian',
            'Reinforcement', 'BayesGLM', 'BackPropagation', 'TDLearning', 'EMStorage',
@@ -831,10 +831,10 @@ class BayesGLM(LearningFunction):
                 # if both are specified, make sure they are the same size
                 if (isinstance(self.mu_0, (list, np.ndarray))
                         and isinstance(self.sigma_0, (list, np.ndarray))
-                        and len(self.mu_0) != len(self.sigma_0)):
+                        and safe_len(self.mu_0) != safe_len(self.sigma_0)):
                     raise FunctionError("Length of {} ({}) does not match length of {} ({}) for {}".
-                                        format(repr('mu_0'), len(self.mu_0),
-                                                    repr('sigma_0'), len(self.sigma_0),
+                                        format(repr('mu_0'), safe_len(self.mu_0),
+                                               repr('sigma_0'), safe_len(self.sigma_0),
                                                          self.__class.__.__name__))
                 # allow their size to determine the size of variable
                 if isinstance(self.mu_0, (list, np.ndarray)):
@@ -855,22 +855,22 @@ class BayesGLM(LearningFunction):
         if np.array(variable).dtype != object:
             variable = np.atleast_2d(variable)
 
-        n = len(variable[0])
+        n = safe_len(variable[0])
 
-        if isinstance(self.mu_0, (int, float)):
+        if is_numeric_scalar(self.mu_0):
             self.mu_prior = np.full((n, 1),self.mu_0)
         else:
-            if len(self.mu_0) != n:
+            if safe_len(self.mu_0) != n:
                 raise FunctionError("Length of mu_0 ({}) does not match number of predictors ({})".
-                                    format(len(self.mu_0), n))
-            self.mu_prior = np.array(self.mu_0).reshape(len(self._mu_0),1)
+                                    format(safe_len(self.mu_0), n))
+            self.mu_prior = np.array(self.mu_0).reshape(safe_len(self._mu_0), 1)
 
-        if isinstance(self.sigma_0, (int, float)):
+        if is_numeric_scalar(self.sigma_0):
             Lambda_0 = (1 / (self.sigma_0 ** 2)) * np.eye(n)
         else:
-            if len(self.sigma_0) != n:
+            if safe_len(self.sigma_0) != n:
                 raise FunctionError("Length of sigma_0 ({}) does not match number of predictors ({})".
-                                    format(len(self.sigma_0), n))
+                                    format(safe_len(self.sigma_0), n))
             Lambda_0 = (1 / (np.array(self.sigma_0) ** 2)) * np.eye(n)
         self.Lambda_prior = Lambda_0
 
@@ -956,7 +956,7 @@ class BayesGLM(LearningFunction):
         # online update rules as per the given reference
         Lambda_n = (predictors.T @ predictors) + Lambda_prior
         mu_n = np.linalg.inv(Lambda_n) @ ((predictors.T @ dependent_vars) + (Lambda_prior @ mu_prior))
-        gamma_shape_n = gamma_shape_prior + dependent_vars.shape[1]
+        gamma_shape_n = np.array(gamma_shape_prior + dependent_vars.shape[1])
         gamma_size_n = gamma_size_prior + (dependent_vars.T @ dependent_vars) \
             + (mu_prior.T @ Lambda_prior @ mu_prior) \
             - (mu_n.T @ Lambda_n @ mu_n)
@@ -1973,7 +1973,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
         # Construct weight change matrix with error term in proper element
         weight_change_matrix = np.diag(error_array)
-        return [error_array, error_array]
+        return convert_all_elements_to_np_array([error_array, error_array])
 
 
 class TDLearning(Reinforcement):
@@ -2556,4 +2556,4 @@ class BackPropagation(LearningFunction):
         # Weight changes = delta rule (learning rate * activity * error)
         weight_change_matrix = learning_rate * activation_input * dE_dW
 
-        return [weight_change_matrix, dE_dW]
+        return convert_all_elements_to_np_array([weight_change_matrix, dE_dW])

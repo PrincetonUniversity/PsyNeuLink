@@ -4214,7 +4214,7 @@ class TestRun:
         assert comp.results == [[[1]]]
 
         context = pnl.Context()
-        t.function.parameters.slope._set(2, context)
+        t.function.parameters.slope._set(np.array(2), context)
 
         comp.run({t: [1]}, context=context)
         assert comp.results == [[[2]]]

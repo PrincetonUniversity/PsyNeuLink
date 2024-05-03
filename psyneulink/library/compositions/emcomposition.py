@@ -896,7 +896,7 @@ from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import \
     (AUTO, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, EM_COMPOSITION, FULL_CONNECTIVITY_MATRIX,
      GAIN, IDENTITY_MATRIX, MULTIPLICATIVE_PARAM, NAME, PARAMS, PRODUCT, PROJECTIONS, RANDOM, SIZE, VARIABLE)
-from psyneulink.core.globals.utilities import all_within_range
+from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric_scalar
 from psyneulink.core.llvm import ExecutionMode
 
 
@@ -923,8 +923,10 @@ def _memory_getter(owning_component=None, context=None)->list:
               for retrieved_node in owning_component.retrieved_nodes]
     # Reorganize memory so that each row is an entry and each column is a field
     memory_capacity = owning_component.memory_capacity or owning_component.defaults.memory_capacity
-    return [[memory[j][i] for j in range(owning_component.num_fields)]
-              for i in range(memory_capacity)]
+    return convert_all_elements_to_np_array([
+        [memory[j][i] for j in range(owning_component.num_fields)]
+        for i in range(memory_capacity)
+    ])
 
 def get_softmax_gain(v, scale=1, base=1, entropy_weighting=.1)->float:
     """Compute the softmax gain (inverse temperature) based on the entropy of the distribution of values.
@@ -1344,18 +1346,17 @@ class EMComposition(AutodiffComposition):
                 return f"must be a list of strings."
 
         def _validate_memory_decay_rate(self, memory_decay_rate):
-            if memory_decay_rate in {None, AUTO}:
+            if memory_decay_rate is None or memory_decay_rate == AUTO:
                 return
-            if not (isinstance(memory_decay_rate, (float, int)) and all_within_range(memory_decay_rate, 0, 1)):
+            if not is_numeric_scalar(memory_decay_rate) and not (0 <= memory_decay_rate <= 1):
                 return f"must be a float in the interval [0,1]."
 
         def _validate_softmax_gain(self, softmax_gain):
-            if softmax_gain != CONTROL and not isinstance(softmax_gain, (float, int)):
+            if softmax_gain != CONTROL and not is_numeric_scalar(softmax_gain):
                 return f"must be a scalar or the keyword 'CONTROL'."
 
         def _validate_storage_prob(self, storage_prob):
-            storage_prob = float(storage_prob)
-            if not all_within_range(storage_prob, 0, 1):
+            if not is_numeric_scalar(storage_prob) and not (0 <= storage_prob <= 1):
                 return f"must be a float in the interval [0,1]."
 
     @check_user_specified
@@ -1574,7 +1575,7 @@ class EMComposition(AutodiffComposition):
                 # Fill with specified value
                 elif isinstance(memory_fill, (list, float, int)):
                     entry = [np.full(len(field), memory_fill).tolist() for field in entry_template]
-                entries = [np.array(entry, dtype=object)] * num_entries
+                entries = [np.array(entry, dtype=object) for _ in range(num_entries)]
 
             return np.array(np.array(entries,dtype=object), dtype=object)
 
@@ -2001,7 +2002,7 @@ class EMComposition(AutodiffComposition):
 
         if not concatenate_keys and self.num_keys > 1:
             if use_gating_for_weighting:
-                field_weight_nodes = [GatingMechanism(input_ports={VARIABLE: field_weights[i],
+                field_weight_nodes = [GatingMechanism(input_ports={VARIABLE: np.array(field_weights[i]),
                                                                    PARAMS:{DEFAULT_INPUT: DEFAULT_VARIABLE},
                                                                    NAME: 'OUTCOME'},
                                                       gate=[key_match_pair[1].output_ports[0]],
@@ -2010,7 +2011,7 @@ class EMComposition(AutodiffComposition):
                                       for i, key_match_pair in enumerate(zip(self.query_input_nodes,
                                                                              self.softmax_nodes))]
             else:
-                field_weight_nodes = [ProcessingMechanism(input_ports={VARIABLE: field_weights[i],
+                field_weight_nodes = [ProcessingMechanism(input_ports={VARIABLE: np.array(field_weights[i]),
                                                                        PARAMS:{DEFAULT_INPUT: DEFAULT_VARIABLE},
                                                                        NAME: 'FIELD_WEIGHT'},
                                                           name= 'WEIGHT' if self.num_keys == 1

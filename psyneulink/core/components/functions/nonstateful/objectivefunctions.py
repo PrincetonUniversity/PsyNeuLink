@@ -36,7 +36,7 @@ from psyneulink.core.globals.keywords import \
     NORMED_L0_SIMILARITY, OBJECTIVE_FUNCTION_TYPE, SIZE, STABILITY_FUNCTION
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
-from psyneulink.core.globals.utilities import DistanceMetricLiteral, safe_len, convert_to_np_array
+from psyneulink.core.globals.utilities import DistanceMetricLiteral, safe_len, convert_to_np_array, convert_all_elements_to_np_array
 from psyneulink.core.globals.utilities import is_iterable
 
 
@@ -379,11 +379,8 @@ class Stability(ObjectiveFunction):
 
         # this mirrors the transformation in _function
         # it is a hack, and a general solution should be found
-        squeezed = np.array(new_default_variable)
-        if squeezed.ndim > 1:
-            squeezed = np.squeeze(squeezed)
-
-        size = safe_len(squeezed)
+        new_default_variable = convert_all_elements_to_np_array(new_default_variable)
+        size = safe_len(np.squeeze(new_default_variable))
         matrix = self.parameters.matrix._get(context)
 
         if isinstance(matrix, MappingProjection):

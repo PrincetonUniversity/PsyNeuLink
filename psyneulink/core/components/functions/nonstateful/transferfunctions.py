@@ -101,7 +101,7 @@ from psyneulink.core.globals.parameters import \
     FunctionParameter, Parameter, get_validator_by_function, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, ValidPrefSet
-from psyneulink.core.globals.utilities import ValidParamSpecType, safe_len, is_matrix_keyword
+from psyneulink.core.globals.utilities import ValidParamSpecType, convert_all_elements_to_np_array, safe_len, is_matrix_keyword
 
 __all__ = ['Angle', 'BinomialDistort', 'Dropout', 'Exponential', 'Gaussian', 'GaussianDistort', 'Identity',
            'Linear', 'LinearMatrix', 'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
@@ -1116,8 +1116,8 @@ class Logistic(TransferFunction):  # -------------------------------------------
         model = super().as_mdf_model()
 
         # x_0 is included in bias in MDF logistic
-        self._set_mdf_arg(model, 'bias', model.args['bias'] - model.args['x_0'])
-        self._set_mdf_arg(model, 'x_0', 0)
+        self._set_mdf_arg(model, 'bias', np.array(model.args['bias'] - model.args['x_0']))
+        self._set_mdf_arg(model, 'x_0', np.array(0))
 
         if model.args['scale'] != 1.0:
             warnings.warn(
@@ -3159,6 +3159,7 @@ class SoftMax(TransferFunction):
             output = []
             for item in variable:
                 output.append(self.apply_softmax(item, gain, output_type))
+            output = convert_all_elements_to_np_array(output)
         else:
             output = self.apply_softmax(variable, gain, output_type)
 

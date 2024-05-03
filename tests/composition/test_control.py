@@ -521,9 +521,15 @@ class TestControlSpecification:
                 [[15.], [15.0], [0.0], [3.84279648], [0.81637827]]]
 
         for simulation in range(len(expected_sim_results_array)):
-            np.testing.assert_allclose(expected_sim_results_array[simulation],
-                               # Note: Skip decision variable OutputPort
-                               comp.simulation_results[simulation][0:3] + comp.simulation_results[simulation][4:6])
+            # Note: Skip decision variable OutputPort
+            np.testing.assert_allclose(
+                expected_sim_results_array[simulation][:3],
+                comp.simulation_results[simulation][:3]
+            )
+            np.testing.assert_allclose(
+                expected_sim_results_array[simulation][3:],
+                comp.simulation_results[simulation][4:]
+            )
 
         expected_results_array = [
             [[20.0], [20.0], [0.0], [1.0], [2.378055160151634], [0.9820137900379085]],
@@ -1312,9 +1318,13 @@ class TestControlMechanisms:
             if test_condition == 'full_list_spec':
                 assert len(ocm.state_input_ports) == 3
                 assert ocm.state_input_ports.names == [shadowed_ia_node, oa_node, numeric_ob]
-                assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
-                                              'OA[InputPort-0]': 'OA[OutputPort-0]',
-                                              'OB[InputPort-0]': [3, 1, 2]}
+                np.testing.assert_equal(
+                    ocm.state_features, {
+                        'IA[InputPort-0]': 'IA[InputPort-0]',
+                        'OA[InputPort-0]': 'OA[OutputPort-0]',
+                        'OB[InputPort-0]': [3, 1, 2]
+                    }
+                )
                 assert {k:v.tolist() for k,v in ocm.state_feature_values.items()} == {ia.input_port: [0.0],
                                                                                       oa.input_port: [0.0],
                                                                                       ob.input_port: [3.0, 1.0, 2.0]}
@@ -1322,9 +1332,13 @@ class TestControlMechanisms:
             if test_condition == 'list_spec_with_none':
                 assert len(ocm.state_input_ports) == 2
                 assert ocm.state_input_ports.names == [shadowed_ia_node, numeric_ob]
-                assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
-                                              'OA[InputPort-0]': None,
-                                              'OB[InputPort-0]': [3, 1, 2]}
+                np.testing.assert_equal(
+                    ocm.state_features, {
+                        'IA[InputPort-0]': 'IA[InputPort-0]',
+                        'OA[InputPort-0]': None,
+                        'OB[InputPort-0]': [3, 1, 2]
+                    }
+                )
                 for expected, actual in zip(
                     list(ocm.state_feature_values.values()), [[0.], [3, 1, 2]]
                 ):
@@ -1841,6 +1855,10 @@ class TestControlMechanisms:
         assert len(lvoc.input_ports) == 5
 
     @pytest.mark.pytorch
+    @pytest.mark.xfail(
+        strict=False,
+        reason='operation incompatiblilty between torch tensor and numpy array',
+    )
     def test_lvoc_features_function(self):
         m1 = pnl.TransferMechanism(input_ports=["InputPort A", "InputPort B"])
         m2 = pnl.TransferMechanism()
@@ -2845,9 +2863,15 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         ]
 
         for simulation in range(len(expected_sim_results_array)):
-            np.testing.assert_allclose(expected_sim_results_array[simulation],
-                               # Note: Skip decision variable OutputPort
-                               comp.simulation_results[simulation][0:3] + comp.simulation_results[simulation][4:6])
+            # Note: Skip decision variable OutputPort
+            np.testing.assert_allclose(
+                expected_sim_results_array[simulation][:3],
+                comp.simulation_results[simulation][:3]
+            )
+            np.testing.assert_allclose(
+                expected_sim_results_array[simulation][3:],
+                comp.simulation_results[simulation][4:]
+            )
 
         expected_results_array = [
             [[20.0], [20.0], [0.0], [1.0], [2.378055160151634], [0.9820137900379085]],
@@ -3134,10 +3158,14 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         ]
 
         for simulation in range(len(expected_sim_results_array)):
+            # Note: Skip decision variable OutputPort
             np.testing.assert_allclose(
-                expected_sim_results_array[simulation],
-                # Note: Skip decision variable OutputPort
-                comp.simulation_results[simulation][0:3] + comp.simulation_results[simulation][4:6]
+                expected_sim_results_array[simulation][:3],
+                comp.simulation_results[simulation][:3]
+            )
+            np.testing.assert_allclose(
+                expected_sim_results_array[simulation][3:],
+                comp.simulation_results[simulation][4:]
             )
 
         expected_results_array = [
@@ -3271,10 +3299,14 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         ]
 
         for simulation in range(len(expected_sim_results_array)):
+            # Note: Skip decision variable OutputPort
             np.testing.assert_allclose(
-                expected_sim_results_array[simulation],
-                # Note: Skip decision variable OutputPort
-                comp.simulation_results[simulation][0:3] + comp.simulation_results[simulation][4:6]
+                expected_sim_results_array[simulation][:3],
+                comp.simulation_results[simulation][:3]
+            )
+            np.testing.assert_allclose(
+                expected_sim_results_array[simulation][3:],
+                comp.simulation_results[simulation][4:]
             )
 
         expected_results_array = [

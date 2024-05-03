@@ -179,7 +179,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter, check_user_specified, FunctionParameter
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import is_numeric, ValidParamSpecType, all_within_range
+from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric, all_within_range
 
 __all__ = [
     'EMStorageMechanism', 'EMStorageMechanismError',
@@ -223,8 +223,10 @@ def _memory_matrix_getter(owning_component=None, context=None)->list:
     memory_capacity = len(memory[0])
 
     # Reorganize memory so that each row is an entry and each column is a field
-    return [[memory[j][i] for j in range(num_fields)]
-              for i in range(memory_capacity)]
+    return convert_all_elements_to_np_array([
+        [memory[j][i] for j in range(num_fields)]
+        for i in range(memory_capacity)
+    ])
 
 
 class EMStorageMechanismError(LearningMechanismError):
@@ -503,6 +505,9 @@ class EMStorageMechanism(LearningMechanism):
                                 parse_spec=True,
                                 constructor_argument='fields',
                                 )
+        fields = Parameter(
+            [], stateful=False, loggable=False, read_only=True, structural=True
+        )
         field_types = Parameter([],stateful=False,
                                 loggable=False,
                                 read_only=True,
@@ -587,8 +592,8 @@ class EMStorageMechanism(LearningMechanism):
                  function: Optional[Callable] = EMStorage,
                  learning_signals: Union[list, dict, ParameterPort, Projection, tuple] = None,
                  modulation: Optional[Literal[OVERRIDE, ADDITIVE, MULTIPLICATIVE]] = OVERRIDE,
-                 decay_rate: Optional[Union[int,float]] = 0.0,
-                 storage_prob: Optional[Union[int, float]] = 1.0,
+                 decay_rate: Optional[Union[int, float, np.ndarray]] = 0.0,
+                 storage_prob: Optional[Union[int, float, np.ndarray]] = 1.0,
                  params=None,
                  name=None,
                  prefs: Optional[ValidPrefSet] = None,
@@ -754,8 +759,10 @@ class EMStorageMechanism(LearningMechanism):
         if memory is None or self.is_initializing:
             if self.is_initializing:
                 # Return existing matrices for field_memories  # FIX: THE FOLLOWING DOESN'T TEST FUNCTION:
-                return [learning_signal.receiver.path_afferents[0].parameters.matrix.get()
-                        for learning_signal in self.learning_signals]
+                return convert_all_elements_to_np_array([
+                    learning_signal.receiver.path_afferents[0].parameters.matrix.get()
+                    for learning_signal in self.learning_signals
+                ])
             # Raise exception if not initializing and memory is not specified
             else:
                 owner_string = ""
@@ -782,7 +789,7 @@ class EMStorageMechanism(LearningMechanism):
                 #   get entry to store from variable of Projection matrix (memory_field)
                 #   to match_node in which memory will be stored (this is to accomodate concatenation_node)
                 axis = 0
-                entry_to_store = field_projection.variable
+                entry_to_store = field_projection.parameters.variable._get(context)
                 if concatenation_node is None:
                     assert np.all(entry_to_store == variable[i]),\
                         f"PROGRAM ERROR: misalignment between inputs and fields for storing them"
@@ -802,5 +809,4 @@ class EMStorageMechanism(LearningMechanism):
                                                                  decay_rate=decay_rate,
                                                                  context=context,
                                                                  runtime_params=runtime_params))
-        self.parameters.value._set(value, context)
-        return value
+        return convert_all_elements_to_np_array(value)

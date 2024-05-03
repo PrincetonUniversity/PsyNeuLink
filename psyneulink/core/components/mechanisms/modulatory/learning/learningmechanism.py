@@ -592,7 +592,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_np_array, is_numeric, ValidParamSpecType, \
+from psyneulink.core.globals.utilities import ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, is_numeric, ValidParamSpecType, \
     convert_to_list
 
 __all__ = [
@@ -1489,9 +1489,11 @@ class LearningMechanism(ModulatoryMechanism_Base):
         if (self.in_composition and
                 isinstance(self.function, BackPropagation) and
                 self.initialization_status == ContextFlags.INITIALIZING):
-            return [0 * summed_learning_signal, 0 * summed_error_signal]
+            return convert_all_elements_to_np_array(
+                [np.zeros(summed_learning_signal.shape), np.zeros(summed_error_signal.shape)]
+            )
 
-        return [summed_learning_signal, summed_error_signal]
+        return convert_all_elements_to_np_array([summed_learning_signal, summed_error_signal])
 
     @property
     def input_source(self):

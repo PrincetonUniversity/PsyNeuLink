@@ -15,10 +15,11 @@
 
 """
 
+from abc import ABCMeta
 from collections.abc import Iterator
 from decimal import Decimal, getcontext
 from inspect import isclass
-from numbers import Number
+from psyneulink.core.globals.utilities import is_numeric_scalar, try_extract_0d_array_item
 
 import numpy as np
 from beartype import beartype
@@ -43,7 +44,7 @@ def _validate_function(source, function):
     if result is None:
         raise SampleIteratorError("Function specified for {} ({}) does not return a result)".
                                   format(source_name, repr(function)))
-    if not isinstance(result, Number):
+    if not is_numeric_scalar(result):
         raise SampleIteratorError("Function specified for {} ({}) does not return a number)".
                                   format(source_name, repr(function)))
 
@@ -53,7 +54,29 @@ class SampleIteratorError(Exception):
         self.error_value = error_value
 
 
-class SampleSpec:
+def make_array_property(name):
+    private_name = f'_{name}'
+
+    def getter(self):
+        return try_extract_0d_array_item(getattr(self, private_name))
+
+    def setter(self, value):
+        if value is not None:
+            value = np.asarray(value)
+        setattr(self, private_name, value)
+
+    return property(getter).setter(setter)
+
+
+class SampleMeta(ABCMeta):
+    def __init__(cls, *args, **kwargs):
+        for n in cls._numeric_attrs:
+            setattr(cls, n, make_array_property(n))
+
+        super().__init__(*args, **kwargs)
+
+
+class SampleSpec(metaclass=SampleMeta):
     """
     SampleSpec(      \
     start=None,      \
@@ -150,6 +173,8 @@ class SampleSpec:
 
     """
 
+    _numeric_attrs = ['start', 'stop', 'step', 'num', '_precision']
+
     @beartype
     def __init__(self,
                  start: Optional[Union[int, float]] = None,
@@ -233,7 +258,7 @@ def is_sample_spec(spec):
     return False
 
 
-class SampleIterator(Iterator):
+class SampleIterator(Iterator, metaclass=SampleMeta):
     """
     SampleIterator(               \
     specification                 \
@@ -270,6 +295,8 @@ class SampleIterator(Iterator):
         samples to be stored and looked up, while the SampleSpec options generate samples as needed.
 
     """
+
+    _numeric_attrs = ['start', 'stop', 'step', 'current_step', 'num', 'head']
 
     def __init__(self,
                  specification):

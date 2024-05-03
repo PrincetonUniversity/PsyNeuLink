@@ -260,7 +260,9 @@ You should avoid using `dot notation <Parameter_Dot_Notation>` in internal code,
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
 |      getter      |     None      |hook that allows overriding the retrieval of|kwargs self, owning_component, and       |
 |                  |               |values based on a supplied method           |context will be passed in if your        |
-|                  |               |(e.g. _output_port_variable_getter)         |method uses them.                        |
+|                  |               |(e.g. _output_port_variable_getter)         |method uses them. modulated=True will be |
+|                  |               |                                            |passed in when modulated values are      |
+|                  |               |                                            |requested.                               |
 |                  |               |                                            |self: the Parameter calling the setter   |
 |                  |               |                                            |owning_component: the Component to which |
 |                  |               |                                            |    the Parameter belongs                |
@@ -319,8 +321,20 @@ import toposort
 from psyneulink.core.globals.context import Context, ContextError, ContextFlags, _get_time, handle_external_context
 from psyneulink.core.globals.context import time as time_object
 from psyneulink.core.globals.log import LogCondition, LogEntry, LogError
-from psyneulink.core.globals.utilities import call_with_pruned_args, copy_iterable_with_shared, \
-    get_alias_property_getter, get_alias_property_setter, get_deepcopy_with_shared, unproxy_weakproxy, create_union_set, safe_equals, get_function_sig_default_value
+from psyneulink.core.globals.utilities import (
+    call_with_pruned_args,
+    convert_all_elements_to_np_array,
+    copy_iterable_with_shared,
+    create_union_set,
+    get_alias_property_getter,
+    get_alias_property_setter,
+    get_deepcopy_with_shared,
+    get_function_sig_default_value,
+    is_numeric,
+    safe_equals,
+    try_extract_0d_array_item,
+    unproxy_weakproxy,
+)
 from psyneulink.core.rpc.graph_pb2 import Entry, ndArray
 
 __all__ = [
@@ -996,6 +1010,7 @@ class Parameter(ParameterBase):
         # attributes will be taken from
         _inherited_source=None,
         _user_specified=False,
+        _scalar_converted=False,
         **kwargs
     ):
         if isinstance(aliases, str):
@@ -1057,6 +1072,7 @@ class Parameter(ParameterBase):
             _inherited_source=_inherited_source,
             _user_specified=_user_specified,
             _temp_uninherited=set(),
+            _scalar_converted=_scalar_converted,
             **kwargs
         )
 
@@ -1098,6 +1114,7 @@ class Parameter(ParameterBase):
             _owner=self._owner,
             _inherited=self._inherited,
             _user_specified=self._user_specified,
+            _scalar_converted=self._scalar_converted,
         )
         # TODO: this is a quick fix to make sure default values are
         # always copied. should be integrated with future changes to
@@ -1189,6 +1206,7 @@ class Parameter(ParameterBase):
         # no default specified, must be inherited or invalid
         if self._parent is not None:
             self._inherited = True
+            return
         else:
             raise ParameterError(
                 'Parameter {0} cannot be reset, as it does not have a default specification '
@@ -1266,7 +1284,13 @@ class Parameter(ParameterBase):
     def _validate(self, value):
         return self._owner._validate(self.name, value)
 
-    def _parse(self, value):
+    def _parse(self, value, check_scalar=False):
+        if is_numeric(value):
+            orig_value = value
+            value = convert_all_elements_to_np_array(value)
+            if check_scalar:
+                self._scalar_converted = orig_value is not value and value.ndim == 0
+
         return self._owner._parse(self.name, value)
 
     @property
@@ -1303,7 +1327,10 @@ class Parameter(ParameterBase):
                 kwargs
                     any additional arguments to be passed to this `Parameter`'s `getter` if it exists
         """
-        return self._get(context, **kwargs)
+        base_val = self._get(context, **kwargs)
+        if self._scalar_converted:
+            base_val = try_extract_0d_array_item(base_val)
+        return base_val
 
     def _get(self, context=None, **kwargs):
         if not self.stateful:
@@ -1457,7 +1484,8 @@ class Parameter(ParameterBase):
         if not override and self.read_only:
             raise ParameterError('Parameter \'{0}\' is read-only. Set at your own risk. Pass override=True to force set.'.format(self.name))
 
-        value = self._set(self._parse(value), context, skip_history, skip_log, **kwargs)
+        value = self._parse(value, check_scalar=True)
+        value = self._set(value, context, skip_history, skip_log, **kwargs)
 
         try:
             if isinstance(value.__self__, Component):
@@ -1749,7 +1777,7 @@ class Parameter(ParameterBase):
     # KDM 7/30/18: the below is weird like this in order to use this like a property, but also include it
     # in the interface for user simplicity: that is, inheritable (by this Parameter's children or from its parent),
     # visible in a Parameter's repr, and easily settable by the user
-    def _set_default_value(self, value, directly=False):
+    def _set_default_value(self, value, directly=False, check_scalar=False):
         """
         Set default_value
 
@@ -1757,9 +1785,12 @@ class Parameter(ParameterBase):
             value: new default_value
             directly (bool, optional): if False, passes **value**
                 through parse and validation steps. Defaults to False.
+            check_scalar (bool, optional): if True, sets
+                _scalar_converted attribute as appropriate for
+                **value**. Defaults to False.
         """
         if not directly:
-            value = self._parse(value)
+            value = self._parse(value, check_scalar=check_scalar)
             self._validate(value)
 
         super().__setattr__('default_value', value)
@@ -2229,8 +2260,11 @@ class ParametersBase(ParametersTemplate):
             super().__setattr__(attr, value)
         else:
             if isinstance(value, Parameter):
+                is_new_parameter = False
+
                 if value._owner is None:
                     value._owner = self
+                    is_new_parameter = True
                 elif value._owner is not self and self._initializing:
                     # case where no Parameters class defined on subclass
                     # but default value overridden in __init__
@@ -2241,7 +2275,8 @@ class ParametersBase(ParametersTemplate):
                     value.name = attr
 
                 if self._initializing and not value._inherited:
-                    value.default_value = self._reconcile_value_with_init_default(attr, value.default_value)
+                    reconciled_value = self._reconcile_value_with_init_default(attr, value.default_value)
+                    value._set_default_value(reconciled_value, check_scalar=is_new_parameter)
 
                 super().__setattr__(attr, value)
 
@@ -2307,15 +2342,15 @@ class ParametersBase(ParametersTemplate):
                     # set _inherited before default_value because it will
                     # restore from cache
                     new_param._inherited = False
-                    new_param.default_value = value
 
                     # the old/replaced Parameter should be discarded
                     current_value._is_invalid_source = True
 
                 else:
-                    new_param = Parameter(name=attr, default_value=value, _owner=self)
+                    new_param = Parameter(name=attr, _owner=self)
 
                 super().__setattr__(attr, new_param)
+                new_param._set_default_value(value)
 
             self._validate(attr, getattr(self, attr).default_value)
             self._register_parameter(attr)

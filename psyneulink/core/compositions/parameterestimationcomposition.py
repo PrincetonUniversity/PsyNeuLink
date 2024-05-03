@@ -186,8 +186,8 @@ from psyneulink.core.globals.context import (
     handle_external_context,
 )
 from psyneulink.core.globals.keywords import BEFORE, OVERRIDE
-from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.utilities import convert_to_list
+from psyneulink.core.globals.parameters import Parameter, SharedParameter, check_user_specified
+from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, convert_to_list
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.components.ports.outputport import OutputPort
 
@@ -207,38 +207,6 @@ CONTROLLER_SPECIFICATION_ARGS = {
 
 class ParameterEstimationCompositionError(CompositionError):
     pass
-
-
-def _initial_seed_getter(owning_component, context=None):
-    try:
-        return owning_component.controller.parameters.initial_seed._get(context)
-    except AttributeError:
-        return None
-
-
-def _initial_seed_setter(value, owning_component, context=None):
-    owning_component.controller.parameters.initial_seed.set(value, context)
-    return value
-
-
-def _same_seed_for_all_parameter_combinations_getter(owning_component, context=None):
-    try:
-        return (
-            owning_component.controller.parameters.same_seed_for_all_allocations._get(
-                context
-            )
-        )
-    except AttributeError:
-        return None
-
-
-def _same_seed_for_all_parameter_combinations_setter(
-    value, owning_component, context=None
-):
-    owning_component.controler.parameters.same_seed_for_all_allocations.set(
-        value, context
-    )
-    return value
 
 
 class ParameterEstimationComposition(Composition):
@@ -473,20 +441,8 @@ class ParameterEstimationComposition(Composition):
         """
 
         # FIX: 11/32/21 CORRECT INITIAlIZATIONS?
-        initial_seed = Parameter(
-            None,
-            loggable=False,
-            pnl_internal=True,
-            getter=_initial_seed_getter,
-            setter=_initial_seed_setter,
-        )
-        same_seed_for_all_parameter_combinations = Parameter(
-            False,
-            loggable=False,
-            pnl_internal=True,
-            getter=_same_seed_for_all_parameter_combinations_getter,
-            setter=_same_seed_for_all_parameter_combinations_setter,
-        )
+        initial_seed = SharedParameter(attribute_name='controller')
+        same_seed_for_all_parameter_combinations = SharedParameter(attribute_name='controller')
 
     @handle_external_context()
     @check_user_specified
@@ -846,7 +802,7 @@ class ParameterEstimationComposition(Composition):
     def run(self, *args, **kwargs):
         # Clear any old results from the composition
         if self.results is not None:
-            self.results.clear()
+            self.results = []
 
         context = kwargs.get("context", None)
         self._assign_execution_ids(context)
@@ -875,6 +831,7 @@ class ParameterEstimationComposition(Composition):
         for state_input_port, value in zip(
             self.controller.state_input_ports, inputs_dict.values()
         ):
+            value = convert_all_elements_to_np_array(value)
             state_input_port.parameters.value._set(value, context)
 
         kwargs.pop("inputs", None)
