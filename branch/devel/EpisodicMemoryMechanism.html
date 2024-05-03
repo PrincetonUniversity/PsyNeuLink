@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EpisodicMemoryMechanism &mdash; PsyNeuLink 0.15.1.0+125.g022c5b7b1 documentation</title>
+  <title>EpisodicMemoryMechanism &mdash; PsyNeuLink 0.15.1.0+157.g77ae8569d documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+125
+                  0.15.1.0+157
                 </div>
               
             
@@ -427,7 +427,7 @@ Function, including how it can be configured to implement a <a class="reference 
 <p>The following example creates a default EpisodicMemoryMechanism (with no initial memory):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_em</span> <span class="o">=</span> <span class="n">EpisodicMemoryMechanism</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_em</span><span class="o">.</span><span class="n">execute</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]])</span>
-<span class="go">[array([0, 0])]</span>
+<span class="go">array([[0, 0]])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_em</span><span class="o">.</span><span class="n">execute</span><span class="p">([[</span><span class="mi">2</span><span class="p">,</span><span class="mi">5</span><span class="p">]])</span>
 <span class="go">array([[1., 2.]])</span>
 </pre></div>
@@ -444,7 +444,7 @@ returned.</p>
 <p>In this example, the <strong>default_variable</strong> argument is used to format the entries of <a class="reference internal" href="#id0" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> to have two fields, one with two elements and the other with three:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_em</span> <span class="o">=</span> <span class="n">EpisodicMemoryMechanism</span><span class="p">(</span><span class="n">default_variable</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_em</span><span class="o">.</span><span class="n">execute</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],[</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">]])</span>
-<span class="go">[array([0, 0]), array([0, 0, 0])]</span>
+<span class="go">array([array([0, 0]), array([0, 0, 0])], dtype=object)</span>
 </pre></div>
 </div>
 <p>As in the previous example, the first execution returns zeros since <a class="reference internal" href="#id0" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> as not
@@ -456,7 +456,7 @@ also that even though a list is specified for <strong>default_variable</strong>,
 <p>The <strong>size</strong> argument can also be used to format entries:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_em</span> <span class="o">=</span> <span class="n">EpisodicMemoryMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_em</span><span class="o">.</span><span class="n">execute</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],[</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">]])</span>
-<span class="go">[array([0, 0]), array([0, 0, 0])]</span>
+<span class="go">array([array([0, 0]), array([0, 0, 0])], dtype=object)</span>
 </pre></div>
 </div>
 <p>Note that each element of <strong>size</strong> specifies the length of a field
