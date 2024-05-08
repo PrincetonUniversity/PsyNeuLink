@@ -1270,7 +1270,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 and isinstance(self, memo[SHARED_COMPONENT_TYPES])
             ):
                 return self
-        elif 'no_shared' not in memo or not memo['no_shared']:
+        else:
             memo[SHARED_COMPONENT_TYPES] = (Component,)
 
         fun = get_deepcopy_with_shared(self._deepcopy_shared_keys)

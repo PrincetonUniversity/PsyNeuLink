@@ -1105,14 +1105,9 @@ class Parameter(ParameterBase):
             return super().__str__()
 
     def __deepcopy__(self, memo):
-        if 'no_shared' in memo and memo['no_shared']:
-            shared_types = tuple()
-        else:
-            shared_types = None
-
         result = type(self)(
             **{
-                k: copy_parameter_value(getattr(self, k), memo=memo, shared_types=shared_types)
+                k: copy_parameter_value(getattr(self, k), memo=memo)
                 for k in self._param_attrs
             },
             _owner=self._owner,
@@ -1120,16 +1115,17 @@ class Parameter(ParameterBase):
             _user_specified=self._user_specified,
             _scalar_converted=self._scalar_converted,
         )
-        # TODO: this is a quick fix to make sure default values are
-        # always copied. should be integrated with future changes to
-        # deepcopy
-        # None indicates was not already deepcopied above
-        if shared_types is None and not self._inherited:
-            # use of memo here relies on the fact that
-            # copy_parameter_value does not currently add
-            # self.default_value. Otherwise it would reuse the shared
-            # value from above
-            result._set_default_value(copy.deepcopy(self.default_value, memo), directly=True)
+
+        # make sure default values are always deepcopied
+        if (
+            not self._inherited
+            and id(self.default_value) in memo
+            and memo[id(self.default_value)] is self.default_value
+        ):
+            del memo[id(self.default_value)]
+            result._set_default_value(
+                copy_parameter_value(self.default_value, memo), directly=True
+            )
 
         memo[id(self)] = result
 
