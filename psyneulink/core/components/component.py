@@ -1275,6 +1275,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         fun = get_deepcopy_with_shared(self._deepcopy_shared_keys)
         newone = fun(self, memo)
+        memo[id(self)] = newone
 
         if newone.parameters is not newone.class_parameters:
             # may be in DEFERRED INIT, so parameters/defaults belongs to class
