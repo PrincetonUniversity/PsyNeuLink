@@ -13,11 +13,6 @@ on:
       - 'v**'
   pull_request:
 
-env:
-  SELF_HOSTED_MACOS: ${{ secrets.SELF_HOSTED_MACOS }}
-  SELF_HOSTED_LINUX: ${{ secrets.SELF_HOSTED_LINUX }}
-  SELF_HOSTED_WINDOWS: ${{ secrets.SELF_HOSTED_WINDOWS }}
-
 # run only the latest instance of this workflow job for the current branch/PR
 # cancel older runs
 # fall back to run id if not available (run id is unique -> no cancellations)
@@ -26,27 +21,15 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # A job to select self-hosted runner if requested by an env var
-  select-runner:
-    runs-on: ubuntu-latest
-
-    outputs:
-      self_hosted_macos: ${{ steps.is_self_hosted.outputs.macos && 'macos' || '' }}
-      self_hosted_linux: ${{ steps.is_self_hosted.outputs.linux && 'linux' || '' }}
-      self_hosted_windows: ${{ steps.is_self_hosted.outputs.windows && 'windows' || '' }}
-
-    steps:
-    - name: Add macos
-      id: is_self_hosted
-      run: |
-        echo "macos=$SELF_HOSTED_MACOS" | tee -a $GITHUB_OUTPUT
-        echo "linux=$SELF_HOSTED_LINUX" | tee -a $GITHUB_OUTPUT
-        echo "windows=$SELF_HOSTED_WINDOWS" | tee -a $GITHUB_OUTPUT
-
-  # the main build job
+  # The main test job
   build:
-    needs: select-runner
-    runs-on: ${{ (contains(needs.select-runner.outputs.*, matrix.os) && fromJSON(format('[ "self-hosted","{0}", "X64" ]', matrix.os))) || format('{0}-latest', matrix.os) }}
+    runs-on: ${{ (contains(vars.SELF_HOSTED, format(';{0}_{1}_{2}_{3};', matrix.os, matrix.python-version, matrix.python-architecture, matrix.extra-args))
+                && fromJSON(format('[ "self-hosted","{0}", "X64" ]', matrix.os == 'ubuntu' && 'Linux' || matrix.os)))
+                || format('{0}-latest', matrix.os) }}
+    env:
+      # Keep DESCRIPTION in sync with the above
+      DESCRIPTION: ${{ format(';{0}_{1}_{2}_{3};', matrix.os, matrix.python-version, matrix.python-architecture, matrix.extra-args) }}
+      SELF_HOSTED: ${{ vars.SELF_HOSTED }}
     strategy:
       fail-fast: false
       matrix:
