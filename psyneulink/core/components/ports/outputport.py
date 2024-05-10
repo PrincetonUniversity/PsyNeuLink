@@ -633,7 +633,7 @@ from psyneulink.core.globals.keywords import \
     MAPPING_PROJECTION, MECHANISM_VALUE, NAME, OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, \
     OWNER_VALUE, PARAMS, PARAMS_DICT, PROJECTION, PROJECTIONS, RECEIVER, REFERENCE_VALUE, STANDARD_OUTPUT_PORTS, PORT, \
     VALUE, VARIABLE, \
-    output_port_spec_to_parameter_name, INPUT_PORT_VARIABLES
+    output_port_spec_to_parameter_name, INPUT_PORT_VARIABLES, SHARED_COMPONENT_TYPES
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
@@ -1427,7 +1427,7 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
                             if isinstance(std_output_port[FUNCTION], Function):
                                 # we should not reuse standard_output_port Function
                                 # instances across multiple ports
-                                std_output_port[FUNCTION] = copy.deepcopy(std_output_port[FUNCTION], memo={'no_shared': True})
+                                std_output_port[FUNCTION] = copy.deepcopy(std_output_port[FUNCTION], memo={SHARED_COMPONENT_TYPES: None})
                         except KeyError:
                             pass
 

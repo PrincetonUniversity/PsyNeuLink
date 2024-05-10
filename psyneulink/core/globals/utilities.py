@@ -824,22 +824,17 @@ def multi_getattr(obj, attr, default = None):
 
 
 # based off the answer here https://stackoverflow.com/a/15774013/3131666
-def get_deepcopy_with_shared(shared_keys=frozenset(), shared_types=()):
+def get_deepcopy_with_shared(shared_keys=frozenset()):
     """
         Arguments
         ---------
             shared_keys
                 an Iterable containing strings that should be shallow copied
 
-            shared_types
-                an Iterable containing types that when objects of that type are encountered
-                will be shallow copied
-
         Returns
         -------
             a __deepcopy__ function
     """
-    shared_types = tuple(shared_types)
     shared_keys = frozenset(shared_keys)
 
     def __deepcopy__(self, memo):
@@ -855,13 +850,10 @@ def get_deepcopy_with_shared(shared_keys=frozenset(), shared_types=()):
 
         for k in ordered_dict_keys:
             v = self.__dict__[k]
-            if k in shared_keys or isinstance(v, shared_types):
+            if k in shared_keys:
                 res_val = v
             else:
-                try:
-                    res_val = copy_iterable_with_shared(v, shared_types, memo)
-                except TypeError:
-                    res_val = copy.deepcopy(v, memo)
+                res_val = copy.deepcopy(v, memo)
             setattr(result, k, res_val)
         return result
 

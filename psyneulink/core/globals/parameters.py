@@ -320,11 +320,11 @@ import toposort
 
 from psyneulink.core.globals.context import Context, ContextError, ContextFlags, _get_time, handle_external_context
 from psyneulink.core.globals.context import time as time_object
+from psyneulink.core.globals.keywords import SHARED_COMPONENT_TYPES
 from psyneulink.core.globals.log import LogCondition, LogEntry, LogError
 from psyneulink.core.globals.utilities import (
     call_with_pruned_args,
     convert_all_elements_to_np_array,
-    copy_iterable_with_shared,
     create_union_set,
     get_alias_property_getter,
     get_alias_property_setter,
@@ -403,27 +403,31 @@ def copy_parameter_value(value, shared_types=None, memo=None):
 
         e.g. in spec attribute or Parameter `Mechanism.input_ports`
     """
-    from psyneulink.core.components.component import Component, ComponentsMeta
+    if memo is None:
+        memo = {}
 
-    if shared_types is None:
-        shared_types = (Component, ComponentsMeta, types.MethodType, types.ModuleType)
-    else:
-        shared_types = tuple(shared_types)
+    if SHARED_COMPONENT_TYPES not in memo:
+        from psyneulink.core.components.component import Component, ComponentsMeta
+        if shared_types is None:
+            shared_types = (Component, ComponentsMeta)
+        else:
+            shared_types = tuple(shared_types)
+        memo[SHARED_COMPONENT_TYPES] = shared_types
+
+    # trying to deepcopy a bound method of a Component will deepcopy the
+    # Component, but we treat these situations like references.
+    # ex: GridSearch.search_function = GridSearch._traverse_grid
+    method_owner = getattr(value, '__self__', None)
+    if method_owner:
+        memo[id(method_owner)] = method_owner
 
     try:
-        return copy_iterable_with_shared(
-            value,
-            shared_types=shared_types,
-            memo=memo
-        )
-    except TypeError:
-        # this will attempt to copy the current object if it
-        # is referenced in a parameter, such as
-        # ComparatorMechanism, which does this for input_ports
-        if not isinstance(value, shared_types):
-            return copy.deepcopy(value, memo)
-        else:
+        return copy.deepcopy(value, memo)
+    except TypeError as e:
+        if 'pickle' in str(e):
             return value
+        else:
+            raise
 
 
 def get_init_signature_default_value(obj, parameter):
@@ -1101,14 +1105,9 @@ class Parameter(ParameterBase):
             return super().__str__()
 
     def __deepcopy__(self, memo):
-        if 'no_shared' in memo and memo['no_shared']:
-            shared_types = tuple()
-        else:
-            shared_types = None
-
         result = type(self)(
             **{
-                k: copy_parameter_value(getattr(self, k), memo=memo, shared_types=shared_types)
+                k: copy_parameter_value(getattr(self, k), memo=memo)
                 for k in self._param_attrs
             },
             _owner=self._owner,
@@ -1116,16 +1115,17 @@ class Parameter(ParameterBase):
             _user_specified=self._user_specified,
             _scalar_converted=self._scalar_converted,
         )
-        # TODO: this is a quick fix to make sure default values are
-        # always copied. should be integrated with future changes to
-        # deepcopy
-        # None indicates was not already deepcopied above
-        if shared_types is None and not self._inherited:
-            # use of memo here relies on the fact that
-            # copy_parameter_value does not currently add
-            # self.default_value. Otherwise it would reuse the shared
-            # value from above
-            result._set_default_value(copy.deepcopy(self.default_value, memo), directly=True)
+
+        # make sure default values are always deepcopied
+        if (
+            not self._inherited
+            and id(self.default_value) in memo
+            and memo[id(self.default_value)] is self.default_value
+        ):
+            del memo[id(self.default_value)]
+            result._set_default_value(
+                copy_parameter_value(self.default_value, memo), directly=True
+            )
 
         memo[id(self)] = result
 
