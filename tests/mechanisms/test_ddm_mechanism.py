@@ -734,6 +734,7 @@ def test_ddm_is_finished(comp_mode, noise, threshold, expected_results):
 
     np.testing.assert_array_equal(results, expected_results)
 
+@pytest.mark.composition
 @pytest.mark.parametrize("until_finished", ["until_finished", "not_until_finished"])
 @pytest.mark.parametrize("threshold_mod", ["threshold_modulated", "threshold_not_modulated"])
 def test_ddm_is_finished_with_dependency(comp_mode, until_finished, threshold_mod):
