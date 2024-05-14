@@ -22,6 +22,8 @@ from typing import Callable, Optional
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import Context
+from psyneulink.core.globals.parameters import is_array_like
+
 from . import helpers, jit_engine, builder_context
 from .debug import debug_env
 
@@ -111,8 +113,16 @@ class Execution:
                       _pretty_size(ctypes.sizeof(struct_ty)), ")",
                       "for", self._obj.name)
 
-        return struct
+            def cond_select_np_arrs(p):
+                return is_array_like(p.default_value)
 
+            if len(self._execution_contexts) == 1:
+                if name == '_state':
+                    self.writeback_state_to_pnl(cond_select_np_arrs)
+                elif name == '_param':
+                    self.writeback_params_to_pnl(cond_select_np_arrs)
+
+        return struct
 
     def writeback_state_to_pnl(self, condition:Callable=lambda p: True):
 
@@ -122,6 +132,12 @@ class Execution:
                                  "llvm_state_ids",
                                  condition)
 
+    def writeback_params_to_pnl(self, condition: Callable = lambda p: True):
+        self._copy_params_to_pnl(self._execution_contexts[0],
+                                 self._obj,
+                                 self._param_struct,
+                                 "llvm_param_ids",
+                                 condition)
 
     def _copy_params_to_pnl(self, context, component, params, ids:str, condition:Callable):
 
@@ -198,7 +214,13 @@ class Execution:
                 elif condition(pnl_param):
 
                     # Replace empty structures with None
-                    if ctypes.sizeof(compiled_attribute_param) == 0:
+                    try:
+                        size_of = ctypes.sizeof(compiled_attribute_param)
+                    except TypeError:
+                        # will be a 0-dim array
+                        size_of = 1
+
+                    if size_of == 0:
                         value = None
                     else:
                         value = np.ctypeslib.as_array(compiled_attribute_param)
@@ -208,11 +230,22 @@ class Execution:
                             value = value[-1]
 
                         # Try to match the shape of the old value
-                        old_value = pnl_param.get(context)
+                        # Use ._get to retrieve underlying numpy arrays
+                        # (.get will extract a scalar if originally set
+                        # as a scalar)
+                        old_value = pnl_param._get(context)
                         if hasattr(old_value, 'shape'):
-                            value = value.reshape(old_value.shape)
+                            try:
+                                value = value.reshape(old_value.shape)
+                            except ValueError:
+                                pass
 
-                    pnl_param.set(value, context=context, override=True)
+                    pnl_param.set(
+                        value,
+                        context=context,
+                        override=True,
+                        compilation_sync=True,
+                    )
 
 
 class CUDAExecution(Execution):

@@ -18,6 +18,7 @@
 
 import abc
 import collections
+import copy
 import numbers
 import warnings
 
@@ -34,7 +35,14 @@ from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import STATEFUL_FUNCTION_TYPE, STATEFUL_FUNCTION, NOISE, RATE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
-from psyneulink.core.globals.utilities import iscompatible, convert_to_np_array, contains_type, safe_len, convert_all_elements_to_np_array
+from psyneulink.core.globals.utilities import (
+    contains_type,
+    convert_all_elements_to_np_array,
+    convert_to_np_array,
+    fill_array,
+    iscompatible,
+    safe_len,
+)
 
 __all__ = ['StatefulFunction']
 
@@ -377,7 +385,9 @@ class StatefulFunction(Function_Base): #  --------------------------------------
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         if not self.parameters.initializer._user_specified:
-            self._initialize_previous_value(np.zeros_like(self.defaults.variable), context)
+            new_previous_value = copy.deepcopy(self.defaults.variable)
+            fill_array(new_previous_value, 0)
+            self._initialize_previous_value(new_previous_value, context)
         self._instantiate_stateful_attributes(self.stateful_attributes, self.initializers, context)
         super()._instantiate_attributes_before_function(function=function, context=context)
 

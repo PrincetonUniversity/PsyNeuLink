@@ -75,7 +75,7 @@ from psyneulink.core.components.functions.function import get_matrix
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingError, MappingProjection
 from psyneulink.core.components.projections.projection import projection_keywords
 from psyneulink.core.globals.keywords import MASKED_MAPPING_PROJECTION, MATRIX
-from psyneulink.core.globals.parameters import check_user_specified
+from psyneulink.core.globals.parameters import check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric_scalar
@@ -212,7 +212,7 @@ class MaskedMappingProjection(MappingProjection):
             if is_numeric_scalar(mask):
                 return
             mask_shape = np.array(mask).shape
-            matrix = get_matrix(self.defaults.matrix,
+            matrix = get_matrix(copy_parameter_value(self.defaults.matrix),
                                 len(self.sender.defaults.value), len(self.receiver.defaults.value))
             matrix_shape = matrix.shape
             if mask_shape != matrix_shape:
@@ -240,3 +240,6 @@ class MaskedMappingProjection(MappingProjection):
                 matrix **= mask
 
         self.parameters.matrix._set(matrix, context)
+        # must manually update parameter port because super
+        # _update_parameter_ports already happened above
+        self.parameter_ports["matrix"].parameters.value._set(matrix, context)

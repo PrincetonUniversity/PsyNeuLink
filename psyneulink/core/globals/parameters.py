@@ -334,6 +334,7 @@ from psyneulink.core.globals.utilities import (
     safe_equals,
     try_extract_0d_array_item,
     unproxy_weakproxy,
+    update_array_in_place,
 )
 from psyneulink.core.rpc.graph_pb2 import Entry, ndArray
 
@@ -505,6 +506,21 @@ def check_user_specified(func):
         return func(self, *args, **orig_kwargs)
 
     return check_user_specified_wrapper
+
+
+def is_array_like(obj: typing.Any) -> bool:
+    """
+    Returns:
+        bool: True if **obj** is a numpy-array-like object. False
+        otherwise
+    """
+    return hasattr(obj, 'dtype')
+
+
+# used in Parameter._set_value. Parameter names where a change in
+# shape/type should cause deletion of corresponding compiled structs
+# even if the values are not synced
+addl_unsynced_parameter_names = {'value'}
 
 
 class ParametersTemplate:
@@ -1015,6 +1031,7 @@ class Parameter(ParameterBase):
         _inherited_source=None,
         _user_specified=False,
         _scalar_converted=False,
+        _tracking_compiled_struct=False,
         **kwargs
     ):
         if isinstance(aliases, str):
@@ -1077,6 +1094,7 @@ class Parameter(ParameterBase):
             _user_specified=_user_specified,
             _temp_uninherited=set(),
             _scalar_converted=_scalar_converted,
+            _tracking_compiled_struct=_tracking_compiled_struct,
             **kwargs
         )
 
@@ -1330,6 +1348,8 @@ class Parameter(ParameterBase):
         base_val = self._get(context, **kwargs)
         if self._scalar_converted:
             base_val = try_extract_0d_array_item(base_val)
+        if is_array_like(base_val):
+            base_val = copy_parameter_value(base_val)
         return base_val
 
     def _get(self, context=None, **kwargs):
@@ -1518,6 +1538,7 @@ class Parameter(ParameterBase):
         skip_history=False,
         skip_log=False,
         skip_delivery=False,
+        compilation_sync=False,
         **kwargs,
     ):
         if not self.stateful:
@@ -1546,6 +1567,7 @@ class Parameter(ParameterBase):
             skip_history=skip_history,
             skip_log=skip_log,
             skip_delivery=skip_delivery,
+            compilation_sync=compilation_sync,
         )
         return value
 
@@ -1557,25 +1579,71 @@ class Parameter(ParameterBase):
         skip_history=False,
         skip_log=False,
         skip_delivery=False,
+        compilation_sync=False,
     ):
+        value_is_array_like = is_array_like(value)
         # store history
         if not skip_history:
             if execution_id in self.values:
+                value_for_history = self.values[execution_id]
+                if value_is_array_like:
+                    value_for_history = copy_parameter_value(value_for_history)
+
                 try:
-                    self.history[execution_id].append(self.values[execution_id])
+                    self.history[execution_id].append(value_for_history)
                 except KeyError:
-                    self.history[execution_id] = collections.deque([self.values[execution_id]], maxlen=self.history_max_length)
+                    self.history[execution_id] = collections.deque(
+                        [value_for_history],
+                        maxlen=self.history_max_length,
+                    )
 
         if self.loggable:
+            value_for_log = value
+            if value_is_array_like:
+                value_for_log = copy_parameter_value(value)
             # log value
             if not skip_log:
-                self._log_value(value, context)
+                self._log_value(value_for_log, context)
             # Deliver value to external application
             if not skip_delivery:
-                self._deliver_value(value, context)
+                self._deliver_value(value_for_log, context)
 
-        # set value
-        self.values[execution_id] = value
+        value_updated = False
+        if not compilation_sync:
+            try:
+                update_array_in_place(self.values[execution_id], value)
+            except (KeyError, TypeError, ValueError):
+                # no self.values for execution_id
+                # failure during attempted update
+                pass
+            except RuntimeError:
+                # torch tensor
+                pass
+            else:
+                value_updated = True
+
+        if not value_updated:
+            self.values[execution_id] = value
+
+            if compilation_sync:
+                self._tracking_compiled_struct = True
+            elif (
+                value_is_array_like
+                and (
+                    self._tracking_compiled_struct
+                    or self.name in addl_unsynced_parameter_names
+                )
+            ):
+                # recompilation is needed for arrays that could not be
+                # updated in place
+                try:
+                    owner_comps = self._owner._owner.compositions
+                except AttributeError:
+                    pass
+                else:
+                    for comp in owner_comps:
+                        comp._delete_compilation_data(context, self)
+                self._tracking_compiled_struct = False
 
     @handle_external_context()
     def delete(self, context=None):

@@ -98,7 +98,7 @@ from psyneulink.core.globals.keywords import \
     RATE, RECEIVER, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM, \
     TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import \
-    FunctionParameter, Parameter, get_validator_by_function, check_user_specified
+    FunctionParameter, Parameter, get_validator_by_function, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, ValidPrefSet
 from psyneulink.core.globals.utilities import ValidParamSpecType, convert_all_elements_to_np_array, safe_len, is_matrix_keyword
@@ -2342,7 +2342,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         scale = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
         bounds = (None, None)
 
     @check_user_specified
@@ -2566,7 +2566,7 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
         """
         p = Parameter(0.5, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
         bounds = (None, None)
 
     @check_user_specified
@@ -2787,7 +2787,7 @@ class Dropout(TransferFunction):  #
         """
         p = Parameter(0.5, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
 
     @check_user_specified
     @beartype
@@ -3827,7 +3827,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     def _instantiate_attributes_before_function(self, function=None, context=None):
         # replicates setting of receiver in _validate_params
         if isinstance(self.owner, Projection):
-            self.receiver = self.defaults.variable
+            self.receiver = copy_parameter_value(self.defaults.variable)
 
         matrix = self.parameters.matrix._get(context)
 
@@ -3854,7 +3854,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             if isinstance(specification, np.matrix):
                 return np.array(specification)
 
-            sender = self.defaults.variable
+            sender = copy_parameter_value(self.defaults.variable)
             sender_len = sender.shape[0]
             try:
                 receiver = self.receiver
@@ -4676,32 +4676,9 @@ class TransferWithCosts(TransferFunction):
                 raise FunctionError(f"{fct} is not a valid cost function for {fct_name}.")
 
         self.intensity_cost_fct = instantiate_fct(INTENSITY_COST_FUNCTION, self.intensity_cost_fct)
-        # Initialize default_value for TransferWithCosts' modulation params from intensity_cost_fct's values
-        self.parameters.intensity_cost_fct_mult_param.default_value = \
-            self.parameters.intensity_cost_fct_mult_param.get()
-        self.parameters.intensity_cost_fct_add_param.default_value = \
-            self.parameters.intensity_cost_fct_add_param.get()
-
         self.adjustment_cost_fct = instantiate_fct(ADJUSTMENT_COST_FUNCTION, self.adjustment_cost_fct)
-        # Initialize default_value for TransferWithCosts' modulation params from adjustment_cost_fct's values
-        self.parameters.adjustment_cost_fct_mult_param.default_value = \
-            self.parameters.adjustment_cost_fct_mult_param.get()
-        self.parameters.adjustment_cost_fct_add_param.default_value = \
-            self.parameters.adjustment_cost_fct_add_param.get()
-
         self.duration_cost_fct = instantiate_fct(DURATION_COST_FUNCTION, self.duration_cost_fct)
-        # Initialize default_value for TransferWithCosts' modulation params from duration_cost_fct's values
-        self.parameters.duration_cost_fct_mult_param.default_value = \
-            self.parameters.duration_cost_fct_add_param.get()
-        self.parameters.duration_cost_fct_add_param.default_value = \
-            self.parameters.duration_cost_fct_add_param.get()
-
         self.combine_costs_fct = instantiate_fct(COMBINE_COSTS_FUNCTION, self.combine_costs_fct)
-        # Initialize default_value for TransferWithCosts' modulation params from combined_costs_fct's values
-        self.parameters.combine_costs_fct_mult_param.default_value = \
-            self.parameters.combine_costs_fct_mult_param.get()
-        self.parameters.combine_costs_fct_add_param.default_value = \
-            self.parameters.combine_costs_fct_add_param.get()
 
         # Initialize intensity attributes
         if self.enabled_cost_functions:
@@ -4792,7 +4769,7 @@ class TransferWithCosts(TransferFunction):
             self.parameters.combined_costs._set(combined_costs, context)
 
         # Store current intensity
-        self.parameters.intensity._set(intensity, context)
+        self.parameters.intensity._set(copy_parameter_value(intensity), context)
 
         return intensity
 

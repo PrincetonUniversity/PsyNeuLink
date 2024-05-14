@@ -151,7 +151,7 @@ __all__ = [
     'scalar_distance', 'sinusoid',
     'tensor_power', 'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy', 'create_union_set', 'merge_dictionaries',
-    'contains_type', 'is_numeric_scalar', 'try_extract_0d_array_item',
+    'contains_type', 'is_numeric_scalar', 'try_extract_0d_array_item', 'fill_array', 'update_array_in_place',
 ]
 
 logger = logging.getLogger(__name__)
@@ -441,17 +441,24 @@ DistanceMetricLiteral = Literal[
 ]
 
 
-def is_iterable(x):
+def is_iterable(x: Any, exclude_str: bool = False) -> bool:
     """
+    Args:
+        x (Any)
+        exclude_str (bool, optional): if True, **x** of type str will
+            return False. Defaults to False.
+
     Returns
     -------
         True - if **x** can be iterated on
         False - otherwise
     """
-    if isinstance(x, np.ndarray) and x.ndim == 0:
+    try:
+        iter(x)
+    except TypeError:
         return False
     else:
-        return isinstance(x, collections.abc.Iterable)
+        return not exclude_str or not isinstance(x, str)
 
 
 kwCompatibilityType = "type"
@@ -848,7 +855,7 @@ def get_deepcopy_with_shared(shared_keys=frozenset()):
         except AttributeError:
             ordered_dict_keys = self.__dict__
 
-        for k in ordered_dict_keys:
+        for k in copy.copy(ordered_dict_keys):
             v = self.__dict__[k]
             if k in shared_keys:
                 res_val = v
@@ -860,16 +867,42 @@ def get_deepcopy_with_shared(shared_keys=frozenset()):
     return __deepcopy__
 
 
-def copy_iterable_with_shared(obj, shared_types=None, memo=None):
+def _copy_shared_iterable_elementwise_as_list(obj, shared_types, memo, result_obj=None):
+    result = result_obj or list()
+
+    for item in obj:
+        try:
+            new_item = copy_iterable_with_shared(item, shared_types, memo)
+        except TypeError:
+            if isinstance(item, shared_types):
+                new_item = item
+            else:
+                new_item = copy.deepcopy(item, memo)
+        result.append(new_item)
+
+    return result
+
+
+def copy_iterable_with_shared(obj, shared_types=type(None), memo=None):
     try:
         shared_types = tuple(shared_types)
     except TypeError:
         shared_types = (shared_types, )
 
-    dict_types = (dict, collections.UserDict)
+    dict_types = (
+        dict,
+        collections.UserDict,
+        weakref.WeakKeyDictionary,
+        weakref.WeakValueDictionary
+    )
     list_types = (list, collections.UserList, collections.deque)
-    tuple_types = (tuple, set)
+    tuple_types = (tuple, set, weakref.WeakSet)
     all_types_using_recursion = dict_types + list_types + tuple_types
+
+    # ContentAddressableList
+    cal_component_type = getattr(obj, 'component_type', None)
+    if cal_component_type and issubclass(cal_component_type, shared_types):
+        return copy.copy(obj)
 
     if isinstance(obj, dict_types):
         result = copy.copy(obj)
@@ -910,14 +943,7 @@ def copy_iterable_with_shared(obj, shared_types=None, memo=None):
         else:
             result = obj.__class__()
 
-        for item in obj:
-            if isinstance(item, all_types_using_recursion):
-                new_item = copy_iterable_with_shared(item, shared_types, memo)
-            elif isinstance(item, shared_types):
-                new_item = item
-            else:
-                new_item = copy.deepcopy(item, memo)
-            result.append(new_item)
+        result = _copy_shared_iterable_elementwise_as_list(obj, shared_types, memo, result)
 
         if is_tuple:
             try:
@@ -925,6 +951,14 @@ def copy_iterable_with_shared(obj, shared_types=None, memo=None):
             except TypeError:
                 # handle namedtuple
                 result = obj.__class__(*result)
+    elif isinstance(obj, np.ndarray) and obj.dtype == object:
+        if obj.ndim > 0:
+            result = _copy_shared_iterable_elementwise_as_list(obj, shared_types, memo)
+            result = safe_create_np_array(result)
+        elif isinstance(obj, shared_types):
+            result = np.array(obj)
+        else:
+            result = copy.deepcopy(obj)
     else:
         raise TypeError
 
@@ -1000,6 +1034,44 @@ def np_array_less_than_2d(array):
     else:
         return False
 
+
+def safe_create_np_array(value):
+    with warnings.catch_warnings():
+
+        # If we have a torch tensor, allow it to pass through unchanged
+        if torch and torch.is_tensor(value):
+            return value
+
+        warnings.filterwarnings('error', category=np.VisibleDeprecationWarning)
+        # NOTE: this will raise a ValueError in the future.
+        # See https://numpy.org/neps/nep-0034-infer-dtype-is-object.html
+        try:
+            try:
+                return np.asarray(value)
+            except np.VisibleDeprecationWarning:
+                return np.asarray(value, dtype=object)
+            except ValueError as e:
+                # numpy 1.24 removed the above deprecation and raises
+                # ValueError instead. Note that the below call can still
+                # raise other ValueErrors
+                if 'The requested array has an inhomogeneous shape' in str(e):
+                    return np.asarray(value, dtype=object)
+                raise
+
+        except ValueError as e:
+            msg = str(e)
+            if 'cannot guess the desired dtype from the input' in msg:
+                return np.asarray(value, dtype=object)
+            # KDM 6/29/20: this case handles a previously noted case
+            # by KAM 6/28/18, #877:
+            # [[0.0], [0.0], np.array([[0.0, 0.0]])]
+            # but was only handled for dimension=1
+            elif 'could not broadcast' in msg:
+                return convert_all_elements_to_np_array(value)
+            else:
+                raise
+
+
 def convert_to_np_array(value, dimension=None):
     """
         Converts value to np.ndarray if it is not already. Handles
@@ -1016,42 +1088,6 @@ def convert_to_np_array(value, dimension=None):
         Returns:
             value : np.ndarray
     """
-    def safe_create_np_array(value):
-        with warnings.catch_warnings():
-
-            # If we have a torch tensor, allow it to pass through unchanged
-            if torch and torch.is_tensor(value):
-                return value
-
-            warnings.filterwarnings('error', category=np.VisibleDeprecationWarning)
-            # NOTE: this will raise a ValueError in the future.
-            # See https://numpy.org/neps/nep-0034-infer-dtype-is-object.html
-            try:
-                try:
-                    return np.asarray(value)
-                except np.VisibleDeprecationWarning:
-                    return np.asarray(value, dtype=object)
-                except ValueError as e:
-                    # numpy 1.24 removed the above deprecation and raises
-                    # ValueError instead. Note that the below call can still
-                    # raise other ValueErrors
-                    if 'The requested array has an inhomogeneous shape' in str(e):
-                        return np.asarray(value, dtype=object)
-                    raise
-
-            except ValueError as e:
-                msg = str(e)
-                if 'cannot guess the desired dtype from the input' in msg:
-                    return np.asarray(value, dtype=object)
-                # KDM 6/29/20: this case handles a previously noted case
-                # by KAM 6/28/18, #877:
-                # [[0.0], [0.0], np.array([[0.0, 0.0]])]
-                # but was only handled for dimension=1
-                elif 'could not broadcast' in msg:
-                    return convert_all_elements_to_np_array(value)
-                else:
-                    raise
-
     value = safe_create_np_array(value)
 
     if dimension == 1:
@@ -2047,11 +2083,14 @@ def contains_type(
         **arr** itself if needed
     """
     try:
-        for a in arr:
-            if isinstance(a, typ) or (a is not arr and contains_type(a, typ)):
-                return True
+        arr_items = iter(arr)
     except TypeError:
-        pass
+        return False
+
+    recurse = not isinstance(arr, np.matrix)
+    for a in arr_items:
+        if isinstance(a, typ) or (a is not arr and recurse and contains_type(a, typ)):
+            return True
 
     return False
 
@@ -2116,6 +2155,22 @@ def toposort_key(
             return -1
 
     return _generated_toposort_key
+
+
+def fill_array(arr: np.ndarray, value: Any):
+    """
+    Fills all elements of **arr** with **value**, maintaining embedded
+    shapes of object-dtype arrays
+
+    Args:
+        arr (np.ndarray)
+        value (Any)
+    """
+    if arr.ndim != 0 and arr.dtype == object:
+        for item in arr:
+            fill_array(item, value)
+    else:
+        arr.fill(value)
 
 
 # np.isscalar returns true on non-numeric items
@@ -2228,4 +2283,94 @@ def extended_array_equal(a, b, equal_nan: bool = False) -> bool:
 
     return _extended_array_compare(
         a, b, functools.partial(np.array_equal, equal_nan=equal_nan)
+    )
+
+
+def _check_array_attr_equiv(a, b, attr):
+    err_msg = '{0} is not a numpy.ndarray'
+
+    try:
+        a_val = getattr(a, attr)
+    except AttributeError:
+        raise ValueError(err_msg.format(a))
+
+    try:
+        b_val = getattr(b, attr)
+    except AttributeError:
+        raise ValueError(err_msg.format(b))
+
+    if a_val != b_val:
+        raise ValueError(f'{attr}s {a_val} and {b_val} differ')
+
+
+def _update_array_in_place(
+    target: np.ndarray,
+    source: np.ndarray,
+    casting: Literal['no', 'equiv', 'safe', 'same_kind', 'unsafe'],
+    _dry_run: bool,
+    _in_object_dtype: bool,
+):
+    # enforce dtype equivalence when recursing in an object-dtype target
+    # array, because we won't know if np.copyto will succeed on every
+    # element until we try
+    if _in_object_dtype:
+        _check_array_attr_equiv(target, source, 'dtype')
+
+    # enforce shape equivalence so that we know when the python-side
+    # values become incompatible with compiled structs
+    _check_array_attr_equiv(target, source, 'shape')
+
+    if target.dtype == object:
+        len_target = len(target)
+        len_source = len(source)
+
+        if len_source != len_target:
+            raise ValueError(f'lengths {len_target} and {len_source} differ')
+
+        # check all elements before update to avoid partial update
+        if not _dry_run:
+            for i in range(len_target):
+                _update_array_in_place(
+                    target[i],
+                    source[i],
+                    casting=casting,
+                    _dry_run=True,
+                    _in_object_dtype=True,
+                )
+
+        for i in range(len_target):
+            _update_array_in_place(
+                target[i],
+                source[i],
+                casting=casting,
+                _dry_run=_dry_run,
+                _in_object_dtype=True,
+            )
+    else:
+        np.broadcast(source, target)  # only here to throw error if broadcast fails
+        if not _dry_run:
+            np.copyto(target, source, casting=casting)
+
+
+def update_array_in_place(
+    target: np.ndarray,
+    source: np.ndarray,
+    casting: Literal['no', 'equiv', 'safe', 'same_kind', 'unsafe'] = 'same_kind',
+):
+    """
+    Copies the values in **source** to **target**, supporting ragged
+    object-dtype arrays.
+
+    Args:
+        target (numpy.ndarray): array receiving values
+        source (numpy.ndarray): array providing values
+        casting (Literal["no", "equiv", "safe", "same_kind", "unsafe"],
+            optional): See `numpy.copyto`. Defaults to 'same_kind'.
+    """
+    _update_array_in_place(
+        target=target,
+        source=source,
+        casting=casting,
+        _dry_run=False,
+        _in_object_dtype=False
     )

@@ -1111,7 +1111,7 @@ from psyneulink.core.globals.keywords import \
     NAME, OUTPUT, OUTPUT_LABELS_DICT, OUTPUT_PORT, OUTPUT_PORT_PARAMS, OUTPUT_PORTS, OWNER_EXECUTION_COUNT, OWNER_VALUE, \
     PARAMETER_PORT, PARAMETER_PORT_PARAMS, PARAMETER_PORTS, PROJECTIONS, REFERENCE_VALUE, RESULT, \
     TARGET_LABELS_DICT, VALUE, VARIABLE, WEIGHT, MODEL_SPEC_ID_MDF_VARIABLE, MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION
-from psyneulink.core.globals.parameters import Parameter, check_user_specified
+from psyneulink.core.globals.parameters import Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.utilities import \
@@ -2447,9 +2447,11 @@ class Mechanism_Base(Mechanism):
                 pass
             # Only call subclass' _execute method and then return (do not complete the rest of this method)
             elif self.initMethod == INIT_EXECUTE_METHOD_ONLY:
-                return_value = self._execute(variable=self.defaults.variable,
+                return_value = self._execute(variable=copy_parameter_value(self.defaults.variable),
                                              context=context,
                                              runtime_params=runtime_params)
+                if context.source is ContextFlags.COMMAND_LINE:
+                    return_value = copy_parameter_value(return_value)
 
                 # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
                 #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
@@ -2474,7 +2476,7 @@ class Mechanism_Base(Mechanism):
 
             # Call only subclass' function during initialization (not its full _execute method nor rest of this method)
             elif self.initMethod == INIT_FUNCTION_METHOD_ONLY:
-                return_value = super()._execute(variable=self.defaults.variable,
+                return_value = super()._execute(variable=copy_parameter_value(self.defaults.variable),
                                                 context=context,
                                                 runtime_params=runtime_params)
                 return convert_to_np_array(return_value, dimension=2)
@@ -2618,6 +2620,10 @@ class Mechanism_Base(Mechanism):
                        context=context,
                        node=self)
 
+        # return copy on external call so users can store it directly
+        # without it changing
+        if context.source is ContextFlags.COMMAND_LINE:
+            value = copy_parameter_value(value)
         return value
 
     def _get_variable_from_input(self, input, context=None):

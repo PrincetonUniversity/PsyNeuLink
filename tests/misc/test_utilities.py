@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 
 from psyneulink.core.globals.utilities import (
-    convert_all_elements_to_np_array, extended_array_equal, prune_unused_args,
+    convert_all_elements_to_np_array, extended_array_equal, prune_unused_args, update_array_in_place
 )
 
 
@@ -119,3 +119,50 @@ def test_extended_array_equal_irregular(a, b, equal):
 )
 def test_extended_array_equal_irregular_identical(a):
     assert extended_array_equal(a, a)
+
+
+@pytest.mark.parametrize(
+    'target, source',
+    [
+        ([[0, 0], [0, 0]], [[1, 1], [1, 1]]),
+        ([[0], [0, 0]], [[1], [1, 1]]),
+    ]
+)
+def test_update_array_in_place(target, source):
+    target = convert_all_elements_to_np_array(target)
+    source = convert_all_elements_to_np_array(source)
+    old_target = target
+
+    update_array_in_place(target, source)
+
+    len_target = len(target)
+    assert len_target == len(source)
+    assert len_target == len(old_target)
+    for i in range(len_target):
+        np.testing.assert_array_equal(target[i], source[i])
+        np.testing.assert_array_equal(old_target[i], source[i])
+        np.testing.assert_array_equal(target[i], old_target[i])
+
+
+@pytest.mark.parametrize(
+    'target, source',
+    [
+        ([[0], [0, 0]], [[1], [1, 1, 1]]),
+        ([0, [0, 0]], [[1], [1, 1]]),
+    ]
+)
+def test_update_array_in_place_failures(target, source):
+    target = convert_all_elements_to_np_array(target)
+    source = convert_all_elements_to_np_array(source)
+    old_target = target
+
+    with pytest.raises(ValueError):
+        update_array_in_place(target, source)
+
+    len_target = len(target)
+    assert len_target == len(source)
+    assert len_target == len(old_target)
+    for i in range(len_target):
+        assert not np.array_equal(target[i], source[i])
+        assert not np.array_equal(old_target[i], source[i])
+        np.testing.assert_array_equal(target[i], old_target[i])

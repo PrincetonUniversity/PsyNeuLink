@@ -211,7 +211,7 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_PORT, MATRIX, NAME, RECURRENT_TRANSFER_MECHANISM, RESULT
-from psyneulink.core.globals.parameters import Parameter, SharedParameter, check_user_specified
+from psyneulink.core.globals.parameters import Parameter, SharedParameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.registry import register_instance, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
@@ -816,15 +816,15 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         param_keys = self._parameter_ports.key_values
 
-        matrix = get_matrix(self.defaults.matrix, rows=self.recurrent_size, cols=self.recurrent_size)
+        matrix = get_matrix(copy_parameter_value(self.defaults.matrix), rows=self.recurrent_size, cols=self.recurrent_size)
 
         # below implements the rules provided by KAM:
         # - If auto and hetero but not matrix are specified, the diagonal terms of the matrix are determined by auto and the off-diagonal terms are determined by hetero.
         # - If auto, hetero, and matrix are all specified, matrix is ignored in favor of auto and hetero.
         # - If auto and matrix are both specified, the diagonal terms are determined by auto and the off-diagonal terms are determined by matrix. ​
         # - If hetero and matrix are both specified, the diagonal terms are determined by matrix and the off-diagonal terms are determined by hetero.
-        auto = get_auto_matrix(self.defaults.auto, self.recurrent_size)
-        hetero = get_hetero_matrix(self.defaults.hetero, self.recurrent_size)
+        auto = get_auto_matrix(copy_parameter_value(self.defaults.auto), self.recurrent_size)
+        hetero = get_hetero_matrix(copy_parameter_value(self.defaults.hetero), self.recurrent_size)
         auto_specified = self.parameters.auto._user_specified
         hetero_specified = self.parameters.hetero._user_specified
 
