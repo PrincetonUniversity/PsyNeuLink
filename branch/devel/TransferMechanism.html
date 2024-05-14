@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferMechanism &mdash; PsyNeuLink 0.15.1.0+164.g0409a6a66 documentation</title>
+  <title>TransferMechanism &mdash; PsyNeuLink 0.15.1.0+192.g267bca8dc documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+164
+                  0.15.1.0+192
                 </div>
               
             
@@ -765,7 +765,7 @@ and the scalar returned is compared to <strong>termination_threshold</strong> us
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
 <span class="go">array([[0.46875, 0.9375 ]])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">num_executions_before_finished</span>
-<span class="go">array(4)</span>
+<span class="go">4</span>
 </pre></div>
 </div>
 <p>Here, <code class="docutils literal notranslate"><span class="pre">my_mech</span></code> continued to execute for <code class="docutils literal notranslate"><span class="pre">5</span></code> times, until the element of the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> with the greatest value exceeded <code class="docutils literal notranslate"><span class="pre">0.9</span></code>.  Note that GREATER_THAN_EQUAL is a keyword for
@@ -784,7 +784,7 @@ the <strong>termination_comparison_op</strong> argument is ignored (the <a class
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
 <span class="go">array([[0.375, 0.75 ]])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">num_executions_before_finished</span>
-<span class="go">array(2)</span>
+<span class="go">2</span>
 </pre></div>
 </div>
 <p>As noted <a class="reference internal" href="#transfermechanism-continued-execution"><span class="std std-ref">above</span></a>, it will continue to execute if it is called again,
@@ -792,11 +792,11 @@ but only once per call:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
 <span class="go">array([[0.4375, 0.875 ]])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">num_executions_before_finished</span>
-<span class="go">array(1)</span>
+<span class="go">1</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
 <span class="go">array([[0.46875, 0.9375 ]])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">num_executions_before_finished</span>
-<span class="go">array(1)</span>
+<span class="go">1</span>
 </pre></div>
 </div>
 <p>In the following example, this behavior is exploited to allow a recurrent form of TransferMechanism (<code class="docutils literal notranslate"><span class="pre">attention</span></code>)
