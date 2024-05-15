@@ -661,11 +661,10 @@ class CompExecution(CUDAExecution):
                                       self._cuda_conditions,
                                       threads=len(self._execution_contexts))
 
-        # Copy the data struct from the device
-        self._data_struct = self.download_ctype(self._cuda_data_struct, type(self._data_struct), '_data_struct')
+        # Copy the data structs from the device
+        self.download_to(self._data_struct, self._cuda_data_struct, 'data')
 
     # Methods used to accelerate "Run"
-
     def _get_run_input_struct(self, inputs, num_input_sets, arg=3):
         # Callers that override input arg, should ensure that _bin_func is not None
         bin_f = self._bin_run_func if arg == 3 else self._bin_func
@@ -780,6 +779,7 @@ class CompExecution(CUDAExecution):
                                      threads=len(self._execution_contexts))
 
         # Copy the data struct from the device
+        self.download_to(self._data_struct, self._cuda_data_struct, 'data')
         ct_out = self.download_ctype(data_out, output_type, 'result')
         if len(self._execution_contexts) > 1:
             return _convert_ctype_to_python(ct_out)
