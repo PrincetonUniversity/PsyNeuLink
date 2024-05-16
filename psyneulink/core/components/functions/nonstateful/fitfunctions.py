@@ -368,6 +368,8 @@ class PECOptimizationFunction(OptimizationFunction):
         # Keep track of the best parameters
         self._best_params = {}
 
+        self._method_kwargs = kwargs if kwargs else {}
+
         super().__init__(
             search_space=search_space,
             save_samples=save_samples,
@@ -375,7 +377,6 @@ class PECOptimizationFunction(OptimizationFunction):
             search_function=search_function,
             search_termination_function=search_termination_function,
             aggregation_function=None,
-            **kwargs,
         )
 
     def set_pec_objective_function(self, objective_function: Callable):
@@ -437,18 +438,10 @@ class PECOptimizationFunction(OptimizationFunction):
                 f"Expected {len(self.fit_param_names)} arguments, got {len(args)}"
             )
 
-        # Parameter values are passed through the input data.
-        # Since we are passing fitting\optimization parameters as inputs we need add them to the inputs
-        # params_input = [np.array([v[0]]) for v in self.fit_parameters.values()]
-        # inputs = {self.model: [[trial] + params_input for trial in inputs[self.model]]}
-        #
-        # self.controller.set_pec_inputs_cache(inputs)
-        inputs_array = list(self.owner.composition.controller._pec_input_values.values())[0]
-        for trial in range(len(inputs_array)):
-            for i, name in enumerate(self.fit_param_names):
-                start_index = len(inputs_array[trial]) - len(self.fit_param_names)
-                inputs_array[trial][start_index+i] = np.array([args[i]])
-
+        # If the model is in the inputs, then inputs are passed as list of lists and we need to add the fitting
+        # parameters to each trial as a concatenated list
+        inputs = self.owner.composition.controller._pec_input_values
+        self.owner.composition.controller.set_parameters_in_inputs(parameters=args, inputs=inputs)
 
         # Reset the search grid
         self.reset_grid()
@@ -736,6 +729,7 @@ class PECOptimizationFunction(OptimizationFunction):
                     seed=seed_for_scipy,
                     popsize=15,
                     polish=False,
+                    **self._method_kwargs
                 )
 
             # Bind the fitted parameters to their names
@@ -848,11 +842,20 @@ class PECOptimizationFunction(OptimizationFunction):
         """Get a unique name for each parameter in the fit."""
         if self.owner is not None:
             # Go through each parameter and create a unique name for it
-            # If the mechanism name has an invalid character (for a python identifiter), we need to replace
-            # it with an underscore.
-            names = [(param_name, re.sub(r"\W|^(?=\d)",'_', mech.name))
-                     for param_name, mech in self.owner.fit_parameters.keys()]
-            return [f"{mech_name}_{param_name}" for param_name, mech_name in names]
+            if not self.owner.depends_on:
+                return [f"{mech.name}.{param_name}"
+                        for param_name, mech in self.owner.fit_parameters.keys()]
+            else:
+                names = []
+                for param_name, mech in self.owner.fit_parameters.keys():
+                    if (param_name, mech) in self.owner.cond_levels:
+                        for level in self.owner.cond_levels[(param_name, mech)]:
+                            names.append(f"{mech.name}.{param_name}<{level}>")
+                    else:
+                        names.append(f"{mech.name}.{param_name}")
+
+                return names
+
         else:
             return None
 
@@ -869,10 +872,21 @@ class PECOptimizationFunction(OptimizationFunction):
 
         if self.owner is not None:
 
-            bounds = [(float(min(s)), float(max(s))) for s in self.owner.fit_parameters.values()]
-
-            # Get the step size for each parameter.
-            steps = [np.unique(np.diff(s).round(decimals=5)) for s in self.owner.fit_parameters.values()]
+            if not self.owner.depends_on:
+                bounds = [(float(min(s)), float(max(s))) for s in self.owner.fit_parameters.values()]
+                steps = [np.unique(np.diff(s).round(decimals=5)) for s in self.owner.fit_parameters.values()]
+            else:
+                bounds = []
+                steps = []
+                for param_name, mech in self.owner.fit_parameters.keys():
+                    s = self.owner.fit_parameters[(param_name, mech)]
+                    if (param_name, mech) in self.owner.cond_levels:
+                        for _ in self.owner.cond_levels[(param_name, mech)]:
+                            bounds.append((float(min(s)), float(max(s))))
+                            steps.append(np.unique(np.diff(s).round(decimals=5)))
+                    else:
+                        bounds.append((float(min(s)), float(max(s))))
+                        steps.append(np.unique(np.diff(s).round(decimals=5)))
 
             # We also check if step size is constant, if not we raise an error
             for s in steps:

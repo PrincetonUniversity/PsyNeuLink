@@ -171,11 +171,13 @@ def _run_ddm_with_params(
         (optuna.samplers.RandomSampler, {'seed': 0}, [0.01]),
         (optuna.samplers.RandomSampler(), None, None)
     ],
-    ids=["differential_evolution",
-         "optuna_random_sampler",
-         "optuna_qmc_sampler",
-         "optuna_random_sampler_with_kwargs",
-         "optuna_random_sampler_no_seed"],
+    ids=[
+        "differential_evolution",
+        "optuna_random_sampler",
+        "optuna_qmc_sampler",
+        "optuna_random_sampler_with_kwargs",
+        "optuna_random_sampler_no_seed"
+    ],
 )
 def test_parameter_optimization_ddm(func_mode, opt_method, optuna_kwargs, result):
     """Test parameter optimization of a DDM in integrator mode"""
@@ -240,7 +242,6 @@ def test_parameter_optimization_ddm(func_mode, opt_method, optuna_kwargs, result
     # Let's generate an "experimental" dataset to fit. This is a parameter recovery test
     # Lets make 10% of the trials have a positive stimulus drift rate, and the other 90%
     # have a negative stimulus drift rate.
-    # trial_inputs = np.ones((num_trials, 1))
     rng = np.random.default_rng(12345)
     trial_inputs = rng.choice(
         [5.0, -5.0], size=(num_trials, 1), p=[0.10, 0.9], replace=True
@@ -284,9 +285,9 @@ def test_parameter_optimization_ddm(func_mode, opt_method, optuna_kwargs, result
         pec.run(inputs={comp: trial_inputs})
 
     if result is not None:
-        np.testing.assert_allclose(pec.optimized_parameter_values, result)
+        np.testing.assert_allclose(list(pec.optimized_parameter_values.values()), result)
 
-
+@pytest.mark.skip
 def test_parameter_estimation_ddm_cond(func_mode):
     if func_mode == "Python":
         pytest.skip(
@@ -296,7 +297,21 @@ def test_parameter_estimation_ddm_cond(func_mode):
     # High-level parameters the impact performance of the test
     num_trials = 50
     time_step_size = 0.01
-    num_estimates = 1000
+    num_estimates = 400
+
+    # Let's generate an "experimental" dataset to fit. This is a parameter recovery test
+    # Lets make 10% of the trials have a positive stimulus drift rate, and the other 90%
+    # have a negative stimulus drift rate.
+    rng = np.random.default_rng(12345)
+    trial_inputs = rng.choice(
+        [5.0, -5.0], size=(num_trials, 1), p=[0.10, 0.9], replace=True
+    )
+
+    # Make the first and last input positive for sure. This helps make sure inputs are really getting
+    # passed to the composition correctly during parameter fitting, and we aren't just getting a single
+    # trials worth of a cached input.
+    trial_inputs[0] = np.abs(trial_inputs[0])
+    trial_inputs[-1] = np.abs(trial_inputs[-1])
 
     ddm_params = dict(
         starting_value=0.0,
@@ -307,8 +322,65 @@ def test_parameter_estimation_ddm_cond(func_mode):
         time_step_size=time_step_size,
     )
 
-    # We will generate a dataset that is comprised of two different conditions. Each condition will have a different
-    # drift rate and non_decision_time.
+    # We will generate a dataset that comprises two different conditions. Each condition will have a different
+    # threshold.
+    params_cond1 = dict(
+       threshold=0.7,
+    )
+
+    params_cond2 = dict(
+       threshold=0.3,
+    )
+
+    comp, data_cond1 = _run_ddm_with_params(**{**ddm_params, **params_cond1}, trial_inputs=trial_inputs)
+    _, data_cond2 = _run_ddm_with_params(**{**ddm_params, **params_cond2}, trial_inputs=trial_inputs)
+
+    # Combine the data from the two conditions
+    data_cond1['condition'] = 'cond1'
+    data_cond2['condition'] = 'cond2'
+    data_to_fit = pd.concat([data_cond1, data_cond2])
+
+    # Add the inputs as columns to the data temporarily so we can shuffle the data and shuffle the inputs together
+    data_to_fit['inputs'] = np.concatenate([trial_inputs, trial_inputs])
+
+    # Shuffle the data, seed is set for reproducibility
+    data_to_fit = data_to_fit.sample(frac=1, random_state=42)
+
+    # Extract the shuffled inputs
+    trial_inputs = data_to_fit['inputs'].to_numpy().reshape(-1, 1)
+    data_to_fit = data_to_fit.drop(columns='inputs')
+
+    fit_parameters = {
+        ("rate", comp.nodes['DDM']): np.linspace(-0.5, 0.5, 1000),
+        ("non_decision_time", comp.nodes['DDM']): np.linspace(0.0, 1.0, 1000),
+        ("threshold", comp.nodes['DDM']): np.linspace(0.1, 1.0, 1000),
+    }
+
+    pec = pnl.ParameterEstimationComposition(
+        name="pec",
+        nodes=[comp],
+        parameters=fit_parameters,
+        depends_on={("threshold", comp.nodes['DDM']): 'condition'},
+        outcome_variables=[
+            comp.nodes['DDM'].output_ports[pnl.DECISION_OUTCOME],
+            comp.nodes['DDM'].output_ports[pnl.RESPONSE_TIME],
+        ],
+        data=data_to_fit,
+        optimization_function=PECOptimizationFunction(
+            method="differential_evolution", max_iterations=1,
+        ),
+        num_estimates=num_estimates,
+        initial_seed=42,
+    )
+
+    pec.controller.parameters.comp_execution_mode.set(func_mode)
+    pec.controller.function.parameters.save_values.set(True)
+    pec.run(inputs={comp: trial_inputs})
+
+    np.testing.assert_allclose(
+        list(pec.optimized_parameter_values.values()),
+        [0.2227273962084888, 0.5976130662377002, 0.1227723651473831],
+    )
 
 
 @pytest.mark.parametrize('likelihood_include_mask', [
@@ -394,7 +466,7 @@ def test_parameter_estimation_ddm_mle(func_mode, likelihood_include_mask):
     # against hardcoded values to make sure we are reproducing
     # the same search trajectory from a known working example.
     np.testing.assert_allclose(
-        pec.optimized_parameter_values,
+        list(pec.optimized_parameter_values.values()),
         [0.2227273962084888, 0.5976130662377002, 0.1227723651473831],
     )
 

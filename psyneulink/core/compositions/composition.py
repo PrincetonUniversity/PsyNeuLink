@@ -9395,7 +9395,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 and not (isinstance(self.controller.input_ports, ContentAddressableList)
                          and self.controller.input_ports
                          and self.controller.afferents)):
-            warnings.warn(f"{self.controller.name} for {self.name} is enabled but has no inputs.")
+            from psyneulink.core.compositions.parameterestimationcomposition import ParameterEstimationComposition
+            if not isinstance(self, ParameterEstimationComposition):
+                warnings.warn(f"{self.controller.name} for {self.name} is enabled but has no inputs.")
 
         # ADD MODULATORY COMPONENTS -----------------------------------------------------
 

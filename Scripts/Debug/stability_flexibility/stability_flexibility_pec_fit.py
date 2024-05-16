@@ -100,7 +100,7 @@ pec = pnl.ParameterEstimationComposition(
         responseGate.output_ports[0],
     ],
     data=data_to_fit,
-    optimization_function='differential_evolution',
+    optimization_function=pnl.PECOptimizationFunction(method='differential_evolution', vectorized=False),
     num_estimates=num_estimates,
 )
 
@@ -109,7 +109,7 @@ pec.controller.function.parameters.save_values.set(True)
 
 print("Running the PEC")
 ret = pec.run(inputs=inputs)
-optimal_parameters = pec.optimized_parameter_values
+optimal_parameters = list(pec.optimized_parameter_values.values())
 
 # Print the recovered parameters.
 records = []

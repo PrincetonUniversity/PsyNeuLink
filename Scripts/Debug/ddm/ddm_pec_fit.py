@@ -90,7 +90,7 @@ pec = pnl.ParameterEstimationComposition(
 pec.controller.parameters.comp_execution_mode.set("LLVM")
 pec.controller.function.parameters.save_values.set(True)
 ret = pec.run(inputs={comp: trial_inputs})
-optimal_parameters = pec.optimized_parameter_values
+optimal_parameters = list(pec.optimized_parameter_values.values())
 
 # Check that the parameters are recovered and that the log-likelihood is correct, set the tolerance pretty high,
 # things are noisy because of the low number of trials and estimates.

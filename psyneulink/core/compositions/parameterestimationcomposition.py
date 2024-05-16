@@ -516,6 +516,7 @@ class ParameterEstimationComposition(Composition):
         num_trials_per_estimate: Optional[int] = None,
         initial_seed: Optional[int] = None,
         same_seed_for_all_parameter_combinations: Optional[bool] = None,
+        depends_on: Optional[Dict] = None,
         name: Optional[str] = None,
         context: Optional[Context] = None,
         **kwargs,
@@ -561,14 +562,25 @@ class ParameterEstimationComposition(Composition):
         kwargs.update({"nodes": model})
         self.model = model
 
+        self.depends_on = depends_on
+
+        # These will be assigned in _validate_date if depends_on is not None
+        self.cond_levels = None
+        self.cond_mask = None
+        self.cond_data = None
+
         self.optimized_parameter_values = []
 
-        pec_mechs = {}
+        self.pec_control_mechs = {}
+        self.pec_control_mechs_input_indices = []
+        idx = len(self.model.input_ports)
         for (pname, mech), values in parameters.items():
-            pec_mechs[(pname, mech)] = ControlMechanism(name=f"{pname}_control",
-                                                       control_signals=[(pname, mech)],
-                                                       modulation=OVERRIDE)
-            self.model.add_node(pec_mechs[(pname, mech)])
+            self.pec_control_mechs[(pname, mech)] = ControlMechanism(name=f"{pname}_control",
+                                                                     control_signals=[(pname, mech)],
+                                                                     modulation=OVERRIDE)
+            self.model.add_node(self.pec_control_mechs[(pname, mech)])
+            self.pec_control_mechs_input_indices.append(idx)
+            idx += 1
 
         super().__init__(
             name=name,
@@ -681,6 +693,54 @@ class ParameterEstimationComposition(Composition):
 
     def _validate_data(self):
         """Check if user supplied data to fit is valid for data fitting mode."""
+
+        # If there is a depends_on attribute, the user is doing a conditional parameterization. The data must be a
+        # pandas dataframe, and we must strip out any columns that parameters are marked to depend on. These columns
+        # should be categorical or string columns.
+        if self.depends_on:
+            if not isinstance(self.data, pd.DataFrame):
+                raise ValueError(
+                    "If using conditional parameterization, the data must be a pandas dataframe."
+                )
+
+            # Check if the dependent columns are in the data
+            for param, col in self.depends_on.items():
+                if col not in self.data.columns:
+                    raise ValueError(f"The data does not contain the column '{col}' that parameter '{param}' "
+                                     f"is dependent on.")
+
+                # If the column is string, convert to categorical
+                if self.data[col].dtype == object:
+                    self.data[col] = self.data[col].astype('category')
+
+                # If the column is not categorical, return and error
+                if not self.data[col].dtype.name == 'category':
+                    raise ValueError(f"The column '{col}' that parameter '{param}' is dependent on must be a string or"
+                                     f" categorical column.")
+
+                # Make sure the column does not have too many unique values.
+                if len(self.data[col].unique()) > 5:
+                    warnings.warn(f"Column '{col}' has more than 5 unique values. Values = {self.data[col].unique()}. "
+                                  f"Each unique value will be treated as a separate condition. This may lead to a "
+                                  f"large number of parameters to estimate. Consider reducing the number of unique "
+                                  f"values in this column.")
+
+            # Get a separate copy of the dataframe with conditional columns
+            self.cond_data = self.data[self.depends_on.values()].copy()
+
+            # For each value in depends_on, get the unique levels of the column. This will determine the number of
+            # of conditional parameters that need to be estimated for that parameter.
+            self.cond_levels = {param: self.cond_data[col].unique() for param, col in self.depends_on.items()}
+
+            # We also need a mask to keep track of which trials are associated with which condition
+            self.cond_mask = {}
+            for param, col in self.depends_on.items():
+                self.cond_mask[param] = {}
+                for level in self.cond_levels[param]:
+                    self.cond_mask[param][level] = self.cond_data[col] == level
+
+            # Remove the dependent columns from the data
+            self.data = self.data.drop(columns=self.depends_on.values())
 
         # If the data is not in numpy format (could be a pandas dataframe) convert it to numpy. Cast all values to
         # floats and keep track of categorical dimensions with a mask. This preprocessing is done to make the data
@@ -850,6 +910,9 @@ class ParameterEstimationComposition(Composition):
             agent_rep=agent_rep,
             monitor_for_control=outcome_variables,
             fit_parameters=parameters,
+            depends_on=self.depends_on,
+            cond_levels=self.cond_levels,
+            cond_mask=self.cond_mask,
             allow_probes=True,
             objective_mechanism=objective_mechanism,
             function=optimization_function,
@@ -887,8 +950,11 @@ class ParameterEstimationComposition(Composition):
 
         # Since we are passing fitting\optimazation parameters as inputs we need add them to the inputs
         if inputs:
-            params_input = [np.array([v[0]]) for v in self.fit_parameters.values()]
-            inputs = {self.model: [[trial] + params_input for trial in inputs[self.model]]}
+
+            # Add the fitting parameters to the inputs, these will be modulated during fitting or optimization,
+            # we just use a dummy value here for now (the first value in the range of the parameter)
+            dummy_params = [v[0] for v in self.controller.function.fit_param_bounds.values()]
+            self.controller.set_parameters_in_inputs(dummy_params, inputs)
 
         self.controller.set_pec_inputs_cache(inputs)
 
@@ -909,6 +975,10 @@ class ParameterEstimationComposition(Composition):
 
         kwargs.pop("inputs", None)
 
+        # Turn off warnings about no inputs the PEC. This is because the PEC doesn't have any inputs itself, it
+        # caches the inputs passed to it and passes them along to the inner composition during simulation.
+        self.warned_about_run_with_no_inputs = True
+
         num_trials_per_estimate = len(inputs_dict[list(inputs_dict.keys())[0]])
         self.controller.parameters.num_trials_per_estimate.set(
             num_trials_per_estimate, context=context
@@ -920,9 +990,10 @@ class ParameterEstimationComposition(Composition):
         # IMPLEMENTATION NOTE: has not executed OCM after first call
         if hasattr(self.controller, "optimal_control_allocation"):
             # Assign optimized_parameter_values and optimal_value    (remove randomization dimension)
-            self.optimized_parameter_values = (
+            self.optimized_parameter_values = dict(zip(
+                self.controller.function.fit_param_names,
                 self.controller.optimal_control_allocation[:-1]
-            )
+            ))
             self.optimal_value = self.controller.optimal_net_outcome
 
         return results
@@ -1054,6 +1125,20 @@ class PEC_OCM(OptimizationControlMechanism):
         else:
             raise ValueError("PEC_OCM requires that the PEC parameters be passed down to it.")
 
+        if 'depends_on' in kwargs:
+            self.depends_on = kwargs['depends_on']
+            del kwargs['depends_on']
+        else:
+            self.depends_on = None
+
+        if 'cond_levels' in kwargs:
+            self.cond_levels = kwargs['cond_levels']
+            del kwargs['cond_levels']
+
+        if 'cond_mask' in kwargs:
+            self.cond_mask = kwargs['cond_mask']
+            del kwargs['cond_mask']
+
         super().__init__(*args, **kwargs)
 
     def _instantiate_output_ports(self, context=None):
@@ -1122,6 +1207,71 @@ class PEC_OCM(OptimizationControlMechanism):
             inputs_dict = {model: input_values}
 
         self._pec_input_values = inputs_dict
+
+    def set_parameters_in_inputs(self, parameters, inputs):
+        """
+        Add the fitting parameters to the inputs passed to the model for each trial. Originally, the PEC used the
+        OCM to modulate the parameters of the model. However, this did not allow for trial-wise conditional or varying
+        parameter values. The current implementation passes the fitting parameters directly to the model as inputs.
+        These inputs go to dummy control mechanisms that are added to the composition before fitting or optimization.
+        The control mechanisms are then used to modulate the parameters of the model. This function has side effects
+        because it modifies the inputs dictionary in place.
+
+        Args:
+            parameters (list): A list of fitting parameters that are to be passed to the model as inputs.
+            inputs (dict): A dictionary of inputs that are passed to the model for each trial.
+
+        """
+
+        # If the model is in the inputs, then inputs are passed as list of lists and we need to add the fitting
+        # parameters to each trial as a concatenated list.
+        if self.composition.model in inputs:
+
+            in_arr = inputs[self.composition.model]
+
+            if type(in_arr) is not np.ndarray:
+                in_arr = np.array(in_arr)
+
+            # Make sure it is 3D
+            in_arr = np.atleast_3d(in_arr)
+
+            # If the inputs don't have columns for the fitting parameters, then we need to add them
+            if in_arr.shape[1] != len(self.composition.input_ports):
+                num_missing = len(self.composition.input_ports) - in_arr.shape[1]
+                in_arr = np.hstack((in_arr, np.zeros((in_arr.shape[0], num_missing, 1))))
+
+            j = 0
+            for i, (pname, mech) in enumerate(self.fit_parameters.keys()):
+                mech_idx = self.composition.pec_control_mechs_input_indices[i]
+                if not self.depends_on or (pname, mech) not in self.depends_on:
+                    in_arr[:, mech_idx, 0] = parameters[j]
+                    j += 1
+                else:
+                    for level in self.cond_levels[(pname, mech)]:
+                        mask = self.cond_mask[(pname, mech)][level]
+                        in_arr[mask, mech_idx, 0] = parameters[j]
+                        j += 1
+
+            inputs[self.composition.model] = in_arr
+
+        # Otherwise, assume the inputs are passed to each mechanism individually. Thus, we need to feed the
+        # fitting parameters to the model to their respective control mechanisms
+        else:
+
+            num_trials = len(list(inputs.values())[0])
+
+            j = 0
+            for i, ((pname, mech), values) in enumerate(self.fit_parameters.items()):
+                control_mech = self.composition.pec_control_mechs[(pname, mech)]
+                if not self.depends_on or (pname, mech) not in self.depends_on:
+                    inputs[control_mech] = np.ones((num_trials, 1)) * parameters[j]
+                    j += 1
+                else:
+                    inputs[control_mech] = np.zeros((num_trials, 1))
+                    for level in self.cond_levels[(pname, mech)]:
+                        mask = self.cond_mask[(pname, mech)][level]
+                        inputs[control_mech][mask] = parameters[j]
+                        j += 1
 
     def _execute(self, variable=None, context=None, runtime_params=None)->np.ndarray:
         """Return control_allocation that optimizes net_outcome of agent_rep.evaluate().
