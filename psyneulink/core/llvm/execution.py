@@ -298,7 +298,10 @@ class CUDAExecution(Execution):
     def __get_cuda_buffer(self, struct_name):
         private_attr_name = "_buffer_cuda" + struct_name
         private_attr = getattr(self, private_attr_name)
-        if private_attr is None:
+
+        # Param struct needs to be reuploaded every time because the values
+        # might have changed.
+        if private_attr is None or struct_name == "_param_struct":
             # Set private attribute to a new buffer
             private_attr = self.upload_ctype(getattr(self, struct_name), struct_name)
             setattr(self, private_attr_name, private_attr)
