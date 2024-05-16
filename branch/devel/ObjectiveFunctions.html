@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ObjectiveFunctions &mdash; PsyNeuLink 0.15.1.0+193.g9db042831 documentation</title>
+  <title>ObjectiveFunctions &mdash; PsyNeuLink 0.15.1.0+197.g092bef5f3 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+193
+                  0.15.1.0+197
                 </div>
               
             
@@ -228,7 +228,7 @@ value using the <code class="xref any docutils literal notranslate"><span class=
 <li><p><strong>size</strong> (<em>int : None</em>) – specifies length of the array over which stability is calculated;  can be used in place of default_value,
 in which case zeros are assigned as the value(s). An error is generated if both are specified but
 size != len(default_value).</p></li>
-<li><p><strong>matrix</strong> (<em>list</em><em>, </em><em>np.ndarray</em><em>, </em><em>np.matrix</em><em>, or </em><em>matrix keyword : default HOLLOW_MATRIX</em>) – specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
+<li><p><strong>matrix</strong> (<em>list</em><em>, </em><em>np.ndarray</em><em>, or </em><em>matrix keyword : default HOLLOW_MATRIX</em>) – specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
 length of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.variable" title="psyneulink.core.components.functions.objectivefunctions.Stability.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p></li>
 <li><p><strong>metric</strong> (<em>keyword in DistanceMetrics : Default ENERGY</em>) – specifies a <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics" title="psyneulink.core.globals.keywords.DistanceMetrics"><code class="xref any py py-class docutils literal notranslate"><span class="pre">metric</span></code></a> from <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics" title="psyneulink.core.globals.keywords.DistanceMetrics"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DistanceMetrics</span></code></a> used to compute stability.</p></li>
 <li><p><strong>transfer_fct</strong> (<em>function</em><em> or </em><em>method : Default None</em>) – specifies the function used to transform output of weight <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.matrix" title="psyneulink.core.components.functions.objectivefunctions.Stability.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a>.</p></li>
@@ -272,7 +272,7 @@ than HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate 
 stability calculation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>list, np.ndarray, np.matrix, function keyword, or MappingProjection : default HOLLOW_MATRIX</p>
+<dd class="field-odd"><p>list, np.ndarray, function keyword, or MappingProjection : default HOLLOW_MATRIX</p>
 </dd>
 </dl>
 </dd></dl>
@@ -359,7 +359,7 @@ arguments of the constructor.</p>
 <dd><p>Validate matrix param</p>
 <dl class="simple">
 <dt><a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.matrix" title="psyneulink.core.components.functions.objectivefunctions.Stability.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> argument must be one of the following</dt><dd><ul class="simple">
-<li><p>2d list, np.ndarray or np.matrix</p></li>
+<li><p>2d list, np.ndarray</p></li>
 <li><p>ParameterPort for one of the above</p></li>
 <li><p>MappingProjection with a parameterPorts[MATRIX] for one of the above</p></li>
 </ul>
@@ -528,7 +528,7 @@ If <a class="reference internal" href="#psyneulink.core.components.functions.obj
 <li><p><strong>size</strong> (<em>int : None</em>) – specifies length of the array over which energy is calculated;  can be used in place of default_value,
 in which case zeros are assigned as the value(s). An error is generated if both are specified but
 size != len(default_value).</p></li>
-<li><p><strong>matrix</strong> (<em>list</em><em>, </em><em>np.ndarray</em><em>, </em><em>np.matrix</em><em>, or </em><em>matrix keyword : default INVERSE_HOLLOW_MATRIX</em>) – specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
+<li><p><strong>matrix</strong> (<em>list</em><em>, </em><em>np.ndarray</em><em>, or </em><em>matrix keyword : default INVERSE_HOLLOW_MATRIX</em>) – specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
 length of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.variable" title="psyneulink.core.components.functions.objectivefunctions.Stability.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p></li>
 <li><p><strong>transfer_fct</strong> (<em>function</em><em> or </em><em>method : Default None</em>) – specifies the function used to transform output of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.matrix" title="psyneulink.core.components.functions.objectivefunctions.Stability.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> prior to the energy calculation
 (see <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability" title="psyneulink.core.components.functions.objectivefunctions.Stability"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Stablility</span></code></a> for explanation).</p></li>
@@ -572,7 +572,7 @@ than INVERSE_HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to el
 the energy calculation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>list, np.ndarray, np.matrix, or matrix keyword</p>
+<dd class="field-odd"><p>list, np.ndarray, or matrix keyword</p>
 </dd>
 </dl>
 </dd></dl>
@@ -648,7 +648,7 @@ arguments of the constructor.</p>
 <li><p><strong>size</strong> (<em>int : None</em>) – specifies length of the array over which entropy is calculated;  can be used in place of default_value,
 in which case zeros are assigned as the value(s). An error is generated if both are specified but
 size != len(default_value).</p></li>
-<li><p><strong>matrix</strong> (<em>list</em><em>, </em><em>np.ndarray</em><em>, </em><em>np.matrix</em><em>, or </em><em>matrix keyword : default INVERSE_HOLLOW_MATRIX</em>) – specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
+<li><p><strong>matrix</strong> (<em>list</em><em>, </em><em>np.ndarray</em><em>, or </em><em>matrix keyword : default INVERSE_HOLLOW_MATRIX</em>) – specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
 length of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.variable" title="psyneulink.core.components.functions.objectivefunctions.Stability.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p></li>
 <li><p><strong>transfer_fct</strong> (<em>function</em><em> or </em><em>method : Default None</em>) – specifies the function used to transform output of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.matrix" title="psyneulink.core.components.functions.objectivefunctions.Stability.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> prior to the entropy calculation
 (see <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability" title="psyneulink.core.components.functions.objectivefunctions.Stability"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Stability</span></code></a> for explanation).</p></li>
@@ -692,7 +692,7 @@ than INVERSE_HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to el
 the entropy calculation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>list, np.ndarray, np.matrix, or matrix keyword</p>
+<dd class="field-odd"><p>list, np.ndarray, or matrix keyword</p>
 </dd>
 </dl>
 </dd></dl>

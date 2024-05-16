@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferFunctions &mdash; PsyNeuLink 0.15.1.0+193.g9db042831 documentation</title>
+  <title>TransferFunctions &mdash; PsyNeuLink 0.15.1.0+197.g092bef5f3 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+193
+                  0.15.1.0+197
                 </div>
               
             
@@ -1330,7 +1330,7 @@ arguments of the constructor.</p></li>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>variable</strong> (<em>list</em><em> or </em><em>1d array : default class_defaults.variable</em>) – specifies a template for the value to be transformed; length must equal the number of rows of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a>.</p></li>
-<li><p><strong>matrix</strong> (<em>number</em><em>, </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><em>function</em><em>, or </em><em>matrix keyword : default IDENTITY_MATRIX</em>) – <p>specifies matrix used to transform <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>
+<li><p><strong>matrix</strong> (<em>number</em><em>, </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d np.ndarray</em><em>, </em><em>function</em><em>, or </em><em>matrix keyword : default IDENTITY_MATRIX</em>) – <p>specifies matrix used to transform <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>
 (see <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> for specification details).</p>
 <p>When LinearMatrix is the <code class="xref any docutils literal notranslate"><span class="pre">function</span></code> of a projection:</p>
 <blockquote>
@@ -1381,7 +1381,7 @@ Can be specified as any of the following:</p>
 <blockquote>
 <div><ul class="simple">
 <li><p>number - used as the filler value for all elements of the <code class="xref std std-keyword docutils literal notranslate"><span class="pre">matrix</span></code> (call to np.fill);</p></li>
-<li><p>list of arrays, 2d array or np.matrix - assigned as the value of <code class="xref std std-keyword docutils literal notranslate"><span class="pre">matrix</span></code>;</p></li>
+<li><p>list of arrays, 2d array - assigned as the value of <code class="xref std std-keyword docutils literal notranslate"><span class="pre">matrix</span></code>;</p></li>
 <li><p>matrix keyword - see <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.MatrixKeywords" title="psyneulink.core.globals.keywords.MatrixKeywords"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MatrixKeywords</span></code></a> for list of options.</p></li>
 </ul>
 </div></blockquote>

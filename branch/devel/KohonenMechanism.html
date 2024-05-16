@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>KohonenMechanism &mdash; PsyNeuLink 0.15.1.0+193.g9db042831 documentation</title>
+  <title>KohonenMechanism &mdash; PsyNeuLink 0.15.1.0+197.g092bef5f3 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+193
+                  0.15.1.0+197
                 </div>
               
             
@@ -265,7 +265,7 @@ See <a class="reference internal" href="TransferMechanism.html#transfermechanism
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>enable_learning</strong> (<em>boolean : default True</em>) – specifies whether the Mechanism should be configured for learning;  if it is not (the default), then learning
 cannot be enabled until it is configured for learning by calling the Mechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.configure_learning" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.configure_learning"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">configure_learning</span></code></a> method.</p></li>
-<li><p><strong>learning_rate</strong> (<em>scalar</em><em>, or </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d np.array</em><em>, or </em><em>np.matrix of numeric values: default False</em>) – specifies the learning rate used by its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learning_function" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learning_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning</span> <span class="pre">function</span></code></a>.
+<li><p><strong>learning_rate</strong> (<em>scalar</em><em>, or </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d np.array of numeric values: default False</em>) – specifies the learning rate used by its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learning_function" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learning_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning</span> <span class="pre">function</span></code></a>.
 If it is <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>, the <a class="reference internal" href="LearningMechanism.html#learningmechanism-learning-rate"><span class="std std-ref">default learning_rate for a LearningMechanism</span></a> is
 used; if it is assigned a value, that is used as the learning_rate (see <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learning_rate" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for details).</p></li>
 <li><p><strong>learning_function</strong> (<a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.LearningFunction" title="psyneulink.core.components.functions.learningfunctions.LearningFunction"><em>LearningFunction</em></a><em>, </em><em>function</em><em> or </em><em>method : default Kohonen</em><em>(</em><em>distance_function=GUASSIAN</em><em>)</em>) – specifies function used by <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learning_mechanism" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learning_mechanism"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_mechanism</span></code></a> to update <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learned_projection" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learned_projection"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learned_projection</span></code></a>.</p></li>
@@ -313,7 +313,7 @@ one identified by <code class="xref any docutils literal notranslate"><span clas
 of the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learning_mechanism" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learning_mechanism"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_mechanism</span></code></a> (see <code class="xref any docutils literal notranslate"><span class="pre">learning_rate</span></code> for details concerning specification and default value assignment).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>float, 1d or 2d np.array, or np.matrix of numeric values : default None</p>
+<dd class="field-odd"><p>float, 1d or 2d np.array of numeric values : default None</p>
 </dd>
 </dl>
 </dd></dl>
