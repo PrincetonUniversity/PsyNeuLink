@@ -314,7 +314,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     COMMENT:
     ??OLD OR NEWER THAN BELOW?
-    matrix : list, np.ndarray, np.matrix, matrix keyword, or AutoAssociativeProjection : default FULL_CONNECTIVITY_MATRIX
+    matrix : list, np.ndarray, matrix keyword, or AutoAssociativeProjection : default FULL_CONNECTIVITY_MATRIX
         specifies the matrix to use for creating a `recurrent AutoAssociativeProjection
         <RecurrentTransferMechanism_Structure>`, or a AutoAssociativeProjection to use. If **auto** or **hetero**
         arguments are specified, the **matrix** argument will be ignored in favor of those arguments.
@@ -336,7 +336,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         equal to the matrix dimensions, if a non-uniform diagonal is desired. Can be modified by control.
     COMMENT
 
-    matrix : list, np.ndarray, np.matrix, matrix keyword, or AutoAssociativeProjection : default HOLLOW_MATRIX
+    matrix : list, np.ndarray, matrix keyword, or AutoAssociativeProjection : default HOLLOW_MATRIX
         specifies the matrix to use for creating a `recurrent AutoAssociativeProjection
         <RecurrentTransferMechanism_Structure>`, or an AutoAssociativeProjection to use.
 
@@ -426,7 +426,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         if it is not (the default), then learning cannot be enabled until it is configured for learning by calling
         the Mechanism's `configure_learning <RecurrentTransferMechanism.configure_learning>` method.
 
-    learning_rate : scalar, or list, 1d or 2d np.array, or np.matrix of numeric values: default False
+    learning_rate : scalar, or list, 1d or 2d np.array of numeric values: default False
         specifies the learning rate used by its `learning function <RecurrentTransferMechanism.learning_function>`.
         If it is `None`, the `default learning_rate for a LearningMechanism <LearningMechanism_Learning_Rate>` is
         used; if it is assigned a value, that is used as the learning_rate (see `learning_rate
@@ -488,7 +488,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         created automatically if `learning is specified <RecurrentTransferMechanism_Learning>`, and used to train the
         `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`.
 
-    learning_rate : float, 1d or 2d np.array, or np.matrix of numeric values : default None
+    learning_rate : float, 1d or 2d np.array of numeric values : default None
         determines the learning rate used by the `learning_function <RecurrentTransferMechanism.learning_function>`
         of the `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` (see `learning_rate
         <AutoAssociativeLearningMechanism.learning_rate>` for details concerning specification and default value
@@ -785,9 +785,9 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         if HETERO in target_set:
             hetero_param = target_set[HETERO]
-            if hetero_param is not None and not isinstance(hetero_param, (np.matrix, np.ndarray, list, numbers.Number)):
+            if hetero_param is not None and not isinstance(hetero_param, (np.ndarray, list, numbers.Number)):
                 raise RecurrentTransferError("hetero parameter ({}) of {} is of incompatible type: it should be a "
-                                             "number, None, or a 2D numeric matrix or array".format(hetero_param, self))
+                                             "number, None, or a 2D numeric array".format(hetero_param, self))
             hetero_shape = np.array(hetero_param).shape
             if hetero_shape != (1,) and hetero_shape != (1, 1):
                 if isinstance(hetero_param, (np.ndarray, list, np.matrix)) and (hetero_param.ndim > 0 and hetero_shape[0] != self.size[0]):

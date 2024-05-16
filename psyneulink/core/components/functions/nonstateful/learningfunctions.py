@@ -416,7 +416,7 @@ class EMStorage(LearningFunction):
            array containing `entry <EMStorage.entry>` to be added to `memory_matrix <EMStorage.memory_matrix>`
            along `axis <EMStorage.axis>`.
 
-        memory_matrix : List, 2d array, np.matrix, ParameterPort, or MappingProjection
+        memory_matrix : List, 2d array, ParameterPort, or MappingProjection
             matrix to which `variable <EMStorage.variable>` is stored.
 
             .. technical_note::
@@ -1027,7 +1027,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
     variable: List[array(float64), array(float64), 2d array[[float64]]] : default class_defaults.variable
         input pattern, array of activation values, and matrix used to calculate the weights changes.
 
-    learning_rate : scalar or list, 1d or 2d array, or np.matrix of numeric values: default .05
+    learning_rate : scalar or list, 1d or 2d array of numeric values: default .05
         specifies the learning rate used by the `function <Kohonen.function>` (see `learning_rate
         <Kohonen.learning_rate>` for details).
 
@@ -1294,7 +1294,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         activations in `variable <Hebbian.variable>`.
     COMMENT
 
-    learning_rate : scalar or list, 1d or 2d array, or np.matrix of numeric values: default .05
+    learning_rate : scalar or list, 1d or 2d array of numeric values: default .05
         specifies the learning rate used by the `function <Hebbian.function>`; (see `learning_rate
         <Hebbian.learning_rate>` for details).
 
@@ -1513,7 +1513,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
         activations in `variable <ContrastiveHebbian.variable>`.
     COMMENT
 
-    learning_rate : scalar or list, 1d or 2d array, or np.matrix of numeric values: default .05
+    learning_rate : scalar or list, 1d or 2d array of numeric values: default .05
         specifies the learning rate used by the `function <ContrastiveHebbian.function>`. (see `learning_rate
         <ContrastiveHebbian.learning_rate>` for details).
 
@@ -2139,7 +2139,7 @@ class BackPropagation(LearningFunction):
     COMMENT
 
     COMMENT:
-    error_matrix : List, 2d array, np.matrix, ParameterPort, or MappingProjection
+    error_matrix : List, 2d array, ParameterPort, or MappingProjection
         matrix, the output of which is used to calculate the `error_signal <BackPropagation.error_signal>`.
         If it is specified as a ParameterPort it must be one for the `matrix <MappingProjection.matrix>`
         parameter of a `MappingProjection`;  if it is a MappingProjection, it must be one with a
@@ -2349,7 +2349,7 @@ class BackPropagation(LearningFunction):
         """Validate learning_rate and error_matrix params
 
         `error_matrix` argument must be one of the following
-            - 2d list, np.ndarray or np.matrix
+            - 2d list, np.ndarray
             - ParameterPort for one of the above
             - MappingProjection with a parameterPorts[MATRIX] for one of the above
 
@@ -2454,7 +2454,7 @@ class BackPropagation(LearningFunction):
             other than activation_input and activation_output, to compute the derivative of the activation function
             with respect to `activation_output <BackPropagation.activation_output>`.
 
-        error_matrix : List, 2d array, np.matrix, ParameterPort, or MappingProjection
+        error_matrix : List, 2d array, ParameterPort, or MappingProjection
             matrix of weights that were used to generate the `error_signal <BackPropagation.error_signal>` (3rd item
             of `variable <BackPropagation.variable>` from `activation_output <BackPropagation.activation_output>`;
             its dimensions must be the length of `activation_output <BackPropagation.activation_output>` (rows) x

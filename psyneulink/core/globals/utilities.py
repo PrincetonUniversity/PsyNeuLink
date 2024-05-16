@@ -123,6 +123,7 @@ from collections import UserDict, UserList
 from itertools import chain, combinations
 
 import numpy as np
+from numpy.typing import DTypeLike
 
 # Conditionally import torch
 try:
@@ -151,7 +152,7 @@ __all__ = [
     'scalar_distance', 'sinusoid',
     'tensor_power', 'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy', 'create_union_set', 'merge_dictionaries',
-    'contains_type', 'is_numeric_scalar', 'try_extract_0d_array_item', 'fill_array', 'update_array_in_place',
+    'contains_type', 'is_numeric_scalar', 'try_extract_0d_array_item', 'fill_array', 'update_array_in_place', 'array_from_matrix_string',
 ]
 
 logger = logging.getLogger(__name__)
@@ -2374,3 +2375,28 @@ def update_array_in_place(
         _dry_run=False,
         _in_object_dtype=False
     )
+
+
+def array_from_matrix_string(
+    s: str, row_sep: str = ';', col_sep: str = ' ', dtype: DTypeLike = float
+) -> np.ndarray:
+    """
+    Constructs a numpy array from a string in forms like '1 2; 3 4'
+    replicating the function of the numpy.matrix constructor.
+
+    Args:
+        s (str): matrix descriptor
+        row_sep (str, optional): separator for matrix rows. Defaults to ';'.
+        col_sep (str, optional): separator for matrix columns. Defaults to ' '.
+        dtype (DTypeLike, optional): dtype of result array. Defaults to float.
+
+    Returns:
+        np.ndarray: array representation of **s**
+    """
+    rows = s.split(row_sep)
+    arr = []
+    for r in rows:
+        # filter empty columns, commonly in form like '1 2; 3 4'
+        arr.append([c for c in r.split(col_sep) if len(c)])
+
+    return np.asarray(arr, dtype=dtype)

@@ -105,7 +105,7 @@ class Stability(ObjectiveFunction):
         in which case zeros are assigned as the value(s). An error is generated if both are specified but
         size != len(default_value).
 
-    matrix : list, np.ndarray, np.matrix, or matrix keyword : default HOLLOW_MATRIX
+    matrix : list, np.ndarray, or matrix keyword : default HOLLOW_MATRIX
         specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
         length of `variable <Stability.variable>`.
 
@@ -142,7 +142,7 @@ class Stability(ObjectiveFunction):
     size : int
         length of array for which stability is calculated.
 
-    matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default HOLLOW_MATRIX
+    matrix : list, np.ndarray, function keyword, or MappingProjection : default HOLLOW_MATRIX
         weight matrix from each element of `variable <Stability.variablity>` to each other;  if a matrix other
         than HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from the
         stability calculation.
@@ -254,7 +254,7 @@ class Stability(ObjectiveFunction):
         """Validate matrix param
 
         `matrix <Stability.matrix>` argument must be one of the following
-            - 2d list, np.ndarray or np.matrix
+            - 2d list, np.ndarray
             - ParameterPort for one of the above
             - MappingProjection with a parameterPorts[MATRIX] for one of the above
 
@@ -502,7 +502,7 @@ class Energy(Stability):
         in which case zeros are assigned as the value(s). An error is generated if both are specified but
         size != len(default_value).
 
-    matrix : list, np.ndarray, np.matrix, or matrix keyword : default INVERSE_HOLLOW_MATRIX
+    matrix : list, np.ndarray, or matrix keyword : default INVERSE_HOLLOW_MATRIX
         specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
         length of `variable <Stability.variable>`.
 
@@ -537,7 +537,7 @@ class Energy(Stability):
     size : int
         length of array for which energy is calculated.
 
-    matrix : list, np.ndarray, np.matrix, or matrix keyword
+    matrix : list, np.ndarray, or matrix keyword
         weight matrix from each element of `variable <Energy.variablity>` to each other;  if a matrix other
         than INVERSE_HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from
         the energy calculation.
@@ -612,7 +612,7 @@ class Entropy(Stability):
         in which case zeros are assigned as the value(s). An error is generated if both are specified but
         size != len(default_value).
 
-    matrix : list, np.ndarray, np.matrix, or matrix keyword : default INVERSE_HOLLOW_MATRIX
+    matrix : list, np.ndarray, or matrix keyword : default INVERSE_HOLLOW_MATRIX
         specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
         length of `variable <Stability.variable>`.
 
@@ -647,7 +647,7 @@ class Entropy(Stability):
     size : int
         length of array for which energy is calculated.
 
-    matrix : list, np.ndarray, np.matrix, or matrix keyword
+    matrix : list, np.ndarray, or matrix keyword
         weight matrix from each element of `variable <Entropy.variablity>` to each other;  if a matrix other
         than INVERSE_HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from
         the entropy calculation.

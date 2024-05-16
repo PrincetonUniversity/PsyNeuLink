@@ -173,7 +173,7 @@ from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import (
     convert_all_elements_to_np_array, convert_to_np_array, get_global_seed, is_instance_or_subclass, object_has_single_value, parameter_spec, parse_valid_identifier, safe_len,
     SeededRandomState, try_extract_0d_array_item, contains_type, is_numeric, NumericCollections,
-    random_matrix
+    random_matrix, array_from_matrix_string
 )
 
 __all__ = [
@@ -1370,7 +1370,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
     # specify 'matrix' as a string (e.g. r = RecurrentTransferMechanism(matrix='1 2; 3 4'))
     if type(specification) == str:
         try:
-            return np.array(np.matrix(specification))
+            return array_from_matrix_string(specification)
         except (ValueError, NameError, TypeError):
             # np.matrix(specification) will give ValueError if specification is a bad value (e.g. 'abc', '1; 1 2')
             #                          [JDC] actually gives NameError if specification is a string (e.g., 'abc')
