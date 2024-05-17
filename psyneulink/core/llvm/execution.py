@@ -251,8 +251,9 @@ class Execution:
 class CUDAExecution(Execution):
     def __init__(self, buffers=['param_struct', 'state_struct', 'out']):
         super().__init__()
+        self._gpu_buffers = {}
         for b in buffers:
-            setattr(self, "_buffer_cuda_" + b, None)
+            self._gpu_buffers["_" + b] = None
         self._uploaded_bytes = Counter()
         self._downloaded_bytes = Counter()
 
@@ -285,9 +286,13 @@ class CUDAExecution(Execution):
             return jit_engine.pycuda.driver.mem_alloc(4)
         return jit_engine.pycuda.driver.to_device(bytes(data))
 
-    def download_to(self, dst, source, name='other'):
+    def download_to(self, dst, source, name='other', *, move=False):
         bounce = self.download_ctype(source, type(dst), name)
         ctypes.memmove(ctypes.addressof(dst), ctypes.addressof(bounce), ctypes.sizeof(dst))
+        if move:
+            for k, v in self._gpu_buffers.items():
+                if v is source:
+                    self._gpu_buffers[k] = None
 
     def download_ctype(self, source, ty, name='other'):
         self._downloaded_bytes[name] += ctypes.sizeof(ty)
@@ -296,17 +301,16 @@ class CUDAExecution(Execution):
         return ty.from_buffer(out_buf)
 
     def __get_cuda_buffer(self, struct_name):
-        private_attr_name = "_buffer_cuda" + struct_name
-        private_attr = getattr(self, private_attr_name)
+        gpu_buffer = self._gpu_buffers[struct_name]
 
         # Param struct needs to be reuploaded every time because the values
         # might have changed.
-        if private_attr is None or struct_name == "_param_struct":
+        if gpu_buffer is None or struct_name == "_param_struct":
             # Set private attribute to a new buffer
-            private_attr = self.upload_ctype(getattr(self, struct_name), struct_name)
-            setattr(self, private_attr_name, private_attr)
+            gpu_buffer = self.upload_ctype(getattr(self, struct_name), struct_name)
+            self._gpu_buffers[struct_name] = gpu_buffer
 
-        return private_attr
+        return gpu_buffer
 
     @property
     def _cuda_param_struct(self):
@@ -326,10 +330,13 @@ class CUDAExecution(Execution):
 
     @property
     def _cuda_out(self):
-        if self._buffer_cuda_out is None:
+        gpu_buffer = self._gpu_buffers["_out"]
+        if gpu_buffer is None:
             size = ctypes.sizeof(self._ct_vo)
-            self._buffer_cuda_out = jit_engine.pycuda.driver.mem_alloc(size)
-        return self._buffer_cuda_out
+            gpu_buffer = jit_engine.pycuda.driver.mem_alloc(size)
+            self._gpu_buffers["_out"] = gpu_buffer
+
+        return gpu_buffer
 
     def cuda_execute(self, variable):
         # Create input argument
@@ -344,7 +351,7 @@ class CUDAExecution(Execution):
 
         # Copy the result from the device
         self.download_to(self._ct_vo, self._cuda_out, 'result')
-        self.download_to(self._state_struct, self._cuda_state_struct, 'state')
+        self.download_to(self._state_struct, self._cuda_state_struct, 'state', move=True)
         return _convert_ctype_to_python(self._ct_vo)
 
 
@@ -662,7 +669,8 @@ class CompExecution(CUDAExecution):
                                       threads=len(self._execution_contexts))
 
         # Copy the data structs from the device
-        self.download_to(self._data_struct, self._cuda_data_struct, 'data')
+        self.download_to(self._data_struct, self._cuda_data_struct, 'data', move=True)
+        self.download_to(self._state_struct, self._cuda_state_struct, 'state', move=True)
 
     # Methods used to accelerate "Run"
     def _get_run_input_struct(self, inputs, num_input_sets, arg=3):
@@ -779,7 +787,9 @@ class CompExecution(CUDAExecution):
                                      threads=len(self._execution_contexts))
 
         # Copy the data struct from the device
-        self.download_to(self._data_struct, self._cuda_data_struct, 'data')
+        self.download_to(self._data_struct, self._cuda_data_struct, 'data', move=True)
+        self.download_to(self._state_struct, self._cuda_state_struct, 'state', move=True)
+
         ct_out = self.download_ctype(data_out, output_type, 'result')
         if len(self._execution_contexts) > 1:
             return _convert_ctype_to_python(ct_out)
