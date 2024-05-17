@@ -7,6 +7,7 @@ import pytest
 import re
 import sys
 
+import graph_scheduler as gs
 import psyneulink
 from psyneulink import clear_registry, primary_registries, torch_available
 from psyneulink.core import llvm as pnlvm
@@ -125,6 +126,8 @@ def pytest_runtest_teardown(item):
     for registry in primary_registries:
         # Clear Registry to have a stable reference for indexed suffixes of default names
         clear_registry(registry)
+
+    gs.utilities.cached_hashable_graph_function.cache_clear()
 
     pnlvm.cleanup()
 
