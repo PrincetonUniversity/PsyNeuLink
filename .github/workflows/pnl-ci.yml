@@ -51,21 +51,9 @@ jobs:
             extra-args: '--forked -m "not llvm"'
 
           # add 32-bit build on windows
-          # split by marks to reduce peak memory
           - python-version: '3.8'
             python-architecture: 'x86'
             os: windows
-            extra-args: '-m llvm'
-
-          - python-version: '3.8'
-            python-architecture: 'x86'
-            os: windows
-            extra-args: '-m "not llvm and composition"'
-
-          - python-version: '3.8'
-            python-architecture: 'x86'
-            os: windows
-            extra-args: '-m "not llvm and not composition"'
 
           # fp32 run on linux python 3.10
           - python-version: '3.10'
@@ -176,16 +164,10 @@ jobs:
       timeout-minutes: 180
       run: pytest --junit-xml=tests_out.xml --verbosity=0 -n logical ${{ matrix.extra-args }}
 
-    # double quotes are disallowed in artifact names
-    - name: Get valid filename string from extra-args
-      id: extra_args_fname
-      run: echo extra_args="$(echo ${{ matrix.extra-args }} | tr -d '\"')" >> $GITHUB_OUTPUT
-      shell: bash
-
     - name: Upload test results
       uses: actions/upload-artifact@v4
       with:
-        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}-${{ matrix.version-restrict }}-${{ steps.extra_args_fname.outputs.extra_args }}
+        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}-${{ matrix.version-restrict }}
         path: tests_out.xml
         retention-days: 5
       if: (success() || failure()) && ! contains(matrix.extra-args, 'forked')
@@ -215,4 +197,3 @@ jobs:
         name: dist-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
         path: dist/
         retention-days: 2
-        overwrite: true
