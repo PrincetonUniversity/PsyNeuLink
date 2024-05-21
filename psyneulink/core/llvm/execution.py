@@ -144,35 +144,26 @@ class Execution:
         for idx, attribute in enumerate(getattr(component, ids)):
             compiled_attribute_param = getattr(params, params._fields_[idx][0])
 
-            # Handle custom compiled-only structures by name
-            if attribute == 'nodes':
-                for node_id, node in enumerate(component._all_nodes):
-                    node_params = getattr(compiled_attribute_param,
-                                          compiled_attribute_param._fields_[node_id][0])
+            def _enumerate_recurse(elements):
+                for element_id, element in enumerate(elements):
+                    element_params = getattr(compiled_attribute_param,
+                                             compiled_attribute_param._fields_[element_id][0])
                     self._copy_params_to_pnl(context=context,
-                                             component=node,
-                                             params=node_params,
-                                             ids=ids,
-                                             condition=condition)
-            elif attribute == 'projections':
-                for proj_id, projection in enumerate(component._inner_projections):
-                    projection_params = getattr(compiled_attribute_param,
-                                                compiled_attribute_param._fields_[proj_id][0])
-                    self._copy_params_to_pnl(context=context,
-                                             component=projection,
-                                             params=projection_params,
+                                             component=element,
+                                             params=element_params,
                                              ids=ids,
                                              condition=condition)
 
+            # Handle custom compiled-only structures by name
+            if attribute == 'nodes':
+                _enumerate_recurse(component._all_nodes)
+
+            elif attribute == 'projections':
+                _enumerate_recurse(component._inner_projections)
+
             elif attribute == '_parameter_ports':
-                for pp_id, param_port in enumerate(component._parameter_ports):
-                    port_params = getattr(compiled_attribute_param,
-                                          compiled_attribute_param._fields_[pp_id][0])
-                    self._copy_params_to_pnl(context=context,
-                                             component=param_port,
-                                             params=port_params,
-                                             ids=ids,
-                                             condition=condition)
+                _enumerate_recurse(component._parameter_ports)
+
             else:
                 # TODO: Reconstruct Python RandomState
                 if attribute == "random_state":
@@ -201,14 +192,7 @@ class Execution:
                                              condition=condition)
 
                 elif attribute == "input_ports" or attribute == "output_ports":
-                    for port_id, port in enumerate(pnl_value):
-                        port_params = getattr(compiled_attribute_param,
-                                              compiled_attribute_param._fields_[port_id][0])
-                        self._copy_params_to_pnl(context=context,
-                                                 component=port,
-                                                 params=port_params,
-                                                 ids=ids,
-                                                 condition=condition)
+                    _enumerate_recurse(pnl_value)
 
                 # Writeback parameter value if the condition matches
                 elif condition(pnl_param):
