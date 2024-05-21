@@ -54,7 +54,7 @@ from psyneulink.core.globals.keywords import \
     OPTIMIZATION_FUNCTION_TYPE, OWNER, VALUE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.sampleiterator import SampleIterator
-from psyneulink.core.globals.utilities import call_with_pruned_args
+from psyneulink.core.globals.utilities import call_with_pruned_args, convert_to_np_array
 
 __all__ = ['OptimizationFunction', 'GradientOptimization', 'GridSearch', 'GaussianProcess',
            'ASCENT', 'DESCENT', 'DIRECTION', 'MAXIMIZE', 'MINIMIZE', 'OBJECTIVE_FUNCTION', 'SEARCH_FUNCTION',
@@ -76,9 +76,11 @@ class OptimizationFunctionError(FunctionError):
 
 def _num_estimates_getter(owning_component, context):
     if owning_component.parameters.randomization_dimension._get(context) is None:
-        return 1
+        return np.array(1)
     else:
-        return owning_component.parameters.search_space._get(context)[owning_component.randomization_dimension].num
+        return np.array(
+            owning_component.parameters.search_space._get(context)[owning_component.randomization_dimension].num
+        )
 
 
 class OptimizationFunction(Function_Base):
@@ -411,6 +413,8 @@ class OptimizationFunction(Function_Base):
         saved_samples = Parameter([], read_only=True, pnl_internal=True)
         saved_values = Parameter([], read_only=True, pnl_internal=True)
 
+        grid = Parameter(None)
+
     @check_user_specified
     @beartype
     def __init__(
@@ -576,7 +580,7 @@ class OptimizationFunction(Function_Base):
             if SEARCH_SPACE in self._unspecified_args:
                 del self._unspecified_args[self._unspecified_args.index(SEARCH_SPACE)]
         if randomization_dimension is not None:
-            self.parameters.randomization_dimension._set(randomization_dimension, context)
+            self.parameters.randomization_dimension._set(np.asarray(randomization_dimension), context)
 
     def _function(self,
                  variable=None,
@@ -677,7 +681,7 @@ class OptimizationFunction(Function_Base):
             try:
                 initial_value = self.owner.objective_mechanism.parameters.value._get(context)
             except AttributeError:
-                initial_value = 0
+                initial_value = np.array(0)
 
             last_sample, last_value, all_samples, all_values = self._sequential_evaluate(initial_sample,
                                                                                          initial_value,
@@ -691,7 +695,7 @@ class OptimizationFunction(Function_Base):
                 self.parameters.num_estimates._get(context) is not None:
 
             # Reshape all_values so that aggregation can be performed over randomization dimension
-            num_estimates = int(self.parameters.num_estimates._get(context))
+            num_estimates = np.array(int(self.parameters.num_estimates._get(context)))
             num_evals = np.prod([d.num for d in self.search_space])
             num_param_combs = num_evals // num_estimates
 
@@ -824,7 +828,7 @@ class OptimizationFunction(Function_Base):
         state_features = ocm.parameters.state_feature_values._get(context)
         inputs, num_inputs_sets = ocm.agent_rep._parse_run_inputs(state_features, context)
 
-        num_evals = np.prod([d.num for d in self.search_space])
+        num_evals = np.prod([d._num for d in self.search_space])
 
         # Map allocations to values
         comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, [context.execution_id])
@@ -838,20 +842,20 @@ class OptimizationFunction(Function_Base):
 
         return outcomes, num_evals
 
-    def reset_grid(self):
+    def reset_grid(self, context):
         """Reset iterators in `search_space <GridSearch.search_space>`"""
         for s in self.search_space:
             s.reset()
-        self.grid = itertools.product(*[s for s in self.search_space])
+        self.parameters.grid._set(itertools.product(*[s for s in self.search_space]), context)
 
     def _traverse_grid(self, variable, sample_num, context=None):
         """Get next sample from grid.
         This is assigned as the `search_function <OptimizationFunction.search_function>` of the `OptimizationFunction`.
         """
         if self.is_initializing:
-            return [signal.start for signal in self.search_space]
+            return convert_to_np_array([signal._start for signal in self.search_space])
         try:
-            sample = next(self.grid)
+            sample = np.asarray(next(self.parameters.grid._get(context)))
         except StopIteration:
             raise OptimizationFunctionError("Expired grid in {} run from {} "
                                             "(execution_count: {}; num_iterations: {})".
@@ -1180,9 +1184,9 @@ class GradientOptimization(OptimizationFunction):
 
         def _parse_direction(self, direction):
             if direction == ASCENT:
-                return 1
+                return np.array(1)
             else:
-                return -1
+                return np.array(-1)
 
     @check_user_specified
     @beartype
@@ -1600,11 +1604,10 @@ class GridSearch(OptimizationFunction):
                     :default value: True
                     :type: ``bool``
         """
-        grid = Parameter(None)
         save_samples = Parameter(False, pnl_internal=True)
         save_values = Parameter(False, pnl_internal=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
         select_randomly_from_optimal_values = Parameter(False)
 
         direction = MAXIMIZE
@@ -1982,7 +1985,7 @@ class GridSearch(OptimizationFunction):
             in the order they were evaluated; otherwise it is empty.
         """
 
-        self.reset_grid()
+        self.reset_grid(context)
         return_all_samples = return_all_values = []
 
         direction = self.parameters.direction._get(context)

@@ -818,7 +818,6 @@ Class Reference
 import copy
 import inspect
 import logging
-import numbers
 import types
 import warnings
 from collections.abc import Iterable
@@ -854,7 +853,7 @@ from psyneulink.core.globals.parameters import Parameter, FunctionParameter, che
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
-    all_within_range, append_type_to_name, iscompatible, convert_to_np_array, safe_equals, parse_valid_identifier
+    all_within_range, is_numeric_scalar, append_type_to_name, convert_all_elements_to_np_array, iscompatible, convert_to_np_array, safe_equals, parse_valid_identifier, safe_len, try_extract_0d_array_item
 from psyneulink.core.scheduling.time import TimeScale
 
 __all__ = [
@@ -1241,16 +1240,12 @@ class TransferMechanism(ProcessingMechanism_Base):
                 return 'may not contain non-numeric entries'
 
         def _validate_clip(self, clip):
-            if clip:
-                if (not (isinstance(clip, (list,tuple)) and len(clip)==2
-                         and all(isinstance(i, numbers.Number)) for i in clip)):
+            if clip is not None:
+                if (not (isinstance(clip, (list, tuple, np.ndarray)) and len(clip) == 2
+                         and all(is_numeric_scalar(i)) for i in clip)):
                     return 'must be a tuple with two numbers.'
                 if not clip[0] < clip[1]:
                     return 'first item must be less than the second.'
-
-        def _parse_clip(self, clip):
-            if clip:
-                return tuple(clip)
 
         def _validate_integrator_mode(self, integrator_mode):
             if not isinstance(integrator_mode, bool):
@@ -1271,8 +1266,14 @@ class TransferMechanism(ProcessingMechanism_Base):
             return termination_measure
 
         def _validate_termination_threshold(self, termination_threshold):
-            if (termination_threshold is not None
-                    and not isinstance(termination_threshold, (int, float))):
+            if (
+                termination_threshold is not None
+                and not (
+                    isinstance(termination_threshold, np.ndarray)
+                    and termination_threshold.ndim == 0
+                    and isinstance(termination_threshold.item(), (int, float))
+                )
+            ):
                 return 'must be a float or int.'
 
         def _validate_termination_comparison_op(self, termination_comparison_op):
@@ -1439,7 +1440,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             noise = noise.execute
 
         if isinstance(noise, (np.ndarray, list)):
-            if len(noise) == 1:
+            if safe_len(noise) == 1:
                 pass
             # Variable is a list/array
             elif (not iscompatible(np.atleast_2d(noise), self.defaults.variable)
@@ -1450,12 +1451,14 @@ class TransferMechanism(ProcessingMechanism_Base):
                                      f"({np.shape(np.array(self.defaults.variable))}).")
             else:
                 for i in range(len(noise)):
-                    if isinstance(noise[i], DistributionFunction):
-                        noise[i] = noise[i].execute
-                    if (not np.isscalar(noise[i]) and not callable(noise[i])
-                            and not iscompatible(np.atleast_2d(noise[i]), self.defaults.variable[i])
-                            and not iscompatible(np.atleast_1d(noise[i]), self.defaults.variable[i])):
-                        raise MechanismError(f"The element '{noise[i]}' specified in 'noise' for {self.name} "
+                    elem = try_extract_0d_array_item(noise[i])
+
+                    if isinstance(elem, DistributionFunction):
+                        elem = elem.execute
+                    if (not isinstance(elem, (float, int)) and not callable(elem)
+                            and not iscompatible(np.atleast_2d(elem), self.defaults.variable[i])
+                            and not iscompatible(np.atleast_1d(elem), self.defaults.variable[i])):
+                        raise MechanismError(f"The element '{elem}' specified in 'noise' for {self.name} "
                                              f"is not valid; noise must be list or array must be floats or functions.")
 
         elif _is_control_spec(noise):
@@ -1788,6 +1791,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             previous_value = self.parameters.value.get_previous(context)
             status = measure([value, previous_value])
 
+        status = convert_all_elements_to_np_array(status)
         self.parameters.termination_measure_value._set(status, context=context, override=True)
 
         # comparator = self.parameters.termination_comparison_op._get(context)
@@ -1800,6 +1804,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     @handle_external_context()
     def _update_default_variable(self, new_default_variable, context=None):
+        new_default_variable = convert_all_elements_to_np_array(new_default_variable)
+
         if not self.parameters.initial_value._user_specified:
             integrator_function_variable = self._get_parsed_variable(
                 self.parameters.integrator_function,

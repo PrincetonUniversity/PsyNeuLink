@@ -176,10 +176,10 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     (ADDITIVE, EM_STORAGE_MECHANISM, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNALS, MULTIPLICATIVE,
      MULTIPLICATIVE_PARAM, MODULATION, NAME, OVERRIDE, OWNER_VALUE, PROJECTIONS, REFERENCE_VALUE, VARIABLE)
-from psyneulink.core.globals.parameters import Parameter, check_user_specified, FunctionParameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified, FunctionParameter, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import is_numeric, ValidParamSpecType, all_within_range
+from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric, all_within_range
 
 __all__ = [
     'EMStorageMechanism', 'EMStorageMechanismError',
@@ -212,19 +212,21 @@ def _memory_matrix_getter(owning_component=None, context=None)->list:
     # Get memory from learning_signals that project to retrieved_nodes
     if owning_component.is_initializing:
         # If initializing, learning_signals are still MappingProjections used to specify them, so get from them
-        memory = [retrieved_learning_signal.parameters.matrix.get(context)
+        memory = [retrieved_learning_signal.parameters.matrix._get(context)
                   for retrieved_learning_signal in learning_signals_for_retrieved]
     else:
         # Otherwise, get directly from the learning_signals
-        memory = [retrieved_learning_signal.efferents[0].receiver.owner.parameters.matrix.get(context)
+        memory = [retrieved_learning_signal.efferents[0].receiver.owner.parameters.matrix._get(context)
                   for retrieved_learning_signal in learning_signals_for_retrieved]
 
     # Get memory capacity from first length of first matrix (can use full set since might be ragged array)
     memory_capacity = len(memory[0])
 
     # Reorganize memory so that each row is an entry and each column is a field
-    return [[memory[j][i] for j in range(num_fields)]
-              for i in range(memory_capacity)]
+    return convert_all_elements_to_np_array([
+        [memory[j][i] for j in range(num_fields)]
+        for i in range(memory_capacity)
+    ])
 
 
 class EMStorageMechanismError(LearningMechanismError):
@@ -291,12 +293,12 @@ class EMStorageMechanism(LearningMechanism):
         specifies the function used to assign each item of the `variable <EMStorageMechanism.variable>` to the
         corresponding `field <EMStorageMechanism_Fields>` of the `memory_matrix <EMStorageMechanism.memory_matrix>`.
         It must take as its `variable <EMStorage.variable>` argument a list or 1d array of numeric values
-        (the "activity vector"); a ``memory_matrix`` argument that is a 2d array or matrix to which
+        (the "activity vector"); a ``memory_matrix`` argument that is a 2d array to which
         the `variable <EMStorageMechanism.variable>` is assigned; ``axis`` and ``storage_location`` arguments that
         determine where in ``memory_matrix`` the `variable <EMStorageMechanism.variable>` is stored; and optional
         ``storage_prob`` and ``decay_rate`` arguments that determine the probability with which storage occurs and
         the rate at which the `memory_matrix <EMStorageMechanism.memory_matrix>` decays, respectively.  The function
-        must return a list, 2d np.array or np.matrix for the corresponding `field <EMStorageMechanism_Fields>` of the
+        must return a list, 2d np.array for the corresponding `field <EMStorageMechanism_Fields>` of the
         `memory_matrix <EMStorageMechanism.memory_matrix>` that is updated (see `EMStorage` for additional details).
 
     learning_signals : List[ParameterPort, Projection, tuple[str, Projection] or dict] : default None
@@ -358,9 +360,10 @@ class EMStorageMechanism(LearningMechanism):
     function : LearningFunction or function : default EMStorage
         the function used to assign the value of each `field <EMStorageMechanism.fields>` to the corresponding entry
         in `memory_matrix <EMStorageMechanism.memory_matrix>`.  It must take as its `variable <EMSorage.variable>`
-        argument a list or 1d array of numeric values (an `entry <EMStorage.entry`) and return a list, 2d np.array or
-        np.matrix assigned to the corresponding `field <EMStorageMechanism_Fields>` of the `memory_matrix
-        <EMStorageMechanism.memory_matrix>`.
+        argument a list or 1d array of numeric values (an `entry
+        <EMStorage.entry`) and return a list, 2d np.array assigned to
+        the corresponding `field <EMStorageMechanism_Fields>` of the
+        `memory_matrix <EMStorageMechanism.memory_matrix>`.
 
     storage_prob : float
         specifies the probability with which the current entry is stored in the EMSorageMechanism's `memory_matrix
@@ -503,6 +506,9 @@ class EMStorageMechanism(LearningMechanism):
                                 parse_spec=True,
                                 constructor_argument='fields',
                                 )
+        fields = Parameter(
+            [], stateful=False, loggable=False, read_only=True, structural=True
+        )
         field_types = Parameter([],stateful=False,
                                 loggable=False,
                                 read_only=True,
@@ -587,8 +593,8 @@ class EMStorageMechanism(LearningMechanism):
                  function: Optional[Callable] = EMStorage,
                  learning_signals: Union[list, dict, ParameterPort, Projection, tuple] = None,
                  modulation: Optional[Literal[OVERRIDE, ADDITIVE, MULTIPLICATIVE]] = OVERRIDE,
-                 decay_rate: Optional[Union[int,float]] = 0.0,
-                 storage_prob: Optional[Union[int, float]] = 1.0,
+                 decay_rate: Optional[Union[int, float, np.ndarray]] = 0.0,
+                 storage_prob: Optional[Union[int, float, np.ndarray]] = 1.0,
                  params=None,
                  name=None,
                  prefs: Optional[ValidPrefSet] = None,
@@ -746,7 +752,7 @@ class EMStorageMechanism(LearningMechanism):
 
         decay_rate = self.parameters.decay_rate._get(context)      # modulable, so use getter
         storage_prob = self.parameters.storage_prob._get(context)  # modulable, so use getter
-        field_weights = self.parameters.field_weights.get(context) # modulable, so use getter
+        field_weights = self.parameters.field_weights._get(context)  # modulable, so use getter
         concatenation_node = self.concatenation_node
         num_match_fields = 1 if concatenation_node else len([i for i in self.field_types if i==1])
 
@@ -754,8 +760,10 @@ class EMStorageMechanism(LearningMechanism):
         if memory is None or self.is_initializing:
             if self.is_initializing:
                 # Return existing matrices for field_memories  # FIX: THE FOLLOWING DOESN'T TEST FUNCTION:
-                return [learning_signal.receiver.path_afferents[0].parameters.matrix.get()
-                        for learning_signal in self.learning_signals]
+                return convert_all_elements_to_np_array([
+                    learning_signal.receiver.path_afferents[0].parameters.matrix._get(context)
+                    for learning_signal in self.learning_signals
+                ])
             # Raise exception if not initializing and memory is not specified
             else:
                 owner_string = ""
@@ -782,7 +790,7 @@ class EMStorageMechanism(LearningMechanism):
                 #   get entry to store from variable of Projection matrix (memory_field)
                 #   to match_node in which memory will be stored (this is to accomodate concatenation_node)
                 axis = 0
-                entry_to_store = field_projection.variable
+                entry_to_store = field_projection.parameters.variable._get(context)
                 if concatenation_node is None:
                     assert np.all(entry_to_store == variable[i]),\
                         f"PROGRAM ERROR: misalignment between inputs and fields for storing them"
@@ -792,15 +800,20 @@ class EMStorageMechanism(LearningMechanism):
                 axis = 1
                 entry_to_store = variable[i - num_match_fields]
             # Get matrix containing memories for the field from the Projection
-            field_memory_matrix = field_projection.parameters.matrix.get(context)
+            field_memory_matrix = field_projection.parameters.matrix._get(context)
 
-            value.append(super(LearningMechanism, self)._execute(variable=entry_to_store,
-                                                                 memory_matrix=field_memory_matrix,
-                                                                 axis=axis,
-                                                                 storage_location=idx_of_weakest_memory,
-                                                                 storage_prob=storage_prob,
-                                                                 decay_rate=decay_rate,
-                                                                 context=context,
-                                                                 runtime_params=runtime_params))
-        self.parameters.value._set(value, context)
-        return value
+            # pass in field_projection matrix to EMStorage function
+            res = super(LearningMechanism, self)._execute(
+                variable=entry_to_store,
+                memory_matrix=copy_parameter_value(field_memory_matrix),
+                axis=axis,
+                storage_location=idx_of_weakest_memory,
+                storage_prob=storage_prob,
+                decay_rate=decay_rate,
+                context=context,
+                runtime_params=runtime_params
+            )
+            value.append(res)
+            # assign modified field_memory_matrix back
+            field_projection.parameters.matrix._set(res, context)
+        return convert_all_elements_to_np_array(value)

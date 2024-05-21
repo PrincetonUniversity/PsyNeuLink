@@ -39,7 +39,7 @@ from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, DIST_FUNCTION_TYPE, BETA, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_ANALYTICAL_FUNCTION, \
     EXPONENTIAL_DIST_FUNCTION, GAMMA_DIST_FUNCTION, HIGH, LOW, MULTIPLICATIVE_PARAM, NOISE, NORMAL_DIST_FUNCTION, \
     SCALE, STANDARD_DEVIATION, THRESHOLD, UNIFORM_DIST_FUNCTION, WALD_DIST_FUNCTION
-from psyneulink.core.globals.utilities import convert_to_np_array, ValidParamSpecType
+from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, convert_to_np_array, ValidParamSpecType
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
@@ -160,7 +160,7 @@ class NormalDist(DistributionFunction):
         mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM], mdf_name='scale')
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
 
     @check_user_specified
     @beartype
@@ -340,7 +340,7 @@ class UniformToNormalDist(DistributionFunction):
                     :type: ``float``
         """
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
@@ -465,7 +465,7 @@ class ExponentialDist(DistributionFunction):
         """
         beta = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
 
     @check_user_specified
     @beartype
@@ -592,7 +592,7 @@ class UniformDist(DistributionFunction):
         low = Parameter(0.0, modulable=True)
         high = Parameter(1.0, modulable=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
 
     @check_user_specified
     @beartype
@@ -748,7 +748,7 @@ class GammaDist(DistributionFunction):
                     :type: ``float``
         """
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         dist_shape = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
@@ -883,7 +883,7 @@ class WaldDist(DistributionFunction):
                     :type: ``float``
         """
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         mean = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
@@ -936,7 +936,7 @@ def _DriftDiffusionAnalytical_bias_getter(owning_component=None, context=None):
     starting_value = owning_component.parameters.starting_value._get(context)
     threshold = owning_component.parameters.threshold._get(context)
     try:
-        return (starting_value + threshold) / (2 * threshold)
+        return np.asarray((starting_value + threshold) / (2 * threshold))
     except TypeError:
         return None
 
@@ -1113,7 +1113,12 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         threshold = Parameter(1.0, modulable=True)
         noise = Parameter(0.5, modulable=True, setter=_noise_setter)
         non_decision_time = Parameter(.200, modulable=True)
-        bias = Parameter(0.5, read_only=True, getter=_DriftDiffusionAnalytical_bias_getter)
+        bias = Parameter(
+            0.5,
+            read_only=True,
+            getter=_DriftDiffusionAnalytical_bias_getter,
+            dependencies=['starting_value', 'threshold']
+        )
         # this is read only because conversion is disabled for this function
         # this occurs in other places as well
         enable_output_type_conversion = Parameter(
@@ -1321,9 +1326,11 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         # Compute moments (mean, variance, skew) of condiational response time distributions
         moments = DriftDiffusionAnalytical._compute_conditional_rt_moments(drift_rate, noise, threshold, bias, non_decision_time)
 
-        return rt, er, \
-               moments['mean_rt_plus'], moments['var_rt_plus'], moments['skew_rt_plus'], \
-               moments['mean_rt_minus'], moments['var_rt_minus'], moments['skew_rt_minus']
+        return convert_all_elements_to_np_array([
+            rt, er,
+            moments['mean_rt_plus'], moments['var_rt_plus'], moments['skew_rt_plus'],
+            moments['mean_rt_minus'], moments['var_rt_minus'], moments['skew_rt_minus']
+        ])
 
     @staticmethod
     def _compute_conditional_rt_moments(drift_rate, noise, threshold, starting_value, non_decision_time):

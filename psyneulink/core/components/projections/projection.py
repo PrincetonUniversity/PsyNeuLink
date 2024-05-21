@@ -426,7 +426,7 @@ from psyneulink.core.globals.keywords import \
     PROJECTION_RECEIVER, PROJECTION_SENDER, PROJECTION_TYPE, \
     RECEIVER, SENDER, STANDARD_ARGS, PORT, PORTS, WEIGHT, ADD_INPUT_PORT, ADD_OUTPUT_PORT, \
     PROJECTION_COMPONENT_CATEGORY
-from psyneulink.core.globals.parameters import Parameter, check_user_specified
+from psyneulink.core.globals.parameters import Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
@@ -741,7 +741,7 @@ class Projection_Base(Projection):
         # FIX: NEED TO KNOW HERE IF SENDER IS SPECIFIED AS A MECHANISM OR PORT
         try:
             # this should become _default_value when that is fully implemented
-            variable = self.sender.defaults.value
+            variable = copy_parameter_value(self.sender.defaults.value)
         except AttributeError:
             if receiver.prefs.verbosePref:
                 warnings.warn("Unable to get value of sender ({0}) for {1};  will assign default ({2})".

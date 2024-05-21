@@ -126,6 +126,11 @@ class Condition(*condition_class_parents, MDFSerializable):
                 return parse_valid_identifier(arg.name)
             elif isinstance(arg, Condition):
                 return arg.as_mdf_model()
+            elif (
+                isinstance(arg, np.number)
+                or (isinstance(arg, np.ndarray) and arg.ndim == 0)
+            ):
+                return arg.item()
             elif arg is None or isinstance(arg, numbers.Number):
                 return arg
             else:

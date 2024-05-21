@@ -48,120 +48,122 @@ def _run_ddm_with_params(
     return comp, data_to_fit
 
 
-# input_node_1 = pnl.ProcessingMechanism(size=1)
-# input_node_2 = pnl.ProcessingMechanism(size=2)
-# input_node_3 = pnl.ProcessingMechanism(size=3)
-# output_node = pnl.ProcessingMechanism(size=2)
-# model = pnl.Composition(
-#     [{input_node_1, input_node_2, input_node_3}, output_node], name="model"
-# )
-# pec = pnl.ParameterEstimationComposition(
-#     name="pec",
-#     model=model,
-#     parameters={("slope", output_node): np.linspace(1.0, 3.0, 3)},
-#     outcome_variables=output_node,
-#     objective_function=lambda x: np.sum(x),
-#     optimization_function=PECOptimizationFunction(method="differential_evolution"),
-# )
-# run_input_test_args = [
-#     pytest.param(
-#         {
-#             model: [
-#                 [np.array([1.0]), np.array([2.0, 3.0, 4.0]), np.array([5.0, 6.0])],
-#                 [np.array([7.0]), np.array([8.0, 9.0, 10.0]), np.array([11.0, 12.0])],
-#                 [
-#                     np.array([13.0]),
-#                     np.array([14.0, 15.0, 16.0]),
-#                     np.array([17.0, 18.0]),
-#                 ],
-#                 [
-#                     np.array([19.0]),
-#                     np.array([20.0, 21.0, 22.0]),
-#                     np.array([23.0, 24.0]),
-#                 ],
-#             ]
-#         },
-#         None,
-#         id="pec_good",
-#     ),
-#     pytest.param(
-#         {
-#             model: [
-#                 [np.array([1.0]), np.array([2.0, 3.0, 4.0])],
-#                 [np.array([7.0]), np.array([8.0, 9.0, 10.0]), np.array([11.0, 12.0])],
-#                 [
-#                     np.array([13.0]),
-#                     np.array([14.0, 15.0, 16.0]),
-#                     np.array([17.0, 18.0]),
-#                 ],
-#                 [
-#                     np.array([19.0]),
-#                     np.array([20.0, 21.0, 22.0]),
-#                     np.array([23.0, 24.0]),
-#                 ],
-#             ]
-#         },
-#         f"The array in the dict specified for the 'inputs' arg of pec.run() is badly formatted: "
-#         f"the length of each item in the outer dimension (a trial's worth of inputs) "
-#         f"must be equal to the number of inputs to 'model' (3).",
-#         id="pec_bad",
-#     ),
-#     pytest.param(
-#         {
-#             input_node_1: [
-#                 [np.array([1.0])],
-#                 [np.array([7.0])],
-#                 [np.array([13.0])],
-#                 [np.array([19.0])],
-#             ],
-#             input_node_2: [
-#                 [np.array([2.0, 3.0, 4])],
-#                 [np.array([8.0, 9.0, 10.0])],
-#                 [np.array([14.0, 15.0, 16.0])],
-#                 [np.array([20.0, 21.0, 22.0])],
-#             ],
-#             input_node_3: [
-#                 [np.array([5.0, 6.0])],
-#                 [np.array([11.0, 12.0])],
-#                 [np.array([17.0, 18.0])],
-#                 [np.array([23.0, 24.0])],
-#             ],
-#         },
-#         None,
-#         id="model_good",
-#     ),
-#     pytest.param(
-#         {
-#             input_node_1: [
-#                 [np.array([1.0])],
-#                 [np.array([7.0])],
-#                 [np.array([13.0])],
-#                 [np.array([19.0])],
-#             ],
-#             input_node_2: [
-#                 [np.array([2.0, 3.0, 4])],
-#                 [np.array([8.0, 9.0, 10.0])],
-#                 [np.array([14.0, 15.0, 16.0])],
-#                 [np.array([20.0, 21.0, 22.0])],
-#             ],
-#         },
-#         f"The dict specified in the `input` arg of pec.run() is badly formatted: "
-#         f"the number of entries should equal the number of inputs to 'model' (3).",
-#         id="model_bad",
-#     ),
-# ]
+input_node_1 = pnl.ProcessingMechanism(size=1)
+input_node_2 = pnl.ProcessingMechanism(size=2)
+input_node_3 = pnl.ProcessingMechanism(size=3)
+output_node = pnl.ProcessingMechanism(size=2)
+model = pnl.Composition(
+    [{input_node_1, input_node_2, input_node_3}, output_node], name="model"
+)
+pec = pnl.ParameterEstimationComposition(
+    name="pec",
+    model=model,
+    parameters={("slope", output_node): np.linspace(1.0, 3.0, 3)},
+    outcome_variables=output_node,
+    objective_function=lambda x: np.sum(x),
+    optimization_function=PECOptimizationFunction(method="differential_evolution"),
+)
+run_input_test_args = [
+    pytest.param(
+        {
+            model: [
+                [np.array([1.0]), np.array([2.0, 3.0, 4.0]), np.array([5.0, 6.0])],
+                [np.array([7.0]), np.array([8.0, 9.0, 10.0]), np.array([11.0, 12.0])],
+                [
+                    np.array([13.0]),
+                    np.array([14.0, 15.0, 16.0]),
+                    np.array([17.0, 18.0]),
+                ],
+                [
+                    np.array([19.0]),
+                    np.array([20.0, 21.0, 22.0]),
+                    np.array([23.0, 24.0]),
+                ],
+            ]
+        },
+        None,
+        id="pec_good",
+    ),
+    pytest.param(
+        {
+            model: [
+                [np.array([1.0]), np.array([2.0, 3.0, 4.0])],
+                [np.array([7.0]), np.array([8.0, 9.0, 10.0]), np.array([11.0, 12.0])],
+                [
+                    np.array([13.0]),
+                    np.array([14.0, 15.0, 16.0]),
+                    np.array([17.0, 18.0]),
+                ],
+                [
+                    np.array([19.0]),
+                    np.array([20.0, 21.0, 22.0]),
+                    np.array([23.0, 24.0]),
+                ],
+            ]
+        },
+        f"The array in the dict specified for the 'inputs' arg of pec.run() is badly formatted: "
+        f"the length of each item in the outer dimension (a trial's worth of inputs) "
+        f"must be equal to the number of inputs to 'model' (3).",
+        id="pec_bad",
+    ),
+    pytest.param(
+        {
+            input_node_1: [
+                [np.array([1.0])],
+                [np.array([7.0])],
+                [np.array([13.0])],
+                [np.array([19.0])],
+            ],
+            input_node_2: [
+                [np.array([2.0, 3.0, 4])],
+                [np.array([8.0, 9.0, 10.0])],
+                [np.array([14.0, 15.0, 16.0])],
+                [np.array([20.0, 21.0, 22.0])],
+            ],
+            input_node_3: [
+                [np.array([5.0, 6.0])],
+                [np.array([11.0, 12.0])],
+                [np.array([17.0, 18.0])],
+                [np.array([23.0, 24.0])],
+            ],
+        },
+        None,
+        id="model_good",
+    ),
+    pytest.param(
+        {
+            input_node_1: [
+                [np.array([1.0])],
+                [np.array([7.0])],
+                [np.array([13.0])],
+                [np.array([19.0])],
+            ],
+            input_node_2: [
+                [np.array([2.0, 3.0, 4])],
+                [np.array([8.0, 9.0, 10.0])],
+                [np.array([14.0, 15.0, 16.0])],
+                [np.array([20.0, 21.0, 22.0])],
+            ],
+        },
+        f"The dict specified in the `input` arg of pec.run() is badly formatted: "
+        f"the number of entries should equal the number of inputs to 'model' (3).",
+        id="model_bad",
+    ),
+]
 
 
-# @pytest.mark.parametrize("inputs_dict, error_msg", run_input_test_args)
-# def test_pec_run_input_formats(inputs_dict, error_msg):
-#     if error_msg:
-#         with pytest.raises(pnl.ParameterEstimationCompositionError) as error:
-#             pec.run(inputs=inputs_dict)
-#         assert error.value.args[0] == error_msg
-#     else:
-#         pec.run(inputs=inputs_dict)
+@pytest.mark.composition
+@pytest.mark.parametrize("inputs_dict, error_msg", run_input_test_args)
+def test_pec_run_input_formats(inputs_dict, error_msg):
+    if error_msg:
+        with pytest.raises(pnl.ParameterEstimationCompositionError) as error:
+            pec.run(inputs=inputs_dict)
+        assert error.value.args[0] == error_msg
+    else:
+        pec.run(inputs=inputs_dict)
 
 
+@pytest.mark.composition
 @pytest.mark.parametrize(
     "opt_method, optuna_kwargs, result",
     [
@@ -388,6 +390,7 @@ def test_parameter_estimation_ddm_cond(func_mode):
     pytest.param(None, id='no_likelihood_include_mask'),]
 )
 # func_mode is a hacky wa to get properly marked; Python, LLVM, and CUDA
+@pytest.mark.composition
 def test_parameter_estimation_ddm_mle(func_mode, likelihood_include_mask):
     """Test parameter estimation of a DDM in integrator mode with MLE."""
 
@@ -471,6 +474,7 @@ def test_parameter_estimation_ddm_mle(func_mode, likelihood_include_mask):
     )
 
 
+@pytest.mark.composition
 def test_pec_bad_outcome_var_spec():
     """
     Tests that exception is raised when outcome variables specifies and output port that doesn't exist on the
@@ -542,6 +546,7 @@ def test_pec_bad_outcome_var_spec():
     assert "The number of columns in the data to fit must match" in str(ex)
 
 
+@pytest.mark.composition
 def test_pec_controller_specified():
     """Test that an exception is raised if a controller is specified for the PEC."""
     with pytest.raises(ValueError):

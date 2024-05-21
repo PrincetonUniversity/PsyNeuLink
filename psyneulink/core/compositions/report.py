@@ -672,7 +672,6 @@ class Report:
                 ) -> 'Report':
 
         if cls._instance is None:
-
             # Validate arguments
             # assert context, "PROGRAM ERROR: Call to Report() without 'context' argument."
             source = f'call to execution method for {caller.name or ""}'
@@ -685,8 +684,8 @@ class Report:
             if not isinstance(report_simulations, ReportSimulations):
                 raise ReportError(f"Bad 'report_simulations' arg in {source}: '{report_simulations}'; "
                                   f"must be {ReportSimulations} option.")
-            cls._report_to_devices = convert_to_list(report_to_devices or ReportDevices.CONSOLE)
-            if not all(isinstance(a, ReportDevices) for a in cls._report_to_devices):
+            _report_to_devices = convert_to_list(report_to_devices or ReportDevices.CONSOLE)
+            if not all(isinstance(a, ReportDevices) for a in _report_to_devices):
                 raise ReportError(f"Bad 'report_to_devices' arg in {source}: '{report_to_devices}'; "
                                   f"must be a one or a list of {ReportDevices} option(s).")
 
@@ -694,52 +693,53 @@ class Report:
             cls._instance = super(Report, cls).__new__(cls)
 
             # Assign option properties
-            cls._report_progress = report_progress
-            cls._report_output = report_output
-            cls._report_params = report_params
-            # cls._reporting_enabled = report_output is not ReportOutput.OFF or cls._report_progress
-            cls._reporting_enabled = report_output is not ReportOutput.OFF or report_progress is not ReportProgress.OFF
-            cls._report_simulations = report_simulations
-            cls._rich_console = ReportDevices.CONSOLE in cls._report_to_devices
-            cls._rich_divert = ReportDevices.DIVERT in cls._report_to_devices
-            cls._record_reports = ReportDevices.RECORD in cls._report_to_devices
-            cls._recording_enabled = any(i is not ReportDevices.CONSOLE for i in cls._report_to_devices)
+            cls._instance._report_to_devices = _report_to_devices
+            cls._instance._report_progress = report_progress
+            cls._instance._report_output = report_output
+            cls._instance._report_params = report_params
+            # cls._instance._reporting_enabled = report_output is not ReportOutput.OFF or cls._instance._report_progress
+            cls._instance._reporting_enabled = report_output is not ReportOutput.OFF or report_progress is not ReportProgress.OFF
+            cls._instance._report_simulations = report_simulations
+            cls._instance._rich_console = ReportDevices.CONSOLE in cls._instance._report_to_devices
+            cls._instance._rich_divert = ReportDevices.DIVERT in cls._instance._report_to_devices
+            cls._instance._record_reports = ReportDevices.RECORD in cls._instance._report_to_devices
+            cls._instance._recording_enabled = any(i is not ReportDevices.CONSOLE for i in cls._instance._report_to_devices)
             # Enable rich if reporting output or progress and using console or recording
-            cls._use_rich = (cls._reporting_enabled
-                             and (cls._rich_console or cls._rich_divert or cls._record_reports))
-            cls._use_pnl_view = ReportDevices.PNL_VIEW in cls._report_to_devices
+            cls._instance._use_rich = (cls._instance._reporting_enabled
+                             and (cls._instance._rich_console or cls._instance._rich_divert or cls._instance._record_reports))
+            cls._instance._use_pnl_view = ReportDevices.PNL_VIEW in cls._instance._report_to_devices
 
-            cls._outermost_comp = caller
-            cls._execution_stack = []
-            cls._trial_header_stack = []
+            cls._instance._outermost_comp = caller
+            cls._instance._execution_stack = []
+            cls._instance._trial_header_stack = []
 
-            cls.depth_indent_factor = depth_indent_factor
-            cls.padding_indent = padding_indent
-            cls._padding_indent_str = padding_indent * ' '
-            cls.padding_lines = padding_lines
+            cls._instance.depth_indent_factor = depth_indent_factor
+            cls._instance.padding_indent = padding_indent
+            cls._instance._padding_indent_str = padding_indent * ' '
+            cls._instance.padding_lines = padding_lines
 
             # Instantiate rich progress context object
             # - it is not started until the self.start_report() method is called
             # - auto_refresh is disabled to accommodate IDEs (such as PyCharm and Jupyter Notebooks)
-            if cls._use_rich:
+            if cls._instance._use_rich:
                 # Set up RECORDING
-                if cls._record_reports:
-                    cls._recording_console = Console()
+                if cls._instance._record_reports:
+                    cls._instance._recording_console = Console()
                 # Set up DIVERT
                 file = False
-                if cls._rich_divert:
+                if cls._instance._rich_divert:
                     file = StringIO()
-                cls._instance._rich_progress = RichProgress(auto_refresh=False, console=Console(file=file))
+                cls._instance._instance._rich_progress = RichProgress(auto_refresh=False, console=Console(file=file))
 
             # Instantiate interface to PsyNeuLinkView
-            if cls._use_pnl_view:
+            if cls._instance._use_pnl_view:
                 warnings.warn("'pnl_view' not yet supported as an option for report_progress of Composition.run()")
 
-            cls.output_reports = {}
-            cls._recorded_reports = str()
-            cls._rich_diverted_reports = str()
+            cls._instance.output_reports = {}
+            cls._instance._recorded_reports = str()
+            cls._instance._rich_diverted_reports = str()
 
-            cls._ref_count = 0
+            cls._instance._ref_count = 0
 
         return cls._instance
 

@@ -633,13 +633,13 @@ from psyneulink.core.globals.keywords import \
     MAPPING_PROJECTION, MECHANISM_VALUE, NAME, OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, \
     OWNER_VALUE, PARAMS, PARAMS_DICT, PROJECTION, PROJECTIONS, RECEIVER, REFERENCE_VALUE, STANDARD_OUTPUT_PORTS, PORT, \
     VALUE, VARIABLE, \
-    output_port_spec_to_parameter_name, INPUT_PORT_VARIABLES
-from psyneulink.core.globals.parameters import Parameter, check_user_specified
+    output_port_spec_to_parameter_name, INPUT_PORT_VARIABLES, SHARED_COMPONENT_TYPES
+from psyneulink.core.globals.parameters import Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
-    convert_to_np_array, is_numeric, iscompatible, make_readonly_property, recursive_update, parse_valid_identifier
+    convert_all_elements_to_np_array, convert_to_np_array, is_numeric, iscompatible, make_readonly_property, recursive_update, parse_valid_identifier
 
 __all__ = [
     'OutputPort', 'OutputPortError', 'PRIMARY', 'SEQUENTIAL', 'StandardOutputPorts', 'StandardOutputPortsError',
@@ -743,12 +743,16 @@ def _parse_output_port_variable(variable, owner, context=None, output_port_name=
         variable = [variable]
 
     if len(variable)== 1:
-        return parse_variable_spec(variable[0])
+        fct_variable = parse_variable_spec(variable[0])
+    else:
+        fct_variable = []
+        for spec in variable:
+            fct_variable.append(parse_variable_spec(spec))
 
-    fct_variable = []
-    for spec in variable:
-        fct_variable.append(parse_variable_spec(spec))
-    return fct_variable
+    if fct_variable is not None:
+        fct_variable = convert_all_elements_to_np_array(fct_variable)
+
+    return copy_parameter_value(fct_variable)
 
 
 def _output_port_variable_getter(owning_component=None, context=None, output_port_name=None):
@@ -1205,6 +1209,8 @@ class OutputPort(Port_Base):
                     fct_variable = owner.function(owner.defaults.variable)[0]
             except AttributeError:
                 fct_variable = None
+            else:
+                fct_variable = np.asarray(fct_variable)
         elif type(fct_variable) is str:
             is_PARAMS_DICT = fct_variable == PARAMS_DICT
 
@@ -1421,7 +1427,7 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
                             if isinstance(std_output_port[FUNCTION], Function):
                                 # we should not reuse standard_output_port Function
                                 # instances across multiple ports
-                                std_output_port[FUNCTION] = copy.deepcopy(std_output_port[FUNCTION], memo={'no_shared': True})
+                                std_output_port[FUNCTION] = copy.deepcopy(std_output_port[FUNCTION], memo={SHARED_COMPONENT_TYPES: None})
                         except KeyError:
                             pass
 
