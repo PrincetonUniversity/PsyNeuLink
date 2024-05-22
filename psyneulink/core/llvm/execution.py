@@ -143,6 +143,7 @@ class Execution:
 
         for idx, attribute in enumerate(getattr(component, ids)):
             compiled_attribute_param = getattr(params, params._fields_[idx][0])
+            compiled_attribute_param_ctype = params._fields_[idx][1]
 
             def _enumerate_recurse(elements):
                 for element_id, element in enumerate(elements):
@@ -198,13 +199,7 @@ class Execution:
                 elif condition(pnl_param):
 
                     # Replace empty structures with None
-                    try:
-                        size_of = ctypes.sizeof(compiled_attribute_param)
-                    except TypeError:
-                        # will be a 0-dim array
-                        size_of = 1
-
-                    if size_of == 0:
+                    if ctypes.sizeof(compiled_attribute_param_ctype) == 0:
                         value = None
                     else:
                         value = np.ctypeslib.as_array(compiled_attribute_param)
