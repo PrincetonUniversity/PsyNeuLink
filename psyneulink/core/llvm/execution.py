@@ -174,6 +174,14 @@ class Execution:
                 if attribute == "ring_memory":
                     continue
 
+                # TODO: Reconstruct Time class
+                if attribute == "num_executions":
+                    continue
+
+                # TODO: Add support for syncing optimizer state
+                if attribute == "optimizer":
+                    continue
+
                 # "old_val" is a helper storage in compiled RecurrentTransferMechanism
                 # to workaround the fact that compiled projections do no pull values
                 # from their source output ports
