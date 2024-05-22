@@ -22,7 +22,6 @@ from typing import Callable, Optional
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import Context
-from psyneulink.core.globals.parameters import is_array_like
 
 from . import helpers, jit_engine, builder_context
 from .debug import debug_env
@@ -101,45 +100,43 @@ class Execution:
             struct = struct_ty(*initializer)
             struct_end = time.time()
 
+            setattr(self, name, struct)
 
             if "time_stat" in self._debug_env:
                 print("Time to get initializer for struct:", name,
                       "for", self._obj.name, ":", init_end - init_start)
                 print("Time to instantiate struct:", name,
                       "for", self._obj.name, ":", struct_end - init_end)
-            setattr(self, name, struct)
+
             if "stat" in self._debug_env:
                 print("Instantiated struct:", name, "( size:" ,
                       _pretty_size(ctypes.sizeof(struct_ty)), ")",
                       "for", self._obj.name)
 
-            def cond_select_np_arrs(p):
-                return is_array_like(p.default_value)
 
             if len(self._execution_contexts) == 1:
                 if name == '_state':
-                    self.writeback_state_to_pnl(cond_select_np_arrs)
+                    self.writeback_state_to_pnl()
                 elif name == '_param':
-                    self.writeback_params_to_pnl(cond_select_np_arrs)
+                    self.writeback_params_to_pnl()
 
         return struct
 
-    def writeback_state_to_pnl(self, condition:Callable=lambda p: True):
+    def writeback_state_to_pnl(self):
 
         self._copy_params_to_pnl(self._execution_contexts[0],
                                  self._obj,
                                  self._state_struct,
-                                 "llvm_state_ids",
-                                 condition)
+                                 "llvm_state_ids")
 
-    def writeback_params_to_pnl(self, condition: Callable = lambda p: True):
+    def writeback_params_to_pnl(self):
+
         self._copy_params_to_pnl(self._execution_contexts[0],
                                  self._obj,
                                  self._param_struct,
-                                 "llvm_param_ids",
-                                 condition)
+                                 "llvm_param_ids")
 
-    def _copy_params_to_pnl(self, context, component, params, ids:str, condition:Callable):
+    def _copy_params_to_pnl(self, context, component, params, ids:str):
 
         for idx, attribute in enumerate(getattr(component, ids)):
             compiled_attribute_param = getattr(params, params._fields_[idx][0])
@@ -152,8 +149,7 @@ class Execution:
                     self._copy_params_to_pnl(context=context,
                                              component=element,
                                              params=element_params,
-                                             ids=ids,
-                                             condition=condition)
+                                             ids=ids)
 
             # Handle custom compiled-only structures by name
             if attribute == 'nodes':
@@ -197,14 +193,13 @@ class Execution:
                     self._copy_params_to_pnl(context=context,
                                              component=pnl_value,
                                              params=compiled_attribute_param,
-                                             ids=ids,
-                                             condition=condition)
+                                             ids=ids)
 
                 elif attribute == "input_ports" or attribute == "output_ports":
                     _enumerate_recurse(pnl_value)
 
-                # Writeback parameter value if the condition matches
-                elif condition(pnl_param):
+                # Writeback parameter value
+                else:
 
                     # Replace empty structures with None
                     if ctypes.sizeof(compiled_attribute_param_ctype) == 0:
