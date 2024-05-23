@@ -113,28 +113,20 @@ class Execution:
                       _pretty_size(ctypes.sizeof(struct_ty)), ")",
                       "for", self._obj.name)
 
-
             if len(self._execution_contexts) == 1:
                 if name == '_state':
-                    self.writeback_state_to_pnl()
+                    self._copy_params_to_pnl(self._execution_contexts[0],
+                                             self._obj,
+                                             self._state_struct,
+                                             "llvm_state_ids")
+
                 elif name == '_param':
-                    self.writeback_params_to_pnl()
+                    self._copy_params_to_pnl(self._execution_contexts[0],
+                                             self._obj,
+                                             self._param_struct,
+                                             "llvm_param_ids")
 
         return struct
-
-    def writeback_state_to_pnl(self):
-
-        self._copy_params_to_pnl(self._execution_contexts[0],
-                                 self._obj,
-                                 self._state_struct,
-                                 "llvm_state_ids")
-
-    def writeback_params_to_pnl(self):
-
-        self._copy_params_to_pnl(self._execution_contexts[0],
-                                 self._obj,
-                                 self._param_struct,
-                                 "llvm_param_ids")
 
     def _copy_params_to_pnl(self, context, component, params, ids:str):
 
@@ -222,12 +214,7 @@ class Execution:
                             except ValueError:
                                 pass
 
-                    pnl_param.set(
-                        value,
-                        context=context,
-                        override=True,
-                        compilation_sync=True,
-                    )
+                    pnl_param.set(value, context=context, override=True, compilation_sync=True)
 
 
 class CUDAExecution(Execution):
