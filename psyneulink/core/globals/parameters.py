@@ -1556,7 +1556,8 @@ class Parameter(ParameterBase):
         if self.setter is not None:
             kwargs = {
                 **self._default_setter_kwargs,
-                **kwargs
+                **kwargs,
+                'compilation_sync':compilation_sync,
             }
             value = call_with_pruned_args(self.setter, value, context=context, **kwargs)
 
