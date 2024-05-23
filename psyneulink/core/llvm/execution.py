@@ -178,7 +178,10 @@ class Execution:
 
                 # Handle PNL parameters
                 pnl_param = getattr(component.parameters, attribute)
-                pnl_value = pnl_param.get(context=context)
+
+                # Use ._get to retrieve underlying numpy arrays
+                # (.get will extract a scalar if originally set as a scalar)
+                pnl_value = pnl_param._get(context=context)
 
                 # Recurse if the value is a PNL object with its own parameters
                 if hasattr(pnl_value, 'parameters'):
@@ -204,13 +207,9 @@ class Execution:
                             value = value[-1]
 
                         # Try to match the shape of the old value
-                        # Use ._get to retrieve underlying numpy arrays
-                        # (.get will extract a scalar if originally set
-                        # as a scalar)
-                        old_value = pnl_param._get(context)
-                        if hasattr(old_value, 'shape'):
+                        if hasattr(pnl_value, 'shape'):
                             try:
-                                value = value.reshape(old_value.shape)
+                                value = value.reshape(pnl_value.shape)
                             except ValueError:
                                 pass
 
