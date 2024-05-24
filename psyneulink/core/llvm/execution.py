@@ -206,12 +206,19 @@ class Execution:
                         if "state" in ids:
                             value = value[-1]
 
-                        # Try to match the shape of the old value
-                        if hasattr(pnl_value, 'shape'):
-                            try:
-                                value = value.reshape(pnl_value.shape)
-                            except ValueError:
-                                pass
+                        # Reshape to match the shape of the old value.
+                        # Do not try to reshape ragged arrays.
+                        if getattr(pnl_value, 'dtype', object) != object and pnl_value.shape != value.shape:
+
+                            # Reshape to match numpy 0d arrays and "matrix"
+                            # parameters that are flattened in compiled form
+                            assert pnl_value.shape == () or pnl_param.name == "matrix", \
+                                "{}: {} vs. {}".format(pnl_param.name, pnl_value.shape, value.shape)
+
+                            # Use an assignment instead of reshape().
+                            # The latter would silently create a copy if the shape
+                            # could not be achieved in metadata (stride, type, ...)
+                            value.shape = pnl_value.shape
 
                     pnl_param.set(value, context=context, override=True, compilation_sync=True)
 
