@@ -22,7 +22,6 @@ from typing import Callable, Optional
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import Context
-from psyneulink.core.globals.parameters import is_array_like
 
 from . import helpers, jit_engine, builder_context
 from .debug import debug_env
@@ -101,78 +100,59 @@ class Execution:
             struct = struct_ty(*initializer)
             struct_end = time.time()
 
+            setattr(self, name, struct)
 
             if "time_stat" in self._debug_env:
                 print("Time to get initializer for struct:", name,
                       "for", self._obj.name, ":", init_end - init_start)
                 print("Time to instantiate struct:", name,
                       "for", self._obj.name, ":", struct_end - init_end)
-            setattr(self, name, struct)
+
             if "stat" in self._debug_env:
                 print("Instantiated struct:", name, "( size:" ,
                       _pretty_size(ctypes.sizeof(struct_ty)), ")",
                       "for", self._obj.name)
 
-            def cond_select_np_arrs(p):
-                return is_array_like(p.default_value)
-
             if len(self._execution_contexts) == 1:
                 if name == '_state':
-                    self.writeback_state_to_pnl(cond_select_np_arrs)
+                    self._copy_params_to_pnl(self._execution_contexts[0],
+                                             self._obj,
+                                             self._state_struct,
+                                             "llvm_state_ids")
+
                 elif name == '_param':
-                    self.writeback_params_to_pnl(cond_select_np_arrs)
+                    self._copy_params_to_pnl(self._execution_contexts[0],
+                                             self._obj,
+                                             self._param_struct,
+                                             "llvm_param_ids")
 
         return struct
 
-    def writeback_state_to_pnl(self, condition:Callable=lambda p: True):
-
-        self._copy_params_to_pnl(self._execution_contexts[0],
-                                 self._obj,
-                                 self._state_struct,
-                                 "llvm_state_ids",
-                                 condition)
-
-    def writeback_params_to_pnl(self, condition: Callable = lambda p: True):
-        self._copy_params_to_pnl(self._execution_contexts[0],
-                                 self._obj,
-                                 self._param_struct,
-                                 "llvm_param_ids",
-                                 condition)
-
-    def _copy_params_to_pnl(self, context, component, params, ids:str, condition:Callable):
+    def _copy_params_to_pnl(self, context, component, params, ids:str):
 
         for idx, attribute in enumerate(getattr(component, ids)):
             compiled_attribute_param = getattr(params, params._fields_[idx][0])
+            compiled_attribute_param_ctype = params._fields_[idx][1]
+
+            def _enumerate_recurse(elements):
+                for element_id, element in enumerate(elements):
+                    element_params = getattr(compiled_attribute_param,
+                                             compiled_attribute_param._fields_[element_id][0])
+                    self._copy_params_to_pnl(context=context,
+                                             component=element,
+                                             params=element_params,
+                                             ids=ids)
 
             # Handle custom compiled-only structures by name
             if attribute == 'nodes':
-                for node_id, node in enumerate(component._all_nodes):
-                    node_params = getattr(compiled_attribute_param,
-                                          compiled_attribute_param._fields_[node_id][0])
-                    self._copy_params_to_pnl(context=context,
-                                             component=node,
-                                             params=node_params,
-                                             ids=ids,
-                                             condition=condition)
+                _enumerate_recurse(component._all_nodes)
+
             elif attribute == 'projections':
-                for proj_id, projection in enumerate(component._inner_projections):
-                    projection_params = getattr(compiled_attribute_param,
-                                                compiled_attribute_param._fields_[proj_id][0])
-                    self._copy_params_to_pnl(context=context,
-                                             component=projection,
-                                             params=projection_params,
-                                             ids=ids,
-                                             condition=condition)
+                _enumerate_recurse(component._inner_projections)
 
             elif attribute == '_parameter_ports':
-                for pp_id, param_port in enumerate(component._parameter_ports):
-                    port_params = getattr(compiled_attribute_param,
-                                          compiled_attribute_param._fields_[pp_id][0])
-                    self._copy_params_to_pnl(context=context,
-                                             component=param_port,
-                                             params=port_params,
-                                             ids=ids,
-                                             condition=condition)
+                _enumerate_recurse(component._parameter_ports)
+
             else:
                 # TODO: Reconstruct Python RandomState
                 if attribute == "random_state":
@@ -180,6 +160,14 @@ class Execution:
 
                 # TODO: Reconstruct Python memory storage
                 if attribute == "ring_memory":
+                    continue
+
+                # TODO: Reconstruct Time class
+                if attribute == "num_executions":
+                    continue
+
+                # TODO: Add support for syncing optimizer state
+                if attribute == "optimizer":
                     continue
 
                 # "old_val" is a helper storage in compiled RecurrentTransferMechanism
@@ -190,37 +178,26 @@ class Execution:
 
                 # Handle PNL parameters
                 pnl_param = getattr(component.parameters, attribute)
-                pnl_value = pnl_param.get(context=context)
+
+                # Use ._get to retrieve underlying numpy arrays
+                # (.get will extract a scalar if originally set as a scalar)
+                pnl_value = pnl_param._get(context=context)
 
                 # Recurse if the value is a PNL object with its own parameters
                 if hasattr(pnl_value, 'parameters'):
                     self._copy_params_to_pnl(context=context,
                                              component=pnl_value,
                                              params=compiled_attribute_param,
-                                             ids=ids,
-                                             condition=condition)
+                                             ids=ids)
 
                 elif attribute == "input_ports" or attribute == "output_ports":
-                    for port_id, port in enumerate(pnl_value):
-                        port_params = getattr(compiled_attribute_param,
-                                              compiled_attribute_param._fields_[port_id][0])
-                        self._copy_params_to_pnl(context=context,
-                                                 component=port,
-                                                 params=port_params,
-                                                 ids=ids,
-                                                 condition=condition)
+                    _enumerate_recurse(pnl_value)
 
-                # Writeback parameter value if the condition matches
-                elif condition(pnl_param):
+                # Writeback parameter value
+                else:
 
                     # Replace empty structures with None
-                    try:
-                        size_of = ctypes.sizeof(compiled_attribute_param)
-                    except TypeError:
-                        # will be a 0-dim array
-                        size_of = 1
-
-                    if size_of == 0:
+                    if ctypes.sizeof(compiled_attribute_param_ctype) == 0:
                         value = None
                     else:
                         value = np.ctypeslib.as_array(compiled_attribute_param)
@@ -229,23 +206,21 @@ class Execution:
                         if "state" in ids:
                             value = value[-1]
 
-                        # Try to match the shape of the old value
-                        # Use ._get to retrieve underlying numpy arrays
-                        # (.get will extract a scalar if originally set
-                        # as a scalar)
-                        old_value = pnl_param._get(context)
-                        if hasattr(old_value, 'shape'):
-                            try:
-                                value = value.reshape(old_value.shape)
-                            except ValueError:
-                                pass
+                        # Reshape to match the shape of the old value.
+                        # Do not try to reshape ragged arrays.
+                        if getattr(pnl_value, 'dtype', object) != object and pnl_value.shape != value.shape:
 
-                    pnl_param.set(
-                        value,
-                        context=context,
-                        override=True,
-                        compilation_sync=True,
-                    )
+                            # Reshape to match numpy 0d arrays and "matrix"
+                            # parameters that are flattened in compiled form
+                            assert pnl_value.shape == () or pnl_param.name == "matrix", \
+                                "{}: {} vs. {}".format(pnl_param.name, pnl_value.shape, value.shape)
+
+                            # Use an assignment instead of reshape().
+                            # The latter would silently create a copy if the shape
+                            # could not be achieved in metadata (stride, type, ...)
+                            value.shape = pnl_value.shape
+
+                    pnl_param.set(value, context=context, override=True, compilation_sync=True)
 
 
 class CUDAExecution(Execution):
