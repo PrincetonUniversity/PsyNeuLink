@@ -870,7 +870,7 @@ class Report:
             self._depth_indent_i = self._depth_str_i = ''
             if self._run_mode is SIMULATION or self._execution_stack_depth:
                 self._depth_indent_i = self.depth_indent_factor * self._execution_stack_depth * ' '
-                self._depth_str_i = f' (depth: {self._execution_stack_depth-1})'
+                self._depth_str_i = f' (depth: {self._execution_stack_depth - 1})'
 
             id = self._rich_progress.add_task(f"[red]{self._depth_indent_i}{comp.name}: "
                                               f"{self._run_mode}ing {self._depth_str_i}...",
@@ -1764,9 +1764,9 @@ class Report:
             self._depth_indent = self._depth_str = ''
             if simulation_mode or self._execution_stack_depth>1:
                 self._depth_indent = self.depth_indent_factor * self._execution_stack_depth * ' '
-                self._depth_str = f' (depth: {self._execution_stack_depth-1})'
+                self._depth_str = f' (depth: {self._execution_stack_depth - 1})'
             update = f'{self._depth_indent}{caller.name}: ' \
-                     f'{self._run_mode}ed {trial_num+1}{num_trials_str} trial{s}{self._depth_str}'
+                     f'{self._run_mode}ed {trial_num + 1}{num_trials_str} trial{s}{self._depth_str}'
 
             # Do update
             self._rich_progress.update(output_report.rich_task_id,
