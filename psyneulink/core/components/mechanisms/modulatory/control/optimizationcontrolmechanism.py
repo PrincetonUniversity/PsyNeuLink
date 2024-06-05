@@ -3653,7 +3653,7 @@ class OptimizationControlMechanism(ControlMechanism):
             else:
                 # Specified InputPort is not (yet) in agent_rep
                 input_port_name = (f"{input_port.full_name}" if input_port
-                                   else f"{str(i-len(agent_rep_input_ports))}")
+                                   else f"{str(i - len(agent_rep_input_ports))}")
                 key = _deferred_agent_rep_input_port_name(input_port_name, self.agent_rep.name)
 
             # Get source for state_features dict

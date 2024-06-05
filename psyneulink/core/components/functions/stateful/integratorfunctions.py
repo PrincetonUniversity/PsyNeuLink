@@ -3118,7 +3118,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
             if angle_result.ndim != 1 and len(angle_result) != dimension:
                 raise FunctionError(f"{fct_msg} specified for 'angle_function' arg of "
                                     f"{self.__class__.__name__} ({angle_function}) must accept a list or 1d array "
-                                    f"of length {dimension-1} and return a 1d array of length {dimension}.")
+                                    f"of length {dimension - 1} and return a 1d array of length {dimension}.")
         except:
             raise FunctionError(f"Problem with {fct_msg} specified for 'angle_function' arg of "
                                 f"{self.__class__.__name__} ({angle_function}).")
@@ -3169,7 +3169,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
             owner_str = f"'of '{self.owner.name}" if self.owner else ""
             raise FunctionError(f"Length of 'variable' for {self.name}{owner_str} ({len(variable)}) must be "
                                 # f"1 or one less than its 'dimension' parameter ({dimension}-1={dimension-1}).")
-                                f"1 or {dimension-1} (one less than its 'dimension' parameter: {dimension}).")
+                                f"1 or {dimension - 1} (one less than its 'dimension' parameter: {dimension}).")
 
         random_draw = np.array([random_state.normal() for i in range(dimension - 1)])
         value = previous_value + rate * drift * time_step_size \
