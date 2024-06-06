@@ -906,7 +906,10 @@ class ParameterEstimationComposition(Composition):
             # Run parse input dict on the inputs, this will fill in missing input ports with default values. There
             # will be missing input ports because the user doesn't know about the control mechanism's input ports that
             # have been added by the PEC for the fitting parameters.
-            full_inputs, num_trials = self.model._parse_input_dict(inputs, context)
+            if self.model in inputs and len(inputs) == 1:
+                full_inputs = inputs
+            else:
+                full_inputs, num_trials = self.model._parse_input_dict(inputs, context)
 
             # Add the fitting parameters to the inputs, these will be modulated during fitting or optimization,
             # we just use a dummy value here for now (the first value in the range of the parameter)
