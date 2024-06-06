@@ -170,7 +170,7 @@ from psyneulink._typing import Optional, Union, Dict, List, Callable, Literal
 import psyneulink.core.llvm as pnllvm
 from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_np_array
 from psyneulink.core.components.shellclasses import Mechanism
-from psyneulink.core.compositions.composition import Composition, CompositionError
+from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
 from psyneulink.core.components.ports.port import Port_Base
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import (
@@ -528,15 +528,11 @@ class ParameterEstimationComposition(Composition):
         self.optimized_parameter_values = []
 
         self.pec_control_mechs = {}
-        self.pec_control_mechs_input_indices = []
-        idx = len(self.model.input_ports)
         for (pname, mech), values in parameters.items():
             self.pec_control_mechs[(pname, mech)] = ControlMechanism(name=f"{pname}_control",
                                                                      control_signals=[(pname, mech)],
                                                                      modulation=OVERRIDE)
             self.model.add_node(self.pec_control_mechs[(pname, mech)])
-            self.pec_control_mechs_input_indices.append(idx)
-            idx += 1
 
         super().__init__(
             name=name,
@@ -904,15 +900,20 @@ class ParameterEstimationComposition(Composition):
         # Get the inputs
         inputs = kwargs.get("inputs", None if not args else args[0])
 
-        # Since we are passing fitting\optimazation parameters as inputs we need add them to the inputs
+        # Since we are passing fitting\optimization parameters as inputs we need add them to the inputs
         if inputs:
+
+            # Run parse input dict on the inputs, this will fill in missing input ports with default values. There
+            # will be missing input ports because the user doesn't know about the control mechanism's input ports that
+            # have been added by the PEC for the fitting parameters.
+            full_inputs, num_trials = self.model._parse_input_dict(inputs, context)
 
             # Add the fitting parameters to the inputs, these will be modulated during fitting or optimization,
             # we just use a dummy value here for now (the first value in the range of the parameter)
             dummy_params = [v[0] for v in self.controller.function.fit_param_bounds.values()]
-            self.controller.set_parameters_in_inputs(dummy_params, inputs)
+            self.controller.set_parameters_in_inputs(dummy_params, full_inputs)
 
-        self.controller.set_pec_inputs_cache(inputs)
+        self.controller.set_pec_inputs_cache(full_inputs)
 
         # We need to set the inputs for the composition during simulation, by assigning the inputs dict passed in
         # PEC run() to its controller's state_feature_values (this is in order to accomodate multi-trial inputs
@@ -1076,6 +1077,8 @@ class PEC_OCM(OptimizationControlMechanism):
     def __init__(self, *args, **kwargs):
         self._pec_input_values = None
 
+        self._pec_control_mech_indices = None
+
         if 'fit_parameters' in kwargs:
             self.fit_parameters = kwargs['fit_parameters']
             del kwargs['fit_parameters']
@@ -1142,11 +1145,16 @@ class PEC_OCM(OptimizationControlMechanism):
             # Restructure inputs as nd array with each row (outer dim) a trial's worth of inputs
             #    and each item in the row (inner dim) the input to a node (or input_port) for that trial
             if len(inputs_dict) != self.num_state_input_ports:
+
+                # Since we added control mechanisms to the composition, we need to make sure that we subtract off
+                # the number of control mechanisms from the number of state input ports in the error message.
+                num_state_input_ports = self.num_state_input_ports - len(self.fit_parameters)
+
                 raise ParameterEstimationCompositionError(
                     f"The dict specified in the `input` arg of "
                     f"{self.composition.name}.run() is badly formatted: "
                     f"the number of entries should equal the number of inputs "
-                    f"to '{model.name}' ({self.num_state_input_ports})."
+                    f"to '{model.name}' ({num_state_input_ports})."
                 )
             trial_seqs = list(inputs_dict.values())
             num_trials = len(trial_seqs[0])
@@ -1180,6 +1188,13 @@ class PEC_OCM(OptimizationControlMechanism):
 
         """
 
+        # Get the input indices for the control mechanisms that are used to modulate the fitting parameters
+        if self._pec_control_mech_indices is None:
+            self.composition.model._analyze_graph()
+            input_nodes = [node for node, roles in self.composition.model.nodes_to_roles.items()
+                           if NodeRole.INPUT in roles]
+            self._pec_control_mech_indices = [input_nodes.index(m) for m in self.composition.pec_control_mechs.values()]
+
         # If the model is in the inputs, then inputs are passed as list of lists and we need to add the fitting
         # parameters to each trial as a concatenated list.
         if self.composition.model in inputs:
@@ -1189,24 +1204,34 @@ class PEC_OCM(OptimizationControlMechanism):
             if type(in_arr) is not np.ndarray:
                 in_arr = convert_to_np_array(in_arr)
 
-            # Make sure it is 3D
-            in_arr = np.atleast_3d(in_arr)
+            # Make sure it is 3D (only if not ragged)
+            if in_arr.dtype != object:
+                in_arr = np.atleast_3d(in_arr)
 
-            # If the inputs don't have columns for the fitting parameters, then we need to add them
-            if in_arr.shape[1] != len(self.composition.input_ports):
-                num_missing = len(self.composition.input_ports) - in_arr.shape[1]
-                in_arr = np.hstack((in_arr, np.zeros((in_arr.shape[0], num_missing, 1))))
+                # If the inputs don't have columns for the fitting parameters, then we need to add them
+                if in_arr.shape[1] != len(self.composition.input_ports):
+                    num_missing = len(self.composition.input_ports) - in_arr.shape[1]
+                    in_arr = np.hstack((in_arr, np.zeros((in_arr.shape[0], num_missing, 1))))
 
             j = 0
             for i, (pname, mech) in enumerate(self.fit_parameters.keys()):
-                mech_idx = self.composition.pec_control_mechs_input_indices[i]
+                mech_idx = self._pec_control_mech_indices[i]
                 if not self.depends_on or (pname, mech) not in self.depends_on:
-                    in_arr[:, mech_idx, 0] = parameters[j]
+                    if in_arr.ndim == 3:
+                        in_arr[:, mech_idx, 0] = parameters[j]
+                    else:
+                        for k in range(in_arr.shape[0]):
+                            in_arr[k, mech_idx] = np.array([parameters[j]])
                     j += 1
                 else:
                     for level in self.cond_levels[(pname, mech)]:
                         mask = self.cond_mask[(pname, mech)][level]
-                        in_arr[mask, mech_idx, 0] = parameters[j]
+                        if in_arr.ndim == 3:
+                            in_arr[mask, mech_idx, 0] = parameters[j]
+                        else:
+                            for k in range(in_arr.shape[0]):
+                                if mask[k]:
+                                    in_arr[k, mech_idx] = np.array([parameters[j]])
                         j += 1
 
             inputs[self.composition.model] = in_arr
@@ -1214,17 +1239,14 @@ class PEC_OCM(OptimizationControlMechanism):
         # Otherwise, assume the inputs are passed to each mechanism individually. Thus, we need to feed the
         # fitting parameters to the model to their respective control mechanisms
         else:
-
-            num_trials = len(list(inputs.values())[0])
-
             j = 0
             for i, ((pname, mech), values) in enumerate(self.fit_parameters.items()):
                 control_mech = self.composition.pec_control_mechs[(pname, mech)]
                 if not self.depends_on or (pname, mech) not in self.depends_on:
-                    inputs[control_mech] = np.ones((num_trials, 1)) * parameters[j]
+                    inputs[control_mech] = np.ones_like(inputs[control_mech]) * parameters[j]
                     j += 1
                 else:
-                    inputs[control_mech] = np.zeros((num_trials, 1))
+                    inputs[control_mech] = np.zeros_like(inputs[control_mech])
                     for level in self.cond_levels[(pname, mech)]:
                         mask = self.cond_mask[(pname, mech)][level]
                         inputs[control_mech][mask] = parameters[j]
