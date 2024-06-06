@@ -1947,9 +1947,9 @@ or in arguments to its `run <Composition.run>` and `learn <Composition.learn>` m
      <Component.reset_stateful_function_when>` of all Nodes are restored to their prior values upon completion.
 
      - **reset_stateful_functions_when** -- this specifies the `Condition(s) <Condition>` under which the `reset
-       <Component.reset>` method will be called for Nodes with `stateful <stateful>`. If a single
+       <Component.reset>` method is called for Nodes with `stateful <stateful>` set to True. If a single
        `Condition` is specified, it is applied to all of the Composition's `Nodes <Composition_Nodes>` that have
-       `stateful <stateful>`; a dictionary can also be specified, in which the key for each entry
+       `stateful <stateful>` set; a dictionary can also be specified, in which the key for each entry
        is a Node, its value is a `Condition` under which that Node's `reset <Component.reset>` method should be called.
 
        .. note::
@@ -1962,7 +1962,7 @@ or in arguments to its `run <Composition.run>` and `learn <Composition.learn>` m
      - **reset_stateful_functions_to** -- this specifies the values used by each `Node <Composition_Nodes>` to reset
        the `stateful parameters <Component_Stateful_Parameters>` of its `StatefulFunction(s) <StatefulFunction>`.  It
        must be a dictionary of {Node:value} pairs, in which the value specifies the value(s) passed to the
-       `reset<Component.reset>` method of the specified Node.  If the `reset <Component.reset>` method of a Node
+       `reset<Component.reset>` method of the each Node.  If the `reset <Component.reset>` method of a Node
        takes more than one value (see Note below), then a list of values must be provided (i.e., as {node:[value_0,
        value_1,... value_n]}) that matches the number of arguments taken by the `reset <Component.reset>` method.
        Any Nodes *not* specified in the dictionary are reset using their `default value(s) <Parameter_Defaults>`.
@@ -1972,7 +1972,7 @@ or in arguments to its `run <Composition.run>` and `learn <Composition.learn>` m
           is used to reset the `previous_value <StatefulFunction.previous_value>` attribute of the Function.  However
           some (such as those that use `DualAdaptiveIntegrator <DualAdaptiveIntegrator>`) take more than one value.
           For such Nodes, a list of values must be specified as the value of their dicitonary entry in
-          **reset_stateful_functions_to**.
+          **reset_stateful_functions_to**, as described above.
 
      The **reset_stateful_functions_when** and **reset_stateful_functions_to** arguments can be used in conjunction or
      independently of one another. For example, the `Condition(s) <Condition>` under which a `Mechanism` with a
@@ -11940,10 +11940,13 @@ _
                                 context=context
                             )
                         ):
+                            # get value(s) of initializer(s) for current node from dict of initializers
                             vals = reset_stateful_functions_to.get(node, [None])
                             try:
+                                # In case vals is a dict (of initializers assigned to particular parameters of node)
                                 node.reset(**vals, context=context)
                             except TypeError:
+                                # Otherwise assume it is just a list
                                 node.reset(*vals, context=context)
                     except AttributeError:
                         pass

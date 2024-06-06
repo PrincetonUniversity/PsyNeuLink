@@ -7179,7 +7179,7 @@ class TestResetValues:
 
         comp.run(inputs={A: [[1.0], [1.0]]})
 
-        # All mechanism values are 2D but B has two elements,
+         # All mechanism values are 2D but B has two elements,
         # extract element 0 out of each.
         run_1_values = [
             A.parameters.value.get(comp)[0],

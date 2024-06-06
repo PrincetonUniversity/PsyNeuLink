@@ -155,6 +155,9 @@ def test_botvinick_model(benchmark, comp_mode, reps):
     comp.add_projection(task_word_weights, task_layer, words_hidden_layer)
     comp.add_projection(word_task_weights, words_hidden_layer, task_layer)
 
+    comp.show_graph()
+    assert True
+
     def trial_dict(red_color, green_color, neutral_color, red_word, green_word, neutral_word, CN, WR):
         trialdict = {
         colors_input_layer: [red_color, green_color, neutral_color],
