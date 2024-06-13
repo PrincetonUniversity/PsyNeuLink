@@ -114,33 +114,44 @@ class Execution:
                       "for", self._obj.name)
 
             if len(self._execution_contexts) == 1:
+
                 if name == '_state':
+                    numpy_struct = np.ctypeslib.as_array(struct)
+                    assert numpy_struct.nbytes == ctypes.sizeof(struct), \
+                        "Size mismatch, numpy: {} vs. ctypes:{}".format(numpy_struct.nbytes, ctypes.sizeof(struct))
                     self._copy_params_to_pnl(self._execution_contexts[0],
                                              self._obj,
-                                             self._state_struct,
+                                             numpy_struct,
                                              "llvm_state_ids")
 
                 elif name == '_param':
+                    numpy_struct = np.ctypeslib.as_array(struct)
+                    assert numpy_struct.nbytes == ctypes.sizeof(struct), \
+                        "Size mismatch, numpy: {} vs. ctypes:{}".format(numpy_struct.nbytes, ctypes.sizeof(struct))
                     self._copy_params_to_pnl(self._execution_contexts[0],
                                              self._obj,
-                                             self._param_struct,
+                                             numpy_struct,
                                              "llvm_param_ids")
 
         return struct
 
     def _copy_params_to_pnl(self, context, component, params, ids:str):
 
-        for idx, attribute in enumerate(getattr(component, ids)):
-            compiled_attribute_param = getattr(params, params._fields_[idx][0])
-            compiled_attribute_param_ctype = params._fields_[idx][1]
+        assert len(params.dtype.names) == len(getattr(component, ids))
+
+        for numpy_name, attribute in zip(params.dtype.names, getattr(component, ids)):
+
+            numpy_field = params[numpy_name]
+            assert numpy_field.base is params or numpy_field.base is params.base
 
             def _enumerate_recurse(elements):
-                for element_id, element in enumerate(elements):
-                    element_params = getattr(compiled_attribute_param,
-                                             compiled_attribute_param._fields_[element_id][0])
+                for numpy_element_name, element in zip(numpy_field.dtype.names, elements):
+                    numpy_element = numpy_field[numpy_element_name]
+                    assert numpy_element.base is numpy_field.base
+
                     self._copy_params_to_pnl(context=context,
                                              component=element,
-                                             params=element_params,
+                                             params=numpy_element,
                                              ids=ids)
 
             # Handle custom compiled-only structures by name
@@ -187,7 +198,7 @@ class Execution:
                 if hasattr(pnl_value, 'parameters'):
                     self._copy_params_to_pnl(context=context,
                                              component=pnl_value,
-                                             params=compiled_attribute_param,
+                                             params=numpy_field,
                                              ids=ids)
 
                 elif attribute == "input_ports" or attribute == "output_ports":
@@ -197,10 +208,10 @@ class Execution:
                 else:
 
                     # Replace empty structures with None
-                    if ctypes.sizeof(compiled_attribute_param_ctype) == 0:
+                    if numpy_field.nbytes == 0:
                         value = None
                     else:
-                        value = np.ctypeslib.as_array(compiled_attribute_param)
+                        value = numpy_field
 
                         # Stateful parameters include history, get the most recent value
                         if "state" in ids:
