@@ -888,8 +888,8 @@ class TransferError(MechanismError):
     pass
 
 
-def _integrator_mode_setter(value, owning_component=None, context=None):
-    if value:
+def _integrator_mode_setter(value, owning_component=None, context=None, *, compilation_sync=False):
+    if value and not compilation_sync:
         if not owning_component.parameters.integrator_mode._get(context):
             # when first creating parameters, integrator_function is not
             # instantiated yet
@@ -908,7 +908,8 @@ def _integrator_mode_setter(value, owning_component=None, context=None):
                 elif owning_component.on_resume_integrator_mode == RESET:
                     owning_component.reset(force=True, context=context)
 
-    owning_component.parameters.has_initializers._set(value, context)
+    if not compilation_sync:
+        owning_component.parameters.has_initializers._set(value, context)
 
     return value
 

@@ -694,11 +694,11 @@ def make_parameter_property(param):
     return property(getter).setter(setter)
 
 
-def _has_initializers_setter(value, owning_component=None, context=None):
+def _has_initializers_setter(value, owning_component=None, context=None, *, compilation_sync=False):
     """
     Assign has_initializers status to Component and any of its owners up the hierarchy.
     """
-    if value:
+    if value and not compilation_sync:
         # only update owner's attribute if setting to True, because there may be
         # other children that have initializers
         try:
