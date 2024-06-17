@@ -48,11 +48,6 @@ jobs:
           - python-version: '3.7'
             os: macos-latest
 
-        include:
-          - python-version: '3.7'
-            os: macos-13
-            pnl-version: 'head'
-
     outputs:
       on_master: ${{ steps.on_master.outputs.on-branch }}
 
