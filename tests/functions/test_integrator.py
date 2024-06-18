@@ -272,7 +272,7 @@ def test_DriftOnASphere_identicalness_against_reference_implementation():
         def convert_spherical_to_angular(dim, ros):
             ct = np.zeros(dim)
             ct[0] = np.cos(ros[0])
-            prod = np.product([np.sin(ros[k]) for k in range(1, dim - 1)])
+            prod = np.prod([np.sin(ros[k]) for k in range(1, dim - 1)])
             n_prod = prod
             for j in range(dim - 2):
                 n_prod /= np.sin(ros[j + 1])
