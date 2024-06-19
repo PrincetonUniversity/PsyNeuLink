@@ -1,6 +1,7 @@
 import copy
 import numpy as np
 import os
+import sys
 import psyneulink as pnl
 import pytest
 
@@ -35,7 +36,7 @@ stroop_stimuli = {
 }
 
 
-json_results_parametrization = [
+pnl_mdf_results_parametrization = [
     ('model_basic.py', 'comp', '{A: 1}', True),
     ('model_basic.py', 'comp', '{A: 1}', False),
     ('model_basic_non_identity.py', 'comp', '{A: 1}', True),
@@ -72,65 +73,148 @@ json_results_parametrization = [
         str(stroop_stimuli).replace("'", ''),
         False
     ),
-    ('model_backprop.py', 'comp', '{a: [1, 2, 3]}', False),
+    ('model_backprop.py', 'comp', '{A: [1, 2, 3]}', False),
 ]
 
 
+def get_mdf_output_file(orig_filename, tmp_path, format='json'):
+    """
+    Returns:
+        tuple(pathlib.Path, str, str):
+            - a pytest tmp_path temp file using **orig_filename** and
+              **format**
+            - the full path to the temp file
+            - the full path to the temp file formatted so that it can be
+              used in an exec/eval string
+    """
+    mdf_file = tmp_path / orig_filename.replace('.py', f'.{format}')
+    mdf_fname = str(mdf_file.absolute())
+
+    # need to escape backslash to use a filename in exec on windows
+    if sys.platform.startswith('win'):
+        mdf_exec_fname = mdf_fname.replace('\\', '\\\\')
+    else:
+        mdf_exec_fname = mdf_fname
+
+    return mdf_file, mdf_fname, mdf_exec_fname
+
+
+def read_defined_model_script(filename):
+    filename = os.path.join(os.path.dirname(__file__), filename)
+
+    with open(filename, 'r') as orig_file:
+        model_input = orig_file.read()
+
+    return model_input
+
+
+def get_loaded_model_state(model_input: str):
+    _globals = copy.copy(globals())
+    _locals = copy.copy(locals())
+
+    exec(model_input, _globals, _locals)
+
+    return _globals, _locals
+
+
+def run_compositions_in_state(
+    composition_input_strs, _globals, _locals, extra_run_args_str=''
+):
+    results = {}
+
+    for comp_name, inputs in composition_input_strs.items():
+        exec(f'{comp_name}.run(inputs={inputs}, {extra_run_args_str})', _globals, _locals)
+        results[comp_name] = eval(f'{comp_name}.results', _globals, _locals)
+
+    return results, _globals, _locals
+
+
+def get_model_results_and_state(
+    model_input: str, composition_input_strs, extra_run_args_str=''
+):
+    _globals, _locals = get_loaded_model_state(model_input)
+    return run_compositions_in_state(
+        composition_input_strs, _globals, _locals, extra_run_args_str
+    )
+
+
+def assert_result_equality(orig_results, new_results):
+    # compositions
+    assert orig_results.keys() == new_results.keys()
+
+    for comp_name in orig_results:
+        np.testing.assert_allclose(
+            orig_results[comp_name],
+            new_results[comp_name],
+            err_msg=f"Results for composition '{comp_name}' are not equal:"
+        )
+
+
 @pytest.mark.parametrize(
     'filename, composition_name, input_dict_str, simple_edge_format',
-    json_results_parametrization
+    pnl_mdf_results_parametrization
 )
-def test_json_results_equivalence(
+def test_get_mdf_serialized_results_equivalence_pnl_only(
     filename,
     composition_name,
     input_dict_str,
     simple_edge_format,
 ):
+    comp_inputs = {composition_name: input_dict_str}
+
     # Get python script from file and execute
-    filename = os.path.join(os.path.dirname(__file__), filename)
-    with open(filename, 'r') as orig_file:
-        exec(orig_file.read())
-        exec(f'{composition_name}.run(inputs={input_dict_str})')
-        orig_results = eval(f'{composition_name}.results')
+    orig_script = read_defined_model_script(filename)
+    orig_results, orig_globals, orig_locals = get_model_results_and_state(
+        orig_script, comp_inputs
+    )
 
     # reset random seed
     pnl.core.globals.utilities.set_global_seed(0)
-    # Generate python script from JSON summary of composition and execute
-    json_summary = pnl.generate_json(eval(f'{composition_name}'), simple_edge_format=simple_edge_format)
-    exec(pnl.generate_script_from_json(json_summary))
-    exec(f'{composition_name}.run(inputs={input_dict_str})')
-    new_results = eval(f'{composition_name}.results')
-    assert pnl.safe_equals(orig_results, new_results)
+    # Generate python script from MDF serialization of composition and execute
+    mdf_data = pnl.get_mdf_serialized(
+        eval(f'{composition_name}', orig_globals, orig_locals),
+        simple_edge_format=simple_edge_format
+    )
+    new_script = pnl.generate_script_from_mdf(mdf_data)
+    new_results, _, _ = get_model_results_and_state(new_script, comp_inputs)
+
+    assert_result_equality(orig_results, new_results)
 
 
 @pytest.mark.parametrize(
     'filename, composition_name, input_dict_str, simple_edge_format',
-    json_results_parametrization
+    pnl_mdf_results_parametrization
 )
-def test_write_json_file(
+def test_write_mdf_file_results_equivalence_pnl_only(
     filename,
     composition_name,
     input_dict_str,
     simple_edge_format,
+    tmp_path,
 ):
+    comp_inputs = {composition_name: input_dict_str}
+
     # Get python script from file and execute
-    filename = os.path.join(os.path.dirname(__file__), filename)
-    with open(filename, 'r') as orig_file:
-        exec(orig_file.read())
-        exec(f'{composition_name}.run(inputs={input_dict_str})')
-        orig_results = eval(f'{composition_name}.results')
+    orig_script = read_defined_model_script(filename)
+    orig_results, orig_globals, orig_locals = get_model_results_and_state(
+        orig_script, comp_inputs
+    )
 
     # reset random seed
     pnl.core.globals.utilities.set_global_seed(0)
 
-    # Save json_summary of Composition to file and read back in.
-    json_filename = filename.replace('.py','.json')
-    exec(f'pnl.write_json_file({composition_name}, json_filename, simple_edge_format=simple_edge_format)')
-    exec(pnl.generate_script_from_json(json_filename))
-    # exec(f'{composition_name}.run(inputs={input_dict_str})')
-    exec(f'pnl.get_compositions()[0].run(inputs={input_dict_str})')
-    final_results = eval(f'{composition_name}.results')
-    assert pnl.safe_equals(orig_results, final_results)
+    # Save MDF serialization of Composition to file and read back in.
+    _, mdf_fname, mdf_exec_fname = get_mdf_output_file(filename, tmp_path)
+    exec(
+        f'pnl.write_mdf_file({composition_name}, "{mdf_exec_fname}", simple_edge_format={simple_edge_format})',
+        orig_globals,
+        orig_locals,
+    )
+
+    new_script = pnl.generate_script_from_mdf(mdf_fname)
+    new_results, _, _ = get_model_results_and_state(new_script, comp_inputs)
+
+    assert_result_equality(orig_results, new_results)
 
 
 @pytest.mark.parametrize(
@@ -144,41 +228,62 @@ def test_write_json_file(
         ('model_with_two_disjoint_comps.py', {'comp': '{A: 1}', 'comp2': '{C: 1}'}),
     ]
 )
-def test_write_json_file_multiple_comps(
+def test_write_mdf_file_results_equivalence_pnl_only_multiple_comps(
     filename,
     input_dict_strs,
+    tmp_path,
 ):
-    orig_results = {}
-
     # Get python script from file and execute
-    filename = os.path.join(os.path.dirname(__file__), filename)
-    with open(filename, 'r') as orig_file:
-        exec(orig_file.read())
-
-        for composition_name in input_dict_strs:
-            exec(f'{composition_name}.run(inputs={input_dict_strs[composition_name]})')
-            orig_results[composition_name] = eval(f'{composition_name}.results')
-
+    orig_script = read_defined_model_script(filename)
+    orig_results, orig_globals, orig_locals = get_model_results_and_state(
+        orig_script, input_dict_strs
+    )
     # reset random seed
     pnl.core.globals.utilities.set_global_seed(0)
 
-    # Save json_summary of Composition to file and read back in.
-    json_filename = filename.replace('.py', '.json')
+    # Save MDF serialization of Composition to file and read back in.
+    _, mdf_fname, mdf_exec_fname = get_mdf_output_file(filename, tmp_path)
+    exec(
+        f'pnl.write_mdf_file([{",".join(input_dict_strs)}], "{mdf_exec_fname}")',
+        orig_globals,
+        orig_locals
+    )
 
-    exec(f'pnl.write_json_file([{",".join(input_dict_strs)}], json_filename)')
-    exec(pnl.generate_script_from_json(json_filename))
+    new_script = pnl.generate_script_from_mdf(mdf_fname)
+    new_results, _, _ = get_model_results_and_state(new_script, input_dict_strs)
 
-    for composition_name in input_dict_strs:
-        exec(f'{composition_name}.run(inputs={input_dict_strs[composition_name]})')
-        final_results = eval(f'{composition_name}.results')
-        assert orig_results[composition_name] == final_results, f'{composition_name}:'
+    assert_result_equality(orig_results, new_results)
 
 
-def _get_mdf_model_results(evaluable_graph):
-    return [
-        [eo.curr_value for _, eo in evaluable_graph.enodes[node.id].evaluable_outputs.items()]
-        for node in evaluable_graph.scheduler.consideration_queue[-1]
-    ]
+def _get_mdf_model_results(evaluable_graph, composition=None):
+    """
+    Returns psyneulink-style output for **evaluable_graph**, optionally
+    casting outputs to their equivalent node's shape in **composition**
+    """
+    if composition is not None:
+        node_output_shapes = {
+            # NOTE: would use defaults.value here, but it doesn't always
+            # match the shape of value (specifically here,
+            # FitzHughNagumoIntegrator EULER)
+            pnl.parse_valid_identifier(node.name): node.value.shape
+            for node in composition.get_nodes_by_role(pnl.NodeRole.OUTPUT)
+        }
+    else:
+        node_output_shapes = {}
+
+    res = []
+    for node in evaluable_graph.scheduler.consideration_queue[-1]:
+        next_res_elem = [
+            eo.curr_value for eo in evaluable_graph.enodes[node.id].evaluable_outputs.values()
+        ]
+        try:
+            next_res_elem = np.reshape(next_res_elem, node_output_shapes[node.id])
+        except KeyError:
+            pass
+
+        res.append(next_res_elem)
+
+    return pnl.convert_to_np_array(res)
 
 
 # These runtime_params are necessary because noise seeding is not
@@ -226,27 +331,28 @@ integrators_runtime_params = (
         ('model_integrators.py', 'comp', {'A': 1.0}, False, integrators_runtime_params),
     ]
 )
-def test_mdf_equivalence(filename, composition_name, input_dict, simple_edge_format, run_args):
+def test_mdf_pnl_results_equivalence(filename, composition_name, input_dict, simple_edge_format, run_args, tmp_path):
     from modeci_mdf.utils import load_mdf
     import modeci_mdf.execution_engine as ee
 
+    comp_inputs = {composition_name: input_dict}
+
     # Get python script from file and execute
-    filename = os.path.join(os.path.dirname(__file__), filename)
-    with open(filename, 'r') as orig_file:
-        exec(orig_file.read())
-        inputs_str = str(input_dict).replace("'", '')
-        exec(f'{composition_name}.run(inputs={inputs_str}, {run_args})')
-        orig_results = eval(f'{composition_name}.results')
+    orig_script = read_defined_model_script(filename)
+    orig_results, orig_globals, orig_locals = get_model_results_and_state(
+        orig_script, comp_inputs, run_args
+    )
 
-    # Save json_summary of Composition to file and read back in.
-    json_filename = filename.replace('.py', '.json')
-    pnl.write_json_file(eval(composition_name), json_filename, simple_edge_format=simple_edge_format)
+    # Save MDF serialization of Composition to file and read back in.
+    _, mdf_fname, _ = get_mdf_output_file(filename, tmp_path)
+    composition = eval(composition_name, orig_globals, orig_locals)
+    pnl.write_mdf_file(composition, mdf_fname, simple_edge_format=simple_edge_format)
 
-    m = load_mdf(json_filename)
+    m = load_mdf(mdf_fname)
     eg = ee.EvaluableGraph(m.graphs[0], verbose=True)
     eg.evaluate(initializer={f'{node}_InputPort_0': i for node, i in input_dict.items()})
 
-    assert pnl.safe_equals(orig_results, _get_mdf_model_results(eg))
+    assert_result_equality(orig_results, {composition_name: _get_mdf_model_results(eg, composition)})
 
 
 ddi_termination_conds = [
@@ -293,7 +399,7 @@ individual_functions_fhn_test_data = [
         *individual_functions_fhn_test_data,
     ]
 )
-def test_mdf_equivalence_individual_functions(mech_type, function, runtime_params, trial_termination_cond):
+def test_mdf_pnl_results_equivalence_individual_functions(mech_type, function, runtime_params, trial_termination_cond):
     import modeci_mdf.execution_engine as ee
 
     A = mech_type(name='A', function=copy.deepcopy(function))
@@ -303,7 +409,8 @@ def test_mdf_equivalence_individual_functions(mech_type, function, runtime_param
         trial_termination_cond = eval(trial_termination_cond)
     except TypeError:
         pass
-    comp.scheduler.termination_conds = {pnl.TimeScale.TRIAL: trial_termination_cond}
+    if trial_termination_cond is not None:
+        comp.scheduler.termination_conds = {pnl.TimeScale.TRIAL: trial_termination_cond}
 
     comp.run(inputs={A: [[1.0]]}, runtime_params=eval(runtime_params))
 
@@ -312,21 +419,22 @@ def test_mdf_equivalence_individual_functions(mech_type, function, runtime_param
     eg = ee.EvaluableGraph(model.graphs[0], verbose=True)
     eg.evaluate(initializer={'A_InputPort_0': 1.0})
 
-    assert pnl.safe_equals(comp.results, _get_mdf_model_results(eg))
+    np.testing.assert_array_equal(comp.results, _get_mdf_model_results(eg, comp))
 
 
-@pytest.mark.parametrize('filename', ['model_basic.py'])
+@pytest.mark.parametrize(
+    'filename, composition_name',
+    [
+        ('model_basic.py', 'comp'),
+    ]
+)
 @pytest.mark.parametrize('fmt', ['json', 'yml'])
-def test_generate_script_from_mdf(filename, fmt):
-    filename = os.path.join(os.path.dirname(__file__), filename)
-    outfi = filename.replace('.py', f'.{fmt}')
+def test_generate_script_from_mdf(filename, composition_name, fmt, tmp_path):
+    orig_file = read_defined_model_script(filename)
+    exec(orig_file)
+    serialized = eval(f'pnl.get_mdf_serialized({composition_name}, fmt="{fmt}")')
 
-    with open(filename, 'r') as orig_file:
-        exec(orig_file.read())
-        serialized = eval(f'pnl.get_mdf_serialized(comp, fmt="{fmt}")')
+    mdf_file, mdf_fname, _ = get_mdf_output_file(filename, tmp_path, fmt)
+    mdf_file.write_text(serialized)
 
-    with open(outfi, 'w') as f:
-        f.write(serialized)
-
-    with open(outfi, 'r') as f:
-        assert pnl.generate_script_from_mdf(f.read()) == pnl.generate_script_from_mdf(outfi)
+    assert pnl.generate_script_from_mdf(mdf_file.read_text()) == pnl.generate_script_from_mdf(mdf_fname)

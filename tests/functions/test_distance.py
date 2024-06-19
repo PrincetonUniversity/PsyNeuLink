@@ -55,4 +55,4 @@ def test_basic(variable, metric, normalize, expected, benchmark, func_mode):
     #        LLVM calculations of most metrics using fp32 are not accurate.
     tol = {'rtol':1e-5, 'atol':1e-8} if metric == kw.COSINE or pytest.helpers.llvm_current_fp_precision() == 'fp32' else {}
     np.testing.assert_allclose(res, expected, **tol)
-    assert np.isscalar(res) or len(res) == 1
+    assert np.isscalar(res) or res.ndim == 0 or len(res) == 1

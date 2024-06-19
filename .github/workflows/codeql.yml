@@ -38,21 +38,24 @@ jobs:
           fetch-depth: 100
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
+        uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
           queries: +security-and-quality
 
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v2
+        uses: github/codeql-action/autobuild@v3
 
-      - name: Cache cleanup
+      - name: Pip cache cleanup
         shell: bash
+        # CODEQL_PYTHON is only defined if dependencies were installed [0]
+        # [0] https://docs.github.com/en/code-security/code-scanning/creating-an-advanced-setup-for-code-scanning/customizing-your-advanced-setup-for-code-scanning?learn=code_security_actions&learnProduct=code-security#analyzing-python-dependencies
+        if: ${{ env.CODEQL_PYTHON != '' }}
         run: |
           $CODEQL_PYTHON -m pip cache info
           $CODEQL_PYTHON -m pip cache purge
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@v3
         with:
           category: "/language:${{ matrix.language }}"

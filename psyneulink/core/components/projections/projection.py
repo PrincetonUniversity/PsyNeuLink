@@ -426,7 +426,7 @@ from psyneulink.core.globals.keywords import \
     PROJECTION_RECEIVER, PROJECTION_SENDER, PROJECTION_TYPE, \
     RECEIVER, SENDER, STANDARD_ARGS, PORT, PORTS, WEIGHT, ADD_INPUT_PORT, ADD_OUTPUT_PORT, \
     PROJECTION_COMPONENT_CATEGORY
-from psyneulink.core.globals.parameters import Parameter, check_user_specified
+from psyneulink.core.globals.parameters import Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
@@ -741,7 +741,7 @@ class Projection_Base(Projection):
         # FIX: NEED TO KNOW HERE IF SENDER IS SPECIFIED AS A MECHANISM OR PORT
         try:
             # this should become _default_value when that is fully implemented
-            variable = self.sender.defaults.value
+            variable = copy_parameter_value(self.sender.defaults.value)
         except AttributeError:
             if receiver.prefs.verbosePref:
                 warnings.warn("Unable to get value of sender ({0}) for {1};  will assign default ({2})".
@@ -1117,8 +1117,11 @@ class Projection_Base(Projection):
             builder.store(builder.load(arg_in), arg_out)
             return builder
 
-        mf_state = pnlvm.helpers.get_state_ptr(builder, self, state, self.parameters.function.name)
-        mf_params = pnlvm.helpers.get_param_ptr(builder, self, params, self.parameters.function.name)
+        mf_params, mf_state = ctx.get_param_or_state_ptr(builder,
+                                                         self,
+                                                         self.parameters.function,
+                                                         param_struct_ptr=params,
+                                                         state_struct_ptr=state)
         main_function = ctx.import_llvm_function(self.function)
         builder.call(main_function, [mf_params, mf_state, arg_in, arg_out])
 

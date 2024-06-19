@@ -93,7 +93,7 @@ COMMENT:
 If the `function <Function_Base.function>` returns a single numeric value, and the Function's class implements
 FunctionOutputTypeConversion, then the type of value returned by its `function <Function>` can be specified using the
 `output_type` attribute, by assigning it one of the following `FunctionOutputType` values:
-    * FunctionOutputType.RAW_NUMBER: return "exposed" number;
+    * FunctionOutputType.NP_0D_ARRAY: return 0d np.array
     * FunctionOutputType.NP_1D_ARRAY: return 1d np.array
     * FunctionOutputType.NP_2D_ARRAY: return 2d np.array.
 
@@ -166,14 +166,14 @@ from psyneulink.core.globals.keywords import (
     MODEL_SPEC_ID_MDF_VARIABLE, MatrixKeywordLiteral, ZEROS_MATRIX
 )
 from psyneulink.core.globals.mdf import _get_variable_parameter_name
-from psyneulink.core.globals.parameters import Parameter, check_user_specified
+from psyneulink.core.globals.parameters import Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF, ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import (
-    convert_to_np_array, get_global_seed, is_instance_or_subclass, object_has_single_value, parameter_spec, parse_valid_identifier, safe_len,
-    SeededRandomState, contains_type, is_numeric, NumericCollections,
-    random_matrix
+    convert_all_elements_to_np_array, convert_to_np_array, get_global_seed, is_instance_or_subclass, object_has_single_value, parameter_spec, parse_valid_identifier, safe_len,
+    SeededRandomState, try_extract_0d_array_item, contains_type, is_numeric, NumericCollections,
+    random_matrix, array_from_matrix_string
 )
 
 __all__ = [
@@ -183,8 +183,12 @@ __all__ = [
 ]
 
 EPSILON = np.finfo(float).eps
+
+
 # numeric to allow modulation, invalid to identify unseeded state
-DEFAULT_SEED = -1
+def DEFAULT_SEED():
+    return np.array(-1)
+
 
 FunctionRegistry = {}
 
@@ -196,7 +200,7 @@ class FunctionError(ComponentError):
 
 
 class FunctionOutputType(IntEnum):
-    RAW_NUMBER = 0
+    NP_0D_ARRAY = 0
     NP_1D_ARRAY = 1
     NP_2D_ARRAY = 2
     DEFAULT = 3
@@ -312,7 +316,7 @@ def _output_type_setter(value, owning_component):
     if (
         owning_component.defaults.variable is not None
         and safe_len(owning_component.defaults.variable) > 1
-        and owning_component.output_type is FunctionOutputType.RAW_NUMBER
+        and owning_component.output_type is FunctionOutputType.NP_0D_ARRAY
     ):
         raise FunctionError(
             f"{owning_component.__class__.__name__} can't be set to return a "
@@ -327,7 +331,7 @@ def _output_type_setter(value, owning_component):
         if (
             isinstance(owning_component.owner, Mechanism)
             and (
-                value == FunctionOutputType.RAW_NUMBER
+                value == FunctionOutputType.NP_0D_ARRAY
                 or value == FunctionOutputType.NP_1D_ARRAY
             )
         ):
@@ -342,29 +346,40 @@ def _output_type_setter(value, owning_component):
     return value
 
 
-def _seed_setter(value, owning_component, context):
-    if value in {None, DEFAULT_SEED}:
+def _seed_setter(value, owning_component, context, *, compilation_sync):
+    if compilation_sync:
+        # compilation sync should provide shared memory 0d array with a floating point value.
+        assert value is not None
+        assert value != DEFAULT_SEED()
+        assert value.shape == ()
+
+        return value
+
+    value = try_extract_0d_array_item(value)
+    if value is None or value == DEFAULT_SEED():
         value = get_global_seed()
 
     # Remove any old PRNG state
     owning_component.parameters.random_state.set(None, context=context)
-    return int(value)
+    return np.asarray(value)
 
 
-def _random_state_getter(self, owning_component, context):
+def _random_state_getter(self, owning_component, context, modulated=False):
 
     seed_param = owning_component.parameters.seed
     try:
-        is_modulated = seed_param.port.is_modulated(context)
+        has_modulation = seed_param.port.has_modulation(context.composition)
     except AttributeError:
-        is_modulated = False
+        has_modulation = False
 
-    if is_modulated:
+    # 'has_modulation' indicates that seed has an active modulatory projection
+    # 'modulated' indicates that the modulated value is requested
+    if has_modulation and modulated:
         seed_value = [int(owning_component._get_current_parameter_value(seed_param, context))]
     else:
         seed_value = [int(seed_param._get(context=context))]
 
-    if seed_value == [DEFAULT_SEED]:
+    if seed_value == [DEFAULT_SEED()]:
         raise FunctionError(
             "Invalid seed for {} in context: {} ({})".format(
                 owning_component, context.execution_id, seed_param
@@ -454,7 +469,7 @@ class Function_Base(Function):
             The output_type can be used to specify type conversion for single-item return values:
             - it can only be used for numbers or a single-number list; other values will generate an exception
             - if self.output_type is set to:
-                FunctionOutputType.RAW_NUMBER, return value is "exposed" as a number
+                FunctionOutputType.NP_0D_ARRAY, return value is "exposed" as a number
                 FunctionOutputType.NP_1D_ARRAY, return value is 1d np.array
                 FunctionOutputType.NP_2D_ARRAY, return value is 2d np.array
             - it must be enabled for a subclass by setting params[FUNCTION_OUTPUT_TYPE_CONVERSION] = True
@@ -666,15 +681,17 @@ class Function_Base(Function):
 
     def __deepcopy__(self, memo):
         new = super().__deepcopy__(memo)
-        # ensure copy does not have identical name
-        register_category(new, Function_Base, new.name, FunctionRegistry)
-        if "random_state" in new.parameters:
-            # HACK: Make sure any copies are re-seeded to avoid dependent RNG.
-            # functions with "random_state" param must have "seed" parameter
-            for ctx in new.parameters.seed.values:
-                new.parameters.seed.set(
-                    DEFAULT_SEED, ctx, skip_log=True, skip_history=True
-                )
+
+        if self is not new:
+            # ensure copy does not have identical name
+            register_category(new, Function_Base, new.name, FunctionRegistry)
+            if "random_state" in new.parameters:
+                # HACK: Make sure any copies are re-seeded to avoid dependent RNG.
+                # functions with "random_state" param must have "seed" parameter
+                for ctx in new.parameters.seed.values:
+                    new.parameters.seed.set(
+                        DEFAULT_SEED(), ctx, skip_log=True, skip_history=True
+                    )
 
         return new
 
@@ -685,6 +702,9 @@ class Function_Base(Function):
                  params=None,
                  target_set=None,
                  **kwargs):
+
+        if ContextFlags.COMMAND_LINE in context.source:
+            variable = copy_parameter_value(variable)
 
         # IMPLEMENTATION NOTE:
         # The following is a convenience feature that supports specification of params directly in call to function
@@ -704,14 +724,9 @@ class Function_Base(Function):
                                     target_set=target_set,
                                     )
         # Execute function
-        try:
-            value = self._function(variable=variable,
-                                   context=context,
-                                   params=params,
-                                   **kwargs)
-        except ValueError as err:
-            err_msg = f"Problem with '{self}' in '{self.owner.name if self.owner else self.__class__.__name__}': {err}"
-            raise FunctionError(err_msg) from err
+        value = self._function(
+            variable=variable, context=context, params=params, **kwargs
+        )
         self.most_recent_context = context
         self.parameters.value._set(value, context=context)
         self._reset_runtime_parameters(context)
@@ -761,13 +776,12 @@ class Function_Base(Function):
         return value
 
     def convert_output_type(self, value, output_type=None):
+        value = convert_all_elements_to_np_array(value)
         if output_type is None:
             if not self.enable_output_type_conversion or self.output_type is None:
                 return value
             else:
                 output_type = self.output_type
-
-        value = convert_to_np_array(value)
 
         # Type conversion (specified by output_type):
 
@@ -813,9 +827,9 @@ class Function_Base(Function):
 
         # Convert to raw number, irrespective of value type:
         # Note: if 2D or 1D array has more than two items, generate exception
-        elif output_type is FunctionOutputType.RAW_NUMBER:
+        elif output_type is FunctionOutputType.NP_0D_ARRAY:
             if object_has_single_value(value):
-                value = float(value)
+                value = np.array(float(value))
             else:
                 raise FunctionError(f"Can't convert value ({value}) with more than a single number to a raw number.")
 
@@ -864,6 +878,8 @@ class Function_Base(Function):
                 extra_noise_functions.append(noise_func_model)
                 return noise_func_model.id
             elif isinstance(noise, (list, np.ndarray)):
+                if noise.ndim == 0:
+                    return None
                 return type(noise)(handle_noise(item) for item in noise)
             else:
                 return None
@@ -1362,7 +1378,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
     # specify 'matrix' as a string (e.g. r = RecurrentTransferMechanism(matrix='1 2; 3 4'))
     if type(specification) == str:
         try:
-            return np.array(np.matrix(specification))
+            return array_from_matrix_string(specification)
         except (ValueError, NameError, TypeError):
             # np.matrix(specification) will give ValueError if specification is a bad value (e.g. 'abc', '1; 1 2')
             #                          [JDC] actually gives NameError if specification is a string (e.g., 'abc')

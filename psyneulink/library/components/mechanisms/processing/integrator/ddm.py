@@ -129,7 +129,7 @@ depending on the `function <DDM.function>` that has been assigned to the DDM, as
 +                                    +----------------------------+----------------------------+
 |                                    | `DriftDiffusionAnalytical` | `DriftDiffusionIntegrator` |
 |                                    |   (`analytic               |   (`path integration)      |
-| **OutputPorts:**                  |   <DDM_Analytic_Mode>`)    |   <DDM_Integration_Mode>`) |
+| **OutputPorts:**                   |   <DDM_Analytic_Mode>`)    |   <DDM_Integration_Mode>`) |
 +------------------------------------+----------------------------+----------------------------+
 | `DECISION_VARIABLE                 |                            |                            |
 | <DDM_DECISION_VARIABLE>`           |       X                    |          X                 |
@@ -740,7 +740,7 @@ class DDM(ProcessingMechanism):
         input_format = Parameter(SCALAR, stateful=False, loggable=False)
         initializer = np.array([[0]])
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
 
         output_ports = Parameter(
             [DECISION_VARIABLE, RESPONSE_TIME],
@@ -822,8 +822,8 @@ class DDM(ProcessingMechanism):
                  #    v[0]=self.value[self.DECISION_VARIABLE_INDEX]
                  #    v[1]=self.parameter_ports[THRESHOLD]
                  #    v[2]=self.input_ports[0].variable
-                 FUNCTION: lambda v: [float(v[2][0][0]), 0] \
-                                      if (v[1] - v[0]) < (v[1] + v[0]) \
+                 FUNCTION: lambda v: [float(v[2][0][0]), 0]
+                                      if (v[1] - v[0]) < (v[1] + v[0])
                                       else [0, float(v[2][0][1])]
                  }
             ])

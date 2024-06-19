@@ -47,6 +47,13 @@ def test_other_docs(mod, capsys):
             fail, total, captured.err, captured.out), pytrace=False)
 
 
+def consistent_doc_attrs(*objs):
+    return (
+        all(o.__doc__ is None for o in objs)
+        or all(isinstance(o.__doc__, str) for o in objs)
+    )
+
+
 @pytest.mark.parametrize(
     'mod',
     [
@@ -77,8 +84,11 @@ def test_scheduler_substitutions(mod):
             except AttributeError:
                 continue
 
+            assert consistent_doc_attrs(cls, ext_cls)
             # global replacements may not happen in every docstring
-            assert re.sub(r'\\\d', '', repl) in cls.__doc__ or not re.match(pattern, ext_cls.__doc__)
+            if cls.__doc__ is not None:
+                assert re.sub(r'\\\d', '', repl) in cls.__doc__ or not re.match(pattern, ext_cls.__doc__)
 
-        ext_module_docstring = getattr(graph_scheduler, mod.__name__.split('.')[-1]).__doc__
-        assert re.sub(r'\\\d', '', repl) in mod.__doc__ or not re.match(pattern, ext_module_docstring)
+        ext_module = getattr(graph_scheduler, mod.__name__.split('.')[-1]).__doc__
+        assert consistent_doc_attrs(mod, ext_module)
+        assert re.sub(r'\\\d', '', repl) in mod.__doc__ or not re.match(pattern, ext_module.__doc__)

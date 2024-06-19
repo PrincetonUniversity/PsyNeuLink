@@ -238,8 +238,8 @@ err_msg_angle_func = 'Variable shape incompatibility between (DriftOnASphereInte
 err_msg_noise = "must be a list or 1d array of length 3 (the value of the 'dimension' parameter minus 1)"
 
 test_vars = [
-    ({'initializer': 0.1}, err_msg_initializer, FunctionError),
-    ({'initializer': [0.1,0.1]}, err_msg_initializer, FunctionError),
+    ({'initializer': 0.1}, err_msg_initializer, ParameterError),
+    ({'initializer': [0.1, 0.1]}, err_msg_initializer, ParameterError),
     ({'initializer': [0.1,0.1,0.1]}, None, None),
     ({'angle_function': Angle}, None, None),
     ({'angle_function': Angle()}, None, None),
@@ -272,7 +272,7 @@ def test_DriftOnASphere_identicalness_against_reference_implementation():
         def convert_spherical_to_angular(dim, ros):
             ct = np.zeros(dim)
             ct[0] = np.cos(ros[0])
-            prod = np.product([np.sin(ros[k]) for k in range(1, dim - 1)])
+            prod = np.prod([np.sin(ros[k]) for k in range(1, dim - 1)])
             n_prod = prod
             for j in range(dim - 2):
                 n_prod /= np.sin(ros[j + 1])

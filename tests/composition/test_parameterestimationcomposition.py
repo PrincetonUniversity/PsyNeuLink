@@ -114,6 +114,7 @@ run_input_test_args = [
 ]
 
 
+@pytest.mark.composition
 @pytest.mark.parametrize("inputs_dict, error_msg", run_input_test_args)
 def test_pec_run_input_formats(inputs_dict, error_msg):
     if error_msg:
@@ -124,12 +125,13 @@ def test_pec_run_input_formats(inputs_dict, error_msg):
         pec.run(inputs=inputs_dict)
 
 
+@pytest.mark.composition
 @pytest.mark.parametrize(
     "opt_method, result",
     [
         ("differential_evolution", [0.010363518438648106]),
-        (optuna.samplers.RandomSampler(), [0.01]),
-        (optuna.samplers.CmaEsSampler(), [0.01]),
+        (optuna.samplers.RandomSampler(seed=0), [0.01]),
+        (optuna.samplers.CmaEsSampler(seed=0), [0.01]),
     ],
     ids=["differential_evolultion", "optuna_random_sampler", "optuna_cmaes_sampler"],
 )
@@ -216,6 +218,7 @@ def test_parameter_optimization_ddm(func_mode, opt_method, result):
 
 
 # func_mode is a hacky wa to get properly marked; Python, LLVM, and CUDA
+@pytest.mark.composition
 def test_parameter_estimation_ddm_mle(func_mode):
     """Test parameter estimation of a DDM in integrator mode with MLE."""
 
@@ -318,6 +321,7 @@ def test_parameter_estimation_ddm_mle(func_mode):
     )
 
 
+@pytest.mark.composition
 def test_pec_bad_outcome_var_spec():
     """
     Tests that exception is raised when outcome variables specifies and output port that doesn't exist on the
@@ -359,7 +363,7 @@ def test_pec_bad_outcome_var_spec():
         ("threshold", decision): np.linspace(0.5, 1.0, 1000),
     }
 
-    with pytest.raises(ValueError) as ex:
+    with pytest.raises(KeyError) as ex:
         pnl.ParameterEstimationComposition(
             name="pec",
             nodes=[comp],
@@ -389,6 +393,7 @@ def test_pec_bad_outcome_var_spec():
     assert "The number of columns in the data to fit must match" in str(ex)
 
 
+@pytest.mark.composition
 def test_pec_controller_specified():
     """Test that an exception is raised if a controller is specified for the PEC."""
     with pytest.raises(ValueError):

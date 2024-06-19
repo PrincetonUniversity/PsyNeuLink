@@ -258,7 +258,7 @@ COMMENT
    <Component>`, that can be created using a constructor; a *function* is an attribute that contains a callable method
    belonging to a Function, and that is executed when the Component to which the Function belongs is executed.
    Functions are used to assign, store, and apply parameter values associated with their function (see `Function
-   <Function_Overview> for a more detailed explanation).
+   <Function_Overview>` for a more detailed explanation).
 
 The parameters of a Mechanism's `function <Mechanism_Base.function>` are attributes of its `function
 <Component.function>`, and can be accessed using standard "dot" notation for that object.  For
@@ -988,12 +988,12 @@ or its `name <Port_Base.name>` as the key, and a dictionary containing parameter
        Projections will not be executed (see `Lazy Evaluation <Component_Lazy_Updating>`), but its `function
        <Port_Base.function>` will be.
 
-     - If the `value <Port_Base.value>` of a Port is specified, *neither its `afferent Projections <Port_Projections>`
+     - If the `value <Port_Base.value>` of a Port is specified, *neither* its `afferent Projections <Port_Projections>`
        nor it `function <Port_Base.function>` will be executed.
 
      - If the `variable <Port_base.variable>` and/or `value <Port_Base.value>` is specified for *all* of the
        OutputPorts of a Mechanism, then it's function will not be executed, and the `value <Mechanism_Base.value>`
-       will retain its previous value (again in accord with `Lazy Evaluation <Component_Lazy_Updating>), though its
+       will retain its previous value (again in accord with `Lazy Evaluation <Component_Lazy_Updating>`), though its
        OutputPorts *will* be executed using the assigned values, and it's `execution_count <Component_Execution_Count>`
        and `num_executions <Component_Num_Executions>` attributes will be incremented (since the OutputPorts --
        Components of the Mechanism -- executed).
@@ -1012,7 +1012,7 @@ key for each type of projecction is its `componentType <Component_Type>` appende
 *MAPPING_PROJECTION_PARAMS*, *CONTROL_PROJECTION_PARAMS*, etc.).  The sub-dictionary can contain specifications that
 apply to *all* Projections of that type and/or individual Projections. If the key of an entryis the name of a parameter
 of the Projection (or its `function <Port_Base.function>`), the specified value applies to *all* Projections of that
-type. Parameters for individual Projections are specified using the Projections or its `name <Projection_Base.name>
+type. Parameters for individual Projections are specified using the Projections or its `name <Projection_Base.name>`
 as the key, and a dictionary containing parameter specifications as its value.
 
    .. note::
@@ -1111,12 +1111,12 @@ from psyneulink.core.globals.keywords import \
     NAME, OUTPUT, OUTPUT_LABELS_DICT, OUTPUT_PORT, OUTPUT_PORT_PARAMS, OUTPUT_PORTS, OWNER_EXECUTION_COUNT, OWNER_VALUE, \
     PARAMETER_PORT, PARAMETER_PORT_PARAMS, PARAMETER_PORTS, PROJECTIONS, REFERENCE_VALUE, RESULT, \
     TARGET_LABELS_DICT, VALUE, VARIABLE, WEIGHT, MODEL_SPEC_ID_MDF_VARIABLE, MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION
-from psyneulink.core.globals.parameters import Parameter, check_user_specified
+from psyneulink.core.globals.parameters import Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, append_type_to_name, convert_all_elements_to_np_array, convert_to_np_array, \
-    iscompatible, kwCompatibilityNumeric, convert_to_list, parse_valid_identifier
+    iscompatible, kwCompatibilityNumeric, convert_to_list, is_numeric, parse_valid_identifier
 from psyneulink.core.scheduling.condition import Condition
 from psyneulink.core.scheduling.time import TimeScale
 
@@ -1139,7 +1139,7 @@ class MechParamsDict(UserDict):
 
 def _input_port_variables_getter(owning_component=None, context=None):
     try:
-        return [input_port.parameters.variable._get(context) for input_port in owning_component.input_ports]
+        return convert_all_elements_to_np_array([input_port.parameters.variable._get(context) for input_port in owning_component.input_ports])
     except (AttributeError, TypeError):
         return None
 
@@ -1617,7 +1617,10 @@ class Mechanism_Base(Mechanism):
         def _parse_input_ports(self, input_ports):
             if input_ports is None:
                 return input_ports
-            elif not isinstance(input_ports, list):
+            elif (
+                not isinstance(input_ports, list)
+                and not (isinstance(input_ports, np.ndarray) and input_ports.ndim > 0)
+            ):
                 input_ports = [input_ports]
 
             spec_list = []
@@ -1666,13 +1669,23 @@ class Mechanism_Base(Mechanism):
                 else:
                     spec_list.append(port)
 
+            if is_numeric(spec_list):
+                spec_list = convert_all_elements_to_np_array(spec_list)
+
             return spec_list
 
         def _parse_output_ports(self, output_ports):
-            if output_ports is not None and not isinstance(output_ports, list):
-                return [output_ports]
-            else:
-                return output_ports
+            if (
+                output_ports is not None
+                and not isinstance(output_ports, list)
+                and not (isinstance(output_ports, np.ndarray) and output_ports.ndim > 0)
+            ):
+                output_ports = [output_ports]
+
+            if is_numeric(output_ports):
+                output_ports = convert_all_elements_to_np_array(output_ports)
+
+            return output_ports
 
     # def __new__(cls, *args, **kwargs):
     # def __new__(cls, name=NotImplemented, params=NotImplemented, context=None):
@@ -1857,7 +1870,10 @@ class Mechanism_Base(Mechanism):
         default_variable_from_input_ports = []
         input_port_variable_was_specified = None
 
-        if not isinstance(input_ports, list):
+        if (
+            not isinstance(input_ports, list)
+            and not (isinstance(input_ports, np.ndarray) and input_ports.ndim > 0)
+        ):
             input_ports = [input_ports]
 
         for i, s in enumerate(input_ports):
@@ -2136,11 +2152,13 @@ class Mechanism_Base(Mechanism):
             except AttributeError:
                 default_weights = None
             if default_weights is None:
-                default_weights = default_weights or [1.0] * len(self.input_ports)
+                default_weights = default_weights or np.ones(len(self.input_ports))
 
             # Assign any weights specified in input_port spec
-            weights = [[input_port.defaults.weight if input_port.defaults.weight is not None else default_weight]
-                       for input_port, default_weight in zip(self.input_ports, default_weights)]
+            weights = convert_to_np_array([
+                [input_port.defaults.weight if input_port.defaults.weight is not None else default_weight]
+                for input_port, default_weight in zip(self.input_ports, default_weights)
+            ])
             self.function.parameters.weights._set(weights, context)
 
         if (
@@ -2159,17 +2177,17 @@ class Mechanism_Base(Mechanism):
             except AttributeError:
                 default_exponents = None
             if default_exponents is None:
-                default_exponents = default_exponents or [1.0] * len(self.input_ports)
+                default_exponents = default_exponents or np.ones(len(self.input_ports))
 
             # Assign any exponents specified in input_port spec
-            exponents = [
+            exponents = convert_to_np_array([
                 [
                     input_port.parameters.exponent._get(context)
                     if input_port.parameters.exponent._get(context) is not None
                     else default_exponent
                 ]
                 for input_port, default_exponent in zip(self.input_ports, default_exponents)
-            ]
+            ])
             self.function.parameters.exponents._set(exponents, context)
 
         # this may be removed when the restriction making all Mechanism values 2D np arrays is lifted
@@ -2358,7 +2376,7 @@ class Mechanism_Base(Mechanism):
         .. technical_note::
             Execution sequence:
 
-            * Handle initialization if `initialization_status <Compoonent.initialization_status> is
+            * Handle initialization if `initialization_status <Compoonent.initialization_status>` is
               *ContextFlags.INITIALIZING*
             * Assign any `Port-specific runtime params <_Mechanism_Runtime_Port_and_Projection_Param_Specification>`
               to corresponding `runtime_params <Mechanism_Base.runtime_params>` dict.
@@ -2429,9 +2447,11 @@ class Mechanism_Base(Mechanism):
                 pass
             # Only call subclass' _execute method and then return (do not complete the rest of this method)
             elif self.initMethod == INIT_EXECUTE_METHOD_ONLY:
-                return_value = self._execute(variable=self.defaults.variable,
+                return_value = self._execute(variable=copy_parameter_value(self.defaults.variable),
                                              context=context,
                                              runtime_params=runtime_params)
+                if context.source is ContextFlags.COMMAND_LINE:
+                    return_value = copy_parameter_value(return_value)
 
                 # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
                 #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
@@ -2456,7 +2476,7 @@ class Mechanism_Base(Mechanism):
 
             # Call only subclass' function during initialization (not its full _execute method nor rest of this method)
             elif self.initMethod == INIT_FUNCTION_METHOD_ONLY:
-                return_value = super()._execute(variable=self.defaults.variable,
+                return_value = super()._execute(variable=copy_parameter_value(self.defaults.variable),
                                                 context=context,
                                                 runtime_params=runtime_params)
                 return convert_to_np_array(return_value, dimension=2)
@@ -2470,7 +2490,7 @@ class Mechanism_Base(Mechanism):
         # EXECUTE MECHANISM
 
         if self.parameters.is_finished_flag._get(context) is True:
-            self.parameters.num_executions_before_finished._set(0, override=True, context=context)
+            self.parameters.num_executions_before_finished._set(np.array(0), override=True, context=context)
 
         while True:
 
@@ -2554,7 +2574,7 @@ class Mechanism_Base(Mechanism):
 
             # MANAGE MAX_EXECUTIONS_BEFORE_FINISHED AND DETERMINE WHETHER TO BREAK
             max_executions = self.parameters.max_executions_before_finished._get(context)
-            num_executions = self.parameters.num_executions_before_finished._get(context) + 1
+            num_executions = np.asarray(self.parameters.num_executions_before_finished._get(context) + 1)
 
             self.parameters.num_executions_before_finished._set(num_executions, override=True, context=context)
 
@@ -2600,6 +2620,10 @@ class Mechanism_Base(Mechanism):
                        context=context,
                        node=self)
 
+        # return copy on external call so users can store it directly
+        # without it changing
+        if context.source is ContextFlags.COMMAND_LINE:
+            value = copy_parameter_value(value)
         return value
 
     def _get_variable_from_input(self, input, context=None):
@@ -2794,6 +2818,11 @@ class Mechanism_Base(Mechanism):
                     continue
                 # Move param specification dict for item to entry with same key in <COMPONENT>_SPECIFIC_PARAMS dict
                 item_specific_dict = {key : outer_dict.pop(key)}
+                item_specific_dict = {
+                    k: convert_all_elements_to_np_array(v) if is_numeric(v) else v
+                    for (k, v) in item_specific_dict.items()
+                }
+
                 if specific_dict_name in dest_dict:
                     dest_dict[specific_dict_name].update(item_specific_dict)
                 else:
@@ -2836,34 +2865,50 @@ class Mechanism_Base(Mechanism):
     def _get_param_ids(self):
         if len(self._parameter_ports) == 0:
             return super()._get_param_ids()
+
         # FIXME: parameter ports should be part of generated params
         return ["_parameter_ports"] + super()._get_param_ids()
 
     def _get_param_struct_type(self, ctx):
-        ports_params = (ctx.get_param_struct_type(s) for s in self._parameter_ports)
-        ports_param_struct = pnlvm.ir.LiteralStructType(ports_params)
         mech_param_struct = ctx.get_param_struct_type(super())
         if len(self._parameter_ports) == 0:
             return mech_param_struct
 
-        return pnlvm.ir.LiteralStructType((ports_param_struct,
-                                           *mech_param_struct))
+        ports_params = (ctx.get_param_struct_type(s) for s in self._parameter_ports)
+        ports_param_struct = pnlvm.ir.LiteralStructType(ports_params)
+        return pnlvm.ir.LiteralStructType((ports_param_struct, *mech_param_struct))
+
+    def _get_param_initializer(self, context):
+        mech_param_init = super()._get_param_initializer(context)
+        if len(self._parameter_ports) == 0:
+            return mech_param_init
+
+        port_param_init = tuple(s._get_param_initializer(context) for s in self._parameter_ports)
+        return (port_param_init, *mech_param_init)
 
     def _get_state_ids(self):
         if len(self._parameter_ports) == 0:
             return super()._get_state_ids()
+
         # FIXME: parameter ports should be part of generated state
         return ["_parameter_ports"] + super()._get_state_ids()
 
     def _get_state_struct_type(self, ctx):
-        ports_state = (ctx.get_state_struct_type(s) for s in self._parameter_ports)
-        ports_state_struct = pnlvm.ir.LiteralStructType(ports_state)
         mech_state_struct = ctx.get_state_struct_type(super())
         if len(self._parameter_ports) == 0:
             return mech_state_struct
 
-        return pnlvm.ir.LiteralStructType((ports_state_struct,
-                                           *mech_state_struct))
+        ports_state = (ctx.get_state_struct_type(s) for s in self._parameter_ports)
+        ports_state_struct = pnlvm.ir.LiteralStructType(ports_state)
+        return pnlvm.ir.LiteralStructType((ports_state_struct, *mech_state_struct))
+
+    def _get_state_initializer(self, context):
+        mech_state_init = super()._get_state_initializer(context)
+        if len(self._parameter_ports) == 0:
+            return mech_state_init
+
+        port_state_init = tuple(s._get_state_initializer(context) for s in self._parameter_ports)
+        return (port_state_init, *mech_state_init)
 
     def _get_output_struct_type(self, ctx):
         output_type_list = (ctx.get_output_struct_type(port) for port in self.output_ports)
@@ -2888,22 +2933,6 @@ class Mechanism_Base(Mechanism):
             return pnlvm.ir.ArrayType(input_type_list[0], len(input_type_list))
 
         return pnlvm.ir.LiteralStructType(input_type_list)
-
-    def _get_param_initializer(self, context):
-        port_param_init = tuple(s._get_param_initializer(context) for s in self._parameter_ports)
-        mech_param_init = super()._get_param_initializer(context)
-        if len(self._parameter_ports) == 0:
-            return mech_param_init
-
-        return (port_param_init, *mech_param_init)
-
-    def _get_state_initializer(self, context):
-        port_state_init = tuple(s._get_state_initializer(context) for s in self._parameter_ports)
-        mech_state_init = super()._get_state_initializer(context)
-        if len(self._parameter_ports) == 0:
-            return mech_state_init
-
-        return (port_state_init, *mech_state_init)
 
     def _gen_llvm_ports(self, ctx, builder, ports, group,
                         get_output_ptr, get_input_data_ptr,
@@ -2931,6 +2960,7 @@ class Mechanism_Base(Mechanism):
                     array_1d = pnlvm.ir.ArrayType(p_input_data.type.pointee, 1)
                     assert array_1d == p_function.args[2].type.pointee, \
                         "{} vs. {}".format(p_function.args[2].type.pointee, p_input_data.type.pointee)
+
                     # restrict shape matching to casting 1d values to 2d arrays
                     # for Control/Gating signals
                     assert len(p_function.args[2].type.pointee) == 1
@@ -3053,7 +3083,7 @@ class Mechanism_Base(Mechanism):
             if name == OWNER_VALUE:
                 data = value
             elif name in self.llvm_state_ids:
-                data = pnlvm.helpers.get_state_ptr(builder, self, mech_state, name)
+                data = ctx.get_param_or_state_ptr(builder, self, name, state_struct_ptr=mech_state)
             else:
                 data = None
 

@@ -22,6 +22,7 @@ from typing import Callable, Optional
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import Context
+
 from . import helpers, jit_engine, builder_context
 from .debug import debug_env
 
@@ -99,99 +100,104 @@ class Execution:
             struct = struct_ty(*initializer)
             struct_end = time.time()
 
+            setattr(self, name, struct)
 
             if "time_stat" in self._debug_env:
                 print("Time to get initializer for struct:", name,
                       "for", self._obj.name, ":", init_end - init_start)
                 print("Time to instantiate struct:", name,
                       "for", self._obj.name, ":", struct_end - init_end)
-            setattr(self, name, struct)
+
             if "stat" in self._debug_env:
                 print("Instantiated struct:", name, "( size:" ,
                       _pretty_size(ctypes.sizeof(struct_ty)), ")",
                       "for", self._obj.name)
 
+            if len(self._execution_contexts) == 1:
+                if name == '_state':
+                    self._copy_params_to_pnl(self._execution_contexts[0],
+                                             self._obj,
+                                             self._state_struct,
+                                             "llvm_state_ids")
+
+                elif name == '_param':
+                    self._copy_params_to_pnl(self._execution_contexts[0],
+                                             self._obj,
+                                             self._param_struct,
+                                             "llvm_param_ids")
+
         return struct
 
-
-    def writeback_params_to_pnl(self, params=None, ids:Optional[str]=None, condition:Callable=lambda p: True):
-
-        assert (params is None) == (ids is None), "Either both 'params' and 'ids' have to be set or neither"
-
-        if params is None:
-            # Default to stateful params
-            params = self._state_struct
-            ids = "llvm_state_ids"
-
-        self._copy_params_to_pnl(self._execution_contexts[0], self._obj, params, ids, condition)
-
-
-    def _copy_params_to_pnl(self, context, component, params, ids:str, condition:Callable):
+    def _copy_params_to_pnl(self, context, component, params, ids:str):
 
         for idx, attribute in enumerate(getattr(component, ids)):
             compiled_attribute_param = getattr(params, params._fields_[idx][0])
+            compiled_attribute_param_ctype = params._fields_[idx][1]
+
+            def _enumerate_recurse(elements):
+                for element_id, element in enumerate(elements):
+                    element_params = getattr(compiled_attribute_param,
+                                             compiled_attribute_param._fields_[element_id][0])
+                    self._copy_params_to_pnl(context=context,
+                                             component=element,
+                                             params=element_params,
+                                             ids=ids)
 
             # Handle custom compiled-only structures by name
             if attribute == 'nodes':
-                for node_id, node in enumerate(component._all_nodes):
-                    node_params = getattr(compiled_attribute_param,
-                                          compiled_attribute_param._fields_[node_id][0])
-                    self._copy_params_to_pnl(context=context,
-                                             component=node,
-                                             params=node_params,
-                                             ids=ids,
-                                             condition=condition)
+                _enumerate_recurse(component._all_nodes)
+
             elif attribute == 'projections':
-                for proj_id, projection in enumerate(component._inner_projections):
-                    projection_params = getattr(compiled_attribute_param,
-                                                compiled_attribute_param._fields_[proj_id][0])
-                    self._copy_params_to_pnl(context=context,
-                                             component=projection,
-                                             params=projection_params,
-                                             ids=ids,
-                                             condition=condition)
+                _enumerate_recurse(component._inner_projections)
 
             elif attribute == '_parameter_ports':
-                for pp_id, param_port in enumerate(component._parameter_ports):
-                    port_params = getattr(compiled_attribute_param,
-                                          compiled_attribute_param._fields_[pp_id][0])
-                    self._copy_params_to_pnl(context=context,
-                                             component=param_port,
-                                             params=port_params,
-                                             ids=ids,
-                                             condition=condition)
+                _enumerate_recurse(component._parameter_ports)
+
             else:
+                # TODO: Reconstruct Python RandomState
+                if attribute == "random_state":
+                    continue
+
+                # TODO: Reconstruct Python memory storage
+                if attribute == "ring_memory":
+                    continue
+
+                # TODO: Reconstruct Time class
+                if attribute == "num_executions":
+                    continue
+
+                # TODO: Add support for syncing optimizer state
+                if attribute == "optimizer":
+                    continue
+
+                # "old_val" is a helper storage in compiled RecurrentTransferMechanism
+                # to workaround the fact that compiled projections do no pull values
+                # from their source output ports
+                if attribute == "old_val":
+                    continue
+
                 # Handle PNL parameters
                 pnl_param = getattr(component.parameters, attribute)
-                pnl_value = pnl_param.get(context=context)
+
+                # Use ._get to retrieve underlying numpy arrays
+                # (.get will extract a scalar if originally set as a scalar)
+                pnl_value = pnl_param._get(context=context)
 
                 # Recurse if the value is a PNL object with its own parameters
                 if hasattr(pnl_value, 'parameters'):
                     self._copy_params_to_pnl(context=context,
                                              component=pnl_value,
                                              params=compiled_attribute_param,
-                                             ids=ids,
-                                             condition=condition)
+                                             ids=ids)
 
                 elif attribute == "input_ports" or attribute == "output_ports":
-                    for port_id, port in enumerate(pnl_value):
-                        port_params = getattr(compiled_attribute_param,
-                                              compiled_attribute_param._fields_[port_id][0])
-                        self._copy_params_to_pnl(context=context,
-                                                 component=port,
-                                                 params=port_params,
-                                                 ids=ids,
-                                                 condition=condition)
+                    _enumerate_recurse(pnl_value)
 
-                # Writeback parameter value if the condition matches
-                elif condition(pnl_param):
-
-                    # TODO: Reconstruct Python RandomState
-                    if attribute == "random_state":
-                        continue
+                # Writeback parameter value
+                else:
 
                     # Replace empty structures with None
-                    if ctypes.sizeof(compiled_attribute_param) == 0:
+                    if ctypes.sizeof(compiled_attribute_param_ctype) == 0:
                         value = None
                     else:
                         value = np.ctypeslib.as_array(compiled_attribute_param)
@@ -200,19 +206,29 @@ class Execution:
                         if "state" in ids:
                             value = value[-1]
 
-                        # Try to match the shape of the old value
-                        old_value = pnl_param.get(context)
-                        if hasattr(old_value, 'shape'):
-                            value = value.reshape(old_value.shape)
+                        # Reshape to match the shape of the old value.
+                        # Do not try to reshape ragged arrays.
+                        if getattr(pnl_value, 'dtype', object) != object and pnl_value.shape != value.shape:
 
-                    pnl_param.set(value, context=context)
+                            # Reshape to match numpy 0d arrays and "matrix"
+                            # parameters that are flattened in compiled form
+                            assert pnl_value.shape == () or pnl_param.name == "matrix", \
+                                "{}: {} vs. {}".format(pnl_param.name, pnl_value.shape, value.shape)
+
+                            # Use an assignment instead of reshape().
+                            # The latter would silently create a copy if the shape
+                            # could not be achieved in metadata (stride, type, ...)
+                            value.shape = pnl_value.shape
+
+                    pnl_param.set(value, context=context, override=True, compilation_sync=True)
 
 
 class CUDAExecution(Execution):
     def __init__(self, buffers=['param_struct', 'state_struct', 'out']):
         super().__init__()
+        self._gpu_buffers = {}
         for b in buffers:
-            setattr(self, "_buffer_cuda_" + b, None)
+            self._gpu_buffers["_" + b] = None
         self._uploaded_bytes = Counter()
         self._downloaded_bytes = Counter()
 
@@ -245,9 +261,13 @@ class CUDAExecution(Execution):
             return jit_engine.pycuda.driver.mem_alloc(4)
         return jit_engine.pycuda.driver.to_device(bytes(data))
 
-    def download_to(self, dst, source, name='other'):
+    def download_to(self, dst, source, name='other', *, move=False):
         bounce = self.download_ctype(source, type(dst), name)
         ctypes.memmove(ctypes.addressof(dst), ctypes.addressof(bounce), ctypes.sizeof(dst))
+        if move:
+            for k, v in self._gpu_buffers.items():
+                if v is source:
+                    self._gpu_buffers[k] = None
 
     def download_ctype(self, source, ty, name='other'):
         self._downloaded_bytes[name] += ctypes.sizeof(ty)
@@ -256,14 +276,16 @@ class CUDAExecution(Execution):
         return ty.from_buffer(out_buf)
 
     def __get_cuda_buffer(self, struct_name):
-        private_attr_name = "_buffer_cuda" + struct_name
-        private_attr = getattr(self, private_attr_name)
-        if private_attr is None:
-            # Set private attribute to a new buffer
-            private_attr = self.upload_ctype(getattr(self, struct_name), struct_name)
-            setattr(self, private_attr_name, private_attr)
+        gpu_buffer = self._gpu_buffers[struct_name]
 
-        return private_attr
+        # Param struct needs to be reuploaded every time because the values
+        # might have changed.
+        if gpu_buffer is None or struct_name == "_param_struct":
+            # Set private attribute to a new buffer
+            gpu_buffer = self.upload_ctype(getattr(self, struct_name), struct_name)
+            self._gpu_buffers[struct_name] = gpu_buffer
+
+        return gpu_buffer
 
     @property
     def _cuda_param_struct(self):
@@ -283,10 +305,13 @@ class CUDAExecution(Execution):
 
     @property
     def _cuda_out(self):
-        if self._buffer_cuda_out is None:
+        gpu_buffer = self._gpu_buffers["_out"]
+        if gpu_buffer is None:
             size = ctypes.sizeof(self._ct_vo)
-            self._buffer_cuda_out = jit_engine.pycuda.driver.mem_alloc(size)
-        return self._buffer_cuda_out
+            gpu_buffer = jit_engine.pycuda.driver.mem_alloc(size)
+            self._gpu_buffers["_out"] = gpu_buffer
+
+        return gpu_buffer
 
     def cuda_execute(self, variable):
         # Create input argument
@@ -301,7 +326,7 @@ class CUDAExecution(Execution):
 
         # Copy the result from the device
         self.download_to(self._ct_vo, self._cuda_out, 'result')
-        self.download_to(self._state_struct, self._cuda_state_struct, 'state')
+        self.download_to(self._state_struct, self._cuda_state_struct, 'state', move=True)
         return _convert_ctype_to_python(self._ct_vo)
 
 
@@ -618,11 +643,11 @@ class CompExecution(CUDAExecution):
                                       self._cuda_conditions,
                                       threads=len(self._execution_contexts))
 
-        # Copy the data struct from the device
-        self._data_struct = self.download_ctype(self._cuda_data_struct, type(self._data_struct), '_data_struct')
+        # Copy the data structs from the device
+        self.download_to(self._data_struct, self._cuda_data_struct, 'data', move=True)
+        self.download_to(self._state_struct, self._cuda_state_struct, 'state', move=True)
 
     # Methods used to accelerate "Run"
-
     def _get_run_input_struct(self, inputs, num_input_sets, arg=3):
         # Callers that override input arg, should ensure that _bin_func is not None
         bin_f = self._bin_run_func if arg == 3 else self._bin_func
@@ -737,6 +762,9 @@ class CompExecution(CUDAExecution):
                                      threads=len(self._execution_contexts))
 
         # Copy the data struct from the device
+        self.download_to(self._data_struct, self._cuda_data_struct, 'data', move=True)
+        self.download_to(self._state_struct, self._cuda_state_struct, 'state', move=True)
+
         ct_out = self.download_ctype(data_out, output_type, 'result')
         if len(self._execution_contexts) > 1:
             return _convert_ctype_to_python(ct_out)
@@ -815,13 +843,19 @@ class CompExecution(CUDAExecution):
 
         parallel_start = time.time()
         with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as ex:
+
+            # Create input and result typed casts once, they are the same
+            # for every submitted job.
+            input_param = ctypes.cast(ctypes.byref(ct_inputs), self.__bin_func.c_func.argtypes[5])
+            results_param = ctypes.cast(ct_results, self.__bin_func.c_func.argtypes[4])
+
             # There are 7 arguments to evaluate_alloc_range:
             # comp_param, comp_state, from, to, results, input, comp_data
             results = [ex.submit(self.__bin_func, ct_param, ct_state,
                                  int(i * evals_per_job),
                                  min((i + 1) * evals_per_job, num_evaluations),
-                                 ctypes.cast(ct_results, self.__bin_func.c_func.argtypes[4]),
-                                 ctypes.cast(ctypes.byref(ct_inputs), self.__bin_func.c_func.argtypes[5]),
+                                 results_param,
+                                 input_param,
                                  ct_data,
                                  ct_num_inputs)
                        for i in range(jobs)]

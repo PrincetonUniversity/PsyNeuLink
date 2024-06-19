@@ -229,7 +229,7 @@ def test_reduce_function(variable, operation, exponents, weights, scale, offset,
     if operation == pnl.SUM:
         expected = np.sum(tmp, axis=1) * scale + offset
     if operation == pnl.PRODUCT:
-        expected = np.product(tmp, axis=1) * scale + offset
+        expected = np.prod(tmp, axis=1) * scale + offset
 
     np.testing.assert_allclose(res, expected, rtol=1e-5, atol=1e-8)
 
@@ -267,7 +267,7 @@ def test_linear_combination_function(variable, operation, exponents, weights, sc
     if operation == pnl.SUM:
         expected = np.sum(tmp, axis=0) * scale + offset
     if operation == pnl.PRODUCT:
-        expected = np.product(tmp, axis=0) * scale + offset
+        expected = np.prod(tmp, axis=0) * scale + offset
 
     np.testing.assert_allclose(res, expected, rtol=1e-5, atol=1e-8)
 
@@ -292,7 +292,7 @@ def test_linear_combination_function_in_mechanism(operation, input, input_ports,
     if operation == pnl.SUM:
         expected = np.sum(input, axis=0) * scale + offset
     if operation == pnl.PRODUCT:
-        expected = np.product(input, axis=0) * scale + offset
+        expected = np.prod(input, axis=0) * scale + offset
 
     # expected is always 1d vs 2d return value res
     np.testing.assert_allclose(res[0], expected)

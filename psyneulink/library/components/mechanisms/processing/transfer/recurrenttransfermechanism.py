@@ -181,7 +181,6 @@ Class Reference
 """
 
 import copy
-import itertools
 import numbers
 import types
 import warnings
@@ -212,11 +211,11 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_PORT, MATRIX, NAME, RECURRENT_TRANSFER_MECHANISM, RESULT
-from psyneulink.core.globals.parameters import Parameter, SharedParameter, check_user_specified
+from psyneulink.core.globals.parameters import Parameter, SharedParameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.registry import register_instance, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
-from psyneulink.core.globals.utilities import NumericCollections, ValidParamSpecType
+from psyneulink.core.globals.utilities import NumericCollections, ValidParamSpecType, safe_len
 from psyneulink.core.scheduling.condition import Condition, WhenFinished
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import \
@@ -275,7 +274,7 @@ def _recurrent_transfer_mechanism_matrix_setter(value, owning_component=None, co
     # the existing behavior. Unsure if this is actually correct though
     # KDM 8/7/18: removing the below because it has bad side effects for _instantiate_from_context, and it's not clear
     # that it's the correct behavior. Similar reason for removing/not implementing auto/hetero setters
-    # if hasattr(owning_component, "recurrent_projection"):
+    # if owning_component.recurrent_projection is not None:
     #     owning_component.recurrent_projection.parameter_ports["matrix"].function.parameters.previous_value._set(value, base_execution_id)
 
     try:
@@ -315,7 +314,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     COMMENT:
     ??OLD OR NEWER THAN BELOW?
-    matrix : list, np.ndarray, np.matrix, matrix keyword, or AutoAssociativeProjection : default FULL_CONNECTIVITY_MATRIX
+    matrix : list, np.ndarray, matrix keyword, or AutoAssociativeProjection : default FULL_CONNECTIVITY_MATRIX
         specifies the matrix to use for creating a `recurrent AutoAssociativeProjection
         <RecurrentTransferMechanism_Structure>`, or a AutoAssociativeProjection to use. If **auto** or **hetero**
         arguments are specified, the **matrix** argument will be ignored in favor of those arguments.
@@ -337,7 +336,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         equal to the matrix dimensions, if a non-uniform diagonal is desired. Can be modified by control.
     COMMENT
 
-    matrix : list, np.ndarray, np.matrix, matrix keyword, or AutoAssociativeProjection : default HOLLOW_MATRIX
+    matrix : list, np.ndarray, matrix keyword, or AutoAssociativeProjection : default HOLLOW_MATRIX
         specifies the matrix to use for creating a `recurrent AutoAssociativeProjection
         <RecurrentTransferMechanism_Structure>`, or an AutoAssociativeProjection to use.
 
@@ -427,7 +426,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         if it is not (the default), then learning cannot be enabled until it is configured for learning by calling
         the Mechanism's `configure_learning <RecurrentTransferMechanism.configure_learning>` method.
 
-    learning_rate : scalar, or list, 1d or 2d np.array, or np.matrix of numeric values: default False
+    learning_rate : scalar, or list, 1d or 2d np.array of numeric values: default False
         specifies the learning rate used by its `learning function <RecurrentTransferMechanism.learning_function>`.
         If it is `None`, the `default learning_rate for a LearningMechanism <LearningMechanism_Learning_Rate>` is
         used; if it is assigned a value, that is used as the learning_rate (see `learning_rate
@@ -489,7 +488,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         created automatically if `learning is specified <RecurrentTransferMechanism_Learning>`, and used to train the
         `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`.
 
-    learning_rate : float, 1d or 2d np.array, or np.matrix of numeric values : default None
+    learning_rate : float, 1d or 2d np.array of numeric values : default None
         determines the learning rate used by the `learning_function <RecurrentTransferMechanism.learning_function>`
         of the `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` (see `learning_rate
         <AutoAssociativeLearningMechanism.learning_rate>` for details concerning specification and default value
@@ -636,6 +635,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             read_only=True,
             structural=True,
         )
+        recurrent_projection = Parameter(None, stateful=False, loggable=False, structural=True)
 
     standard_output_ports = TransferMechanism.standard_output_ports.copy()
     standard_output_ports.extend([{NAME:ENERGY_OUTPUT_PORT_NAME}, {NAME:ENTROPY_OUTPUT_PORT_NAME}])
@@ -779,21 +779,21 @@ class RecurrentTransferMechanism(TransferMechanism):
             if (auto_param is not None) and not isinstance(auto_param, (np.ndarray, list, numbers.Number)):
                 raise RecurrentTransferError("auto parameter ({}) of {} is of incompatible type: it should be a "
                                              "number, None, or a 1D numeric array".format(auto_param, self))
-            if isinstance(auto_param, (np.ndarray, list)) and len(auto_param) != 1 and len(auto_param) != self.size[0]:
+            if isinstance(auto_param, (np.ndarray, list)) and safe_len(auto_param) != 1 and safe_len(auto_param) != self.size[0]:
                 raise RecurrentTransferError("auto parameter ({0}) for {1} is of incompatible length with the size "
                                              "({2}) of its owner, {1}.".format(auto_param, self, self.size[0]))
 
         if HETERO in target_set:
             hetero_param = target_set[HETERO]
-            if hetero_param is not None and not isinstance(hetero_param, (np.matrix, np.ndarray, list, numbers.Number)):
+            if hetero_param is not None and not isinstance(hetero_param, (np.ndarray, list, numbers.Number)):
                 raise RecurrentTransferError("hetero parameter ({}) of {} is of incompatible type: it should be a "
-                                             "number, None, or a 2D numeric matrix or array".format(hetero_param, self))
+                                             "number, None, or a 2D numeric array".format(hetero_param, self))
             hetero_shape = np.array(hetero_param).shape
             if hetero_shape != (1,) and hetero_shape != (1, 1):
-                if isinstance(hetero_param, (np.ndarray, list, np.matrix)) and hetero_shape[0] != self.size[0]:
+                if isinstance(hetero_param, (np.ndarray, list, np.matrix)) and (hetero_param.ndim > 0 and hetero_shape[0] != self.size[0]):
                     raise RecurrentTransferError("hetero parameter ({0}) for {1} is of incompatible size with the size "
                                                  "({2}) of its owner, {1}.".format(hetero_param, self, self.size[0]))
-                if isinstance(hetero_param, (np.ndarray, list, np.matrix)) and hetero_shape[0] != hetero_shape[1]:
+                if isinstance(hetero_param, (np.ndarray, list, np.matrix)) and (hetero_param.ndim > 0 and hetero_shape[0] != hetero_shape[1]):
                     raise RecurrentTransferError("hetero parameter ({}) for {} must be square.".format(hetero_param, self))
 
         # Validate DECAY
@@ -816,15 +816,15 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         param_keys = self._parameter_ports.key_values
 
-        matrix = get_matrix(self.defaults.matrix, rows=self.recurrent_size, cols=self.recurrent_size)
+        matrix = get_matrix(copy_parameter_value(self.defaults.matrix), rows=self.recurrent_size, cols=self.recurrent_size)
 
         # below implements the rules provided by KAM:
         # - If auto and hetero but not matrix are specified, the diagonal terms of the matrix are determined by auto and the off-diagonal terms are determined by hetero.
         # - If auto, hetero, and matrix are all specified, matrix is ignored in favor of auto and hetero.
         # - If auto and matrix are both specified, the diagonal terms are determined by auto and the off-diagonal terms are determined by matrix. ​
         # - If hetero and matrix are both specified, the diagonal terms are determined by matrix and the off-diagonal terms are determined by hetero.
-        auto = get_auto_matrix(self.defaults.auto, self.recurrent_size)
-        hetero = get_hetero_matrix(self.defaults.hetero, self.recurrent_size)
+        auto = get_auto_matrix(copy_parameter_value(self.defaults.auto), self.recurrent_size)
+        hetero = get_hetero_matrix(copy_parameter_value(self.defaults.hetero), self.recurrent_size)
         auto_specified = self.parameters.auto._user_specified
         hetero_specified = self.parameters.hetero._user_specified
 
@@ -1014,11 +1014,11 @@ class RecurrentTransferMechanism(TransferMechanism):
         # KDM 10/12/18: removing below because it doesn't seem to be correct, and also causes
         # unexpected values to be set to previous_value
         # KDM 7/1/19: reinstating below
-        if hasattr(self, "recurrent_projection"):
+        if self.recurrent_projection is not None:
             self.recurrent_projection.parameter_ports["matrix"].function.previous_value = val
             self.recurrent_projection.parameter_ports["matrix"].function.reset = val
 
-        self.parameters.matrix._set(val, self.most_recent_context)
+        self.parameters.matrix.set(val, self.most_recent_context)
 
     @property
     def auto(self):
@@ -1026,9 +1026,9 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     @auto.setter
     def auto(self, val):
-        self.parameters.auto._set(val, self.most_recent_context)
+        self.parameters.auto.set(val, self.most_recent_context)
 
-        if hasattr(self, "recurrent_projection") and 'hetero' in self._parameter_ports:
+        if self.recurrent_projection is not None and 'hetero' in self._parameter_ports:
             self.recurrent_projection.parameter_ports["matrix"].function.previous_value = self.matrix
 
     @property
@@ -1037,9 +1037,9 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     @hetero.setter
     def hetero(self, val):
-        self.parameters.hetero._set(val, self.most_recent_context)
+        self.parameters.hetero.set(val, self.most_recent_context)
 
-        if hasattr(self, "recurrent_projection") and 'auto' in self._parameter_ports:
+        if self.recurrent_projection is not None and 'auto' in self._parameter_ports:
             self.recurrent_projection.parameter_ports["matrix"].function.previous_value = self.matrix_param
 
     @property
@@ -1243,36 +1243,21 @@ class RecurrentTransferMechanism(TransferMechanism):
         """
         return self.output_port
 
-    def _get_param_ids(self):
-        return super()._get_param_ids() + ["recurrent_projection"]
-
-    def _get_param_struct_type(self, ctx):
-        transfer_t = ctx.get_param_struct_type(super())
-        projection_t = ctx.get_param_struct_type(self.recurrent_projection)
-        return pnlvm.ir.LiteralStructType([*transfer_t.elements, projection_t])
-
     def _get_state_ids(self):
-        return super()._get_state_ids() + ["old_val", "recurrent_projection"]
+        return super()._get_state_ids() + ["old_val"]
 
     def _get_state_struct_type(self, ctx):
         transfer_t = ctx.get_state_struct_type(super())
-        projection_t = ctx.get_state_struct_type(self.recurrent_projection)
         return_t = ctx.get_output_struct_type(self)
-        return pnlvm.ir.LiteralStructType([*transfer_t.elements, return_t, projection_t])
-
-    def _get_param_initializer(self, context):
-        transfer_params = super()._get_param_initializer(context)
-        projection_params = self.recurrent_projection._get_param_initializer(context)
-        return (*transfer_params, projection_params)
+        return pnlvm.ir.LiteralStructType([*transfer_t.elements, return_t])
 
     def _get_state_initializer(self, context):
         transfer_init = super()._get_state_initializer(context)
-        projection_init = self.recurrent_projection._get_state_initializer(context)
 
         # Initialize to OutputPort defaults.
         # That is what the recurrent projection finds.
         retval_init = (tuple(op.parameters.value.get(context)) if not np.isscalar(op.parameters.value.get(context)) else op.parameters.value.get(context) for op in self.output_ports)
-        return (*transfer_init, tuple(retval_init), projection_init)
+        return (*transfer_init, tuple(retval_init))
 
     def _gen_llvm_function_reset(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "reset" in tags
@@ -1356,10 +1341,3 @@ class RecurrentTransferMechanism(TransferMechanism):
         prev_val_ptr = ctx.get_param_or_state_ptr(builder, self, "old_val", state_struct_ptr=mech_state)
         builder.store(builder.load(mech_out), prev_val_ptr)
         return ret
-
-    @property
-    def _dependent_components(self):
-        return list(itertools.chain(
-            super()._dependent_components,
-            [self.recurrent_projection],
-        ))

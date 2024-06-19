@@ -99,8 +99,6 @@ Class Reference
 ---------------
 
 """
-import numbers
-
 import numpy as np
 from beartype import beartype
 
@@ -117,6 +115,7 @@ from psyneulink.core.globals.keywords import AUTO_ASSOCIATIVE_PROJECTION, DEFAUL
 from psyneulink.core.globals.parameters import SharedParameter, Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
+from psyneulink.core.globals.utilities import is_numeric_scalar
 
 __all__ = [
     'AutoAssociativeError', 'AutoAssociativeProjection', 'get_auto_matrix', 'get_hetero_matrix',
@@ -161,7 +160,7 @@ class AutoAssociativeProjection(MappingProjection):
         specifies the destination of the Projection's output; must be (or belong to) the same Mechanism as **sender**,
         and the length of its `variable <InputPort.variable>` must match the `value <OutputPort.value>` of **sender**.
 
-    matrix : list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX
+    matrix : list, np.ndarray, function or keyword : default DEFAULT_MATRIX
         specifies the matrix used by `function <Projection_Base.function>` (default: `LinearCombination`) to
         transform the `value <Projection_Base.value>` of the `sender <MappingProjection.sender>` into a value
         provided to the `variable <InputPort.variable>` of the `receiver <MappingProjection.receiver>` `InputPort`;
@@ -366,7 +365,7 @@ class AutoAssociativeProjection(MappingProjection):
 
 # a helper function that takes a specification of `hetero` and returns a hollow matrix with the right values
 def get_hetero_matrix(raw_hetero, size):
-    if isinstance(raw_hetero, numbers.Number):
+    if is_numeric_scalar(raw_hetero):
         return get_matrix(HOLLOW_MATRIX, size, size) * raw_hetero
     elif ((isinstance(raw_hetero, np.ndarray) and raw_hetero.ndim == 1) or
               (isinstance(raw_hetero, list) and np.array(raw_hetero).ndim == 1)):
@@ -384,7 +383,7 @@ def get_hetero_matrix(raw_hetero, size):
 
 # similar to get_hetero_matrix() above
 def get_auto_matrix(raw_auto, size):
-    if isinstance(raw_auto, numbers.Number):
+    if is_numeric_scalar(raw_auto):
         return np.diag(np.full(size, raw_auto, dtype=float))
     elif ((isinstance(raw_auto, np.ndarray) and raw_auto.ndim == 1) or
               (isinstance(raw_auto, list) and np.array(raw_auto).ndim == 1)):

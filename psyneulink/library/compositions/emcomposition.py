@@ -507,7 +507,7 @@ and `value_input_nodes <EMComposition.value_input_nodes>` attributes, respective
 .. _EMComposition_Memory:
 
 *Memory*
-~~~~~~~
+~~~~~~~~
 
 The `memory <EMComposition.memory>` attribute contains a record of the entries in the EMComposition's memory. This is
 in the form of a 2d array, in which rows (axis 0) are entries and columns (axis 1) are fields.  The number of fields
@@ -534,7 +534,7 @@ and the number of entries is determined by the `memory_capacity <EMComposition_M
 .. _EMComposition_Output:
 
 *Output*
-~~~~~~~
+~~~~~~~~
 
 The outputs corresponding to retrieved value for each field are represented as `OUTPUT <NodeRole.INPUT>` `Nodes
 <Composition_Nodes>` of the EMComposition, listed in its `retrieved_nodes <EMComposition.retrieved_nodes>` attribute.
@@ -896,7 +896,7 @@ from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import \
     (AUTO, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, EM_COMPOSITION, FULL_CONNECTIVITY_MATRIX,
      GAIN, IDENTITY_MATRIX, MULTIPLICATIVE_PARAM, NAME, PARAMS, PRODUCT, PROJECTIONS, RANDOM, SIZE, VARIABLE)
-from psyneulink.core.globals.utilities import all_within_range
+from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric_scalar
 from psyneulink.core.llvm import ExecutionMode
 
 
@@ -923,8 +923,10 @@ def _memory_getter(owning_component=None, context=None)->list:
               for retrieved_node in owning_component.retrieved_nodes]
     # Reorganize memory so that each row is an entry and each column is a field
     memory_capacity = owning_component.memory_capacity or owning_component.defaults.memory_capacity
-    return [[memory[j][i] for j in range(owning_component.num_fields)]
-              for i in range(memory_capacity)]
+    return convert_all_elements_to_np_array([
+        [memory[j][i] for j in range(owning_component.num_fields)]
+        for i in range(memory_capacity)
+    ])
 
 def get_softmax_gain(v, scale=1, base=1, entropy_weighting=.1)->float:
     """Compute the softmax gain (inverse temperature) based on the entropy of the distribution of values.
@@ -1313,7 +1315,7 @@ class EMComposition(AutodiffComposition):
         learn_field_weights = Parameter(True, structural=True)
         learning_rate = Parameter(.001, modulable=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, setter=_seed_setter)
 
         def _validate_memory_template(self, memory_template):
             if isinstance(memory_template, tuple):
@@ -1344,18 +1346,17 @@ class EMComposition(AutodiffComposition):
                 return f"must be a list of strings."
 
         def _validate_memory_decay_rate(self, memory_decay_rate):
-            if memory_decay_rate in {None, AUTO}:
+            if memory_decay_rate is None or memory_decay_rate == AUTO:
                 return
-            if not (isinstance(memory_decay_rate, (float, int)) and all_within_range(memory_decay_rate, 0, 1)):
+            if not is_numeric_scalar(memory_decay_rate) and not (0 <= memory_decay_rate <= 1):
                 return f"must be a float in the interval [0,1]."
 
         def _validate_softmax_gain(self, softmax_gain):
-            if softmax_gain != CONTROL and not isinstance(softmax_gain, (float, int)):
+            if softmax_gain != CONTROL and not is_numeric_scalar(softmax_gain):
                 return f"must be a scalar or the keyword 'CONTROL'."
 
         def _validate_storage_prob(self, storage_prob):
-            storage_prob = float(storage_prob)
-            if not all_within_range(storage_prob, 0, 1):
+            if not is_numeric_scalar(storage_prob) and not (0 <= storage_prob <= 1):
                 return f"must be a float in the interval [0,1]."
 
     @check_user_specified
@@ -1493,9 +1494,12 @@ class EMComposition(AutodiffComposition):
             self.exclude_node_roles(node, NodeRole.OUTPUT)
 
         # Warn if divide by zero will occur due to memory initialization
-        if not np.any([np.any([self.memory[i][j]
-                               for i in range(self.memory_capacity)])
-                       for j in range(self.num_keys)]):
+        memory = self.memory
+        memory_capacity = self.memory_capacity
+        if not np.any([
+            np.any([memory[i][j] for i in range(memory_capacity)])
+            for j in range(self.num_keys)
+        ]):
             warnings.warn(f"Memory initialized with at least one field that has all zeros; "
                           f"a divide by zero will occur if 'normalize_memories' is True. "
                           f"This can be avoided by using 'memory_fill' to initialize memories with non-zero values.")
@@ -1574,7 +1578,7 @@ class EMComposition(AutodiffComposition):
                 # Fill with specified value
                 elif isinstance(memory_fill, (list, float, int)):
                     entry = [np.full(len(field), memory_fill).tolist() for field in entry_template]
-                entries = [np.array(entry, dtype=object)] * num_entries
+                entries = [np.array(entry, dtype=object) for _ in range(num_entries)]
 
             return np.array(np.array(entries,dtype=object), dtype=object)
 
@@ -2001,7 +2005,7 @@ class EMComposition(AutodiffComposition):
 
         if not concatenate_keys and self.num_keys > 1:
             if use_gating_for_weighting:
-                field_weight_nodes = [GatingMechanism(input_ports={VARIABLE: field_weights[i],
+                field_weight_nodes = [GatingMechanism(input_ports={VARIABLE: np.array(field_weights[i]),
                                                                    PARAMS:{DEFAULT_INPUT: DEFAULT_VARIABLE},
                                                                    NAME: 'OUTCOME'},
                                                       gate=[key_match_pair[1].output_ports[0]],
@@ -2010,7 +2014,7 @@ class EMComposition(AutodiffComposition):
                                       for i, key_match_pair in enumerate(zip(self.query_input_nodes,
                                                                              self.softmax_nodes))]
             else:
-                field_weight_nodes = [ProcessingMechanism(input_ports={VARIABLE: field_weights[i],
+                field_weight_nodes = [ProcessingMechanism(input_ports={VARIABLE: np.array(field_weights[i]),
                                                                        PARAMS:{DEFAULT_INPUT: DEFAULT_VARIABLE},
                                                                        NAME: 'FIELD_WEIGHT'},
                                                           name= 'WEIGHT' if self.num_keys == 1
@@ -2110,20 +2114,20 @@ class EMComposition(AutodiffComposition):
         and from the value_input_node to the retrieved_node for values. The `function <EMStorageMechanism.function>`
         of the `EMSorageMechanism` that takes the following arguments:
 
-         - **variable* -- template for an `entry <EMComposition_Memory>` in `memory<EMComposition.memory>`;
+         - **variable** -- template for an `entry <EMComposition_Memory>` in `memory<EMComposition.memory>`;
 
-         - **fields* -- the `input_nodes <EMComposition.input_nodes>` for the corresponding `fields
+         - **fields** -- the `input_nodes <EMComposition.input_nodes>` for the corresponding `fields
            <EMComposition_Fields>` of an `entry <EMCmposition_Memory>` in `memory <EMComposition.memory>`;
 
-         - **field_types* -- a list of the same length as ``fields``, containing 1's for key fields and 0's for
+         - **field_types** -- a list of the same length as ``fields``, containing 1's for key fields and 0's for
            value fields;
 
-         - **concatenate_keys_node* -- node used to concatenate keys (if `concatenate_keys
+         - **concatenate_keys_node** -- node used to concatenate keys (if `concatenate_keys
            <EMComposition.concatenate_keys>` is `True`) or None;
 
-         - **memory_matrix* -- `memory_template <EMComposition.memory_template>`);
+         - **memory_matrix** -- `memory_template <EMComposition.memory_template>`);
 
-         - **learning_signals* -- list of ` `MappingProjection`\\s (or their ParameterPort`\\s) that store each
+         - **learning_signals** -- list of ` `MappingProjection`\\s (or their ParameterPort`\\s) that store each
            `field <EMComposition_Fields>` of `memory <EMComposition.memory>`;
 
          - **decay_rate** -- rate at which entries in the `memory_matrix <EMComposition.memory_matrix>` decay;

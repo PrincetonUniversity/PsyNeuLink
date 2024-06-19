@@ -110,6 +110,7 @@ from psyneulink.core.globals.keywords import LEABRA_FUNCTION, LEABRA_FUNCTION_TY
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
+from psyneulink.core.globals.utilities import convert_all_elements_to_np_array
 from psyneulink.core.scheduling.time import TimeScale
 
 __all__ = [
@@ -614,7 +615,9 @@ def run_leabra_network(network, input_pattern):
         network.set_inputs({'input_layer': input_pattern})
         network.set_outputs({})  # clear network._outputs
         network.trial()
-    return [unit.act_m for unit in network.layers[-1].units]
+    return convert_all_elements_to_np_array(
+        [unit.act_m for unit in network.layers[-1].units]
+    )
 
 
 def train_leabra_network(network, input_pattern, output_pattern):
@@ -635,7 +638,9 @@ def train_leabra_network(network, input_pattern, output_pattern):
         network.set_outputs({'output_layer': output_pattern})
         network.trial()
 
-    return [unit.act_m for unit in network.layers[-1].units]
+    return convert_all_elements_to_np_array(
+        [unit.act_m for unit in network.layers[-1].units]
+    )
 
 
 # infer whether the network is using the None or 'leabra' training rule

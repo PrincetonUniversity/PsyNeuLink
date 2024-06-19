@@ -59,12 +59,15 @@ for module in ['scheduler', 'condition', 'time']:
 
             if cls.__doc__ is None:
                 try:
-                    cls.__doc__ = f'{getattr(ext_module, cls_name).__doc__}'
+                    ext_cls = getattr(ext_module, cls_name)
                 except AttributeError:
                     # PNL-exclusive object
                     continue
+                else:
+                    cls.__doc__ = ext_cls.__doc__
 
-            cls.__doc__ = re.sub(pattern, repl, cls.__doc__, flags=re.MULTILINE | re.DOTALL)
+            if cls.__doc__ is not None:
+                cls.__doc__ = re.sub(pattern, repl, cls.__doc__, flags=re.MULTILINE | re.DOTALL)
 
     for cls, repls in module._doc_subs.items():
         if cls is None:
@@ -73,7 +76,8 @@ for module in ['scheduler', 'condition', 'time']:
             cls = getattr(module, cls)
 
         for pattern, repl in repls:
-            cls.__doc__ = re.sub(pattern, repl, cls.__doc__, flags=re.MULTILINE | re.DOTALL)
+            if cls.__doc__ is not None:
+                cls.__doc__ = re.sub(pattern, repl, cls.__doc__, flags=re.MULTILINE | re.DOTALL)
 
 del graph_scheduler
 del re

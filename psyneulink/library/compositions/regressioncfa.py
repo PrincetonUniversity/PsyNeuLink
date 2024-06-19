@@ -74,13 +74,14 @@ Class Reference
 ---------------
 
 """
+
+import itertools
 import numpy as np
 from beartype import beartype
 
 from psyneulink._typing import Optional, Union
 
 from enum import Enum
-from itertools import product
 
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BayesGLM
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
@@ -346,7 +347,9 @@ class RegressionCFA(CompositionFunctionApproximator):
 
         .. note::
             If this method is assigned as the `objective_funtion of a `GradientOptimization` `Function`,
-            it is differentiated using `autograd <https://github.com/HIPS/autograd>`_\\.grad().
+            it is differentiated using
+            `PyTorch autograd's <https://pytorch.org/docs/stable/generated/torch.func.grad.html>`_
+            `grad <torch.func.grad>`.
         """
 
         predicted_outcome=0
@@ -541,7 +544,7 @@ class RegressionCFA(CompositionFunctionApproximator):
                 self.terms[FC] = fc = np.tensordot(f, c, axes=0)
                 self.num[FC] = len(fc.reshape(-1))
                 self.num_elems[FC] = len(fc.reshape(-1))
-                self.labels[FC] = list(product(self.labels[F], self.labels[C]))
+                self.labels[FC] = list(itertools.product(self.labels[F], self.labels[C]))
 
             # feature-feature-control interactions
             if any(term in specified_terms for term in [PV.FFC, PV.FFCC]):
@@ -550,7 +553,7 @@ class RegressionCFA(CompositionFunctionApproximator):
                 self.terms[FFC] = ffc = np.tensordot(ff, c, axes=0)
                 self.num[FFC] = len(ffc.reshape(-1))
                 self.num_elems[FFC] = len(ffc.reshape(-1))
-                self.labels[FFC] = list(product(self.labels[FF], self.labels[C]))
+                self.labels[FFC] = list(itertools.product(self.labels[FF], self.labels[C]))
 
             # feature-control-control interactions
             if any(term in specified_terms for term in [PV.FCC, PV.FFCC]):
@@ -559,7 +562,7 @@ class RegressionCFA(CompositionFunctionApproximator):
                 self.terms[FCC] = fcc = np.tensordot(f, cc, axes=0)
                 self.num[FCC] = len(fcc.reshape(-1))
                 self.num_elems[FCC] = len(fcc.reshape(-1))
-                self.labels[FCC] = list(product(self.labels[F], self.labels[CC]))
+                self.labels[FCC] = list(itertools.product(self.labels[F], self.labels[CC]))
 
             # feature-feature-control-control interactions
             if PV.FFCC in specified_terms:
@@ -570,7 +573,7 @@ class RegressionCFA(CompositionFunctionApproximator):
                 self.terms[FFCC] = ffcc = np.tensordot(ff, cc, axes=0)
                 self.num[FFCC] = len(ffcc.reshape(-1))
                 self.num_elems[FFCC] = len(ffcc.reshape(-1))
-                self.labels[FFCC] = list(product(self.labels[FF], self.labels[CC]))
+                self.labels[FFCC] = list(itertools.product(self.labels[FF], self.labels[CC]))
 
             # Construct "flattened" vector based on specified terms, and assign indices (as slices)
             i=0
@@ -633,23 +636,23 @@ class RegressionCFA(CompositionFunctionApproximator):
             computed_terms[PV.F] = f = self.terms[PV.F.value]
 
             # Compute value of each control_signal from its variable
-            c = [None] * len(control_allocation)
+            c = np.zeros((len(control_allocation), ))
             for i, var in enumerate(control_allocation):
                 c[i] = self.control_signal_functions[i](var, context=context)
-            computed_terms[PV.C] = c = np.array(c)
+            computed_terms[PV.C] = c
 
             # Compute costs for new control_signal values
             if PV.COST in terms:
                 # computed_terms[PV.COST] = -(np.exp(0.25*c-3))
                 # computed_terms[PV.COST] = -(np.exp(0.25*c-3) + (np.exp(0.25*np.abs(c-self.control_signal_change)-3)))
-                costs = [None] * len(c)
+                costs = np.zeros((len(control_allocation),))
                 for i, val in enumerate(c):
                     # MODIFIED 11/9/18 OLD:
                     costs[i] = -(self._compute_costs[i](val, context=context))
                     # # MODIFIED 11/9/18 NEW: [JDC]
                     # costs[i] = -(self._compute_costs[i](val, ref_variables[i]))
                     # MODIFIED 11/9/18 END
-                computed_terms[PV.COST] = np.array(costs)
+                computed_terms[PV.COST] = costs
 
             # Compute terms interaction that are used
             if any(term in terms for term in [PV.FF, PV.FFC, PV.FFCC]):

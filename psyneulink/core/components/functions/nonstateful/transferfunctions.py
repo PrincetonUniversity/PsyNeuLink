@@ -98,10 +98,10 @@ from psyneulink.core.globals.keywords import \
     RATE, RECEIVER, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM, \
     TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import \
-    FunctionParameter, Parameter, get_validator_by_function, check_user_specified
+    FunctionParameter, Parameter, get_validator_by_function, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, ValidPrefSet
-from psyneulink.core.globals.utilities import ValidParamSpecType, safe_len, is_matrix_keyword
+from psyneulink.core.globals.utilities import ValidParamSpecType, convert_all_elements_to_np_array, safe_len, is_matrix_keyword
 
 __all__ = ['Angle', 'BinomialDistort', 'Dropout', 'Exponential', 'Gaussian', 'GaussianDistort', 'Identity',
            'Linear', 'LinearMatrix', 'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
@@ -722,8 +722,6 @@ class Exponential(TransferFunction):  # ----------------------------------------
         scale = self._get_current_parameter_value(SCALE, context)
         offset = self._get_current_parameter_value(OFFSET, context)
 
-        # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
-        # result = scale * np.exp(rate * variable + bias) + offset
         result = scale * e**(rate * variable + bias) + offset
         return self.convert_output_type(result)
 
@@ -1022,8 +1020,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
         offset = self._get_current_parameter_value(OFFSET, context)
         scale = self._get_current_parameter_value(SCALE, context)
 
-        # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
-        # result = 1. / (1 + np.exp(-gain * (variable - bias) + offset))
         result = scale * (1. / (1 + e**(-gain * (variable + bias - x_0) + offset)))
 
         return self.convert_output_type(result)
@@ -1120,8 +1116,8 @@ class Logistic(TransferFunction):  # -------------------------------------------
         model = super().as_mdf_model()
 
         # x_0 is included in bias in MDF logistic
-        self._set_mdf_arg(model, 'bias', model.args['bias'] - model.args['x_0'])
-        self._set_mdf_arg(model, 'x_0', 0)
+        self._set_mdf_arg(model, 'bias', np.array(model.args['bias'] - model.args['x_0']))
+        self._set_mdf_arg(model, 'x_0', np.array(0))
 
         if model.args['scale'] != 1.0:
             warnings.warn(
@@ -1346,9 +1342,6 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         offset = self._get_current_parameter_value(OFFSET, context)
         scale = self._get_current_parameter_value(SCALE, context)
 
-        # The following probably doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
-        #   (since np.exp doesn't work)
-        # result = 1. / (1 + np.tanh(-gain * (variable - bias) + offset))
         exponent = -2 * (gain * (variable + bias - x_0) + offset)
         result = scale * (1 - e**exponent)/ (1 + e**exponent)
 
@@ -2349,7 +2342,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         scale = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
         bounds = (None, None)
 
     @check_user_specified
@@ -2437,7 +2430,6 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         offset = self._get_current_parameter_value(OFFSET, context)
         random_state = self._get_current_parameter_value('random_state', context)
 
-        # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         result = scale * random_state.normal(variable + bias, variance) + offset
 
         return self.convert_output_type(result)
@@ -2574,7 +2566,7 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
         """
         p = Parameter(0.5, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
         bounds = (None, None)
 
     @check_user_specified
@@ -2795,7 +2787,7 @@ class Dropout(TransferFunction):  #
         """
         p = Parameter(0.5, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
 
     @check_user_specified
     @beartype
@@ -2846,7 +2838,6 @@ class Dropout(TransferFunction):  #
             result = variable
 
         else:
-            # ??Not sure whether the following works with autograd (https://github.com/HIPS/autograd/issues/416)
             p = p or self.defaults.p
             self.binomial_distort.parameters.p.set(p, context)
             result = self.binomial_distort(variable) * (1 / (1 - p))
@@ -3168,6 +3159,7 @@ class SoftMax(TransferFunction):
             output = []
             for item in variable:
                 output.append(self.apply_softmax(item, gain, output_type))
+            output = convert_all_elements_to_np_array(output)
         else:
             output = self.apply_softmax(variable, gain, output_type)
 
@@ -3463,7 +3455,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         specifies a template for the value to be transformed; length must equal the number of rows of `matrix
         <LinearMatrix.matrix>`.
 
-    matrix : number, list, 1d or 2d np.ndarray, np.matrix, function, or matrix keyword : default IDENTITY_MATRIX
+    matrix : number, list, 1d or 2d np.ndarray, function, or matrix keyword : default IDENTITY_MATRIX
         specifies matrix used to transform `variable <LinearMatrix.variable>`
         (see `matrix <LinearMatrix.matrix>` for specification details).
 
@@ -3513,7 +3505,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         matrix used to transform `variable <LinearMatrix.variable>`.
         Can be specified as any of the following:
             * number - used as the filler value for all elements of the :keyword:`matrix` (call to np.fill);
-            * list of arrays, 2d array or np.matrix - assigned as the value of :keyword:`matrix`;
+            * list of arrays, 2d array - assigned as the value of :keyword:`matrix`;
             * matrix keyword - see `MatrixKeywords` for list of options.
         Rows correspond to elements of the input array (outer index), and
         columns correspond to elements of the output array (inner index).
@@ -3569,7 +3561,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     #         return True
     #     if m in MATRIX_KEYWORD_VALUES:
     #         return True
-    #     if isinstance(m, (list, np.ndarray, np.matrix, types.FunctionType)):
+    #     if isinstance(m, (list, np.ndarray, types.FunctionType)):
     #         return True
     #     return False
 
@@ -3758,7 +3750,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                     # format(param_value, self.__class__.__name__, error_msg))
                                     format(param_value, self.name, self.owner_name, error_msg))
 
-                    # string used to describe matrix, so convert to np.matrix and pass to validation of matrix below
+                    # string used to describe matrix, so convert to np.array and pass to validation of matrix below
                     elif isinstance(param_value, str):
                         try:
                             param_value = np.atleast_2d(param_value)
@@ -3771,12 +3763,12 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     # function so:
                     # - assume it uses random.rand()
                     # - call with two args as place markers for cols and rows
-                    # -  validate that it returns an array or np.matrix
+                    # -  validate that it returns an array
                     elif isinstance(param_value, types.FunctionType):
                         test = param_value(1, 1)
-                        if not isinstance(test, (np.ndarray, np.matrix)):
+                        if not isinstance(test, np.ndarray):
                             raise FunctionError("A function is specified for the matrix of the {} function of {}: {}) "
-                                                "that returns a value ({}) that is neither a matrix nor an array".
+                                                "that returns a value ({}) that is not an array".
                                                 # format(param_value, self.__class__.__name__, test))
                                                 format(self.name, self.owner_name, param_value, test))
 
@@ -3820,7 +3812,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                         "LinearMatrix function. When the LinearMatrix function is implemented in a "
                                         "mechanism, such as {}, the correct matrix cannot be determined from a "
                                         "keyword. Instead, the matrix must be fully specified as a float, list, "
-                                        "np.ndarray, or np.matrix".
+                                        "np.ndarray".
                                         format(param_value, self.name, self.owner.name))
 
                 # The only remaining valid option is matrix = None (sorted out in instantiate_attribs_before_fn)
@@ -3835,7 +3827,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     def _instantiate_attributes_before_function(self, function=None, context=None):
         # replicates setting of receiver in _validate_params
         if isinstance(self.owner, Projection):
-            self.receiver = self.defaults.variable
+            self.receiver = copy_parameter_value(self.defaults.variable)
 
         matrix = self.parameters.matrix._get(context)
 
@@ -3862,7 +3854,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             if isinstance(specification, np.matrix):
                 return np.array(specification)
 
-            sender = self.defaults.variable
+            sender = copy_parameter_value(self.defaults.variable)
             sender_len = sender.shape[0]
             try:
                 receiver = self.receiver
@@ -3886,7 +3878,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             return np.array(specification)
 
 
-    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags:frozenset):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         # Restrict to 1d arrays
         if self.defaults.variable.ndim != 1:
             warnings.warn("Shape mismatch: {} (in {}) got 2D input: {}".format(
@@ -3899,7 +3891,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                           pnlvm.PNLCompilerWarning)
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-        matrix = ctx.get_param_or_state_ptr(builder, self, MATRIX, param_struct_ptr=params)
+        matrix = ctx.get_param_or_state_ptr(builder, self, MATRIX, param_struct_ptr=params, state_struct_ptr=state)
         normalize = ctx.get_param_or_state_ptr(builder, self, NORMALIZE, param_struct_ptr=params)
 
         # Convert array pointer to pointer to the fist element
@@ -4017,7 +4009,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 # def is_matrix_spec(m):
 #     if m is None:
 #         return True
-#     if isinstance(m, (list, np.ndarray, np.matrix, types.FunctionType)):
+#     if isinstance(m, (list, np.ndarray, types.FunctionType)):
 #         return True
 #     if m in MATRIX_KEYWORD_VALUES:
 #         return True
@@ -4684,32 +4676,9 @@ class TransferWithCosts(TransferFunction):
                 raise FunctionError(f"{fct} is not a valid cost function for {fct_name}.")
 
         self.intensity_cost_fct = instantiate_fct(INTENSITY_COST_FUNCTION, self.intensity_cost_fct)
-        # Initialize default_value for TransferWithCosts' modulation params from intensity_cost_fct's values
-        self.parameters.intensity_cost_fct_mult_param.default_value = \
-            self.parameters.intensity_cost_fct_mult_param.get()
-        self.parameters.intensity_cost_fct_add_param.default_value = \
-            self.parameters.intensity_cost_fct_add_param.get()
-
         self.adjustment_cost_fct = instantiate_fct(ADJUSTMENT_COST_FUNCTION, self.adjustment_cost_fct)
-        # Initialize default_value for TransferWithCosts' modulation params from adjustment_cost_fct's values
-        self.parameters.adjustment_cost_fct_mult_param.default_value = \
-            self.parameters.adjustment_cost_fct_mult_param.get()
-        self.parameters.adjustment_cost_fct_add_param.default_value = \
-            self.parameters.adjustment_cost_fct_add_param.get()
-
         self.duration_cost_fct = instantiate_fct(DURATION_COST_FUNCTION, self.duration_cost_fct)
-        # Initialize default_value for TransferWithCosts' modulation params from duration_cost_fct's values
-        self.parameters.duration_cost_fct_mult_param.default_value = \
-            self.parameters.duration_cost_fct_add_param.get()
-        self.parameters.duration_cost_fct_add_param.default_value = \
-            self.parameters.duration_cost_fct_add_param.get()
-
         self.combine_costs_fct = instantiate_fct(COMBINE_COSTS_FUNCTION, self.combine_costs_fct)
-        # Initialize default_value for TransferWithCosts' modulation params from combined_costs_fct's values
-        self.parameters.combine_costs_fct_mult_param.default_value = \
-            self.parameters.combine_costs_fct_mult_param.get()
-        self.parameters.combine_costs_fct_add_param.default_value = \
-            self.parameters.combine_costs_fct_add_param.get()
 
         # Initialize intensity attributes
         if self.enabled_cost_functions:
@@ -4800,7 +4769,7 @@ class TransferWithCosts(TransferFunction):
             self.parameters.combined_costs._set(combined_costs, context)
 
         # Store current intensity
-        self.parameters.intensity._set(intensity, context)
+        self.parameters.intensity._set(copy_parameter_value(intensity), context)
 
         return intensity
 
