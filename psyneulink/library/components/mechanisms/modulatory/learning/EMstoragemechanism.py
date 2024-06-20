@@ -797,7 +797,7 @@ class EMStorageMechanism(LearningMechanism):
                     if np.all(entry_to_store == variable[i]):
                         assert True
                     else:
-                        assert True
+                        assert False
             else:
                 # For retrieval matrices,
                 #    get entry to store from variable (which has inputs to all fields)
