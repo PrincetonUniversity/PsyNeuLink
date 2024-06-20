@@ -33,13 +33,10 @@ The script contains methods to construct, train, and run the model, and analyze 
   (under "Construction parameters")
 
 * `train_network <EGO.train_network>`:
-  takes as arguments the feedforward neural network Composition (FFN_COMPOSITION) and number of epochs to train.
-  Note: learning_rate is set at construction (can specify using LEARNING_RATE under "Training parameters" below).
+   ...
 
 * `run_model <EGO.run_model>`:
-  takes as arguments the drift rate in the temporal context vector to be applied on each trial,
-  and the number of trials to execute, as well as reporting and animation specifications
-  (see "Execution parameters").
+   ...
 
 * `analyze_results <EGO.analyze_results>`:
   takes as arguments the results of executing the model, and optionally a number of trials and EGO_level to analyze;
@@ -154,7 +151,8 @@ RUN_MODEL = True                       # True => run the model
 # EXECUTION_MODE = ExecutionMode.Python
 EXECUTION_MODE = ExecutionMode.PyTorch
 ANALYZE_RESULTS = False                # True => output analysis of results of run
-REPORT_OUTPUT = ReportOutput.FULL     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
+# REPORT_OUTPUT = ReportOutput.FULL     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
+REPORT_OUTPUT = ReportOutput.OFF     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
 PRINT_RESULTS = False                  # print model.results after execution
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
@@ -498,22 +496,6 @@ def construct_model(model_name:str=MODEL_NAME,
                                                size=state_size,
                                                auto=1-context_integration_rate,
                                                hetero=0.0)
-    # em = EpisodicMemoryMechanism(name=em_name,
-    #                              default_variable=[[0] * state_size,   # state
-    #                                                [0] * time_size,    # time
-    #                                                [0] * state_size,   # context
-    #                                                [0] * reward_size], # reward
-    #                              input_ports=[{NAME:state_input_name, SIZE:state_size},
-    #                                           {NAME:time_input_name, SIZE:time_size},
-    #                                           {NAME:context_name, SIZE:state_size},
-    #                                           {NAME:reward_input_name, SIZE:reward_size}],
-    #                              function=ContentAddressableMemory(
-    #                                  # selection_function=SoftMax(gain=retrieval_softmax_gain),
-    #                                  distance_field_weights=[state_retrieval_weight,
-    #                                                          time_retrieval_weight,
-    #                                                          context_retrieval_weight,
-    #                                                          reward_retrieval_weight]))
-    # # em.output_ports[RETRIEVED_TIME_NAME].parameters.require_projection_in_composition.set(False, override=True)
     em = EMComposition(name=em_name,
                        memory_template=[[0] * state_size,   # state
                                         [0] * time_size,    # time
