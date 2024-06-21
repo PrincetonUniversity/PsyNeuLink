@@ -6562,26 +6562,31 @@ class TestInputSpecifications:
 
 
 class TestProperties:
+
+    _fallback_xfail = pytest.mark.xfail(raises=AssertionError, match="Runtime parameters are not supported in compiled mode")
+
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python, pnl.ExecutionMode.Auto,
-                                      pytest.param(pnl.ExecutionMode.LLVM, marks=[pytest.mark.xfail, pytest.mark.llvm]),
-                                      pytest.param(pnl.ExecutionMode.LLVMExec, marks=[pytest.mark.xfail, pytest.mark.llvm]),
-                                      pytest.param(pnl.ExecutionMode.LLVMRun, marks=[pytest.mark.xfail, pytest.mark.llvm]),
-                                      pytest.param(pnl.ExecutionMode.PTXExec, marks=[pytest.mark.xfail, pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param(pnl.ExecutionMode.PTXRun, marks=[pytest.mark.xfail, pytest.mark.llvm, pytest.mark.cuda]),
+    @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Auto, pnl.ExecutionMode.Python,
+                                      pytest.param(pnl.ExecutionMode.LLVM, marks=[_fallback_xfail, pytest.mark.llvm]),
+                                      pytest.param(pnl.ExecutionMode.LLVMExec, marks=[_fallback_xfail, pytest.mark.llvm]),
+                                      pytest.param(pnl.ExecutionMode.LLVMRun, marks=[_fallback_xfail, pytest.mark.llvm]),
+                                      pytest.param(pnl.ExecutionMode.PTXExec, marks=[_fallback_xfail, pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param(pnl.ExecutionMode.PTXRun, marks=[_fallback_xfail, pytest.mark.llvm, pytest.mark.cuda]),
                                      ])
     def test_llvm_fallback(self, mode):
-        comp = Composition()
+
         # FIXME: using num_executions is a hack. The name collides with
         #        a stateful param of every component and thus it's not supported
         def myFunc(variable, params, context, num_executions):
             return variable * 2
+
         U = UserDefinedFunction(custom_function=myFunc, default_variable=[[0, 0], [0, 0]], num_executions=0)
         A = TransferMechanism(name="composition-pytests-A",
                               default_variable=[[1.0, 2.0], [3.0, 4.0]],
                               function=U)
+
+        comp = Composition(nodes=[A])
         inputs = {A: [[10., 20.], [30., 40.]]}
-        comp.add_node(A)
 
         res = comp.run(inputs=inputs, execution_mode=mode)
         np.testing.assert_allclose(res, [[20.0, 40.0], [60.0, 80.0]])

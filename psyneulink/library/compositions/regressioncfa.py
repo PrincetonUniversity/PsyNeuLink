@@ -74,13 +74,14 @@ Class Reference
 ---------------
 
 """
+
+import itertools
 import numpy as np
 from beartype import beartype
 
 from psyneulink._typing import Optional, Union
 
 from enum import Enum
-from itertools import product
 
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BayesGLM
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
@@ -543,7 +544,7 @@ class RegressionCFA(CompositionFunctionApproximator):
                 self.terms[FC] = fc = np.tensordot(f, c, axes=0)
                 self.num[FC] = len(fc.reshape(-1))
                 self.num_elems[FC] = len(fc.reshape(-1))
-                self.labels[FC] = list(product(self.labels[F], self.labels[C]))
+                self.labels[FC] = list(itertools.product(self.labels[F], self.labels[C]))
 
             # feature-feature-control interactions
             if any(term in specified_terms for term in [PV.FFC, PV.FFCC]):
@@ -552,7 +553,7 @@ class RegressionCFA(CompositionFunctionApproximator):
                 self.terms[FFC] = ffc = np.tensordot(ff, c, axes=0)
                 self.num[FFC] = len(ffc.reshape(-1))
                 self.num_elems[FFC] = len(ffc.reshape(-1))
-                self.labels[FFC] = list(product(self.labels[FF], self.labels[C]))
+                self.labels[FFC] = list(itertools.product(self.labels[FF], self.labels[C]))
 
             # feature-control-control interactions
             if any(term in specified_terms for term in [PV.FCC, PV.FFCC]):
@@ -561,7 +562,7 @@ class RegressionCFA(CompositionFunctionApproximator):
                 self.terms[FCC] = fcc = np.tensordot(f, cc, axes=0)
                 self.num[FCC] = len(fcc.reshape(-1))
                 self.num_elems[FCC] = len(fcc.reshape(-1))
-                self.labels[FCC] = list(product(self.labels[F], self.labels[CC]))
+                self.labels[FCC] = list(itertools.product(self.labels[F], self.labels[CC]))
 
             # feature-feature-control-control interactions
             if PV.FFCC in specified_terms:
@@ -572,7 +573,7 @@ class RegressionCFA(CompositionFunctionApproximator):
                 self.terms[FFCC] = ffcc = np.tensordot(ff, cc, axes=0)
                 self.num[FFCC] = len(ffcc.reshape(-1))
                 self.num_elems[FFCC] = len(ffcc.reshape(-1))
-                self.labels[FFCC] = list(product(self.labels[FF], self.labels[CC]))
+                self.labels[FFCC] = list(itertools.product(self.labels[FF], self.labels[CC]))
 
             # Construct "flattened" vector based on specified terms, and assign indices (as slices)
             i=0

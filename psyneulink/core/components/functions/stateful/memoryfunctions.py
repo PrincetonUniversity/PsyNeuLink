@@ -24,10 +24,10 @@ Functions that store and can return a record of their input.
 """
 
 import copy
+import itertools
 import numbers
 import warnings
 from collections import deque
-from itertools import combinations, product
 
 from psyneulink._typing import Callable, List, Literal
 
@@ -1309,7 +1309,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         field_wts_homog = np.full(len(test_var),1).tolist()
         field_wts_heterog = np.full(len(test_var),range(0,len(test_var))).tolist()
 
-        for granularity, field_weights in product(['full_entry', 'per_field'],[field_wts_homog, field_wts_heterog]):
+        for granularity, field_weights in itertools.product(['full_entry', 'per_field'],[field_wts_homog, field_wts_heterog]):
             try:
                 distance_result = self._get_distance(test_var, test_var, field_weights, granularity, context=context)
             except:
@@ -1594,7 +1594,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             # Check for any duplicate entries in matches and, if they are not allowed, return zeros
             if (not self.duplicate_entries_allowed
                     and any(self._is_duplicate(_memory[i],_memory[j], field_weights, context)
-                            for i, j in combinations(indices_of_selected_items, 2))):
+                            for i, j in itertools.combinations(indices_of_selected_items, 2))):
                 warnings.warn(f"More than one entry matched cue ({cue}) in memory for {self.name} "
                               f"{'of ' + self.owner.name if self.owner else ''} even though "
                               f"{repr('duplicate_entries_allowed')} is False; zeros returned as retrieved item.")
@@ -1860,7 +1860,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         existing_memory = self.parameters.previous_value._get(context)
         pruned_memory = copy_parameter_value(existing_memory)
-        for entry, memory in product(entries, existing_memory):
+        for entry, memory in itertools.product(entries, existing_memory):
             if (np.all(entry == memory)
                     or fields and all(entry[f] == memory[f] for f in fields)):
                 pruned_memory = np.delete(pruned_memory, pruned_memory.tolist().index(memory.tolist()), axis=0)

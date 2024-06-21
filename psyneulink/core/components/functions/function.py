@@ -346,7 +346,15 @@ def _output_type_setter(value, owning_component):
     return value
 
 
-def _seed_setter(value, owning_component, context):
+def _seed_setter(value, owning_component, context, *, compilation_sync):
+    if compilation_sync:
+        # compilation sync should provide shared memory 0d array with a floating point value.
+        assert value is not None
+        assert value != DEFAULT_SEED()
+        assert value.shape == ()
+
+        return value
+
     value = try_extract_0d_array_item(value)
     if value is None or value == DEFAULT_SEED():
         value = get_global_seed()

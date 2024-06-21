@@ -7,6 +7,7 @@ import pytest
 import re
 import sys
 
+import graph_scheduler as gs
 import psyneulink
 from psyneulink import clear_registry, primary_registries, torch_available
 from psyneulink.core import llvm as pnlvm
@@ -126,7 +127,18 @@ def pytest_runtest_teardown(item):
         # Clear Registry to have a stable reference for indexed suffixes of default names
         clear_registry(registry)
 
-    pnlvm.cleanup()
+    gs.utilities.cached_hashable_graph_function.cache_clear()
+
+    # Skip running the leak checker if the test is marked xfail.
+    # XFAIL tests catch exceptions that references call frames
+    # including PNL objects that would be reported as leaks.
+    # Hopefully, there are no leaky codepaths that are only hit
+    # in xfail tests.
+    # The same applies to test failures
+    skip_cleanup_check = ("xfail" in item.keywords) or item.session.testsfailed > 0
+
+    # Only run the llvm leak checker on llvm tests
+    pnlvm.cleanup("llvm" in item.keywords and not skip_cleanup_check)
 
 @pytest.fixture
 def comp_mode_no_llvm():
@@ -193,24 +205,10 @@ def cuda_param(val):
 @pytest.helpers.register
 def get_func_execution(func, func_mode):
     if func_mode == 'LLVM':
-        ex = pnlvm.execution.FuncExecution(func)
-
-        # Calling writeback here will replace parameter values
-        # with numpy instances that share memory with the binary
-        # structure used by the compiled function
-        ex.writeback_state_to_pnl()
-
-        return ex.execute
+        return pnlvm.execution.FuncExecution(func).execute
 
     elif func_mode == 'PTX':
-        ex = pnlvm.execution.FuncExecution(func)
-
-        # Calling writeback here will replace parameter values
-        # with numpy instances that share memory with the binary
-        # structure used by the compiled function
-        ex.writeback_state_to_pnl()
-
-        return ex.cuda_execute
+        return pnlvm.execution.FuncExecution(func).cuda_execute
 
     elif func_mode == 'Python':
         return func.function
@@ -220,29 +218,16 @@ def get_func_execution(func, func_mode):
 @pytest.helpers.register
 def get_mech_execution(mech, mech_mode):
     if mech_mode == 'LLVM':
-        ex = pnlvm.execution.MechExecution(mech)
-
-        # Calling writeback here will replace parameter values
-        # with numpy instances that share memory with the binary
-        # structure used by the compiled function
-        ex.writeback_state_to_pnl()
-
-        return ex.execute
+        return pnlvm.execution.MechExecution(mech).execute
 
     elif mech_mode == 'PTX':
-        ex = pnlvm.execution.MechExecution(mech)
-
-        # Calling writeback here will replace parameter values
-        # with numpy instances that share memory with the binary
-        # structure used by the compiled function
-        ex.writeback_state_to_pnl()
-
-        return ex.cuda_execute
+        return pnlvm.execution.MechExecution(mech).cuda_execute
 
     elif mech_mode == 'Python':
         def mech_wrapper(x):
             mech.execute(x)
             return mech.output_values
+
         return mech_wrapper
     else:
         assert False, "Unknown mechanism mode: {}".format(mech_mode)

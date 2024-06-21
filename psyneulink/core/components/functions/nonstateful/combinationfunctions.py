@@ -512,7 +512,7 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
                     except IndexError:
                         raise FunctionError(f"Index ({i}) specified in {repr(ARRANGEMENT)} arg for "
                                             f"{self.name}{owner_str} is out of bounds for its {repr(DEFAULT_VARIABLE)} "
-                                            f"arg (max index = {len(self.parameters.variable.default_value)-1}).")
+                                            f"arg (max index = {len(self.parameters.variable.default_value) - 1}).")
 
         # Check that SCALE and OFFSET are scalars.
         if SCALE in target_set and target_set[SCALE] is not None:
