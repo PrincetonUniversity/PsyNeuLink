@@ -1676,6 +1676,7 @@ class EMComposition(AutodiffComposition):
         self.num_keys = len(keys_weights)
         self.num_values = self.num_fields - self.num_keys
         if parsed_field_names:
+            # FIX: NEED TO TAKE ACCOUNT OF THE POSSIBLITY THAT KEYS MAY NOT BE CONTIGUOUS IN PARSED FIELD NAMES
             self.key_names = parsed_field_names[:self.num_keys]
             self.value_names = parsed_field_names[self.num_keys:]
         else:
@@ -1867,7 +1868,8 @@ class EMComposition(AutodiffComposition):
             f"non-zero values in field_weights ({len(key_indices)})."
 
         query_input_nodes = [TransferMechanism(size=len(self.entry_template[key_indices[i]]),
-                                             name=f'{self.key_names[i]} [QUERY]')
+                                             # name=f'{self.key_names[i]} [QUERY]')
+                                             name=f'{self.key_names[key_indices[i]]} [QUERY]')
                        for i in range(self.num_keys)]
 
         return query_input_nodes
