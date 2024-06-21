@@ -4,7 +4,6 @@ import numpy as np
 import psyneulink as pnl
 import pandas as pd
 
-import psyneulink.core.llvm as pnllvm
 from psyneulink.core.globals.utilities import set_global_seed
 
 sys.path.append(".")

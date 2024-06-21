@@ -1,5 +1,4 @@
 import copy
-import re
 
 import optuna.samplers
 from fastkde import fastKDE

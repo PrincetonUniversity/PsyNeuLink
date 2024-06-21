@@ -1315,7 +1315,7 @@ class PEC_OCM(OptimizationControlMechanism):
             try:
                 alt_controller = context.composition.controller
             except AttributeError:
-                pass
+                alt_controller = None
 
         self.agent_rep._initialize_as_agent_rep(
             frozen_context, base_context=context, alt_controller=alt_controller
@@ -1344,4 +1344,3 @@ class PEC_OCM(OptimizationControlMechanism):
 
         # Return optimal control_allocation formatted as 2d array
         return [defaultControlAllocation]
-
