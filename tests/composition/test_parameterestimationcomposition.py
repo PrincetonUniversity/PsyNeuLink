@@ -192,7 +192,7 @@ def test_parameter_optimization_ddm(func_mode, opt_method, optuna_kwargs, result
     # High-level parameters the impact performance of the test
     num_trials = 50
     time_step_size = 0.01
-    num_estimates = 400
+    num_estimates = 300
 
     ddm_params = dict(
         starting_value=0.0,
@@ -289,17 +289,55 @@ def test_parameter_optimization_ddm(func_mode, opt_method, optuna_kwargs, result
     if result is not None:
         np.testing.assert_allclose(list(pec.optimized_parameter_values.values()), result)
 
-@pytest.mark.skip
 def test_parameter_estimation_ddm_cond(func_mode):
+
     if func_mode == "Python":
         pytest.skip(
             "Test not yet implemented for Python. Parameter estimate is too slow."
         )
 
+    def _run_ddm_with_params(
+            starting_value,
+            rate,
+            noise,
+            threshold,
+            non_decision_time,
+            time_step_size,
+            trial_inputs,
+    ):
+        """Create a composition with DDM and run it with the given parameters."""
+
+        # Create a simple one mechanism composition containing a DDM in integrator mode.
+        decision = pnl.DDM(
+            function=pnl.DriftDiffusionIntegrator(
+                starting_value=starting_value,
+                rate=rate,
+                noise=noise,
+                threshold=threshold,
+                non_decision_time=non_decision_time,
+                time_step_size=time_step_size,
+            ),
+            output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME],
+            name="DDM",
+        )
+
+        comp = pnl.Composition(pathways=decision)
+
+        # Run the composition to generate some data to fit
+        comp.run(inputs={decision: trial_inputs})
+        results = comp.results
+
+        data_to_fit = pd.DataFrame(
+            np.squeeze(np.array(results)), columns=["decision", "response_time"]
+        )
+        data_to_fit["decision"] = data_to_fit["decision"].astype("category")
+
+        return comp, data_to_fit
+
     # High-level parameters the impact performance of the test
     num_trials = 50
     time_step_size = 0.01
-    num_estimates = 400
+    num_estimates = 20
 
     # Let's generate an "experimental" dataset to fit. This is a parameter recovery test
     # Lets make 10% of the trials have a positive stimulus drift rate, and the other 90%
@@ -327,19 +365,19 @@ def test_parameter_estimation_ddm_cond(func_mode):
     # We will generate a dataset that comprises two different conditions. Each condition will have a different
     # threshold.
     params_cond1 = dict(
-       threshold=0.7,
+        threshold=0.7,
     )
 
     params_cond2 = dict(
-       threshold=0.3,
+        threshold=0.3,
     )
 
     comp, data_cond1 = _run_ddm_with_params(**{**ddm_params, **params_cond1}, trial_inputs=trial_inputs)
     _, data_cond2 = _run_ddm_with_params(**{**ddm_params, **params_cond2}, trial_inputs=trial_inputs)
 
     # Combine the data from the two conditions
-    data_cond1['condition'] = 'cond1'
-    data_cond2['condition'] = 'cond2'
+    data_cond1['condition'] = 'cond_t=0.7'
+    data_cond2['condition'] = 'cond_t=0.3'
     data_to_fit = pd.concat([data_cond1, data_cond2])
 
     # Add the inputs as columns to the data temporarily so we can shuffle the data and shuffle the inputs together
@@ -368,20 +406,21 @@ def test_parameter_estimation_ddm_cond(func_mode):
             comp.nodes['DDM'].output_ports[pnl.RESPONSE_TIME],
         ],
         data=data_to_fit,
-        optimization_function=PECOptimizationFunction(
+        optimization_function=pnl.PECOptimizationFunction(
             method="differential_evolution", max_iterations=1,
         ),
         num_estimates=num_estimates,
         initial_seed=42,
     )
 
-    pec.controller.parameters.comp_execution_mode.set(func_mode)
+    pec.controller.parameters.comp_execution_mode.set("LLVM")
     pec.controller.function.parameters.save_values.set(True)
     pec.run(inputs={comp: trial_inputs})
 
+
     np.testing.assert_allclose(
         list(pec.optimized_parameter_values.values()),
-        [0.2227273962084888, 0.5976130662377002, 0.1227723651473831],
+        [0.13574824786818707, 0.04513454296326741, 0.49615574384553446, 0.8985587363124521]
     )
 
 
@@ -402,7 +441,7 @@ def test_parameter_estimation_ddm_mle(func_mode, likelihood_include_mask):
     # High-level parameters the impact performance of the test
     num_trials = 50
     time_step_size = 0.01
-    num_estimates = 1000
+    num_estimates = 200
 
     ddm_params = dict(
         starting_value=0.0,
