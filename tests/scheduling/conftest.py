@@ -34,3 +34,25 @@ def three_node_linear_composition():
     comp.add_linear_processing_pathway([A, B, C])
 
     return comp.nodes, comp
+
+
+@pytest.helpers.register
+def composition_from_string_pathways(pathways):
+    mechanisms = {}
+    pathways_as_mechs = []
+
+    for p in pathways:
+        p_as_mechs = []
+        assert not isinstance(p, str), 'pathways must be a list of lists'
+        for m in p:
+            try:
+                mech = mechanisms[m]
+            except KeyError:
+                mech = pnl.ProcessingMechanism(name=m)
+                mechanisms[m] = mech
+            p_as_mechs.append(mech)
+        pathways_as_mechs.append(p_as_mechs)
+
+    comp = pnl.Composition(pathways=pathways_as_mechs)
+
+    return comp, mechanisms, mechanisms.values()

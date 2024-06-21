@@ -121,7 +121,7 @@ __all__ = [
     'TRIAL', 'TRIALS_DIM',
     'UNCHANGED', 'UNIFORM_DIST_FUNCTION', 'USER_DEFINED_FUNCTION', 'USER_DEFINED_FUNCTION_TYPE',
     'VALUES', 'VALIDATE', 'VALIDATION', 'VALUE', 'VALUE_ASSIGNMENT', 'VALUE_FUNCTION', 'VARIABLE', 'VARIANCE',
-    'VECTOR', 'WALD_DIST_FUNCTION', 'WEIGHT', 'WEIGHTS', 'X_0', 'ZEROS_MATRIX'
+    'VECTOR', 'WALD_DIST_FUNCTION', 'WEIGHT', 'WEIGHTS', 'X_0', 'ZEROS_MATRIX', 'SHARED_COMPONENT_TYPES',
 ]
 
 # **********************************************************************************************************************
@@ -1092,3 +1092,5 @@ MODEL_SPEC_ID_MDF_VARIABLE = 'variable0'
 MODEL_SPEC_ID_SHAPE = 'shape'
 
 MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION = 'input_combination_function'
+
+SHARED_COMPONENT_TYPES = 'shared_component_types'

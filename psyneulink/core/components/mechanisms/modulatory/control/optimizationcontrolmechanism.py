@@ -1111,7 +1111,7 @@ from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import rename_instance_in_registry
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
-from psyneulink.core.globals.utilities import convert_to_list, ContentAddressableList, is_numeric
+from psyneulink.core.globals.utilities import convert_to_list, convert_to_np_array, ContentAddressableList, is_numeric, object_has_single_value, try_extract_0d_array_item
 from psyneulink.core.llvm.debug import debug_env
 
 __all__ = [
@@ -1940,7 +1940,7 @@ class OptimizationControlMechanism(ControlMechanism):
     def _instantiate_input_ports(self, context=None):
         """Instantiate InputPorts for state_features (with state_feature_function if specified).
 
-        This instantiates the OptimizationControlMechanism's `state_input_ports;
+        This instantiates the OptimizationControlMechanism's `state_input_ports`;
              these are used to provide input to the agent_rep when its evaluate method is called
         The OptimizationControlMechanism's outcome_input_ports are instantiated by
             ControlMechanism._instantiate_input_ports in the call to super().
@@ -1966,7 +1966,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # FIX: 11/3/21 :
         #    ADD CHECK IN _parse_state_feature_specs() THAT IF A NODE RATHER THAN InputPort IS SPECIFIED,
         #    ITS PRIMARY IS USED (SEE SCRATCH PAD FOR EXAMPLES)
-        if not self.state_feature_specs:
+        if self.state_feature_specs is None:
             # If agent_rep is CompositionFunctionApproximator, warn if no state_features specified.
             # Note: if agent rep is Composition, state_input_ports and any state_feature_function specified
             #       are assigned in _update_state_input_ports_for_controller.
@@ -2380,7 +2380,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # SINGLE ITEM spec, SO APPLY TO ALL agent_rep_input_ports
         if (user_specs is None
                 or isinstance(user_specs, (str, tuple, InputPort, OutputPort, Mechanism, Composition))
-                or (is_numeric(user_specs) and (np.array(user_specs).ndim < 2))):
+                or (is_numeric(user_specs) and object_has_single_value(user_specs))):
             specs = [user_specs] * len(agent_rep_input_ports)
             # OK to assign here (rather than in _parse_secs()) since spec is intended for *all* state_input_ports
             self.parameters.state_feature_specs.set(specs, override=True)
@@ -2394,10 +2394,10 @@ class OptimizationControlMechanism(ControlMechanism):
         # - SHADOW_INPUTS dict (with list spec as its only entry): {SHADOW_INPUTS: {[spec, spec...]}}
         # Treat specs as sources of input to INPUT Nodes of agent_rep (in corresponding order):
         # Call _parse_specs to construct a regular dict using INPUT Nodes as keys and specs as values
-        elif isinstance(user_specs, list) or (isinstance(user_specs, dict) and SHADOW_INPUTS in user_specs):
-            if isinstance(user_specs, list):
+        elif isinstance(user_specs, (list, np.ndarray)) or (isinstance(user_specs, dict) and SHADOW_INPUTS in user_specs):
+            if isinstance(user_specs, (list, np.ndarray)):
                 num_missing_specs = len(agent_rep_input_ports) - len(self.state_feature_specs)
-                specs = user_specs + [self.state_feature_default] * num_missing_specs
+                specs = list(user_specs) + [self.state_feature_default] * num_missing_specs
                 spec_type = 'list'
             else:
                 # SHADOW_INPUTS spec:
@@ -2953,9 +2953,12 @@ class OptimizationControlMechanism(ControlMechanism):
 
 
     def _create_randomization_control_signal(self, context):
-        if self.num_estimates:
+        num_estimates = self.parameters.num_estimates._get(context)
+        num_estimates = try_extract_0d_array_item(num_estimates)
+
+        if num_estimates:
             # must be SampleSpec in allocation_samples arg
-            randomization_seed_mod_values = SampleSpec(start=1, stop=self.num_estimates, step=1)
+            randomization_seed_mod_values = SampleSpec(start=1, stop=num_estimates, step=1)
 
             # FIX: 11/3/21 noise PARAM OF TransferMechanism IS MARKED AS SEED WHEN ASSIGNED A DISTRIBUTION FUNCTION,
             #                BUT IT HAS NO PARAMETER PORT BECAUSE THAT PRESUMABLY IS FOR THE INTEGRATOR FUNCTION,
@@ -2968,10 +2971,10 @@ class OptimizationControlMechanism(ControlMechanism):
                 self.random_variables = self.agent_rep.random_variables
 
             if not self.random_variables:
-                warnings.warn(f"'{self.name}' has '{NUM_ESTIMATES} = {self.num_estimates}' specified, "
+                warnings.warn(f"'{self.name}' has '{NUM_ESTIMATES} = {num_estimates}' specified, "
                               f"but its '{AGENT_REP}' ('{self.agent_rep.name}') has no random variables: "
                               f"'{RANDOMIZATION_CONTROL_SIGNAL}' will not be created, and num_estimates set to None.")
-                self.num_estimates = None
+                self.parameters.num_estimates._set(None, context)
                 return
 
             randomization_control_signal = ControlSignal(name=RANDOMIZATION_CONTROL_SIGNAL,
@@ -2981,7 +2984,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                                          modulation=OVERRIDE,
                                                          cost_options=CostFunctions.NONE,
                                                          # FIXME: Hack that Jan found to prevent some LLVM runtime errors
-                                                         default_allocation=[self.num_estimates])
+                                                         default_allocation=np.array([num_estimates]))
             randomization_control_signal = self._instantiate_control_signal(randomization_control_signal, context)
             randomization_control_signal_index = len(self.output_ports)
             randomization_control_signal._variable_spec = (OWNER_VALUE, randomization_control_signal_index)
@@ -2990,9 +2993,9 @@ class OptimizationControlMechanism(ControlMechanism):
 
             # Otherwise, assert that num_estimates and number of seeds generated by randomization_control_signal are equal
             num_seeds = self.control_signals[RANDOMIZATION_CONTROL_SIGNAL].parameters.allocation_samples._get(context).num
-            assert self.num_estimates == num_seeds, \
+            assert num_estimates == num_seeds, \
                     f"PROGRAM ERROR:  The value of the {NUM_ESTIMATES} Parameter of {self.name}" \
-                    f"({self.num_estimates}) is not equal to the number of estimates that will be generated by " \
+                    f"({num_estimates}) is not equal to the number of estimates that will be generated by " \
                     f"its {RANDOMIZATION_CONTROL_SIGNAL} ControlSignal ({num_seeds})."
 
             function_search_space = self.function.parameters.search_space._get(context)
@@ -3073,12 +3076,12 @@ class OptimizationControlMechanism(ControlMechanism):
         """
 
         if self.is_initializing:
-            return [defaultControlAllocation]
+            return np.asarray([defaultControlAllocation])
 
         # Assign default control_allocation if it is not yet specified (presumably first trial)
         control_allocation = self.parameters.control_allocation._get(context)
         if control_allocation is None:
-            control_allocation = [c.defaults.variable for c in self.control_signals]
+            control_allocation = convert_to_np_array([c.defaults.variable for c in self.control_signals])
 
         # Give the agent_rep a chance to adapt based on last trial's state_feature_values and control_allocation
         if hasattr(self.agent_rep, "adapt"):
@@ -3358,13 +3361,15 @@ class OptimizationControlMechanism(ControlMechanism):
 
         nodes_params = pnlvm.helpers.get_param_ptr(builder, self.composition,
                                                    params, "nodes")
-        my_idx = self.composition._get_node_index(self)
-        my_params = builder.gep(nodes_params, [ctx.int32_ty(0),
-                                               ctx.int32_ty(my_idx)])
-        num_trials_per_estimate_ptr = pnlvm.helpers.get_param_ptr(builder, self,
-                                                                  my_params, "num_trials_per_estimate")
+        controller_idx = self.composition._get_node_index(self)
+        controller_params = builder.gep(nodes_params,
+                                        [ctx.int32_ty(0), ctx.int32_ty(controller_idx)])
+        num_trials_per_estimate_ptr = ctx.get_param_or_state_ptr(builder,
+                                                                 self,
+                                                                 "num_trials_per_estimate",
+                                                                 param_struct_ptr=controller_params)
         func_params = pnlvm.helpers.get_param_ptr(builder, self,
-                                                  my_params, "function")
+                                                  controller_params, "function")
         search_space = pnlvm.helpers.get_param_ptr(builder, self.function,
                                                    func_params, "search_space")
 
@@ -3428,7 +3433,7 @@ class OptimizationControlMechanism(ControlMechanism):
         assert self.composition.controller is self
         assert self.composition is self.agent_rep
         nodes_states = pnlvm.helpers.get_state_ptr(builder, self.composition,
-                                                   comp_state, "nodes", None)
+                                                   comp_state, "nodes")
         nodes_params = pnlvm.helpers.get_param_ptr(builder, self.composition,
                                                    comp_params, "nodes")
 
@@ -3442,15 +3447,16 @@ class OptimizationControlMechanism(ControlMechanism):
         assert len(self.output_ports) == len(allocation_sample.type.pointee)
         controller_out = builder.gep(comp_data, [ctx.int32_ty(0), ctx.int32_ty(0),
                                                  ctx.int32_ty(controller_idx)])
-        all_op_state = pnlvm.helpers.get_state_ptr(builder, self,
-                                                   controller_state, "output_ports")
-        all_op_params = pnlvm.helpers.get_param_ptr(builder, self,
-                                                    controller_params, "output_ports")
+        all_op_params, all_op_states = ctx.get_param_or_state_ptr(builder,
+                                                                  self,
+                                                                  "output_ports",
+                                                                  param_struct_ptr=controller_params,
+                                                                  state_struct_ptr=controller_state)
         for i, op in enumerate(self.output_ports):
             op_idx = ctx.int32_ty(i)
 
             op_f = ctx.import_llvm_function(op, tags=frozenset({"simulation"}))
-            op_state = builder.gep(all_op_state, [ctx.int32_ty(0), op_idx])
+            op_state = builder.gep(all_op_states, [ctx.int32_ty(0), op_idx])
             op_params = builder.gep(all_op_params, [ctx.int32_ty(0), op_idx])
             op_in = builder.alloca(op_f.args[2].type.pointee)
             op_out = builder.gep(controller_out, [ctx.int32_ty(0), op_idx])
@@ -3483,9 +3489,10 @@ class OptimizationControlMechanism(ControlMechanism):
 
 
         # Determine simulation counts
-        num_trials_per_estimate_ptr = pnlvm.helpers.get_param_ptr(builder, self,
-                                                        controller_params,
-                                                        "num_trials_per_estimate")
+        num_trials_per_estimate_ptr = ctx.get_param_or_state_ptr(builder,
+                                                                 self,
+                                                                 "num_trials_per_estimate",
+                                                                 param_struct_ptr=controller_params)
 
         num_trials_per_estimate = builder.load(num_trials_per_estimate_ptr, "num_trials_per_estimate")
 
@@ -3646,7 +3653,7 @@ class OptimizationControlMechanism(ControlMechanism):
             else:
                 # Specified InputPort is not (yet) in agent_rep
                 input_port_name = (f"{input_port.full_name}" if input_port
-                                   else f"{str(i-len(agent_rep_input_ports))}")
+                                   else f"{str(i - len(agent_rep_input_ports))}")
                 key = _deferred_agent_rep_input_port_name(input_port_name, self.agent_rep.name)
 
             # Get source for state_features dict
@@ -3699,7 +3706,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
     @property
     def state_feature_sources(self):
-        """Dict with {InputPort: source} for all INPUT Nodes of agent_rep, and sources in **state_feature_specs.
+        """Dict with {InputPort: source} for all INPUT Nodes of agent_rep, and sources in **state_feature_specs**.
         Used by state_distal_sources_and_destinations_dict()
         """
         state_dict = {}

@@ -138,7 +138,7 @@ A ContrastiveHebbianMechanism always has two, and possibly three `InputPorts <In
     * *RECURRENT:* receives the `value <Projection_Base.value>` of the Mechanism's `recurrent_projection
       <ContrastiveHebbianMechanism.recurrent_projection>`;
     ..
-    * *TARGET:* only implemented if **target_size** is specified, **separated = `True` (default), and
+    * *TARGET:* only implemented if **target_size** is specified, **separated** = `True` (default), and
       mode is not `SIMPLE_HEBBIAN <ContrastiveHebbian_SIMPLE_HEBBIAN>`;  receives the `target <Run.target>`
       specified in the `run <System.run>` method of any `Composition` to which the Mechanism belongs.
 
@@ -634,8 +634,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         condition for that phase is specified as *CONVERGENCE*.  Compares the value of `current_activity
         <ContrastiveHebbianMechanism.current_activity>` with the
         previous `value <Mechanism_Base.value>`; result is
-        assigned as the value of `delta
-        <ContrastiveHebbianMechanism.delta>.
+        assigned as the value of `delta <ContrastiveHebbianMechanism.delta>`.
 
     minus_phase_termination_condition : CONVERGENCE or COUNT: default CONVERGENCE
         determines the type of condition used to terminate the `minus_phase <ContrastiveHebbian_Minus_Phase>` of
@@ -1180,7 +1179,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             self.parameters.current_termination_threshold._set(
                     self.parameters.minus_phase_termination_threshold._get(context), context)
             self.parameters.current_termination_condition._set(self.minus_phase_termination_condition, context)
-            self.parameters.phase_execution_count._set(0, context)
+            self.parameters.phase_execution_count._set(np.asarray(0), context)
 
         if self.parameters.is_finished_flag._get(context):
         # if self.parameters.is_finished_._get(context):
@@ -1198,7 +1197,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                                             runtime_params=runtime_params,
                                             )
 
-        self.parameters.phase_execution_count._set(self.parameters.phase_execution_count._get(context) + 1, context)
+        self.parameters.phase_execution_count._set(np.asarray(self.parameters.phase_execution_count._get(context) + 1), context)
 
         current_activity = np.squeeze(current_activity)
         # Set value of primary OutputPort to current activity
@@ -1255,7 +1254,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
             # Switch execution_phase
             self.parameters.execution_phase._set(not self.parameters.execution_phase._get(context), context)
-            self.parameters.phase_execution_count._set(0, context)
+            self.parameters.phase_execution_count._set(np.asarray(0), context)
 
         return current_activity
         # return self.current_activity

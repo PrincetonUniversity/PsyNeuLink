@@ -592,7 +592,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_np_array, is_numeric, ValidParamSpecType, \
+from psyneulink.core.globals.utilities import ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, is_numeric, ValidParamSpecType, \
     convert_to_list
 
 __all__ = [
@@ -843,7 +843,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         the values of the InputPorts to which the `covariates_sources <LearningMechanism.covariates_sources>` project;
         passed to the LearningMechanism's `function <LearningMechanism.function>` as the *COVARIATES* item of its
         `variable <LearningMechanism.variable>`, and assigned as the `value <InputPort.value>` of the LearningMechanism's
-        *COVARIATES* `InputPort <LearningMechanism_Covariates>`s.
+        *COVARIATES* `InputPorts <LearningMechanism_Covariates>`.
 
     error_sources : list[ComparatorMechanism or LearningMechanism]
         the Mechanism(s) that calculate the error signal(s) provided to the
@@ -886,7 +886,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         is assigned as the `value <OutputPort.value>` of the LearningMechanism's *ERROR_SIGNAL* `OutputPort
         <LearningMechanism_Output_Error_Signal>`.
 
-    learning_signal : number, ndarray or matrix
+    learning_signal : number or ndarray
         one of two values returned by the LearningMechanism's `function <LearningMechanism.function>`, that specifies
         the changes to the weights of the `matrix <MappingProjection.matrix>` parameter for the LearningMechanism's
         `learned_projections <LearningMechanism.learned_projections>`;  it is calculated to reduce the error signal
@@ -1489,9 +1489,11 @@ class LearningMechanism(ModulatoryMechanism_Base):
         if (self.in_composition and
                 isinstance(self.function, BackPropagation) and
                 self.initialization_status == ContextFlags.INITIALIZING):
-            return [0 * summed_learning_signal, 0 * summed_error_signal]
+            return convert_all_elements_to_np_array(
+                [np.zeros(summed_learning_signal.shape), np.zeros(summed_error_signal.shape)]
+            )
 
-        return [summed_learning_signal, summed_error_signal]
+        return convert_all_elements_to_np_array([summed_learning_signal, summed_error_signal])
 
     @property
     def input_source(self):

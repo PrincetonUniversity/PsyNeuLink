@@ -135,7 +135,7 @@ The following arguments of the Composition's constructor can be used to add Comp
         values as the **projections** argument of that method.  In general, this is not neded -- default Projections
         are created for Pathways and/or Nodes added to the Composition using the methods described above; however
         it can be useful for custom configurations, including the implementation of specific Projection `matrices
-         <MappingProjection.matrix>`.
+        <MappingProjection.matrix>`.
 
    .. _Composition_Controller_Arg:
 
@@ -1000,7 +1000,7 @@ COMMENT:
 Add explanation of how learning_rate applies to Unsupervised forms of learning
 COMMENT
 The rate at which learning occurs in a `learning pathway <Composition_Learning_Pathway>` is determined by the
-`learning_rate <LearningMechanism_Learning_Rate> Parameter of the `LearningMechanism(s) <LearningMechanism>` in that
+`learning_rate <LearningMechanism_Learning_Rate>` Parameter of the `LearningMechanism(s) <LearningMechanism>` in that
 Pathway.  If it is not specified, then the `default value <Parameter_Defaults>` for the LearningMechanism's `function
 <LearningMechanism.function>` is used, which is determined by the kind of learning in that Pathway. However, the
 learning_rate can be specified in several other ways, both at construction and/or execution.  At construction, it can
@@ -1098,19 +1098,19 @@ that execution only.
 .. table::
    :widths: 5 34 33 33
 
-   +--------------------+------------------------------------+--------------------------------------------------------+
-   |                    |**Composition**                     |**AutodiffComposition**                                 |
-   +--------------------+------------------------------------+--------------------------+-----------------------------+
-   |                    |*Python*                            |`AutodiffComposition_LLVM`|`AutodiffComposition_PyTorch`|
-   |                    |                                    |(*Direct Compilation*)    |                             |
-   +====================+====================================+==========================+=============================+
-   |execution_mode=     |`ExecutionMode.Python`              |`ExecutionMode.LLVMRun`   |`ExecutionMode.PyTorch       |
-   +--------------------+------------------------------------+--------------------------+-----------------------------+
-   |`learn()            |                                    |                          |                             |
-   |<Composition.learn>`|Python interpreted                  |LLVM compiled             |PyTorch compiled             |
-   |                    |                                    |                          |                             |
-   |`run()              |                                    |                          |                             |
-   |<Composition.run>`  |Python interpreted                  |LLVM compiled             |Python interpreted           |
+   +--------------------+------------------------------------+---------------------------------------------------------+
+   |                    |**Composition**                     |**AutodiffComposition**                                  |
+   +--------------------+------------------------------------+--------------------------+------------------------------+
+   |                    |*Python*                            |`AutodiffComposition_LLVM`|`AutodiffComposition_PyTorch` |
+   |                    |                                    |(*Direct Compilation*)    |                              |
+   +====================+====================================+==========================+==============================+
+   |execution_mode=     |`ExecutionMode.Python`              |`ExecutionMode.LLVMRun`   |`ExecutionMode.PyTorch`       |
+   +--------------------+------------------------------------+--------------------------+------------------------------+
+   |`learn()            |                                    |                          |                              |
+   |<Composition.learn>`|Python interpreted                  |LLVM compiled             |PyTorch compiled              |
+   |                    |                                    |                          |                              |
+   |`run()              |                                    |                          |                              |
+   |<Composition.run>`  |Python interpreted                  |LLVM compiled             |Python interpreted            |
    +--------------------+------------------------------------+--------------------------+------------------------------+
    |*Speed:*            |slow                                |fastest                   |fast                          |
    +--------------------+------------------------------------+--------------------------+------------------------------+
@@ -2885,6 +2885,7 @@ import logging
 import sys
 import typing
 import warnings
+import weakref
 from copy import deepcopy, copy
 from inspect import isgenerator, isgeneratorfunction
 
@@ -2892,10 +2893,11 @@ import graph_scheduler
 import networkx
 import numpy as np
 import pint
+import toposort
 from PIL import Image
 from beartype import beartype
 
-from psyneulink._typing import Optional, Union, Literal, Type, Callable, List
+from psyneulink._typing import Optional, Union, Literal, Type, Callable, List, Set
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentError, ComponentsMeta
@@ -2950,12 +2952,12 @@ from psyneulink.core.globals.keywords import \
     SAMPLE, SENDER, SHADOW_INPUTS, SOFT_CLAMP, SUM, \
     TARGET, TARGET_MECHANISM, TEXT, VARIABLE, WEIGHT, OWNER_MECH
 from psyneulink.core.globals.log import CompositionLog, LogCondition
-from psyneulink.core.globals.parameters import Parameter, ParametersBase, check_user_specified
+from psyneulink.core.globals.parameters import Parameter, ParametersBase, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, _assign_prefs
 from psyneulink.core.globals.registry import register_category
-from psyneulink.core.globals.utilities import ContentAddressableList, call_with_pruned_args, convert_to_list, \
-    nesting_depth, convert_to_np_array, is_numeric, is_matrix, is_matrix_keyword, parse_valid_identifier
+from psyneulink.core.globals.utilities import ContentAddressableList, call_with_pruned_args, convert_all_elements_to_np_array, convert_to_list, \
+    nesting_depth, convert_to_np_array, is_numeric, is_matrix, is_matrix_keyword, parse_valid_identifier, extended_array_equal
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, Condition, Never, AtNCalls, BeforeNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import Time, TimeScale
@@ -3099,7 +3101,7 @@ class Graph(object):
         self.comp_to_vertex = collections.OrderedDict()  # Translate from PNL Mech, Comp or Proj to corresponding vertex
         self.vertices = []  # List of vertices within graph
 
-        self.cycle_vertices = set()
+        self.cycle_vertices = []
 
     def copy(self):
         """
@@ -3231,14 +3233,14 @@ class Graph(object):
         # stores the original unmodified dependencies
         structural_dependencies = self.dependency_dict
         # wipe and reconstruct list of vertices in cycles
-        self.cycle_vertices = set()
+        self.cycle_vertices = []
         flexible_edges = set()
 
         for node in execution_dependencies:
             # prune recurrent edges
             try:
                 execution_dependencies[node].remove(node)
-                self.cycle_vertices.add(node)
+                self.cycle_vertices.append([node])
             except KeyError:
                 pass
 
@@ -3298,9 +3300,11 @@ class Graph(object):
             # a cycle will still depend on n_i when it is part of a
             # flattened cycle. The flattened cycle will simply add more
             # nodes to the consideration set in which n_i exists
+            cycle_verts = []
             for child in cycle:
-                self.cycle_vertices.add(child)
+                cycle_verts.append(child)
                 execution_dependencies[child] = acyclic_dependencies
+            self.cycle_vertices.append(cycle_verts)
 
         return (
             execution_dependencies,
@@ -3344,7 +3348,10 @@ class NodeRole(enum.Enum):
     ----------
 
     ORIGIN
-        A `Node <Composition_Nodes>` that does not receive any `Projections <Projection>` from any other Nodes
+        A `Node <Composition_Nodes>` that has no scheduling dependencies
+        on any other Nodes within its own `Composition`. Typically,
+        an `ORIGIN` Node also do not receive any `Projections <Projection>` from
+        any other Nodes
         within its own `Composition`, though if it is in a `nested Composition <Composition_Nested>` it may
         receive Projections from the outer Composition.  `Execution of a `Composition <Composition_Execution>`
         always begins with an `ORIGIN` Node.  A Composition may have many `ORIGIN` Nodes.  This role cannot be
@@ -3444,7 +3451,10 @@ class NodeRole(enum.Enum):
         <Composition_Node_Role_Assignment>` to Nodes.  A Composition can have many `OUTPUT` Nodes.
 
     TERMINAL
-        A `Node <Composition_Nodes>` that does not send any `Projections <Projection>` to any other Nodes within
+        A `Node <Composition_Nodes>` on which no other Nodes have
+        scheduling dependencies within its own `Composition`, excluding
+        `ObjectiveMechanism`. Typically, a `TERMINAL` Node does not send
+        any `Projections <Projection>` to any other Nodes within
         its own `Composition`, though if it is in a `nested Composition <Composition_Nested>` it may send Projections
         to the outer Composition. A Composition may have many `TERMINAL` Nodes. The `ObjectiveMechanism` associated
         with the Composition's `controller <Composition.controller>` (assigned the role `CONTROLLER_OBJECTIVE`)
@@ -3452,6 +3462,8 @@ class NodeRole(enum.Enum):
         always ends with a `TERMINAL` Node, although the `controller <Composition.controller>` and its associated
         `ObjectiveMechanism` may execute after that; some `TERMINAL` Nodes may also execute earlier (i.e., if they
         belong to a `Pathway` that is shorter than the longest one in the Composition).
+        Nodes in a flattened cycle will be either all TERMINAL or all
+        not TERMINAL.
         This role cannot be modified programmatically.
 
     """
@@ -3907,8 +3919,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     _model_spec_generic_type_name = 'graph'
 
-
-    class Parameters(ParametersBase):
+    class Parameters(Composition_Base.Parameters):
         """
             Attributes
             ----------
@@ -3948,7 +3959,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         simulation_results = Parameter([], loggable=False, pnl_internal=True)
         retain_old_simulation_data = Parameter(False, stateful=False, loggable=False, pnl_internal=True)
         input_specification = Parameter(None, stateful=False, loggable=False, pnl_internal=True)
-
+        value = Parameter(NotImplemented, read_only=True)  # replaces deletion in constructor below
 
     class _CompilationData(ParametersBase):
         execution = None
@@ -4020,6 +4031,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._executed_from_command_line = False
 
         self.projections = ContentAddressableList(component_type=Component)
+        self.compositions = weakref.WeakSet()
 
         self._scheduler = None
         self._partially_added_nodes = []
@@ -4085,7 +4097,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.add_controller(controller)
         self.controller_mode = controller_mode
         self.controller_time_scale = controller_time_scale
-        self.controller_condition = controller_condition
+        self.controller_condition = copy(controller_condition)
         self.controller_condition.owner = self.controller
         # This is set at runtime and may be used by the controller to assign its
         #     `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` attribute.
@@ -4099,7 +4111,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # should be used instead - in the long run, we should look into possibly
         # populating both values and results, as it would be more consistent with
         # the behavior of components
-        del self.parameters.value
+        # del self.parameters.value
 
         # Call with context = COMPOSITION to avoid calling _check_initialization_status again
         self._analyze_graph(context=context)
@@ -4133,13 +4145,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.needs_update_scheduler or not isinstance(self._scheduler, Scheduler):
             old_scheduler = self._scheduler
             if old_scheduler is not None:
-                orig_conds = old_scheduler._user_specified_conds
-                orig_term_conds = old_scheduler._user_specified_termination_conds
+                self._scheduler = Scheduler(
+                    composition=self,
+                    conditions=old_scheduler._user_specified_conds,
+                    termination_conds=old_scheduler._user_specified_termination_conds,
+                    default_execution_id=old_scheduler.default_execution_id,
+                    mode=old_scheduler.mode,
+                    default_absolute_time_unit=old_scheduler.default_absolute_time_unit,
+                )
             else:
-                orig_conds = None
-                orig_term_conds = None
+                self._scheduler = Scheduler(composition=self)
 
-            self._scheduler = Scheduler(composition=self, conditions=orig_conds, termination_conds=orig_term_conds)
             self.needs_update_scheduler = False
 
         return self._scheduler
@@ -4281,6 +4297,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         except AttributeError:
             pass
 
+        node._add_to_composition(self)
         node._check_for_composition(context=context)
 
         # Add node to Composition's graph
@@ -4400,6 +4417,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         del self.nodes[node]
         self.node_ordering.remove(node)
+        node._remove_from_composition(self)
 
         for p in self.pathways:
             try:
@@ -4968,6 +4986,55 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if nested:
             return any(component in comp._all_nodes for comp in self._get_nested_compositions())
 
+    def _get_terminal_nodes(self, graph, toposorted_graph=None) -> Set[Component]:
+        """
+        Returns a list of nodes in this composition that are
+        NodeRole.TERMINAL with respect to an acyclic **graph**. The
+        result can change depending on whether the scheduler or
+        composition graph is used. The **graph** of the scheduler graph
+        is the scheduler's consideration_queue.
+
+        Includes all nodes that have no receivers in **graph**. The
+        ObjectiveMechanism of a Composition's controller cannot be
+        NodeRole.TERMINAL, so if the ObjectiveMechanism is the only node
+        with no receivers in **graph**, then that node's senders are
+        assigned NodeRole.TERMINAL instead.
+        """
+        terminal_nodes = set()
+
+        receivers = {n: set() for n in graph}
+        for n in graph:
+            for sender in graph[n]:
+                receivers[sender].add(n)
+
+        nodes_without_receivers = {n for n in graph if len(receivers[n]) == 0}
+
+        # if a node is in a flattened cycle, all others in that cycle
+        # must also have no receivers, or that node cannot be terminal
+        if self.graph_processing.cycle_vertices:
+            for node in copy(nodes_without_receivers):
+                for cycle in self.graph_processing.cycle_vertices:
+                    if (
+                        node in cycle
+                        and any(n not in nodes_without_receivers for n in cycle)
+                    ):
+                        nodes_without_receivers.remove(node)
+
+        for node in nodes_without_receivers:
+            if NodeRole.CONTROLLER_OBJECTIVE not in self.get_roles_by_node(node):
+                terminal_nodes.add(node)
+            elif len(nodes_without_receivers) < 2:
+                if toposorted_graph is None:
+                    toposorted_graph = list(toposort.toposort(graph))
+                assert len(toposorted_graph) > 1 and node in toposorted_graph[-1], (
+                    'CONTROLLER_OBJECTIVE node skipped as terminal, but'
+                    ' consideration queue is not suitable for fallback'
+                )
+                for previous_node in toposorted_graph[-2]:
+                    terminal_nodes.add(previous_node)
+
+        return terminal_nodes
+
     def _determine_origin_and_terminal_nodes_from_consideration_queue(self):
         """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL
            to all nodes in the last entry of the consideration queue. The ObjectiveMechanism of a Composition's
@@ -4979,24 +5046,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in list(queue)[0]:
             self._add_node_role(node, NodeRole.ORIGIN)
 
-        for node in list(queue)[-1]:
-            if NodeRole.CONTROLLER_OBJECTIVE not in self.get_roles_by_node(node):
-                self._add_node_role(node, NodeRole.TERMINAL)
-            elif len(queue[-1]) < 2:
-                for previous_node in queue[-2]:
-                    self._add_node_role(previous_node, NodeRole.TERMINAL)
-
-        # IMPLEMENTATION NOTE:
-        #   The following is needed because the assignments above only identify nodes in the *last* consideration_set;
-        #   however, the TERMINAL node(s) of a pathway with fewer nodes than the longest one may not be in the last
-        #   consideration set.  Identifying these assumes that graph_processing has been called/updated,
-        #   which identifies and "breaks" cycles, and assigns FEEDBACK_SENDER to the appropriate consideration set(s).
-        for node in self.nodes:
-            if not any([
-                efferent.is_active_in_composition(self) for efferent in node.efferents
-                if efferent.receiver.owner is not self.output_CIM
-            ]):
-                self._add_node_role(node, NodeRole.TERMINAL)
+        for node in self._get_terminal_nodes(self.scheduler.dependency_dict, queue):
+            self._add_node_role(node, NodeRole.TERMINAL)
 
     def _add_node_aux_components(self, node, context=None):
         """Add aux_components of node to Composition.
@@ -5193,7 +5244,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
              - these will all be assigined afferent Projections from Composition.input_CIM
 
         INPUT:
-          - all ORIGIN Nodes for which INPUT has not been removed and/or excluded using exclude_node_roles();
+          - all Nodes that have no incoming edges in this composition,
+            or that are in a cycle with no external incoming edges, for
+            which INPUT has not been removed and/or excluded using
+            exclude_node_roles();
           - all Nodes for which INPUT has been assigned as a required_node_role by user
             (i.e., in self.required_node_roles[NodeRole.INPUT].
 
@@ -5204,11 +5258,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
           - all Nodes that have one or more InputPorts for which default_input == DEFAULT_VARIABLE
 
         INTERNAL:
-          - all Nodes that are *neither* ORIGIN nor TERMINAL
+            A `Node <Composition_Nodes>` that is neither `INPUT` nor
+            `OUTPUT`.  Note that it *can* also be `ORIGIN`, `TERMINAL`
+            or `SINGLETON`, if it has no `afferent
+            <Mechanism_Base.afferents>` or `efferent
+            <Mechanism_Base.efferents>` Projections or neither,
+            respectively. This role cannot be modified programmatically.
 
         CYCLE:
           - all Nodes that identified as being in a cycle by self.graph_processing
-            (i.e., in self.graph_processing.cycle_vertices)
+            (i.e., in a cycle in self.graph_processing.cycle_vertices)
 
         FEEDBACK_SENDER:
           - all Nodes that send a Projection designated as feedback by self.graph_processing OR
@@ -5251,7 +5310,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
              - must project to a LearningMechanism
 
         OUTPUT:
-          - all TERMINAL Nodes *unless* they are:
+          - all Nodes that have no outgoing edges in this compositions
+            *unless* they are:
             - a ModulatoryMechanism (i.e., ControlMechanism or LearningMechanism)
             - an ObjectiveMechanisms associated with ModulatoryMechanism
           - all Nodes that project only to:
@@ -5298,11 +5358,32 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.scheduler.consideration_queue:
             self._determine_origin_and_terminal_nodes_from_consideration_queue()
 
+        # With graph structure conditions, the scheduler graph may be
+        # different than the composition graph.
+        comp_graph_dependencies = self.graph_processing.prune_feedback_edges()[0]
+
         # INPUT
-        origin_nodes = self.get_nodes_by_role(NodeRole.ORIGIN)
+
+        # all nodes from processing graph with no incoming edges are INPUT
+        input_nodes = {
+            n for n in comp_graph_dependencies if len(comp_graph_dependencies[n]) == 0
+        }
+
+        # an entire cycle that has no node with any incoming edge other
+        # than from other nodes in the cycle is treated as INPUT
+        # ex: tests/composition/test_composition.py::TestNodeRoles::test_BIAS
+        if self.graph_processing.cycle_vertices:
+            for cycle in self.graph_processing.cycle_vertices:
+                for i, node in enumerate(cycle):
+                    prev = cycle[(i - 1) % len(cycle)]
+                    if comp_graph_dependencies[node] != {prev}:
+                        break
+                else:
+                    input_nodes = input_nodes.union(cycle)
+
         for node in self.nodes:
             # Check all remaining ORIGIN Nodes
-            if node in origin_nodes:
+            if node in input_nodes:
                 # Don't allow INTERNAL Nodes to be INPUTS
                 if NodeRole.INTERNAL in self.get_roles_by_node(node):
                     continue
@@ -5320,7 +5401,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             # always obey standard scheduling behavior
                             if (
                                 not isinstance(parent.component, ControlMechanism)
-                                or parent.component not in origin_nodes
+                                or parent.component not in input_nodes
                             ):
                                 continue
 
@@ -5345,8 +5426,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._add_node_role(node, NodeRole.BIAS)
 
         # CYCLE
-        for node in self.graph_processing.cycle_vertices:
-            self._add_node_role(node, NodeRole.CYCLE)
+        for cycle in self.graph_processing.cycle_vertices:
+            for node in cycle:
+                self._add_node_role(node, NodeRole.CYCLE)
 
         # FEEDBACK_SENDER and FEEDBACK_RECEIVER
         for receiver in self.graph_processing.vertices:
@@ -5366,11 +5448,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     - NOTE IN PROGRAM ERROR FAILURE TO ASSIGN CONTROL_OBJECTIVE
 
         # OUTPUT
+        # Note: "TERMINAL" referenced below is in respect to the
+        # the composition graph, not the scheduler graph, because OUTPUT
+        # is determined by composition structure, not scheduling order.
+        try:
+            output_nodes = self._get_terminal_nodes(comp_graph_dependencies)
+        except IndexError:
+            output_nodes = []
 
         for node in self.nodes:
 
             # Assign OUTPUT if node is TERMINAL...
-            if NodeRole.TERMINAL in self.get_roles_by_node(node):
+            if node in output_nodes:
                 # unless it is a ModulatoryMechanism
                 if isinstance(node, ModulatoryMechanism_Base):
                     continue
@@ -5473,7 +5562,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in self.nodes:
             if all(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
                 self._add_node_role(node, NodeRole.SINGLETON)
-            if not any(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
+            if not any(n in self.nodes_to_roles[node] for n in {NodeRole.INPUT, NodeRole.OUTPUT}):
                 self._add_node_role(node, NodeRole.INTERNAL)
 
         # Finally, remove any NodeRole assignments specified in excluded_node_roles
@@ -5777,8 +5866,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # instantiate the input port on the output CIM to correspond to the node's output port
                     interface_input_port = InputPort(owner=self.output_CIM,
-                                                     variable=output_port.defaults.value,
-                                                     reference_value=output_port.defaults.value,
+                                                     variable=copy_parameter_value(output_port.defaults.value),
+                                                     reference_value=copy_parameter_value(output_port.defaults.value),
                                                      name=OUTPUT_CIM_NAME + "_" + node.name + "_" + output_port.name,
                                                      context=context)
 
@@ -5792,7 +5881,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             variable=(OWNER_VALUE, functools.partial(self.output_CIM.get_input_port_position,
                                                                      interface_input_port)),
                             function=Identity,
-                            reference_value=output_port.defaults.value,
+                            reference_value=copy_parameter_value(output_port.defaults.value),
                             name=OUTPUT_CIM_NAME + "_" + node.name + "_" + output_port.name,
                             context=context)
 
@@ -6541,6 +6630,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _add_projection(self, projection):
         self.projections.append(projection)
+        projection._add_to_composition(self)
 
     def remove_projection(self, projection):
         # step 1 - remove Vertex from Graph
@@ -6550,6 +6640,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # step 2 - remove Projection from Composition's list
         if projection in self.projections:
             self.projections.remove(projection)
+
+        projection._remove_from_composition(self)
 
         # step 3 - deactivate Projection in this Composition
         projection._deactivate_for_compositions(self)
@@ -7922,7 +8014,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     pathway,
                                     learning_function: Union[Type[LearningFunction], LearningFunction, Callable] = None,
                                     loss_spec: Optional[Loss] = Loss.MSE,
-                                    learning_rate: Optional[Union[int, float]] = None,
+                                    learning_rate: Optional[Union[int, float, np.ndarray]] = None,
                                     error_function=LinearCombination,
                                     learning_update: Union[bool, Literal['online', 'after']] = 'after',
                                     default_projection_matrix=None,
@@ -8129,7 +8221,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                            learning_update: Union[bool, Literal['online', 'after']] = 'online',
                                            default_projection_matrix=None,
                                            name: Optional[str] = None):
-        """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Reinforcement`
+        """Convenience method that calls `add_linear_learning_pathway` with **learning_function** = `Reinforcement`
 
         Arguments
         ---------
@@ -8186,7 +8278,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 learning_update: Union[bool, Literal['online', 'after']] = 'online',
                                 default_projection_matrix=None,
                                 name: Optional[str] = None):
-        """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`TDLearning`
+        """Convenience method that calls `add_linear_learning_pathway` with **learning_function** = `TDLearning`
 
         Arguments
         ---------
@@ -8242,7 +8334,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                              learning_update: Optional[Union[bool, Literal['online', 'after']]] = 'after',
                                              default_projection_matrix=None,
                                              name: str = None):
-        """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Backpropagation`
+        """Convenience method that calls `add_linear_learning_pathway` with **learning_function** = `Backpropagation`
 
         Arguments
         ---------
@@ -9647,7 +9739,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                 )
 
             # Get control signal costs
-            other_costs = controller.parameters.costs._get(context) or []
+            other_costs = controller.parameters.costs._get(context)
+            if other_costs is None:
+                other_costs = []
             all_costs = convert_to_np_array(other_costs + [reconfiguration_cost])
             # Compute a total for the candidate control signal(s)
             total_cost = controller.combine_costs(all_costs)
@@ -9757,14 +9851,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if buffer_animate_state:
                 self._animate = buffer_animate_state
 
-        assert result == self.get_output_values(context)
+        assert extended_array_equal(result, self.get_output_values(context))
 
         # Store simulation results on "base" composition
         if self.initialization_status != ContextFlags.INITIALIZING:
             try:
                 self.parameters.simulation_results._get(base_context).append(result)
             except AttributeError:
-                self.parameters.simulation_results._set([result], base_context)
+                self.parameters.simulation_results._set(
+                    convert_to_np_array([result]), base_context
+                )
 
         # COMPUTE net_outcome and aggregate in net_outcomes
 
@@ -10996,9 +11092,19 @@ _
 
         if ContextFlags.SIMULATION_MODE not in context.runmode:
             try:
-                self.parameters.input_specification._set(copy(inputs), context)
+                inputs = copy_parameter_value(inputs)
+            except TypeError:
+                # generator, must be copied during generation
+                pass
+
+            if is_numeric(inputs):
+                _input_spec = convert_all_elements_to_np_array(inputs)
+            else:
+                _input_spec = inputs
+            try:
+                self.parameters.input_specification._set(copy(_input_spec), context)
             except:
-                self.parameters.input_specification._set(inputs, context)
+                self.parameters.input_specification._set(_input_spec, context)
 
         # May be used by controller for specifying num_trials_per_simulation
         self.num_trials = num_trials
@@ -11043,10 +11149,6 @@ _
             self._set_up_animation(context)
 
         # SET UP EXECUTION -----------------------------------------------
-        results = self.parameters.results._get(context)
-        if results is None:
-            results = []
-
         self.rich_diverted_reports = None
         self.recorded_reports = None
 
@@ -11126,6 +11228,12 @@ _
                 self._reset_stateful_functions_when_cache[node] = node.reset_stateful_function_when
                 node.reset_stateful_function_when = reset_stateful_functions_when[node]
 
+        results = self.parameters.results._get(context)
+        if results is None:
+            results = []
+        else:
+            results = list(results)
+
         is_simulation = (context is not None and
                          ContextFlags.SIMULATION_MODE in context.runmode)
 
@@ -11162,14 +11270,7 @@ _
                         assert False, "Unknown execution mode: {}".format(execution_mode)
 
                     # Update the parameter for results
-                    self.parameters.results._set(results, context)
-
-                    if self._is_learning(context):
-                        # copies back matrix to pnl from param struct (after learning)
-                        _comp_ex.writeback_params_to_pnl(params=_comp_ex._param_struct,
-                                                         ids="llvm_param_ids",
-                                                         condition=lambda p: p.name == "matrix")
-
+                    self.parameters.results._set(convert_to_np_array(results), context)
                     self._propagate_most_recent_context(context)
 
                     report(self,
@@ -11265,13 +11366,10 @@ _
                 # store the result of this execution in case it will be the final result
 
                 # object.results.append(result)
-                if isinstance(trial_output, collections.abc.Iterable):
-                    result_copy = trial_output.copy()
-                else:
-                    result_copy = trial_output
+                trial_output = copy_parameter_value(trial_output)
 
-                results.append(result_copy)
-                self.parameters.results._set(results, context)
+                results.append(trial_output)
+                self.parameters.results._set(convert_to_np_array(results), context)
 
                 if not self.parameters.retain_old_simulation_data._get():
                     if self.controller is not None:
@@ -12120,7 +12218,7 @@ _
 
                     # Store values of all nodes in this execution_set for use by other nodes in the execution set
                     #    throughout this timestep (e.g., for recurrent Projections)
-                    frozen_values[node] = node.get_output_values(context)
+                    frozen_values[node] = copy_parameter_value(node.get_output_values(context))
 
                     # FIX: 6/12/19 Deprecate?
                     # Handle input clamping
@@ -12128,7 +12226,7 @@ _
                         if clamp_input:
                             if node in hard_clamp_inputs:
                                 # clamp = HARD_CLAMP --> "turn off" recurrent projection
-                                if hasattr(node, "recurrent_projection"):
+                                if node.recurrent_projection is not None:
                                     node.recurrent_projection.sender.parameters.value._set([0.0], context)
                             elif node in no_clamp_inputs:
                                 for input_port in node.input_ports:
@@ -12205,6 +12303,7 @@ _
                                 # Set current Python values to LLVM results
                                 data = _comp_ex.extract_frozen_node_output(data_loc)
                                 for op, v in zip(srnode.output_ports, data):
+                                    v = convert_all_elements_to_np_array(v)
                                     op.parameters.value._set(
                                       v, context, skip_history=True, skip_log=True)
 
@@ -12219,17 +12318,14 @@ _
                         else:
                             is_simulating = False
 
-                        # # MODIFIED 11/24/23 OLD:
-                        # # Run node-level compiled nested composition
-                        # # only if there are no control projections
-                        # nested_execution_mode = execution_mode \
-                        #     if len(node.parameter_CIM.afferents) == 0 else \
-                        #     pnlvm.ExecutionMode.Python
-                        # ret = node.execute(context=context,
-                        #                    execution_mode=nested_execution_mode)
-                        # MODIFIED 11/24/23 NEW:
-                        ret = node.execute(context=context, execution_mode=execution_mode)
-                        # MODIFIED 11/24/23 END
+                        # Run node-level compiled nested composition
+                        # only if there are no control projections
+                        if execution_mode == pnlvm.ExecutionMode.LLVM and len(node.parameter_CIM.afferents) != 0:
+                            nested_execution_mode = pnlvm.ExecutionMode.Python
+                        else:
+                            nested_execution_mode = execution_mode
+                        ret = node.execute(context=context,
+                                           execution_mode=nested_execution_mode)
 
                         # Get output info from nested execution
                         if execution_mode & pnlvm.ExecutionMode.COMPILED:
@@ -12268,7 +12364,7 @@ _
 
                     # Store new value generated by node,
                     #    then set back to frozen value for use by other nodes in execution_set
-                    new_values[node] = node.get_output_values(context)
+                    new_values[node] = copy_parameter_value(node.get_output_values(context))
                     for i in range(len(node.output_ports)):
                         node.output_ports[i].parameters.value._set(frozen_values[node][i], context,
                                                                    skip_history=True, skip_log=True)
@@ -12396,9 +12492,9 @@ _
         This allows Composition, after it has been constructed, to be run simply by calling it directly.
         """
         if not args and not kwargs:
-            if self.results:
+            try:
                 return self.results[-1]
-            else:
+            except IndexError:
                 return None
         elif (args and isinstance(args[0],dict)) or INPUTS in kwargs:
             from psyneulink.core.compositions.pathway import PathwayRole
@@ -12445,7 +12541,7 @@ _
             if True, shows labels instead of values for Mechanisms that have an `input_label_dict
             <Mechanism_Base.input_labels_dict>`.  For **num_trials** = 1, a representative label is
             shown; for **num_trials** > 1, a different label is used for each trial shown, cycling
-            through the set if **num_trials** is greater than the number of labels.  If **num_trials = *FULL*,
+            through the set if **num_trials** is greater than the number of labels.  If **num_trials** = *FULL*,
             trials will be included.
 
             it is set to the number of labels in the largest list specified in any `input_label_dict
@@ -12462,7 +12558,7 @@ _
         Returns
         -------
 
-        Either a dict formatted appropriately for assignment as the **inputs** argument of the Composition's `run()
+        Either a dict formatted appropriately for assignment as the **inputs** argument of the Composition's `run()`
         method (form = *DICT*, the default), or string showing the format required by the **inputs** argument
         <Composition.run>` (form = *TEXT*).
 
@@ -12648,7 +12744,10 @@ _
             # Get labels for corresponding values
             values = [node.labeled_output_values for node in output_nodes]
         else:
-            values = self.results[-1] or self.output_values
+            if len(self.results) > 0 and len(self.results[-1]) > 0:
+                values = self.results[-1]
+            else:
+                values = self.output_values
 
         full_output_set = zip(output_nodes, values)
 
@@ -12877,6 +12976,8 @@ _
                                                                               entry,
                                                                               param_key,
                                                                               param_spec[entry])
+            if is_numeric(param_spec):
+                param_spec = convert_all_elements_to_np_array(param_spec)
             return (param_spec, param_condition)
 
         if runtime_params is None:
@@ -12971,12 +13072,21 @@ _
 
     @property
     def _inner_projections(self):
-        # PNL considers afferent projections to input_CIM to be part
-        # of the nested composition. Filter them out.
+        # Filter out projections not used in compiled variant of this composition:
+        # * afferent projections to input_CIM and parameter_CIM.
+        #   These are included in node wrapper of the nested composition node,
+        #   and included in outer composition
+        # * efferent projections from output_CIM.
+        #   Same as above, they are considered part of the outer composition,
+        #   and are executed in node wrappers of the receiving nodes
+        # * Autoassociative projections (RTM, LCA)
+        #   These are executed as part of their respective mechanism and are
+        #   included in the compiled structures of their respective mechanisms.
         return (p for p in self.projections
-                  if p.receiver.owner is not self.input_CIM and
-                     p.receiver.owner is not self.parameter_CIM and
-                     p.sender.owner is not self.output_CIM)
+                if p.receiver.owner is not self.input_CIM and
+                   p.receiver.owner is not self.parameter_CIM and
+                   p.sender.owner is not self.output_CIM and
+                   p.sender.owner is not p.receiver.owner)
 
     def _get_param_ids(self):
         return ["nodes", "projections"] + super()._get_param_ids()
@@ -13049,6 +13159,25 @@ _
             return pnlvm.codegen.gen_composition_run(ctx, self, tags=tags)
         else:
             return pnlvm.codegen.gen_composition_exec(ctx, self, tags=tags)
+
+    def _delete_compilation_data(self, context: Context, from_parameter: Parameter = None):
+        if from_parameter is None:
+            self._compilation_data.execution.delete(context)
+        else:
+            execution_dict = self._compilation_data.execution.get(context)
+            if execution_dict is None:
+                return
+
+            param_owner = from_parameter._owner._owner
+            if from_parameter.name in param_owner.llvm_param_ids:
+                struct_attr = '_param'
+            elif from_parameter.name in param_owner.llvm_state_ids:
+                struct_attr = '_state'
+            else:
+                struct_attr = '_data'
+
+            for execution in execution_dict.values():
+                setattr(execution, struct_attr, None)
 
     def enable_logging(self):
         for item in self.nodes + self.projections:
@@ -13180,9 +13309,11 @@ _
         return self.get_output_values(self.most_recent_context)
 
     def get_output_values(self, context=None):
-        return [output_port.parameters.value.get(context)
-                for output_port in self.output_CIM.output_ports
-                if (not self.output_CIM._sender_is_probe(output_port) or self.include_probes_in_output)]
+        return convert_all_elements_to_np_array([
+            output_port.parameters.value.get(context)
+            for output_port in self.output_CIM.output_ports
+            if (not self.output_CIM._sender_is_probe(output_port) or self.include_probes_in_output)
+        ])
 
     @property
     def shadowing_dict(self):

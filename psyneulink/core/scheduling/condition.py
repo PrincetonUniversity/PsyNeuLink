@@ -10,7 +10,6 @@
 
 import collections
 import copy
-import functools
 import inspect
 import numbers
 import warnings
@@ -23,10 +22,42 @@ from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.mdf import MDFSerializable
 from psyneulink.core.globals.keywords import MODEL_SPEC_ID_TYPE, comparison_operators
 from psyneulink.core.globals.parameters import parse_context
-from psyneulink.core.globals.utilities import parse_valid_identifier
+from psyneulink.core.globals.utilities import parse_valid_identifier, toposort_key
 
 __all__ = copy.copy(graph_scheduler.condition.__all__)
 __all__.extend(['Threshold'])
+
+
+# avoid restricting graph_scheduler versions for this code
+# ConditionBase was introduced with graph structure conditions
+gs_condition_base_class = graph_scheduler.condition.Condition
+condition_class_parents = [graph_scheduler.condition.Condition]
+
+
+try:
+    gs_condition_base_class = graph_scheduler.condition.ConditionBase
+except AttributeError:
+    pass
+else:
+    class ConditionBase(graph_scheduler.condition.ConditionBase, MDFSerializable):
+        def as_mdf_model(self):
+            raise graph_scheduler.ConditionError(
+                f'MDF support not yet implemented for {type(self)}'
+            )
+    condition_class_parents.append(ConditionBase)
+
+
+try:
+    graph_scheduler.condition.GraphStructureCondition
+except AttributeError:
+    graph_structure_conditions_available = False
+    gsc_unavailable_message = (
+        'Graph structure conditions are not available'
+        f'in your installed graph-scheduler v{graph_scheduler.__version__}'
+    )
+else:
+    graph_structure_conditions_available = True
+    gsc_unavailable_message = ''
 
 
 def _create_as_pnl_condition(condition):
@@ -38,11 +69,23 @@ def _create_as_pnl_condition(condition):
         return condition
 
     # already a pnl Condition
-    if isinstance(condition, Condition):
+    if isinstance(condition, pnl_condition_base_class):
         return condition
 
-    if not issubclass(pnl_class, graph_scheduler.Condition):
+    if not issubclass(pnl_class, gs_condition_base_class):
         return None
+
+    if (
+        graph_structure_conditions_available
+        and isinstance(condition, graph_scheduler.condition.GraphStructureCondition)
+    ):
+        try:
+            return pnl_class(
+                *condition.nodes,
+                **{k: v for k, v in condition.kwargs.items() if k != 'nodes'}
+            )
+        except AttributeError:
+            return pnl_class(**condition.kwargs)
 
     new_args = [_create_as_pnl_condition(a) or a for a in condition.args]
     new_kwargs = {k: _create_as_pnl_condition(v) or v for k, v in condition.kwargs.items()}
@@ -58,7 +101,7 @@ def _create_as_pnl_condition(condition):
     return res
 
 
-class Condition(graph_scheduler.Condition, MDFSerializable):
+class Condition(*condition_class_parents, MDFSerializable):
     @handle_external_context()
     def is_satisfied(self, *args, context=None, execution_id=None, **kwargs):
         if execution_id is None:
@@ -81,8 +124,13 @@ class Condition(graph_scheduler.Condition, MDFSerializable):
         def _parse_condition_arg(arg):
             if isinstance(arg, Component):
                 return parse_valid_identifier(arg.name)
-            elif isinstance(arg, graph_scheduler.Condition):
+            elif isinstance(arg, Condition):
                 return arg.as_mdf_model()
+            elif (
+                isinstance(arg, np.number)
+                or (isinstance(arg, np.ndarray) and arg.ndim == 0)
+            ):
+                return arg.item()
             elif arg is None or isinstance(arg, numbers.Number):
                 return arg
             else:
@@ -112,7 +160,7 @@ class Condition(graph_scheduler.Condition, MDFSerializable):
                 for a in self.args:
                     if isinstance(a, Component):
                         a = parse_valid_identifier(a.name)
-                    elif isinstance(a, graph_scheduler.Condition):
+                    elif isinstance(a, Condition):
                         a = a.as_mdf_model()
                     args_list.append(a)
                 extra_args[name] = args_list
@@ -139,40 +187,47 @@ class Condition(graph_scheduler.Condition, MDFSerializable):
 # below produces psyneulink versions of each Condition class so that
 # they are compatible with the extra changes made in Condition above
 # (the scheduler does not handle Context objects or mdf/json export)
-cond_dependencies = {}
+gs_class_dependencies = {}
+gs_classes_to_copy_as_pnl = []
 pnl_conditions_module = locals()  # inserting into locals defines the classes
+pnl_condition_base_class = pnl_conditions_module[gs_condition_base_class.__name__]
 
-for cond_name in graph_scheduler.condition.__all__:
-    sched_module_cond_obj = getattr(graph_scheduler.condition, cond_name)
-    cond_dependencies[cond_name] = set(sched_module_cond_obj.__mro__[1:])
+for class_name in graph_scheduler.condition.__dict__:
+    cls_ = getattr(graph_scheduler.condition, class_name)
+    if inspect.isclass(cls_):
+        # don't substitute classes explicitly defined above
+        if class_name not in pnl_conditions_module:
+            if issubclass(cls_, gs_condition_base_class):
+                gs_classes_to_copy_as_pnl.append(class_name)
+            else:
+                pnl_conditions_module[class_name] = cls_
+
+        gs_class_dependencies[class_name] = {
+            c.__name__ for c in cls_.__mro__ if c.__name__ != class_name
+        }
 
 # iterate in order such that superclass types are before subclass types
 for cond_name in sorted(
-    graph_scheduler.condition.__all__,
-    key=functools.cmp_to_key(lambda a, b: -1 if b in cond_dependencies[a] else 1)
+    gs_classes_to_copy_as_pnl,
+    key=toposort_key(gs_class_dependencies)
 ):
-    # don't substitute Condition because it is explicitly defined above
-    if cond_name == 'Condition':
-        continue
-
     sched_module_cond_obj = getattr(graph_scheduler.condition, cond_name)
-    if (
-        inspect.isclass(sched_module_cond_obj)
-        and issubclass(sched_module_cond_obj, graph_scheduler.Condition)
-    ):
-        new_mro = []
-        for cls_ in sched_module_cond_obj.__mro__:
-            if cls_ is not graph_scheduler.Condition:
-                try:
-                    new_mro.append(pnl_conditions_module[cls_.__name__])
+    new_bases = []
+    for cls_ in sched_module_cond_obj.__mro__:
+        try:
+            new_bases.append(pnl_conditions_module[cls_.__name__])
+        except KeyError:
+            new_bases.append(cls_)
+        if cls_ is gs_condition_base_class:
+            break
 
-                except KeyError:
-                    new_mro.append(cls_)
-            else:
-                new_mro.extend(Condition.__mro__[:-1])
-        pnl_conditions_module[cond_name] = type(cond_name, tuple(new_mro), {})
-    elif isinstance(sched_module_cond_obj, type):
-        pnl_conditions_module[cond_name] = sched_module_cond_obj
+    new_meta = type(new_bases[0])
+    if new_meta is not type:
+        pnl_conditions_module[cond_name] = new_meta(
+            cond_name, tuple(new_bases), {'__module__': Condition.__module__}
+        )
+    else:
+        pnl_conditions_module[cond_name] = type(cond_name, tuple(new_bases), {})
 
     pnl_conditions_module[cond_name].__doc__ = sched_module_cond_obj.__doc__
 

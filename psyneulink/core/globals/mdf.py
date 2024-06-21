@@ -174,7 +174,10 @@ class PNLJSONEncoder(json.JSONEncoder):
         elif isinstance(o, SampleIterator):
             return f'{o.__class__.__name__}({repr(o.specification)})'
         elif isinstance(o, numpy.ndarray):
-            return list(o)
+            try:
+                return list(o)
+            except TypeError:
+                return o.item()
         elif isinstance(o, numpy.random.RandomState):
             return f'numpy.random.RandomState({o.seed})'
         elif isinstance(o, numpy.number):
@@ -225,6 +228,19 @@ def _mdf_obj_from_dict(d):
         return _get_mdf_object(d, mdf.Function)
 
     return None
+
+
+def _get_parameters_from_mdf_base_object(model, pnl_type):
+    model_params = getattr(model, pnl_type._model_spec_id_parameters)
+
+    if isinstance(model_params, list):
+        parameters = {p.id: p.value for p in model_params}
+    elif isinstance(model_params, dict):
+        parameters = dict(model_params)
+    else:
+        parameters = {}
+
+    return parameters
 
 
 def _parse_component_type(model_obj):
@@ -543,29 +559,19 @@ def _generate_component_string(
 
     is_user_defined_function = False
     try:
-        parameters = dict(getattr(component_model, component_type._model_spec_id_parameters))
+        parameters = _get_parameters_from_mdf_base_object(component_model, component_type)
     except AttributeError:
         is_user_defined_function = True
-    except TypeError:
-        parameters = {}
 
     if is_user_defined_function or component_type is UserDefinedFunction:
         custom_func = component_type
         component_type = UserDefinedFunction
-        try:
-            parameters = dict(getattr(component_model, component_type._model_spec_id_parameters))
-        except TypeError:
-            parameters = {}
+        parameters = _get_parameters_from_mdf_base_object(component_model, component_type)
         parameters['custom_function'] = f'{custom_func}'
         try:
             del component_model.metadata['custom_function']
         except KeyError:
             pass
-
-    try:
-        parameters.update(getattr(component_model, component_type._model_spec_id_parameters))
-    except TypeError:
-        pass
 
     try:
         # args in function dict
@@ -954,6 +960,10 @@ def _generate_composition_string(graph, component_identifiers):
         psyneulink.LearningMechanism,
         psyneulink.LearningProjection,
     )
+    implicit_roles = (
+        psyneulink.NodeRole.LEARNING,
+    )
+
     output = []
 
     comp_identifer = parse_valid_identifier(graph.id)
@@ -1090,6 +1100,22 @@ def _generate_composition_string(graph, component_identifiers):
     control_mechanisms = []
     implicit_mechanisms = []
 
+    try:
+        node_roles = {
+            parse_valid_identifier(node): role for (node, role) in
+            graph.metadata['required_node_roles']
+        }
+    except KeyError:
+        node_roles = []
+
+    try:
+        excluded_node_roles = {
+            parse_valid_identifier(node): role for (node, role) in
+            graph.metadata['excluded_node_roles']
+        }
+    except KeyError:
+        excluded_node_roles = []
+
     # add nested compositions and mechanisms in order they were added
     # to this composition
     for node in sorted(
@@ -1104,10 +1130,19 @@ def _generate_composition_string(graph, component_identifiers):
             except (AttributeError, KeyError):
                 component_type = default_node_type
             identifier = parse_valid_identifier(node.id)
+
+            try:
+                node_role = eval(_parse_parameter_value(node_roles[identifier]))
+            except (KeyError, TypeError):
+                node_role = None
+
             if issubclass(component_type, control_mechanism_types):
                 control_mechanisms.append(node)
                 component_identifiers[identifier] = True
-            elif issubclass(component_type, implicit_types):
+            elif (
+                issubclass(component_type, implicit_types)
+                or node_role in implicit_roles
+            ):
                 implicit_mechanisms.append(node)
             else:
                 mechanisms.append(node)
@@ -1165,23 +1200,6 @@ def _generate_composition_string(graph, component_identifiers):
         )
     if len(compositions) > 0:
         output.append('')
-
-    # generate string to add the nodes to this Composition
-    try:
-        node_roles = {
-            parse_valid_identifier(node): role for (node, role) in
-            graph.metadata['required_node_roles']
-        }
-    except KeyError:
-        node_roles = []
-
-    try:
-        excluded_node_roles = {
-            parse_valid_identifier(node): role for (node, role) in
-            graph.metadata['excluded_node_roles']
-        }
-    except KeyError:
-        excluded_node_roles = []
 
     # do not add the controller as a normal node
     try:
@@ -1383,10 +1401,11 @@ def generate_script_from_mdf(model_input, outfile=None):
     for i in range(len(comp_strs)):
         # greedy and non-greedy
         for cs in comp_strs[i]:
-            potential_module_names = set([
+            cs_potential_names = set([
                 *re.findall(r'([A-Za-z_\.]+)\.', cs),
                 *re.findall(r'([A-Za-z_\.]+?)\.', cs)
             ])
+            potential_module_names.update(cs_potential_names)
 
         for module in potential_module_names:
             if module not in component_identifiers:
@@ -1556,7 +1575,9 @@ def write_mdf_file(compositions, filename: str, path: str = None, fmt: str = Non
                 not specified then the current directory is used.
 
             fmt : str
-                specifies file format of output. Current options ('json', 'yml'/'yaml')
+                specifies file format of output. Auto-detect based on
+                **filename** extension if None.
+                Current options: 'json', 'yml'/'yaml'
 
             simple_edge_format : bool
                 specifies use of
@@ -1567,8 +1588,8 @@ def write_mdf_file(compositions, filename: str, path: str = None, fmt: str = Non
 
     if fmt is None:
         try:
-            fmt = re.match(r'(.*)\.(.*)$', filename).groups(1)
-        except AttributeError:
+            fmt = re.match(r'(.*)\.(.*)$', filename).groups()[1]
+        except (AttributeError, IndexError):
             fmt = 'json'
 
     if path is not None:

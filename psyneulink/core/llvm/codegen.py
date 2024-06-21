@@ -633,12 +633,10 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
         # and the entire call should be optimized out.
         node_in = builder.alloca(node_function.args[2].type.pointee,
                                  name="mechanism_node_input")
-        incoming_projections = node.mod_afferents if "reset" in tags else node.afferents
-
-    # Checking if node is finished doesn't need projections
-    # FIXME: Can the values used in the check be modulated?
-    if "is_finished" in tags:
-        incoming_projections = []
+        if {"reset", "is_finished"}.intersection(tags):
+            incoming_projections = node.mod_afferents
+        else:
+            incoming_projections = node.afferents
 
     if "reset" in tags:
         proj_func_tags = func_tags.difference({"reset"}).union({"passthrough"})
@@ -820,7 +818,8 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
         for idx, node in enumerate(composition._all_nodes):
             node_state = builder.gep(nodes_states, [ctx.int32_ty(0),
                                                     ctx.int32_ty(idx)])
-            num_exec_locs[node] = helpers.get_state_ptr(builder, node,
+            num_exec_locs[node] = helpers.get_state_ptr(builder,
+                                                        node,
                                                         node_state,
                                                         "num_executions")
 
@@ -1056,7 +1055,7 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
         node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
         num_executions_ptr = helpers.get_state_ptr(builder, node, node_state, "num_executions")
         num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.RUN.value)])
-        builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
+        builder.store(num_exec_time_ptr.type.pointee(None), num_exec_time_ptr)
 
     # Allocate and initialize condition structure
     cond_gen = helpers.ConditionGenerator(ctx, composition)

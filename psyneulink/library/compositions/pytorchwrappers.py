@@ -13,7 +13,6 @@ import graph_scheduler
 import torch
 import torch.nn as nn
 
-from psyneulink.core.components.component import Component, ComponentsMeta
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, PRODUCT, SUM
 from psyneulink.core.compositions.composition import NodeRole, CompositionInterfaceMechanism
 from psyneulink.library.compositions.pytorchllvmhelper import *
@@ -238,7 +237,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         self._regenerate_paramlist()
 
-    __deepcopy__ = get_deepcopy_with_shared(shared_types=(Component, ComponentsMeta))
+    __deepcopy__ = get_deepcopy_with_shared()
 
     def _regenerate_paramlist(self):
         """Add Projection matrices to Pytorch Module's parameter list"""
@@ -377,7 +376,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         efferent_node = proj.receiver
                         efferent_node_error = error_dict[efferent_node]
 
-                        weights_llvmlite = proj._extract_llvm_matrix(ctx, builder, params)
+                        weights_llvmlite = proj._extract_llvm_matrix(ctx, builder, state, params)
 
                         if proj_idx == 0:
                             gen_inject_vxm_transposed(
@@ -406,7 +405,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 afferent_node_activation = builder.gep(model_output, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(proj.sender._idx), ctx.int32_ty(0)])
 
                 # get dimensions of weight matrix
-                weights_llvmlite = proj._extract_llvm_matrix(ctx, builder, params)
+                weights_llvmlite = proj._extract_llvm_matrix(ctx, builder, state, params)
                 pnlvm.helpers.printf_float_matrix(builder, weights_llvmlite, prefix= f"{proj.sender._mechanism} -> {proj.receiver._mechanism}\n", override_debug=False)
                 # update delta_W
                 node_delta_w = builder.gep(delta_w, [ctx.int32_ty(0), ctx.int32_ty(proj._idx)])
@@ -454,7 +453,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         builder.call(optimizer_zero_grad, [optimizer_struct])
         builder.call(backprop, [state, params, data,
                                 optimizer_struct])
-        builder.call(optimizer_step_f, [optimizer_struct, params])
+        builder.call(optimizer_step_f, [optimizer_struct, state, params])
 
     def _get_compiled_optimizer(self):
         # setup optimizer
@@ -690,10 +689,14 @@ class PytorchMechanismWrapper():
                                          ctx.int32_ty(0),
                                          ctx.int32_ty(self._idx)])
 
-        f_params_ptr = pnlvm.helpers.get_param_ptr(builder, self._mechanism, mech_params, "function")
+        f_params, f_state = ctx.get_param_or_state_ptr(builder,
+                                                       self._mechanism,
+                                                       "function",
+                                                       param_struct_ptr=mech_params,
+                                                       state_struct_ptr=mech_state)
+
         f_params, builder = self._mechanism._gen_llvm_param_ports_for_obj(
-                self._mechanism.function, f_params_ptr, ctx, builder, mech_params, mech_state, mech_input)
-        f_state = pnlvm.helpers.get_state_ptr(builder, self._mechanism, mech_state, "function")
+                self._mechanism.function, f_params, ctx, builder, mech_params, mech_state, mech_input)
 
         output, _ = self._mechanism._gen_llvm_invoke_function(ctx, builder, self._mechanism.function,
                                                               f_params, f_state, mech_input, None,
@@ -770,21 +773,31 @@ class PytorchProjectionWrapper():
             self._projection.parameters.matrix._set(detached_matrix, context=self._context)
             self._projection.parameter_ports['matrix'].parameters.value._set(detached_matrix, context=self._context)
 
-    def _extract_llvm_matrix(self, ctx, builder, params):
-        proj_params = builder.gep(params, [ctx.int32_ty(0),
-                                           ctx.int32_ty(1),
-                                           ctx.int32_ty(self._idx)])
+    def _extract_llvm_matrix(self, ctx, builder, state, params):
+        proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(self._idx)])
+        proj_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(self._idx)])
 
         dim_x, dim_y = self.matrix.detach().numpy().shape
-        proj_func = pnlvm.helpers.get_param_ptr(builder, self._projection, proj_params, "function")
-        proj_matrix = pnlvm.helpers.get_param_ptr(builder, self._projection.function, proj_func, "matrix")
+
+        func_p, func_s = ctx.get_param_or_state_ptr(builder,
+                                                    self._projection,
+                                                    self._projection.parameters.function,
+                                                    param_struct_ptr=proj_params,
+                                                    state_struct_ptr=proj_state)
+
+        proj_matrix = ctx.get_param_or_state_ptr(builder,
+                                                 self._projection.function,
+                                                 self._projection.function.parameters.matrix,
+                                                 param_struct_ptr=func_p,
+                                                 state_struct_ptr=func_s)
+
         proj_matrix = builder.bitcast(proj_matrix, pnlvm.ir.types.ArrayType(
             pnlvm.ir.types.ArrayType(ctx.float_ty, dim_y), dim_x).as_pointer())
 
         return proj_matrix
 
     def _gen_llvm_execute(self, ctx, builder, state, params, data):
-        proj_matrix = self._extract_llvm_matrix(ctx, builder, params)
+        proj_matrix = self._extract_llvm_matrix(ctx, builder, state, params)
 
         input_vec = builder.gep(data, [ctx.int32_ty(0),
                                        ctx.int32_ty(0),

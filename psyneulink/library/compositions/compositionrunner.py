@@ -15,6 +15,7 @@ from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.compositions.report import Report, ReportProgress, ReportDevices, LEARN_REPORT, PROGRESS_REPORT
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
 from psyneulink.core.globals.keywords import OBJECTIVE_MECHANISM, TRAINING_SET
+from psyneulink.core.globals.parameters import copy_parameter_value
 from inspect import isgeneratorfunction
 
 __all__ = ["CompositionRunner"]
@@ -77,7 +78,7 @@ class CompositionRunner():
                     chunk = {}
                     for k, v in inputs.items():
                         chunk[k] = v[idx % len(v)]
-                    yield chunk
+                    yield copy_parameter_value(chunk)
                 if call_after_minibatch:
                     call_after_minibatch()
 

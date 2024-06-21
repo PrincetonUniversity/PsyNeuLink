@@ -77,7 +77,7 @@ class TestReset:
 
         # reset only decision variable
         D.function.initializer = 1.0
-        D.function.non_decision_time = 0.0
+        D.function.non_decision_time.base = 0.0
         D.reset()
         np.testing.assert_allclose(D.function.value[0], 1.0)
         np.testing.assert_allclose(D.function.parameters.previous_value.get(), 1.0)
@@ -266,8 +266,8 @@ def test_DDM_Integrator_Bogacz(benchmark, mech_mode, prng):
     ex = pytest.helpers.get_mech_execution(T, mech_mode)
 
     ex(stim)
-    val = benchmark(ex, stim)[0]
-    np.testing.assert_allclose(val, [1.0])
+    val = benchmark(ex, stim)
+    np.testing.assert_allclose(val, [[1.0], [0.3]])
 
 # ------------------------------------------------------------------------------------------------
 # # TEST 3
@@ -284,8 +284,8 @@ def test_DDM_Integrator_Bogacz(benchmark, mech_mode, prng):
 #         name='DDM',
 #         function=NavarroAndFuss()
 #     )
-#     val = float(T.execute(stim)[0])
-#     assert val == 10
+#     val = T.execute(stim)
+#     np.testing.assert_array_equal(val, [[10]])
 
 
 # ======================================= NOISE TESTS ============================================
@@ -339,7 +339,7 @@ def test_DDM_noise_invalid(noise):
                 time_step_size=1.0
             ),
         )
-        float(T.execute(stim)[0])
+        T.execute(stim)
     assert "DriftDiffusionIntegrator requires noise parameter to be a float" in str(error_text.value)
 
 # ======================================= INPUT TESTS ============================================
@@ -362,8 +362,8 @@ def test_DDM_input(stim):
         ),
         execute_until_finished=False,
     )
-    val = float(T.execute(stim)[0])
-    assert val == 10
+    val = T.execute(stim)
+    np.testing.assert_array_equal(val, [[10], [1]])
 
 # ------------------------------------------------------------------------------------------------
 
@@ -388,7 +388,7 @@ def test_DDM_input_list_len_2():
             ),
             execute_until_finished=False,
         )
-        float(T.execute(stim)[0])
+        T.execute(stim)
     assert "single numeric item" in str(error_text.value)
 
 # ------------------------------------------------------------------------------------------------
@@ -413,7 +413,7 @@ def test_DDM_input_fn():
             ),
             execute_until_finished=False,
         )
-        float(T.execute(stim))
+        T.execute(stim)
     assert 'Input to \'DDM\' ([(NormalDist Normal Distribution Function' in str(error_text.value)
     assert 'is incompatible with its corresponding InputPort (DDM[InputPort-0]): ' \
            '\'unsupported operand type(s) for *: \'NormalDist\' and \'float\'.\'' in str(error_text.value)
@@ -445,8 +445,8 @@ def test_DDM_rate(benchmark, rate, expected, mech_mode):
     ex = pytest.helpers.get_mech_execution(T, mech_mode)
 
     ex(stim)
-    val = float(benchmark(ex, stim)[0][0])
-    assert val == expected
+    val = benchmark(ex, stim)
+    np.testing.assert_array_equal(val, [[expected], [2]])
 
 # ------------------------------------------------------------------------------------------------
 # INVALID RATES:
@@ -475,7 +475,7 @@ def test_DDM_rate_fn():
             ),
             execute_until_finished=False,
         )
-        float(T.execute(stim)[0])
+        T.execute(stim)
     assert "incompatible value" in str(error_text.value)
 
 # ------------------------------------------------------------------------------------------------
@@ -710,10 +710,10 @@ def test_DDM_threshold_modulation_integrator(comp_mode):
 
 @pytest.mark.composition
 @pytest.mark.parametrize(["noise", "threshold", "expected_results"],[
-                            (1.0, 0.0, (0.0, 1.0)),
-                            (1.5, 2, (-2.0, 1.0)),
-                            (10.0, 10.0, (10.0, 29.0)),
-                            (100.0, 100.0, (100.0, 76.0)),
+                            (1.0, 0.0, [[0.0], [1.0]]),
+                            (1.5, 2, [[-2.0], [1.0]]),
+                            (10.0, 10.0, [[10.0], [29.0]]),
+                            (100.0, 100.0, [[100.0], [76.0]]),
                         ])
 def test_ddm_is_finished(comp_mode, noise, threshold, expected_results):
 
@@ -732,9 +732,46 @@ def test_ddm_is_finished(comp_mode, noise, threshold, expected_results):
 
     results = comp.run([0], execution_mode=comp_mode)
 
-    results = [x for x in np.array(results).flatten()] #HACK: The result is an object dtype in Python comp_mode for some reason?
-    np.testing.assert_allclose(results, np.array(expected_results).flatten())
+    np.testing.assert_array_equal(results, expected_results)
 
+@pytest.mark.composition
+@pytest.mark.parametrize("until_finished", ["until_finished", "not_until_finished"])
+@pytest.mark.parametrize("threshold_mod", ["threshold_modulated", "threshold_not_modulated"])
+def test_ddm_is_finished_with_dependency(comp_mode, until_finished, threshold_mod):
+
+    # 3/5/2021 - DDM' default behaviour now requires resetting stateful
+    # functions after each trial. This is not supported in LLVM execution mode.
+    # See: https://github.com/PrincetonUniversity/PsyNeuLink/issues/1935
+    # Moreover, evaluating scheduler conditions in Python is not supported
+    # for compiled execution
+    if comp_mode == pnl.ExecutionMode.LLVM:
+        pytest.xfail(reason="DDM' default behaviour now requires resetting stateful functions after each trial. "
+                            "This is not supported in LLVM execution mode. "
+                            "See: https://github.com/PrincetonUniversity/PsyNeuLink/issues/1935")
+
+    comp = Composition()
+    ddm = DDM(function=DriftDiffusionIntegrator(),
+              # Use only the decision variable in this test
+              output_ports=[pnl.DECISION_VARIABLE],
+              execute_until_finished=until_finished == "until_finished")
+    dep = pnl.ProcessingMechanism()
+    comp.add_linear_processing_pathway([ddm, dep])
+    comp.scheduler.add_condition(dep, pnl.WhenFinished(ddm))
+
+    inputs = {ddm: [4]}
+    expected_results = [[100]]
+
+    if threshold_mod == "threshold_modulated":
+        control = pnl.ControlMechanism(control_signals=[(pnl.THRESHOLD, ddm)])
+        comp.add_node(control)
+
+        # reduce the threshold by half
+        inputs[control] = 0.5
+        expected_results = [[50]]
+
+    results = comp.run(inputs, execution_mode=comp_mode)
+
+    np.testing.assert_array_equal(results, expected_results)
 
 def test_sequence_of_DDM_mechs_in_Composition_Pathway():
     myMechanism = DDM(

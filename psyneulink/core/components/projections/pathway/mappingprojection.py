@@ -84,8 +84,8 @@ its `matrix <MappingProjection.matrix>` parameter.  This is used by the MappingP
 <Projection_Base.value>` provided to its `receiver <MappingProjection.receiver>`. It can be specified in any of the
 following ways:
 
-  * **List, array or matrix**  -- if it is a list, each item must be a list or 1d np.array of numbers;  otherwise,
-    it must be a 2d np.array or np.matrix.  In each case, the outer dimension (outer list items, array axis 0,
+  * **List or array**  -- if it is a list, each item must be a list or 1d np.array of numbers;  otherwise,
+    it must be a 2d np.array.  In each case, the outer dimension (outer list items, array axis 0,
     or matrix rows) corresponds to the elements of the `sender <MappingProjection.sender>`, and the inner dimension
     (inner list items, array axis 1, or matrix columns) corresponds to the weighting of the contribution that a
     given `sender <MappingProjection.sender>` makes to the `receiver <MappingProjection.receiver>` (the number of which
@@ -301,7 +301,7 @@ from psyneulink.core.globals.keywords import \
     MAPPING_PROJECTION, MATRIX, \
     OUTPUT_PORT, VALUE
 from psyneulink.core.globals.log import ContextFlags
-from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
+from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -357,7 +357,7 @@ class MappingProjection(PathwayProjection_Base):
         the context in which the Projection is used, or its initialization will be `deferred
         <MappingProjection_Deferred_Initialization>`.
 
-    matrix : list, np.ndarray, np.matrix, function, `RandomMatrix` or keyword : default DEFAULT_MATRIX
+    matrix : list, np.ndarray, function, `RandomMatrix` or keyword : default DEFAULT_MATRIX
         specifies the matrix used by `function <Projection_Base.function>` (default: `LinearCombination`) to
         transform the `value <Projection_Base.value>` of the `sender <MappingProjection.sender>` into a form suitable
         for the `variable <InputPort.variable>` of its `receiver <MappingProjection.receiver>` `InputPort`
@@ -468,7 +468,7 @@ class MappingProjection(PathwayProjection_Base):
         # Assign matrix to function_params for use as matrix param of MappingProjection.function
         # (7/12/17 CW) this is a PATCH to allow the user to set matrix as an np.matrix... I still don't know why
         # it wasn't working.
-        if isinstance(matrix, (np.matrix, list)):
+        if isinstance(matrix, list):
             matrix = np.array(matrix)
 
         self.learning_mechanism = None
@@ -553,7 +553,7 @@ class MappingProjection(PathwayProjection_Base):
         except TypeError:
             mapping_output_len = 1
 
-        matrix_spec = self.defaults.matrix
+        matrix_spec = copy_parameter_value(self.defaults.matrix)
 
         if (type(matrix_spec) == str and
                 matrix_spec == AUTO_ASSIGN_MATRIX):

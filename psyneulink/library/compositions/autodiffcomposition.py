@@ -166,7 +166,7 @@ which provides a comparison of the different modes of execution for an AutodiffC
 *PyTorch mode*
 ~~~~~~~~~~~~~~
 
-This is the default for an AutodiffComposition, but, can be specified explicitly by setting **execution_mode =
+This is the default for an AutodiffComposition, but, can be specified explicitly by setting **execution_mode** =
 `ExecutionMode.PyTorch` in the `learn <Composition.learn>` method (see `example <BasicsAndPrimer_Rumelhart_Model>`
 in `BasicsAndPrimer`).  In this mode, the AutodiffComposition is automatically translated to a `PyTorch
 <https://pytorch.org>`_ model for learning.  This is comparable in speed to `LLVM compilation
@@ -344,6 +344,7 @@ from psyneulink.core.compositions.report import (ReportOutput, ReportParams, Rep
                                                  ReportDevices, EXECUTE_REPORT, LEARN_REPORT, PROGRESS_REPORT)
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context, CONTEXT
 from psyneulink.core.globals.keywords import AUTODIFF_COMPOSITION, SOFT_CLAMP, Loss
+from psyneulink.core.globals.utilities import is_numeric_scalar
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.scheduling.time import TimeScale
@@ -712,7 +713,7 @@ class AutodiffComposition(Composition):
         return self.parameters.pytorch_representation._get(context)
 
     def _make_optimizer(self, optimizer_type, learning_rate, weight_decay, context):
-        if not isinstance(learning_rate, (int, float)):
+        if not is_numeric_scalar(learning_rate):
             raise AutodiffCompositionError("Learning rate must be an integer or float value.")
         if optimizer_type not in ['sgd', 'adam']:
             raise AutodiffCompositionError("Invalid optimizer specified. Optimizer argument must be a string. "
@@ -799,7 +800,7 @@ class AutodiffComposition(Composition):
             idx = component.output_ports.index(port)
             outputs += [curr_tensor_outputs[component][idx].detach().cpu().numpy().copy().tolist()]
 
-        self.parameters.tracked_loss_count._set(self.parameters.tracked_loss_count._get(context=context) + 1,
+        self.parameters.tracked_loss_count._set(np.array(self.parameters.tracked_loss_count._get(context=context) + 1),
                                                 context=context,
                                                 skip_history=True,
                                                 skip_log=True)
@@ -817,11 +818,11 @@ class AutodiffComposition(Composition):
         optimizer = self.parameters.optimizer._get(context=context)
         optimizer.zero_grad()
 
-        tracked_loss = self.parameters.tracked_loss._get(context=context) / self.parameters.tracked_loss_count._get(context=context)
+        tracked_loss = self.parameters.tracked_loss._get(context=context) / int(self.parameters.tracked_loss_count._get(context=context))
         tracked_loss.backward(retain_graph=not self.force_no_retain_graph)
         self.parameters.losses._get(context=context).append(tracked_loss.detach().cpu().numpy()[0])
         self.parameters.tracked_loss._set(torch.zeros(1, device=self.device).double(), context=context, skip_history=True, skip_log=True)
-        self.parameters.tracked_loss_count._set(0, context=context, skip_history=True, skip_log=True)
+        self.parameters.tracked_loss_count._set(np.array(0), context=context, skip_history=True, skip_log=True)
         optimizer.step()
         self.parameters.pytorch_representation._get(context=context).detach_all()
         self.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)

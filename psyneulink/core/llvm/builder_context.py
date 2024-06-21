@@ -18,9 +18,9 @@ import numpy as np
 import os
 import re
 import time
-from psyneulink._typing import Set
 import weakref
 
+from psyneulink._typing import Set
 from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import ContentAddressableList
@@ -96,6 +96,8 @@ class LLVMBuilderContext:
         assert LLVMBuilderContext.__current_context is None
         self._modules = []
         self._cache = weakref.WeakKeyDictionary()
+        self._component_param_use = weakref.WeakKeyDictionary()
+        self._component_state_use = weakref.WeakKeyDictionary()
 
         # Supported stats are listed explicitly to catch typos
         self._stats = { "function_cache_misses":0,
@@ -160,6 +162,10 @@ class LLVMBuilderContext:
         if cls.__current_context is None:
             return LLVMBuilderContext(cls.default_float_ty)
         return cls.__current_context
+
+    @classmethod
+    def is_active(cls):
+        return cls.__current_context is not None
 
     @classmethod
     def clear_global(cls):
@@ -268,6 +274,8 @@ class LLVMBuilderContext:
             self._stats["function_cache_misses"] += 1
             with self:
                 obj_cache[tags] = obj._gen_llvm_function(ctx=self, tags=tags)
+                self.check_used_params(obj, tags=tags)
+
         return obj_cache[tags]
 
     def import_llvm_function(self, fun, *, tags:frozenset=frozenset()) -> ir.Function:
@@ -288,15 +296,14 @@ class LLVMBuilderContext:
         return f
 
     def get_random_state_ptr(self, builder, component, state, params):
-        random_state_ptr = helpers.get_state_ptr(builder, component, state, "random_state")
-
+        random_state_ptr = self.get_param_or_state_ptr(builder, component, "random_state", state_struct_ptr=state)
 
         # Used seed is the last member of both MT state and Philox state
         seed_idx = len(random_state_ptr.type.pointee) - 1
         used_seed_ptr = builder.gep(random_state_ptr, [self.int32_ty(0), self.int32_ty(seed_idx)])
         used_seed = builder.load(used_seed_ptr)
 
-        seed_ptr = helpers.get_param_ptr(builder, component, params, "seed")
+        seed_ptr = self.get_param_or_state_ptr(builder, component, "seed", param_struct_ptr=params)
         new_seed = pnlvm.helpers.load_extract_scalar_array_one(builder, seed_ptr)
         # FIXME: The seed should ideally be integer already.
         #        However, it can be modulated and we don't support
@@ -315,6 +322,67 @@ class LLVMBuilderContext:
             builder.call(reseed_f, [random_state_ptr, new_seed])
 
         return random_state_ptr
+
+    def get_param_or_state_ptr(self, builder, component, param, *, param_struct_ptr=None, state_struct_ptr=None, history=0):
+        param_name = getattr(param, "name", param)
+        param = None
+        state = None
+
+        if param_name in component.llvm_param_ids:
+            assert param_struct_ptr is not None, "Can't get param ptr for: {}".format(param_name)
+            self._component_param_use.setdefault(component, set()).add(param_name)
+            param = helpers.get_param_ptr(builder, component, param_struct_ptr, param_name)
+
+        if param_name in component.llvm_state_ids:
+            assert state_struct_ptr is not None, "Can't get state ptr for: {}".format(param_name)
+            self._component_state_use.setdefault(component, set()).add(param_name)
+            state = helpers.get_state_ptr(builder, component, state_struct_ptr, param_name, history)
+
+        if param is not None and state is not None:
+            return (param, state)
+
+        return param or state
+
+    def get_state_space(self, builder, component, state_ptr, param):
+        param_name = getattr(param, "name", param)
+        self._component_state_use.setdefault(component, set()).add(param_name)
+        return helpers.get_state_space(builder, component, state_ptr, param_name)
+
+    def check_used_params(self, component, *, tags:frozenset):
+        # Skip the check if the parameter use is not tracked. Some components (like node wrappers)
+        # don't even have parameters.
+        if component not in self._component_state_use and component not in self._component_param_use:
+            return
+
+        # Skip the check for variant functions
+        if len(tags) != 0:
+            return
+
+        component_param_ids = set(component.llvm_param_ids)
+        component_state_ids = set(component.llvm_state_ids)
+
+        used_param_ids = self._component_param_use.get(component, set())
+        used_state_ids = self._component_state_use.get(component, set())
+
+        # initializers are  only used in "reset" variants
+        initializers = {p.initializer for p in component.parameters}
+
+        # has_initializers is only used in "reset" variants
+        initializers.add('has_initializers')
+
+        # 'termination_mesasure" is only used in "is_finished" variant
+        used_param_ids.add('termination_measure')
+        used_state_ids.add('termination_measure')
+
+        # 'num_trials_per_estimate' is only used in "evaluate" variants
+        if hasattr(component, 'evaluate_agent_rep'):
+            used_param_ids.add('num_trials_per_estimate')
+
+        unused_param_ids = component_param_ids - used_param_ids - initializers
+        unused_state_ids = component_state_ids - used_state_ids
+
+        assert len(unused_param_ids) == 0 and len(unused_state_ids) == 0, \
+            "Compiled component '{}'(tags: {}) unused parameters: {}, state: {}".format(component, list(tags), unused_param_ids, unused_state_ids)
 
     @staticmethod
     def get_debug_location(func: ir.Function, component):
@@ -415,6 +483,8 @@ class LLVMBuilderContext:
                 return self.get_state_struct_type(val)
             if isinstance(val, ContentAddressableList):
                 return ir.LiteralStructType(self.get_state_struct_type(x) for x in val)
+            if p.name == 'matrix':   # Flatten matrix
+                val = np.asfarray(val).flatten()
             struct = self.convert_python_struct_to_llvm_ir(val)
             return ir.ArrayType(struct, p.history_min_length + 1)
 

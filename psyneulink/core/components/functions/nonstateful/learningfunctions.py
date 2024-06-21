@@ -47,7 +47,7 @@ from psyneulink.core.globals.keywords import \
     MATRIX, Loss
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
-from psyneulink.core.globals.utilities import is_numeric, scalar_distance, convert_to_np_array, all_within_range
+from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric, scalar_distance, convert_to_np_array, all_within_range, safe_len, is_numeric_scalar
 
 __all__ = ['LearningFunction', 'Kohonen', 'Hebbian', 'ContrastiveHebbian',
            'Reinforcement', 'BayesGLM', 'BackPropagation', 'TDLearning', 'EMStorage',
@@ -349,7 +349,7 @@ class EMStorage(LearningFunction):
         storage_prob = Parameter(1.0, modulable=True)
         decay_rate = Parameter(0.0, modulable=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
 
     def _validate_storage_prob(self, storage_prob):
         storage_prob = float(storage_prob)
@@ -416,7 +416,7 @@ class EMStorage(LearningFunction):
            array containing `entry <EMStorage.entry>` to be added to `memory_matrix <EMStorage.memory_matrix>`
            along `axis <EMStorage.axis>`.
 
-        memory_matrix : List, 2d array, np.matrix, ParameterPort, or MappingProjection
+        memory_matrix : List, 2d array, ParameterPort, or MappingProjection
             matrix to which `variable <EMStorage.variable>` is stored.
 
             .. technical_note::
@@ -767,7 +767,7 @@ class BayesGLM(LearningFunction):
                     :type: ``int``
         """
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
         variable = Parameter([np.array([0, 0, 0]),
                               np.array([0])],
                              read_only=True,
@@ -831,10 +831,10 @@ class BayesGLM(LearningFunction):
                 # if both are specified, make sure they are the same size
                 if (isinstance(self.mu_0, (list, np.ndarray))
                         and isinstance(self.sigma_0, (list, np.ndarray))
-                        and len(self.mu_0) != len(self.sigma_0)):
+                        and safe_len(self.mu_0) != safe_len(self.sigma_0)):
                     raise FunctionError("Length of {} ({}) does not match length of {} ({}) for {}".
-                                        format(repr('mu_0'), len(self.mu_0),
-                                                    repr('sigma_0'), len(self.sigma_0),
+                                        format(repr('mu_0'), safe_len(self.mu_0),
+                                               repr('sigma_0'), safe_len(self.sigma_0),
                                                          self.__class.__.__name__))
                 # allow their size to determine the size of variable
                 if isinstance(self.mu_0, (list, np.ndarray)):
@@ -855,22 +855,22 @@ class BayesGLM(LearningFunction):
         if np.array(variable).dtype != object:
             variable = np.atleast_2d(variable)
 
-        n = len(variable[0])
+        n = safe_len(variable[0])
 
-        if isinstance(self.mu_0, (int, float)):
+        if is_numeric_scalar(self.mu_0):
             self.mu_prior = np.full((n, 1),self.mu_0)
         else:
-            if len(self.mu_0) != n:
+            if safe_len(self.mu_0) != n:
                 raise FunctionError("Length of mu_0 ({}) does not match number of predictors ({})".
-                                    format(len(self.mu_0), n))
-            self.mu_prior = np.array(self.mu_0).reshape(len(self._mu_0),1)
+                                    format(safe_len(self.mu_0), n))
+            self.mu_prior = np.array(self.mu_0).reshape(safe_len(self._mu_0), 1)
 
-        if isinstance(self.sigma_0, (int, float)):
+        if is_numeric_scalar(self.sigma_0):
             Lambda_0 = (1 / (self.sigma_0 ** 2)) * np.eye(n)
         else:
-            if len(self.sigma_0) != n:
+            if safe_len(self.sigma_0) != n:
                 raise FunctionError("Length of sigma_0 ({}) does not match number of predictors ({})".
-                                    format(len(self.sigma_0), n))
+                                    format(safe_len(self.sigma_0), n))
             Lambda_0 = (1 / (np.array(self.sigma_0) ** 2)) * np.eye(n)
         self.Lambda_prior = Lambda_0
 
@@ -956,7 +956,7 @@ class BayesGLM(LearningFunction):
         # online update rules as per the given reference
         Lambda_n = (predictors.T @ predictors) + Lambda_prior
         mu_n = np.linalg.inv(Lambda_n) @ ((predictors.T @ dependent_vars) + (Lambda_prior @ mu_prior))
-        gamma_shape_n = gamma_shape_prior + dependent_vars.shape[1]
+        gamma_shape_n = np.array(gamma_shape_prior + dependent_vars.shape[1])
         gamma_size_n = gamma_size_prior + (dependent_vars.T @ dependent_vars) \
             + (mu_prior.T @ Lambda_prior @ mu_prior) \
             - (mu_n.T @ Lambda_n @ mu_n)
@@ -1027,7 +1027,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
     variable: List[array(float64), array(float64), 2d array[[float64]]] : default class_defaults.variable
         input pattern, array of activation values, and matrix used to calculate the weights changes.
 
-    learning_rate : scalar or list, 1d or 2d array, or np.matrix of numeric values: default .05
+    learning_rate : scalar or list, 1d or 2d array of numeric values: default .05
         specifies the learning rate used by the `function <Kohonen.function>` (see `learning_rate
         <Kohonen.learning_rate>` for details).
 
@@ -1294,7 +1294,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         activations in `variable <Hebbian.variable>`.
     COMMENT
 
-    learning_rate : scalar or list, 1d or 2d array, or np.matrix of numeric values: default .05
+    learning_rate : scalar or list, 1d or 2d array of numeric values: default .05
         specifies the learning rate used by the `function <Hebbian.function>`; (see `learning_rate
         <Hebbian.learning_rate>` for details).
 
@@ -1513,7 +1513,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
         activations in `variable <ContrastiveHebbian.variable>`.
     COMMENT
 
-    learning_rate : scalar or list, 1d or 2d array, or np.matrix of numeric values: default .05
+    learning_rate : scalar or list, 1d or 2d array of numeric values: default .05
         specifies the learning rate used by the `function <ContrastiveHebbian.function>`. (see `learning_rate
         <ContrastiveHebbian.learning_rate>` for details).
 
@@ -1973,7 +1973,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
         # Construct weight change matrix with error term in proper element
         weight_change_matrix = np.diag(error_array)
-        return [error_array, error_array]
+        return convert_all_elements_to_np_array([error_array, error_array])
 
 
 class TDLearning(Reinforcement):
@@ -2139,7 +2139,7 @@ class BackPropagation(LearningFunction):
     COMMENT
 
     COMMENT:
-    error_matrix : List, 2d array, np.matrix, ParameterPort, or MappingProjection
+    error_matrix : List, 2d array, ParameterPort, or MappingProjection
         matrix, the output of which is used to calculate the `error_signal <BackPropagation.error_signal>`.
         If it is specified as a ParameterPort it must be one for the `matrix <MappingProjection.matrix>`
         parameter of a `MappingProjection`;  if it is a MappingProjection, it must be one with a
@@ -2349,7 +2349,7 @@ class BackPropagation(LearningFunction):
         """Validate learning_rate and error_matrix params
 
         `error_matrix` argument must be one of the following
-            - 2d list, np.ndarray or np.matrix
+            - 2d list, np.ndarray
             - ParameterPort for one of the above
             - MappingProjection with a parameterPorts[MATRIX] for one of the above
 
@@ -2454,7 +2454,7 @@ class BackPropagation(LearningFunction):
             other than activation_input and activation_output, to compute the derivative of the activation function
             with respect to `activation_output <BackPropagation.activation_output>`.
 
-        error_matrix : List, 2d array, np.matrix, ParameterPort, or MappingProjection
+        error_matrix : List, 2d array, ParameterPort, or MappingProjection
             matrix of weights that were used to generate the `error_signal <BackPropagation.error_signal>` (3rd item
             of `variable <BackPropagation.variable>` from `activation_output <BackPropagation.activation_output>`;
             its dimensions must be the length of `activation_output <BackPropagation.activation_output>` (rows) x
@@ -2556,4 +2556,4 @@ class BackPropagation(LearningFunction):
         # Weight changes = delta rule (learning rate * activity * error)
         weight_change_matrix = learning_rate * activation_input * dE_dW
 
-        return [weight_change_matrix, dE_dW]
+        return convert_all_elements_to_np_array([weight_change_matrix, dE_dW])

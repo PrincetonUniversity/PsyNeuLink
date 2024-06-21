@@ -34,9 +34,9 @@ from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DOT_PRODUCT, \
     ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, NORMALIZE, \
     NORMED_L0_SIMILARITY, OBJECTIVE_FUNCTION_TYPE, SIZE, STABILITY_FUNCTION
-from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
+from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
-from psyneulink.core.globals.utilities import DistanceMetricLiteral, safe_len, convert_to_np_array
+from psyneulink.core.globals.utilities import DistanceMetricLiteral, safe_len, convert_to_np_array, convert_all_elements_to_np_array
 from psyneulink.core.globals.utilities import is_iterable
 
 
@@ -105,7 +105,7 @@ class Stability(ObjectiveFunction):
         in which case zeros are assigned as the value(s). An error is generated if both are specified but
         size != len(default_value).
 
-    matrix : list, np.ndarray, np.matrix, or matrix keyword : default HOLLOW_MATRIX
+    matrix : list, np.ndarray, or matrix keyword : default HOLLOW_MATRIX
         specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
         length of `variable <Stability.variable>`.
 
@@ -142,7 +142,7 @@ class Stability(ObjectiveFunction):
     size : int
         length of array for which stability is calculated.
 
-    matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default HOLLOW_MATRIX
+    matrix : list, np.ndarray, function keyword, or MappingProjection : default HOLLOW_MATRIX
         weight matrix from each element of `variable <Stability.variablity>` to each other;  if a matrix other
         than HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from the
         stability calculation.
@@ -254,7 +254,7 @@ class Stability(ObjectiveFunction):
         """Validate matrix param
 
         `matrix <Stability.matrix>` argument must be one of the following
-            - 2d list, np.ndarray or np.matrix
+            - 2d list, np.ndarray
             - ParameterPort for one of the above
             - MappingProjection with a parameterPorts[MATRIX] for one of the above
 
@@ -379,11 +379,8 @@ class Stability(ObjectiveFunction):
 
         # this mirrors the transformation in _function
         # it is a hack, and a general solution should be found
-        squeezed = np.array(new_default_variable)
-        if squeezed.ndim > 1:
-            squeezed = np.squeeze(squeezed)
-
-        size = safe_len(squeezed)
+        new_default_variable = convert_all_elements_to_np_array(new_default_variable)
+        size = safe_len(np.squeeze(new_default_variable))
         matrix = self.parameters.matrix._get(context)
 
         if isinstance(matrix, MappingProjection):
@@ -391,7 +388,7 @@ class Stability(ObjectiveFunction):
         elif isinstance(matrix, ParameterPort):
             pass
         else:
-            matrix = get_matrix(self.defaults.matrix, size, size)
+            matrix = get_matrix(copy_parameter_value(self.defaults.matrix), size, size)
 
         self.parameters.matrix._set(matrix, context)
 
@@ -402,7 +399,7 @@ class Stability(ObjectiveFunction):
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         # Dot product
         dot_out = builder.alloca(arg_in.type.pointee)
-        matrix = pnlvm.helpers.get_param_ptr(builder, self, params, MATRIX)
+        matrix = ctx.get_param_or_state_ptr(builder, self, MATRIX, param_struct_ptr=params, state_struct_ptr=state)
 
         # Convert array pointer to pointer to the fist element
         matrix = builder.gep(matrix, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -423,6 +420,10 @@ class Stability(ObjectiveFunction):
             #FIXME: implement this
             assert False, "Support for transfer functions is not implemented"
         else:
+            # Check that transfer_fct is absent from the compiled parameter
+            # structure or represented by an empty structure
+            assert "transfer_fct" not in self.llvm_param_ids or ctx.get_param_or_state_ptr(builder, self, "transfer_fct", param_struct_ptr=params).type.pointee.elements == ()
+
             trans_out = builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
             builder.store(builder.load(dot_out), trans_out)
 
@@ -430,8 +431,7 @@ class Stability(ObjectiveFunction):
         builder.store(builder.load(arg_in), builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(0)]))
 
         # Distance Function
-        metric_params = pnlvm.helpers.get_param_ptr(builder, self, params, "metric_fct")
-        metric_state = pnlvm.helpers.get_state_ptr(builder, self, state, "metric_fct")
+        metric_params, metric_state = ctx.get_param_or_state_ptr(builder, self, "metric_fct", param_struct_ptr=params, state_struct_ptr=state)
         metric_out = arg_out
         builder.call(metric_fun, [metric_params, metric_state, metric_in, metric_out])
         return builder
@@ -502,7 +502,7 @@ class Energy(Stability):
         in which case zeros are assigned as the value(s). An error is generated if both are specified but
         size != len(default_value).
 
-    matrix : list, np.ndarray, np.matrix, or matrix keyword : default INVERSE_HOLLOW_MATRIX
+    matrix : list, np.ndarray, or matrix keyword : default INVERSE_HOLLOW_MATRIX
         specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
         length of `variable <Stability.variable>`.
 
@@ -537,7 +537,7 @@ class Energy(Stability):
     size : int
         length of array for which energy is calculated.
 
-    matrix : list, np.ndarray, np.matrix, or matrix keyword
+    matrix : list, np.ndarray, or matrix keyword
         weight matrix from each element of `variable <Energy.variablity>` to each other;  if a matrix other
         than INVERSE_HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from
         the energy calculation.
@@ -612,7 +612,7 @@ class Entropy(Stability):
         in which case zeros are assigned as the value(s). An error is generated if both are specified but
         size != len(default_value).
 
-    matrix : list, np.ndarray, np.matrix, or matrix keyword : default INVERSE_HOLLOW_MATRIX
+    matrix : list, np.ndarray, or matrix keyword : default INVERSE_HOLLOW_MATRIX
         specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
         length of `variable <Stability.variable>`.
 
@@ -647,7 +647,7 @@ class Entropy(Stability):
     size : int
         length of array for which energy is calculated.
 
-    matrix : list, np.ndarray, np.matrix, or matrix keyword
+    matrix : list, np.ndarray, or matrix keyword
         weight matrix from each element of `variable <Entropy.variablity>` to each other;  if a matrix other
         than INVERSE_HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from
         the entropy calculation.
@@ -1120,7 +1120,7 @@ class Distance(ObjectiveFunction):
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0),
                                             ctx.int32_ty(0)])
 
-        normalize_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, NORMALIZE)
+        normalize_ptr = ctx.get_param_or_state_ptr(builder, self, NORMALIZE, param_struct_ptr=params)
         normalize = builder.load(normalize_ptr)
         normalize_b = builder.fcmp_ordered("!=", normalize, normalize.type(0))
 
@@ -1204,7 +1204,8 @@ class Distance(ObjectiveFunction):
             # MODIFIED CW 3/20/18: avoid divide by zero error by plugging in two zeros
             # FIX: unsure about desired behavior when v2 = 0 and v1 != 0
             # JDC: returns [inf]; leave, and let it generate a warning or error message for user
-            result = -np.sum(np.where(np.logical_and(v1 == 0, v2 == 0), 0.0, v1 * np.log(v2)))
+            both_zero = np.logical_and(v1 == 0, v2 == 0)
+            result = -np.sum(v1 * np.where(both_zero, 0.0, np.log(v2, where=np.logical_not(both_zero))))
 
         # Energy
         elif self.metric == ENERGY:

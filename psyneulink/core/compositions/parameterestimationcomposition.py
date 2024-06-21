@@ -69,7 +69,7 @@ that describe arguments specific to each.
       <ParameterEstimationComposition.model>`, the `values <Mechanism_Base.value>` of which are used to evaluate the
       fit of the different combinations of `parameter <ParameterEstimationComposition.parameters>` values sampled. An
       important limitation of the PEC is that the `outcome_variables <ParameterEstimationComposition.outcome_variables>`
-      must be a subset of the output ports of the `model <ParameterEstimationComposition.model>`'s `terminal Mechanism.
+      must be a subset of the output ports of the `model <ParameterEstimationComposition.model>`'s terminal Mechanism.
 
     * **optimization_function** - specifies the function used to search over the combinations of `parameter
       <ParameterEstimationComposition.parameters>` values to be estimated. This must be either an instance of
@@ -141,7 +141,7 @@ requires that the **objective_function** argument be specified:
 Supported Optimizers
 --------------------
 
-- `DifferentialEvolution <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.differential_evolution.html`_
+- `DifferentialEvolution <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.differential_evolution.html>`_
 
 Structure
 ---------
@@ -186,8 +186,8 @@ from psyneulink.core.globals.context import (
     handle_external_context,
 )
 from psyneulink.core.globals.keywords import BEFORE, OVERRIDE
-from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.utilities import convert_to_list
+from psyneulink.core.globals.parameters import Parameter, SharedParameter, check_user_specified
+from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, convert_to_list
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.components.ports.outputport import OutputPort
 
@@ -207,38 +207,6 @@ CONTROLLER_SPECIFICATION_ARGS = {
 
 class ParameterEstimationCompositionError(CompositionError):
     pass
-
-
-def _initial_seed_getter(owning_component, context=None):
-    try:
-        return owning_component.controller.parameters.initial_seed._get(context)
-    except AttributeError:
-        return None
-
-
-def _initial_seed_setter(value, owning_component, context=None):
-    owning_component.controller.parameters.initial_seed.set(value, context)
-    return value
-
-
-def _same_seed_for_all_parameter_combinations_getter(owning_component, context=None):
-    try:
-        return (
-            owning_component.controller.parameters.same_seed_for_all_allocations._get(
-                context
-            )
-        )
-    except AttributeError:
-        return None
-
-
-def _same_seed_for_all_parameter_combinations_setter(
-    value, owning_component, context=None
-):
-    owning_component.controler.parameters.same_seed_for_all_allocations.set(
-        value, context
-    )
-    return value
 
 
 class ParameterEstimationComposition(Composition):
@@ -266,7 +234,7 @@ class ParameterEstimationComposition(Composition):
         <ParameterEstimationComposition.model>`, the `values <Mechanism_Base.value>` of which are used to evaluate the
         fit of the different combinations of `parameter <ParameterEstimationComposition.parameters>` values sampled. An
         important limitation of the PEC is that the `outcome_variables <ParameterEstimationComposition.outcome_variables>`
-        must be a subset of the output ports of the `model <ParameterEstimationComposition.model>`'s `terminal Mechanism.
+        must be a subset of the output ports of the `model <ParameterEstimationComposition.model>`'s terminal `Mechanism`.
 
     model :
         specifies an external `Composition` for which parameters are to be `fit to data
@@ -299,7 +267,7 @@ class ParameterEstimationComposition(Composition):
     optimization_function : OptimizationFunction, function or method : default or MaximumLikelihood or GridSearch
         specifies the function used to search over the combinations of `parameter
         <ParameterEstimationComposition.parameters>` values to be estimated. This must be either an instance of
-      `PECOptimizationFunction` or a string name of one of the supported optimizers.
+        `PECOptimizationFunction` or a string name of one of the supported optimizers.
 
     num_estimates : int : default 1
         specifies the number of estimates made for a each combination of `parameter <ParameterEstimationComposition>`
@@ -473,20 +441,8 @@ class ParameterEstimationComposition(Composition):
         """
 
         # FIX: 11/32/21 CORRECT INITIAlIZATIONS?
-        initial_seed = Parameter(
-            None,
-            loggable=False,
-            pnl_internal=True,
-            getter=_initial_seed_getter,
-            setter=_initial_seed_setter,
-        )
-        same_seed_for_all_parameter_combinations = Parameter(
-            False,
-            loggable=False,
-            pnl_internal=True,
-            getter=_same_seed_for_all_parameter_combinations_getter,
-            setter=_same_seed_for_all_parameter_combinations_setter,
-        )
+        initial_seed = SharedParameter(attribute_name='controller')
+        same_seed_for_all_parameter_combinations = SharedParameter(attribute_name='controller')
 
     @handle_external_context()
     @check_user_specified
@@ -592,15 +548,19 @@ class ParameterEstimationComposition(Composition):
 
         self._outcome_variable_indices = []
         in_comp = self.nodes[0]
-        in_comp_ports = list(in_comp.output_CIM.port_map.keys())
         for outcome_var in self.outcome_variables:
             try:
                 if not isinstance(outcome_var, OutputPort):
                     outcome_var = outcome_var.output_port
 
-                self._outcome_variable_indices.append(in_comp_ports.index(outcome_var))
-            except ValueError:
-                raise ValueError(
+                # Get the index of the outcome variable in the output ports of inner composition. To do this,
+                # we must use the inner composition's portmap to get the CIM output port that corresponds to
+                # the outcome variable
+                index = in_comp.output_ports.index(in_comp.output_CIM.port_map[outcome_var][1])
+
+                self._outcome_variable_indices.append(index)
+            except KeyError:
+                raise KeyError(
                     f"Could not find outcome variable {outcome_var.full_name} in the output ports of "
                     f"the composition being fitted to data ({self.nodes[0]}). A current limitation of the "
                     f"PEC data fitting API is that any output port of composition that should be fit to "
@@ -842,7 +802,7 @@ class ParameterEstimationComposition(Composition):
     def run(self, *args, **kwargs):
         # Clear any old results from the composition
         if self.results is not None:
-            self.results.clear()
+            self.results = []
 
         context = kwargs.get("context", None)
         self._assign_execution_ids(context)
@@ -871,6 +831,7 @@ class ParameterEstimationComposition(Composition):
         for state_input_port, value in zip(
             self.controller.state_input_ports, inputs_dict.values()
         ):
+            value = convert_all_elements_to_np_array(value)
             state_input_port.parameters.value._set(value, context)
 
         kwargs.pop("inputs", None)
