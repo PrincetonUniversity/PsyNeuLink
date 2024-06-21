@@ -37,6 +37,8 @@ from rich.progress import Progress, BarColumn, TimeRemainingColumn
 import warnings
 import logging
 
+from rich.markup import escape
+
 logger = logging.getLogger(__name__)
 
 __all__ = ["PECOptimizationFunction", "BadLikelihoodWarning", "PECObjectiveFuncWarning"]
@@ -56,7 +58,7 @@ def get_param_str(params):
 
     """
     return ", ".join(
-        f"{name.replace('PARAMETER_CIM_', '')}={value:.5f}"
+        f"[dodger_blue1]{escape(name.replace('PARAMETER_CIM_', ''))}[/dodger_blue1]=[spring_green1]{value:.5f}[/spring_green1]"
         for name, value in params.items()
     )
 
@@ -607,13 +609,15 @@ class PECOptimizationFunction(OptimizationFunction):
                         f"{get_param_str(params)}, {self.obj_func_desc_str}: {obj_val}, "
                         f"Eval-Time: {elapsed} (seconds)",
                         style="bold red",
+                        highlight=False,
                     )
                     # Clear the warnings
                     warns.clear()
                 else:
                     progress.console.print(
                         f"{get_param_str(params)}, {self.obj_func_desc_str}: {obj_val}, "
-                        f"Eval-Time: {elapsed} (seconds)"
+                        f"Eval-Time: {elapsed} (seconds)",
+                        highlight=False,
                     )
 
                 # Certain algorithms like differential evolution evaluate the objective function multiple times per
@@ -856,7 +860,7 @@ class PECOptimizationFunction(OptimizationFunction):
                 for param_name, mech in self.owner.fit_parameters.keys():
                     if (param_name, mech) in self.owner.cond_levels:
                         for level in self.owner.cond_levels[(param_name, mech)]:
-                            names.append(f"{mech.name}.{param_name}<{level}>")
+                            names.append(f"{mech.name}.{param_name}[{level}]")
                     else:
                         names.append(f"{mech.name}.{param_name}")
 
