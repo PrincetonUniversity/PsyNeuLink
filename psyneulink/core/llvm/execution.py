@@ -84,8 +84,8 @@ class Execution:
         self._debug_env = debug_env
 
     def _get_compilation_param(self, name, init_method, arg):
-        struct = getattr(self, name, None)
-        if struct is None:
+        saved = getattr(self, name, None)
+        if saved is None:
             struct_ty = self._bin_func.byref_arg_types[arg]
             init_f = getattr(self._obj, init_method)
             if len(self._execution_contexts) > 1:
@@ -100,7 +100,12 @@ class Execution:
             struct = struct_ty(*initializer)
             struct_end = time.time()
 
-            setattr(self, name, struct)
+            numpy_struct = np.ctypeslib.as_array(struct)
+            assert numpy_struct.nbytes == ctypes.sizeof(struct), \
+                "Size mismatch ({}), numpy: {} vs. ctypes:{}".format(name, numpy_struct.nbytes, ctypes.sizeof(struct))
+
+            saved = (struct, numpy_struct)
+            setattr(self, name, saved)
 
             if "time_stat" in self._debug_env:
                 print("Time to get initializer for struct:", name,
@@ -116,24 +121,18 @@ class Execution:
             if len(self._execution_contexts) == 1:
 
                 if name == '_state':
-                    numpy_struct = np.ctypeslib.as_array(struct)
-                    assert numpy_struct.nbytes == ctypes.sizeof(struct), \
-                        "Size mismatch, numpy: {} vs. ctypes:{}".format(numpy_struct.nbytes, ctypes.sizeof(struct))
                     self._copy_params_to_pnl(self._execution_contexts[0],
                                              self._obj,
                                              numpy_struct,
                                              "llvm_state_ids")
 
                 elif name == '_param':
-                    numpy_struct = np.ctypeslib.as_array(struct)
-                    assert numpy_struct.nbytes == ctypes.sizeof(struct), \
-                        "Size mismatch, numpy: {} vs. ctypes:{}".format(numpy_struct.nbytes, ctypes.sizeof(struct))
                     self._copy_params_to_pnl(self._execution_contexts[0],
                                              self._obj,
                                              numpy_struct,
                                              "llvm_param_ids")
 
-        return struct
+        return saved
 
     def _copy_params_to_pnl(self, context, component, params, ids:str):
 
@@ -292,8 +291,12 @@ class CUDAExecution(Execution):
         # Param struct needs to be reuploaded every time because the values
         # might have changed.
         if gpu_buffer is None or struct_name == "_param_struct":
+            c_struct = getattr(self, struct_name)
+            if isinstance(c_struct, tuple):
+                c_struct = c_struct[0]
+
             # Set private attribute to a new buffer
-            gpu_buffer = self.upload_ctype(getattr(self, struct_name), struct_name)
+            gpu_buffer = self.upload_ctype(c_struct, struct_name)
             self._gpu_buffers[struct_name] = gpu_buffer
 
         return gpu_buffer
@@ -332,12 +335,13 @@ class CUDAExecution(Execution):
 
         self._bin_func.cuda_call(self._cuda_param_struct,
                                  self._cuda_state_struct,
-                                 data_in, self._cuda_out,
+                                 data_in,
+                                 self._cuda_out,
                                  threads=len(self._execution_contexts))
 
         # Copy the result from the device
         self.download_to(self._ct_vo, self._cuda_out, 'result')
-        self.download_to(self._state_struct, self._cuda_state_struct, 'state', move=True)
+        self.download_to(self._state_struct[0], self._cuda_state_struct, 'state', move=True)
         return _convert_ctype_to_python(self._ct_vo)
 
 
@@ -389,13 +393,16 @@ class FuncExecution(CUDAExecution):
         if len(self._execution_contexts) > 1:
             # wrap_call casts the arguments so we only need contiguous data
             # layout
-            self._bin_multirun.wrap_call(self._param_struct,
-                                         self._state_struct,
-                                         ct_vi, self._ct_vo, self._ct_len)
+            self._bin_multirun.wrap_call(self._param_struct[0],
+                                         self._state_struct[0],
+                                         ct_vi,
+                                         self._ct_vo,
+                                         self._ct_len)
         else:
-            self._bin_func(ctypes.byref(self._param_struct),
-                           ctypes.byref(self._state_struct),
-                           ct_vi, ctypes.byref(self._ct_vo))
+            self._bin_func(ctypes.byref(self._param_struct[0]),
+                           ctypes.byref(self._state_struct[0]),
+                           ct_vi,
+                           ctypes.byref(self._ct_vo))
 
         return _convert_ctype_to_python(self._ct_vo)
 
@@ -543,17 +550,17 @@ class CompExecution(CUDAExecution):
         return self.extract_node_struct(node, self.__frozen_vals)
 
     def extract_node_output(self, node):
-        return self.extract_node_struct(node, self._data_struct)
+        return self.extract_node_struct(node, self._data_struct[0])
 
     def extract_node_state(self, node):
-        return self.extract_node_struct(node, self._state_struct)
+        return self.extract_node_struct(node, self._state_struct[0])
 
     def extract_node_params(self, node):
-        return self.extract_node_struct(node, self._param_struct)
+        return self.extract_node_struct(node, self._param_struct[0])
 
     def insert_node_output(self, node, data):
-        my_field_name = self._data_struct._fields_[0][0]
-        my_res_struct = getattr(self._data_struct, my_field_name)
+        my_field_name = self._data_struct[0]._fields_[0][0]
+        my_res_struct = getattr(self._data_struct[0], my_field_name)
         index = self._composition._get_node_index(node)
         node_field_name = my_res_struct._fields_[index][0]
         setattr(my_res_struct, node_field_name, _tupleize(data))
@@ -577,7 +584,7 @@ class CompExecution(CUDAExecution):
         return c_input(*_tupleize(input_data))
 
     def freeze_values(self):
-        self.__frozen_vals = copy.deepcopy(self._data_struct)
+        self.__frozen_vals = copy.deepcopy(self._data_struct[0])
 
     def execute_node(self, node, inputs=None, context=None):
         # We need to reconstruct the input dictionary here if it was not provided.
@@ -605,8 +612,11 @@ class CompExecution(CUDAExecution):
         if node is not self._composition.input_CIM and self.__frozen_vals is None:
             self.freeze_values()
 
-        self._bin_func(self._state_struct, self._param_struct,
-                       inputs, self.__frozen_vals, self._data_struct)
+        self._bin_func(self._state_struct[0],
+                       self._param_struct[0],
+                       inputs,
+                       self.__frozen_vals,
+                       self._data_struct[0])
 
         if "comp_node_debug" in self._debug_env:
             print("RAN: {}. State: {}".format(node, self.extract_node_state(node)))
@@ -634,15 +644,18 @@ class CompExecution(CUDAExecution):
         # NOTE: Make sure that input struct generation is inlined.
         # We need the binary function to be setup for it to work correctly.
         if len(self._execution_contexts) > 1:
-            self._bin_exec_multi_func.wrap_call(self._state_struct,
-                                                self._param_struct,
+            self._bin_exec_multi_func.wrap_call(self._state_struct[0],
+                                                self._param_struct[0],
                                                 self._get_input_struct(inputs),
-                                                self._data_struct,
-                                                self._conditions, self._ct_len)
+                                                self._data_struct[0],
+                                                self._conditions,
+                                                self._ct_len)
         else:
-            self._bin_exec_func(self._state_struct, self._param_struct,
+            self._bin_exec_func(self._state_struct[0],
+                                self._param_struct[0],
                                 self._get_input_struct(inputs),
-                                self._data_struct, self._conditions)
+                                self._data_struct[0],
+                                self._conditions)
 
     def cuda_execute(self, inputs):
         # NOTE: Make sure that input struct generation is inlined.
@@ -655,8 +668,8 @@ class CompExecution(CUDAExecution):
                                       threads=len(self._execution_contexts))
 
         # Copy the data structs from the device
-        self.download_to(self._data_struct, self._cuda_data_struct, 'data', move=True)
-        self.download_to(self._state_struct, self._cuda_state_struct, 'state', move=True)
+        self.download_to(self._data_struct[0], self._cuda_data_struct, 'data', move=True)
+        self.download_to(self._state_struct[0], self._cuda_state_struct, 'state', move=True)
 
     # Methods used to accelerate "Run"
     def _get_run_input_struct(self, inputs, num_input_sets, arg=3):
@@ -726,14 +739,24 @@ class CompExecution(CUDAExecution):
         runs_count = ctypes.c_int(runs)
         input_count = ctypes.c_int(num_input_sets)
         if len(self._execution_contexts) > 1:
-            self._bin_run_multi_func.wrap_call(self._state_struct, self._param_struct,
-                                               self._data_struct, inputs, outputs,
-                                               runs_count, input_count, self._ct_len)
+            self._bin_run_multi_func.wrap_call(self._state_struct[0],
+                                               self._param_struct[0],
+                                               self._data_struct[0],
+                                               inputs,
+                                               outputs,
+                                               runs_count,
+                                               input_count,
+                                               self._ct_len)
+
             return _convert_ctype_to_python(outputs)
         else:
-            self._bin_run_func.wrap_call(self._state_struct, self._param_struct,
-                                         self._data_struct, inputs, outputs,
-                                         runs_count, input_count)
+            self._bin_run_func.wrap_call(self._state_struct[0],
+                                         self._param_struct[0],
+                                         self._data_struct[0],
+                                         inputs,
+                                         outputs,
+                                         runs_count,
+                                         input_count)
 
             # Extract only #trials elements in case the run exited early
             assert runs_count.value <= runs, "Composition ran more times than allowed!"
@@ -773,8 +796,8 @@ class CompExecution(CUDAExecution):
                                      threads=len(self._execution_contexts))
 
         # Copy the data struct from the device
-        self.download_to(self._data_struct, self._cuda_data_struct, 'data', move=True)
-        self.download_to(self._state_struct, self._cuda_state_struct, 'state', move=True)
+        self.download_to(self._data_struct[0], self._cuda_data_struct, 'data', move=True)
+        self.download_to(self._state_struct[0], self._cuda_state_struct, 'state', move=True)
 
         ct_out = self.download_ctype(data_out, output_type, 'result')
         if len(self._execution_contexts) > 1:
@@ -800,9 +823,9 @@ class CompExecution(CUDAExecution):
 
         # Directly initialized structures
         assert ocm.agent_rep is self._composition
-        ct_comp_param = self._get_compilation_param('_eval_param', '_get_param_initializer', 0)
-        ct_comp_state = self._get_compilation_param('_eval_state', '_get_state_initializer', 1)
-        ct_comp_data = self._get_compilation_param('_eval_data', '_get_data_initializer', 6)
+        comp_params = self._get_compilation_param('_eval_param', '_get_param_initializer', 0)
+        comp_state = self._get_compilation_param('_eval_state', '_get_state_initializer', 1)
+        comp_data = self._get_compilation_param('_eval_data', '_get_data_initializer', 6)
 
         # Construct input variable, the 5th parameter of the evaluate function
         ct_inputs = self._get_run_input_struct(inputs, num_input_sets, 5)
@@ -824,18 +847,18 @@ class CompExecution(CUDAExecution):
                   "for", self._obj.name)
 
         # return variable as numpy array. pycuda can use it directly
-        return ct_comp_param, ct_comp_state, ct_comp_data, ct_inputs, out_ty, ct_num_inputs
+        return comp_params, comp_state, comp_data, ct_inputs, out_ty, ct_num_inputs
 
     def cuda_evaluate(self, inputs, num_input_sets, num_evaluations, all_results:bool=False):
-        ct_comp_param, ct_comp_state, ct_comp_data, ct_inputs, out_ty, ct_num_inputs = \
+        comp_params, comp_state, comp_data, ct_inputs, out_ty, ct_num_inputs = \
             self._prepare_evaluate(inputs, num_input_sets, num_evaluations, all_results)
 
         # Output is allocated on device, but we need the ctype (out_ty).
-        cuda_args = (self.upload_ctype(ct_comp_param, 'params'),
-                     self.upload_ctype(ct_comp_state, 'state'),
+        cuda_args = (self.upload_ctype(comp_params[0], 'params'),
+                     self.upload_ctype(comp_state[0], 'state'),
                      jit_engine.pycuda.driver.mem_alloc(ctypes.sizeof(out_ty)),
                      self.upload_ctype(ct_inputs, 'input'),
-                     self.upload_ctype(ct_comp_data, 'data'),
+                     self.upload_ctype(comp_data[0], 'data'),
                      self.upload_ctype(ct_num_inputs, 'input'),
                     )
 
@@ -845,7 +868,7 @@ class CompExecution(CUDAExecution):
         return ct_results
 
     def thread_evaluate(self, inputs, num_input_sets, num_evaluations, all_results:bool=False):
-        ct_param, ct_state, ct_data, ct_inputs, out_ty, ct_num_inputs = \
+        comp_params, comp_state, comp_data, ct_inputs, out_ty, ct_num_inputs = \
             self._prepare_evaluate(inputs, num_input_sets, num_evaluations, all_results)
 
         ct_results = out_ty()
@@ -862,12 +885,14 @@ class CompExecution(CUDAExecution):
 
             # There are 7 arguments to evaluate_alloc_range:
             # comp_param, comp_state, from, to, results, input, comp_data
-            results = [ex.submit(self.__bin_func, ct_param, ct_state,
+            results = [ex.submit(self.__bin_func,
+                                 comp_params[0],
+                                 comp_state[0],
                                  int(i * evals_per_job),
                                  min((i + 1) * evals_per_job, num_evaluations),
                                  results_param,
                                  input_param,
-                                 ct_data,
+                                 comp_data[0],
                                  ct_num_inputs)
                        for i in range(jobs)]
 
