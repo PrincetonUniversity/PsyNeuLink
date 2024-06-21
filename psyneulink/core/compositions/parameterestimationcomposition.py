@@ -234,6 +234,13 @@ class ParameterEstimationComposition(Composition):
         of each entry specifies a parameter to estimate, and its value is a list values to sample for that
         parameter.
 
+    depends_on :
+        A dictionary that specifies which parameters depend on a condition. The keys of the dictionary are the
+        specified identically to the keys of the parameters dictionary. The values are a string that specifies a
+        column in the data that the parameter depends on. The values of this column must be categorical. Each unique
+        value will represent a condition and will result in a separate parameter being estimated for it. The number of
+        unique values should be small because each unique value will result in a separate parameter being estimated.
+
     outcome_variables :
         specifies the `OUTPUT` `Nodes <Composition_Nodes>` of the `model
         <ParameterEstimationComposition.model>`, the `values <Mechanism_Base.value>` of which are used to evaluate the
@@ -903,6 +910,11 @@ class ParameterEstimationComposition(Composition):
         # Since we are passing fitting\optimization parameters as inputs we need add them to the inputs
         if inputs:
 
+            # Don't check inputs if we are within a call to evaluate_agent_rep, the inputs have already been checked and
+            # cached on the PEC controller.
+            if ContextFlags.PROCESSING not in context.flags:
+                self.controller.check_pec_inputs(inputs)
+
             # Run parse input dict on the inputs, this will fill in missing input ports with default values. There
             # will be missing input ports because the user doesn't know about the control mechanism's input ports that
             # have been added by the PEC for the fitting parameters.
@@ -1115,6 +1127,53 @@ class PEC_OCM(OptimizationControlMechanism):
         self.parameters.output_ports._set(output_ports, context)
         self._create_randomization_control_signal(context)
 
+    def check_pec_inputs(self, inputs_dict: dict):
+
+        model = self.composition.model
+
+        # Since we added control mechanisms to the composition, we need to make sure that we subtract off
+        # the number of control mechanisms from the number of state input ports in the error message.
+        num_state_input_ports = self.num_state_input_ports - len(self.fit_parameters)
+
+        if not inputs_dict:
+            pass
+
+        # If inputs_dict has model as its only entry, then check that its format is OK to pass to pec.run()
+        elif len(inputs_dict) == 1 and model in inputs_dict:
+            if not all(
+                    len(trial) == num_state_input_ports for trial in inputs_dict[model]
+            ):
+                raise ParameterEstimationCompositionError(
+                    f"The array in the dict specified for the 'inputs' arg of "
+                    f"{self.composition.name}.run() is badly formatted: "
+                    f"the length of each item in the outer dimension (a trial's "
+                    f"worth of inputs) must be equal to the number of inputs to "
+                    f"'{model.name}' ({num_state_input_ports})."
+                )
+
+        else:
+
+            # Restructure inputs as nd array with each row (outer dim) a trial's worth of inputs
+            #    and each item in the row (inner dim) the input to a node (or input_port) for that trial
+            if len(inputs_dict) != num_state_input_ports:
+
+                raise ParameterEstimationCompositionError(
+                    f"The dict specified in the `input` arg of "
+                    f"{self.composition.name}.run() is badly formatted: "
+                    f"the number of entries should equal the number of inputs "
+                    f"to '{model.name}' ({num_state_input_ports})."
+                )
+            trial_seqs = list(inputs_dict.values())
+            num_trials = len(trial_seqs[0])
+            for trial in range(num_trials):
+                for trial_seq in trial_seqs:
+                    if len(trial_seq) != num_trials:
+                        raise ParameterEstimationCompositionError(
+                            f"The dict specified in the `input` arg of "
+                            f"ParameterEstimationMechanism.run() is badly formatted: "
+                            f"every entry must have the same number of inputs."
+                        )
+
     def set_pec_inputs_cache(self, inputs_dict: dict) -> dict:
         """Cache input values passed to the last call of run for the composition that this OCM controls.
         This method is used by the ParamterEstimationComposition in its run() method.
@@ -1128,53 +1187,19 @@ class PEC_OCM(OptimizationControlMechanism):
 
         model = self.composition.model
 
-        if not inputs_dict:
+        if not inputs_dict or (len(inputs_dict) == 1 and model in inputs_dict):
             pass
-
-        # If inputs_dict has model as its only entry, then check that its format is OK to pass to pec.run()
-        elif len(inputs_dict) == 1 and model in inputs_dict:
-            if not all(
-                len(trial) == self.num_state_input_ports for trial in inputs_dict[model]
-            ):
-                raise ParameterEstimationCompositionError(
-                    f"The array in the dict specified for the 'inputs' arg of "
-                    f"{self.composition.name}.run() is badly formatted: "
-                    f"the length of each item in the outer dimension (a trial's "
-                    f"worth of inputs) must be equal to the number of inputs to "
-                    f"'{model.name}' ({self.num_state_input_ports})."
-                )
-
         else:
-            # Restructure inputs as nd array with each row (outer dim) a trial's worth of inputs
-            #    and each item in the row (inner dim) the input to a node (or input_port) for that trial
-            if len(inputs_dict) != self.num_state_input_ports:
-
-                # Since we added control mechanisms to the composition, we need to make sure that we subtract off
-                # the number of control mechanisms from the number of state input ports in the error message.
-                num_state_input_ports = self.num_state_input_ports - len(self.fit_parameters)
-
-                raise ParameterEstimationCompositionError(
-                    f"The dict specified in the `input` arg of "
-                    f"{self.composition.name}.run() is badly formatted: "
-                    f"the number of entries should equal the number of inputs "
-                    f"to '{model.name}' ({num_state_input_ports})."
-                )
             trial_seqs = list(inputs_dict.values())
             num_trials = len(trial_seqs[0])
             input_values = [[] for _ in range(num_trials)]
             for trial in range(num_trials):
                 for trial_seq in trial_seqs:
-                    if len(trial_seq) != num_trials:
-                        raise ParameterEstimationCompositionError(
-                            f"The dict specified in the `input` arg of "
-                            f"ParameterEstimationMechanism.run() is badly formatted: "
-                            f"every entry must have the same number of inputs."
-                        )
-                    # input_values[trial].append(np.array([trial_seq[trial].tolist()]))
                     input_values[trial].extend(trial_seq[trial])
             inputs_dict = {model: input_values}
 
         self._pec_input_values = inputs_dict
+
 
     def set_parameters_in_inputs(self, parameters, inputs):
         """
@@ -1212,9 +1237,12 @@ class PEC_OCM(OptimizationControlMechanism):
                 in_arr = np.atleast_3d(in_arr)
 
                 # If the inputs don't have columns for the fitting parameters, then we need to add them
-                if in_arr.shape[1] != len(self.composition.input_ports):
-                    num_missing = len(self.composition.input_ports) - in_arr.shape[1]
+            if in_arr.shape[1] != len(self.composition.input_ports):
+                num_missing = len(self.composition.input_ports) - in_arr.shape[1]
+                if in_arr.ndim == 3:
                     in_arr = np.hstack((in_arr, np.zeros((in_arr.shape[0], num_missing, 1))))
+                elif in_arr.ndim == 2:
+                    in_arr = np.hstack((in_arr, np.zeros((in_arr.shape[0], num_missing))))
 
             j = 0
             for i, (pname, mech) in enumerate(self.fit_parameters.keys()):
