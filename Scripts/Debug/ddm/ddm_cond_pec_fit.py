@@ -44,7 +44,7 @@ def _run_ddm_with_params(
 # High-level parameters the impact performance of the test
 num_trials = 50
 time_step_size = 0.01
-num_estimates = 10000
+num_estimates = 1000
 
 # Let's generate an "experimental" dataset to fit. This is a parameter recovery test
 # Lets make 10% of the trials have a positive stimulus drift rate, and the other 90%
@@ -114,7 +114,7 @@ pec = pnl.ParameterEstimationComposition(
     ],
     data=data_to_fit,
     optimization_function=pnl.PECOptimizationFunction(
-        method="differential_evolution", max_iterations=1,
+        method="differential_evolution",
     ),
     num_estimates=num_estimates,
     initial_seed=42,
@@ -128,8 +128,8 @@ records = []
 params = {
     'DDM.rate': ddm_params['rate'],
     'DDM.non_decision_time': ddm_params['non_decision_time'],
-    'DDM.threshold<cond_t=0.3>': 0.3,
-    'DDM.threshold<cond_t=0.7>': 0.7
+    'DDM.threshold[cond_t=0.3]': 0.3,
+    'DDM.threshold[cond_t=0.7]': 0.7
 }
 for i, (name, recovered_param) in enumerate(pec.optimized_parameter_values.items()):
     percent_error = 100.0 * (abs(params[name] - recovered_param) / params[name])
