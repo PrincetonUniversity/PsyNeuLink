@@ -1674,10 +1674,12 @@ class EMComposition(AutodiffComposition):
         self.num_fields = len(self.entry_template)
         keys_weights = [i for i in parsed_field_weights if i != 0]
         self.num_keys = len(keys_weights)
+        # Get indices of field_weights that specify keys:
+        self.key_indices = np.nonzero(field_weights)[0]
+
         self.num_values = self.num_fields - self.num_keys
         if parsed_field_names:
-            # FIX: NEED TO TAKE ACCOUNT OF THE POSSIBLITY THAT KEYS MAY NOT BE CONTIGUOUS IN PARSED FIELD NAMES
-            self.key_names = parsed_field_names[:self.num_keys]
+            self.key_names = [parsed_field_names[i] for i in self.key_indices]
             self.value_names = parsed_field_names[self.num_keys:]
         else:
             # FIX THIS TO PRODUCE CLEANER NAMES
@@ -1861,16 +1863,15 @@ class EMComposition(AutodiffComposition):
         where i is selected randomly without replacement from (0->memory_capacity)
         """
 
-        # Get indices of field_weights that specify keys:
-        key_indices = np.nonzero(field_weights)[0]
-
-        assert len(key_indices) == self.num_keys, \
+        assert len(self.key_indices) == self.num_keys, \
             f"PROGRAM ERROR: number of keys ({self.num_keys}) does not match number of " \
-            f"non-zero values in field_weights ({len(key_indices)})."
+            f"non-zero values in field_weights ({len(self.key_indices)})."
 
-        query_input_nodes = [TransferMechanism(size=len(self.entry_template[key_indices[i]]),
-                                             # name=f'{self.key_names[i]} [QUERY]')
-                                             name=f'{self.key_names[key_indices[i]]} [QUERY]')
+        # query_input_nodes = [TransferMechanism(size=len(self.entry_template[self.key_indices[i]]),
+        #                                      name=f'{self.key_names[self.key_indices[i]]} [QUERY]')
+        #                for i in range(self.num_keys)]
+        query_input_nodes = [TransferMechanism(size=len(self.entry_template[self.key_indices[i]]),
+                                             name=f'{self.key_names[i]} [QUERY]')
                        for i in range(self.num_keys)]
 
         return query_input_nodes
