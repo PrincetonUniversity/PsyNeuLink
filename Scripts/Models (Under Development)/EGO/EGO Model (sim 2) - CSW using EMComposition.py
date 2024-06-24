@@ -7,6 +7,9 @@
 
 # TODO:
 
+# ADD PREVIOUS STATES
+# ADD previous_state to EM and control to support that
+
 # FIX: TERMINATION CONDITION IS GETTING TRIGGED AFTER 1st TRIAL
 
 # FOR INPUT NODES: scheduler.add_condition(A, BeforeNCalls(A,1)
@@ -125,12 +128,12 @@ NUM_PRED_TRIALS = 10           # Number of trials (ROLL OUTS) to run in PREDICTI
 
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = (                      # Only one of the following can be uncommented:
-    None                             # suppress display of model
-    # {}                               # show simple visual display of model
+    # None                             # suppress display of model
+    {}                               # show simple visual display of model
     # {'show_node_structure': True}    # show detailed view of node structures and projections
 )
-RUN_MODEL = True                       # True => run the model
-# RUN_MODEL = False                      # False => don't run the model
+# RUN_MODEL = True                       # True => run the model
+RUN_MODEL = False                      # False => don't run the model
 EXECUTION_MODE = ExecutionMode.Python
 # EXECUTION_MODE = ExecutionMode.PyTorch
 ANALYZE_RESULTS = False                # True => output analysis of results of run
@@ -150,6 +153,7 @@ ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation
 model_params = dict(
     n_participants=58,
     n_simulations = 100, # number of rollouts per participant
+    num_seqs = 20, # total number of sequences to be executed (used to set size of EM)
     n_steps = 3, # number of steps per rollout
     state_d = 7, # length of state vector
     context_d = 7, # length of context vector
@@ -170,8 +174,9 @@ model_params = dict(
 MODEL_NAME = "EGO Model CSW"
 STATE_INPUT_LAYER_NAME = "STATE"
 CONTEXT_LAYER_NAME = 'CONTEXT'
+PREVIOUS_STATE_NAME = 'PREVIOUS_STATE'
 EM_NAME = "EM"
-RESPONSE_LAYER_NAME = "RESPONSE"
+PREDICTION_LAYER_NAME = "PREDICTION"
 
 EMFieldsIndex = IntEnum('EMFields',
                         ['STATE',
@@ -198,6 +203,8 @@ assert (model_params['retrieved_context_weight'] + STATE_WEIGHT + CONTEXT_INTEGR
 STATE_RETRIEVAL_WEIGHT = model_params['state_weight']     # weight of state field in retrieval from EM
 CONTEXT_RETRIEVAL_WEIGHT = model_params['context_weight'] # weight of context field in retrieval from EM
 RETRIEVAL_SOFTMAX_GAIN = 1/model_params['temperature']    # gain on softmax retrieval function
+
+PREVIOUS_STATE_WEIGHT = 0
 
 RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projections
 
@@ -239,9 +246,11 @@ def construct_model(model_name:str=MODEL_NAME,
                     retrieval_softmax_gain=RETRIEVAL_SOFTMAX_GAIN,
                     state_retrieval_weight:Union[float,int]=STATE_RETRIEVAL_WEIGHT,
                     context_retrieval_weight:Union[float,int]=CONTEXT_RETRIEVAL_WEIGHT,
+                    previous_state_name=PREVIOUS_STATE_NAME,
+                    previous_state_weight:Union[float,int]=PREVIOUS_STATE_WEIGHT,
 
                     # Output / decision processing:
-                    response_layer_name:str=RESPONSE_LAYER_NAME,
+                    PREDICTION_LAYER_NAME:str=PREDICTION_LAYER_NAME,
 
                     )->Composition:
 
@@ -275,17 +284,23 @@ def construct_model(model_name:str=MODEL_NAME,
                                                hetero=0.0)
     em = EMComposition(name=em_name,
                        memory_template=[[0] * state_size,   # state
-                                        [0] * state_size],   # context
+                                        [0] * state_size,   # previous state
+                                        [0] * state_size],  # context
                        memory_fill=(0,.01),
                        memory_capacity=NUM_SEQS,
                        softmax_gain=1.0,
                        # Input Nodes:
                        field_names=[state_input_name,
-                                    context_name],
+                                    previous_state_name,
+                                    context_name,
+                                    ],
                        field_weights=(state_retrieval_weight,
-                                      context_retrieval_weight))
+                                      previous_state_weight,
+                                      context_retrieval_weight
+                                      )
+                       )
 
-    response_layer = ProcessingMechanism(name=response_layer_name)
+    prediction_layer = ProcessingMechanism(name=PREDICTION_LAYER_NAME)
 
     
     # ----------------------------------------------------------------------------------------------------------------
@@ -294,17 +309,17 @@ def construct_model(model_name:str=MODEL_NAME,
     
 
     EGO_comp = Composition(name=model_name,
-                           # # Terminate a Task.PREDICT trial after response_layer executes if a reward is retrieved
+                           # # Terminate a Task.PREDICT trial after prediction_layer executes if a reward is retrieved
                            # termination_processing={
                            #     # TimeScale.TRIAL: And(Condition(lambda: task_input_layer.value == Task.PREDICT),
                            #     #                      Condition(lambda: retrieved_reward_layer.value),
-                           #     #                      JustRan(response_layer))}
+                           #     #                      JustRan(prediction_layer))}
                            #     # CRASHES:
                            #     # TimeScale.TRIAL: Any(And(Condition(lambda: task_input_layer.value == Task.EXPERIENCE),
                            #     #                          JustRan(em)),
                            #     #                      And(Condition(lambda: task_input_layer.value == Task.PREDICT),
                            #     #                          Condition(lambda: retrieved_reward_layer.value),
-                           #     #                          JustRan(response_layer)))}
+                           #     #                          JustRan(prediction_layer)))}
                            #     TimeScale.TRIAL: Any(And(Condition(lambda: task_input_layer.value == Task.EXPERIENCE),
                            #                              AllHaveRun()),
                            #                          And(Condition(lambda: task_input_layer.value == Task.PREDICT),
@@ -313,12 +328,7 @@ def construct_model(model_name:str=MODEL_NAME,
                            )
 
     # Nodes not included in (decision output) Pathway specified above
-    EGO_comp.add_nodes([state_input_layer,
-                        context_layer,
-                        em,
-                        response_layer
-                        ])
-    # EGO_comp.exclude_node_roles(task_input_layer, NodeRole.OUTPUT)
+    EGO_comp.add_nodes([state_input_layer, context_layer, em, prediction_layer])
 
     # Projections:
     QUERY = ' [QUERY]'
@@ -327,48 +337,32 @@ def construct_model(model_name:str=MODEL_NAME,
 
     # EM encoding --------------------------------------------------------------------------------
     # state -> em
-    EGO_comp.add_projection(MappingProjection(state_input_layer, em.nodes[state_input_name + QUERY]))
+    EGO_comp.add_projection(MappingProjection(state_input_layer,
+                                              em.nodes[state_input_name + QUERY]))
     # context -> em
-    EGO_comp.add_projection(MappingProjection(context_layer, em.nodes[context_name + QUERY]))
+    EGO_comp.add_projection(MappingProjection(context_layer,
+                                              em.nodes[context_name + QUERY]))
 
     # Inputs to Context ---------------------------------------------------------------------------
-    # actual state -> attend_external_layer
-    EGO_comp.add_projection(MappingProjection(state_input_layer, attend_external_layer))
-    # retrieved state -> attend_memory_layer
-    EGO_comp.add_projection(MappingProjection(em.nodes[STATE_INPUT_LAYER_NAME + RETRIEVED],
-                                              attend_memory_layer))
-    # attend_external_layer -> context_layer
-    EGO_comp.add_projection(MappingProjection(attend_external_layer, context_layer,
-                                              matrix=np.eye(STATE_SIZE) * state_weight))
-    # attend_memory_layer -> context_layer
-    EGO_comp.add_projection(MappingProjection(attend_memory_layer, context_layer,
-                                              matrix=np.eye(STATE_SIZE) * state_weight))
     # retrieved context -> context_layer
-    EGO_comp.add_projection(MappingProjection(em.nodes[CONTEXT_LAYER_NAME + RETRIEVED], context_layer,
+    EGO_comp.add_projection(MappingProjection(em.nodes[context_name + RETRIEVED],
+                                              context_layer,
                                               matrix=np.eye(STATE_SIZE) * context_weight))
 
-    # Decision pathway ---------------------------------------------------------------------------
-    # retrieved reward -> retrieved reward
-    EGO_comp.add_projection(MappingProjection(em.nodes[REWARD_INPUT_LAYER_NAME + RETRIEVED],
-                                              retrieved_reward_layer))
-    # retrieved reward -> decision layer
-    EGO_comp.add_projection(MappingProjection(retrieved_reward_layer, response_layer))
+    # Response pathway ---------------------------------------------------------------------------
+    # retrieved state -> prediction_layer
+    EGO_comp.add_projection(MappingProjection(em.nodes[state_input_name + RETRIEVED],
+                                              prediction_layer))
+
 
     # Validate construction
-    proj_from_retrieved_reward_to_control = control_layer.input_ports[1].path_afferents[0]
-    assert proj_from_retrieved_reward_to_control._feedback == True
-    assert proj_from_retrieved_reward_to_control in EGO_comp.feedback_projections # retrieved_reward feedback
     assert context_layer.input_port.path_afferents[0].sender.owner == context_layer # recurrent projection
     assert context_layer.input_port.path_afferents[0].parameters.matrix.get()[0][0] == 1-context_integration_rate
-    assert context_layer.input_port.path_afferents[1].sender.owner == attend_external_layer # external state
     assert context_layer.input_port.path_afferents[1].parameters.matrix.get()[0][0] == state_weight
-    assert context_layer.input_port.path_afferents[2].sender.owner == attend_memory_layer # memory of state
     assert context_layer.input_port.path_afferents[2].parameters.matrix.get()[0][0] == state_weight
     assert context_layer.input_port.path_afferents[3].sender.owner == em.nodes[CONTEXT_LAYER_NAME + RETRIEVED]  # memory of
     # context
     assert context_layer.input_port.path_afferents[3].parameters.matrix.get()[0][0] == context_weight
-    assert control_layer.input_ports[0].path_afferents[0].sender.owner == task_input_layer
-    assert control_layer.input_ports[1].path_afferents[0].sender.owner == retrieved_reward_layer
 
     return EGO_comp
 #endregion
@@ -425,7 +419,7 @@ if __name__ == '__main__':
         model.termination_processing = {
             TimeScale.TRIAL: And(Condition(lambda: model.nodes[TASK_INPUT_LAYER_NAME].value == Task.PREDICT),
                                  Condition(lambda: model.nodes[RETRIEVED_REWARD_NAME].value),
-                                 # JustRan(model.nodes[RESPONSE_LAYER_NAME])
+                                 # JustRan(model.nodes[PREDICTION_LAYER_NAME])
                                  AllHaveRun()
                                  )
         }
