@@ -355,6 +355,7 @@ def construct_model(model_name:str=MODEL_NAME,
                                               prediction_layer))
 
 
+    # FIX: REMAINS TO BE FIXED:
     # Validate construction
     assert context_layer.input_port.path_afferents[0].sender.owner == context_layer # recurrent projection
     assert context_layer.input_port.path_afferents[0].parameters.matrix.get()[0][0] == 1-context_integration_rate

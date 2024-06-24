@@ -1682,8 +1682,9 @@ class EMComposition(AutodiffComposition):
             self.key_names = [parsed_field_names[i] for i in self.key_indices]
             self.value_names = parsed_field_names[self.num_keys:]
         else:
-            # FIX THIS TO PRODUCE CLEANER NAMES
-            self.key_names = [f'{i} [QUERY]' for i in range(self.num_keys)] if self.num_keys > 1 else ['KEY']
+            # FIX: PRODUCE CLEANER NAMES
+            # self.key_names = [f'{i} [QUERY]' for i in range(self.num_keys)] if self.num_keys > 1 else ['KEY']
+            self.key_names = [f'{i}' for i in range(self.num_keys)] if self.num_keys > 1 else ['KEY']
             self.value_names = [f'{i} [VALUE]' for i in range(self.num_values)] if self.num_values > 1 else ['VALUE']
 
         user_specified_concatenate_keys = concatenate_keys or False
