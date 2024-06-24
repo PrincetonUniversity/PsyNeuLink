@@ -1680,7 +1680,8 @@ class EMComposition(AutodiffComposition):
         self.num_values = self.num_fields - self.num_keys
         if parsed_field_names:
             self.key_names = [parsed_field_names[i] for i in self.key_indices]
-            self.value_names = parsed_field_names[self.num_keys:]
+            # self.value_names = parsed_field_names[self.num_keys:]
+            self.value_names = [parsed_field_names[i] for i in range(self.num_fields) if i not in self.key_indices]
         else:
             # FIX: PRODUCE CLEANER NAMES
             # self.key_names = [f'{i} [QUERY]' for i in range(self.num_keys)] if self.num_keys > 1 else ['KEY']
