@@ -313,19 +313,12 @@ def construct_model(model_name:str=MODEL_NAME,
                            )
 
     # Nodes not included in (decision output) Pathway specified above
-    EGO_comp.add_nodes([task_input_layer,
-                        state_input_layer,
-                        time_input_layer,
-                        attend_external_layer,
-                        attend_memory_layer,
+    EGO_comp.add_nodes([state_input_layer,
                         context_layer,
-                        reward_input_layer,
                         em,
-                        retrieved_reward_layer,
-                        control_layer,
                         response_layer
                         ])
-    EGO_comp.exclude_node_roles(task_input_layer, NodeRole.OUTPUT)
+    # EGO_comp.exclude_node_roles(task_input_layer, NodeRole.OUTPUT)
 
     # Projections:
     QUERY = ' [QUERY]'
@@ -335,12 +328,8 @@ def construct_model(model_name:str=MODEL_NAME,
     # EM encoding --------------------------------------------------------------------------------
     # state -> em
     EGO_comp.add_projection(MappingProjection(state_input_layer, em.nodes[state_input_name + QUERY]))
-    # time -> em
-    EGO_comp.add_projection(MappingProjection(time_input_layer, em.nodes[time_input_name + QUERY]))
     # context -> em
     EGO_comp.add_projection(MappingProjection(context_layer, em.nodes[context_name + QUERY]))
-    # reward -> em
-    EGO_comp.add_projection(MappingProjection(reward_input_layer, em.nodes[reward_input_name + VALUE]))
 
     # Inputs to Context ---------------------------------------------------------------------------
     # actual state -> attend_external_layer
