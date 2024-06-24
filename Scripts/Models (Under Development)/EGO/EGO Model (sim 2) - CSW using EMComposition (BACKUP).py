@@ -8,25 +8,7 @@
 # TODO:
 
 # ADD PREVIOUS STATES
-# ADD next_state to EM and control to support that
-# - CONTROL FLOW:
-#   - UPDATE CONTEXT LAYER:  INTEGRATE CURRENT STATE IN CONTEXT LAYER
-#   - USE UPDATED CONTEXT + CURRENT STATE TO RETRIEVE PREDICTED NEXT STATE
-#   - GET NEXT STATE
-#   - ENCODE "CURRENT" (I.E., PREVIOUS) STATE + "NEXT" (NOW ACTUALLY CURRENT) STATE + CONTEXT (PRIOR TO
-#           INTEGRATION OF "NEXT") INTO EM
-
-# - CONTROL FLOW (FROM VANTAGE OF "NEXT" STATE):
-#   - USE CONTEXT + PREVIOUS STATE TO RETRIEVE PREDICTION OF CURRENT STATE
-#   - ENCODE PREVIOUS STATE + CURRENT STATE + CONTEXT INTO EM
-#   - UPDATE CONTEXT LAYER:  INTEGRATE CURRENT STATE IN CONTEXT LAYER:
-#   SO:
-#   - EM SHOULD EXECUTE FIRST:
-#     - USING VALUES OF STATE INPUT NODE AND CONTEXT LAYER TO RETRIEVE NEXT_STATE
-#     - AND ENCODING VALUES OF STATE INPUT NODE, CURRENT INPUT, AND CONTEXT LAYER IN EM
-#   - THEN CONTEXT LAYER SHOULD EXECUTE, USING CURRENT INPUT TO INTEGRATE INTO CONTEXT LAYER
-
-
+# ADD previous_state to EM and control to support that
 
 # FIX: TERMINATION CONDITION IS GETTING TRIGGED AFTER 1st TRIAL
 
@@ -177,10 +159,12 @@ model_params = dict(
     context_d = 7, # length of context vector
     time_d = 25, # length of time vector
     self_excitation = .25, # rate at which old context is carried over to new context
-    integration_rate = .5, # rate at which state is integrated into new context
+    input_weight = .5, # rate at which state is integrated into new context
+    retrieved_context_weight = .25, # rate at which context retrieved from EM is integrated into new context
+    time_noise=.01,# noise std for time integrator (drift is set to 0)
     state_weight = .5, # weight of the state used during memory retrieval
     context_weight = .3, # weight of the context used during memory retrieval
-    time_noise=.01,# noise std for time integrator (drift is set to 0)
+    time_weight = .2, # weight of the time used during memory retrieval
     temperature = .05 # temperature of the softmax used during memory retrieval (smaller means more argmax-like
 )
 
@@ -190,14 +174,14 @@ model_params = dict(
 MODEL_NAME = "EGO Model CSW"
 STATE_INPUT_LAYER_NAME = "STATE"
 CONTEXT_LAYER_NAME = 'CONTEXT'
-NEXT_STATE_NAME = 'NEXT_STATE'
+PREVIOUS_STATE_NAME = 'PREVIOUS_STATE'
 EM_NAME = "EM"
 PREDICTION_LAYER_NAME = "PREDICTION"
 
 EMFieldsIndex = IntEnum('EMFields',
                         ['STATE',
                          'CONTEXT',
-                         'NEXT_STATE'],
+                         'PREVIOUS_STATE'],
                         start=0)
 
 
@@ -208,14 +192,19 @@ STATE_SIZE = model_params['state_d']  # length of state vector
 CONTEXT_SIZE = model_params['context_d']  # length of state vector
 
 # Context processing:
-INTEGRATION_RATE = model_params['integration_rate']  # rate at which state is integrated into context_layer
+STATE_WEIGHT = model_params['input_weight']  # rate at which external vs. memory state are integrated in context_layer
+CONTEXT_INTEGRATION_RATE = model_params['retrieved_context_weight']  # rate at which retrieved context (from EM)
+                                                                     # is integrated into context_layer
+assert (model_params['retrieved_context_weight'] + STATE_WEIGHT + CONTEXT_INTEGRATION_RATE) == 1,\
+    (f"Sum of STATE_WEIGHT ({STATE_WEIGHT}), CONTEXT_INTEGRATION_RATE ({CONTEXT_INTEGRATION_RATE}), "
+     f"and RETRIEVED_CONTEXT_WEIGHT ({model_params['retrieved_context_weight']}) must equal 1")
 
 # EM retrieval
 STATE_RETRIEVAL_WEIGHT = model_params['state_weight']     # weight of state field in retrieval from EM
 CONTEXT_RETRIEVAL_WEIGHT = model_params['context_weight'] # weight of context field in retrieval from EM
 RETRIEVAL_SOFTMAX_GAIN = 1/model_params['temperature']    # gain on softmax retrieval function
 
-NEXT_STATE_WEIGHT = 0
+PREVIOUS_STATE_WEIGHT = 0
 
 RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projections
 
@@ -249,15 +238,16 @@ def construct_model(model_name:str=MODEL_NAME,
 
                     # Context processing:
                     context_name:str=CONTEXT_LAYER_NAME,
-                    integration_rate:Union[float,int]=INTEGRATION_RATE,
+                    state_weight:Union[float,int]=STATE_WEIGHT,
+                    context_integration_rate:Union[float,int]=CONTEXT_INTEGRATION_RATE,
 
                     # EM:
                     em_name:str=EM_NAME,
                     retrieval_softmax_gain=RETRIEVAL_SOFTMAX_GAIN,
                     state_retrieval_weight:Union[float,int]=STATE_RETRIEVAL_WEIGHT,
                     context_retrieval_weight:Union[float,int]=CONTEXT_RETRIEVAL_WEIGHT,
-                    next_state_name=NEXT_STATE_NAME,
-                    next_state_weight:Union[float,int]=NEXT_STATE_WEIGHT,
+                    previous_state_name=PREVIOUS_STATE_NAME,
+                    previous_state_weight:Union[float,int]=PREVIOUS_STATE_WEIGHT,
 
                     # Output / decision processing:
                     PREDICTION_LAYER_NAME:str=PREDICTION_LAYER_NAME,
@@ -266,9 +256,22 @@ def construct_model(model_name:str=MODEL_NAME,
 
     # Apportionment of contributions of state (actual or em) vs. context (em) to context_layer integration:
 
+    # FIX: THIS IS FOR MDP;  NEEDS TO BE REVISED FOR CSW
+    # state input (EXPERIENCE) -\
+    #                            --> state_weight -------\
+    # state from em (PREDICT)---/                         -> * (context_integration_rate) -----\
+    #                          /-----> context_weight ---/                                      --> context
+    # context from em --------/      (=1- state_weight)                                        /
+    #                                                    /---> 1 - context_integration_rate --/
+    # context from prev. cycle -------------------------/
 
-    assert 0 <= integration_rate <= 1,\
+    assert 0 <= context_integration_rate <= 1,\
         f"context_retrieval_weight must be a number from 0 to 1"
+    assert 0 <= state_weight <= 1,\
+        f"context_retrieval_weight must be a number from 0 to 1"
+    context_weight = 1 - state_weight
+    state_weight *= context_integration_rate
+    context_weight *= context_integration_rate
 
     # ----------------------------------------------------------------------------------------------------------------
     # -------------------------------------------------  Nodes  ------------------------------------------------------
@@ -277,7 +280,7 @@ def construct_model(model_name:str=MODEL_NAME,
     state_input_layer = ProcessingMechanism(name=state_input_name, size=state_size)
     context_layer = RecurrentTransferMechanism(name=context_name,
                                                size=state_size,
-                                               auto=1-integration_rate,
+                                               auto=1-context_integration_rate,
                                                hetero=0.0)
     em = EMComposition(name=em_name,
                        memory_template=[[0] * state_size,   # state
@@ -288,11 +291,11 @@ def construct_model(model_name:str=MODEL_NAME,
                        softmax_gain=1.0,
                        # Input Nodes:
                        field_names=[state_input_name,
-                                    next_state_name,
+                                    previous_state_name,
                                     context_name,
                                     ],
                        field_weights=(state_retrieval_weight,
-                                      next_state_weight,
+                                      previous_state_weight,
                                       context_retrieval_weight
                                       )
                        )
@@ -344,22 +347,22 @@ def construct_model(model_name:str=MODEL_NAME,
     # retrieved context -> context_layer
     EGO_comp.add_projection(MappingProjection(state_input_layer,
                                               context_layer,
-                                              # matrix=np.eye(STATE_SIZE) * state_weight
-                                              ))
+                                              matrix=np.eye(STATE_SIZE) * state_weight))
 
     # Response pathway ---------------------------------------------------------------------------
     # retrieved state -> prediction_layer
-    EGO_comp.add_projection(MappingProjection(em.nodes[next_state_name + RETRIEVED],
+    EGO_comp.add_projection(MappingProjection(em.nodes[state_input_name + RETRIEVED],
                                               prediction_layer))
 
 
     # Validate construction
     assert context_layer.input_port.path_afferents[0].sender.owner == context_layer # recurrent projection
-    assert context_layer.input_port.path_afferents[0].parameters.matrix.get()[0][0] == 1-integration_rate
+    assert context_layer.input_port.path_afferents[0].parameters.matrix.get()[0][0] == 1-context_integration_rate
     # assert context_layer.input_port.path_afferents[1].sender.owner == em.nodes[CONTEXT_LAYER_NAME + RETRIEVED]  #
     assert context_layer.input_port.path_afferents[1].sender.owner == state_input_layer  #
-    # memory of context
-    # assert context_layer.input_port.path_afferents[1].parameters.matrix.get()[0][0] == state_weight
+    # memory of
+    # context
+    assert context_layer.input_port.path_afferents[1].parameters.matrix.get()[0][0] == state_weight
 
     return EGO_comp
 #endregion
