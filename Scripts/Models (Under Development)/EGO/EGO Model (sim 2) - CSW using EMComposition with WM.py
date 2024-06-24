@@ -233,7 +233,7 @@ NUM_SEQS = model_params['num_seqs']  # total number of sequences to be executed 
 
 STIM_SEQS = [list(range(1,NUM_STIM_PER_SEQ*2,2)),
             list(range(2,NUM_STIM_PER_SEQ*2+1,2))]
-CURRICULUM_TYE = 'blocked'     # 'blocked' or 'interleaved'
+CURRICULUM_TYPE = 'blocked'     # 'blocked' or 'interleaved'
 
 #endregion
 
@@ -398,7 +398,7 @@ if __name__ == '__main__':
                                                     num_baseline_seqs=NUM_BASELINE_SEQS,
                                                     num_revaluation_seqs=NUM_REVALUATION_SEQS,
                                                     reward_vals=REWARD_VALS,
-                                                    CURRICULUM_TYE=CURRICULUM_TYE,
+                                                    CURRICULUM_TYPE=CURRICULUM_TYPE,
                                                     ratio=RATIO,
                                                     stim_seqs=STIM_SEQS)
         input_layers = [STATE_INPUT_LAYER_NAME]
