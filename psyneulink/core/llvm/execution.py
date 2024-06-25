@@ -291,9 +291,7 @@ class CUDAExecution(Execution):
         # Param struct needs to be reuploaded every time because the values
         # might have changed.
         if gpu_buffer is None or struct_name == "_param_struct":
-            c_struct = getattr(self, struct_name)
-            if isinstance(c_struct, tuple):
-                c_struct = c_struct[0]
+            c_struct = getattr(self, struct_name)[0]
 
             # Set private attribute to a new buffer
             gpu_buffer = self.upload_ctype(c_struct, struct_name)
@@ -491,16 +489,17 @@ class CompExecution(CUDAExecution):
         if self.__conds is None:
             gen = helpers.ConditionGenerator(None, self._composition)
             if len(self._execution_contexts) > 1:
-                cond_type = self._bin_func_multirun.byref_arg_types[4] * len(self._execution_contexts)
+                cond_ctype = self._bin_func_multirun.byref_arg_types[4] * len(self._execution_contexts)
                 cond_initializer = (gen.get_condition_initializer() for _ in self._execution_contexts)
             else:
-                cond_type = self._bin_func.byref_arg_types[4]
+                cond_ctype = self._bin_func.byref_arg_types[4]
                 cond_initializer = gen.get_condition_initializer()
 
-            self.__conds = cond_type(*cond_initializer)
+            c_conds = cond_ctype(*cond_initializer)
+            self.__conds = (c_conds, np.ctypeslib.as_array(c_conds))
             if "stat" in self._debug_env:
                 print("Instantiated condition struct ( size:" ,
-                      _pretty_size(ctypes.sizeof(cond_type)), ")",
+                      _pretty_size(ctypes.sizeof(cond_ctype)), ")",
                       "for", self._composition.name)
 
         return self.__conds
@@ -648,14 +647,14 @@ class CompExecution(CUDAExecution):
                                                 self._param_struct[0],
                                                 self._get_input_struct(inputs),
                                                 self._data_struct[0],
-                                                self._conditions,
+                                                self._conditions[0],
                                                 self._ct_len)
         else:
             self._bin_exec_func(self._state_struct[0],
                                 self._param_struct[0],
                                 self._get_input_struct(inputs),
                                 self._data_struct[0],
-                                self._conditions)
+                                self._conditions[0])
 
     def cuda_execute(self, inputs):
         # NOTE: Make sure that input struct generation is inlined.
