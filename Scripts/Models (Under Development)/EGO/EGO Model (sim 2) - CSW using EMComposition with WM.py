@@ -411,43 +411,45 @@ if __name__ == '__main__':
             print("Model not yet constructed")
 
     if RUN_MODEL:
-        experience_inputs = build_experience_inputs(state_size=STATE_SIZE,
-                                                    time_drift_rate=TIME_DRIFT_RATE,
-                                                    num_baseline_seqs=NUM_BASELINE_SEQS,
-                                                    num_revaluation_seqs=NUM_REVALUATION_SEQS,
-                                                    reward_vals=REWARD_VALS,
-                                                    CURRICULUM_TYPE=CURRICULUM_TYPE,
-                                                    ratio=RATIO,
-                                                    stim_seqs=STIM_SEQS)
-        input_layers = [STATE_INPUT_LAYER_NAME]
-
-        # Experience Phase
-        print(f"Presenting {model.name} with {TOTAL_NUM_EXPERIENCE_STIMS} EXPERIENCE stimuli")
-        model.run(inputs={k: v for k, v in zip(input_layers, experience_inputs)},
-                  execution_mode=EXECUTION_MODE,
-                  report_output=REPORT_OUTPUT,
-                  report_progress=REPORT_PROGRESS)
-
-        # Prediction Phase
-        prediction_inputs = build_prediction_inputs(state_size=STATE_SIZE,
-                                                    time_drift_rate=TIME_DRIFT_RATE,
-                                                    num_roll_outs_per_stim=int(NUM_ROLL_OUTS / 2),
-                                                    stim_seqs=STIM_SEQS,
-                                                    reward_vals=REWARD_VALS,
-                                                    seq_type=PREDICT_SEQ_TYPE)
-        print(f"Running {model.name} for {NUM_ROLL_OUTS} PREDICT (ROLL OUT) trials")
-        model.termination_processing = {
-            TimeScale.TRIAL: And(Condition(lambda: model.nodes[TASK_INPUT_LAYER_NAME].value == Task.PREDICT),
-                                 Condition(lambda: model.nodes[RETRIEVED_REWARD_NAME].value),
-                                 # JustRan(model.nodes[PREDICTION_LAYER_NAME])
-                                 AllHaveRun()
-                                 )
-        }
-        model.run(inputs={k: v for k, v in zip(input_layers, prediction_inputs)},
-                  report_output=REPORT_OUTPUT,
-                  report_progress=REPORT_PROGRESS
-                  )
+        print("MODEL NOT YET FULLY EXECUTABLE")
+        # experience_inputs = build_experience_inputs(state_size=STATE_SIZE,
+        #                                             time_drift_rate=TIME_DRIFT_RATE,
+        #                                             num_baseline_seqs=NUM_BASELINE_SEQS,
+        #                                             num_revaluation_seqs=NUM_REVALUATION_SEQS,
+        #                                             reward_vals=REWARD_VALS,
+        #                                             CURRICULUM_TYPE=CURRICULUM_TYPE,
+        #                                             ratio=RATIO,
+        #                                             stim_seqs=STIM_SEQS)
+        # input_layers = [STATE_INPUT_LAYER_NAME]
+        #
+        # # Experience Phase
+        # print(f"Presenting {model.name} with {TOTAL_NUM_EXPERIENCE_STIMS} EXPERIENCE stimuli")
+        # model.run(inputs={k: v for k, v in zip(input_layers, experience_inputs)},
+        #           execution_mode=EXECUTION_MODE,
+        #           report_output=REPORT_OUTPUT,
+        #           report_progress=REPORT_PROGRESS)
+        #
+        # # Prediction Phase
+        # prediction_inputs = build_prediction_inputs(state_size=STATE_SIZE,
+        #                                             time_drift_rate=TIME_DRIFT_RATE,
+        #                                             num_roll_outs_per_stim=int(NUM_ROLL_OUTS / 2),
+        #                                             stim_seqs=STIM_SEQS,
+        #                                             reward_vals=REWARD_VALS,
+        #                                             seq_type=PREDICT_SEQ_TYPE)
+        # print(f"Running {model.name} for {NUM_ROLL_OUTS} PREDICT (ROLL OUT) trials")
+        # model.termination_processing = {
+        #     TimeScale.TRIAL: And(Condition(lambda: model.nodes[TASK_INPUT_LAYER_NAME].value == Task.PREDICT),
+        #                          Condition(lambda: model.nodes[RETRIEVED_REWARD_NAME].value),
+        #                          # JustRan(model.nodes[PREDICTION_LAYER_NAME])
+        #                          AllHaveRun()
+        #                          )
+        # }
+        # model.run(inputs={k: v for k, v in zip(input_layers, prediction_inputs)},
+        #           report_output=REPORT_OUTPUT,
+        #           report_progress=REPORT_PROGRESS
+        #           )
 
         if PRINT_RESULTS:
-            print(f"Predicted reward for last stimulus: {model.results}")
+            print("MODEL NOT YET FULLY EXECUTABLE SO NO RESULTS")
+            # print(f"Predicted reward for last stimulus: {model.results}")
     #endregion
