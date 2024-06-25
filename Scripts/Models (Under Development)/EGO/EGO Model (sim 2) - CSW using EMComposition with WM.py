@@ -133,6 +133,7 @@ MORE HERE
 """
 
 import numpy as np
+import graph_scheduler as gs
 from enum import IntEnum
 
 from psyneulink import *
@@ -141,19 +142,17 @@ from psyneulink.core.scheduling.condition import Any, And, AllHaveRun, AtRunStar
 
 # Settings for running script:
 
-NUM_EXP_SEQS = 5               # Number of sequences to run in EXPERIENCE Phase (includes baseline + revaluation)
-NUM_PRED_TRIALS = 10           # Number of trials (ROLL OUTS) to run in PREDICTION Phase
-
+MEMORY_CAPACITY = 100
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = (                      # Only one of the following can be uncommented:
-    # None                             # suppress display of model
-    {}                               # show simple visual display of model
+    None                             # suppress display of model
+    # {}                               # show simple visual display of model
     # {'show_node_structure': True}    # show detailed view of node structures and projections
 )
-# RUN_MODEL = True                       # True => run the model
-RUN_MODEL = False                      # False => don't run the model
-EXECUTION_MODE = ExecutionMode.Python
-# EXECUTION_MODE = ExecutionMode.PyTorch
+RUN_MODEL = True                       # True => run the model
+# RUN_MODEL = False                      # False => don't run the model
+# EXECUTION_MODE = ExecutionMode.Python
+EXECUTION_MODE = ExecutionMode.PyTorch
 ANALYZE_RESULTS = False                # True => output analysis of results of run
 # REPORT_OUTPUT = ReportOutput.FULL     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_OUTPUT = ReportOutput.OFF     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
@@ -169,13 +168,10 @@ ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation
 
 # PyTorch Version Parameters:
 model_params = dict(
-    n_participants=58,
-    n_simulations = 100, # number of rollouts per participant
-    num_seqs = 20, # total number of sequences to be executed (used to set size of EM)
-    n_steps = 3, # number of steps per rollout
-    state_d = 7, # length of state vector
-    integrator_d = 7, # length of integrator vector
-    context_d = 7, # length of context vector
+    state_d = 11, # length of state vector
+    previous_state_d = 11, # length of state vector
+    integrator_d = 11, # length of integrator vector
+    context_d = 11, # length of context vector
     self_excitation = .25, # rate at which old context is carried over to new context
     integration_rate = .5, # rate at which state is integrated into new context
     state_weight = .5, # weight of the state used during memory retrieval
@@ -206,6 +202,7 @@ EMFieldsIndex = IntEnum('EMFields',
 
 # Layer sizes:
 STATE_SIZE = model_params['state_d']  # length of state vector
+PREVIOUS_STATE_SIZE = model_params['previous_state_d']  # length of prevoius_state vector
 INTEGRATOR_SIZE = model_params['integrator_d']  # length of state vector
 CONTEXT_SIZE = model_params['context_d']  # length of state vector
 
@@ -229,12 +226,9 @@ RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec
 # ======================================================================================================================
 
 # Task environment:
-NUM_STIM_PER_SEQ = model_params['n_steps'] # number of stimuli in a sequence
-NUM_SEQS = model_params['num_seqs']  # total number of sequences to be executed (to set size of EM)
-
-STIM_SEQS = [list(range(1,NUM_STIM_PER_SEQ*2,2)),
-            list(range(2,NUM_STIM_PER_SEQ*2+1,2))]
-CURRICULUM_TYPE = 'blocked'     # 'blocked' or 'interleaved'
+import Environment
+CURRICULUM_TYPE = 'Blocked'     # 'Blocked' or 'Interleaved'
+INPUTS = Environment.generate_dataset(condition=CURRICULUM_TYPE).xs.numpy()
 
 #endregion
 
@@ -245,13 +239,13 @@ CURRICULUM_TYPE = 'blocked'     # 'blocked' or 'interleaved'
 
 def construct_model(model_name:str=MODEL_NAME,
 
-                    # Inputs:
+                    # Input layer:
                     state_input_name:str=STATE_INPUT_LAYER_NAME,
                     state_size:int=STATE_SIZE,
 
                     # Previous state
                     previous_state_input_name:str=PREVIOUS_STATE_LAYER_NAME,
-                    previous_state_size:int=STATE_SIZE,
+                    previous_state_size:int=PREVIOUS_STATE_SIZE,
 
                     # Integrator:
                     integrator_name:str=INTEGRATOR_LAYER_NAME,
@@ -294,7 +288,7 @@ def construct_model(model_name:str=MODEL_NAME,
                                         [0] * state_size,   # previous state
                                         [0] * state_size],  # context
                        memory_fill=(0,.01),
-                       memory_capacity=NUM_SEQS,
+                       memory_capacity=MEMORY_CAPACITY,
                        softmax_gain=1.0,
                        # Input Nodes:
                        field_names=[state_input_name,
@@ -382,6 +376,8 @@ def construct_model(model_name:str=MODEL_NAME,
                                               prediction_layer))
 
 
+    EGO_comp.scheduler.add_condition(em, BeforeNodes(previous_state_layer, integrator_layer))
+
     # Validate construction
     assert integrator_layer.input_port.path_afferents[0].sender.owner == integrator_layer # recurrent projection
     assert integrator_layer.input_port.path_afferents[0].parameters.matrix.get()[0][0] == 1-integration_rate
@@ -411,45 +407,17 @@ if __name__ == '__main__':
             print("Model not yet constructed")
 
     if RUN_MODEL:
-        print("MODEL NOT YET FULLY EXECUTABLE")
-        # experience_inputs = build_experience_inputs(state_size=STATE_SIZE,
-        #                                             time_drift_rate=TIME_DRIFT_RATE,
-        #                                             num_baseline_seqs=NUM_BASELINE_SEQS,
-        #                                             num_revaluation_seqs=NUM_REVALUATION_SEQS,
-        #                                             reward_vals=REWARD_VALS,
-        #                                             CURRICULUM_TYPE=CURRICULUM_TYPE,
-        #                                             ratio=RATIO,
-        #                                             stim_seqs=STIM_SEQS)
-        # input_layers = [STATE_INPUT_LAYER_NAME]
-        #
-        # # Experience Phase
-        # print(f"Presenting {model.name} with {TOTAL_NUM_EXPERIENCE_STIMS} EXPERIENCE stimuli")
-        # model.run(inputs={k: v for k, v in zip(input_layers, experience_inputs)},
-        #           execution_mode=EXECUTION_MODE,
-        #           report_output=REPORT_OUTPUT,
-        #           report_progress=REPORT_PROGRESS)
-        #
-        # # Prediction Phase
-        # prediction_inputs = build_prediction_inputs(state_size=STATE_SIZE,
-        #                                             time_drift_rate=TIME_DRIFT_RATE,
-        #                                             num_roll_outs_per_stim=int(NUM_ROLL_OUTS / 2),
-        #                                             stim_seqs=STIM_SEQS,
-        #                                             reward_vals=REWARD_VALS,
-        #                                             seq_type=PREDICT_SEQ_TYPE)
-        # print(f"Running {model.name} for {NUM_ROLL_OUTS} PREDICT (ROLL OUT) trials")
-        # model.termination_processing = {
-        #     TimeScale.TRIAL: And(Condition(lambda: model.nodes[TASK_INPUT_LAYER_NAME].value == Task.PREDICT),
-        #                          Condition(lambda: model.nodes[RETRIEVED_REWARD_NAME].value),
-        #                          # JustRan(model.nodes[PREDICTION_LAYER_NAME])
-        #                          AllHaveRun()
-        #                          )
-        # }
-        # model.run(inputs={k: v for k, v in zip(input_layers, prediction_inputs)},
-        #           report_output=REPORT_OUTPUT,
-        #           report_progress=REPORT_PROGRESS
-        #           )
+        # print("MODEL NOT YET FULLY EXECUTABLE")
+        print(f'Running {MODEL_NAME}')
+        model.run(inputs={STATE_INPUT_LAYER_NAME:INPUTS},
+                  report_output=REPORT_OUTPUT,
+                  report_progress=REPORT_PROGRESS
+                  )
 
         if PRINT_RESULTS:
             print("MODEL NOT YET FULLY EXECUTABLE SO NO RESULTS")
             # print(f"Predicted reward for last stimulus: {model.results}")
     #endregion
+
+    # print(model.scheduler.consideration_queue)
+    # gs.output_graph_image(model.scheduler.graph, 'EGO_comp-scheduler.png')

@@ -42,16 +42,15 @@ class DeterministicCSWDataset(dataset.Dataset):
     def __getitem__(self, idx):
         return self.xs[idx], self.contexts[idx], self.ys[idx]
 
+def generate_dataset(condition='Blocked'):
+    # Generate the dataset for either the blocked or interleaved condition
+    if condition=='Blocked':
+        contexts_to_load = [0,1,0,1] + [randint(0,1) for _ in range(40)]
+        n_samples_per_context = [40,40,40,40] + [1]*40
+    elif condition == 'Interleaved':
+        contexts_to_load = [0,1]*80 + [randint(0,1) for _ in range(40)]
+        n_samples_per_context = [1]*160 + [1]*40
+    else:
+        raise ValueError(f'Unknown dataset condition: {condition}')
 
-# Generate the dataset for either the blocked or interleaved condition
-condition = 'Blocked' # 'Interleaved'
-if condition=='Blocked':
-	contexts_to_load = [0,1,0,1] + [randint(0,1) for _ in range(40)]
-	n_samples_per_context = [40,40,40,40] + [1]*40
-elif condition == 'Interleaved':
-	contexts_to_load = [0,1]*80 + [randint(0,1) for _ in range(40)]
-	n_samples_per_context = [1]*160 + [1]*40
-else:
-	raise ValueError(f'Unknown dataset condition: {condition}')
-
-ds = DeterministicCSWDataset(n_samples_per_context, contexts_to_load)
+    return DeterministicCSWDataset(n_samples_per_context, contexts_to_load)
