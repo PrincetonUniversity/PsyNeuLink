@@ -307,7 +307,6 @@ def construct_model(model_name:str=MODEL_NAME,
     # ----------------------------------------------------------------------------------------------------------------
     # -------------------------------------------------  EGO Composition  --------------------------------------------
     # ----------------------------------------------------------------------------------------------------------------
-    
 
     EGO_comp = Composition(name=model_name,
                            # # Terminate a Task.PREDICT trial after prediction_layer executes if a reward is retrieved
