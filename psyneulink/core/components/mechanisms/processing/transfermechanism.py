@@ -1598,9 +1598,13 @@ class TransferMechanism(ProcessingMechanism_Base):
 
             builder.call(func, [func_params, func_state, func_in, cmp_val_ptr])
 
-        elif isinstance(self.termination_measure, TimeScale):
+        elif isinstance(self.termination_measure, TimeScale) or isinstance(self.termination_measure, np.ndarray) or self.termination_measure in {ts.value for ts in TimeScale}:
+            if isinstance(self.termination_measure, TimeScale):
+                measure = self.termination_measure.value
+            else:
+                measure = self.termination_measure
             num_executions_array_ptr = ctx.get_param_or_state_ptr(builder, self, "num_executions", state_struct_ptr=m_state)
-            elem_ptr = builder.gep(num_executions_array_ptr, [ctx.int32_ty(0), ctx.int32_ty(self.termination_measure.value)])
+            elem_ptr = builder.gep(num_executions_array_ptr, [ctx.int32_ty(0), ctx.int32_ty(measure)])
             elem_val = builder.sitofp(builder.load(elem_ptr), threshold.type)
             builder.store(elem_val, cmp_val_ptr)
 
