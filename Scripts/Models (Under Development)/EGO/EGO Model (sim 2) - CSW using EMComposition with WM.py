@@ -174,13 +174,12 @@ model_params = dict(
     num_seqs = 20, # total number of sequences to be executed (used to set size of EM)
     n_steps = 3, # number of steps per rollout
     state_d = 7, # length of state vector
+    integrator_d = 7, # length of integrator vector
     context_d = 7, # length of context vector
-    time_d = 25, # length of time vector
     self_excitation = .25, # rate at which old context is carried over to new context
     integration_rate = .5, # rate at which state is integrated into new context
     state_weight = .5, # weight of the state used during memory retrieval
     context_weight = .3, # weight of the context used during memory retrieval
-    time_noise=.01,# noise std for time integrator (drift is set to 0)
     temperature = .05 # temperature of the softmax used during memory retrieval (smaller means more argmax-like
 )
 
@@ -190,6 +189,7 @@ model_params = dict(
 MODEL_NAME = "EGO Model CSW"
 STATE_INPUT_LAYER_NAME = "STATE"
 PREVIOUS_STATE_LAYER_NAME = "PREVIOUS STATE"
+INTEGRATOR_LAYER_NAME = 'INTEGRATOR'
 CONTEXT_LAYER_NAME = 'CONTEXT'
 
 EM_NAME = "EM"
@@ -206,10 +206,11 @@ EMFieldsIndex = IntEnum('EMFields',
 
 # Layer sizes:
 STATE_SIZE = model_params['state_d']  # length of state vector
+INTEGRATOR_SIZE = model_params['integrator_d']  # length of state vector
 CONTEXT_SIZE = model_params['context_d']  # length of state vector
 
 # Context processing:
-INTEGRATION_RATE = model_params['integration_rate']  # rate at which state is integrated into context_layer
+INTEGRATION_RATE = model_params['integration_rate']  # rate at which state is integrated into integrator layer
 
 # EM retrieval
 STATE_RETRIEVAL_WEIGHT = 0
@@ -252,9 +253,14 @@ def construct_model(model_name:str=MODEL_NAME,
                     previous_state_input_name:str=PREVIOUS_STATE_LAYER_NAME,
                     previous_state_size:int=STATE_SIZE,
 
-                    # Context processing:
-                    context_name:str=CONTEXT_LAYER_NAME,
+                    # Integrator:
+                    integrator_name:str=INTEGRATOR_LAYER_NAME,
+                    integrator_size:int=INTEGRATOR_SIZE,
                     integration_rate:Union[float,int]=INTEGRATION_RATE,
+
+                    # Context representation (learned):
+                    context_name:str=CONTEXT_LAYER_NAME,
+                    context_size:Union[float,int]=CONTEXT_SIZE,
 
                     # EM:
                     em_name:str=EM_NAME,
@@ -268,11 +274,8 @@ def construct_model(model_name:str=MODEL_NAME,
 
                     )->Composition:
 
-    # Apportionment of contributions of state (actual or em) vs. context (em) to context_layer integration:
-
-
     assert 0 <= integration_rate <= 1,\
-        f"context_retrieval_weight must be a number from 0 to 1"
+        f"integrator_retrieval_weight must be a number from 0 to 1"
 
     # ----------------------------------------------------------------------------------------------------------------
     # -------------------------------------------------  Nodes  ------------------------------------------------------
@@ -280,10 +283,12 @@ def construct_model(model_name:str=MODEL_NAME,
 
     state_input_layer = ProcessingMechanism(name=state_input_name, size=state_size)
     previous_state_layer = ProcessingMechanism(name=previous_state_input_name, size=previous_state_size)
-    context_layer = RecurrentTransferMechanism(name=context_name,
-                                               size=state_size,
+    integrator_layer = RecurrentTransferMechanism(name=integrator_name,
+                                               size=integrator_size,
                                                auto=1-integration_rate,
                                                hetero=0.0)
+    context_layer = ProcessingMechanism(name=context_name, size=context_size)
+
     em = EMComposition(name=em_name,
                        memory_template=[[0] * state_size,   # state
                                         [0] * state_size,   # previous state
@@ -330,44 +335,57 @@ def construct_model(model_name:str=MODEL_NAME,
                            )
 
     # Nodes not included in (decision output) Pathway specified above
-    EGO_comp.add_nodes([state_input_layer, previous_state_layer, context_layer, em, prediction_layer])
+    EGO_comp.add_nodes([state_input_layer,
+                        previous_state_layer,
+                        integrator_layer,
+                        context_layer,
+                        em,
+                        prediction_layer])
 
     # Projections:
     QUERY = ' [QUERY]'
     VALUE = ' [VALUE]'
     RETRIEVED = ' [RETRIEVED]'
 
-    # EM retrieval & encoding --------------------------------------------------------------------------------
-    # previous_state -> em
+    # EM encoding & retrieval  --------------------------------------------------------------------------------
+    # state_input -> em (retrieval)
+    EGO_comp.add_projection(MappingProjection(state_input_layer,
+                                              em.nodes[state_input_name + VALUE],
+                                              matrix=IDENTITY_MATRIX))
+
+    # previous_state -> em (retrieval)
     EGO_comp.add_projection(MappingProjection(previous_state_layer,
-                                              em.nodes[previous_state_input_name + QUERY]))
-    # context -> em
+                                              em.nodes[previous_state_input_name + QUERY],
+                                              matrix=IDENTITY_MATRIX))
+    # context -> em (retrieval)
     EGO_comp.add_projection(MappingProjection(context_layer,
-                                              em.nodes[context_name + QUERY]))
+                                              em.nodes[context_name + QUERY],
+                                              matrix=IDENTITY_MATRIX))
 
     # Inputs to previous_state and context -------------------------------------------------------------------
-    # state -> context_layer
+    # state -> previous_layer
     EGO_comp.add_projection(MappingProjection(state_input_layer,
                                               previous_state_layer,
-                                              ))
-    # state -> context_layer
+                                              matrix=IDENTITY_MATRIX))
+    # state -> integrator_layer
     EGO_comp.add_projection(MappingProjection(state_input_layer,
-                                              context_layer,
-                                              # matrix=np.eye(STATE_SIZE) * state_weight
-                                              ))
+                                              integrator_layer,
+                                              matrix=IDENTITY_MATRIX))
 
-    # Response pathway ---------------------------------------------------------------------------
+    # integrator_layer -> context_layer (learnable)
+    EGO_comp.add_projection(MappingProjection(integrator_layer,
+                                              context_layer))
+
+    # Response pathway ---------------------------------------------------------------------------------------
     # retrieved state -> prediction_layer
     EGO_comp.add_projection(MappingProjection(em.nodes[state_input_name + RETRIEVED],
                                               prediction_layer))
 
 
-    # FIX: REMAINS TO BE FIXED:
     # Validate construction
-    assert context_layer.input_port.path_afferents[0].sender.owner == context_layer # recurrent projection
-    assert context_layer.input_port.path_afferents[0].parameters.matrix.get()[0][0] == 1-integration_rate
-    # assert context_layer.input_port.path_afferents[1].sender.owner == em.nodes[CONTEXT_LAYER_NAME + RETRIEVED]  #
-    assert context_layer.input_port.path_afferents[1].sender.owner == state_input_layer  #
+    assert integrator_layer.input_port.path_afferents[0].sender.owner == integrator_layer # recurrent projection
+    assert integrator_layer.input_port.path_afferents[0].parameters.matrix.get()[0][0] == 1-integration_rate
+    assert integrator_layer.input_port.path_afferents[1].sender.owner == state_input_layer  #
 
     return EGO_comp
 #endregion
