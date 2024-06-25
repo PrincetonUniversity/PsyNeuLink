@@ -271,12 +271,6 @@ class CUDAExecution(Execution):
             return jit_engine.pycuda.driver.mem_alloc(4)
         return jit_engine.pycuda.driver.to_device(bytes(data))
 
-    def download_ctype(self, source, ty, name='other'):
-        self._downloaded_bytes[name] += ctypes.sizeof(ty)
-        out_buf = bytearray(ctypes.sizeof(ty))
-        jit_engine.pycuda.driver.memcpy_dtoh(out_buf, source)
-        return ty.from_buffer(out_buf)
-
     def __get_cuda_arg(self, struct_name, arg_handler):
         gpu_buffer = self._gpu_buffers[struct_name]
 
@@ -758,8 +752,9 @@ class CompExecution(CUDAExecution):
         output_type = (self._bin_run_func.byref_arg_types[4] * runs)
         if len(self._execution_contexts) > 1:
             output_type = output_type * len(self._execution_contexts)
-        output_size = ctypes.sizeof(output_type)
-        data_out = jit_engine.pycuda.driver.mem_alloc(output_size)
+
+        ct_out = output_type()
+        data_out = jit_engine.pycuda.driver.Out(np.ctypeslib.as_array(ct_out))
 
         # number of trials argument
         runs_np = np.full(len(self._execution_contexts), runs, dtype=np.int32)
@@ -777,7 +772,6 @@ class CompExecution(CUDAExecution):
                                      data_in, data_out, runs_count, input_count,
                                      threads=len(self._execution_contexts))
 
-        ct_out = self.download_ctype(data_out, output_type, 'result')
         if len(self._execution_contexts) > 1:
             return _convert_ctype_to_python(ct_out)
         else:
@@ -831,17 +825,17 @@ class CompExecution(CUDAExecution):
         comp_params, comp_state, comp_data, ct_inputs, out_ty, ct_num_inputs = \
             self._prepare_evaluate(inputs, num_input_sets, num_evaluations, all_results)
 
-        # Output is allocated on device, but we need the ctype (out_ty).
+        ct_results = out_ty()
+
         cuda_args = (jit_engine.pycuda.driver.In(comp_params[1]),
                      jit_engine.pycuda.driver.InOut(comp_state[1]),
-                     jit_engine.pycuda.driver.mem_alloc(ctypes.sizeof(out_ty)),
+                     jit_engine.pycuda.driver.Out(np.ctypeslib.as_array(ct_results)),
                      self.upload_ctype(ct_inputs, 'input'),
                      jit_engine.pycuda.driver.InOut(comp_data[1]),
                      self.upload_ctype(ct_num_inputs, 'input'),
                     )
 
         self.__bin_func.cuda_call(*cuda_args, threads=int(num_evaluations))
-        ct_results = self.download_ctype(cuda_args[2], out_ty, 'result')
 
         return ct_results
 
