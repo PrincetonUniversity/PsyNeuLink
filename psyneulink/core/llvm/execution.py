@@ -271,56 +271,46 @@ class CUDAExecution(Execution):
             return jit_engine.pycuda.driver.mem_alloc(4)
         return jit_engine.pycuda.driver.to_device(bytes(data))
 
-    def download_to(self, dst, source, name='other', *, move=False):
-        bounce = self.download_ctype(source, type(dst), name)
-        ctypes.memmove(ctypes.addressof(dst), ctypes.addressof(bounce), ctypes.sizeof(dst))
-        if move:
-            for k, v in self._gpu_buffers.items():
-                if v is source:
-                    self._gpu_buffers[k] = None
-
     def download_ctype(self, source, ty, name='other'):
         self._downloaded_bytes[name] += ctypes.sizeof(ty)
         out_buf = bytearray(ctypes.sizeof(ty))
         jit_engine.pycuda.driver.memcpy_dtoh(out_buf, source)
         return ty.from_buffer(out_buf)
 
-    def __get_cuda_buffer(self, struct_name):
+    def __get_cuda_arg(self, struct_name, arg_handler):
         gpu_buffer = self._gpu_buffers[struct_name]
 
-        # Param struct needs to be reuploaded every time because the values
-        # might have changed.
-        if gpu_buffer is None or struct_name == "_param_struct":
-            c_struct = getattr(self, struct_name)[0]
+        np_struct = getattr(self, struct_name)[1]
+        if gpu_buffer is None or gpu_buffer.array is not np_struct:
 
-            # Set private attribute to a new buffer
-            gpu_buffer = self.upload_ctype(c_struct, struct_name)
+            # 0-sized structures fail to upload use a small device buffer instead
+            gpu_buffer = arg_handler(np_struct) if np_struct.nbytes > 0 else jit_engine.pycuda.driver.mem_alloc(8)
+
             self._gpu_buffers[struct_name] = gpu_buffer
 
         return gpu_buffer
 
     @property
     def _cuda_param_struct(self):
-        return self.__get_cuda_buffer("_param_struct")
+        return self.__get_cuda_arg("_param_struct", jit_engine.pycuda.driver.In)
 
     @property
     def _cuda_state_struct(self):
-        return self.__get_cuda_buffer("_state_struct")
+        return self.__get_cuda_arg("_state_struct", jit_engine.pycuda.driver.InOut)
 
     @property
     def _cuda_data_struct(self):
-        return self.__get_cuda_buffer("_data_struct")
+        return self.__get_cuda_arg("_data_struct", jit_engine.pycuda.driver.InOut)
 
     @property
     def _cuda_conditions(self):
-        return self.__get_cuda_buffer("_conditions")
+        return self.__get_cuda_arg("_conditions", jit_engine.pycuda.driver.InOut)
 
     @property
     def _cuda_out(self):
         gpu_buffer = self._gpu_buffers["_out"]
         if gpu_buffer is None:
-            size = ctypes.sizeof(self._ct_vo)
-            gpu_buffer = jit_engine.pycuda.driver.mem_alloc(size)
+            gpu_buffer = jit_engine.pycuda.driver.Out(np.ctypeslib.as_array(self._ct_vo))
             self._gpu_buffers["_out"] = gpu_buffer
 
         return gpu_buffer
@@ -337,9 +327,6 @@ class CUDAExecution(Execution):
                                  self._cuda_out,
                                  threads=len(self._execution_contexts))
 
-        # Copy the result from the device
-        self.download_to(self._ct_vo, self._cuda_out, 'result')
-        self.download_to(self._state_struct[0], self._cuda_state_struct, 'state', move=True)
         return _convert_ctype_to_python(self._ct_vo)
 
 
@@ -666,10 +653,6 @@ class CompExecution(CUDAExecution):
                                       self._cuda_conditions,
                                       threads=len(self._execution_contexts))
 
-        # Copy the data structs from the device
-        self.download_to(self._data_struct[0], self._cuda_data_struct, 'data', move=True)
-        self.download_to(self._state_struct[0], self._cuda_state_struct, 'state', move=True)
-
     # Methods used to accelerate "Run"
     def _get_run_input_struct(self, inputs, num_input_sets, arg=3):
         # Callers that override input arg, should ensure that _bin_func is not None
@@ -794,10 +777,6 @@ class CompExecution(CUDAExecution):
                                      data_in, data_out, runs_count, input_count,
                                      threads=len(self._execution_contexts))
 
-        # Copy the data struct from the device
-        self.download_to(self._data_struct[0], self._cuda_data_struct, 'data', move=True)
-        self.download_to(self._state_struct[0], self._cuda_state_struct, 'state', move=True)
-
         ct_out = self.download_ctype(data_out, output_type, 'result')
         if len(self._execution_contexts) > 1:
             return _convert_ctype_to_python(ct_out)
@@ -853,11 +832,11 @@ class CompExecution(CUDAExecution):
             self._prepare_evaluate(inputs, num_input_sets, num_evaluations, all_results)
 
         # Output is allocated on device, but we need the ctype (out_ty).
-        cuda_args = (self.upload_ctype(comp_params[0], 'params'),
-                     self.upload_ctype(comp_state[0], 'state'),
+        cuda_args = (jit_engine.pycuda.driver.In(comp_params[1]),
+                     jit_engine.pycuda.driver.InOut(comp_state[1]),
                      jit_engine.pycuda.driver.mem_alloc(ctypes.sizeof(out_ty)),
                      self.upload_ctype(ct_inputs, 'input'),
-                     self.upload_ctype(comp_data[0], 'data'),
+                     jit_engine.pycuda.driver.InOut(comp_data[1]),
                      self.upload_ctype(ct_num_inputs, 'input'),
                     )
 
