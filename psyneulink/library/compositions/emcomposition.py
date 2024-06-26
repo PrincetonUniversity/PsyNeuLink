@@ -1675,7 +1675,7 @@ class EMComposition(AutodiffComposition):
         keys_weights = [i for i in parsed_field_weights if i != 0]
         self.num_keys = len(keys_weights)
         # Get indices of field_weights that specify keys:
-        self.key_indices = np.nonzero(field_weights)[0]
+        self.key_indices = np.nonzero(parsed_field_weights)[0]
 
         self.num_values = self.num_fields - self.num_keys
         if parsed_field_names:
