@@ -127,7 +127,7 @@ def pytest_runtest_teardown(item):
         # Clear Registry to have a stable reference for indexed suffixes of default names
         clear_registry(registry)
 
-    # gs.utilities.cached_hashable_graph_function.cache_clear()
+    gs.utilities.cached_hashable_graph_function.cache_clear()
 
     # Skip running the leak checker if the test is marked xfail.
     # XFAIL tests catch exceptions that references call frames
