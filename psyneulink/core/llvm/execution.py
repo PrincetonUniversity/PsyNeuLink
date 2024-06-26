@@ -263,14 +263,6 @@ class CUDAExecution(Execution):
         # CUDA uses the same function for single and multi run
         return self._bin_func
 
-    def upload_ctype(self, data, name='other'):
-        self._uploaded_bytes[name] += ctypes.sizeof(data)
-        if ctypes.sizeof(data) == 0:
-            # 0-sized structures fail to upload
-            # provide a small device buffer instead
-            return jit_engine.pycuda.driver.mem_alloc(4)
-        return jit_engine.pycuda.driver.to_device(bytes(data))
-
     def __get_cuda_arg(self, struct_name, arg_handler):
         gpu_buffer = self._gpu_buffers[struct_name]
 
@@ -548,20 +540,21 @@ class CompExecution(CUDAExecution):
     def _get_input_struct(self, inputs):
         # Either node or composition execute.
         # All execute functions expect inputs to be 3rd param.
-        c_input = self._bin_func.byref_arg_types[2]
+        c_input_type = self._bin_func.byref_arg_types[2]
 
         # Read provided input data and parse into an array (generator)
         if len(self._execution_contexts) > 1:
             assert len(self._execution_contexts) == len(inputs)
-            c_input = c_input * len(self._execution_contexts)
+            c_input_type = c_input_type * len(self._execution_contexts)
             input_data = (([x] for x in self._composition._build_variable_for_input_CIM(inp)) for inp in inputs)
         else:
             input_data = ([x] for x in self._composition._build_variable_for_input_CIM(inputs))
 
         if "stat" in self._debug_env:
-            print("Input struct size:", _pretty_size(ctypes.sizeof(c_input)),
+            print("Input struct size:", _pretty_size(ctypes.sizeof(c_input_type)),
                   "for", self._composition.name)
-        return c_input(*_tupleize(input_data))
+        c_input = c_input_type(*_tupleize(input_data))
+        return c_input, np.ctypeslib.as_array(c_input)
 
     def freeze_values(self):
         self.__frozen_vals = copy.deepcopy(self._data_struct[0])
@@ -584,7 +577,7 @@ class CompExecution(CUDAExecution):
         # Set bin node to make sure self._*struct works as expected
         self._set_bin_node(node)
         if inputs is not None:
-            inputs = self._get_input_struct(inputs)
+            inputs = self._get_input_struct(inputs)[0]
 
         assert inputs is not None or node is not self._composition.input_CIM
 
@@ -626,14 +619,14 @@ class CompExecution(CUDAExecution):
         if len(self._execution_contexts) > 1:
             self._bin_exec_multi_func.wrap_call(self._state_struct[0],
                                                 self._param_struct[0],
-                                                self._get_input_struct(inputs),
+                                                self._get_input_struct(inputs)[0],
                                                 self._data_struct[0],
                                                 self._conditions[0],
                                                 self._ct_len)
         else:
             self._bin_exec_func(self._state_struct[0],
                                 self._param_struct[0],
-                                self._get_input_struct(inputs),
+                                self._get_input_struct(inputs)[0],
                                 self._data_struct[0],
                                 self._conditions[0])
 
@@ -642,7 +635,7 @@ class CompExecution(CUDAExecution):
         # We need the binary function to be setup for it to work correctly.
         self._bin_exec_func.cuda_call(self._cuda_state_struct,
                                       self._cuda_param_struct,
-                                      self.upload_ctype(self._get_input_struct(inputs), 'input'),
+                                      jit_engine.pycuda.driver.In(self._get_input_struct(inputs)[1]),
                                       self._cuda_data_struct,
                                       self._cuda_conditions,
                                       threads=len(self._execution_contexts))
@@ -741,12 +734,11 @@ class CompExecution(CUDAExecution):
     def cuda_run(self, inputs, runs, num_input_sets):
         # Create input buffer
         if isgenerator(inputs):
-            inputs, runs = self._get_generator_run_input_struct(inputs, runs)
+            ct_inputs, runs = self._get_generator_run_input_struct(inputs, runs)
             assert num_input_sets == 0 or num_input_sets == sys.maxsize
-            num_input_sets = len(inputs)
+            num_input_sets = len(ct_inputs)
         else:
-            inputs = self._get_run_input_struct(inputs, num_input_sets)
-        data_in = self.upload_ctype(inputs, 'input')
+            ct_inputs = self._get_run_input_struct(inputs, num_input_sets)
 
         # Create output buffer
         output_type = (self._bin_run_func.byref_arg_types[4] * runs)
@@ -754,30 +746,26 @@ class CompExecution(CUDAExecution):
             output_type = output_type * len(self._execution_contexts)
 
         ct_out = output_type()
-        data_out = jit_engine.pycuda.driver.Out(np.ctypeslib.as_array(ct_out))
 
         # number of trials argument
-        runs_np = np.full(len(self._execution_contexts), runs, dtype=np.int32)
-        runs_count = jit_engine.pycuda.driver.InOut(runs_np)
-        self._uploaded_bytes['input'] += runs_np.nbytes
-        self._downloaded_bytes['input'] += runs_np.nbytes
-
-        # input_count argument
-        input_count = jit_engine.pycuda.driver.In(np.int32(num_input_sets))
-        self._uploaded_bytes['input'] += 4
+        np_runs = np.full(len(self._execution_contexts), runs, dtype=np.int32)
 
         self._bin_run_func.cuda_call(self._cuda_state_struct,
                                      self._cuda_param_struct,
                                      self._cuda_data_struct,
-                                     data_in, data_out, runs_count, input_count,
+                                     jit_engine.pycuda.driver.In(np.ctypeslib.as_array(ct_inputs)), # input
+                                     jit_engine.pycuda.driver.Out(np.ctypeslib.as_array(ct_out)),   # output
+                                     jit_engine.pycuda.driver.InOut(np_runs),                       # runs
+                                     jit_engine.pycuda.driver.In(np.int32(num_input_sets)),         # number of inputs
                                      threads=len(self._execution_contexts))
+
+        assert all(np_runs <= runs), "Composition ran more times than allowed: {}".format(runs)
 
         if len(self._execution_contexts) > 1:
             return _convert_ctype_to_python(ct_out)
         else:
             # Extract only #trials elements in case the run exited early
-            assert runs_np[0] <= runs, "Composition ran more times than allowed!"
-            return _convert_ctype_to_python(ct_out)[0:runs_np[0]]
+            return _convert_ctype_to_python(ct_out)[0:np_runs[0]]
 
     def _prepare_evaluate(self, inputs, num_input_sets, num_evaluations, all_results:bool):
         ocm = self._composition.controller
@@ -822,17 +810,17 @@ class CompExecution(CUDAExecution):
         return comp_params, comp_state, comp_data, ct_inputs, out_ty, ct_num_inputs
 
     def cuda_evaluate(self, inputs, num_input_sets, num_evaluations, all_results:bool=False):
-        comp_params, comp_state, comp_data, ct_inputs, out_ty, ct_num_inputs = \
+        comp_params, comp_state, comp_data, ct_inputs, out_ty, _ = \
             self._prepare_evaluate(inputs, num_input_sets, num_evaluations, all_results)
 
         ct_results = out_ty()
 
         cuda_args = (jit_engine.pycuda.driver.In(comp_params[1]),
                      jit_engine.pycuda.driver.InOut(comp_state[1]),
-                     jit_engine.pycuda.driver.Out(np.ctypeslib.as_array(ct_results)),
-                     self.upload_ctype(ct_inputs, 'input'),
-                     jit_engine.pycuda.driver.InOut(comp_data[1]),
-                     self.upload_ctype(ct_num_inputs, 'input'),
+                     jit_engine.pycuda.driver.Out(np.ctypeslib.as_array(ct_results)),   # results
+                     jit_engine.pycuda.driver.In(np.ctypeslib.as_array(ct_inputs)),     # inputs
+                     jit_engine.pycuda.driver.InOut(comp_data[1]),                      # composition data
+                     jit_engine.pycuda.driver.In(np.int32(num_input_sets)),             # number of inputs
                     )
 
         self.__bin_func.cuda_call(*cuda_args, threads=int(num_evaluations))
