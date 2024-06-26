@@ -8,7 +8,6 @@
 
 # ********************************************* Binary Execution Wrappers **************************************************************
 
-from collections import Counter
 import concurrent.futures
 import copy
 import ctypes
@@ -239,24 +238,6 @@ class CUDAExecution(Execution):
         self._gpu_buffers = {}
         for b in buffers:
             self._gpu_buffers["_" + b] = None
-        self._uploaded_bytes = Counter()
-        self._downloaded_bytes = Counter()
-
-    def __del__(self):
-        if "stat" in self._debug_env:
-            try:
-                name = self._bin_func.name
-            except AttributeError:
-                name = self._composition.name
-
-            for k, v in self._uploaded_bytes.items():
-                print("{} CUDA uploaded `{}': {}".format(name, k, _pretty_size(v)))
-            if len(self._uploaded_bytes) > 1:
-                print("{} CUDA uploaded `total': {}".format(name, _pretty_size(sum(self._uploaded_bytes.values()))))
-            for k, v in self._downloaded_bytes.items():
-                print("{} CUDA downloaded `{}': {}".format(name, k, _pretty_size(v)))
-            if len(self._downloaded_bytes) > 1:
-                print("{} CUDA downloaded `total': {}".format(name, _pretty_size(sum(self._downloaded_bytes.values()))))
 
     @property
     def _bin_func_multirun(self):
@@ -305,7 +286,6 @@ class CUDAExecution(Execution):
         # Create input argument
         new_var = np.asfarray(variable, dtype=self._vi_dty)
         data_in = jit_engine.pycuda.driver.In(new_var)
-        self._uploaded_bytes['input'] += new_var.nbytes
 
         self._bin_func.cuda_call(self._cuda_param_struct,
                                  self._cuda_state_struct,
