@@ -335,30 +335,30 @@ def construct_model(model_name:str=MODEL_NAME,
     RETRIEVED = ' [RETRIEVED]'
 
     # # EM encoding & retrieval  --------------------------------------------------------------------------------
-    # # state_input -> em (retrieval)
-    # EGO_comp.add_projection(MappingProjection(state_input_layer,
-    #                                           em.nodes[state_input_name + VALUE],
-    #                                           matrix=IDENTITY_MATRIX))
-    #
-    # # previous_state -> em (retrieval)
-    # EGO_comp.add_projection(MappingProjection(previous_state_layer,
-    #                                           em.nodes[previous_state_input_name + QUERY],
-    #                                           matrix=IDENTITY_MATRIX))
-    # # context -> em (retrieval)
-    # EGO_comp.add_projection(MappingProjection(context_layer,
-    #                                           em.nodes[context_name + QUERY],
-    #                                           matrix=IDENTITY_MATRIX))
-    #
-    # # Inputs to previous_state and context -------------------------------------------------------------------
-    # # state -> previous_layer
-    # EGO_comp.add_projection(MappingProjection(state_input_layer,
-    #                                           previous_state_layer,
-    #                                           matrix=IDENTITY_MATRIX))
-    # # state -> integrator_layer
-    # EGO_comp.add_projection(MappingProjection(state_input_layer,
-    #                                           integrator_layer,
-    #                                           matrix=IDENTITY_MATRIX))
-    #
+    # state_input -> em (retrieval)
+    EGO_comp.add_projection(MappingProjection(state_input_layer,
+                                              em.nodes[state_input_name + VALUE],
+                                              matrix=IDENTITY_MATRIX))
+
+    # previous_state -> em (retrieval)
+    EGO_comp.add_projection(MappingProjection(previous_state_layer,
+                                              em.nodes[previous_state_input_name + QUERY],
+                                              matrix=IDENTITY_MATRIX))
+    # context -> em (retrieval)
+    EGO_comp.add_projection(MappingProjection(context_layer,
+                                              em.nodes[context_name + QUERY],
+                                              matrix=IDENTITY_MATRIX))
+
+    # Inputs to previous_state and context -------------------------------------------------------------------
+    # state -> previous_layer
+    EGO_comp.add_projection(MappingProjection(state_input_layer,
+                                              previous_state_layer,
+                                              matrix=IDENTITY_MATRIX))
+    # state -> integrator_layer
+    EGO_comp.add_projection(MappingProjection(state_input_layer,
+                                              integrator_layer,
+                                              matrix=IDENTITY_MATRIX))
+
     # # integrator_layer -> context_layer (learnable)
     # EGO_comp.add_projection(MappingProjection(integrator_layer,
     #                                           context_layer,
@@ -369,25 +369,28 @@ def construct_model(model_name:str=MODEL_NAME,
     # EGO_comp.add_projection(MappingProjection(em.nodes[state_input_name + RETRIEVED],
     #                                           prediction_layer))
     #
-    EGO_comp.add_backpropagation_learning_pathway([state_input_layer,
-                                                   IDENTITY_MATRIX,
-                                                   integrator_layer,
-                                                   IDENTITY_MATRIX,
-                                                   context_layer,
-                                                   IDENTITY_MATRIX,
-                                                   em.nodes[state_input_name + VALUE]])
-    EGO_comp.add_linear_processing_pathway([state_input_layer,
-                                           IDENTITY_MATRIX,
-                                           previous_state_layer,
-                                           em.nodes[previous_state_input_name + QUERY]])
-    EGO_comp.add_backpropagation_learning_pathway([previous_state_layer,
-                                                   IDENTITY_MATRIX,
-                                                   em.nodes[previous_state_input_name + QUERY]])
+    # EGO_comp.add_backpropagation_learning_pathway([integrator_layer,
+    #                                                context_layer,
+    #                                                em.nodes[previous_state_input_name + QUERY]])
+    EGO_comp.add_backpropagation_learning_pathway([integrator_layer, context_layer])
+    EGO_comp.add_backpropagation_learning_pathway([context_layer,em.nodes[context_name + QUERY]])
+    # EGO_comp.add_backpropagation_learning_pathway([context_layer,em,prediction_layer])
     EGO_comp.add_backpropagation_learning_pathway([em.nodes[state_input_name + RETRIEVED],
-                                                       IDENTITY_MATRIX,
-                                                       prediction_layer])
-    EGO_comp.add_backpropagation_learning_pathway([em, prediction_layer])
+                                                   prediction_layer])
+    # EGO_comp.add_linear_processing_pathway([state_input_layer,
+    #                                        IDENTITY_MATRIX,
+    #                                        previous_state_layer,
+    #                                        em.nodes[previous_state_input_name + QUERY]])
+    # EGO_comp.add_backpropagation_learning_pathway([previous_state_layer,
+    #                                                IDENTITY_MATRIX,
+    #                                                em.nodes[previous_state_input_name + QUERY]])
+    # EGO_comp.add_backpropagation_learning_pathway([em.nodes[state_input_name + RETRIEVED],
+    #                                                    IDENTITY_MATRIX,
+    #                                                    prediction_layer])
+    # EGO_comp.add_backpropagation_learning_pathway([em, prediction_layer])
 
+    # Ensure EM is executed (to encode previous state and context, and predict current state)
+    #     before updating state and context
     EGO_comp.scheduler.add_condition(em, BeforeNodes(previous_state_layer, integrator_layer))
 
     # Validate construction
