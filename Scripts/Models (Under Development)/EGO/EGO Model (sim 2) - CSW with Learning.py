@@ -141,8 +141,8 @@ DISPLAY_MODEL = (                      # Only one of the following can be uncomm
 )
 RUN_MODEL = True                       # True => run the model
 # RUN_MODEL = False                      # False => don't run the model
-EXECUTION_MODE = ExecutionMode.Python
-# EXECUTION_MODE = ExecutionMode.PyTorch
+# EXECUTION_MODE = ExecutionMode.Python
+EXECUTION_MODE = ExecutionMode.PyTorch
 ANALYZE_RESULTS = False                # True => output analysis of results of run
 # REPORT_OUTPUT = ReportOutput.FULL     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_OUTPUT = ReportOutput.OFF     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
@@ -269,9 +269,10 @@ def construct_model(model_name:str=MODEL_NAME,
     state_input_layer = ProcessingMechanism(name=state_input_name, size=state_size)
     previous_state_layer = ProcessingMechanism(name=previous_state_input_name, size=previous_state_size)
     integrator_layer = RecurrentTransferMechanism(name=integrator_name,
-                                               size=integrator_size,
-                                               auto=1-integration_rate,
-                                               hetero=0.0)
+                                                  function=Tanh,
+                                                  size=integrator_size,
+                                                  auto=1-integration_rate,
+                                                  hetero=0.0)
     context_layer = ProcessingMechanism(name=context_name, size=context_size)
 
     em = EMComposition(name=em_name,
@@ -291,7 +292,7 @@ def construct_model(model_name:str=MODEL_NAME,
                                       previous_state_retrieval_weight,
                                       context_retrieval_weight
                                       ),
-                       enable_learning=True,
+                       # enable_learning=True,
                        learn_field_weights=False
                        )
 
@@ -302,92 +303,80 @@ def construct_model(model_name:str=MODEL_NAME,
     # -------------------------------------------------  EGO Composition  --------------------------------------------
     # ----------------------------------------------------------------------------------------------------------------
 
-    EGO_comp = Composition(name=model_name,
-                           # # Terminate a Task.PREDICT trial after prediction_layer executes if a reward is retrieved
-                           # termination_processing={
-                           #     # TimeScale.TRIAL: And(Condition(lambda: task_input_layer.value == Task.PREDICT),
-                           #     #                      Condition(lambda: retrieved_reward_layer.value),
-                           #     #                      JustRan(prediction_layer))}
-                           #     # CRASHES:
-                           #     # TimeScale.TRIAL: Any(And(Condition(lambda: task_input_layer.value == Task.EXPERIENCE),
-                           #     #                          JustRan(em)),
-                           #     #                      And(Condition(lambda: task_input_layer.value == Task.PREDICT),
-                           #     #                          Condition(lambda: retrieved_reward_layer.value),
-                           #     #                          JustRan(prediction_layer)))}
-                           #     TimeScale.TRIAL: Any(And(Condition(lambda: task_input_layer.value == Task.EXPERIENCE),
-                           #                              AllHaveRun()),
-                           #                          And(Condition(lambda: task_input_layer.value == Task.PREDICT),
-                           #                              Condition(lambda: retrieved_reward_layer.value),
-                           #                              AllHaveRun()))}
-                           )
+    # EGO_comp = AutodiffComposition(name=model_name,
+    #                        # # Terminate a Task.PREDICT trial after prediction_layer executes if a reward is retrieved
+    #                        # termination_processing={
+    #                        #     # TimeScale.TRIAL: And(Condition(lambda: task_input_layer.value == Task.PREDICT),
+    #                        #     #                      Condition(lambda: retrieved_reward_layer.value),
+    #                        #     #                      JustRan(prediction_layer))}
+    #                        #     # CRASHES:
+    #                        #     # TimeScale.TRIAL: Any(And(Condition(lambda: task_input_layer.value == Task.EXPERIENCE),
+    #                        #     #                          JustRan(em)),
+    #                        #     #                      And(Condition(lambda: task_input_layer.value == Task.PREDICT),
+    #                        #     #                          Condition(lambda: retrieved_reward_layer.value),
+    #                        #     #                          JustRan(prediction_layer)))}
+    #                        #     TimeScale.TRIAL: Any(And(Condition(lambda: task_input_layer.value == Task.EXPERIENCE),
+    #                        #                              AllHaveRun()),
+    #                        #                          And(Condition(lambda: task_input_layer.value == Task.PREDICT),
+    #                        #                              Condition(lambda: retrieved_reward_layer.value),
+    #                        #                              AllHaveRun()))}
+    #                        )
 
     # Nodes not included in (decision output) Pathway specified above
-    EGO_comp.add_nodes([state_input_layer,
-                        previous_state_layer,
-                        integrator_layer,
-                        context_layer,
-                        em,
-                        prediction_layer])
+    # EGO_comp.add_nodes([state_input_layer,
+    #                     previous_state_layer,
+    #                     integrator_layer,
+    #                     context_layer,
+    #                     em,
+    #                     prediction_layer])
 
     # Projections:
     QUERY = ' [QUERY]'
     VALUE = ' [VALUE]'
     RETRIEVED = ' [RETRIEVED]'
 
-    # # EM encoding & retrieval  --------------------------------------------------------------------------------
-    # state_input -> em (retrieval)
-    EGO_comp.add_projection(MappingProjection(state_input_layer,
-                                              em.nodes[state_input_name + VALUE],
-                                              matrix=IDENTITY_MATRIX))
+    state_to_em_pathway = [state_input_layer, IDENTITY_MATRIX, em.nodes[state_input_name + VALUE]]
+    previous_state_to_em_pathway = [previous_state_layer, IDENTITY_MATRIX, em.nodes[previous_state_input_name + QUERY]]
+    state_to_previous_state_pathway = [state_input_layer, IDENTITY_MATRIX, previous_state_layer]
+    state_to_integrator_pathway = [state_input_layer,
+                                   np.eye(STATE_SIZE) * integration_rate,
+                                   integrator_layer]
+    context_learning_pathway = [integrator_layer,
+                                context_layer,
+                                MappingProjection(context_layer, em.nodes[context_name + QUERY]),
+                                em,
+                                MappingProjection(em.nodes[state_input_name + RETRIEVED], prediction_layer),
+                                prediction_layer]
 
-    # previous_state -> em (retrieval)
-    EGO_comp.add_projection(MappingProjection(previous_state_layer,
-                                              em.nodes[previous_state_input_name + QUERY],
-                                              matrix=IDENTITY_MATRIX))
-    # context -> em (retrieval)
-    EGO_comp.add_projection(MappingProjection(context_layer,
-                                              em.nodes[context_name + QUERY],
-                                              matrix=IDENTITY_MATRIX))
+    # FIX: VERSION THAT SHOULD WORK: BUT FAILS TO IMPLEMENT STATE -> EM and PREVIOUS_STATE -> EM PROJECTIONS
+    EGO_comp = AutodiffComposition([state_to_em_pathway,
+                                    previous_state_to_em_pathway,
+                                    state_to_previous_state_pathway,
+                                    state_to_integrator_pathway,
+                                    context_learning_pathway],
+                                   name=model_name)
 
-    # Inputs to previous_state and context -------------------------------------------------------------------
-    # state -> previous_layer
-    EGO_comp.add_projection(MappingProjection(state_input_layer,
-                                              previous_state_layer,
-                                              matrix=IDENTITY_MATRIX))
-    # state -> integrator_layer
-    EGO_comp.add_projection(MappingProjection(state_input_layer,
-                                              integrator_layer,
-                                              matrix=IDENTITY_MATRIX))
+    # FIX: ALT VERSION using add_linear_processing_pathway
+    # EGO_comp = AutodiffComposition(pathways=[context_learning_pathway], name=model_name)
+    # EGO_comp.add_linear_processing_pathway(state_to_em_pathway)
+    # EGO_comp.add_linear_processing_pathway(previous_state_to_em_pathway)
+    # EGO_comp.add_linear_processing_pathway(state_to_previous_state_pathway)
+    # EGO_comp.add_linear_processing_pathway(state_to_integrator_pathway)
 
-    # # integrator_layer -> context_layer (learnable)
-    # EGO_comp.add_projection(MappingProjection(integrator_layer,
-    #                                           context_layer,
-    #                                           matrix=IDENTITY_MATRIX))
-    #
-    # # Response pathway ---------------------------------------------------------------------------------------
-    # # retrieved state -> prediction_layer
-    # EGO_comp.add_projection(MappingProjection(em.nodes[state_input_name + RETRIEVED],
-    #                                           prediction_layer))
-    #
-    # EGO_comp.add_backpropagation_learning_pathway([integrator_layer,
-    #                                                context_layer,
-    #                                                em.nodes[previous_state_input_name + QUERY]])
-    EGO_comp.add_backpropagation_learning_pathway([integrator_layer, context_layer])
-    EGO_comp.add_backpropagation_learning_pathway([context_layer,em.nodes[context_name + QUERY]])
-    # EGO_comp.add_backpropagation_learning_pathway([context_layer,em,prediction_layer])
-    EGO_comp.add_backpropagation_learning_pathway([em.nodes[state_input_name + RETRIEVED],
-                                                   prediction_layer])
-    # EGO_comp.add_linear_processing_pathway([state_input_layer,
-    #                                        IDENTITY_MATRIX,
-    #                                        previous_state_layer,
-    #                                        em.nodes[previous_state_input_name + QUERY]])
-    # EGO_comp.add_backpropagation_learning_pathway([previous_state_layer,
-    #                                                IDENTITY_MATRIX,
-    #                                                em.nodes[previous_state_input_name + QUERY]])
-    # EGO_comp.add_backpropagation_learning_pathway([em.nodes[state_input_name + RETRIEVED],
-    #                                                    IDENTITY_MATRIX,
-    #                                                    prediction_layer])
-    # EGO_comp.add_backpropagation_learning_pathway([em, prediction_layer])
+
+    # FIX: ALT VERSION using manual adds
+    # EGO_comp = AutodiffComposition(name=model_name)
+    # EGO_comp.add_nodes([state_input_layer, previous_state_layer, integrator_layer, context_layer, em, prediction_layer])
+    # EGO_comp.add_projection(MappingProjection(state_input_layer,
+    #                                           em.nodes[state_input_name + VALUE]))
+    # EGO_comp.add_projection(MappingProjection(previous_state_layer,
+    #                                           em.nodes[previous_state_input_name + QUERY]))
+    # EGO_comp.add_projection(MappingProjection(state_input_layer,
+    #                                           integrator_layer))
+    # EGO_comp.add_backpropagation_learning_pathway(context_learning_pathway)
+
+
+    EGO_comp.show_graph(show_learning=True)
 
     # Ensure EM is executed (to encode previous state and context, and predict current state)
     #     before updating state and context

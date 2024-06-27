@@ -281,9 +281,10 @@ def construct_model(model_name:str=MODEL_NAME,
     state_input_layer = ProcessingMechanism(name=state_input_name, size=state_size)
     previous_state_layer = ProcessingMechanism(name=previous_state_input_name, size=previous_state_size)
     integrator_layer = RecurrentTransferMechanism(name=integrator_name,
-                                               size=integrator_size,
-                                               auto=1-integration_rate,
-                                               hetero=0.0)
+                                                  function=Tanh,
+                                                  size=integrator_size,
+                                                  auto=1-integration_rate,
+                                                  hetero=0.0)
     context_layer = ProcessingMechanism(name=context_name, size=context_size)
 
     em = EMComposition(name=em_name,
@@ -367,7 +368,7 @@ def construct_model(model_name:str=MODEL_NAME,
     # state -> integrator_layer
     EGO_comp.add_projection(MappingProjection(state_input_layer,
                                               integrator_layer,
-                                              matrix=IDENTITY_MATRIX))
+                                              matrix=np.eye(STATE_SIZE) * integration_rate))
 
     # integrator_layer -> context_layer (learnable)
     EGO_comp.add_projection(MappingProjection(integrator_layer,
