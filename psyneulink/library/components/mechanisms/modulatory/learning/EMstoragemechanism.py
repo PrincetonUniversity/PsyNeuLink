@@ -320,7 +320,7 @@ class EMStorageMechanism(LearningMechanism):
 
     decay_rate : float : default 0.0
         specifies the rate at which `entries <EMStorageMechanism_Entry>` in the `memory_matrix
-        <EMStorageMechanism.memory_matrix>` decays (see `decay_rate <EMStorageMechanism.decay_rate>` for additional
+        <EMStorageMechanism.memory_matrix>` decay (see `decay_rate <EMStorageMechanism.decay_rate>` for additional
         details).
 
     Attributes
@@ -743,7 +743,7 @@ class EMStorageMechanism(LearningMechanism):
          - call function for each LearningSignal to decay existing memory and assign input to weakest entry
         EMStorage function:
          - decay existing memories
-         - assign input to weakest entry (given index for passed from EMStorageMechanism)
+         - assign input to weakest entry (given index passed from EMStorageMechanism)
 
         :return: List[2d np.array] self.learning_signal
         """
@@ -780,6 +780,10 @@ class EMStorageMechanism(LearningMechanism):
         if field_weights is not None:
             field_norms *= field_weights
         row_norms = np.sum(field_norms, axis=1)
+        # IMPLEMENTATION NOTE:
+        #  the following will give the lowest index in case of a tie;
+        #  this means that if memory is initialized with all zeros,
+        #  it will be occupied in row order
         idx_of_weakest_memory = np.argmin(row_norms)
 
         value = []

@@ -287,8 +287,9 @@ def construct_model(model_name:str=MODEL_NAME,
                        memory_template=[[0] * state_size,   # state
                                         [0] * state_size,   # previous state
                                         [0] * state_size],  # context
-                       memory_fill=(0,.01),
+                       # memory_fill=(0,.01),
                        memory_capacity=MEMORY_CAPACITY,
+                       memory_decay_rate=0,
                        softmax_gain=1.0,
                        # Input Nodes:
                        field_names=[state_input_name,
@@ -398,6 +399,8 @@ if __name__ == '__main__':
         print(f'Constructing {MODEL_NAME}')
         model = construct_model()
         assert 'DEBUGGING BREAK POINT'
+        # print(model.scheduler.consideration_queue)
+        # gs.output_graph_image(model.scheduler.graph, 'EGO_comp-scheduler.png')
 
     if DISPLAY_MODEL is not None:
         if model:
@@ -409,14 +412,10 @@ if __name__ == '__main__':
         # print("MODEL NOT YET FULLY EXECUTABLE")
         print(f'Running {MODEL_NAME}')
         model.run(inputs={STATE_INPUT_LAYER_NAME:INPUTS},
-                  report_output=REPORT_OUTPUT,
-                  report_progress=REPORT_PROGRESS
+                  # report_output=REPORT_OUTPUT,
+                  # report_progress=REPORT_PROGRESS
                   )
 
         if PRINT_RESULTS:
             print("MODEL NOT YET FULLY EXECUTABLE SO NO RESULTS")
-            # print(f"Predicted reward for last stimulus: {model.results}")
     #endregion
-
-    # print(model.scheduler.consideration_queue)
-    # gs.output_graph_image(model.scheduler.graph, 'EGO_comp-scheduler.png')
