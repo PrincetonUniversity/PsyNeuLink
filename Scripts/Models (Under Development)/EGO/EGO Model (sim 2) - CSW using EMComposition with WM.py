@@ -7,6 +7,8 @@
 
 # TODO:
 
+# REPLACE INTEGRATOR RECURRENTTRANSFERMECHANISM WITH TRANSFERMECHANISM IN INTEGRATOR MODE
+
 # ADD PREVIOUS STATES
 # ADD next_state to EM and control to support that
 # - CONTROL FLOW:
@@ -142,7 +144,7 @@ from psyneulink.core.scheduling.condition import Any, And, AllHaveRun, AtRunStar
 
 # Settings for running script:
 
-MEMORY_CAPACITY = 100
+MEMORY_CAPACITY = 5
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = (                      # Only one of the following can be uncommented:
     None                             # suppress display of model
@@ -151,8 +153,8 @@ DISPLAY_MODEL = (                      # Only one of the following can be uncomm
 )
 RUN_MODEL = True                       # True => run the model
 # RUN_MODEL = False                      # False => don't run the model
-# EXECUTION_MODE = ExecutionMode.Python
-EXECUTION_MODE = ExecutionMode.PyTorch
+EXECUTION_MODE = ExecutionMode.Python
+# EXECUTION_MODE = ExecutionMode.PyTorch
 ANALYZE_RESULTS = False                # True => output analysis of results of run
 # REPORT_OUTPUT = ReportOutput.FULL     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_OUTPUT = ReportOutput.OFF     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
@@ -172,11 +174,10 @@ model_params = dict(
     previous_state_d = 11, # length of state vector
     integrator_d = 11, # length of integrator vector
     context_d = 11, # length of context vector
-    self_excitation = .25, # rate at which old context is carried over to new context
-    integration_rate = .5, # rate at which state is integrated into new context
+    integration_rate = .69, # rate at which state is integrated into new context
     state_weight = .5, # weight of the state used during memory retrieval
-    context_weight = .3, # weight of the context used during memory retrieval
-    temperature = .05 # temperature of the softmax used during memory retrieval (smaller means more argmax-like
+    context_weight = .5, # weight of the context used during memory retrieval
+    temperature = .01 # temperature of the softmax used during memory retrieval (smaller means more argmax-like
 )
 
 # Fixed (structural) parameters:
@@ -228,7 +229,9 @@ RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec
 # Task environment:
 import Environment
 CURRICULUM_TYPE = 'Blocked'     # 'Blocked' or 'Interleaved'
-INPUTS = Environment.generate_dataset(condition=CURRICULUM_TYPE).xs.numpy()
+INPUTS = Environment.generate_dataset(condition=CURRICULUM_TYPE).xs.numpy()[:5]
+# INPUTS = [env_inputs[i][:10] for i in range(len(env_inputs))]
+
 
 #endregion
 
@@ -368,7 +371,8 @@ def construct_model(model_name:str=MODEL_NAME,
 
     # integrator_layer -> context_layer (learnable)
     EGO_comp.add_projection(MappingProjection(integrator_layer,
-                                              context_layer))
+                                              context_layer,
+                                              matrix=IDENTITY_MATRIX))
 
     # Response pathway ---------------------------------------------------------------------------------------
     # retrieved state -> prediction_layer
