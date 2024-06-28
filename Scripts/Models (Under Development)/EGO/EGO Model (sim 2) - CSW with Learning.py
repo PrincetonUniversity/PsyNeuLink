@@ -313,6 +313,7 @@ def construct_model(model_name:str=MODEL_NAME,
     VALUE = ' [VALUE]'
     RETRIEVED = ' [RETRIEVED]'
 
+    # Pathways
     state_to_em_pathway = [state_input_layer,
                            MappingProjection(state_input_layer, em.nodes[state_input_name+VALUE]),
                            em]
@@ -330,6 +331,7 @@ def construct_model(model_name:str=MODEL_NAME,
                                 MappingProjection(em.nodes[state_input_name + RETRIEVED], prediction_layer),
                                 prediction_layer]
 
+    # Composition
     EGO_comp = AutodiffComposition([state_to_previous_state_pathway,
                                     state_to_integrator_pathway,
                                     state_to_em_pathway,
