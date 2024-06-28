@@ -321,7 +321,7 @@ def construct_model(model_name:str=MODEL_NAME,
                                     em]
     state_to_previous_state_pathway = [state_input_layer, previous_state_layer]
     state_to_integrator_pathway = [state_input_layer,
-                                   # np.eye(STATE_SIZE) * integration_rate,
+                                   np.eye(STATE_SIZE) * integration_rate,
                                    integrator_layer]
     context_learning_pathway = [integrator_layer,
                                 context_layer,
