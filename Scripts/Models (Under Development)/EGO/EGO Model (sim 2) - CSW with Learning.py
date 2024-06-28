@@ -314,16 +314,16 @@ def construct_model(model_name:str=MODEL_NAME,
     RETRIEVED = ' [RETRIEVED]'
 
     # Pathways
+    state_to_previous_state_pathway = [state_input_layer, previous_state_layer]
+    state_to_integrator_pathway = [state_input_layer,
+                                   np.eye(STATE_SIZE) * integration_rate,
+                                   integrator_layer]
     state_to_em_pathway = [state_input_layer,
                            MappingProjection(state_input_layer, em.nodes[state_input_name+VALUE]),
                            em]
     previous_state_to_em_pathway = [previous_state_layer,
                                     MappingProjection(previous_state_layer, em.nodes[previous_state_input_name+QUERY]),
                                     em]
-    state_to_previous_state_pathway = [state_input_layer, previous_state_layer]
-    state_to_integrator_pathway = [state_input_layer,
-                                   np.eye(STATE_SIZE) * integration_rate,
-                                   integrator_layer]
     context_learning_pathway = [integrator_layer,
                                 context_layer,
                                 MappingProjection(context_layer, em.nodes[context_name + QUERY]),
