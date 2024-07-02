@@ -1090,10 +1090,11 @@ def _setup_philox_rand_int32(ctx, state_ty, gen_int64):
     buffered_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(3)])
     has_buffered_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(5)])
     has_buffered = builder.load(has_buffered_ptr)
-    with builder.if_then(has_buffered):
+    has_buffered_cond = builder.icmp_unsigned("!=", has_buffered, has_buffered.type(0))
+    with builder.if_then(has_buffered_cond):
         buffered = builder.load(buffered_ptr)
         builder.store(buffered, out)
-        builder.store(has_buffered.type(False), has_buffered_ptr)
+        builder.store(has_buffered.type(0), has_buffered_ptr)
         builder.ret_void()
 
 
@@ -1107,7 +1108,7 @@ def _setup_philox_rand_int32(ctx, state_ty, gen_int64):
     val_hi = builder.lshr(val, val.type(val.type.width // 2))
     val_hi = builder.trunc(val_hi, buffered_ptr.type.pointee)
     builder.store(val_hi, buffered_ptr)
-    builder.store(has_buffered.type(True), has_buffered_ptr)
+    builder.store(has_buffered.type(1), has_buffered_ptr)
 
     builder.ret_void()
 
@@ -2048,7 +2049,7 @@ def get_philox_state_struct(ctx):
         ir.ArrayType(int64_ty, _PHILOX_DEFAULT_BUFFER_SIZE),  #  pre-gen buffer
         ctx.int32_ty,  #  the other half of random 64 bit int
         int16_ty,      #  buffer pos
-        ctx.bool_ty,   #  has uint buffered
+        int16_ty,      #  has uint buffered
         int64_ty])     #  seed
 
 
