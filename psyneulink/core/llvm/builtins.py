@@ -510,9 +510,9 @@ def _setup_mt_rand_init_scalar(ctx, state_ty):
     builder.store(seed_lo, a_0)
 
     # clear gauss helpers
-    last_g_avail = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+    last_g_avail = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(3)])
     builder.store(last_g_avail.type.pointee(0), last_g_avail)
-    last_g = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(3)])
+    last_g = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
     builder.store(last_g.type.pointee(0), last_g)
 
     with helpers.for_loop(builder,
@@ -532,8 +532,8 @@ def _setup_mt_rand_init_scalar(ctx, state_ty):
         val = b.and_(val, val.type(0xffffffff))
         b.store(val, a_i)
 
-    pidx = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
-    builder.store(pidx.type.pointee(_MERSENNE_N), pidx)
+    idx_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+    builder.store(idx_ptr.type.pointee(_MERSENNE_N), idx_ptr)
     seed_p = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(4)])
     builder.store(seed, seed_p)
     builder.ret_void()
@@ -641,8 +641,8 @@ def _setup_mt_rand_integer(ctx, state_ty):
     state, out = builder.function.args
 
     array = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
-    pidx = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
-    idx = builder.load(pidx)
+    idx_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+    idx = builder.load(idx_ptr)
 
     cond = builder.icmp_signed(">=", idx, ctx.int32_ty(_MERSENNE_N))
     with builder.if_then(cond, likely=False):
@@ -703,16 +703,16 @@ def _setup_mt_rand_integer(ctx, state_ty):
 
             b.store(val, pkk)
 
-        builder.store(pidx.type.pointee(0), pidx)
+        builder.store(idx_ptr.type.pointee(0), idx_ptr)
 
     # Get pointer and update index
-    idx = builder.load(pidx)
-    pval = builder.gep(array, [ctx.int32_ty(0), idx])
+    idx = builder.load(idx_ptr)
+    val_ptr = builder.gep(array, [ctx.int32_ty(0), idx])
     idx = builder.add(idx, idx.type(1))
-    builder.store(idx, pidx)
+    builder.store(idx, idx_ptr)
 
     # Load and temper
-    val = builder.load(pval)
+    val = builder.load(val_ptr)
     tmp = builder.lshr(val, val.type(11))
     val = builder.xor(val, tmp)
 
@@ -793,15 +793,15 @@ def _setup_mt_rand_normal(ctx, state_ty, gen_float):
     builder = _setup_builtin_func_builder(ctx, "mt_rand_normal", (state_ty.as_pointer(), ctx.float_ty.as_pointer()))
     state, out = builder.function.args
 
-    p_last = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(3)])
-    p_last_avail = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
-    last_avail = builder.load(p_last_avail)
+    last_g_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+    last_g_avail_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(3)])
+    last_g_avail = builder.load(last_g_avail_ptr)
 
-    cond = builder.icmp_signed("==", last_avail, ctx.int32_ty(1))
+    cond = builder.icmp_signed("==", last_g_avail, last_g_avail.type(1))
     with builder.if_then(cond, likely=False):
-        builder.store(builder.load(p_last), out)
-        builder.store(ctx.float_ty(0), p_last)
-        builder.store(p_last_avail.type.pointee(0), p_last_avail)
+        builder.store(builder.load(last_g_ptr), out)
+        builder.store(last_g_ptr.type.pointee(0), last_g_ptr)
+        builder.store(last_g_avail_ptr.type.pointee(0), last_g_avail_ptr)
         builder.ret_void()
 
     loop_block = builder.append_basic_block("gen_loop_gauss")
@@ -844,18 +844,22 @@ def _setup_mt_rand_normal(ctx, state_ty, gen_float):
     builder.store(val, out)
 
     next_val = builder.fmul(f, x1)
-    builder.store(next_val, p_last)
-    builder.store(p_last_avail.type.pointee(1), p_last_avail)
+    builder.store(next_val, last_g_ptr)
+    builder.store(last_g_avail_ptr.type.pointee(1), last_g_avail_ptr)
 
     builder.ret_void()
 
 
 def get_mersenne_twister_state_struct(ctx):
+    assert _MERSENNE_N % 2 == 0
+
+    int16_ty = ir.IntType(16)
+
     return ir.LiteralStructType([
         ir.ArrayType(ctx.int32_ty, _MERSENNE_N),  # array
-        ctx.int32_ty,   # index
-        ctx.int32_ty,   # last_gauss available
         ctx.float_ty,   # last_gauss
+        int16_ty,       # index
+        int16_ty,       # last_gauss available
         ctx.int32_ty])  # used seed
 
 
