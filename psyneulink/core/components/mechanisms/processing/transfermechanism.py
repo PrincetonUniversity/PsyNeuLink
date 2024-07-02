@@ -1536,7 +1536,14 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         m_params, builder = self._gen_llvm_param_ports_for_obj(
                 self, m_base_params, ctx, builder, m_base_params, m_state, m_in)
+
         threshold_ptr = ctx.get_param_or_state_ptr(builder, self, "termination_threshold", param_struct_ptr=m_params)
+        current_mech_value_ptr = ctx.get_param_or_state_ptr(builder, self, "value", state_struct_ptr=m_state)
+        measure_ptrs = ctx.get_param_or_state_ptr(builder,
+                                                  self,
+                                                  "termination_measure",
+                                                  param_struct_ptr=m_base_params,
+                                                  state_struct_ptr=m_state)
 
         if isinstance(threshold_ptr.type.pointee, pnlvm.ir.LiteralStructType):
 
@@ -1552,9 +1559,15 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # Extract value to compare with threshold above
         cmp_val_ptr = builder.alloca(threshold.type, name="is_finished_threshold")
-        current_mech_value_ptr = ctx.get_param_or_state_ptr(builder, self, "value", state_struct_ptr=m_state)
 
-        if self.termination_measure is max:
+        is_in_params = "termination_measure" in self.llvm_param_ids
+        is_in_state = "termination_measure" in self.llvm_state_ids
+
+        if not is_in_params and not is_in_state:
+
+            # This can be any builtint function, but currently only max() is supported
+            assert measure_ptrs is None
+            assert self.termination_measure is max
             assert self._termination_measure_num_items_expected == 1
 
             # Get inside of the structure
@@ -1569,10 +1582,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 max_val = b.select(cond, test_val, max_val)
                 b.store(max_val, cmp_val_ptr)
 
-            assert "termination_measure" not in self.llvm_param_ids, \
-                "'termination_measure' in {}: {}".format(self.name, pnlvm.helpers.get_param_ptr(builder, self, m_base_params, "termination_measure").type.pointee)
-
-        elif isinstance(self.termination_measure, Function):
+        elif is_in_params and is_in_state:
 
             expected = np.empty_like([self.defaults.value[0], self.defaults.value[0]])
             got = np.empty_like(self.termination_measure.defaults.variable)
@@ -1585,11 +1595,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 self.termination_measure.defaults.variable = expected
 
             func = ctx.import_llvm_function(self.termination_measure)
-            func_params, func_state = ctx.get_param_or_state_ptr(builder,
-                                                                 self,
-                                                                 "termination_measure",
-                                                                 param_struct_ptr=m_base_params,
-                                                                 state_struct_ptr=m_state)
+            func_params, func_state = measure_ptrs
             func_in = builder.alloca(func.args[2].type.pointee, name="termination_func_in")
 
             # Populate input
@@ -1606,9 +1612,11 @@ class TransferMechanism(ProcessingMechanism_Base):
 
             builder.call(func, [func_params, func_state, func_in, cmp_val_ptr])
 
-        elif isinstance(self.termination_measure, TimeScale):
+        elif is_in_params and not is_in_state:
+
             num_executions_array_ptr = ctx.get_param_or_state_ptr(builder, self, "num_executions", state_struct_ptr=m_state)
-            elem_ptr = builder.gep(num_executions_array_ptr, [ctx.int32_ty(0), ctx.int32_ty(self.termination_measure.value)])
+            index = pnlvm.helpers.load_extract_scalar_array_one(builder, measure_ptrs)
+            elem_ptr = builder.gep(num_executions_array_ptr, [ctx.int32_ty(0), index])
             elem_val = builder.sitofp(builder.load(elem_ptr), cmp_val_ptr.type.pointee)
             builder.store(elem_val, cmp_val_ptr)
 
