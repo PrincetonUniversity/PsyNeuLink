@@ -549,6 +549,7 @@ class AutodiffComposition(Composition):
             while len(queue) > 0:
                 node, input_port, current_comp = queue.popleft()
 
+                # node is nested Composition that is an INPUT node of the immediate outer Composition
                 if (isinstance(node, Composition) and node is not self
                         and any(isinstance(proj.sender.owner, CompositionInterfaceMechanism)
                                 for proj in node.afferents)):
@@ -680,7 +681,6 @@ class AutodiffComposition(Composition):
             for pathway in pathways:
                 self.add_backpropagation_learning_pathway(pathway=pathway,
                                                           loss_spec=self.loss_spec)
-        assert True
 
     # CLEANUP: move some of what's done in the methods below to a "validate_params" type of method
     @handle_external_context()

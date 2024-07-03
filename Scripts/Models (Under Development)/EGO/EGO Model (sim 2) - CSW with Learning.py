@@ -26,6 +26,17 @@
 #    - ADD PROJECTION OF CURRENT STATE TO TARGET (GOTTEN FROM LEARNING COMPONENTS)
 #    - DEBUG LEARNING
 # PNL STUFF:
+#    - BUG:
+#        ? autodiffcomposition LINE 538: infinite while loop
+#        ? try taking out the integrator layer and see if it works
+#        ? try removing learnable attribute from projections to STORE node
+#        ? STORE node shows up multiple times in queue (but should be existing tests for convergence in nested)
+#        ? divergengence of STATE to PREVIOUS_STATE and STATE to EM projections confuses _get_backprop_pathway
+#           when traversing EM.input_CIM projections in depth part of search (since
+#           STATE->PREVIOUS_STATE->PREVIOUS_STATE [QUERY] is a valid path) even though the only one wanted for learning
+#           is the direct STATE->EM->STATE [VALUE] projection
+#           (see _get_backprop_pathway in AutodiffComposition, LINE 591 onward)
+#    - ADD COMMENT TO autodiffcomposition LINE 552 explaining what the subsquent block of code does
 #    - WRITE METHOD IN AUTODIFFCOMPOSITION to show_learning in show_graph()
 #    - DOCUMENT API FOR SPECIFYING PROJECTIONS TO NODES OF NESTED COMPOSITION
 #      (VIZ, *HAVE* TO EXPLICILTY SPECIFY PROJECTIONS TO NODES OF NESTED COMPOSITION AND ALSO INCLUDE THE NESTED COMP)
@@ -135,7 +146,6 @@ from enum import IntEnum
 
 from psyneulink import *
 from psyneulink._typing import Union, Literal
-from psyneulink.core.scheduling.condition import Any, And, AllHaveRun, AtRunStart
 
 # Settings for running script:
 
@@ -278,6 +288,10 @@ def construct_model(model_name:str=MODEL_NAME,
                                                   size=integrator_size,
                                                   auto=1-integration_rate,
                                                   hetero=0.0)
+    # integrator_layer = TransferMechanism(name=integrator_name,
+    #                                               function=Tanh,
+    #                                               size=integrator_size
+    #                                      )
     context_layer = ProcessingMechanism(name=context_name, size=context_size)
 
     em = EMComposition(name=em_name,
