@@ -873,7 +873,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
 
 
         iter_ptr = builder.alloca(ctx.int32_ty, name="iter_counter")
-        builder.store(ctx.int32_ty(0), iter_ptr)
+        builder.store(iter_ptr.type.pointee(0), iter_ptr)
 
         # Start the main loop structure
         loop_condition = builder.append_basic_block(name="scheduling_loop_condition")
@@ -964,12 +964,12 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
         builder.block.name = "update_iter_count"
         # Increment number of iterations
         iters = builder.load(iter_ptr, name="iterw")
-        iters = builder.add(iters, ctx.int32_ty(1), name="iterw_inc")
+        iters = builder.add(iters, iters.type(1), name="iterw_inc")
         builder.store(iters, iter_ptr)
 
         max_iters = len(composition.scheduler.consideration_queue)
         completed_pass = builder.icmp_unsigned("==", iters,
-                                               ctx.int32_ty(max_iters),
+                                               iters.type(max_iters),
                                                name="completed_pass")
         # Increment pass and reset time step
         with builder.if_then(completed_pass):
