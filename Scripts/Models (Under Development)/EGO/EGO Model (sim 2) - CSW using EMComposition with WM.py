@@ -171,7 +171,6 @@ ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation
 # PyTorch Version Parameters:
 model_params = dict(
     state_d = 11, # length of state vector
-    previous_state_d = 11, # length of state vector
     integrator_d = 11, # length of integrator vector
     context_d = 11, # length of context vector
     integration_rate = .69, # rate at which state is integrated into new context
@@ -203,7 +202,6 @@ EMFieldsIndex = IntEnum('EMFields',
 
 # Layer sizes:
 STATE_SIZE = model_params['state_d']  # length of state vector
-PREVIOUS_STATE_SIZE = model_params['previous_state_d']  # length of prevoius_state vector
 INTEGRATOR_SIZE = model_params['integrator_d']  # length of state vector
 CONTEXT_SIZE = model_params['context_d']  # length of state vector
 
@@ -248,7 +246,7 @@ def construct_model(model_name:str=MODEL_NAME,
 
                     # Previous state
                     previous_state_input_name:str=PREVIOUS_STATE_LAYER_NAME,
-                    previous_state_size:int=PREVIOUS_STATE_SIZE,
+                    previous_state_size:int=STATE_SIZE,
 
                     # Integrator:
                     integrator_name:str=INTEGRATOR_LAYER_NAME,
@@ -267,7 +265,7 @@ def construct_model(model_name:str=MODEL_NAME,
                     context_retrieval_weight:Union[float,int]=CONTEXT_RETRIEVAL_WEIGHT,
 
                     # Output / decision processing:
-                    PREDICTION_LAYER_NAME:str=PREDICTION_LAYER_NAME,
+                    prediction_layer_name:str=PREDICTION_LAYER_NAME,
 
                     )->Composition:
 
@@ -279,7 +277,7 @@ def construct_model(model_name:str=MODEL_NAME,
     # ----------------------------------------------------------------------------------------------------------------
 
     state_input_layer = ProcessingMechanism(name=state_input_name, size=state_size)
-    previous_state_layer = ProcessingMechanism(name=previous_state_input_name, size=previous_state_size)
+    previous_state_layer = ProcessingMechanism(name=previous_state_input_name, size=state_size)
     integrator_layer = RecurrentTransferMechanism(name=integrator_name,
                                                   function=Tanh,
                                                   size=integrator_size,
@@ -306,7 +304,8 @@ def construct_model(model_name:str=MODEL_NAME,
                                       )
                        )
 
-    prediction_layer = ProcessingMechanism(name=PREDICTION_LAYER_NAME)
+    prediction_layer = ProcessingMechanism(name=prediction_layer_name,
+                                           size=state_size)
 
     
     # ----------------------------------------------------------------------------------------------------------------

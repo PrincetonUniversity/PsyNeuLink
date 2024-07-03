@@ -18,10 +18,17 @@
 
 # TODO:
 
-# REPLACE INTEGRATOR RECURRENTTRANSFERMECHANISM WITH TRANSFERMECHANISM IN INTEGRATOR MODE
-# ADD LEARNING:
+# SCRIPT STUFF:
+# - REPLACE INTEGRATOR RECURRENTTRANSFERMECHANISM WITH TRANSFERMECHANISM IN INTEGRATOR MODE
+#   OR TRY USING LCA with DECAY?
+# - ADD LEARNING:
 #    - SET LEARNABILITY OF OUTER COMP PROJECTIONS
 #    - ADD PROJECTION OF CURRENT STATE TO TARGET (GOTTEN FROM LEARNING COMPONENTS)
+#    - DEBUG LEARNING
+# PNL STUFF:
+#    - WRITE METHOD IN AUTODIFFCOMPOSITION to show_learning in show_graph()
+#    - DOCUMENT API FOR SPECIFYING PROJECTIONS TO NODES OF NESTED COMPOSITION
+#      (VIZ, *HAVE* TO EXPLICILTY SPECIFY PROJECTIONS TO NODES OF NESTED COMPOSITION AND ALSO INCLUDE THE NESTED COMP)
 
 """
 QUESTIONS:
@@ -141,8 +148,8 @@ DISPLAY_MODEL = (                      # Only one of the following can be uncomm
 )
 RUN_MODEL = True                       # True => run the model
 # RUN_MODEL = False                      # False => don't run the model
-# EXECUTION_MODE = ExecutionMode.Python
-EXECUTION_MODE = ExecutionMode.PyTorch
+EXECUTION_MODE = ExecutionMode.Python
+# EXECUTION_MODE = ExecutionMode.PyTorch
 ANALYZE_RESULTS = False                # True => output analysis of results of run
 # REPORT_OUTPUT = ReportOutput.FULL     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_OUTPUT = ReportOutput.OFF     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
@@ -191,7 +198,6 @@ EMFieldsIndex = IntEnum('EMFields',
 
 # Layer sizes:
 STATE_SIZE = model_params['state_d']  # length of state vector
-PREVIOUS_STATE_SIZE = model_params['previous_state_d']  # length of prevoius_state vector
 INTEGRATOR_SIZE = model_params['integrator_d']  # length of state vector
 CONTEXT_SIZE = model_params['context_d']  # length of state vector
 
@@ -236,7 +242,6 @@ def construct_model(model_name:str=MODEL_NAME,
 
                     # Previous state
                     previous_state_input_name:str=PREVIOUS_STATE_LAYER_NAME,
-                    previous_state_size:int=PREVIOUS_STATE_SIZE,
 
                     # Integrator:
                     integrator_name:str=INTEGRATOR_LAYER_NAME,
@@ -255,7 +260,7 @@ def construct_model(model_name:str=MODEL_NAME,
                     context_retrieval_weight:Union[float,int]=CONTEXT_RETRIEVAL_WEIGHT,
 
                     # Output / decision processing:
-                    PREDICTION_LAYER_NAME:str=PREDICTION_LAYER_NAME,
+                    prediction_layer_name:str=PREDICTION_LAYER_NAME,
 
                     )->Composition:
 
@@ -267,7 +272,7 @@ def construct_model(model_name:str=MODEL_NAME,
     # ----------------------------------------------------------------------------------------------------------------
 
     state_input_layer = ProcessingMechanism(name=state_input_name, size=state_size)
-    previous_state_layer = ProcessingMechanism(name=previous_state_input_name, size=previous_state_size)
+    previous_state_layer = ProcessingMechanism(name=previous_state_input_name, size=state_size)
     integrator_layer = RecurrentTransferMechanism(name=integrator_name,
                                                   function=Tanh,
                                                   size=integrator_size,
@@ -296,51 +301,28 @@ def construct_model(model_name:str=MODEL_NAME,
                        learn_field_weights=False
                        )
 
-    prediction_layer = ProcessingMechanism(name=PREDICTION_LAYER_NAME)
+    prediction_layer = ProcessingMechanism(name=prediction_layer_name, size=state_size)
 
     
     # ----------------------------------------------------------------------------------------------------------------
     # -------------------------------------------------  EGO Composition  --------------------------------------------
     # ----------------------------------------------------------------------------------------------------------------
 
-    # EGO_comp = AutodiffComposition(name=model_name,
-    #                        # # Terminate a Task.PREDICT trial after prediction_layer executes if a reward is retrieved
-    #                        # termination_processing={
-    #                        #     # TimeScale.TRIAL: And(Condition(lambda: task_input_layer.value == Task.PREDICT),
-    #                        #     #                      Condition(lambda: retrieved_reward_layer.value),
-    #                        #     #                      JustRan(prediction_layer))}
-    #                        #     # CRASHES:
-    #                        #     # TimeScale.TRIAL: Any(And(Condition(lambda: task_input_layer.value == Task.EXPERIENCE),
-    #                        #     #                          JustRan(em)),
-    #                        #     #                      And(Condition(lambda: task_input_layer.value == Task.PREDICT),
-    #                        #     #                          Condition(lambda: retrieved_reward_layer.value),
-    #                        #     #                          JustRan(prediction_layer)))}
-    #                        #     TimeScale.TRIAL: Any(And(Condition(lambda: task_input_layer.value == Task.EXPERIENCE),
-    #                        #                              AllHaveRun()),
-    #                        #                          And(Condition(lambda: task_input_layer.value == Task.PREDICT),
-    #                        #                              Condition(lambda: retrieved_reward_layer.value),
-    #                        #                              AllHaveRun()))}
-    #                        )
-
-    # Nodes not included in (decision output) Pathway specified above
-    # EGO_comp.add_nodes([state_input_layer,
-    #                     previous_state_layer,
-    #                     integrator_layer,
-    #                     context_layer,
-    #                     em,
-    #                     prediction_layer])
-
-    # Projections:
     QUERY = ' [QUERY]'
     VALUE = ' [VALUE]'
     RETRIEVED = ' [RETRIEVED]'
 
-    state_to_em_pathway = [state_input_layer, IDENTITY_MATRIX, em.nodes[state_input_name + VALUE]]
-    previous_state_to_em_pathway = [previous_state_layer, IDENTITY_MATRIX, em.nodes[previous_state_input_name + QUERY]]
-    state_to_previous_state_pathway = [state_input_layer, IDENTITY_MATRIX, previous_state_layer]
+    # Pathways
+    state_to_previous_state_pathway = [state_input_layer, previous_state_layer]
     state_to_integrator_pathway = [state_input_layer,
                                    np.eye(STATE_SIZE) * integration_rate,
                                    integrator_layer]
+    state_to_em_pathway = [state_input_layer,
+                           MappingProjection(state_input_layer, em.nodes[state_input_name+VALUE]),
+                           em]
+    previous_state_to_em_pathway = [previous_state_layer,
+                                    MappingProjection(previous_state_layer, em.nodes[previous_state_input_name+QUERY]),
+                                    em]
     context_learning_pathway = [integrator_layer,
                                 context_layer,
                                 MappingProjection(context_layer, em.nodes[context_name + QUERY]),
@@ -348,35 +330,15 @@ def construct_model(model_name:str=MODEL_NAME,
                                 MappingProjection(em.nodes[state_input_name + RETRIEVED], prediction_layer),
                                 prediction_layer]
 
-    # # FIX: VERSION THAT SHOULD WORK: BUT FAILS TO IMPLEMENT STATE -> EM and PREVIOUS_STATE -> EM PROJECTIONS
-    # EGO_comp = AutodiffComposition([state_to_em_pathway,
-    #                                 previous_state_to_em_pathway,
-    #                                 state_to_previous_state_pathway,
-    #                                 state_to_integrator_pathway,
-    #                                 context_learning_pathway],
-    #                                name=model_name)
+    # Composition
+    EGO_comp = AutodiffComposition([state_to_previous_state_pathway,
+                                    state_to_integrator_pathway,
+                                    state_to_em_pathway,
+                                    previous_state_to_em_pathway,
+                                    context_learning_pathway],
+                                   name=model_name)
 
-    # FIX: ALT VERSION using add_linear_processing_pathway
-    # EGO_comp = AutodiffComposition(pathways=[context_learning_pathway], name=model_name)
-    # EGO_comp.add_linear_processing_pathway(state_to_em_pathway)
-    # EGO_comp.add_linear_processing_pathway(previous_state_to_em_pathway)
-    # EGO_comp.add_linear_processing_pathway(state_to_previous_state_pathway)
-    # EGO_comp.add_linear_processing_pathway(state_to_integrator_pathway)
-
-
-    # FIX: ALT VERSION using manual adds
-    EGO_comp = AutodiffComposition(name=model_name)
-    EGO_comp.add_nodes([state_input_layer, previous_state_layer, integrator_layer, context_layer, em, prediction_layer])
-    EGO_comp.add_projection(MappingProjection(state_input_layer,
-                                              em.nodes[state_input_name + VALUE]))
-    EGO_comp.add_projection(MappingProjection(previous_state_layer,
-                                              em.nodes[previous_state_input_name + QUERY]))
-    EGO_comp.add_projection(MappingProjection(state_input_layer,
-                                              integrator_layer))
-    EGO_comp.add_backpropagation_learning_pathway(context_learning_pathway)
-
-
-    EGO_comp.show_graph(show_learning=True)
+    # EGO_comp.show_graph(show_learning=True)
 
     # Ensure EM is executed (to encode previous state and context, and predict current state)
     #     before updating state and context
@@ -415,7 +377,11 @@ if __name__ == '__main__':
     if RUN_MODEL:
         # print("MODEL NOT YET FULLY EXECUTABLE")
         print(f'Running {MODEL_NAME}')
-        model.run(inputs={STATE_INPUT_LAYER_NAME:INPUTS},
+        # model.run(inputs={STATE_INPUT_LAYER_NAME:INPUTS},
+        #           # report_output=REPORT_OUTPUT,
+        #           # report_progress=REPORT_PROGRESS
+        #           )
+        model.learn(inputs={STATE_INPUT_LAYER_NAME:INPUTS},
                   # report_output=REPORT_OUTPUT,
                   # report_progress=REPORT_PROGRESS
                   )
