@@ -86,6 +86,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
     def visit_arguments(self, node):
         args = node.args
         variable = args[0]
+
         # update register
         self.register[variable.arg] = self.arg_in
         parameters = args[1:]
@@ -210,6 +211,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         if node.attr == "shape":
             shape = helpers.get_array_shape(val)
             return ir.ArrayType(self.ctx.float_ty, len(shape))(shape)
+
         elif node.attr == "flatten":
             val = self.get_rval(val)
             def flatten(builder):
@@ -224,13 +226,16 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
                 for i, v in enumerate(res):
                     flat = self.builder.insert_value(flat, v, i)
                 return flat
+
             return flatten
+
         elif node.attr == "astype":
             val = self.get_rval(val)
             def astype(builder, ty):
                 def _convert(builder, x):
                     return helpers.convert_type(builder, x, ty)
                 return self._do_unary_op(builder, val, _convert)
+
             return astype
 
         return val[node.attr]
@@ -249,6 +254,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
                 self._update_debug_metadata(self.var_builder, node)
                 target = self.var_builder.alloca(value.type, name=str(t.id) + '_local_variable')
                 self.register[t.id] = target
+
             assert self.is_lval(target)
             self.builder.store(value, target)
 
@@ -562,7 +568,9 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         x = self.get_rval(x)
         if helpers.is_scalar(x):
             return x
+
         res = self.ctx.float_ty(float("-Inf"))
+
         def find_max(builder, x):
             nonlocal res
             # to propagate NaNs we use unordered >,
@@ -572,9 +580,9 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             cond = builder.and_(not_nan, greater)
             res = builder.select(cond, x, res)
             return res
+
         self._do_unary_op(builder, x, find_max)
         return res
-
 
 
 def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
@@ -584,6 +592,7 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
     node_function = ctx.import_llvm_function(node, tags=func_tags)
     # FIXME: This is a hack
     is_mech = hasattr(node, 'function')
+    zero = ctx.int32_ty(0)
 
     data_struct_ptr = ctx.get_data_struct_type(composition).as_pointer()
     args = [
@@ -599,8 +608,7 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
         cond_ty = cond_gen.get_condition_struct_type().as_pointer()
         args.append(cond_ty)
 
-    builder = ctx.create_llvm_function(args, node, tags=tags,
-                                       return_type=node_function.type.pointee.return_type)
+    builder = ctx.create_llvm_function(args, node, tags=tags, return_type=node_function.type.pointee.return_type)
     llvm_func = builder.function
     for a in llvm_func.args:
         a.attributes.add('nonnull')
@@ -611,19 +619,19 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
         # if there are incoming modulatory projections,
         # the input structure is shared
         if composition.parameter_CIM.afferents:
-            node_in = builder.gep(comp_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            node_in = builder.gep(comp_in, [zero, zero])
         else:
             node_in = comp_in
         incoming_projections = []
     elif node is composition.parameter_CIM and node.afferents:
         # if parameter_CIM has afferent projections,
         # their values are in comp_in[1]
-        node_in = builder.gep(comp_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        node_in = builder.gep(comp_in, [zero, ctx.int32_ty(1)])
+
         # And we run no further projection
         incoming_projections = []
     elif not is_mech:
-        node_in = builder.alloca(node_function.args[2].type.pointee,
-                                 name="composition_node_input")
+        node_in = builder.alloca(node_function.args[2].type.pointee, name="composition_node_input")
         incoming_projections = node.parameter_CIM.afferents
         if "reset" not in tags:
             incoming_projections += node.input_CIM.afferents
@@ -631,8 +639,7 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
         # this path also handles parameter_CIM with no afferent
         # projections. 'comp_in' does not include any extra values,
         # and the entire call should be optimized out.
-        node_in = builder.alloca(node_function.args[2].type.pointee,
-                                 name="mechanism_node_input")
+        node_in = builder.alloca(node_function.args[2].type.pointee, name="mechanism_node_input")
         if {"reset", "is_finished"}.intersection(tags):
             incoming_projections = node.mod_afferents
         else:
@@ -645,11 +652,8 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
 
     # Execute all incoming projections
     inner_projections = list(composition._inner_projections)
-    zero = ctx.int32_ty(0)
-    projections_params = helpers.get_param_ptr(builder, composition,
-                                               params, "projections")
-    projections_states = helpers.get_state_ptr(builder, composition,
-                                               state, "projections")
+    projections_params = helpers.get_param_ptr(builder, composition, params, "projections")
+    projections_states = helpers.get_state_ptr(builder, composition, state, "projections")
     for proj in incoming_projections:
         # Skip autoassociative projections.
         # Recurrent projections are executed as part of the mechanism to
@@ -667,10 +671,7 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
 
         assert proj.sender in send_mech.output_ports
         output_port_idx = send_mech.output_ports.index(proj.sender)
-        proj_in = builder.gep(data_in, [ctx.int32_ty(0),
-                                        ctx.int32_ty(0),
-                                        ctx.int32_ty(send_node_idx),
-                                        ctx.int32_ty(output_port_idx)])
+        proj_in = builder.gep(data_in, [zero, zero, ctx.int32_ty(send_node_idx), ctx.int32_ty(output_port_idx)])
 
         # Get location of projection output (in mechanism's input structure)
         rec_port = proj.receiver
@@ -723,7 +724,6 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
 
         builder.call(proj_function, [proj_params, proj_state, proj_in, proj_out])
 
-
     node_idx = ctx.int32_ty(composition._get_node_index(node))
     nodes_params = helpers.get_param_ptr(builder, composition, params, "nodes")
     nodes_states = helpers.get_state_ptr(builder, composition, state, "nodes")
@@ -742,8 +742,8 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
         nested_idx = ctx.int32_ty(composition._get_node_index(node) + 1)
         node_data = builder.gep(data_in, [zero, nested_idx])
         node_cond = builder.gep(llvm_func.args[5], [zero, nested_idx])
-        ret = builder.call(node_function, [node_state, node_params, node_in,
-                                           node_data, node_cond])
+        ret = builder.call(node_function, [node_state, node_params, node_in, node_data, node_cond])
+
         # Copy output of the nested composition to its output place
         output_idx = node._get_node_index(node.output_CIM)
         result = builder.gep(node_data, [zero, zero, ctx.int32_ty(output_idx)])
@@ -764,7 +764,7 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
 def _gen_composition_exec_context(ctx, composition, *, tags:frozenset, suffix="", extra_args=[]):
     cond_gen = helpers.ConditionGenerator(ctx, composition)
 
-    name = "_".join(("wrap_exec", *tags ,composition.name + suffix))
+    name = "_".join(("wrap_exec", *tags, composition.name + suffix))
     args = [ctx.get_state_struct_type(composition).as_pointer(),
             ctx.get_param_struct_type(composition).as_pointer(),
             ctx.get_input_struct_type(composition).as_pointer(),
@@ -816,12 +816,8 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
         # Get locations of number of executions.
         num_exec_locs = {}
         for idx, node in enumerate(composition._all_nodes):
-            node_state = builder.gep(nodes_states, [ctx.int32_ty(0),
-                                                    ctx.int32_ty(idx)])
-            num_exec_locs[node] = helpers.get_state_ptr(builder,
-                                                        node,
-                                                        node_state,
-                                                        "num_executions")
+            node_state = builder.gep(nodes_states, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+            num_exec_locs[node] = helpers.get_state_ptr(builder, node, node_state, "num_executions")
 
         # Generate pointers to 'is_finished' callbacks
         is_finished_callbacks = {}
@@ -836,33 +832,34 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
         # executed above
         for time_loc in num_exec_locs.values():
             for scale in (TimeScale.TRIAL, TimeScale.PASS, TimeScale.TIME_STEP):
-                num_exec_time_ptr = builder.gep(time_loc, [ctx.int32_ty(0),
-                                                           ctx.int32_ty(scale.value)])
+                num_exec_time_ptr = builder.gep(time_loc, [ctx.int32_ty(0), ctx.int32_ty(scale.value)])
                 builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
 
         # Check if there's anything to reset
         for node in composition._all_nodes:
-            when = getattr(node, "reset_stateful_function_when", Never())
             # FIXME: This should not be necessary. The code gets DCE'd,
             # but there are still some problems with generation
             # 'reset' function
             if node is composition.controller:
                 continue
 
-            reinit_cond = cond_gen.generate_sched_condition(
-                builder, when, cond, node, is_finished_callbacks, num_exec_locs, nodes_states)
+            reinit_cond = cond_gen.generate_sched_condition(builder,
+                                                            getattr(node, "reset_stateful_function_when", Never()),
+                                                            cond,
+                                                            node,
+                                                            is_finished_callbacks,
+                                                            num_exec_locs,
+                                                            nodes_states)
             with builder.if_then(reinit_cond):
                 node_w = ctx.get_node_wrapper(composition, node)
                 node_reinit_f = ctx.import_llvm_function(node_w, tags=node_tags.union({"reset"}))
                 builder.call(node_reinit_f, [state, params, comp_in, data, data])
 
         # Run controller if it's enabled in 'BEFORE' mode
-        if simulation is False and composition.enable_controller and \
-           composition.controller_mode == BEFORE:
+        if simulation is False and composition.enable_controller and composition.controller_mode == BEFORE:
             assert composition.controller is not None
             controller_w = ctx.get_node_wrapper(composition, composition.controller)
-            controller_f = ctx.import_llvm_function(controller_w,
-                                                     tags=node_tags)
+            controller_f = ctx.import_llvm_function(controller_w, tags=node_tags)
             builder.call(controller_f, [state, params, comp_in, data, data])
 
 
@@ -882,9 +879,13 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
         # Generate a while not 'end condition' loop
         builder.position_at_end(loop_condition)
 
-        trial_term_cond = cond_gen.generate_sched_condition(
-            builder, composition.termination_processing[TimeScale.TRIAL],
-            cond, None, is_finished_callbacks, num_exec_locs, nodes_states)
+        trial_term_cond = cond_gen.generate_sched_condition(builder,
+                                                            composition.termination_processing[TimeScale.TRIAL],
+                                                            cond,
+                                                            None,
+                                                            is_finished_callbacks,
+                                                            num_exec_locs,
+                                                            nodes_states)
         trial_cond = builder.not_(trial_term_cond, name="not_trial_term_cond")
 
         loop_body = builder.append_basic_block(name="scheduling_loop_body")
@@ -900,15 +901,16 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
         any_cond = ctx.bool_ty(0)
         # Calculate execution set before running the mechanisms
         for idx, node in enumerate(composition.nodes):
-            run_set_node_ptr = builder.gep(run_set_ptr,
-                                           [zero, ctx.int32_ty(idx)],
-                                           name="run_cond_ptr_" + node.name)
-            node_cond = cond_gen.generate_sched_condition(
-                builder, composition._get_processing_condition_set(node),
-                cond, node, is_finished_callbacks, num_exec_locs, nodes_states)
+            run_set_node_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)], name="run_cond_ptr_" + node.name)
+            node_cond = cond_gen.generate_sched_condition(builder,
+                                                          composition._get_processing_condition_set(node),
+                                                          cond,
+                                                          node,
+                                                          is_finished_callbacks,
+                                                          num_exec_locs,
+                                                          nodes_states)
             ran = cond_gen.generate_ran_this_pass(builder, cond, node)
-            node_cond = builder.and_(node_cond, builder.not_(ran),
-                                     name="run_cond_" + node.name)
+            node_cond = builder.and_(node_cond, builder.not_(ran), name="run_cond_" + node.name)
             any_cond = builder.or_(any_cond, node_cond, name="any_ran_cond")
             builder.store(node_cond, run_set_node_ptr)
 
@@ -919,15 +921,13 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
             ran_prev_step = builder.extract_value(previous_step, [idx])
             time_loc = num_exec_locs[node]
             with builder.if_then(ran_prev_step):
-                num_exec_time_ptr = builder.gep(time_loc, [ctx.int32_ty(0),
-                                                           ctx.int32_ty(TimeScale.TIME_STEP.value)])
+                num_exec_time_ptr = builder.gep(time_loc, [zero, ctx.int32_ty(TimeScale.TIME_STEP.value)])
                 builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
 
         for idx, node in enumerate(composition.nodes):
 
             run_set_node_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
-            node_cond = builder.load(run_set_node_ptr,
-                                     name="node_" + node.name + "_should_run")
+            node_cond = builder.load(run_set_node_ptr, name="node_" + node.name + "_should_run")
             with builder.if_then(node_cond):
                 node_w = ctx.get_node_wrapper(composition, node)
                 node_f = ctx.import_llvm_function(node_w, tags=node_tags)
@@ -947,11 +947,8 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
             run_set_node_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
             node_cond = builder.load(run_set_node_ptr, name="node_" + node.name + "_ran")
             with builder.if_then(node_cond):
-                out_ptr = builder.gep(output_storage, [zero, zero,
-                                                       ctx.int32_ty(idx)],
-                                      name="result_ptr_" + node.name)
-                data_ptr = builder.gep(data, [zero, zero, ctx.int32_ty(idx)],
-                                       name="data_result_" + node.name)
+                out_ptr = builder.gep(output_storage, [zero, zero, ctx.int32_ty(idx)], name="result_ptr_" + node.name)
+                data_ptr = builder.gep(data, [zero, zero, ctx.int32_ty(idx)], name="data_result_" + node.name)
                 builder.store(builder.load(out_ptr), data_ptr)
 
         # Update step counter
@@ -968,9 +965,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
         builder.store(iters, iter_ptr)
 
         max_iters = len(composition.scheduler.consideration_queue)
-        completed_pass = builder.icmp_unsigned("==", iters,
-                                               iters.type(max_iters),
-                                               name="completed_pass")
+        completed_pass = builder.icmp_unsigned("==", iters, iters.type(max_iters), name="completed_pass")
         # Increment pass and reset time step
         with builder.if_then(completed_pass):
             builder.block.name = "inc_pass"
@@ -979,8 +974,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
             cond_gen.bump_ts(builder, cond, (0, 1, 0))
             # Reset internal PASS clock for each node
             for time_loc in num_exec_locs.values():
-                num_exec_time_ptr = builder.gep(time_loc, [ctx.int32_ty(0),
-                                                           ctx.int32_ty(TimeScale.PASS.value)])
+                num_exec_time_ptr = builder.gep(time_loc, [zero, ctx.int32_ty(TimeScale.PASS.value)])
                 builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
 
         builder.branch(loop_condition)
@@ -1108,9 +1102,8 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
 
     if not simulation or "simulation_results" in tags:
         # Extract output_CIM result
-        idx = composition._get_node_index(composition.output_CIM)
-        result_ptr = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(0),
-                                        ctx.int32_ty(idx)])
+        node_idx = composition._get_node_index(composition.output_CIM)
+        result_ptr = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(node_idx)])
         output_ptr = builder.gep(data_out, [iters])
         result = builder.load(result_ptr)
         builder.store(result, output_ptr)
