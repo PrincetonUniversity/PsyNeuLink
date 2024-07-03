@@ -348,13 +348,13 @@ def construct_model(model_name:str=MODEL_NAME,
                                 MappingProjection(em.nodes[state_input_name + RETRIEVED], prediction_layer),
                                 prediction_layer]
 
-    # FIX: VERSION THAT SHOULD WORK: BUT FAILS TO IMPLEMENT STATE -> EM and PREVIOUS_STATE -> EM PROJECTIONS
-    EGO_comp = AutodiffComposition([state_to_em_pathway,
-                                    previous_state_to_em_pathway,
-                                    state_to_previous_state_pathway,
-                                    state_to_integrator_pathway,
-                                    context_learning_pathway],
-                                   name=model_name)
+    # # FIX: VERSION THAT SHOULD WORK: BUT FAILS TO IMPLEMENT STATE -> EM and PREVIOUS_STATE -> EM PROJECTIONS
+    # EGO_comp = AutodiffComposition([state_to_em_pathway,
+    #                                 previous_state_to_em_pathway,
+    #                                 state_to_previous_state_pathway,
+    #                                 state_to_integrator_pathway,
+    #                                 context_learning_pathway],
+    #                                name=model_name)
 
     # FIX: ALT VERSION using add_linear_processing_pathway
     # EGO_comp = AutodiffComposition(pathways=[context_learning_pathway], name=model_name)
@@ -365,15 +365,15 @@ def construct_model(model_name:str=MODEL_NAME,
 
 
     # FIX: ALT VERSION using manual adds
-    # EGO_comp = AutodiffComposition(name=model_name)
-    # EGO_comp.add_nodes([state_input_layer, previous_state_layer, integrator_layer, context_layer, em, prediction_layer])
-    # EGO_comp.add_projection(MappingProjection(state_input_layer,
-    #                                           em.nodes[state_input_name + VALUE]))
-    # EGO_comp.add_projection(MappingProjection(previous_state_layer,
-    #                                           em.nodes[previous_state_input_name + QUERY]))
-    # EGO_comp.add_projection(MappingProjection(state_input_layer,
-    #                                           integrator_layer))
-    # EGO_comp.add_backpropagation_learning_pathway(context_learning_pathway)
+    EGO_comp = AutodiffComposition(name=model_name)
+    EGO_comp.add_nodes([state_input_layer, previous_state_layer, integrator_layer, context_layer, em, prediction_layer])
+    EGO_comp.add_projection(MappingProjection(state_input_layer,
+                                              em.nodes[state_input_name + VALUE]))
+    EGO_comp.add_projection(MappingProjection(previous_state_layer,
+                                              em.nodes[previous_state_input_name + QUERY]))
+    EGO_comp.add_projection(MappingProjection(state_input_layer,
+                                              integrator_layer))
+    EGO_comp.add_backpropagation_learning_pathway(context_learning_pathway)
 
 
     EGO_comp.show_graph(show_learning=True)
@@ -419,6 +419,7 @@ if __name__ == '__main__':
                   # report_output=REPORT_OUTPUT,
                   # report_progress=REPORT_PROGRESS
                   )
+        print(model.nodes['EM'].parameters.memory.get(context=MODEL_NAME))
 
         if PRINT_RESULTS:
             print("MODEL NOT YET FULLY EXECUTABLE SO NO RESULTS")

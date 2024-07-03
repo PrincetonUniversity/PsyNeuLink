@@ -420,7 +420,7 @@ if __name__ == '__main__':
                   # report_output=REPORT_OUTPUT,
                   # report_progress=REPORT_PROGRESS
                   )
-
+        print(model.nodes['EM'].parameters.memory.get(context=MODEL_NAME))
         if PRINT_RESULTS:
             print("MODEL NOT YET FULLY EXECUTABLE SO NO RESULTS")
     #endregion
