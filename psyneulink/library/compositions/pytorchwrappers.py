@@ -42,6 +42,18 @@ class DataTypeEnum(Enum):
     TARGETS = auto()
     LOSSES = auto()
 
+
+def _get_pytorch_function(obj, device, context):
+    pytorch_fct = getattr(obj, '_gen_pytorch_fct', None)
+    if pytorch_fct is None:
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
+        raise AutodiffCompositionError(
+            f"Function {obj} is not currently supported by AutodiffComposition"
+        )
+    else:
+        return pytorch_fct(device, context)
+
+
 # # MODIFIED 7/29/24 OLD:
 class PytorchCompositionWrapper(torch.nn.Module):
 # # MODIFIED 7/29/24 NEW: NEEDED FOR torch MPS SUPPORT
@@ -908,21 +920,11 @@ class PytorchMechanismWrapper():
         self.afferents = []
         self.efferents = []
 
-        from psyneulink.core.components.functions.function import FunctionError
-        from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
-        try:
-            pnl_fct = mechanism.function
-            self.function = pnl_fct._gen_pytorch_fct(device, context)
-            if hasattr(mechanism, 'integrator_function'):
-                pnl_fct = mechanism.integrator_function
-                self.integrator_function = pnl_fct._gen_pytorch_fct(device, context)
-                self.integrator_previous_value = pnl_fct._get_pytorch_fct_param_value('initializer', device, context)
-        except FunctionError as error:
-            from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
-            raise AutodiffCompositionError(error.args[0])
-        except:
-            raise AutodiffCompositionError(f"Function {pnl_fct} is not currently supported by AutodiffComposition")
+        self.function = PytorchFunctionWrapper(mechanism.function, device, context)
 
+        if hasattr(mechanism, 'integrator_function'):
+            self.integrator_function = PytorchFunctionWrapper(mechanism.integrator_function, device, context)
+            self.integrator_previous_value = mechanism.integrator_function._get_pytorch_fct_param_value('initializer', device, context)
 
     def add_efferent(self, efferent):
         """Add ProjectionWrapper for efferent from MechanismWrapper.
@@ -1238,3 +1240,17 @@ class PytorchProjectionWrapper():
 
     def __repr__(self):
         return "PytorchWrapper for: " +self._projection.__repr__()
+
+
+class PytorchFunctionWrapper():
+    def __init__(self, function, device, context=None):
+        self._pnl_function = function
+        self.name = f"PytorchFunctionWrapper[{function.name}]"
+        self._context = context
+        self.function = _get_pytorch_function(function, device, context)
+
+    def __repr__(self):
+        return "PytorchWrapper for: " + self._pnl_function.__repr__()
+
+    def __call__(self, *args, **kwargs):
+        return self.function(*args, **kwargs)
