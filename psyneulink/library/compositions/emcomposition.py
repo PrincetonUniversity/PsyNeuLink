@@ -886,6 +886,7 @@ from psyneulink.core.components.functions.function import \
     DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.compositions.composition import CompositionError, NodeRole
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, torch_available
+from psyneulink.library.compositions.pytorchwrappers import CUSTOM_AUTODIFF_EXECUTION
 from psyneulink.library.components.mechanisms.modulatory.learning.EMstoragemechanism import EMStorageMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
@@ -2156,6 +2157,9 @@ class EMComposition(AutodiffComposition):
                                           storage_prob=storage_prob,
                                           decay_rate = memory_decay_rate,
                                           name='STORE')
+
+        setattr(storage_node, CUSTOM_AUTODIFF_EXECUTION, self._store_memory)
+
         return storage_node
 
     def _set_learning_attributes(self):

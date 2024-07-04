@@ -26,6 +26,7 @@ from psyneulink.core import llvm as pnlvm
 
 __all__ = ['PytorchCompositionWrapper', 'PytorchMechanismWrapper', 'PytorchProjectionWrapper']
 
+CUSTOM_AUTODIFF_EXECUTION = 'custom_autodiff_execution'
 
 class PytorchCompositionWrapper(torch.nn.Module):
     """Wrapper for a Composition as a Pytorch Module
@@ -89,7 +90,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         for node in sorted(nodes, key=lambda x: isinstance(x, AutodiffComposition)):
             # Wrap nested Composition
             if isinstance(node, AutodiffComposition):
-                pytorch_node = PytorchCompositionWrapper(node, device, outer_creator=self, context=context)
+                pytorch_node = node.pytorch_composition_wrapper_type(node, device, outer_creator=self, context=context)
             # Wrap Mechanism
             else:
                 pytorch_node = PytorchMechanismWrapper(node,
@@ -520,7 +521,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     # Node is not INPUT to Composition or BIAS, so get all input from its afferents
                     variable = node.collate_afferents()
 
-                self.execute_node(node, variable, context)
+                if node._custom_execution:
+                    # This allows special handling by nested composition (such as storage_node of EMComposition)
+                    node._custom_execution(variable, context)
+                else:
+                    self.execute_node(node, variable, context)
 
                 # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
                 #  note: these may be different than for actual Composition, as they are flattened
@@ -571,14 +576,25 @@ class PytorchMechanismWrapper():
     """Wrapper for a Mechanism in a PytorchCompositionWrapper"""
     def __init__(self, mechanism, component_idx, device, context=None):
         self._mechanism = mechanism
-        self.name = f"PytorchMechanismWrapper[{mechanism.name}]"
         self._idx = component_idx
         self._context = context
-
         self._is_input = False
         self._is_bias = False
+        self._curr_sender_value = None
+
+        if hasattr(mechanism, CUSTOM_AUTODIFF_EXECUTION):
+            self._custom_execution = mechanism.custom_autodiff_execution
+        else:
+            self._custom_execution = None
+
+        self.name = f"PytorchMechanismWrapper[{mechanism.name}]"
         self.afferents = []
         self.efferents = []
+        if mechanism.parameters.has_initializers._get(context) and mechanism.parameters.value.initializer:
+            self.default_value = mechanism.parameters.value.initializer.get(context)
+        else:
+            self.default_value = mechanism.defaults.value
+
         try:
             self.function = mechanism.function._gen_pytorch_fct(device, context)
         except:
@@ -590,13 +606,16 @@ class PytorchMechanismWrapper():
         self._target_mechanism = None
 
     def add_efferent(self, efferent):
+        """Add ProjectionWrapper for efferent from MechanismWrapper.
+        Implemented for completeness;  not currently used"""
         assert efferent not in self.efferents
         self.efferents.append(efferent)
 
     def add_afferent(self, afferent):
+        """Add ProjectionWrapper for afferent to MechanismWrapper.
+        For use in call to collate_afferents"""
         assert afferent not in self.afferents
         self.afferents.append(afferent)
-
 
     def collate_afferents(self, port=None):
         """Return weight-multiplied sum of afferent projections for input_port(s) of the Mechanism
@@ -606,25 +625,34 @@ class PytorchMechanismWrapper():
         """
         assert self.afferents,\
             f"PROGRAM ERROR: No afferents found for '{self._mechanism.name}' in AutodiffComposition"
+
+        for proj_wrapper in self.afferents:
+            curr_val = proj_wrapper.sender.value
+            if curr_val is not None:
+                proj_wrapper._curr_sender_value = proj_wrapper.sender.value[proj_wrapper._value_idx]
+            else:
+                proj_wrapper._curr_sender_value = torch.tensor(proj_wrapper.default_value)
+
         # Specific port is specified
         # FIX: USING _port_idx TO INDEX INTO sender.value GETS IT WRONG IF THE MECHANISM HAS AN OUTPUT PORT
         #      USED BY A PROJECTION NOT IN THE CURRENT COMPOSITION
         if port is not None:
-            return sum(proj_wrapper.execute(proj_wrapper.sender.value[proj_wrapper._value_idx]).unsqueeze(0)
+            return sum(proj_wrapper.execute(proj_wrapper._curr_sender_value).unsqueeze(0)
                                             for proj_wrapper in self.afferents
                                             if proj_wrapper._pnl_proj
                                             in self._mechanism.input_ports[port].path_afferents)
         # Has only one input_port
         elif len(self._mechanism.input_ports) == 1:
             # Get value corresponding to port from which each afferent projects
-            return sum((proj_wrapper.execute(proj_wrapper.sender.value[proj_wrapper._value_idx]).unsqueeze(0)
+            return sum((proj_wrapper.execute(proj_wrapper._curr_sender_value).unsqueeze(0)
                         for proj_wrapper in self.afferents))
         # Has multiple input_ports
         else:
-            return [sum(proj_wrapper.execute(proj_wrapper.sender.value[proj_wrapper._value_idx]).unsqueeze(0)
+            return [sum(proj_wrapper.execute(proj_wrapper._curr_sender_value).unsqueeze(0)
                          for proj_wrapper in self.afferents
                          if proj_wrapper._pnl_proj in input_port.path_afferents)
                      for input_port in self._mechanism.input_ports]
+
 
     def execute(self, variable):
         """Execute Mechanism's function on variable, enforce result to be 2d, and assign to self.value"""
@@ -734,15 +762,23 @@ class PytorchProjectionWrapper():
                  sender=None,
                  receiver=None,
                  context=None):
-        self.name = f"PytorchProjectionWrapper[{projection.name}]"
         self._projection = projection # Projection being wrapped (may *not* be the one being learned; see note above)
         self._pnl_proj = pnl_proj # Projection that directly projects to/from sender/receiver (see above)
         self._idx = component_idx     # Index of Projection in Composition's list of projections
         self._port_idx = port_idx     # Index of sender's port (used by LLVM)
         self._value_idx = 0           # Index of value in sender's value (used in collate_afferents)
+        self._curr_sender_value = None
+
+        self.name = f"PytorchProjectionWrapper[{projection.name}]"
         self.sender = sender          # PytorchMechanismWrapper to which Projection's sender is mapped
         self.receiver = receiver      # PytorchMechanismWrapper to which Projection's receiver is mapped
         self._context = context
+
+        if projection.parameters.has_initializers._get(context) and projection.parameters.value.initializer:
+            self.default_value = projection.parameters.value.initializer.get(context)
+        else:
+            self.default_value = projection.defaults.value
+
 
         # Get item of value corresponding to OutputPort that is Projection's sender
         # Note: this may not be the same as _port_idx if the sender Mechanism has OutputPorts for Projections

@@ -358,6 +358,7 @@ __all__ = [
     'AutodiffComposition'
 ]
 
+CUSTOM_AUTODIFF_EXECUTION = 'custom_autodiff_execution'
 
 class AutodiffCompositionError(CompositionError):
 
@@ -522,9 +523,9 @@ class AutodiffComposition(Composition):
             IMPLEMENTATION NOTE:  flattens nested Compositions
             Return a list of all pathways from input_node -> output node
             """
-            pathways = []
-            prev = {}
-            queue = collections.deque([(input_node, None, self)])
+            pathways = []  # List of all feedforward pathways from INPUT Node to OUTPUT Node
+            prev = {}      # Dictionary of previous component for each component in every pathway
+            queue = collections.deque([(input_node, None, self)])  # Queue of nodes to visit in breadth-first search
 
             # FIX:  9/17/23 - THIS VERSION FLATTENS NESTED COMPOSITIONS;  MAY NOT STILL BE NEEDED
             #                 SINCE EXECUTION SETS ARE NOW FLATTENED IN PytorchCompositionWrapper
@@ -532,14 +533,16 @@ class AutodiffComposition(Composition):
             #                 THOUGH DOING SO PREVIOUSLY SEEMED TO LOSE TARGET NODE.
             #                 MAYBE NOT NOW THAT THEY ARE CONSTRUCTED EXPLICITLY BELOW?
             def create_pathway(node)->list:
+                """Create pathway starting with node (presumably an output NODE) and working backward via prev"""
                 pathway = []
                 entry = node
                 while entry in prev:
                     pathway.insert(0, entry)
                     entry = prev[entry]
                 pathway.insert(0, entry)
-                # Only consider input -> projection -> ... -> output pathways
-                # (since can't learn on only one mechanism)
+                # Only consider pathways with 3 or more components (input -> projection -> ... -> output)
+                #    since can't learn on only one mechanism (len==1)
+                #    and a pathway can't have just one mechanism and one projection (len==2)
                 if len(pathway) >= 3:
                     return pathway
                 else:
