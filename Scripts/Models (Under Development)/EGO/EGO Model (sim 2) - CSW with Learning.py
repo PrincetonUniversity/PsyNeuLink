@@ -28,12 +28,12 @@
 #         and/or the memory attribute of the EMPytorchCompositionWrapper?
 #         and the matrix values of the wrappers for the projection that store the memories?
 #     ***-> When fixing the above (by calling pytorchEMComposition.store_memory instead of EMComposition.store_memory):
-#        RuntimeError: one of the variables needed for gradient computation has been modified by an inplace
-#          operation: [torch.DoubleTensor [5, 11]], which is output 0 of torch::autograd::CopySlices, is at version 1;
-#          expected version 0 instead.
-#          Hint: enable anomaly detection to find the operation that failed to compute its gradient,
-#          with torch.autograd.set_detect_anomaly(True)
-#        Possible to override this?  ??? MAKE RELEVANT PROJECTIONS NOT LEARNABLE?
+#        > RuntimeError: one of the variables needed for gradient computation has been modified by an inplace
+#            operation: [torch.DoubleTensor [5, 11]], which is output 0 of torch::autograd::CopySlices, is at version 1;
+#            expected version 0 instead.
+#            Hint: enable anomaly detection to find the operation that failed to compute its gradient,
+#            with torch.autograd.set_detect_anomaly(True)
+#        > Tried to avoid this by making memory projections not learnable: cf. pytorchwrappers LINE 798
 
 # TODO:
 #
