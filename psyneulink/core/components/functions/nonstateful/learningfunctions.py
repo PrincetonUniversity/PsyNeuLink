@@ -508,7 +508,7 @@ class EMStorage(LearningFunction):
             """Decay existing memories and replace weakest entry with entry_to_store (parallel EMStorage._function)"""
             if random_state.uniform(0, 1) < storage_prob:
                 if decay_rate:
-                    memory_matrix *= decay_rate
+                    memory_matrix *= torch.tensor(decay_rate)
                 if storage_location is not None:
                     idx_of_min = storage_location
                 else:

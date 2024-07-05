@@ -15,40 +15,19 @@
 #     - CONTEXT LAYER EXECUTES TO GET LEARNED CONTEXT (FOR RETRIEVAL ON NEXT TRIAL)
 #   - PREDICTED CURRENT STATE IS COMPARED WITH ACTUAL CURRENT STATE (TARGET) TO UPDATE INTEGRATOR -> CONTEXT WEIGHTS
 
-# ISSUES:
-#   * Using TransferMechanism (to avoid recurrent in PyTorch):
-#     -> input is always just linearly integrated, and the integral is tanh'd
-#        (not sure tanh is even necessary, since integral is always between 0 and 1)
-#     -> how is recurrence implemented in PyTorch?
-#   * Learning is not storing to memory:
-#     - this is because in PyTorch mode:
-#       - no EMComposition remains (its nodes are absorbed into the outer composition)
-#       - the values are stored in the wrappers of the corresponding nodes
-#       ? Should the EMComposition's memory parameter be assigned to the storage_node wrapper's value
-#         and/or the memory attribute of the EMPytorchCompositionWrapper?
-#         and the matrix values of the wrappers for the projection that store the memories?
-#     ***-> When fixing the above (by calling pytorchEMComposition.store_memory instead of EMComposition.store_memory):
-#        > RuntimeError: one of the variables needed for gradient computation has been modified by an inplace
-#            operation: [torch.DoubleTensor [5, 11]], which is output 0 of torch::autograd::CopySlices, is at version 1;
-#            expected version 0 instead.
-#            Hint: enable anomaly detection to find the operation that failed to compute its gradient,
-#            with torch.autograd.set_detect_anomaly(True)
-#        > Tried to avoid this by making memory projections not learnable: cf. pytorchwrappers LINE 798
 
 # TODO:
-#
+
 # SCRIPT STUFF:
-# - CHECK THAT VERSION WITH TRANSFERMECHANISM FOR CONTEXT PRODUCES CORRECT EM ENTRIES PER PREVOUS BENCHMARKING
 # - REPLACE INTEGRATOR RECURRENTTRANSFERMECHANISM WITH TRANSFERMECHANISM IN INTEGRATOR MODE
 #   OR TRY USING LCA with DECAY?
 # - ADD LEARNING:
 #    - SET LEARNABILITY OF OUTER COMP PROJECTIONS
 #    - ADD PROJECTION OF CURRENT STATE TO TARGET (GOTTEN FROM LEARNING COMPONENTS)
 #    - DEBUG LEARNING
-#
 # PNL STUFF:
 #    - BUG:
-#        ? autodiffcomposition LINE 538: infinite while loop -> due to recurrent connection on INTENGRATOR?
+#        ? autodiffcomposition LINE 538: infinite while loop
 #        ? try taking out the integrator layer and see if it works
 #        ? try removing learnable attribute from projections to STORE node
 #        ? STORE node shows up multiple times in queue (but should be existing tests for convergence in nested)
@@ -61,8 +40,6 @@
 #    - WRITE METHOD IN AUTODIFFCOMPOSITION to show_learning in show_graph()
 #    - DOCUMENT API FOR SPECIFYING PROJECTIONS TO NODES OF NESTED COMPOSITION
 #      (VIZ, *HAVE* TO EXPLICILTY SPECIFY PROJECTIONS TO NODES OF NESTED COMPOSITION AND ALSO INCLUDE THE NESTED COMP)
-#    - DOCUMENT THAT CURRENTLY AUTODIFF LEARNING DOES NOT SUPPORT CYCLIC GRAPHS
-#      or FIX FOR INCLUSION OF RECURRENTTRANSFERMECHANISM PER PROBLEM WITH INTEGRATOR LAYER ABOVE
 
 """
 QUESTIONS:
@@ -200,6 +177,7 @@ ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation
 model_params = dict(
     state_d = 11, # length of state vector
     previous_state_d = 11, # length of state vector
+    integrator_d = 11, # length of integrator vector
     context_d = 11, # length of context vector
     integration_rate = .69, # rate at which state is integrated into new context
     state_weight = .5, # weight of the state used during memory retrieval
@@ -213,6 +191,7 @@ model_params = dict(
 MODEL_NAME = "EGO Model CSW"
 STATE_INPUT_LAYER_NAME = "STATE"
 PREVIOUS_STATE_LAYER_NAME = "PREVIOUS STATE"
+INTEGRATOR_LAYER_NAME = 'INTEGRATOR'
 CONTEXT_LAYER_NAME = 'CONTEXT'
 
 EM_NAME = "EM"
@@ -229,6 +208,7 @@ EMFieldsIndex = IntEnum('EMFields',
 
 # Layer sizes:
 STATE_SIZE = model_params['state_d']  # length of state vector
+INTEGRATOR_SIZE = model_params['integrator_d']  # length of state vector
 CONTEXT_SIZE = model_params['context_d']  # length of state vector
 
 # Context processing:
@@ -273,10 +253,14 @@ def construct_model(model_name:str=MODEL_NAME,
                     # Previous state
                     previous_state_input_name:str=PREVIOUS_STATE_LAYER_NAME,
 
+                    # Integrator:
+                    integrator_name:str=INTEGRATOR_LAYER_NAME,
+                    integrator_size:int=INTEGRATOR_SIZE,
+                    integration_rate:Union[float,int]=INTEGRATION_RATE,
+
                     # Context representation (learned):
                     context_name:str=CONTEXT_LAYER_NAME,
                     context_size:Union[float,int]=CONTEXT_SIZE,
-                    integration_rate:float=INTEGRATION_RATE,
 
                     # EM:
                     em_name:str=EM_NAME,
@@ -299,12 +283,16 @@ def construct_model(model_name:str=MODEL_NAME,
 
     state_input_layer = ProcessingMechanism(name=state_input_name, size=state_size)
     previous_state_layer = ProcessingMechanism(name=previous_state_input_name, size=state_size)
-    # context_layer = ProcessingMechanism(name=context_name, size=context_size)
-    context_layer = TransferMechanism(name=context_name,
-                                      size=context_size,
-                                      function=Tanh,
-                                      integrator_mode=True,
-                                      integration_rate=integration_rate)
+    integrator_layer = RecurrentTransferMechanism(name=integrator_name,
+                                                  function=Tanh,
+                                                  size=integrator_size,
+                                                  auto=1-integration_rate,
+                                                  hetero=0.0)
+    # integrator_layer = TransferMechanism(name=integrator_name,
+    #                                               function=Tanh,
+    #                                               size=integrator_size
+    #                                      )
+    context_layer = ProcessingMechanism(name=context_name, size=context_size)
 
     em = EMComposition(name=em_name,
                        memory_template=[[0] * state_size,   # state
@@ -340,14 +328,17 @@ def construct_model(model_name:str=MODEL_NAME,
 
     # Pathways
     state_to_previous_state_pathway = [state_input_layer, previous_state_layer]
-    state_to_context_pathway = [state_input_layer, context_layer]
+    state_to_integrator_pathway = [state_input_layer,
+                                   np.eye(STATE_SIZE) * integration_rate,
+                                   integrator_layer]
     state_to_em_pathway = [state_input_layer,
                            MappingProjection(state_input_layer, em.nodes[state_input_name+VALUE]),
                            em]
     previous_state_to_em_pathway = [previous_state_layer,
                                     MappingProjection(previous_state_layer, em.nodes[previous_state_input_name+QUERY]),
                                     em]
-    context_learning_pathway = [context_layer,
+    context_learning_pathway = [integrator_layer,
+                                context_layer,
                                 MappingProjection(context_layer, em.nodes[context_name + QUERY]),
                                 em,
                                 MappingProjection(em.nodes[state_input_name + RETRIEVED], prediction_layer),
@@ -355,7 +346,7 @@ def construct_model(model_name:str=MODEL_NAME,
 
     # Composition
     EGO_comp = AutodiffComposition([state_to_previous_state_pathway,
-                                    state_to_context_pathway,
+                                    state_to_integrator_pathway,
                                     state_to_em_pathway,
                                     previous_state_to_em_pathway,
                                     context_learning_pathway],
@@ -365,12 +356,12 @@ def construct_model(model_name:str=MODEL_NAME,
 
     # Ensure EM is executed (to encode previous state and context, and predict current state)
     #     before updating state and context
-    EGO_comp.scheduler.add_condition(em, BeforeNodes(previous_state_layer, context_layer))
+    EGO_comp.scheduler.add_condition(em, BeforeNodes(previous_state_layer, integrator_layer))
 
-    # # Validate construction
-    # print(EGO_comp.scheduler.consideration_queue)
-    # import graph_scheduler
-    # graph_scheduler.output_graph_image(EGO_comp.scheduler.graph, 'EGO_comp-scheduler.png')
+    # Validate construction
+    assert integrator_layer.input_port.path_afferents[0].sender.owner == integrator_layer # recurrent projection
+    assert integrator_layer.input_port.path_afferents[0].parameters.matrix.get()[0][0] == 1-integration_rate
+    assert integrator_layer.input_port.path_afferents[1].sender.owner == state_input_layer  #
 
     return EGO_comp
 #endregion

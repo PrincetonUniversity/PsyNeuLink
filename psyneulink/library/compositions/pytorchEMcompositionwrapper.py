@@ -34,6 +34,10 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         # Get PytorchProjectionWrappers for Projections to match and retrieve nodes;
         #   used by get_memory() to construct memory_matrix and store_memory() to store entry in it
         pnl_storage_mech = self.storage_node._mechanism
+        # This is so that if EMComposition is nested in another Composition,
+        #     _store_memory can still be called when storage_node is executed
+        self.storage_node._custom_execution = self.store_memory
+
         num_fields = len(pnl_storage_mech.input_ports)
         num_learning_signals = len(pnl_storage_mech.learning_signals)
         num_match_fields = num_learning_signals - num_fields

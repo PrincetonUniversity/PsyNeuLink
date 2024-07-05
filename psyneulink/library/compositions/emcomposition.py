@@ -2156,6 +2156,7 @@ class EMComposition(AutodiffComposition):
                                           storage_prob=storage_prob,
                                           decay_rate = memory_decay_rate,
                                           name='STORE')
+
         return storage_node
 
     def _set_learning_attributes(self):
@@ -2187,7 +2188,10 @@ class EMComposition(AutodiffComposition):
         return results
 
     def _store_memory(self, inputs, context):
-        """Store inputs in memory as weights of Projections to softmax_nodes (keys) and retrieved_nodes (values).
+        """Store inputs to query and value nodes in memory
+        Store memories in weights of Projections to softmax_nodes (queries) and retrieved_nodes (values).
+        Note: inputs argument is ignored (included for compatibility with function of MemoryFunctions class;
+              storage is handled by call to EMComopsition._encode_memory
         """
         storage_prob = np.array(self._get_current_parameter_value(STORAGE_PROB, context)).astype(float)
         random_state = self._get_current_parameter_value('random_state', context)
