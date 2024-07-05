@@ -27,7 +27,7 @@
 #    - DEBUG LEARNING
 # PNL STUFF:
 #    - BUG:
-#        ? autodiffcomposition LINE 538: infinite while loop
+#        ? autodiffcomposition LINE 538: infinite while loop -> due to recurrent connection on INTENGRATOR?
 #        ? try taking out the integrator layer and see if it works
 #        ? try removing learnable attribute from projections to STORE node
 #        ? STORE node shows up multiple times in queue (but should be existing tests for convergence in nested)
