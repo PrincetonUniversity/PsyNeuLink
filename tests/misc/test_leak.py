@@ -37,21 +37,5 @@ def test_composition_leak(comp_mode, run):
 
     gc.collect()
 
-    def print_ref(r, depth=0):
-        if depth == 3:
-            return
-
-        if isinstance(r, (dict, set, list, tuple)):
-            for r1 in gc.get_referrers(r):
-                print_ref(r1, depth + 1)
-
-    if weak_t() is not None:
-        for r in gc.get_referrers(weak_t()):
-            print_ref(r)
-
-    if weak_c() is not None:
-        for r in gc.get_referrers(weak_c()):
-            print_ref(r)
-
-    assert weak_c() is None
-    assert weak_t() is None
+    assert weak_c() is None, gc.get_referrers(weak_c())
+    assert weak_t() is None, gc.get_referrers(weak_t())
