@@ -26,8 +26,6 @@ from psyneulink.core import llvm as pnlvm
 
 __all__ = ['PytorchCompositionWrapper', 'PytorchMechanismWrapper', 'PytorchProjectionWrapper']
 
-CUSTOM_AUTODIFF_EXECUTION = 'custom_autodiff_execution'
-
 class PytorchCompositionWrapper(torch.nn.Module):
     """Wrapper for a Composition as a Pytorch Module
     Set up parameters of PyTorch model & information required for forward computation
@@ -523,6 +521,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
                 if node._custom_execution:
                     # This allows special handling by nested composition (such as storage_node of EMComposition)
+                    #    since its nodes have been incorporated into the outer composition
+                    #    and so any class-specific override of execute_node by the nested composition is not called
                     node._custom_execution(variable, context)
                 else:
                     self.execute_node(node, variable, context)
@@ -547,7 +547,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
         Implemented as method (and includes context as arg) so that it can be overridden
         by subclasses of PytorchCompositionWrapper
         """
-        node.execute(variable)
+        value = node.execute(variable)
+        assert 'DEBUGGING BREAK POINT'
 
     def detach_all(self):
         for projection in self.projections_map.values():
@@ -580,12 +581,8 @@ class PytorchMechanismWrapper():
         self._context = context
         self._is_input = False
         self._is_bias = False
-        self._curr_sender_value = None
-
-        if hasattr(mechanism, CUSTOM_AUTODIFF_EXECUTION):
-            self._custom_execution = mechanism.custom_autodiff_execution
-        else:
-            self._custom_execution = None
+        self._curr_sender_value = None # Used to assign initializer or default if value == None (i.e., not yet executed)
+        self._custom_execution = None  # Used by subclasses to assign custom node.execute methods
 
         self.name = f"PytorchMechanismWrapper[{mechanism.name}]"
         self.afferents = []

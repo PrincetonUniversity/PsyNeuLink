@@ -15,9 +15,28 @@
 #     - CONTEXT LAYER EXECUTES TO GET LEARNED CONTEXT (FOR RETRIEVAL ON NEXT TRIAL)
 #   - PREDICTED CURRENT STATE IS COMPARED WITH ACTUAL CURRENT STATE (TARGET) TO UPDATE INTEGRATOR -> CONTEXT WEIGHTS
 
+# ISSUES:
+#   * Using TransferMechanism (to avoid recurrent in PyTorch):
+#     -> input is always just linearly integrated, and the integral is tanh'd
+#        (not sure tanh is even necessary, since integral is always between 0 and 1)
+#     -> how is recurrence implemented in PyTorch?
+#   * Learning is not storing to memory:
+#     - this is because in PyTorch mode:
+#       - no EMComposition remains (its nodes are absorbed into the outer composition)
+#       - the values are stored in the wrappers of the corresponding nodes
+#       ? Should the EMComposition's memory parameter be assigned to the storage_node wrapper's value
+#         and/or the memory attribute of the EMPytorchCompositionWrapper?
+#         and the matrix values of the wrappers for the projection that store the memories?
+#     ***-> When fixing the above (by calling pytorchEMComposition.store_memory instead of EMComposition.store_memory):
+#        RuntimeError: one of the variables needed for gradient computation has been modified by an inplace
+#          operation: [torch.DoubleTensor [5, 11]], which is output 0 of torch::autograd::CopySlices, is at version 1;
+#          expected version 0 instead.
+#          Hint: enable anomaly detection to find the operation that failed to compute its gradient,
+#          with torch.autograd.set_detect_anomaly(True)
+#        Possible to override this?  ??? MAKE RELEVANT PROJECTIONS NOT LEARNABLE?
 
 # TODO:
-
+#
 # SCRIPT STUFF:
 # - CHECK THAT VERSION WITH TRANSFERMECHANISM FOR CONTEXT PRODUCES CORRECT EM ENTRIES PER PREVOUS BENCHMARKING
 # - REPLACE INTEGRATOR RECURRENTTRANSFERMECHANISM WITH TRANSFERMECHANISM IN INTEGRATOR MODE
@@ -26,6 +45,7 @@
 #    - SET LEARNABILITY OF OUTER COMP PROJECTIONS
 #    - ADD PROJECTION OF CURRENT STATE TO TARGET (GOTTEN FROM LEARNING COMPONENTS)
 #    - DEBUG LEARNING
+#
 # PNL STUFF:
 #    - BUG:
 #        ? autodiffcomposition LINE 538: infinite while loop
@@ -348,9 +368,9 @@ def construct_model(model_name:str=MODEL_NAME,
     EGO_comp.scheduler.add_condition(em, BeforeNodes(previous_state_layer, context_layer))
 
     # # Validate construction
-    # assert integrator_layer.input_port.path_afferents[0].sender.owner == integrator_layer # recurrent projection
-    # assert integrator_layer.input_port.path_afferents[0].parameters.matrix.get()[0][0] == 1-integration_rate
-    # assert integrator_layer.input_port.path_afferents[1].sender.owner == state_input_layer  #
+    # print(EGO_comp.scheduler.consideration_queue)
+    # import graph_scheduler
+    # graph_scheduler.output_graph_image(EGO_comp.scheduler.graph, 'EGO_comp-scheduler.png')
 
     return EGO_comp
 #endregion

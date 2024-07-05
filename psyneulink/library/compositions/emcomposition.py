@@ -886,7 +886,6 @@ from psyneulink.core.components.functions.function import \
     DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.compositions.composition import CompositionError, NodeRole
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, torch_available
-from psyneulink.library.compositions.pytorchwrappers import CUSTOM_AUTODIFF_EXECUTION
 from psyneulink.library.components.mechanisms.modulatory.learning.EMstoragemechanism import EMStorageMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
@@ -2158,8 +2157,6 @@ class EMComposition(AutodiffComposition):
                                           decay_rate = memory_decay_rate,
                                           name='STORE')
 
-        setattr(storage_node, CUSTOM_AUTODIFF_EXECUTION, self._store_memory)
-
         return storage_node
 
     def _set_learning_attributes(self):
@@ -2191,7 +2188,10 @@ class EMComposition(AutodiffComposition):
         return results
 
     def _store_memory(self, inputs, context):
-        """Store inputs in memory as weights of Projections to softmax_nodes (keys) and retrieved_nodes (values).
+        """Store inputs to query and value nodes in memory
+        Store memories in weights of Projections to softmax_nodes (queries) and retrieved_nodes (values).
+        Note: inputs argument is ignored (included for compatibility with function of MemoryFunctions class;
+              storage is handled by call to EMComopsition._encode_memory
         """
         storage_prob = np.array(self._get_current_parameter_value(STORAGE_PROB, context)).astype(float)
         random_state = self._get_current_parameter_value('random_state', context)

@@ -358,8 +358,6 @@ __all__ = [
     'AutodiffComposition'
 ]
 
-CUSTOM_AUTODIFF_EXECUTION = 'custom_autodiff_execution'
-
 class AutodiffCompositionError(CompositionError):
 
     def __init__(self, error_value):
