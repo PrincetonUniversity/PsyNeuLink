@@ -24,7 +24,7 @@ jobs:
   # The main test job
   build:
     runs-on: ${{ (contains(vars.SELF_HOSTED, format(';{0}_{1}_{2}_{3};', matrix.os, matrix.python-version, matrix.python-architecture, matrix.extra-args))
-                && fromJSON(format('[ "self-hosted","{0}", "X64" ]', matrix.os == 'ubuntu' && 'Linux' || matrix.os)))
+                && fromJSON(format('[ "self-hosted","{0}", "X64", "enabled" ]', matrix.os == 'ubuntu' && 'Linux' || matrix.os)))
                 || format('{0}-latest', matrix.os) }}
     env:
       # Keep DESCRIPTION in sync with the above
