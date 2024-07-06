@@ -350,10 +350,7 @@ class FuncExecution(CUDAExecution):
                                          self._ct_vo,
                                          self._ct_len)
         else:
-            self._bin_func(self._param_struct[0],
-                           self._state_struct[0],
-                           ct_vi,
-                           self._ct_vo)
+            self._bin_func(self._param_struct[0], self._state_struct[0], ct_vi, self._ct_vo)
 
         return _convert_ctype_to_python(self._ct_vo)
 
@@ -626,18 +623,20 @@ class CompExecution(CUDAExecution):
         bin_f = self._bin_run_func if arg == 3 else self._bin_func
 
         input_type = bin_f.byref_arg_types[arg]
-        c_input = (input_type * num_input_sets) * len(self._execution_contexts)
+        c_input_type = (input_type * num_input_sets) * len(self._execution_contexts)
         if len(self._execution_contexts) == 1:
             inputs = [inputs]
 
         assert len(inputs) == len(self._execution_contexts)
         # Extract input for each trial and execution id
         run_inputs = ((([x] for x in self._composition._build_variable_for_input_CIM({k:v[i] for k,v in inp.items()})) for i in range(num_input_sets)) for inp in inputs)
-        c_inputs = c_input(*_tupleize(run_inputs))
+        c_inputs = c_input_type(*_tupleize(run_inputs))
         if "stat" in self._debug_env:
             print("Instantiated struct: input ( size:" ,
-                  _pretty_size(ctypes.sizeof(c_inputs)), ")",
-                  "for", self._obj.name)
+                  _pretty_size(ctypes.sizeof(c_inputs)),
+                  ")",
+                  "for",
+                  self._obj.name)
 
         return c_inputs
 
@@ -648,8 +647,8 @@ class CompExecution(CUDAExecution):
         run_inputs = _tupleize(run_inputs)
         num_input_sets = len(run_inputs)
         runs = num_input_sets if runs == 0 or runs == sys.maxsize else runs
-        c_input = self._bin_run_func.byref_arg_types[3] * num_input_sets
-        return c_input(*run_inputs), runs
+        c_input_type = self._bin_run_func.byref_arg_types[3] * num_input_sets
+        return c_input_type(*run_inputs), runs
 
     @property
     def _bin_run_func(self):
@@ -677,6 +676,7 @@ class CompExecution(CUDAExecution):
         ct_vo = self._bin_run_func.byref_arg_types[4] * runs
         if len(self._execution_contexts) > 1:
             ct_vo = ct_vo * len(self._execution_contexts)
+
         outputs = ct_vo()
 
         if "stat" in self._debug_env:
@@ -685,8 +685,8 @@ class CompExecution(CUDAExecution):
             print("Output struct size:", _pretty_size(ctypes.sizeof(outputs)),
                   "for", self._composition.name)
 
-        runs_count = ctypes.c_int(runs)
-        input_count = ctypes.c_int(num_input_sets)
+        runs_count = ctypes.c_uint(runs)
+        input_count = ctypes.c_uint(num_input_sets)
         if len(self._execution_contexts) > 1:
             self._bin_run_multi_func.wrap_call(self._state_struct[0],
                                                self._param_struct[0],
@@ -699,13 +699,16 @@ class CompExecution(CUDAExecution):
 
             return _convert_ctype_to_python(outputs)
         else:
-            self._bin_run_func.wrap_call(self._state_struct[0],
-                                         self._param_struct[0],
-                                         self._data_struct[0],
-                                         inputs,
-                                         outputs,
-                                         runs_count,
-                                         input_count)
+            # This is only needed for non-generator inputs that are wrapped in an extra context dimension
+            inputs = ctypes.cast(inputs, self._bin_run_func.c_func.argtypes[3])
+
+            self._bin_run_func(self._state_struct[0],
+                               self._param_struct[0],
+                               self._data_struct[0],
+                               inputs,
+                               outputs,
+                               runs_count,
+                               input_count)
 
             # Extract only #trials elements in case the run exited early
             assert runs_count.value <= runs, "Composition ran more times than allowed!"
