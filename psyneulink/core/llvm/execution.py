@@ -350,10 +350,10 @@ class FuncExecution(CUDAExecution):
                                          self._ct_vo,
                                          self._ct_len)
         else:
-            self._bin_func(ctypes.byref(self._param_struct[0]),
-                           ctypes.byref(self._state_struct[0]),
+            self._bin_func(self._param_struct[0],
+                           self._state_struct[0],
                            ct_vi,
-                           ctypes.byref(self._ct_vo))
+                           self._ct_vo)
 
         return _convert_ctype_to_python(self._ct_vo)
 
@@ -820,7 +820,7 @@ class CompExecution(CUDAExecution):
 
             # Create input and result typed casts once, they are the same
             # for every submitted job.
-            input_param = ctypes.cast(ctypes.byref(ct_inputs), self.__bin_func.c_func.argtypes[5])
+            input_param = ctypes.cast(ct_inputs, self.__bin_func.c_func.argtypes[5])
             results_param = ctypes.cast(ct_results, self.__bin_func.c_func.argtypes[4])
 
             # There are 7 arguments to evaluate_alloc_range:
