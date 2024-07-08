@@ -582,7 +582,15 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
 
 class PytorchMechanismWrapper():
-    """Wrapper for a Mechanism in a PytorchCompositionWrapper"""
+    """Wrapper for a Mechanism in a PytorchCompositionWrapper
+    Attributes
+    ----------
+
+    exclude_from_autodiff: bool or str[BEFORE | AFTER]: False
+        used to prevent a node from being included in the Pytorch gradient calculation by excluding it in calls to
+        the forward() and backward().  If AFTER is specified, the node is executed after at the end of the
+        `update_learning_parameters` method.  BEFORE is not currently supported
+    """
     def __init__(self,
                  mechanism,         # Mechanism to be wrapped
                  composition,       # Composition to which node belongs (used for execution of nested Compositions)
@@ -595,9 +603,7 @@ class PytorchMechanismWrapper():
         self._is_input = False
         self._is_bias = False
         self._curr_sender_value = None # Used to assign initializer or default if value == None (i.e., not yet executed)
-        self.exclude_from_gradient_calc = False # Can be used to execute node before or after forward/backward pass
-        # methods
-        # methods
+        self.exclude_from_gradient_calc = False # Used to execute node before or after forward/backward pass methods
         self.wrapper_type = composition
 
         self.name = f"PytorchMechanismWrapper[{mechanism.name}]"
