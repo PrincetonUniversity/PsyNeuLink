@@ -583,6 +583,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
 class PytorchMechanismWrapper():
     """Wrapper for a Mechanism in a PytorchCompositionWrapper
+
     Attributes
     ----------
 
