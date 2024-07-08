@@ -20,23 +20,6 @@
 #     -> input is always just linearly integrated, and the integral is tanh'd
 #        (not sure tanh is even necessary, since integral is always between 0 and 1)
 #     -> how is recurrence implemented in PyTorch?
-#   * infer_backpropagation_learning_pathways has to be called twice to get learning components
-#   * Adding projection from state_input_layer to TARGET for PREDICTION masks the latter as a TARGET for learning
-#       in _infer_output_nodes
-#   * Learning is not storing to memory:
-#     - this is because in PyTorch mode:
-#       - no EMComposition remains (its nodes are absorbed into the outer composition)
-#       - the values are stored in the wrappers of the corresponding nodes
-#       ? Should the EMComposition's memory parameter be assigned to the storage_node wrapper's value
-#         and/or the memory attribute of the EMPytorchCompositionWrapper?
-#         and the matrix values of the wrappers for the projection that store the memories?
-#     ***-> When fixing the above (by calling pytorchEMComposition.store_memory instead of EMComposition.store_memory):
-#        > RuntimeError: one of the variables needed for gradient computation has been modified by an inplace
-#            operation: [torch.DoubleTensor [5, 11]], which is output 0 of torch::autograd::CopySlices, is at version 1;
-#            expected version 0 instead.
-#            Hint: enable anomaly detection to find the operation that failed to compute its gradient,
-#            with torch.autograd.set_detect_anomaly(True)
-#        > Tried to avoid this by making memory projections not learnable: cf. pytorchwrappers LINE 798
 #   * ??Possible bug:  for nodes in nested composition (such as EMComposition):  calling of execute_node on the
 #                      nested Composition rather than the outer one to which they now belong in
 #                      PytorchCompositionWrapper
@@ -49,27 +32,23 @@
 #   OR TRY USING LCA with DECAY?
 # - ADD LEARNING:
 #    - SET LEARNABILITY OF OUTER COMP PROJECTIONS
-#    - ADD PROJECTION OF CURRENT STATE TO TARGET (GOTTEN FROM LEARNING COMPONENTS)
 #    - DEBUG LEARNING
 #
 # PNL STUFF:
+#    - WRITE METHOD IN AUTODIFFCOMPOSITION to show_learning in show_graph()
+#    - DOCUMENT API FOR SPECIFYING PROJECTIONS TO NODES OF NESTED COMPOSITION
+#      (VIZ, *HAVE* TO EXPLICILTY SPECIFY PROJECTIONS TO NODES OF NESTED COMPOSITION AND ALSO INCLUDE THE NESTED COMP)
+#    - DOCUMENT THAT CURRENTLY AUTODIFF LEARNING DOES NOT SUPPORT CYCLIC GRAPHS
+#      or FIX FOR INCLUSION OF RECURRENTTRANSFERMECHANISM PER PROBLEM WITH INTEGRATOR LAYER ABOVE
 #    - BUG:
 #        ? autodiffcomposition LINE 538: infinite while loop
-#        ? try taking out the integrator layer and see if it works
-#        ? try removing learnable attribute from projections to STORE node
 #        ? STORE node shows up multiple times in queue (but should be existing tests for convergence in nested)
 #        ? divergengence of STATE to PREVIOUS_STATE and STATE to EM projections confuses _get_backprop_pathway
 #           when traversing EM.input_CIM projections in depth part of search (since
 #           STATE->PREVIOUS_STATE->PREVIOUS_STATE [QUERY] is a valid path) even though the only one wanted for learning
 #           is the direct STATE->EM->STATE [VALUE] projection
 #           (see _get_backprop_pathway in AutodiffComposition, LINE 591 onward)
-#    - ADD COMMENT TO autodiffcomposition LINE 552 explaining what the subsquent block of code does
-#    - WRITE METHOD IN AUTODIFFCOMPOSITION to show_learning in show_graph()
-#    - DOCUMENT API FOR SPECIFYING PROJECTIONS TO NODES OF NESTED COMPOSITION
-#      (VIZ, *HAVE* TO EXPLICILTY SPECIFY PROJECTIONS TO NODES OF NESTED COMPOSITION AND ALSO INCLUDE THE NESTED COMP)
-#    - DOCUMENT THAT CURRENTLY AUTODIFF LEARNING DOES NOT SUPPORT CYCLIC GRAPHS
-#      or FIX FOR INCLUSION OF RECURRENTTRANSFERMECHANISM PER PROBLEM WITH INTEGRATOR LAYER ABOVE
-#    - Rename autodiffcomposition.infer_output_nodes to get_target_values
+#    - ADD COMMENT TO autodiffcomposition LINE 552 explaining what the subsequent block of code does
 
 """
 QUESTIONS:
