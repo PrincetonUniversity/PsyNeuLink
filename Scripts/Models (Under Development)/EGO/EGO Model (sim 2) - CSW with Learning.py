@@ -20,6 +20,9 @@
 #     -> input is always just linearly integrated, and the integral is tanh'd
 #        (not sure tanh is even necessary, since integral is always between 0 and 1)
 #     -> how is recurrence implemented in PyTorch?
+#   * infer_backpropagation_learning_pathways has to be called twice to get learning components
+#   * Adding projection from state_input_layer to TARGET for PREDICTION masks the latter as a TARGET for learning
+#       in _infer_output_nodes
 #   * Learning is not storing to memory:
 #     - this is because in PyTorch mode:
 #       - no EMComposition remains (its nodes are absorbed into the outer composition)
@@ -34,6 +37,9 @@
 #            Hint: enable anomaly detection to find the operation that failed to compute its gradient,
 #            with torch.autograd.set_detect_anomaly(True)
 #        > Tried to avoid this by making memory projections not learnable: cf. pytorchwrappers LINE 798
+#   * ??Possible bug:  for nodes in nested composition (such as EMComposition):  calling of execute_node on the
+#                      nested Composition rather than the outer one to which they now belong in
+#                      PytorchCompositionWrapper
 
 # TODO:
 #
@@ -63,6 +69,7 @@
 #      (VIZ, *HAVE* TO EXPLICILTY SPECIFY PROJECTIONS TO NODES OF NESTED COMPOSITION AND ALSO INCLUDE THE NESTED COMP)
 #    - DOCUMENT THAT CURRENTLY AUTODIFF LEARNING DOES NOT SUPPORT CYCLIC GRAPHS
 #      or FIX FOR INCLUSION OF RECURRENTTRANSFERMECHANISM PER PROBLEM WITH INTEGRATOR LAYER ABOVE
+#    - Rename autodiffcomposition.infer_output_nodes to get_target_values
 
 """
 QUESTIONS:
@@ -362,6 +369,8 @@ def construct_model(model_name:str=MODEL_NAME,
                                    name=model_name)
 
     # EGO_comp.show_graph(show_learning=True)
+    learning_components = EGO_comp.infer_backpropagation_learning_pathways(ExecutionMode.PyTorch)
+    EGO_comp.add_projection(sender=state_input_layer, receiver=learning_components[2])
 
     # Ensure EM is executed (to encode previous state and context, and predict current state)
     #     before updating state and context
