@@ -499,10 +499,10 @@ class LLVMBuilderContext:
         return ir.LiteralStructType([])
 
     def get_node_wrapper(self, composition, node):
-        cache = getattr(composition, '_node_wrappers', None)
+        cache = getattr(composition, '_wrapped_nodes', None)
         if cache is None:
             cache = weakref.WeakKeyDictionary()
-            setattr(composition, '_node_wrappers', cache)
+            setattr(composition, '_wrapped_nodes', cache)
         return cache.setdefault(node, _node_wrapper(composition, node))
 
     def convert_python_struct_to_llvm_ir(self, t):

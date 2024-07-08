@@ -18,7 +18,7 @@ from psyneulink.core.compositions.composition import NodeRole, CompositionInterf
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
 from psyneulink.library.compositions.compiledloss import MSELoss, CROSS_ENTROPYLoss
-from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, Loss, NODE, TARGET_MECHANISM
+from psyneulink.core.globals.keywords import AFTER, BEFORE, DEFAULT_VARIABLE, Loss, NODE, TARGET_MECHANISM
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared
 from psyneulink.core.globals.log import LogCondition
@@ -63,7 +63,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         self.name = f"PytorchCompositionWrapper[{composition.name}]"
 
-        self.node_wrappers = []  # can be PytorchMechanismWrapper or PytorchCompositionWrapper
+        self.wrapped_nodes = []  # can be PytorchMechanismWrapper or PytorchCompositionWrapper
         self.nodes_map = {} # maps Node (Mech or nested Comp) -> PytorchMechanismWrapper or PytorchCompositionWrapper
 
         self.projection_wrappers = [] # PytorchProjectionWrappers
@@ -73,6 +73,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.device = device
 
         self._composition = composition
+        self._nodes_to_execute_after_gradient_calc = {} # Nodes requiring execution after Pytorch forward/backward pass
 
         # Instantiate pytorch Mechanisms
         nodes = list(set(composition.nodes) - set(composition.get_nodes_by_role(NodeRole.LEARNING)))
@@ -92,13 +93,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # Wrap Mechanism
             else:
                 pytorch_node = PytorchMechanismWrapper(node,
+                                                       self,
                                                        self._composition._get_node_index(node),
                                                        device,
                                                        context=context)
                 pytorch_node._is_bias = any(input_port.default_input == DEFAULT_VARIABLE
                                             for input_port in node.input_ports)
             self.nodes_map[node] = pytorch_node
-            self.node_wrappers.append(pytorch_node)
+            self.wrapped_nodes.append(pytorch_node)
 
         # Assign INPUT Nodes for outermost Composition (including any that are nested within it at any level)
         # Note: Pytorch representation is "flattened" (i.e., any nested Compositions are replaced by their Nodes)
@@ -110,8 +112,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     if isinstance(pytorch_node, PytorchMechanismWrapper):
                         pytorch_node._is_input = pytorch_node._mechanism in composition._get_input_receivers(type=NODE)
                     else:
-                        _assign_input_nodes(pytorch_node.node_wrappers)
-            _assign_input_nodes(self.node_wrappers)
+                        _assign_input_nodes(pytorch_node.wrapped_nodes)
+            _assign_input_nodes(self.wrapped_nodes)
 
         # Instantiate PyTorch ProjectionWrappers (ignoring any from/to CIMs in the same composition)
         for projection in composition._inner_projections:
@@ -218,7 +220,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             self.execution_sets[index:index] = exec_sets
 
         # Flatten maps
-        for node_wrapper in self.node_wrappers:
+        for node_wrapper in self.wrapped_nodes:
             if isinstance(node_wrapper, PytorchCompositionWrapper):
                 # For copying weights back to PNL in AutodiffComposition._update_learning_parameters
                 self.projections_map.update(node_wrapper.projections_map)
@@ -519,13 +521,20 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     # Node is not INPUT to Composition or BIAS, so get all input from its afferents
                     variable = node.collate_afferents()
 
-                if node._custom_execution:
-                    # This allows special handling by nested composition (such as storage_node of EMComposition)
-                    #    since its nodes have been incorporated into the outer composition
-                    #    and so any class-specific override of execute_node by the nested composition is not called
-                    node._custom_execution(variable, context)
-                else:
-                    self.execute_node(node, variable, context)
+                if node.exclude_from_gradient_calc:
+                    if node.exclude_from_gradient_calc == AFTER:
+                        self._nodes_to_execute_after_gradient_calc[node] = variable
+                        continue
+                    elif node.exclude_from_gradient_calc == BEFORE:
+                        assert False, 'PROGRAM ERROR: node.exclude_from_gradient_calc == BEFORE not yet implemented'
+                    else:
+                        assert False, \
+                            (f'PROGRAM ERROR: Bad assignment to {node.name}.exclude_from_gradient_calc: '
+                             f'{node.exclude_from_gradient_calc}; only {AFTER} is currently supported')
+
+                # Execute the node using wrapper_type for Composition to which it belongs
+                # Note: this is to support overrides of execute_node method by subclasses (such as in EMComposition)
+                node.wrapper_type.execute_node(node, variable, context)
 
                 # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
                 #  note: these may be different than for actual Composition, as they are flattened
@@ -562,27 +571,34 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 pytorch_rep.matrix.detach().cpu().numpy(), context)
             projection.parameter_ports['matrix'].parameters.value._set(
                 pytorch_rep.matrix.detach().cpu().numpy(), context)
-            assert True
 
     def log_weights(self):
         for proj_wrapper in self.projection_wrappers:
             proj_wrapper.log_matrix()
 
     def log_values(self):
-        for node_wrapper in [n for n in self.node_wrappers if not isinstance(n, PytorchCompositionWrapper)]:
+        for node_wrapper in [n for n in self.wrapped_nodes if not isinstance(n, PytorchCompositionWrapper)]:
             node_wrapper.log_value()
 
 
 class PytorchMechanismWrapper():
     """Wrapper for a Mechanism in a PytorchCompositionWrapper"""
-    def __init__(self, mechanism, component_idx, device, context=None):
+    def __init__(self,
+                 mechanism,         # Mechanism to be wrapped
+                 composition,       # Composition to which node belongs (used for execution of nested Compositions)
+                 component_idx,     # index of the Mechanism in the Composition
+                 device,            # needed for Pytorch
+                 context=None):
         self._mechanism = mechanism
         self._idx = component_idx
         self._context = context
         self._is_input = False
         self._is_bias = False
         self._curr_sender_value = None # Used to assign initializer or default if value == None (i.e., not yet executed)
-        self._custom_execution = None  # Used by subclasses to assign custom node.execute methods
+        self.exclude_from_gradient_calc = False # Can be used to execute node before or after forward/backward pass
+        # methods
+        # methods
+        self.wrapper_type = composition
 
         self.name = f"PytorchMechanismWrapper[{mechanism.name}]"
         self.afferents = []

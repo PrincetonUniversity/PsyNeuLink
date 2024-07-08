@@ -20,49 +20,18 @@
 #     -> input is always just linearly integrated, and the integral is tanh'd
 #        (not sure tanh is even necessary, since integral is always between 0 and 1)
 #     -> how is recurrence implemented in PyTorch?
-#   * Learning is not storing to memory:
-#     - this is because in PyTorch mode:
-#       - no EMComposition remains (its nodes are absorbed into the outer composition)
-#       - the values are stored in the wrappers of the corresponding nodes
-#       ? Should the EMComposition's memory parameter be assigned to the storage_node wrapper's value
-#         and/or the memory attribute of the EMPytorchCompositionWrapper?
-#         and the matrix values of the wrappers for the projection that store the memories?
-#     ***-> When fixing the above (by calling pytorchEMComposition.store_memory instead of EMComposition.store_memory):
-#        > RuntimeError: one of the variables needed for gradient computation has been modified by an inplace
-#            operation: [torch.DoubleTensor [5, 11]], which is output 0 of torch::autograd::CopySlices, is at version 1;
-#            expected version 0 instead.
-#            Hint: enable anomaly detection to find the operation that failed to compute its gradient,
-#            with torch.autograd.set_detect_anomaly(True)
-#        > Tried to avoid this by making memory projections not learnable: cf. pytorchwrappers LINE 798
+#   * ??Possible bug:  for nodes in nested composition (such as EMComposition):  calling of execute_node on the
+#                      nested Composition rather than the outer one to which they now belong in
+#                      PytorchCompositionWrapper
 
 # TODO:
 #
 # SCRIPT STUFF:
-# - CHECK THAT VERSION WITH TRANSFERMECHANISM FOR CONTEXT PRODUCES CORRECT EM ENTRIES PER PREVOUS BENCHMARKING
-# - REPLACE INTEGRATOR RECURRENTTRANSFERMECHANISM WITH TRANSFERMECHANISM IN INTEGRATOR MODE
+# √ REPLACE INTEGRATOR RECURRENTTRANSFERMECHANISM WITH TRANSFERMECHANISM IN INTEGRATOR MODE
 #   OR TRY USING LCA with DECAY?
-# - ADD LEARNING:
-#    - SET LEARNABILITY OF OUTER COMP PROJECTIONS
-#    - ADD PROJECTION OF CURRENT STATE TO TARGET (GOTTEN FROM LEARNING COMPONENTS)
-#    - DEBUG LEARNING
+# - CHECK THAT VERSION WITH TRANSFERMECHANISM FOR CONTEXT PRODUCES CORRECT EM ENTRIES PER PREVOUS BENCHMARKING
+# - DEBUG LEARNING
 #
-# PNL STUFF:
-#    - BUG:
-#        ? autodiffcomposition LINE 538: infinite while loop -> due to recurrent connection on INTENGRATOR?
-#        ? try taking out the integrator layer and see if it works
-#        ? try removing learnable attribute from projections to STORE node
-#        ? STORE node shows up multiple times in queue (but should be existing tests for convergence in nested)
-#        ? divergengence of STATE to PREVIOUS_STATE and STATE to EM projections confuses _get_backprop_pathway
-#           when traversing EM.input_CIM projections in depth part of search (since
-#           STATE->PREVIOUS_STATE->PREVIOUS_STATE [QUERY] is a valid path) even though the only one wanted for learning
-#           is the direct STATE->EM->STATE [VALUE] projection
-#           (see _get_backprop_pathway in AutodiffComposition, LINE 591 onward)
-#    - ADD COMMENT TO autodiffcomposition LINE 552 explaining what the subsquent block of code does
-#    - WRITE METHOD IN AUTODIFFCOMPOSITION to show_learning in show_graph()
-#    - DOCUMENT API FOR SPECIFYING PROJECTIONS TO NODES OF NESTED COMPOSITION
-#      (VIZ, *HAVE* TO EXPLICILTY SPECIFY PROJECTIONS TO NODES OF NESTED COMPOSITION AND ALSO INCLUDE THE NESTED COMP)
-#    - DOCUMENT THAT CURRENTLY AUTODIFF LEARNING DOES NOT SUPPORT CYCLIC GRAPHS
-#      or FIX FOR INCLUSION OF RECURRENTTRANSFERMECHANISM PER PROBLEM WITH INTEGRATOR LAYER ABOVE
 
 """
 QUESTIONS:
@@ -183,11 +152,11 @@ RUN_MODEL = True                       # True => run the model
 # RUN_MODEL = False                      # False => don't run the model
 EXECUTION_MODE = ExecutionMode.Python
 # EXECUTION_MODE = ExecutionMode.PyTorch
-ANALYZE_RESULTS = False                # True => output analysis of results of run
+# ANALYZE_RESULTS = False                # True => output analysis of results of run
 # REPORT_OUTPUT = ReportOutput.FULL     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_OUTPUT = ReportOutput.OFF     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
-PRINT_RESULTS = False                  # print model.results after execution
+PRINT_RESULTS = True                  # print model.results after execution
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 
 
@@ -348,7 +317,7 @@ def construct_model(model_name:str=MODEL_NAME,
                                     MappingProjection(previous_state_layer, em.nodes[previous_state_input_name+QUERY]),
                                     em]
     context_learning_pathway = [context_layer,
-                                MappingProjection(context_layer, em.nodes[context_name + QUERY]),
+                                MappingProjection(context_layer, em.nodes[context_name + QUERY], learnable=True),
                                 em,
                                 MappingProjection(em.nodes[state_input_name + RETRIEVED], prediction_layer),
                                 prediction_layer]
@@ -362,6 +331,8 @@ def construct_model(model_name:str=MODEL_NAME,
                                    name=model_name)
 
     # EGO_comp.show_graph(show_learning=True)
+    learning_components = EGO_comp.infer_backpropagation_learning_pathways(ExecutionMode.PyTorch)
+    EGO_comp.add_projection(sender=state_input_layer, receiver=learning_components[2])
 
     # Ensure EM is executed (to encode previous state and context, and predict current state)
     #     before updating state and context
@@ -404,12 +375,15 @@ if __name__ == '__main__':
         #           # report_output=REPORT_OUTPUT,
         #           # report_progress=REPORT_PROGRESS
         #           )
+        context = MODEL_NAME
         model.learn(inputs={STATE_INPUT_LAYER_NAME:INPUTS},
                   # report_output=REPORT_OUTPUT,
                   # report_progress=REPORT_PROGRESS
+                    call_after_minibatch=print('Projections from context to EM: ',
+                                               model.projections[7].parameters.matrix.get(context))
+                                               # model.projections[7].matrix)
                   )
-        print(model.nodes['EM'].parameters.memory.get(context=MODEL_NAME))
-
         if PRINT_RESULTS:
-            print("MODEL NOT YET FULLY EXECUTABLE SO NO RESULTS")
+            print("MEMORY:")
+            print(model.nodes['EM'].parameters.memory.get(context))
     #endregion

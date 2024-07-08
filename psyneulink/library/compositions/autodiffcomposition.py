@@ -502,8 +502,9 @@ class AutodiffComposition(Composition):
 
         # Set to True after first warning about failure to specify execution mode so warning is issued only once
         self.execution_mode_warned_about_default = False
+        # return self.infer_backpropagation_learning_pathways(pnlvm.ExecutionMode.PyTorch)
 
-    def infer_backpropagation_learning_pathways(self, execution_mode, context=None):
+    def infer_backpropagation_learning_pathways(self, execution_mode, context=None)->list:
         """Create backpropapagation learning pathways for every Input Node --> Output Node pathway
         Flattens nested compositions:
           - only includes the Projections in outer Composition to/from the CIMs of the nested Composition
@@ -511,6 +512,7 @@ class AutodiffComposition(Composition):
           - excludes Projections from/to CIMs in the nested Composition
             (from input_CIMs and to output_CIMs), as those should remain identity Projections;
           see `PytorchCompositionWrapper` for table of how Projections are handled and further details.
+        Returns list of target nodes for each pathway
         """
 
         self._analyze_graph()
@@ -683,6 +685,9 @@ class AutodiffComposition(Composition):
                 self.add_backpropagation_learning_pathway(pathway=pathway,
                                                           loss_spec=self.loss_spec)
 
+        self._analyze_graph()
+        return self.learning_components
+
     # CLEANUP: move some of what's done in the methods below to a "validate_params" type of method
     @handle_external_context()
     def _build_pytorch_representation(self, context=None, refresh=False):
@@ -783,7 +788,8 @@ class AutodiffComposition(Composition):
 
         # do forward computation on current inputs
         #   should return 2d values for each component
-        curr_tensor_outputs = self.parameters.pytorch_representation._get(context).forward(curr_tensor_inputs, context)
+        pytorch_rep = self.parameters.pytorch_representation._get(context)
+        curr_tensor_outputs = pytorch_rep.forward(curr_tensor_inputs, context)
 
         for component in curr_tensor_outputs.keys():
             # possibly add custom loss option, which is a loss function that takes many args
@@ -806,6 +812,7 @@ class AutodiffComposition(Composition):
                                                 context=context,
                                                 skip_history=True,
                                                 skip_log=True)
+
         return outputs
 
     def clear_losses(self, context=None):
@@ -813,11 +820,14 @@ class AutodiffComposition(Composition):
         self.parameters.losses.set([], context=context)
 
     def _update_learning_parameters(self, context):
-        """Carry out backpropagation learning for one or more trials
-        Updates parameters (weights) based on trials run since last update.
-        Uses Pytorch backward method to compute gradients and update weights
+        """Carry out backpropagation learning for one or more trials.
+        Update parameters (weights) based on trials run since last update,
+            using Pytorch backward method to compute gradients and update weights
+        Then execute (i.e., do forward computation for) nodes in pytorch_rep._nodes_to_execute_after_gradient_calc
         """
         optimizer = self.parameters.optimizer._get(context=context)
+        pytorch_rep = self.parameters.pytorch_representation._get(context=context)
+
         optimizer.zero_grad()
 
         tracked_loss = self.parameters.tracked_loss._get(context=context) / int(self.parameters.tracked_loss_count._get(context=context))
@@ -826,8 +836,13 @@ class AutodiffComposition(Composition):
         self.parameters.tracked_loss._set(torch.zeros(1, device=self.device).double(), context=context, skip_history=True, skip_log=True)
         self.parameters.tracked_loss_count._set(np.array(0), context=context, skip_history=True, skip_log=True)
         optimizer.step()
-        self.parameters.pytorch_representation._get(context=context).detach_all()
-        self.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)
+        pytorch_rep.detach_all()
+        pytorch_rep.copy_weights_to_psyneulink(context)
+
+        # do forward computation on nodes that should be executed after gradient calculation
+        with torch.no_grad():
+            for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
+                node.wrapper_type.execute_node(node, variable, context)
 
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         if "run" in tags:
@@ -838,7 +853,7 @@ class AutodiffComposition(Composition):
     def _get_total_loss(self, num_trials: int=1, context:Context=None):
         return sum(self.parameters.trial_losses._get(context)[-num_trials:]) /num_trials
 
-    def _infer_input_nodes(self, input_dict: dict):
+    def _get_autodiff_inputs_values(self, input_dict: dict):
         """Remove TARGET Nodes, and return dict with values of INPUT Nodes for single trial
         For nested Compositions, replace input to nested Composition with inputs to its INPUT Nodes
         For InuptPorts, replace with owner
@@ -853,40 +868,34 @@ class AutodiffComposition(Composition):
             if (mech in self.get_nested_nodes_input_nodes_at_levels()
                     and mech not in self.get_nodes_by_role(NodeRole.TARGET)):
                 # Pass along inputs to all INPUT Nodes except TARGETS
-                # (those are handled separately in _infer_output_nodes)
+                # (those are handled separately in _get_autodiff_targets_values)
                 autodiff_input_dict[node] = values
-            # FIX: 11/3/23:  This is handled _parse_learning_spec
-            # elif isinstance(node, Composition):
-            #     # Replace input to nested Composition with inputs for the InputPorts of its INPUT Nodes
-            #     i = 0
-            #     for output_port in node.input_CIM.output_ports:
-            #         # If node has input from a Node in an outer Composition, no need for input here
-            #         if node.input_CIM._get_source_node_for_input_CIM(output_port):
-            #             continue
-            #         assert len(output_port.efferents) == 1, \
-            #             (f"PROGRAM ERROR: {output_port.name} of ouput_CIM for '{node.name}' "
-            #              f"has more than one efferent.")
-            #         # Get input for destination input_port for every trial in values
-            #         #   note: each value (input spec) should be 2d rather than 3d,
-            #         #         since it is the input for an InputPort rather than a Mechanism;
-            #         #         this gets parsed in PytorchCompositionWrapper.forward()
-            #         # autodiff_input_dict[output_port.efferents[0].receiver] = values[i]
-            #         # autodiff_input_dict[output_port.efferents[0].receiver] = [value[i] for value in values]
-            #         i += 1
         return autodiff_input_dict
 
-    def _infer_output_nodes(self, input_dict: dict):
-        """Remove INPUT Nodes, and return dict with values for TARGET Nodes
-
-        Get Inputs to TARGET Nodes and assign to dict mapping them to OUTPUT Nodes of Composition,
-        which are used for computation of loss in autodiff_training().
+    def _get_autodiff_targets_values(self, input_dict):
+        """Return dict with values for TARGET Nodes
+        Get Inputs to TARGET Nodes used for computation of loss in autodiff_training().
+        Uses input_dict to get values for TARGET Nodes that are INPUT Nodes of the AutodiffComposition,
+        If a TARGET Node is not an INPUT Node, it is assumed to be the target of a projection from an INPUT Node
+        and the value is determined by searching recursively for the input Node that projects to the TARGET Node.
 
         Returns
         ---------
-        A dict mapping TARGET Nodes -> target values corresponding to OUTPUT Nodes of Composition
+        A dict mapping TARGET Nodes -> target values
         """
-        # Reduce from 3d inputs to 2d values to match outputs computed in forward computation in autodiff_training()
-        return {node:value for node, value in input_dict.items() if node in self.target_output_map}
+        target_values = {}
+        def get_target_value(target):
+            if target in self.get_nodes_by_role(NodeRole.INPUT):
+                return input_dict[target]
+            if len(target.path_afferents) > 1:
+                raise AutodiffCompositionError(f"TARGET Node '{target.name}' (for '{self.name}')"
+                                               f"cannot have more than one afferent projection.")
+            target = target.path_afferents[0].sender.owner
+            return get_target_value(target)
+
+        for target in self.target_output_map:
+            target_values[target] = get_target_value(target)
+        return target_values
 
     def _parse_learning_spec(self, inputs, targets, execution_mode, context):
         stim_input, num_input_trials = super()._parse_learning_spec(inputs, targets, execution_mode, context)
@@ -1009,8 +1018,8 @@ class AutodiffComposition(Composition):
                 # model may be modified between runs?
 
 
-                autodiff_inputs = self._infer_input_nodes(inputs)
-                autodiff_targets = self._infer_output_nodes(inputs)
+                autodiff_inputs = self._get_autodiff_inputs_values(inputs)
+                autodiff_targets = self._get_autodiff_targets_values(inputs)
 
                 report(self,
                        LEARN_REPORT,
