@@ -685,7 +685,7 @@ class ParameterEstimationComposition(Composition):
                                   f"values in this column.")
 
             # Get a separate copy of the dataframe with conditional columns
-            self.cond_data = self.data[self.depends_on.values()].copy()
+            self.cond_data = self.data[list(set(self.depends_on.values()))].copy()
 
             # For each value in depends_on, get the unique levels of the column. This will determine the number of
             # of conditional parameters that need to be estimated for that parameter.
