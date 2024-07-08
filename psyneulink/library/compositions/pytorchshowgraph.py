@@ -21,7 +21,7 @@ any `nested Compositions <AutodiffComposition_Nesting>` are "flattened" (i.e., i
 Composition); also, any `Nodes <Composition_Nodes>`` designated as `exclude_from_gradient_calc
 <PytorchMechanismWrapper.exclude_from_gradient_calc>` will be moved to the end of the graph (as they are executed
 after the gradient calculation), and any Projections designated as `exclude_from_autodiff
-
+<Projection.exclude_from_autodiff>` will not be used in the gradient calculations at all.
 
 .. _PyTorchShowGraph_Class_Reference:
 
