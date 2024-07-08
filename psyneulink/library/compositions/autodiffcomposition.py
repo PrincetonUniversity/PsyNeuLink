@@ -504,6 +504,8 @@ class AutodiffComposition(Composition):
         self.execution_mode_warned_about_default = False
         # return self.infer_backpropagation_learning_pathways(pnlvm.ExecutionMode.PyTorch)
 
+        self._show_graph = PytorchShowGraph(self, **show_graph_attributes)
+
     def infer_backpropagation_learning_pathways(self, execution_mode, context=None)->list:
         """Create backpropapagation learning pathways for every Input Node --> Output Node pathway
         Flattens nested compositions:

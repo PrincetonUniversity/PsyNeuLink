@@ -4116,6 +4116,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Call with context = COMPOSITION to avoid calling _check_initialization_status again
         self._analyze_graph(context=context)
 
+        # ShowGraph
         show_graph_attributes = show_graph_attributes or {}
         self._show_graph = ShowGraph(self, **show_graph_attributes)
 
