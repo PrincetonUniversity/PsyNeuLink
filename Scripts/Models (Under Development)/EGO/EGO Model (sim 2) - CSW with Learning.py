@@ -397,8 +397,8 @@ if __name__ == '__main__':
                   # report_output=REPORT_OUTPUT,
                   # report_progress=REPORT_PROGRESS
                     call_after_minibatch=print('Projections from context to EM: ',
-                                               # model.projections[7].parameters.matrix.get(context))
-                                               model.projections[7].matrix)
+                                               model.projections[7].parameters.matrix.get(context))
+                                               # model.projections[7].matrix)
                   )
         if PRINT_RESULTS:
             print("MEMORY:")
