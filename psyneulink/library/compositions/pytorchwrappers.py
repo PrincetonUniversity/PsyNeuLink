@@ -243,7 +243,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
     def _regenerate_paramlist(self):
         """Add Projection matrices to Pytorch Module's parameter list"""
         self.params = nn.ParameterList()
-        for proj_wrapper in [p for p in self.projection_wrappers if not p._projection._exclude_from_autodiff]:
+        for proj_wrapper in [p for p in self.projection_wrappers if not p._projection.exclude_in_autodiff]:
             self.params.append(proj_wrapper.matrix)
 
     # generates llvm function for self.forward
@@ -586,7 +586,7 @@ class PytorchMechanismWrapper():
     Attributes
     ----------
 
-    exclude_from_autodiff: bool or str[BEFORE | AFTER]: False
+    exclude_from_gradient_calc: bool or str[BEFORE | AFTER]: False
         used to prevent a node from being included in the Pytorch gradient calculation by excluding it in calls to
         the forward() and backward().  If AFTER is specified, the node is executed after at the end of the
         `update_learning_parameters` method.  BEFORE is not currently supported

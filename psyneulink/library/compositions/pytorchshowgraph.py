@@ -15,13 +15,12 @@
 *PyTorch ShowGraph*
 --------------------
 
-This is a subclass of the `ShowGraph` class that is used to display the graph of a `Composition` used for learning in
-`PyTorch mode <Composition_Learning_AutodiffComposition>` (also see `AutodiffComposition_PyTorch`).  In this mode, any
-`nested Compositions <AutodiffComposition_Nesting>` are "flattened" (i.e., incorporated into the outermost Composition);
-also, any nodes designated as `exclude_from_gradient_calc <>
-
-XXX
-and _exclude_from_autodiff
+This is a subclass of the `ShowGraph` class that is used to display the graph of a `Composition` used for learning
+in `PyTorch mode <Composition_Learning_AutodiffComposition>` (also see `AutodiffComposition_PyTorch`).  In this mode,
+any `nested Compositions <AutodiffComposition_Nesting>` are "flattened" (i.e., incorporated into the outermost
+Composition); also, any `Nodes <Composition_Nodes>`` designated as `exclude_from_gradient_calc
+<PytorchMechanismWrapper.exclude_from_gradient_calc>` will be moved to the end of the graph (as they are executed
+after the gradient calculation), and any Projections designated as `exclude_from_autodiff
 
 
 .. _PyTorchShowGraph_Class_Reference:

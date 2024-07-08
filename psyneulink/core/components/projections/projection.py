@@ -563,6 +563,9 @@ class Projection_Base(Projection):
         assignment as a *feedback* Projection, whereas False precludes it from being assigned as a feedback Projection;
         None (the default) allows the Composition to determine whether it is assigned as a feedback Projection.
 
+    exclude_in_autodiff : bool : default False
+        specifies whether Projection is included in `AutodiffComposition` gradient calculations.
+
     Attributes
     ----------
 
@@ -587,6 +590,9 @@ class Projection_Base(Projection):
         <Projection_Base.function>`.  The value of the parameters of the Projection and its `function
         <Projection_Base.function>` are also accessible as (and can be modified using) attributes of the Projection,
         in the same manner as they can for a `Mechanism <Mechanism_ParameterPorts>`).
+
+    exclude_in_autodiff : bool : default False
+        determines whether Projection is included in `AutodiffComposition` gradient calculations.
 
     weight : number
        multiplies the `value <Projection_Base.value>` of the Projection after applying the `exponent
@@ -717,7 +723,7 @@ class Projection_Base(Projection):
             return
 
         self.receiver = receiver
-        self._exclude_from_autodiff = exclude_in_autodiff
+        self.exclude_in_autodiff = exclude_in_autodiff
         self._feedback = feedback # Assign to _feedback to avoid interference with vertex.feedback used in Composition
 
          # Register with ProjectionRegistry or create one
