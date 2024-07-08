@@ -843,18 +843,6 @@ class AutodiffComposition(Composition):
         with torch.no_grad():
             for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
                 node.wrapper_type.execute_node(node, variable, context)
-        # PER DECLAN:
-        # for i_trial, (x,_,y) in enumerate(data_loader):
-        #     context = context_module(x)
-        #     if i_trial > 0:
-        #         optimizer.zero_grad()
-        #         pred_em = em_module(x,context)
-        #         loss = loss_fn(pred_em,y)
-        #         loss.backward()
-        #         optimizer.step()
-        #         with torch.no_grad():
-        #             em_module.write(x,context,y)
-
 
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         if "run" in tags:
