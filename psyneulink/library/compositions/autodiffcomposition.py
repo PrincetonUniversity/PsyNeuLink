@@ -502,6 +502,7 @@ class AutodiffComposition(Composition):
 
         # Set to True after first warning about failure to specify execution mode so warning is issued only once
         self.execution_mode_warned_about_default = False
+        # return self.infer_backpropagation_learning_pathways(pnlvm.ExecutionMode.PyTorch)
 
     def infer_backpropagation_learning_pathways(self, execution_mode, context=None)->list:
         """Create backpropapagation learning pathways for every Input Node --> Output Node pathway

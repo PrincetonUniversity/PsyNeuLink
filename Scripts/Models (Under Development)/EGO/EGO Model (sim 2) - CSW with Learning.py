@@ -169,11 +169,11 @@ RUN_MODEL = True                       # True => run the model
 # RUN_MODEL = False                      # False => don't run the model
 EXECUTION_MODE = ExecutionMode.Python
 # EXECUTION_MODE = ExecutionMode.PyTorch
-ANALYZE_RESULTS = False                # True => output analysis of results of run
+# ANALYZE_RESULTS = False                # True => output analysis of results of run
 # REPORT_OUTPUT = ReportOutput.FULL     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_OUTPUT = ReportOutput.OFF     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
-PRINT_RESULTS = False                  # print model.results after execution
+PRINT_RESULTS = True                  # print model.results after execution
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 
 
@@ -334,7 +334,7 @@ def construct_model(model_name:str=MODEL_NAME,
                                     MappingProjection(previous_state_layer, em.nodes[previous_state_input_name+QUERY]),
                                     em]
     context_learning_pathway = [context_layer,
-                                MappingProjection(context_layer, em.nodes[context_name + QUERY]),
+                                MappingProjection(context_layer, em.nodes[context_name + QUERY], learnable=True),
                                 em,
                                 MappingProjection(em.nodes[state_input_name + RETRIEVED], prediction_layer),
                                 prediction_layer]
@@ -392,12 +392,15 @@ if __name__ == '__main__':
         #           # report_output=REPORT_OUTPUT,
         #           # report_progress=REPORT_PROGRESS
         #           )
+        context = MODEL_NAME
         model.learn(inputs={STATE_INPUT_LAYER_NAME:INPUTS},
                   # report_output=REPORT_OUTPUT,
                   # report_progress=REPORT_PROGRESS
+                    call_after_minibatch=print('Projections from context to EM: ',
+                                               # model.projections[7].parameters.matrix.get(context))
+                                               model.projections[7].matrix)
                   )
-        print(model.nodes['EM'].parameters.memory.get(context=MODEL_NAME))
-
         if PRINT_RESULTS:
-            print("MODEL NOT YET FULLY EXECUTABLE SO NO RESULTS")
+            print("MEMORY:")
+            print(model.nodes['EM'].parameters.memory.get(context))
     #endregion
