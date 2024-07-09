@@ -46,7 +46,11 @@ class PytorchShowGraph(ShowGraph):
     @handle_external_context(source=ContextFlags.COMPOSITION)
     def show_graph(self, *args, **kwargs):
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
-        # FIX: PUT PYTORCH SPECIFIC HANDING HERE
         return super().show_graph(*args, **kwargs)
+
+    def _get_nodes(self, composition):
+        """Override to return nodes of PytorchCompositionWrapper rather than autodiffcomposition"""
+        # FIX: ADD CODE HERE
+
 
 

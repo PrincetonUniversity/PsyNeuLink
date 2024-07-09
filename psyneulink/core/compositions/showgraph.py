@@ -920,6 +920,10 @@ class ShowGraph():
         """Helper method that allows override by subclass to filter nodes used for graph"""
         return composition.nodes
 
+    def _get_projections(self, composition):
+        """Helper method that allows override by subclass to filter projections used for graph"""
+        return composition.projections
+
     def _assign_processing_components(self,
                                       g,
                                       rcvr,
@@ -1190,7 +1194,9 @@ class ShowGraph():
 
         from psyneulink.core.compositions.composition import Composition, NodeRole
         composition = self.composition
+        composition_projections = self._get_projections(composition)
         enclosing_g = enclosing_comp._show_graph.G if enclosing_comp else None
+        enclosing_comp_projections = self._get_projections(enclosing_comp) if enclosing_comp else None
 
         cim_rank = 'same'
 
@@ -1239,7 +1245,7 @@ class ShowGraph():
                 # But if any Projection to it is from a controller, use controller_color
                 for input_port in cim.input_ports:
                     for proj in input_port.path_afferents:
-                        if proj not in enclosing_comp.projections and not show_projections_not_in_composition:
+                        if (proj not in enclosing_comp_projections and not show_projections_not_in_composition):
                             continue
                         if self._trace_senders_for_controller(proj, enclosing_comp):
                             cim_type_color = self.controller_color
@@ -1296,7 +1302,7 @@ class ShowGraph():
                     for proj in projs:
 
                         proj_color=self.default_node_color
-                        if proj not in enclosing_comp.projections:
+                        if proj not in enclosing_comp_projections:
                             if not show_projections_not_in_composition:
                                 continue
                             else:
@@ -1348,7 +1354,7 @@ class ShowGraph():
                     for proj in projs:
 
                         proj_color = self.default_node_color
-                        if proj not in composition.projections:
+                        if proj not in composition_projections:
                             if not show_projections_not_in_composition:
                                 continue
                             else:
@@ -1412,7 +1418,7 @@ class ShowGraph():
                     for proj in projs:
 
                         proj_color = self.control_color
-                        if proj not in enclosing_comp.projections:
+                        if proj not in enclosing_comp_projections:
                             if not show_projections_not_in_composition:
                                 continue
                             else:
@@ -1464,7 +1470,7 @@ class ShowGraph():
                     for proj in projs:
 
                         proj_color = None
-                        if proj not in composition.projections:
+                        if proj not in composition_projections:
                             if not show_projections_not_in_composition:
                                 continue
                             else:
@@ -1535,7 +1541,7 @@ class ShowGraph():
                     for proj in projs:
 
                         proj_color = self.default_node_color
-                        if proj not in composition.projections:
+                        if proj not in composition_projections:
                             if not show_projections_not_in_composition:
                                 continue
                             else:
@@ -1598,7 +1604,7 @@ class ShowGraph():
                     for proj in projs:
 
                         proj_color = self.default_node_color
-                        if proj not in enclosing_comp.projections:
+                        if proj not in enclosing_comp_projections:
                             if not show_projections_not_in_composition:
                                 continue
                             else:
@@ -1740,7 +1746,7 @@ class ShowGraph():
                 ctl_proj_arrowhead = self.control_projection_arrow
 
                 # Skip ControlProjections not in the Composition
-                if ctl_proj not in composition.projections:
+                if ctl_proj not in self._get_projections(composition):
                     continue
 
                 # Construct edge name  ---------------------------------------------------
@@ -2244,6 +2250,7 @@ class ShowGraph():
 
         from psyneulink.core.compositions.composition import Composition, NodeRole
         composition = self.composition
+        composition_projections = self._get_projections(composition)
         if nesting_level not in comp_hierarchy:
             comp_hierarchy[nesting_level] = composition
         enclosing_g = enclosing_comp._show_graph.G if enclosing_comp else None
@@ -2258,7 +2265,7 @@ class ShowGraph():
             if show_nested is NESTED:
                 # Add output_CIMs for nested Comps to find sender nodes
                 cims = set([proj.sender.owner for proj in rcvr.afferents
-                            if (proj in composition.projections
+                            if (proj in composition_projections
                                 and isinstance(proj.sender.owner, CompositionInterfaceMechanism)
                                 and (proj.sender.owner is proj.sender.owner.composition.output_CIM))])
                 senders.update(cims)
@@ -2266,7 +2273,7 @@ class ShowGraph():
             if enclosing_g and show_nested is not INSET:
                 # Add input_CIM for current Composition to find senders from enclosing_g
                 cims = set([proj.sender.owner for proj in rcvr.afferents
-                            if (proj in composition.projections
+                            if (proj in composition_projections
                                 and isinstance(proj.sender.owner, CompositionInterfaceMechanism)
                                 and proj.sender.owner in {composition.input_CIM, composition.parameter_CIM})])
                 senders.update(cims)
@@ -2424,7 +2431,7 @@ class ShowGraph():
                     proj_color = proj_color_default
                     proj_arrowhead = proj_arrow_default
 
-                    if proj not in composition.projections:
+                    if proj not in composition_projections:
                         if not show_projections_not_in_composition:
                             continue
                         else:
@@ -2524,6 +2531,7 @@ class ShowGraph():
 
         composition = self.composition
         nodes = self._get_nodes(composition)
+        projections = self._get_projections(composition)
 
         # Sort nodes for display
         def get_index_of_node_in_G_body(node, node_type: Literal['MECHANISM', 'Projection', 'Composition']):
@@ -2563,7 +2571,7 @@ class ShowGraph():
                 if i is not None:
                     G.body.insert(len(G.body),G.body.pop(i))
 
-        for proj in composition.projections:
+        for proj in projections:
             # Put ControlProjection(s) last, except for controller of Composition (see below)
             # if isinstance(proj, ControlProjection) and self._is_composition_controller(proj.sender.owner):
             if isinstance(proj, ControlProjection) and self._is_composition_controller(proj.sender.owner,
