@@ -906,7 +906,8 @@ class ShowGraph():
                                              show_node_structure,
                                              node_struct_args,
                                              show_projection_labels,
-                                             show_projections_not_in_composition)
+                                             show_projections_not_in_composition,
+                                             context)
 
         return self._generate_output(G,
                                      enclosing_comp,
@@ -925,6 +926,10 @@ class ShowGraph():
     def _get_projections(self, composition, context):
         """Helper method that allows override by subclass to filter projections used for graph"""
         return composition.projections
+
+    def _get_roles_by_node(self, composition, node, context):
+        """Helper method that allows override by subclass to filter node roles used for graph"""
+        return composition.get_roles_by_node(node)
 
     def _assign_processing_components(self,
                                       g,
@@ -962,12 +967,11 @@ class ShowGraph():
                                     NESTING_LEVEL:nesting_level + 1,
                                     })
                 # Get subgraph for nested Composition
-                # # MODIFIED 10/29/22 NEW: FIX: HACK SO NESTED COMPOSITIONS DON'T CRASH ANIMATION (THOUGH STILL NOT SHOWN)
+                # IMPLEMENTATION NOTE: FIX: HACK SO NESTED COMPOSITIONS DON'T CRASH ANIMATION (THOUGH STILL NOT SHOWN)
                 if hasattr(composition, '_animate') and composition._animate is not False:
                     rcvr._animate = composition._animate
                     rcvr._set_up_animation(context)
                     rcvr._animate_num_trials = composition._animate_num_trials + 1
-                # MODIFIED 10/29/22 END
                 nested_comp_graph = rcvr._show_graph.show_graph(**nested_args)
 
                 nested_comp_graph.name = "cluster_" + rcvr.name
@@ -1251,7 +1255,7 @@ class ShowGraph():
                     for proj in input_port.path_afferents:
                         if (proj not in enclosing_comp_projections and not show_projections_not_in_composition):
                             continue
-                        if self._trace_senders_for_controller(proj, enclosing_comp):
+                        if self._trace_senders_for_controller(proj, context, enclosing_comp):
                             cim_type_color = self.controller_color
             elif cim is composition.output_CIM:
                 cim_type_color = self.output_color
@@ -1441,7 +1445,7 @@ class ShowGraph():
                             f"PROGRAM ERROR: parameter_CIM of {composition.name} recieves a Projection " \
                             f"from a Node from other than a {ControlMechanism.__name__}."
                         # Skip Projections from controller (handled in _assign_controller_components)
-                        if self._is_composition_controller(ctl_mech_output_port_owner, enclosing_comp):
+                        if self._is_composition_controller(ctl_mech_output_port_owner, context, enclosing_comp):
                             continue
                         # Skip if there is no outer Composition (enclosing_g),
                         #    or Projections across nested Compositions are not being shown (show_nested=INSET)
@@ -1516,7 +1520,7 @@ class ShowGraph():
                             rcvr_modulated_mec_proj_label = rcvr_label
 
                         # Render Projection
-                        if self._trace_senders_for_controller(proj, enclosing_comp):
+                        if self._trace_senders_for_controller(proj, context, enclosing_comp):
                             ctl_proj_color = proj_color or self.controller_color
                         else:
                             ctl_proj_color = proj_color or self.control_color
@@ -2083,7 +2087,8 @@ class ShowGraph():
                                     show_node_structure,
                                     node_struct_args,
                                     show_projection_labels,
-                                    show_projections_not_in_composition):
+                                    show_projections_not_in_composition,
+                                    context):
         """Assign learning nodes and edges to graph"""
 
         from psyneulink.core.compositions.composition import NodeRole
@@ -2101,7 +2106,7 @@ class ShowGraph():
             if isinstance(rcvr, MappingProjection):
                 return
 
-            if NodeRole.TARGET in composition.get_roles_by_node(rcvr):
+            if NodeRole.TARGET in self._get_roles_by_node(composition, rcvr, context):
                 rcvr_width = self.bold_width
             else:
                 rcvr_width = self.default_width
@@ -2481,7 +2486,7 @@ class ShowGraph():
                                         rcvr is not enclosing_comp.controller
                                         and rcvr is not composition.controller
                                         and not sndr.afferents and show_cim
-                                        or self._is_composition_controller(sndr, enclosing_comp)):
+                                        or self._is_composition_controller(sndr, context, enclosing_comp)):
                                     continue
                                 if sender is composition.parameter_CIM:
                                     # # Allow MappingProjections to iconified rep of nested Composition
@@ -2562,7 +2567,7 @@ class ShowGraph():
         for node in nodes:
             if isinstance(node, Composition):
                 continue
-            roles = composition.get_roles_by_node(node)
+            roles = self._get_roles_by_node(composition, node, context)
             # Put INPUT node(s) first
             if NodeRole.INPUT in roles:
                 i = get_index_of_node_in_G_body(node, MECHANISM)
@@ -2582,7 +2587,7 @@ class ShowGraph():
         for proj in projections:
             # Put ControlProjection(s) last, except for controller of Composition (see below)
             # if isinstance(proj, ControlProjection) and self._is_composition_controller(proj.sender.owner):
-            if isinstance(proj, ControlProjection) and self._is_composition_controller(proj.sender.owner,
+            if isinstance(proj, ControlProjection) and self._is_composition_controller(proj.sender.owner, context,
                                                                                        enclosing_comp):
                 i = get_index_of_node_in_G_body(proj, PROJECTION)
                 if i is not None:
@@ -2639,7 +2644,7 @@ class ShowGraph():
         except:
             raise ShowGraphError(f"Problem displaying graph for {composition.name}")
 
-    def _is_composition_controller(self, mech, enclosing_comp=None):
+    def _is_composition_controller(self, mech, context, enclosing_comp=None):
         # FIX 6/12/20: REPLACE WITH TEST FOR NodeRole.CONTROLLER ONCE THAT IS IMPLEMENTED
         # return isinstance(mech, ControlMechanism) and hasattr(mech, 'composition') and mech.composition
         from psyneulink.core.compositions.composition import NodeRole
@@ -2648,15 +2653,15 @@ class ShowGraph():
         for comp in [self.composition, enclosing_comp]:
             if not comp:
                 continue
-            if mech in comp._all_nodes and NodeRole.CONTROLLER in comp.get_roles_by_node(mech):
+            if mech in comp._all_nodes and NodeRole.CONTROLLER in self._get_roles_by_node(comp, mech, context):
                 return True
         return False
 
-    def _trace_senders_for_controller(self, proj, comp=None):
+    def _trace_senders_for_controller(self, proj, context, comp=None):
         """Check whether source sender of a ControlProjection is (at any level of nesting) a Composition controller."""
         owner = proj.sender.owner
         comp = owner.composition if hasattr(owner, 'composition') else comp or self.composition
-        if self._is_composition_controller(owner, comp):
+        if self._is_composition_controller(owner, context, comp):
             return True
         if isinstance(owner, CompositionInterfaceMechanism):
             sender_proj = owner.port_map[proj.receiver][0].path_afferents[0]

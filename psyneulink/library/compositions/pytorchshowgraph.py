@@ -13,7 +13,10 @@ from beartype import beartype
 from psyneulink._typing import Optional, Union, Literal
 
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
+from psyneulink.core.compositions import NodeRole
 from psyneulink.core.compositions.showgraph import ShowGraph
+from psyneulink.core.llvm import ExecutionMode
+
 
 __all__ = ['SHOW_PYTORCH']
 
@@ -28,7 +31,7 @@ class PytorchShowGraph(ShowGraph):
     Composition); also, any `Nodes <Composition_Nodes>`` designated as `exclude_from_gradient_calc
     <PytorchMechanismWrapper.exclude_from_gradient_calc>` will be moved to the end of the graph (as they are executed
     after the gradient calculation), and any Projections designated as `exclude_from_autodiff
-    <Projection.exclude_from_autodiff>` will not be used in the gradient calculations at all.
+    <Projection.exclude_from_autodiff>` will not be shown as they are not used in the gradient calculations at all.
 
     Arguments
     ---------
@@ -46,17 +49,43 @@ class PytorchShowGraph(ShowGraph):
     @handle_external_context(source=ContextFlags.COMPOSITION)
     def show_graph(self, *args, **kwargs):
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
+        self.show_pytorch = kwargs.pop(SHOW_PYTORCH, self.show_pytorch)
+        context = kwargs.get('context')
+        if self.show_pytorch:
+            self.pytorch_rep = self.composition._build_pytorch_representation(context)
         return super().show_graph(*args, **kwargs)
-
 
     def _get_nodes(self, composition, context):
         """Override to return nodes of PytorchCompositionWrapper rather than autodiffcomposition"""
-        # FIX: REPLACE WITH RETURN OF PytorchCompositionWrapper NODES
-        return super()._get_nodes(composition, context)
+        if self.show_pytorch:
+            nodes = list(self.pytorch_rep.nodes_map.keys())
+            return nodes
+        else:
+            return super()._get_nodes(composition, context)
 
     def _get_projections(self, composition, context):
         """Override to return nodes of PytorchCompositionWrapper rather than autodiffcomposition"""
-        # FIX: REPLACE WITH RETURN OF PytorchCompositionWrapper NODES
-        return super()._get_projections(composition, context)
+        if self.show_pytorch:
+            nodes = list(self.pytorch_rep.projections_map.keys())
+            return nodes
+        else:
+            return super()._get_projections(composition, context)
 
+    def _get_roles_by_node(self, composition, node, context):
+        """Override in Pytorch mode to return NodeRole.INTERNAL for all nodes in nested compositions"""
+        if self.show_pytorch:
+            try:
+                return composition.get_roles_by_node(node)
+            except:
+                return [NodeRole.INTERNAL]
+        if self.show_pytorch and node not in self.composition.nodes:
+                return [NodeRole.INTERNAL]
+        else:
+            return super()._get_roles_by_node(composition, node, context)
 
+    # def _get_nodes_by_role(self, composition, role, context):
+    #     """Override in Pytorch mode to return NodeRole.INTERNAL for all nodes in nested compositions"""
+    #     if self.show_pytorch and node not in self.composition.nodes:
+    #         return [NodeRole.INTERNAL]
+    #     else:
+    #         return super()._get_nodes_by_role(composition, node, context)
