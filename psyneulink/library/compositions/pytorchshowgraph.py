@@ -14,7 +14,6 @@ from psyneulink._typing import Optional, Union, Literal
 
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.compositions.showgraph import ShowGraph
-from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
 
 __all__ = ['SHOW_PYTORCH']
 
@@ -46,6 +45,8 @@ class PytorchShowGraph(ShowGraph):
     @beartype
     @handle_external_context(source=ContextFlags.COMPOSITION)
     def show_graph(self, *args, **kwargs):
-        return super().__init__(*args, **kwargs)
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
+        # FIX: PUT PYTORCH SPECIFIC HANDING HERE
+        return super().show_graph(*args, **kwargs)
 
 

@@ -826,8 +826,8 @@ class ShowGraph():
         rcvrs = list(processing_graph.keys())
         for rcvr in rcvrs:
 
-            if any(n is rcvr for nested_comp in composition.nodes
-                   if isinstance(nested_comp, Composition) for n in nested_comp.nodes):
+            if any(n is rcvr for nested_comp in self._get_nodes(composition)
+                   if isinstance(nested_comp, Composition) for n in self._get_nodes(nested_comp)):
                 continue
 
             # If show_controller is true, objective mechanism is handled in _assign_controller_components
@@ -915,6 +915,10 @@ class ShowGraph():
 
     def __call__(self, **args):
         return self.show_graph(**args)
+
+    def _get_nodes(self, composition):
+        """Helper method that allows override by subclass to filter nodes used for graph"""
+        return composition.nodes
 
     def _assign_processing_components(self,
                                       g,
@@ -1674,6 +1678,7 @@ class ShowGraph():
         from psyneulink.core.compositions.composition import Composition
 
         composition = self.composition
+        nodes = self._get_nodes(composition)
         controller = composition.controller
 
         if controller is None:
@@ -1749,12 +1754,13 @@ class ShowGraph():
                     rcvr_comp = ctl_proj_rcvr.owner.composition
                     def find_rcvr_comp(r, c, l):
                         """Find deepest Composition within c that encloses r within range of num_nesting_levels of c"""
+                        rcvr_nodes = self._get_nodes(c)
                         if (self.num_nesting_levels is not None and l > self.num_nesting_levels):
                             return c, l
-                        elif r in c.nodes:
+                        elif r in rcvr_nodes:
                             return r, l
                         l+=1
-                        for nested_c in [nc for nc in c.nodes if isinstance(nc, Composition)]:
+                        for nested_c in [nc for nc in nodes if isinstance(nc, Composition)]:
                             return find_rcvr_comp(r, nested_c, l)
                         return None
                     project_to_node = False
@@ -1917,7 +1923,7 @@ class ShowGraph():
                                                                 proj_sndr.owner,
                                                                 show_types,
                                                                 show_dimensions)
-                        if (proj_sndr.owner not in composition.nodes
+                        if (proj_sndr.owner not in nodes
                                 # MODIFIED 1/6/22 NEW:
                                 and isinstance(proj_sndr.owner, CompositionInterfaceMechanism)):
                             # MODIFIED 1/6/22 END
@@ -1964,7 +1970,7 @@ class ShowGraph():
                                                                      projection.sender.owner,
                                                                      show_types,
                                                                      show_dimensions)
-                        if (projection.sender.owner not in composition.nodes
+                        if (projection.sender.owner not in nodes
                                 and not controller.allow_probes):
                             num_nesting_levels = self.num_nesting_levels or 0
                             nested_comp = projection.sender.owner.composition
@@ -2517,6 +2523,7 @@ class ShowGraph():
         from psyneulink.core.compositions.composition import Composition, NodeRole
 
         composition = self.composition
+        nodes = self._get_nodes(composition)
 
         # Sort nodes for display
         def get_index_of_node_in_G_body(node, node_type: Literal['MECHANISM', 'Projection', 'Composition']):
@@ -2536,7 +2543,7 @@ class ShowGraph():
                 elif 'subgraph' in item and node_type in {COMPOSITION}:
                     return i
 
-        for node in composition.nodes:
+        for node in nodes:
             if isinstance(node, Composition):
                 continue
             roles = composition.get_roles_by_node(node)
@@ -2571,7 +2578,7 @@ class ShowGraph():
             G.body.insert(len(G.body),G.body.pop(i))
 
         # Put nested Composition(s) very last
-        for node in composition.nodes:
+        for node in nodes:
             if isinstance(node, Composition):
                 i = get_index_of_node_in_G_body(node, COMPOSITION)
                 if i is not None:

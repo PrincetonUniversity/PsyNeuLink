@@ -333,6 +333,7 @@ except ImportError:
     torch_available = False
 else:
     from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper
+    from psyneulink.library.compositions.pytorchshowgraph import PytorchShowGraph
 
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
@@ -465,6 +466,8 @@ class AutodiffComposition(Composition):
         #     raise AutodiffCompositionError('Pytorch python module (torch) is not installed. Please install it with '
         #                                    '`pip install torch` or `pip3 install torch`')
 
+        show_graph_attributes = kwargs.pop('show_graph_attributes', {})
+
         super(AutodiffComposition, self).__init__(name = name,
                                                   learning_rate = learning_rate,
                                                   optimizer_type = optimizer_type,
@@ -504,6 +507,11 @@ class AutodiffComposition(Composition):
         self.execution_mode_warned_about_default = False
         # return self.infer_backpropagation_learning_pathways(pnlvm.ExecutionMode.PyTorch)
 
+        # ShowGraph
+        self.assign_ShowGraph(show_graph_attributes)
+    def assign_ShowGraph(self, show_graph_attributes):
+        """Override to replace assignment of ShowGraph class with PytorchShowGraph"""
+        show_graph_attributes = show_graph_attributes or {}
         self._show_graph = PytorchShowGraph(self, **show_graph_attributes)
 
     def infer_backpropagation_learning_pathways(self, execution_mode, context=None)->list:
@@ -1212,3 +1220,7 @@ class AutodiffComposition(Composition):
         optimizer_states = tuple()
 
         return (*comp_states, optimizer_states)
+
+    def show_graph(self, *args, **kwargs):
+        """Override to use PytorchShowGraph"""
+        self._show_graph.show_graph(*args, **kwargs)
