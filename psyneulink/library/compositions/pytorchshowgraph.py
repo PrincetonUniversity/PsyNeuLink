@@ -55,6 +55,21 @@ class PytorchShowGraph(ShowGraph):
             self.pytorch_rep = self.composition._build_pytorch_representation(context)
         return super().show_graph(*args, **kwargs)
 
+    def _get_processing_graph(self, composition, context):
+        """Helper method that creates dependencies graph for nodes of autodiffcomposition used in Pytorch mode"""
+        if self.show_pytorch:
+            processing_graph = {}
+            projections = self._get_projections(composition, context)
+            for node in self._get_nodes(composition, context):
+                dependencies = set()
+                for projection in projections:
+                    if node is projection.receiver.owner:
+                        dependencies.add(projection.sender.owner)
+                processing_graph[node] = dependencies
+            return processing_graph
+        else:
+            return super()._get_nodes(composition, context)
+
     def _get_nodes(self, composition, context):
         """Override to return nodes of PytorchCompositionWrapper rather than autodiffcomposition"""
         if self.show_pytorch:
@@ -83,9 +98,9 @@ class PytorchShowGraph(ShowGraph):
         else:
             return super()._get_roles_by_node(composition, node, context)
 
-    # def _get_nodes_by_role(self, composition, role, context):
-    #     """Override in Pytorch mode to return NodeRole.INTERNAL for all nodes in nested compositions"""
-    #     if self.show_pytorch and node not in self.composition.nodes:
-    #         return [NodeRole.INTERNAL]
-    #     else:
-    #         return super()._get_nodes_by_role(composition, node, context)
+    def _get_nodes_by_role(self, composition, role, context):
+        """Override in Pytorch mode to return all nodes in nested compositions as INTERNAL"""
+        if self.show_pytorch and composition is not self.composition:
+            return None
+        else:
+            return super()._get_nodes_by_role(composition, role, context)
