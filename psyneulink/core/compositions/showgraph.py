@@ -826,8 +826,8 @@ class ShowGraph():
         rcvrs = list(processing_graph.keys())
         for rcvr in rcvrs:
 
-            if any(n is rcvr for nested_comp in self._get_nodes(composition)
-                   if isinstance(nested_comp, Composition) for n in self._get_nodes(nested_comp)):
+            if any(n is rcvr for nested_comp in self._get_nodes(composition, context)
+                   if isinstance(nested_comp, Composition) for n in self._get_nodes(nested_comp, context)):
                 continue
 
             # If show_controller is true, objective mechanism is handled in _assign_controller_components
@@ -869,7 +869,8 @@ class ShowGraph():
                                         show_projection_labels,
                                         show_projections_not_in_composition,
                                         show_controller,
-                                        comp_hierarchy)
+                                        comp_hierarchy,
+                                        context)
 
         # Add controller-related Components to graph if show_controller
         if show_controller:
@@ -886,7 +887,8 @@ class ShowGraph():
                                                show_projection_labels,
                                                show_projections_not_in_composition,
                                                comp_hierarchy,
-                                               nesting_level)
+                                               nesting_level,
+                                               context)
 
         # Add learning-related Components to graph if show_learning
         if show_learning:
@@ -916,11 +918,11 @@ class ShowGraph():
     def __call__(self, **args):
         return self.show_graph(**args)
 
-    def _get_nodes(self, composition):
+    def _get_nodes(self, composition ,context):
         """Helper method that allows override by subclass to filter nodes used for graph"""
         return composition.nodes
 
-    def _get_projections(self, composition):
+    def _get_projections(self, composition, context):
         """Helper method that allows override by subclass to filter projections used for graph"""
         return composition.projections
 
@@ -1176,7 +1178,8 @@ class ShowGraph():
                                     show_projections_not_in_composition,
                                     enclosing_comp=enclosing_comp,
                                     comp_hierarchy=comp_hierarchy,
-                                    nesting_level=nesting_level)
+                                    nesting_level=nesting_level,
+                                    context=context)
 
     def _assign_cim_components(self,
                                g,
@@ -1190,13 +1193,14 @@ class ShowGraph():
                                show_projection_labels,
                                show_projections_not_in_composition,
                                show_controller,
-                               comp_hierarchy):
+                               comp_hierarchy,
+                               context):
 
         from psyneulink.core.compositions.composition import Composition, NodeRole
         composition = self.composition
-        composition_projections = self._get_projections(composition)
+        composition_projections = self._get_projections(composition, context)
         enclosing_g = enclosing_comp._show_graph.G if enclosing_comp else None
-        enclosing_comp_projections = self._get_projections(enclosing_comp) if enclosing_comp else None
+        enclosing_comp_projections = self._get_projections(enclosing_comp, context) if enclosing_comp else None
 
         cim_rank = 'same'
 
@@ -1679,12 +1683,13 @@ class ShowGraph():
                                       show_projection_labels,
                                       show_projections_not_in_composition,
                                       comp_hierarchy,
-                                      nesting_level):
+                                      nesting_level,
+                                      context):
         """Assign control nodes and edges to graph"""
         from psyneulink.core.compositions.composition import Composition
 
         composition = self.composition
-        nodes = self._get_nodes(composition)
+        nodes = self._get_nodes(composition, context)
         controller = composition.controller
 
         if controller is None:
@@ -1746,7 +1751,7 @@ class ShowGraph():
                 ctl_proj_arrowhead = self.control_projection_arrow
 
                 # Skip ControlProjections not in the Composition
-                if ctl_proj not in self._get_projections(composition):
+                if ctl_proj not in self._get_projections(composition, context):
                     continue
 
                 # Construct edge name  ---------------------------------------------------
@@ -1760,7 +1765,7 @@ class ShowGraph():
                     rcvr_comp = ctl_proj_rcvr.owner.composition
                     def find_rcvr_comp(r, c, l):
                         """Find deepest Composition within c that encloses r within range of num_nesting_levels of c"""
-                        rcvr_nodes = self._get_nodes(c)
+                        rcvr_nodes = self._get_nodes(c, context)
                         if (self.num_nesting_levels is not None and l > self.num_nesting_levels):
                             return c, l
                         elif r in rcvr_nodes:
@@ -2060,7 +2065,8 @@ class ShowGraph():
                                     show_projections_not_in_composition,
                                     proj_color=ctl_proj_color,
                                     comp_hierarchy=comp_hierarchy,
-                                    nesting_level=nesting_level)
+                                    nesting_level=nesting_level,
+                                    context=context)
 
     def _assign_learning_components(self,
                                     g,
@@ -2150,7 +2156,8 @@ class ShowGraph():
                                             show_projections_not_in_composition,
                                             enclosing_comp=enclosing_comp,
                                             comp_hierarchy=comp_hierarchy,
-                                            nesting_level=nesting_level)
+                                            nesting_level=nesting_level,
+                                            context=context)
 
     def _render_projection_as_node(self,
                                    g,
@@ -2246,11 +2253,12 @@ class ShowGraph():
                                proj_arrow=None,
                                enclosing_comp=None,
                                comp_hierarchy=None,
-                               nesting_level=None):
+                               nesting_level=None,
+                               context=None):
 
         from psyneulink.core.compositions.composition import Composition, NodeRole
         composition = self.composition
-        composition_projections = self._get_projections(composition)
+        composition_projections = self._get_projections(composition, context)
         if nesting_level not in comp_hierarchy:
             comp_hierarchy[nesting_level] = composition
         enclosing_g = enclosing_comp._show_graph.G if enclosing_comp else None
@@ -2530,8 +2538,8 @@ class ShowGraph():
         from psyneulink.core.compositions.composition import Composition, NodeRole
 
         composition = self.composition
-        nodes = self._get_nodes(composition)
-        projections = self._get_projections(composition)
+        nodes = self._get_nodes(composition, context)
+        projections = self._get_projections(composition, context)
 
         # Sort nodes for display
         def get_index_of_node_in_G_body(node, node_type: Literal['MECHANISM', 'Projection', 'Composition']):

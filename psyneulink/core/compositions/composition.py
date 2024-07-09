@@ -4117,11 +4117,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._analyze_graph(context=context)
 
         # ShowGraph
-        show_graph_attributes = show_graph_attributes or {}
-        self._show_graph = ShowGraph(self, **show_graph_attributes)
+        self.assign_ShowGraph(show_graph_attributes)
 
         if termination_processing is not None:
             self.termination_processing = termination_processing
+
+    def assign_ShowGraph(self, show_graph_attributes):
+        """Helper function to allow override of the ShowGraph class in subclasses (e.g., AutodiffComposition)"""
+        show_graph_attributes = show_graph_attributes or {}
+        self._show_graph = ShowGraph(self, **show_graph_attributes)
 
     @property
     def graph_processing(self):
@@ -13551,7 +13555,8 @@ _
                    active_items=None,
                    output_fmt='pdf',
                    context=None):
-
+        """Patch to ShowGraph method
+        IMPLEMENTATION NOTE: arguments are listed explicitly so they show up in IDEs that support argument completion"""
         return self._show_graph(show_all=show_all,
                                 show_node_structure=show_node_structure,
                                 show_nested=show_nested,
