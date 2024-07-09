@@ -110,3 +110,7 @@ class PytorchShowGraph(ShowGraph):
             return None
         else:
             return super()._get_nodes_by_role(composition, role, context)
+
+    # def _assign_processing_components(self, *args, **kwargs):
+    #     super()._assign_processing_components(*args, **kwargs)
+    #     assert True
