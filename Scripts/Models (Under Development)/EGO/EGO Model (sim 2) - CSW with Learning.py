@@ -148,7 +148,8 @@ DISPLAY_MODEL = (                      # Only one of the following can be uncomm
     # {}                               # show simple visual display of model
     {
     'show_pytorch': True,            # show pytorch graph of model
-     'show_learning': True             # show target mechanisms for learning
+     'show_learning': True,
+    # 'exclude_from_gradient_calc_style': 'dashed'# show target mechanisms for learning
     # {'show_node_structure': True     # show detailed view of node structures and projections
     }
 )

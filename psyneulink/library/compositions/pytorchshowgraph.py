@@ -15,12 +15,11 @@ from psyneulink._typing import Optional, Union, Literal
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.compositions import NodeRole
 from psyneulink.core.compositions.showgraph import ShowGraph
-from psyneulink.core.llvm import ExecutionMode
-
 
 __all__ = ['SHOW_PYTORCH']
 
 SHOW_PYTORCH = 'show_pytorch'
+EXCLUDE_FROM_GRADIENT_CALC_STYLE = 'exclude_from_gradient_calc_style'
 
 class PytorchShowGraph(ShowGraph):
     """ShowGraph object with `show_graph <ShowGraph.show_graph>` method for displaying `Composition`.
@@ -49,12 +48,11 @@ class PytorchShowGraph(ShowGraph):
     @handle_external_context(source=ContextFlags.COMPOSITION)
     def show_graph(self, *args, **kwargs):
         """Override of show_graph to check if show_pytorch==True and if so build pytorch rep of autofiffcomposition"""
-        from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
         self.show_pytorch = kwargs.pop(SHOW_PYTORCH, self.show_pytorch)
         context = kwargs.get('context')
         if self.show_pytorch:
             self.pytorch_rep = self.composition._build_pytorch_representation(context)
-
+        self.exclude_from_gradient_calc = kwargs.pop(EXCLUDE_FROM_GRADIENT_CALC_STYLE, 'dotted')
         return super().show_graph(*args, **kwargs)
 
     def _get_processing_graph(self, composition, context):
@@ -118,7 +116,7 @@ class PytorchShowGraph(ShowGraph):
     #     assert True
 
     def _implement_graph_node(self, g, rcvr, *args, **kwargs):
-        """Helper method that allows override by subclass to assign custom attributes to nodes"""
-        if rcvr in self.pytorch_rep._nodes_to_execute_after_gradient_calc:
-            assert True
+        """Override to assign EXCLUDE_FROM_GRADIENT_CALC nodes a different style in Pytorch mode"""
+        if self.pytorch_rep.nodes_map[rcvr].exclude_from_gradient_calc:
+            kwargs['style'] = self.exclude_from_gradient_calc
         g.node(*args, **kwargs)
