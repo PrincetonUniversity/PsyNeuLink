@@ -19,7 +19,7 @@ from psyneulink.core.compositions.showgraph import ShowGraph
 __all__ = ['SHOW_PYTORCH']
 
 SHOW_PYTORCH = 'show_pytorch'
-EXCLUDE_FROM_GRADIENT_CALC_STYLE = 'exclude_from_gradient_calc_style'
+EXCLUDE_FROM_GRADIENT_CALC_LINE_STYLE = 'exclude_from_gradient_calc_line_style'
 
 class PytorchShowGraph(ShowGraph):
     """ShowGraph object with `show_graph <ShowGraph.show_graph>` method for displaying `Composition`.
@@ -52,7 +52,7 @@ class PytorchShowGraph(ShowGraph):
         context = kwargs.get('context')
         if self.show_pytorch:
             self.pytorch_rep = self.composition._build_pytorch_representation(context)
-        self.exclude_from_gradient_calc = kwargs.pop(EXCLUDE_FROM_GRADIENT_CALC_STYLE, 'dotted')
+        self.exclude_from_gradient_calc = kwargs.pop(EXCLUDE_FROM_GRADIENT_CALC_LINE_STYLE, 'dotted')
         return super().show_graph(*args, **kwargs)
 
     def _get_processing_graph(self, composition, context):
@@ -110,10 +110,6 @@ class PytorchShowGraph(ShowGraph):
             return None
         else:
             return super()._get_nodes_by_role(composition, role, context)
-
-    # def _assign_processing_components(self, *args, **kwargs):
-    #     super()._assign_processing_components(*args, **kwargs)
-    #     assert True
 
     def _implement_graph_node(self, g, rcvr, *args, **kwargs):
         """Override to assign EXCLUDE_FROM_GRADIENT_CALC nodes a different style in Pytorch mode"""
