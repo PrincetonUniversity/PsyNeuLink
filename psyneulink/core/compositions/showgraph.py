@@ -1177,18 +1177,18 @@ class ShowGraph():
         #            rank=rcvr_rank)
         # # MODIFIED 7/9/24 NEW:
         # # FIX: IMPLEMENT THIS AS METHOD THAT CAN BE OVERRIDEN BY SUBCLASS FOR FORMAT MODIFICATION
-        def _implement_node(args, **kwargs):
+        def _implement_node(*args, **kwargs):
             g.node(args, **kwargs)
 
         rcvr_label = self._get_graph_node_label(composition,
                                                 rcvr,
                                                 show_types,
                                                 show_dimensions)
+
         if show_node_structure and isinstance(rcvr, Mechanism):
-            structured_mech_spec = rcvr._show_structure(**node_struct_args,
-                                                        node_border=rcvr_penwidth,
-                                                        condition=condition)
-            args = (rcvr_label, show_node_structure)
+            args = (rcvr_label, rcvr._show_structure(**node_struct_args,
+                                                     node_border=rcvr_penwidth,
+                                                     condition=condition))
             kwargs = {'shape': self.struct_shape,
                           'color':rcvr_color,
                           'penwidth': rcvr_penwidth,
@@ -1200,7 +1200,7 @@ class ShowGraph():
                           'penwidth': rcvr_penwidth,
                           'rank': rcvr_rank}
 
-        _implement_node(args, **kwargs)
+        _implement_node(args, *kwargs)
         # MODIFIED 7/9/24 END
 
 
