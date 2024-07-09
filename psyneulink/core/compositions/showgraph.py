@@ -1155,7 +1155,7 @@ class ShowGraph():
             rcvr_penwidth = str(self.default_width)
 
         # Implement rcvr node
-        # # MODIFIED 7/9/24 OLD:
+        # # # MODIFIED 7/9/24 OLD:
         # rcvr_label = self._get_graph_node_label(composition,
         #                                         rcvr,
         #                                         show_types,
@@ -1176,9 +1176,9 @@ class ShowGraph():
         #            penwidth=rcvr_penwidth,
         #            rank=rcvr_rank)
         # # MODIFIED 7/9/24 NEW:
-        # # FIX: IMPLEMENT THIS AS METHOD THAT CAN BE OVERRIDEN BY SUBCLASS FOR FORMAT MODIFICATION
+        # FIX: IMPLEMENT THIS AS METHOD THAT CAN BE OVERRIDEN BY SUBCLASS FOR FORMAT MODIFICATION
         def _implement_node(*args, **kwargs):
-            g.node(args, **kwargs)
+            g.node(*args, **kwargs)
 
         rcvr_label = self._get_graph_node_label(composition,
                                                 rcvr,
@@ -1194,13 +1194,13 @@ class ShowGraph():
                           'penwidth': rcvr_penwidth,
                           'rank': rcvr_rank}
         else:
-            args = (rcvr_label)
+            args = (rcvr_label,)
             kwargs = {'shape': node_shape,
                           'color':rcvr_color,
                           'penwidth': rcvr_penwidth,
                           'rank': rcvr_rank}
 
-        _implement_node(args, *kwargs)
+        _implement_node(*args, **kwargs)
         # MODIFIED 7/9/24 END
 
 
