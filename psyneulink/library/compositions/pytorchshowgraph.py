@@ -74,7 +74,7 @@ class PytorchShowGraph(ShowGraph):
                 #  - ALTERNATIVELY, JUST ADD DEPENDENCES BASED ON ALL EFFERENTS FROM EVERY NODE
             return processing_graph
         else:
-            return super()._get_nodes(composition, context)
+            return super()._get_processing_graph(composition, context)
 
     def _get_nodes(self, composition, context):
         """Override to return nodes of PytorchCompositionWrapper rather than autodiffcomposition"""
