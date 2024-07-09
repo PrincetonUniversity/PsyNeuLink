@@ -11,10 +11,12 @@
 import ctypes
 import enum
 import functools
+import gc
 import numpy as np
 import time
 from math import ceil, log2
 from psyneulink._typing import Set
+import weakref
 
 from llvmlite import ir
 
@@ -273,10 +275,11 @@ def cleanup(check_leaks:bool=False):
         LLVMBuilderContext.clear_global()
 
         # check that WeakKeyDictionary is not keeping any references
-        import gc
-        gc.collect()
-        c = list(old_context._cache.keys())
+        # Try first without calling the GC
+        c = weakref.WeakSet(old_context._cache.keys())
+        if len(c) > 0:
+            gc.collect()
 
-        assert len(c) == 0, c
+        assert len(c) == 0, list(c)
     else:
         LLVMBuilderContext.clear_global()

@@ -6,18 +6,27 @@ import weakref
 import graph_scheduler as gs
 import psyneulink as pnl
 
+show_graph_args = ["show_all", "show_node_structure", "show_cim", "show_learning", "show_types", "show_dimensions",
+                   "show_projection_labels", "show_projections_not_in_composition"]
 
 @pytest.mark.composition
-@pytest.mark.parametrize("run", ["not_run", "run"])
-def test_composition_leak(comp_mode, run):
+@pytest.mark.parametrize("show_graph_args", [pytest.param(None, id="show_graph_disabled"),
+                                             pytest.param({}, id="show_graph_default"),
+                                             *(pytest.param({arg: True}, id=arg) for arg in show_graph_args),
+                                            ])
+@pytest.mark.parametrize("op", ["construct", "run"])
+def test_composition_leak(comp_mode, op, show_graph_args):
 
     c = pnl.Composition()
     t = pnl.TransferMechanism()
     c.add_node(t)
 
-    if run == "run":
+    if op == "run":
         res = c.run([5], execution_mode=comp_mode)
         np.testing.assert_array_equal(res, [[5]])
+
+    if show_graph_args is not None:
+        c.show_graph(**show_graph_args, output_fmt=None)
 
     weak_c = weakref.ref(c)
     weak_t = weakref.ref(t)
@@ -37,21 +46,5 @@ def test_composition_leak(comp_mode, run):
 
     gc.collect()
 
-    def print_ref(r, depth=0):
-        if depth == 3:
-            return
-
-        if isinstance(r, (dict, set, list, tuple)):
-            for r1 in gc.get_referrers(r):
-                print_ref(r1, depth + 1)
-
-    if weak_t() is not None:
-        for r in gc.get_referrers(weak_t()):
-            print_ref(r)
-
-    if weak_c() is not None:
-        for r in gc.get_referrers(weak_c()):
-            print_ref(r)
-
-    assert weak_c() is None
-    assert weak_t() is None
+    assert weak_c() is None, gc.get_referrers(weak_c())
+    assert weak_t() is None, gc.get_referrers(weak_t())
