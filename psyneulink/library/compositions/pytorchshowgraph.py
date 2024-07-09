@@ -66,6 +66,12 @@ class PytorchShowGraph(ShowGraph):
                     if node is projection.receiver.owner:
                         dependencies.add(projection.sender.owner)
                 processing_graph[node] = dependencies
+            for node in self.composition.learning_components:
+                processing_graph[node] = set([afferent.sender.owner for afferent in node.path_afferents])
+                # FIX:
+                #  - THE ABOVE FINDS DEPENDENCIES BY LOOKING AT AFFERENTS TO NODES (PROJECTION'S RECEIVERS)
+                #  - ADD CHECK HERE THAT ALL *EFFERENT* PROJECTIONS FOR NODES HAVE BEEN ACCOUNTED FOR
+                #  - ALTERNATIVELY, JUST ADD DEPENDENCES BASED ON ALL EFFERENTS FROM EVERY NODE
             return processing_graph
         else:
             return super()._get_nodes(composition, context)
@@ -73,7 +79,7 @@ class PytorchShowGraph(ShowGraph):
     def _get_nodes(self, composition, context):
         """Override to return nodes of PytorchCompositionWrapper rather than autodiffcomposition"""
         if self.show_pytorch:
-            nodes = list(self.pytorch_rep.nodes_map.keys()) + self.composition.learning_components
+            nodes = list(self.pytorch_rep.nodes_map.keys())
             return nodes
         else:
             return super()._get_nodes(composition, context)
