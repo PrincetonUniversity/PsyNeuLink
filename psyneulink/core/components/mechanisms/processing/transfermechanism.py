@@ -1793,13 +1793,14 @@ class TransferMechanism(ProcessingMechanism_Base):
             # return True
             return self.parameters.is_finished_flag._get(context)
 
-        assert self.parameters.value.history_min_length + 1 >= self._termination_measure_num_items_expected,\
-            "History of 'value' is not guaranteed enough entries for termination_mesasure"
+        assert self.parameters.value.history_min_length + 1 >= self._termination_measure_num_items_expected, \
+            "History of 'value' is not guaranteed enough entries for termination_measure"
+
         measure = self.termination_measure
         value = self.parameters.value._get(context)
 
         if self._termination_measure_num_items_expected==0:
-            status = self.parameters.num_executions._get(context)._get_by_time_scale(self.termination_measure)
+            status = self.parameters.num_executions._get(context)._get_by_time_scale(TimeScale(self.termination_measure))
 
         elif self._termination_measure_num_items_expected==1:
             # Squeeze to collapse 2d array with single item

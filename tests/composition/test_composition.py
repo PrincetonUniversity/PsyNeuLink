@@ -4319,6 +4319,7 @@ class TestRun:
         # assign array with len 2 to float, must recompile
         A.function.intercept.base = [3, 3]
         self._check_comp_ex(comp, None, comp_mode, struct_name)
+
         # vectorized intercept not supported in LLVM modes
         A.function.intercept.base = 3
 
@@ -4415,6 +4416,40 @@ class TestRun:
         np.testing.assert_allclose([[0.9375, 0.9375]], output)
         self._check_comp_ex(comp, None, comp_mode, struct_name, is_not=True)
         self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name, is_not=True)
+
+    @pytest.mark.composition
+    @pytest.mark.usefixtures("comp_mode_no_llvm")
+    @pytest.mark.parametrize("comp_mode2", [m for m in pytest.helpers.get_comp_execution_modes() if m.values[0] is not pnl.ExecutionMode.LLVM])
+    def test_execution_after_cleanup_enum_param(self, comp_mode, comp_mode2):
+        """
+        This test checks that compiled sync works for Parameters with Enum values.
+        Enums are converted to 0-d numpy arrays of tyep integer and the synced value
+        should be correctly consumed by the following execution, both Python and compiled
+        """
+
+        T = pnl.TransferMechanism(integrator_mode=True,
+                                  termination_measure=pnl.TimeScale.TRIAL,
+                                  termination_threshold=5,
+                                  execute_until_finished=True)
+        P = pnl.ProcessingMechanism()
+
+        C = pnl.Composition()
+        C.add_linear_processing_pathway([T, P])
+
+        C.scheduler.add_condition(P, pnl.WhenFinished(T))
+
+        ctx = pnl.Context()
+
+        res = C.run([5], execution_mode=comp_mode, context=ctx)
+        np.testing.assert_allclose(res, [[4.84375]])
+
+        # Cleanup is really only necessary if the first execution is compiled,
+        # but it's really cheap if it there's no compilation context
+        C._compilation_data.execution.set(None, context=ctx)
+        pnl.core.llvm.cleanup()
+
+        res2 = C.run([5], execution_mode=comp_mode2, context=ctx)
+        np.testing.assert_allclose(res2, [[4.995117]])
 
 
 class TestCallBeforeAfterTimescale:
