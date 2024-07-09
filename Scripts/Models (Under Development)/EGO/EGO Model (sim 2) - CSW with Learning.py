@@ -387,6 +387,7 @@ if __name__ == '__main__':
                                                model.projections[7].parameters.matrix.get(context))
                                                # model.projections[7].matrix)
                   )
+        model.show_graph(**DISPLAY_MODEL)
         if PRINT_RESULTS:
             print("MEMORY:")
             print(model.nodes['EM'].parameters.memory.get(context))

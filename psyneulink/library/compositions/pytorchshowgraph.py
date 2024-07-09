@@ -48,11 +48,13 @@ class PytorchShowGraph(ShowGraph):
     @beartype
     @handle_external_context(source=ContextFlags.COMPOSITION)
     def show_graph(self, *args, **kwargs):
+        """Override of show_graph to check if show_pytorch==True and if so build pytorch rep of autofiffcomposition"""
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
         self.show_pytorch = kwargs.pop(SHOW_PYTORCH, self.show_pytorch)
         context = kwargs.get('context')
         if self.show_pytorch:
             self.pytorch_rep = self.composition._build_pytorch_representation(context)
+
         return super().show_graph(*args, **kwargs)
 
     def _get_processing_graph(self, composition, context):
@@ -114,3 +116,9 @@ class PytorchShowGraph(ShowGraph):
     # def _assign_processing_components(self, *args, **kwargs):
     #     super()._assign_processing_components(*args, **kwargs)
     #     assert True
+
+    def _implement_graph_node(self, g, rcvr, *args, **kwargs):
+        """Helper method that allows override by subclass to assign custom attributes to nodes"""
+        if rcvr in self.pytorch_rep._nodes_to_execute_after_gradient_calc:
+            assert True
+        g.node(*args, **kwargs)

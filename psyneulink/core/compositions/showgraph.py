@@ -939,6 +939,10 @@ class ShowGraph():
         """Helper method that allows override by subclass to filter NodeRoles used for graph"""
         return composition.get_nodes_by_role(role)
 
+    def _implement_graph_node(self, g, rcvr, *args, **kwargs):
+        """Helper method that allows override by subclass to assign custom attributes to nodes"""
+        g.node(*args, **kwargs)
+
     def _assign_processing_components(self,
                                       g,
                                       rcvr,
@@ -1155,31 +1159,6 @@ class ShowGraph():
             rcvr_penwidth = str(self.default_width)
 
         # Implement rcvr node
-        # # # MODIFIED 7/9/24 OLD:
-        # rcvr_label = self._get_graph_node_label(composition,
-        #                                         rcvr,
-        #                                         show_types,
-        #                                         show_dimensions)
-        # if show_node_structure and isinstance(rcvr, Mechanism):
-        #     g.node(rcvr_label,
-        #            rcvr._show_structure(**node_struct_args,
-        #                                 node_border=rcvr_penwidth,
-        #                                 condition=condition),
-        #            shape=self.struct_shape,
-        #            color=rcvr_color,
-        #            penwidth=rcvr_penwidth,
-        #            rank=rcvr_rank)
-        # else:
-        #     g.node(rcvr_label,
-        #            shape=node_shape,
-        #            color=rcvr_color,
-        #            penwidth=rcvr_penwidth,
-        #            rank=rcvr_rank)
-        # # MODIFIED 7/9/24 NEW:
-        # FIX: IMPLEMENT THIS AS METHOD THAT CAN BE OVERRIDEN BY SUBCLASS FOR FORMAT MODIFICATION
-        def _implement_node(*args, **kwargs):
-            g.node(*args, **kwargs)
-
         rcvr_label = self._get_graph_node_label(composition,
                                                 rcvr,
                                                 show_types,
@@ -1200,13 +1179,10 @@ class ShowGraph():
                           'penwidth': rcvr_penwidth,
                           'rank': rcvr_rank}
 
-        _implement_node(*args, **kwargs)
-        # MODIFIED 7/9/24 END
+        self._implement_graph_node(g, rcvr, *args, **kwargs)
 
-
-
-        # 7/5/24
-        # FIX: IMPLEMENT THIS AS METHOD THAT CAN BE OVERRIDEN BY SUBCLASS TO IMPLEMENT DIRECT PROEJECTSIONS TO NESTED
+        # 7/9/24
+        # FIX: IMPLEMENT THIS AS METHOD THAT CAN BE OVERRIDEN BY SUBCLASS TO IMPLEMENT DIRECT PROEJECTIONS TO NESTED
         # Implement sender edges from Nodes within Composition
         sndrs = processing_graph[rcvr]
         self._assign_incoming_edges(g,
