@@ -73,7 +73,7 @@ class PytorchShowGraph(ShowGraph):
     def _get_nodes(self, composition, context):
         """Override to return nodes of PytorchCompositionWrapper rather than autodiffcomposition"""
         if self.show_pytorch:
-            nodes = list(self.pytorch_rep.nodes_map.keys())
+            nodes = list(self.pytorch_rep.nodes_map.keys()) + self.composition.learning_components
             return nodes
         else:
             return super()._get_nodes(composition, context)

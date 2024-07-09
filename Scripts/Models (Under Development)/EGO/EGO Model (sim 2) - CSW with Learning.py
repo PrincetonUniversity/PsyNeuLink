@@ -146,7 +146,8 @@ CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the scr
 DISPLAY_MODEL = (                      # Only one of the following can be uncommented:
     # None                             # suppress display of model
     # {}                               # show simple visual display of model
-    {'show_pytorch': True}             # show pytorch graph of model
+    {'show_pytorch': True,             # show pytorch graph of model
+     'show_learning': True}            # show target mechanisms for learning
     # {'show_node_structure': True}    # show detailed view of node structures and projections
 )
 RUN_MODEL = True                       # True => run the model
