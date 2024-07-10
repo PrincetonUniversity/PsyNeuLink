@@ -64,6 +64,7 @@ class PytorchShowGraph(ShowGraph):
         if self.show_pytorch:
             processing_graph = {}
             projections = self._get_projections(composition, context)
+            # 7/9/24 FIX: COULD DO THIS BY ITERATING OVER PROJECTIONS INSTEAD OF NODES
             for node in self._get_nodes(composition, context):
                 dependencies = set()
                 for projection in projections:
@@ -123,9 +124,18 @@ class PytorchShowGraph(ShowGraph):
         else:
             return super()._get_nodes_by_role(composition, role, context)
 
-    def _implement_graph_node(self, g, rcvr, *args, **kwargs):
-        """Override to assign EXCLUDE_FROM_GRADIENT_CALC nodes a different style in Pytorch mode"""
+    def _implement_graph_node(self, g, rcvr, context, *args, **kwargs):
+        """Override to assign EXCLUDE_FROM_GRADIENT_CALC nodes their own style in Pytorch mode"""
         if self.pytorch_rep.nodes_map[rcvr].exclude_from_gradient_calc:
             kwargs['style'] = self.exclude_from_gradient_calc_line_style
             kwargs['color'] = self.exclude_from_gradient_calc_color
         g.node(*args, **kwargs)
+
+    def _implement_graph_edge(self, graph, proj, context, *args, **kwargs):
+        """Override to assign custom attributes to edges"""
+        # self._get_projections(self.composition, context)
+        if proj in self.pytorch_rep.projections_map and self.pytorch_rep.projections_map[proj].matrix.requires_grad:
+            kwargs['color'] = self.learning_color
+        else:
+            kwargs['color'] = self.default_node_color
+        graph.edge(*args, **kwargs)

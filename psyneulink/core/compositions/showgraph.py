@@ -939,9 +939,13 @@ class ShowGraph():
         """Helper method that allows override by subclass to filter NodeRoles used for graph"""
         return composition.get_nodes_by_role(role)
 
-    def _implement_graph_node(self, g, rcvr, *args, **kwargs):
+    def _implement_graph_node(self, graph, rcvr, context, *args, **kwargs):
         """Helper method that allows override by subclass to assign custom attributes to nodes"""
-        g.node(*args, **kwargs)
+        graph.node(*args, **kwargs)
+
+    def _implement_graph_edge(self, graph, proj, context, *args, **kwargs):
+        """Helper method that allows override by subclass to assign custom attributes to edges"""
+        graph.edge(*args, **kwargs)
 
     def _assign_processing_components(self,
                                       g,
@@ -1175,10 +1179,10 @@ class ShowGraph():
                           'penwidth': rcvr_penwidth,
                           'rank': rcvr_rank}
 
-        self._implement_graph_node(g, rcvr, *args, **kwargs)
+        self._implement_graph_node(g, rcvr, context,*args, **kwargs)
 
         # 7/9/24
-        # FIX: IMPLEMENT THIS AS METHOD THAT CAN BE OVERRIDEN BY SUBCLASS TO IMPLEMENT DIRECT PROEJECTIONS TO NESTED
+        # FIX: IMPLEMENT THIS AS METHOD THAT CAN BE OVERRIDEN BY SUBCLASS TO IMPLEMENT DIRECT PROJS TO NESTED NODES
         # Implement sender edges from Nodes within Composition
         sndrs = processing_graph[rcvr]
         self._assign_incoming_edges(g,
@@ -2280,7 +2284,6 @@ class ShowGraph():
 
         from psyneulink.core.compositions.composition import Composition, NodeRole
         composition = self.composition
-        composition_nodes = self._get_nodes(composition, context)
         composition_projections = self._get_projections(composition, context)
         if nesting_level not in comp_hierarchy:
             comp_hierarchy[nesting_level] = composition
@@ -2441,11 +2444,16 @@ class ShowGraph():
                         graph = enclosing_g
                     else:
                         graph = g
-                    graph.edge(sndr_proj_label, proc_mech_rcvr_label,
-                               label=label,
-                               color=proj_color,
-                               penwidth=proj_width,
-                               arrowhead=proj_arrowhead)
+
+                    self._implement_graph_edge(graph,
+                                               proj,
+                                               context,
+                                               sndr_proj_label,
+                                               proc_mech_rcvr_label,
+                                               label=label,
+                                               color=proj_color,
+                                               penwidth=proj_width,
+                                               arrowhead=proj_arrowhead)
 
         # Sorted to insure consistency of ordering in g for testing
         for sender in sorted(senders):

@@ -19,7 +19,7 @@
 # -      Deal with matrix assignment in LearningProjection LINE 643
 # -      Reinstate test for execution of Concatenate with learning in test_emcomposition (currently commented out)
 # - FIX: Softmax Gain Control:
-#        Test if it current works (they are added to Compostion but not in BackProp processing pathway)
+#        Test if it current works (they are added to Composition but not in BackProp processing pathway)
 #        Does backprop have to run through this if not learnable?
 #        If so, need to add PNL Function, with derivative and LLVM and Pytorch implementations
 # - FIX: WRITE MORE TESTS FOR EXECUTION, WARNINGS, AND ERROR MESSAGES
