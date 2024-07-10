@@ -1021,11 +1021,7 @@ class ShowGraph():
         # If rcvr is a learning component and not an INPUT node,
         #    break and handle in _assign_learning_components()
         #    (node: this allows TARGET node for learning to remain marked as an INPUT node)
-        # MODIFIED 7/9/24 OLD:
-        # if (NodeRole.LEARNING in composition.nodes_to_roles[rcvr]):
-        # MODIFIED 7/9/24 NEW:
         if (NodeRole.LEARNING in self._get_roles_by_node(composition, rcvr, context)):
-        # MODIFIED 7/9/24 END
             return
 
         # DEAL WITH CONTROLLER's OBJECTIVEMECHANIMS
@@ -1400,16 +1396,6 @@ class ShowGraph():
                             continue
 
                         # Validate the Projection is to an INPUT node or a node that is shadowing one
-                        # # MODIFIED 7/9/24 OLD:
-                        # if ((rcvr_input_node_proj_owner in composition.nodes_to_roles and
-                        #      NodeRole.INPUT not in composition.nodes_to_roles[rcvr_input_node_proj_owner])
-                        #         and (proj.receiver.shadow_inputs in composition.nodes_to_roles and
-                        #              NodeRole.INPUT not in composition.nodes_to_roles[proj.receiver.shadow_inputs])):
-                        #     raise ShowGraphError(f"Projection from input_CIM of {composition.name} to node "
-                        #                            f"{rcvr_input_node_proj_owner} that is not an "
-                        #                            f"{NodeRole.INPUT.name} node or shadowing its "
-                        #                            f"{NodeRole.INPUT.name.lower()}.")
-                        # MODIFIED 7/9/24 NEW:
                         if ((rcvr_input_node_proj_owner in composition_nodes and NodeRole.INPUT not in
                                 self._get_roles_by_node(composition, rcvr_input_node_proj_owner, context))
                                 and (proj.receiver.shadow_inputs in composition_nodes and NodeRole.INPUT not in
@@ -1418,7 +1404,7 @@ class ShowGraph():
                                                    f"{rcvr_input_node_proj_owner} that is not an "
                                                    f"{NodeRole.INPUT.name} node or shadowing its "
                                                    f"{NodeRole.INPUT.name.lower()}.")
-                        # MODIFIED 7/9/24 END
+
                         rcvr_label = self._get_graph_node_label(composition,
                                                            rcvr_input_node_proj_owner,
                                                            show_types, show_dimensions)
@@ -1597,16 +1583,10 @@ class ShowGraph():
                         else:
                             sndr_output_node_proj_owner = sndr_output_node_proj.owner
                         # Validate the Projection is from an OUTPUT or PROBE node
-                        # # MODIFIED 7/9/24 OLD:
-                        # if ((sndr_output_node_proj_owner in composition.nodes_to_roles and
-                        #      not any(role for role in {NodeRole.OUTPUT, NodeRole.PROBE} if
-                        #              role in composition.nodes_to_roles[sndr_output_node_proj_owner]))):
-                        # MODIFIED 7/9/24 NEW:
                         if (sndr_output_node_proj_owner in composition_nodes and
                                 not any(role for role in {NodeRole.OUTPUT, NodeRole.PROBE}
                                         if role in self._get_roles_by_node(composition, sndr_output_node_proj_owner,
                                                                            context))):
-                        # MODIFIED 7/9/24 END
                             raise ShowGraphError(f"Projection to output_CIM of {composition.name} "
                                                    f"from node {sndr_output_node_proj_owner} that is not "
                                                    f"an {NodeRole.OUTPUT} node.")

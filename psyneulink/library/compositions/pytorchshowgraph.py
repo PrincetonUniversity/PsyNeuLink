@@ -15,11 +15,14 @@ from psyneulink._typing import Optional, Union, Literal
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.compositions import NodeRole
 from psyneulink.core.compositions.showgraph import ShowGraph
+from psyneulink.core.compositions.composition import CompositionInterfaceMechanism
+from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 
 __all__ = ['SHOW_PYTORCH']
 
 SHOW_PYTORCH = 'show_pytorch'
 EXCLUDE_FROM_GRADIENT_CALC_LINE_STYLE = 'exclude_from_gradient_calc_line_style'
+EXCLUDE_FROM_GRADIENT_CALC_COLOR = 'exclude_from_gradient_calc_color'
 
 class PytorchShowGraph(ShowGraph):
     """ShowGraph object with `show_graph <ShowGraph.show_graph>` method for displaying `Composition`.
@@ -52,26 +55,33 @@ class PytorchShowGraph(ShowGraph):
         context = kwargs.get('context')
         if self.show_pytorch:
             self.pytorch_rep = self.composition._build_pytorch_representation(context)
-        self.exclude_from_gradient_calc = kwargs.pop(EXCLUDE_FROM_GRADIENT_CALC_LINE_STYLE, 'dotted')
+        self.exclude_from_gradient_calc_line_style = kwargs.pop(EXCLUDE_FROM_GRADIENT_CALC_LINE_STYLE, 'dotted')
+        self.exclude_from_gradient_calc_color = kwargs.pop(EXCLUDE_FROM_GRADIENT_CALC_COLOR, 'brown')
         return super().show_graph(*args, **kwargs)
 
     def _get_processing_graph(self, composition, context):
         """Helper method that creates dependencies graph for nodes of autodiffcomposition used in Pytorch mode"""
         if self.show_pytorch:
             processing_graph = {}
+            # 7/9/24 FIX:
+            #  - THE FOLLOWING FINDS DEPENDENCIES BY LOOKING AT AFFERENTS TO NODES (PROJECTION'S RECEIVERS)
+            #  - ADD CHECK THAT ALL *EFFERENT* PROJECTIONS FOR NODES HAVE BEEN ACCOUNTED FOR
+            #  - ??ALTERNATIVELY, JUST ADD DEPENDENCIES BASED ON ALL EFFERENTS FROM EVERY NODE
             projections = self._get_projections(composition, context)
             for node in self._get_nodes(composition, context):
                 dependencies = set()
                 for projection in projections:
                     if node is projection.receiver.owner:
                         dependencies.add(projection.sender.owner)
+                    # Add dependency of INPUT node of nested graph on node in outer graph that projects to it
+                    elif (isinstance(projection.receiver.owner, CompositionInterfaceMechanism) and
+                          projection.receiver.owner._get_destination_info_from_input_CIM(projection.receiver)[1]
+                          is node):
+                        dependencies.add(projection.sender.owner)
                 processing_graph[node] = dependencies
+            # Add TARGET nodes
             for node in self.composition.learning_components:
                 processing_graph[node] = set([afferent.sender.owner for afferent in node.path_afferents])
-                # FIX:
-                #  - THE ABOVE FINDS DEPENDENCIES BY LOOKING AT AFFERENTS TO NODES (PROJECTION'S RECEIVERS)
-                #  - ADD CHECK HERE THAT ALL *EFFERENT* PROJECTIONS FOR NODES HAVE BEEN ACCOUNTED FOR
-                #  - ALTERNATIVELY, JUST ADD DEPENDENCES BASED ON ALL EFFERENTS FROM EVERY NODE
             return processing_graph
         else:
             return super()._get_processing_graph(composition, context)
@@ -85,10 +95,16 @@ class PytorchShowGraph(ShowGraph):
             return super()._get_nodes(composition, context)
 
     def _get_projections(self, composition, context):
-        """Override to return nodes of PytorchCompositionWrapper rather than autodiffcomposition"""
+        """Override to return nodes of Pytorch graph"""
         if self.show_pytorch:
-            nodes = list(self.pytorch_rep.projections_map.keys())
-            return nodes
+            projections = list(self.pytorch_rep.projections_map.keys())
+            # FIX: NEED TO ADD PROJECTIONS TO NESTED COMPS THAT ARE TO CIM
+            # Add any Projections to TARGET nodes
+            projections += [afferent
+                            for node in self.composition.learning_components
+                            for afferent in node.path_afferents
+                            if not isinstance(afferent.sender.owner, CompositionInterfaceMechanism)]
+            return projections
         else:
             return super()._get_projections(composition, context)
 
@@ -114,5 +130,6 @@ class PytorchShowGraph(ShowGraph):
     def _implement_graph_node(self, g, rcvr, *args, **kwargs):
         """Override to assign EXCLUDE_FROM_GRADIENT_CALC nodes a different style in Pytorch mode"""
         if self.pytorch_rep.nodes_map[rcvr].exclude_from_gradient_calc:
-            kwargs['style'] = self.exclude_from_gradient_calc
+            kwargs['style'] = self.exclude_from_gradient_calc_line_style
+            kwargs['color'] = self.exclude_from_gradient_calc_color
         g.node(*args, **kwargs)
