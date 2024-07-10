@@ -63,10 +63,6 @@ class PytorchShowGraph(ShowGraph):
         """Helper method that creates dependencies graph for nodes of autodiffcomposition used in Pytorch mode"""
         if self.show_pytorch:
             processing_graph = {}
-            # 7/9/24 FIX:
-            #  - THE FOLLOWING FINDS DEPENDENCIES BY LOOKING AT AFFERENTS TO NODES (PROJECTION'S RECEIVERS)
-            #  - ADD CHECK THAT ALL *EFFERENT* PROJECTIONS FOR NODES HAVE BEEN ACCOUNTED FOR
-            #  - ??ALTERNATIVELY, JUST ADD DEPENDENCIES BASED ON ALL EFFERENTS FROM EVERY NODE
             projections = self._get_projections(composition, context)
             for node in self._get_nodes(composition, context):
                 dependencies = set()
