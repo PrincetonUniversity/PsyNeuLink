@@ -37,7 +37,7 @@ class TestOutputPorts:
                              [((pnl.OWNER_VALUE, 0), [1], [1]),
                               ((pnl.OWNER_VALUE, 1), [2], [2]),
                               ((pnl.OWNER_VALUE, 2), [3], [3]),
-                              pytest.param((pnl.OWNER_VALUE, 3), [3], [3], marks=[pytest.mark.xfail()]),
+                              pytest.param((pnl.OWNER_VALUE, 3), [3], [3], marks=[pytest.mark.xfail(raises=IndexError, match="list index out of range")]),
                               ((pnl.OWNER_EXECUTION_COUNT), [4], [8]),
                               (("num_executions", pnl.TimeScale.LIFE), [4], [8]),
                               (("num_executions", pnl.TimeScale.RUN), [4], [4]),
