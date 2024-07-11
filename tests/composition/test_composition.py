@@ -4445,7 +4445,6 @@ class TestRun:
 
         # Cleanup is really only necessary if the first execution is compiled,
         # but it's really cheap if it there's no compilation context
-        C._compilation_data.execution.set(None, context=ctx)
         pnl.core.llvm.cleanup()
 
         res2 = C.run([5], execution_mode=comp_mode2, context=ctx)

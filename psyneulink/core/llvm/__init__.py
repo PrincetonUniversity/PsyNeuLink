@@ -12,6 +12,7 @@ import ctypes
 import enum
 import functools
 import gc
+import inspect
 import numpy as np
 import time
 from math import ceil, log2
@@ -283,3 +284,19 @@ def cleanup(check_leaks:bool=False):
         assert len(c) == 0, list(c)
     else:
         LLVMBuilderContext.clear_global()
+
+        # If not checking for leaks, there might be active compositions that
+        # cache pointers to binary functions. Accessing those pointers would
+        # cause segfault.
+        # Extract the set of associated compositions. Both to avoid duplicate
+        # clears for executions that belong to the same composition, and to
+        # avoid modifying the container that is iterated over.
+        for c in {e._composition for e in CompExecution.active_executions}:
+            c._compilation_data.execution.values.clear()
+            c._compilation_data.execution.history.clear()
+
+        # The set of active executions should be empty
+        for e in CompExecution.active_executions:
+            assert any(inspect.isframe(r) for r in gc.get_referrers(e))
+
+        CompExecution.active_executions.clear()
