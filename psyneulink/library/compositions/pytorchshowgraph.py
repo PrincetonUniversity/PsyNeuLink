@@ -111,7 +111,7 @@ class PytorchShowGraph(ShowGraph):
             return super()._get_projections(composition, context)
 
     def _proj_in_composition(self, proj, composition_projections, context)->bool:
-        """Helper method that allows override by subclass to filter projections used for graph"""
+        """Override to include direct Projections from outer to nested comps in Pytorch mode"""
         processing_graph = self._get_processing_graph(self.composition, context)
         if proj in composition_projections:
             return True
