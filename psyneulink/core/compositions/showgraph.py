@@ -826,9 +826,12 @@ class ShowGraph():
         rcvrs = list(processing_graph.keys())
         for rcvr in rcvrs:
 
-            if any(n is rcvr for nested_comp in self._get_nodes(composition, context)
-                   if isinstance(nested_comp, Composition) for n in self._get_nodes(nested_comp, context)):
-                continue
+            # # MODIFIED 7/10 NEW:
+            # # FIX: NOT SURE WHAT THE PURPOSE OF THIS WAS, AND DOESN'T EVER SEEM TO GET CALLED:
+            # if any(n is rcvr for nested_comp in self._get_nodes(composition, context)
+            #        if isinstance(nested_comp, Composition) for n in self._get_nodes(nested_comp, context)):
+            #     continue
+            # # MODIFIED 7/10 END
 
             # If show_controller is true, objective mechanism is handled in _assign_controller_components
             if (show_controller
@@ -2199,7 +2202,8 @@ class ShowGraph():
                                    proj_color,
                                    proj_width,
                                    sndr_label=None,
-                                   rcvr_label=None):
+                                   rcvr_label=None,
+                                   context=None):
 
         composition = self.composition
 
@@ -2251,13 +2255,25 @@ class ShowGraph():
             else:
                 edge_label = ''
             if show_node_structure:
-                self.G.edge(sndr_label + ':' + OutputPort.__name__ + '-' + 'LearningSignal',
-                       rcvr_label,
-                       label=edge_label,
-                       color=learning_proj_color, penwidth=learning_proj_width)
+                # self.G.edge(sndr_label + ':' + OutputPort.__name__ + '-' + 'LearningSignal',
+                #        rcvr_label,
+                #        label=edge_label,
+                #        color=learning_proj_color, penwidth=learning_proj_width)
+                self._implement_graph_edge(self.G, proj, context,
+                                           sndr_label + ':' + OutputPort.__name__ + '-' + 'LearningSignal',
+                                           rcvr_label,
+                                           label=edge_label,
+                                           color=learning_proj_color,
+                                           penwidth=learning_proj_width)
             else:
-                self.G.edge(sndr_label, rcvr_label, label = edge_label,
-                       color=learning_proj_color, penwidth=learning_proj_width)
+                # self.G.edge(sndr_label, rcvr_label, label = edge_label,
+                #        color=learning_proj_color, penwidth=learning_proj_width)
+                self._implement_graph_edge(self.G, proj, context,
+                                           sndr_label,
+                                           rcvr_label,
+                                           label=edge_label,
+                                           color=learning_proj_color,
+                                           penwidth=learning_proj_width)
         return True
 
     @beartype
@@ -2427,7 +2443,8 @@ class ShowGraph():
                                                                    rcvr_label=proc_mech_rcvr_label,
                                                                    sndr_label=sndr_proj_label,
                                                                    proj_color=proj_color,
-                                                                   proj_width=proj_width)
+                                                                   proj_width=proj_width,
+                                                                   context=context)
                     # Deferred if it is the last Mechanism in a learning Pathway
                     # (see _render_projection_as_node)
                     if deferred:
