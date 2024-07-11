@@ -149,6 +149,7 @@ DISPLAY_MODEL = (                      # Only one of the following can be uncomm
     {
     'show_pytorch': True,            # show pytorch graph of model
      'show_learning': True,
+     # 'show_projections_not_in_composition': True,
     # 'exclude_from_gradient_calc_style': 'dashed'# show target mechanisms for learning
     # {'show_node_structure': True     # show detailed view of node structures and projections
     }
@@ -228,8 +229,6 @@ RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec
 import Environment
 CURRICULUM_TYPE = 'Blocked'     # 'Blocked' or 'Interleaved'
 INPUTS = Environment.generate_dataset(condition=CURRICULUM_TYPE).xs.numpy()[:5]
-# INPUTS = [env_inputs[i][:10] for i in range(len(env_inputs))]
-
 
 #endregion
 
@@ -313,18 +312,35 @@ def construct_model(model_name:str=MODEL_NAME,
     RETRIEVED = ' [RETRIEVED]'
 
     # Pathways
-    state_to_previous_state_pathway = [state_input_layer, previous_state_layer]
-    state_to_context_pathway = [state_input_layer, context_layer]
+    state_to_previous_state_pathway = [state_input_layer,
+                                       MappingProjection(matrix=IDENTITY_MATRIX,
+                                                         learnable=False),
+                                       previous_state_layer]
+    state_to_context_pathway = [state_input_layer,
+                                MappingProjection(matrix=IDENTITY_MATRIX,
+                                                  learnable=False),
+                                context_layer]
     state_to_em_pathway = [state_input_layer,
-                           MappingProjection(state_input_layer, em.nodes[state_input_name+VALUE]),
+                           MappingProjection(sender=state_input_layer,
+                                             receiver=em.nodes[state_input_name+VALUE],
+                                             matrix=IDENTITY_MATRIX,
+                                             learnable=False),
                            em]
     previous_state_to_em_pathway = [previous_state_layer,
-                                    MappingProjection(previous_state_layer, em.nodes[previous_state_input_name+QUERY]),
+                                    MappingProjection(sender=previous_state_layer,
+                                                      receiver=em.nodes[previous_state_input_name+QUERY],
+                                                      matrix=IDENTITY_MATRIX,
+                                                      learnable=False),
                                     em]
     context_learning_pathway = [context_layer,
-                                MappingProjection(context_layer, em.nodes[context_name + QUERY], learnable=True),
+                                MappingProjection(sender=context_layer,
+                                                  receiver=em.nodes[context_name + QUERY],
+                                                  learnable=True),
                                 em,
-                                MappingProjection(em.nodes[state_input_name + RETRIEVED], prediction_layer),
+                                MappingProjection(sender=em.nodes[state_input_name + RETRIEVED],
+                                                  receiver=prediction_layer,
+                                                  matrix=IDENTITY_MATRIX,
+                                                  learnable=False),
                                 prediction_layer]
 
     # Composition

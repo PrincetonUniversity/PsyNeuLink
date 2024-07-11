@@ -934,6 +934,10 @@ class ShowGraph():
         """Helper method that allows override by subclass to filter projections used for graph"""
         return composition.projections
 
+    def _proj_in_composition(self, proj, composition_projections, context):
+        """Helper method that allows override by subclass to filter projections used for graph"""
+        return proj in composition_projections
+
     def _get_roles_by_node(self, composition, node, context):
         """Helper method that allows override by subclass to filter NodeRoles used for graph"""
         return composition.get_roles_by_node(node)
@@ -2487,11 +2491,11 @@ class ShowGraph():
                     proj_color = proj_color_default
                     proj_arrowhead = proj_arrow_default
 
-                    if proj not in composition_projections:
-                        if not show_projections_not_in_composition:
-                            continue
-                        else:
+                    if not self._proj_in_composition(proj, composition_projections, context):
+                        if show_projections_not_in_composition:
                             proj_color=self.inactive_projection_color
+                        else:
+                            continue
 
                     assign_proj_to_enclosing_comp = False
 
