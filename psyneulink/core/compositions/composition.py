@@ -4765,22 +4765,54 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                deeply nested Composition, but that Composition itself may not have the same role in the Composition
                within which *it* is nested (e.g., a Node might be an INPUT Node of a nested Composition, but that
                nested Composition may not be an INPUT Node of the Composition in which it is nested).
+        Note: exclude_roles takes precedence, so that if a NodeRole is listed in both,
+              nodes with that role will be *excluded*.
+
+        7/10/24 FIX:
+        Override Composition method to filter return of TARGET nodes based on learning specifications""
+        Restrict TARGET nodes to be returned only if enable_learning==True and only those for which fields_weights!=0.
+        IMPLEMENTATION NOTE:
+            Need to do this here, as this is the method that is called recursively (and thus can be overridden) when
+            infer_target_nodes_at_all_levels() is called from an AutodiffComposition in which EMComposition is nested
+
+
         """
-        nested_nodes = []
         include_roles = [] if include_roles is None else convert_to_list(include_roles)
         exclude_roles = [] if exclude_roles is None else convert_to_list(exclude_roles)
+        nested_nodes = []
+
         if isinstance(comp, Composition):
             # Get all nested nodes in comp that have include_roles and not exclude_roles:
             for node in [n for n in comp.nodes
                          if (any(n in comp.get_nodes_by_role(include)
                                  for include in include_roles)
-                               and not any(n in comp.get_nodes_by_role(exclude)
-                                           for exclude in exclude_roles))]:
+                             and not any(n in comp.get_nodes_by_role(exclude)
+                                         for exclude in exclude_roles))]:
                 if isinstance(node, Composition):
                     nested_nodes.extend(node.get_nested_nodes_by_roles_at_any_level(node, include_roles, exclude_roles))
                 else:
                     nested_nodes.append(node)
+
+        # MODIFIED 7/10/24 NEW:
+        # If TARGET has been specified, filter accordingly by calling self.get_target_nodes()
+        if NodeRole.TARGET in include_roles + exclude_roles:
+            # First Get entries for nodes from all other Compositions than current comp
+            filtered_nodes = [node for node in nested_nodes if node not in self.nodes]
+            target_nodes = self.get_target_nodes() or []
+            if NodeRole.TARGET in include_roles:
+                # Filter according to criteria for TARGET node for current comp
+                filtered_nodes += [node for node in nested_nodes if node in target_nodes]
+            if NodeRole.TARGET in exclude_roles:
+                # Exclude nodes according to criteria for TARGET node for current comp
+                filtered_nodes = [node for node in filtered_nodes if node not in target_nodes]
+            nest_nodes = filtered_nodes
+            # MODIFIED 7/10/24 END
+
         return nested_nodes if any(nested_nodes) else None
+
+    def get_target_nodes(self, context=None):
+        """Return all OUTPUT Nodes in the Composition as default for identifying TARGET nodes."""
+        self.get_nested_output_nodes_at_all_levels()
 
     def get_nested_input_nodes_at_all_levels(self)->list or None:
         """Return all Nodes from nested Compositions that receive input directly from input to outermost Composition."""

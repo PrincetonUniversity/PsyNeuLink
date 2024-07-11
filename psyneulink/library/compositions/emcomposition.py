@@ -2296,29 +2296,38 @@ class EMComposition(AutodiffComposition):
             execution_mode = ExecutionMode.PyTorch
         return execution_mode
 
-    def get_nested_nodes_by_roles_at_any_level(self, comp, include_roles, exclude_roles=None)->list or None:
-        """Override Composition method to filter return of TARGET nodes based on learning specifications""
-        Restrict TARGET nodes to be returned only if enable_learning==True and only those for which fields_weights!=0.
-        IMPLEMENTATION NOTE:
-            Need to do this here, as this is the method that is called recursively (and thus can be overridden) when
-            infer_target_nodes_at_all_levels() is called from an AutodiffComposition in which EMComposition is nested
-        """
-        nodes = super().get_nested_nodes_by_roles_at_any_level(comp, include_roles, exclude_roles)
-        if NodeRole.TARGET in include_roles:
-            # Get OUTPUT Nodes of EMComposition
-            em_output_nodes = [node for node in nodes if node in self.retrieved_nodes]
-            # By default, allow all OUTPUT Nodes of EMComposition to be TARGET Nodes
-            nodes_to_remove = []
-            if isinstance(self.enable_learning, list):
-                # Exclude OUTPUT nodes as TARGETS if they are not specified for learning
-                nodes_to_remove = [node for node in em_output_nodes
-                                   if self.enable_learning[self.retrieved_nodes.index(node)] == False]
-            elif self.enable_learning is False:
-                # Exclude all OUTPUT nodes as TARGETS (i.e., there will be none) if learning is not enabled
-                nodes_to_remove = em_output_nodes
-            nodes = [node for node in nodes if node not in nodes_to_remove]
-
-        return nodes
+    # def get_nested_nodes_by_roles_at_any_level(self, comp, include_roles, exclude_roles=None)->list or None:
+    #     """Override Composition method to filter return of TARGET nodes based on learning specifications""
+    #     Restrict TARGET nodes to be returned only if enable_learning==True and only those for which fields_weights!=0.
+    #     IMPLEMENTATION NOTE:
+    #         Need to do this here, as this is the method that is called recursively (and thus can be overridden) when
+    #         infer_target_nodes_at_all_levels() is called from an AutodiffComposition in which EMComposition is nested
+    #     """
+    #     # Get TARGET nodes for all levels of nesting of Compositions
+    #     nodes = super().get_nested_nodes_by_roles_at_any_level(comp, include_roles, exclude_roles)
+    #
+    #     filtered_nodes = [node for node in nodes if node not in self.retrieved_nodes]
+    #
+    #     # Filter according to criteria for TARGET node for current comp
+    #     if NodeRole.TARGET in include_roles:
+    #         filtered_nodes += [node for node in nodes if node in self.get_target_nodes(context)]
+    #
+    #     if NodeRole.TARGET in exclude_roles:
+    #         filtered_nodes = [node for node in filtered_nodes if node not in self.get_target_nodes(context)]
+    #
+    #     return filtered_nodes
+    #
+    def get_target_nodes(self, context=None):
+        """Override to return TARGET nodes for EMComposition based on enable_learning parameter"""
+        enable_learning = self.parameters.enable_learning._get(context)
+        if enable_learning is True:
+            return self.retrieved_nodes
+        elif enable_learning is False:
+            return []
+        elif isinstance(enable_learning, list):
+            # Exclude retrieved_nodes as TARGETS if they are not specified for learning in enable_learning
+            return [node for node in self.retrieved_nodes
+                               if enable_learning[self.retrieved_nodes.index(node)] == True]
 
     def infer_backpropagation_learning_pathways(self, execution_mode, context=None):
         if self.concatenate_keys:
