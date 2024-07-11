@@ -2943,7 +2943,7 @@ from psyneulink.core.globals.keywords import \
     AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, CROSS_ENTROPY, \
     DEFAULT, DEFAULT_VARIABLE, DICT, FEEDBACK, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, \
     INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
-    LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
+    LEARNABLE, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     LEARNING_SIGNAL, Loss, \
     MATRIX, MAYBE, MODEL_SPEC_ID_METADATA, MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, NODES, \
     OBJECTIVE_MECHANISM, ONLINE, ONLY, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
@@ -6491,8 +6491,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 proj_spec = {PROJECTION_TYPE:projection.className,
                               PROJECTION_PARAMS:{
                                   FUNCTION:projection.function,
-                                  MATRIX:projection.matrix.base}
-                              }
+                                  MATRIX:projection.matrix.base,
+                                  LEARNABLE:projection.learnable}}
                 return self.add_projection(proj_spec, sender=projection.sender, receiver=projection.receiver)
 
         # Create Projection if it doesn't exist
@@ -6697,7 +6697,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if isinstance(projection, dict):
             proj_type = projection.pop(PROJECTION_TYPE, None) or MappingProjection
             params = projection.pop(PROJECTION_PARAMS, None)
-            projection = MappingProjection(params=params)
+            # MODIFIED 7/10/24 OLD:
+            # projection = MappingProjection(params=params)
+            # MODIFIED 7/10/24 NEW:
+            projection = MappingProjection(**params)
+            # MODIFIED 7/10/24 END
         elif isinstance(projection, (np.ndarray, np.matrix, list, RandomMatrix)):
             return MappingProjection(matrix=projection, sender=sender, receiver=receiver, name=name)
         elif isinstance(projection, str):
@@ -8395,7 +8399,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 default_projection_matrix=default_projection_matrix,
                                                 name=name)
 
-    # NOTES:
+    # IMPLEMENTATION NOTE:
     # Learning-type-specific creation methods should:
     # - create ComparatorMechanism and pass in as error_source (for 1st LearningMechanism in sequence in bp)
     # - Determine and pass error_sources (aka previous_learning_mechanism) (for bp)

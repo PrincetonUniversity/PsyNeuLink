@@ -351,7 +351,6 @@ def construct_model(model_name:str=MODEL_NAME,
                                     context_learning_pathway],
                                    name=model_name)
 
-    # EGO_comp.show_graph(show_learning=True)
     learning_components = EGO_comp.infer_backpropagation_learning_pathways(ExecutionMode.PyTorch)
     EGO_comp.add_projection(MappingProjection(sender=state_input_layer,
                                               receiver=learning_components[2],
