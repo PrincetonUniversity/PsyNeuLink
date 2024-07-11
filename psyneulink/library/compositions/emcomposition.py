@@ -994,9 +994,8 @@ class EMComposition(AutodiffComposition):
         see `memory_capacity <EMComposition_Memory_Capacity>` for details.
 
     field_weights : tuple : default (1,0)
-        specifies the relative weight assigned to each key when matching an item in memory, and can be used to disable
-        learning for some fields (by setting their weight to 0); see `field weights <EMComposition_Field_Weights>`
-        and `enable_learning <EMComposition.enable_learning>` for additional details.
+        specifies the relative weight assigned to each key when matching an item in memory;
+        see `field weights <EMComposition_Field_Weights>` for additional details.
 
     field_names : list : default None
         specifies the optional names assigned to each field in the memory_template;
@@ -1023,9 +1022,11 @@ class EMComposition(AutodiffComposition):
         specifies the rate at which items in the EMComposition's memory decay;
         see `memory_decay_rate <EMComposition_Memory_Decay_Rate>` for details.
 
-    enable_learning : bool: default True
+    enable_learning : bool or list[bool]: default True
         specifies whether a learning pathway is constructed for each `field <EMComposition_Entries_and_Fields>`
-        of the EMComposition; see `enable_learning <EMComposition.enable_learning>` for additional details.
+        of the EMComposition.  If it is a list, each item must be ``True`` or ``False`` and the number of items
+        must be equal to the number of `fields <EMComposition_Fields> specified; see `enable_learning
+        <EMComposition.enable_learning>` for additional details.
 
     learn_field_weights : bool : default True
         specifies whether `field_weights <EMComposition.field_weights>` are learnable during training;
@@ -1077,10 +1078,7 @@ class EMComposition(AutodiffComposition):
         determines which fields of the input are treated as "keys" (non-zero values) that are used to match entries in
         `memory <EMComposition.memory>` for retrieval, and which are used as "values" (zero values), that are stored
         and retrieved from memory, but not used in the match process (see `Match memories by field
-        <EMComposition_Processing>`.  If `enable_learning <EMComposition.enable_learning>` is True, then field_weights
-        also determines which fields are used for learning (those with non-zero field_weight values) and which are not
-        (those with zero values); see `field_weights <EMComposition_Field_Weights>` and `EMComposition_Learning`
-        additional details.
+        <EMComposition_Processing>`. see `field_weights <EMComposition_Field_Weights>` additional details.
 
     field_names : list[str]
         determines which names that can be used to label fields in `memory <EMComposition.memory>`;  see
@@ -1108,15 +1106,14 @@ class EMComposition(AutodiffComposition):
         determines the rate at which items in the EMComposition's memory decay (see `memory_decay_rate
         <EMComposition_Memory_Decay_Rate>` for details).
 
-    enable_learning : bool
+    enable_learning : bool or list[bool]
         determines whether `learning <Composition_Learning>` is enabled for the EMComposition, allowing any error
         received by the `retrieved_nodes <EMComposition.retrieved_nodes>` to be propagated to the corresponding
         `query_input_nodes <EMComposition.query_input_nodes>` and `value_input_nodes
         <EMComposition.value_input_nodes>`, and on to any `Nodes <Composition_Nodes>` that project to them.
-        If True, learning is enabled for all fields that have non-zero `field_weights <EMComposition.field_weights>`;
-        if False, learning is disabled for all fields. Learning can be enabled for some fields and not others by
-        using the `field_weights <EMComposition.field_weights>` attribute;  see `Learning <EMComposition_Learning>`
-        for additional details.
+        If True, learning is enabled for all fields and if False learning is disabled for all fields; If it is a
+        list, then each entry specifies whether learning is enabled or disabled for the corresponding field
+        see `Learning <EMComposition_Learning>` and `Fields <EMComposition_Fields>` for additional details.
 
     learn_field_weights : bool
         determines whether `field_weights <EMComposition.field_weights>` are learnable during training;
@@ -1241,7 +1238,7 @@ class EMComposition(AutodiffComposition):
                     see `enable_learning <EMComposition.enable_learning>`
 
                     :default value: True
-                    :type: ``bool``
+                    :type: ``bool`` or ``list``
 
                 field_names
                     see `field_names <EMComposition.field_names>`
@@ -1359,8 +1356,11 @@ class EMComposition(AutodiffComposition):
                 return f"must be a list of strings."
 
         def _validate_enable_learning(self, enable_learning):
-            if not isinstance(enable_learning, bool):
-                return f"must be a bool."
+            if isinstance(enable_learning, list):
+                if not all(isinstance(item, bool) for item in enable_learning):
+                    return f"can only contains bools as entries."
+            elif not isinstance(enable_learning, bool):
+                return f"must be a bool or list of bools."
 
         def _validate_memory_decay_rate(self, memory_decay_rate):
             if memory_decay_rate is None or memory_decay_rate == AUTO:
@@ -1388,7 +1388,7 @@ class EMComposition(AutodiffComposition):
                  softmax_gain:Union[float, CONTROL]=CONTROL,
                  storage_prob:float=1.0,
                  memory_decay_rate:Union[float,AUTO]=AUTO,
-                 enable_learning:bool=True,
+                 enable_learning:Union[bool,list]=True,
                  learn_field_weights:bool=True,
                  learning_rate:float=None,
                  use_storage_node:bool=True,
@@ -1559,6 +1559,12 @@ class EMComposition(AutodiffComposition):
                 all(isinstance(item, (int, float)) for item in memory_fill)):
             raise EMCompositionError(f"The 'memory_fill' arg ({memory_fill}) specified for {name} "
                                      f"must be a float, int or len tuple of ints and/or floats.")
+
+        # If enable_learning is a list of bools, it must match the len of 1st dimension (axis 0) of memory_template:
+        if isinstance(self.enable_learning, list) and len(self.enable_learning) != num_fields:
+            raise EMCompositionError(f"The number of items ({len(self.enable_learning)}) in the 'enable_learning' arg "
+                                     f"for {name} must match the number of fields in memory "
+                                     f"({num_fields}).")
 
         # If len of field_weights > 1, must match the len of 1st dimension (axis 0) of memory_template:
         field_weights_len = len(np.atleast_1d(field_weights))
@@ -2301,11 +2307,14 @@ class EMComposition(AutodiffComposition):
         if NodeRole.TARGET in include_roles:
             # Get OUTPUT Nodes of EMComposition
             em_output_nodes = [node for node in nodes if node in self.retrieved_nodes]
-            if self.enable_learning:
+            # By default, allow all OUTPUT Nodes of EMComposition to be TARGET Nodes
+            nodes_to_remove = []
+            if isinstance(self.enable_learning, list):
+                # Exclude OUTPUT nodes as TARGETS if they are not specified for learning
                 nodes_to_remove = [node for node in em_output_nodes
-                                   if self.field_weights[self.retrieved_nodes.index(node)] == 0]
-            else:
-                # Include all OUTPUT Nodes
+                                   if self.enable_learning[self.retrieved_nodes.index(node)] == False]
+            elif self.enable_learning is False:
+                # Exclude all OUTPUT nodes as TARGETS (i.e., there will be none) if learning is not enabled
                 nodes_to_remove = em_output_nodes
             nodes = [node for node in nodes if node not in nodes_to_remove]
 
