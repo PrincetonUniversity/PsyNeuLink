@@ -353,7 +353,9 @@ def construct_model(model_name:str=MODEL_NAME,
 
     # EGO_comp.show_graph(show_learning=True)
     learning_components = EGO_comp.infer_backpropagation_learning_pathways(ExecutionMode.PyTorch)
-    EGO_comp.add_projection(sender=state_input_layer, receiver=learning_components[2])
+    EGO_comp.add_projection(MappingProjection(sender=state_input_layer,
+                                              receiver=learning_components[2],
+                                              learnable=False))
 
     # Ensure EM is executed (to encode previous state and context, and predict current state)
     #     before updating state and context
