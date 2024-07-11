@@ -17,6 +17,7 @@ import os
 import sys
 import time
 from typing import Callable, Optional
+import weakref
 
 
 from psyneulink.core import llvm as pnlvm
@@ -369,6 +370,8 @@ class MechExecution(FuncExecution):
 
 class CompExecution(CUDAExecution):
 
+    active_executions = weakref.WeakSet()
+
     def __init__(self, composition, execution_ids=[None], *, additional_tags=frozenset()):
         super().__init__(buffers=['state_struct', 'param_struct', 'data_struct', 'conditions'])
         self._composition = composition
@@ -387,6 +390,11 @@ class CompExecution(CUDAExecution):
 
         if len(execution_ids) > 1:
             self._ct_len = ctypes.c_int(len(execution_ids))
+
+        self.active_executions.add(self)
+
+    def __del__(self):
+        self.active_executions.discard(self)
 
     @staticmethod
     def get(composition, context, additional_tags=frozenset()):
