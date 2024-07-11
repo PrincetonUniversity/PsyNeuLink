@@ -410,7 +410,7 @@ An EMComposition is created by calling its constructor, that takes the following
      `memory_fill <EMComposition_Memory_Fill>` to use small random values (e.g., ``memory_fill=(0,.001)``).
 
 .. _EMComposition_Field_Weights:
-
+7/10/24 FIX: ADD DISCUSSION OF INFLUENCE ON LEARNING, RELATIONSHIP TO LEARN_FIELD_WEIGHTS, AND ADD EXAMPLES
 * **field_weights**: specifies which fields are used as keys, and how they are weighted during retrieval. The
   number of values specified must match the number of fields specified in ``memory_template`` (i.e., the size of
   of its first dimension (axis 0)).  All non-zero entries must be positive, and designate *keys* -- fields
@@ -655,7 +655,8 @@ COMMENT
 *Learning*
 ~~~~~~~~~~
 
-7/10/24 FIX: MODIFY TO INDICATE THAT enable_learning ALLOWS PROPAGATION OF ERROR TRHOUGH THE NETWORK,
+7/10/24 - FIX: MODIFY TO INDICATE THAT enable_learning + field_weights DETERMINES IMPLEMEMTNATION OF TARGET
+               NODES AND HOW ERROR IS PROPAGATED THROUGH THE NETWORK,
      WHILE learn_field_weights ALLOWS LEARNING OF THE FIELD_WEIGHTS, WHICH REQUIRES enable_learning TO BE True
 If `learn <Composition.learn>` is called and the `learn_field_weights <EMComposition.learn_field_weights>` attribute
 is True, then the `field_weights <EMComposition.field_weights>` are modified to minimize the error passed to the
@@ -993,8 +994,9 @@ class EMComposition(AutodiffComposition):
         see `memory_capacity <EMComposition_Memory_Capacity>` for details.
 
     field_weights : tuple : default (1,0)
-        specifies the relative weight assigned to each key when matching an item in memory'
-        see `field weights <EMComposition_Field_Weights>` for details.
+        specifies the relative weight assigned to each key when matching an item in memory, and can be used to disable
+        learning for some fields (by setting their weight to 0); see `field weights <EMComposition_Field_Weights>`
+        and `enable_learning <EMComposition.enable_learning>` for additional details.
 
     field_names : list : default None
         specifies the optional names assigned to each field in the memory_template;
@@ -1021,9 +1023,9 @@ class EMComposition(AutodiffComposition):
         specifies the rate at which items in the EMComposition's memory decay;
         see `memory_decay_rate <EMComposition_Memory_Decay_Rate>` for details.
 
-    enable_learning : bool or List[bool]: default True
-        specifies whether a learning pathway is constructed for each output of the EMComposition
-        (see `enable_learning <Composition.enable_learning>` for additional details).
+    enable_learning : bool: default True
+        specifies whether a learning pathway is constructed for each `field <EMComposition_Entries_and_Fields>`
+        of the EMComposition; see `enable_learning <EMComposition.enable_learning>` for additional details.
 
     learn_field_weights : bool : default True
         specifies whether `field_weights <EMComposition.field_weights>` are learnable during training;
@@ -1072,11 +1074,13 @@ class EMComposition(AutodiffComposition):
         <EMComposition_Memory_Capacity>` for additional details.
 
     field_weights : tuple[float]
-        determines which fields of the input are treated as "keys" (non-zero values), used to match entries in `memory
-        <EMComposition.memory>` for retrieval, and which are used as "values" (zero values), that are stored and
-        retrieved from memory, but not used in the match process (see `Match memories by field
-        <EMComposition_Processing>`;  see `field_weights <EMComposition_Field_Weights>` for additional details
-        of specification).
+        determines which fields of the input are treated as "keys" (non-zero values) that are used to match entries in
+        `memory <EMComposition.memory>` for retrieval, and which are used as "values" (zero values), that are stored
+        and retrieved from memory, but not used in the match process (see `Match memories by field
+        <EMComposition_Processing>`.  If `enable_learning <EMComposition.enable_learning>` is True, then field_weights
+        also determines which fields are used for learning (those with non-zero field_weight values) and which are not
+        (those with zero values); see `field_weights <EMComposition_Field_Weights>` and `EMComposition_Learning`
+        additional details.
 
     field_names : list[str]
         determines which names that can be used to label fields in `memory <EMComposition.memory>`;  see
@@ -1104,27 +1108,15 @@ class EMComposition(AutodiffComposition):
         determines the rate at which items in the EMComposition's memory decay (see `memory_decay_rate
         <EMComposition_Memory_Decay_Rate>` for details).
 
-    # 7/10/24 FIX: NEW:
-        enable_learning : bool or List[bool]
-        determines whether `learning <Composition_Learning>` is enabled for each `field
-        <EMComposition_Entries_and_Fields>` of the EMComposition, based on the value of the `retrieved_node
-        <EMComposition.retrieved_nodes>` for that field (i.e., allowing any error received by the `retrieved_node
-        <EMComposition.retrieved_nodes>` to be propagated to the corresponding `query_input_node
-        <EMComposition.query_input_nodes>` and `value_input_node <EMComposition.value_input_nodes>`, and on to any
-        `Nodes <Composition_Nodes>` that project to them. If True, learning is enable for all fields;  if a list is
-        specified, it must be the same length as the number of fields, and each item must be a boolean specifying
-        whether learning is enabled for the corresponding field; if False, learning is disabled for all fields.
-
-
-    enable_learning : bool or List[bool]
-        determines whether `learning <Composition_Learning>` is enabled for each `field
-        <EMComposition_Entries_and_Fields>` of the EMComposition, based on the value of the `retrieved_node
-        <EMComposition.retrieved_nodes>` for that field (i.e., allowing any error received by the `retrieved_node
-        <EMComposition.retrieved_nodes>` to be propagated to the corresponding `query_input_node
-        <EMComposition.query_input_nodes>` and `value_input_node <EMComposition.value_input_nodes>`, and on to any
-        `Nodes <Composition_Nodes>` that project to them. If True, learning is enable for all fields;  if a list is
-        specified, it must be the same length as the number of fields, and each item must be a boolean specifying
-        whether learning is enabled for the corresponding field; if False, learning is disabled for all fields.
+    enable_learning : bool
+        determines whether `learning <Composition_Learning>` is enabled for the EMComposition, allowing any error
+        received by the `retrieved_nodes <EMComposition.retrieved_nodes>` to be propagated to the corresponding
+        `query_input_nodes <EMComposition.query_input_nodes>` and `value_input_nodes
+        <EMComposition.value_input_nodes>`, and on to any `Nodes <Composition_Nodes>` that project to them.
+        If True, learning is enabled for all fields that have non-zero `field_weights <EMComposition.field_weights>`;
+        if False, learning is disabled for all fields. Learning can be enabled for some fields and not others by
+        using the `field_weights <EMComposition.field_weights>` attribute;  see `Learning <EMComposition_Learning>`
+        for additional details.
 
     learn_field_weights : bool
         determines whether `field_weights <EMComposition.field_weights>` are learnable during training;
@@ -1249,7 +1241,7 @@ class EMComposition(AutodiffComposition):
                     see `enable_learning <EMComposition.enable_learning>`
 
                     :default value: True
-                    :type: ``bool or ``list``
+                    :type: ``bool``
 
                 field_names
                     see `field_names <EMComposition.field_names>`
@@ -1366,6 +1358,10 @@ class EMComposition(AutodiffComposition):
             if field_names and not all(isinstance(item, str) for item in field_names):
                 return f"must be a list of strings."
 
+        def _validate_enable_learning(self, enable_learning):
+            if not isinstance(enable_learning, bool):
+                return f"must be a bool."
+
         def _validate_memory_decay_rate(self, memory_decay_rate):
             if memory_decay_rate is None or memory_decay_rate == AUTO:
                 return
@@ -1392,7 +1388,7 @@ class EMComposition(AutodiffComposition):
                  softmax_gain:Union[float, CONTROL]=CONTROL,
                  storage_prob:float=1.0,
                  memory_decay_rate:Union[float,AUTO]=AUTO,
-                 enable_learning:Union(bool,list)=True,
+                 enable_learning:bool=True,
                  learn_field_weights:bool=True,
                  learning_rate:float=None,
                  use_storage_node:bool=True,
@@ -1704,8 +1700,6 @@ class EMComposition(AutodiffComposition):
             # self.value_names = parsed_field_names[self.num_keys:]
             self.value_names = [parsed_field_names[i] for i in range(self.num_fields) if i not in self.key_indices]
         else:
-            # FIX: PRODUCE CLEANER NAMES
-            # self.key_names = [f'{i} [QUERY]' for i in range(self.num_keys)] if self.num_keys > 1 else ['KEY']
             self.key_names = [f'{i}' for i in range(self.num_keys)] if self.num_keys > 1 else ['KEY']
             self.value_names = [f'{i} [VALUE]' for i in range(self.num_values)] if self.num_values > 1 else ['VALUE']
 
@@ -2183,8 +2177,7 @@ class EMComposition(AutodiffComposition):
     def _set_learning_attributes(self):
         """Set learning-related attributes for Node and Projections
         """
-        # self.require_node_roles(self.storage_node, NodeRole.LEARNING)
-
+        # 7/10/24 FIX: SHOULD THIS ALSO BE CONSTRAINTED BY VALUE OF field_weights FOR CORRESPONDING FIELD?
         for projection in self.projections:
             if (projection.sender.owner in self.field_weight_nodes
                     and self.enable_learning
@@ -2296,6 +2289,27 @@ class EMComposition(AutodiffComposition):
                 self.execution_mode_warned_about_default = True
             execution_mode = ExecutionMode.PyTorch
         return execution_mode
+
+    def get_nested_nodes_by_roles_at_any_level(self, comp, include_roles, exclude_roles=None)->list or None:
+        """Override Composition method to filter return of TARGET nodes based on learning specifications""
+        Restrict TARGET nodes to be returned only if enable_learning==True and only those for which fields_weights!=0.
+        IMPLEMENTATION NOTE:
+            Need to do this here, as this is the method that is called recursively (and thus can be overridden) when
+            infer_target_nodes_at_all_levels() is called from an AutodiffComposition in which EMComposition is nested
+        """
+        nodes = super().get_nested_nodes_by_roles_at_any_level(comp, include_roles, exclude_roles)
+        if NodeRole.TARGET in include_roles:
+            # Get OUTPUT Nodes of EMComposition
+            em_output_nodes = [node for node in nodes if node in self.retrieved_nodes]
+            if self.enable_learning:
+                nodes_to_remove = [node for node in em_output_nodes
+                                   if self.field_weights[self.retrieved_nodes.index(node)] == 0]
+            else:
+                # Include all OUTPUT Nodes
+                nodes_to_remove = em_output_nodes
+            nodes = [node for node in nodes if node not in nodes_to_remove]
+
+        return nodes
 
     def infer_backpropagation_learning_pathways(self, execution_mode, context=None):
         if self.concatenate_keys:

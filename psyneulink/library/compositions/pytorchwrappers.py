@@ -538,7 +538,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
                 # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
                 #  note: these may be different than for actual Composition, as they are flattened
-                if (node._mechanism in self._composition.get_nested_nodes_output_nodes_at_levels()):
+                if (node._mechanism in self._composition.get_nested_output_nodes_at_all_levels()):
                     outputs[node._mechanism] = node.value
 
         # NOTE: Context source needs to be set to COMMAND_LINE to force logs to update independently of timesteps

@@ -4782,7 +4782,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     nested_nodes.append(node)
         return nested_nodes if any(nested_nodes) else None
 
-    def get_nested_nodes_input_nodes_at_levels(self)->list or None:
+    def get_nested_input_nodes_at_all_levels(self)->list or None:
         """Return all Nodes from nested Compositions that receive input directly from input to outermost Composition."""
         input_nodes = self.get_nested_nodes_by_roles_at_any_level(self, include_roles=NodeRole.INPUT)
         return [input_node for input_node in input_nodes
@@ -4791,7 +4791,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            for input_port in input_node.input_ports for proj in input_port.path_afferents
                            if isinstance(proj.sender.owner, CompositionInterfaceMechanism))] or None
 
-    def get_nested_nodes_output_nodes_at_levels(self)->list or None:
+    def get_nested_output_nodes_at_all_levels(self)->list or None:
         """Return all Nodes from nested Compositions that send output directly to outermost Composition."""
         output_nodes = self.get_nested_nodes_by_roles_at_any_level(self, include_roles=NodeRole.OUTPUT)
         return [output_node for output_node in output_nodes

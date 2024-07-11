@@ -674,13 +674,14 @@ class AutodiffComposition(Composition):
             # IMPLEMENTATION NOTE: only add target nodes if not already present
             #    (to avoid duplication in multiple calls, including from command line;
             #     see test_xor_training_identicalness_standard_composition_vs_PyTorch_and_LLVM for example)
-            output_mechs = self.get_nested_nodes_output_nodes_at_levels()
-            assert set([mech for mech in [pathway[-1] for pathway in pathways]]) == set(output_mechs)
+            output_mechs_for_learning = self.get_nested_output_nodes_at_all_levels()
+            # output_mechs_for_learning = self.infer_target_nodes_at_all_levels()
+            assert set([mech for mech in [pathway[-1] for pathway in pathways]]) == set(output_mechs_for_learning)
             target_mechs = [ProcessingMechanism(default_variable = np.array([np.zeros_like(value)
                                                                              for value in mech.value],
                                                                             dtype=object),
                                                 name= 'TARGET for ' + mech.name)
-                            for mech in output_mechs if mech not in self.target_output_map.values()]
+                            for mech in output_mechs_for_learning if mech not in self.target_output_map.values()]
             # Suppress warnings about role assignments
             context = Context(source=ContextFlags.METHOD)
             self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.LEARNING], context=context)
@@ -688,7 +689,8 @@ class AutodiffComposition(Composition):
                 self.exclude_node_roles(target_mech, NodeRole.OUTPUT, context)
                 for output_port in target_mech.output_ports:
                     output_port.parameters.require_projection_in_composition.set(False, override=True)
-            self.target_output_map.update({target: output for target, output in zip(target_mechs, output_mechs)})
+            self.target_output_map.update({target: output for target, output
+                                           in zip(target_mechs, output_mechs_for_learning)})
         else:
             # Construct entire PNL backpropagation learning pathways for each INPUT Node
             for pathway in pathways:
@@ -875,12 +877,26 @@ class AutodiffComposition(Composition):
         autodiff_input_dict = {}
         for node, values in input_dict.items():
             mech = node.owner if isinstance(node, InputPort) else node
-            if (mech in self.get_nested_nodes_input_nodes_at_levels()
+            if (mech in self.get_nested_input_nodes_at_all_levels()
                     and mech not in self.get_nodes_by_role(NodeRole.TARGET)):
                 # Pass along inputs to all INPUT Nodes except TARGETS
                 # (those are handled separately in _get_autodiff_targets_values)
                 autodiff_input_dict[node] = values
         return autodiff_input_dict
+
+    # 7/10/24 FIX: STILL WORKING ON THIS TO INSURE IT IS USED RECURSIVELY
+    # def _get_output_nodes_for_learning(self):
+    #     """Helper method that returns the OUTPUT nodes that should be learned.
+    #     By default, returns all OUTPUT nodes of outermost and all nested Compositions.
+    #     Can be overridden by subclasses (e.g., EMComposition) to restrict learning to just some OUTPUT nodes."""
+    #     return self.get_nested_output_nodes_at_all_levels()
+    # def get_nested_output_nodes_at_levels(self)->list or None:
+    #     """Return all Nodes from nested Compositions that send output directly to outermost Composition."""
+    #     output_nodes = self.get_nested_nodes_by_roles_at_any_level(self, include_roles=NodeRole.TARGET)
+    #     return [output_node for output_node in output_nodes
+    #             if not all(proj.receiver.owner._get_destination_info_for_output_CIM(proj.receiver)
+    #                        for output_port in output_node.output_ports for proj in output_port.efferents
+    #                        if isinstance(proj.receiver.owner, CompositionInterfaceMechanism))] or None
 
     def _get_autodiff_targets_values(self, input_dict):
         """Return dict with values for TARGET Nodes
