@@ -6697,11 +6697,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if isinstance(projection, dict):
             proj_type = projection.pop(PROJECTION_TYPE, None) or MappingProjection
             params = projection.pop(PROJECTION_PARAMS, None)
-            # MODIFIED 7/10/24 OLD:
-            # projection = MappingProjection(params=params)
-            # MODIFIED 7/10/24 NEW:
             projection = MappingProjection(**params)
-            # MODIFIED 7/10/24 END
         elif isinstance(projection, (np.ndarray, np.matrix, list, RandomMatrix)):
             return MappingProjection(matrix=projection, sender=sender, receiver=receiver, name=name)
         elif isinstance(projection, str):
