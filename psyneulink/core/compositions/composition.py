@@ -4756,9 +4756,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError('Node missing from {0}.nodes_to_roles: {1}'.format(self, e))
 
     def get_nested_nodes_by_roles_at_any_level(self, comp, include_roles, exclude_roles=None)->list or None:
-        """Return all Nodes from nested Compositions that have *include_roles* but not *exclude_roles at all levels*.
-        Returns Nodes that have or don't have the specified roles at *any* level of nesting,
-            irrespective of their status at other levels of nesting.
+        """Return all Nodes from comp or any nested within it that have *include_roles* but not *exclude_roles*.
+        Returns Nodes that have or don't have the specified roles in the Composition specified by **comp**
+        or any Composition nested within it, irrespective of their status at other levels of nesting.
         To get nodes that are either INPUT or OUTPUT Nodes at *all* levels of nesting, use either
             get_nested_input_nodes_at_all_levels() or get_nested_output_nodes_at_all_levels()
         Note:  do this recursively, checking roles on the "way down," as a Node may have a role in a
