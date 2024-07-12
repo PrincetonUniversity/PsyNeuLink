@@ -136,6 +136,9 @@ import numpy as np
 import graph_scheduler as gs
 from enum import IntEnum
 
+import torch
+torch.manual_seed(0)
+
 from psyneulink import *
 from psyneulink._typing import Union, Literal
 
@@ -143,16 +146,15 @@ from psyneulink._typing import Union, Literal
 
 MEMORY_CAPACITY = 5
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
-DISPLAY_MODEL = (                      # Only one of the following can be uncommented:
-    # None                             # suppress display of model
+DISPLAY_MODEL =  (                      # Only one of the following can be uncommented:
+    None                             # suppress display of model
     # {}                               # show simple visual display of model
-    {
-    'show_pytorch': True,            # show pytorch graph of model
-     'show_learning': True,
-     # 'show_projections_not_in_composition': True,
-    # 'exclude_from_gradient_calc_style': 'dashed'# show target mechanisms for learning
-    # {'show_node_structure': True     # show detailed view of node structures and projections
-    }
+    # {
+    # 'show_pytorch': True,            # show pytorch graph of model
+    #  'show_learning': True,
+    #  # 'show_projections_not_in_composition': True,
+    # # 'exclude_from_gradient_calc_style': 'dashed'# show target mechanisms for learning
+    # # {'show_node_structure': True     # show detailed view of node structures and projections
 )
 RUN_MODEL = True                       # True => run the model
 # RUN_MODEL = False                      # False => don't run the model
@@ -297,6 +299,7 @@ def construct_model(model_name:str=MODEL_NAME,
                                       context_retrieval_weight
                                       ),
                        enable_learning=[True, False, False],
+                       # enable_learning=True,
                        learn_field_weights=False
                        )
 
@@ -334,6 +337,7 @@ def construct_model(model_name:str=MODEL_NAME,
                                     em]
     context_learning_pathway = [context_layer,
                                 MappingProjection(sender=context_layer,
+                                                  matrix=IDENTITY_MATRIX,
                                                   receiver=em.nodes[context_name + QUERY],
                                                   learnable=True),
                                 em,
@@ -349,6 +353,7 @@ def construct_model(model_name:str=MODEL_NAME,
                                     state_to_em_pathway,
                                     previous_state_to_em_pathway,
                                     context_learning_pathway],
+                                   learning_rate=.5,
                                    name=model_name)
 
     learning_components = EGO_comp.infer_backpropagation_learning_pathways(ExecutionMode.PyTorch)
@@ -401,15 +406,13 @@ if __name__ == '__main__':
         model.learn(inputs={STATE_INPUT_LAYER_NAME:INPUTS},
                   # report_output=REPORT_OUTPUT,
                   # report_progress=REPORT_PROGRESS
+                    call_after_minibatch=print('Projections from context to EM: ',
+                                               model.projections[7].parameters.matrix.get(context)),
+                                               # model.projections[7].matrix)
+                    learning_rate=.5
                   )
-        # model.learn(inputs={STATE_INPUT_LAYER_NAME:INPUTS},
-        #           # report_output=REPORT_OUTPUT,
-        #           # report_progress=REPORT_PROGRESS
-        #             call_after_minibatch=print('Projections from context to EM: ',
-        #                                        model.projections[7].parameters.matrix.get(context))
-        #                                        # model.projections[7].matrix)
-        #           )
-        model.show_graph(**DISPLAY_MODEL)
+        if DISPLAY_MODEL is not None:
+            model.show_graph(**DISPLAY_MODEL)
         if PRINT_RESULTS:
             print("MEMORY:")
             print(model.nodes['EM'].parameters.memory.get(context))
