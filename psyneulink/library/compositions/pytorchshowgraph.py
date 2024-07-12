@@ -37,8 +37,8 @@ class PytorchShowGraph(ShowGraph):
     any `nested Compositions <AutodiffComposition_Nesting>` are "flattened" (i.e., incorporated into the outermost
     Composition); also, any `Nodes <Composition_Nodes>`` designated as `exclude_from_gradient_calc
     <PytorchMechanismWrapper.exclude_from_gradient_calc>` will be moved to the end of the graph (as they are executed
-    after the gradient calculation), and any Projections designated as `exclude_from_autodiff
-    <Projection.exclude_from_autodiff>` will not be shown as they are not used in the gradient calculations at all.
+    after the gradient calculation), and any Projections designated as `exclude_in_autodiff
+    <Projection.exclude_in_autodiff>` will not be shown as they are not used in the gradient calculations at all.
 
     Arguments
     ---------

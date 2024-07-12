@@ -394,7 +394,11 @@ if __name__ == '__main__':
         # print("MODEL NOT YET FULLY EXECUTABLE")
         print(f'Running {MODEL_NAME}')
         context = MODEL_NAME
-        model.run(inputs={STATE_INPUT_LAYER_NAME:INPUTS},
+        # model.run(inputs={STATE_INPUT_LAYER_NAME:INPUTS},
+        #           # report_output=REPORT_OUTPUT,
+        #           # report_progress=REPORT_PROGRESS
+        #           )
+        model.learn(inputs={STATE_INPUT_LAYER_NAME:INPUTS},
                   # report_output=REPORT_OUTPUT,
                   # report_progress=REPORT_PROGRESS
                   )
