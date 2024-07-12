@@ -112,15 +112,18 @@ class PytorchShowGraph(ShowGraph):
 
     def _proj_in_composition(self, proj, composition_projections, context)->bool:
         """Override to include direct Projections from outer to nested comps in Pytorch mode"""
-        processing_graph = self._get_processing_graph(self.composition, context)
-        if proj in composition_projections:
-            return True
-        # If proj is betw. a sender and receiver specified in the processing_graphl, then it is in the autodiffcomp
-        elif (proj.receiver.owner in processing_graph
-              and proj.sender.owner in processing_graph[proj.receiver.owner]):
-            return True
+        if self.show_pytorch:
+            processing_graph = self._get_processing_graph(self.composition, context)
+            if proj in composition_projections:
+                return True
+            # If proj is betw. a sender and receiver specified in the processing_graphl, then it is in the autodiffcomp
+            elif (proj.receiver.owner in processing_graph
+                  and proj.sender.owner in processing_graph[proj.receiver.owner]):
+                return True
+            else:
+                return False
         else:
-            return False
+            return super()._proj_in_composition(proj, composition_projections, context)
 
     def _get_roles_by_node(self, composition, node, context):
         """Override in Pytorch mode to return NodeRole.INTERNAL for all nodes in nested compositions"""
@@ -143,32 +146,39 @@ class PytorchShowGraph(ShowGraph):
 
     def _implement_graph_node(self, g, rcvr, context, *args, **kwargs):
         """Override to assign EXCLUDE_FROM_GRADIENT_CALC nodes their own style in Pytorch mode"""
-        if self.pytorch_rep.nodes_map[rcvr].exclude_from_gradient_calc:
-            kwargs['style'] = self.exclude_from_gradient_calc_line_style
-            kwargs['color'] = self.exclude_from_gradient_calc_color
-        g.node(*args, **kwargs)
+        if self.show_pytorch:
+            if self.pytorch_rep.nodes_map[rcvr].exclude_from_gradient_calc:
+                kwargs['style'] = self.exclude_from_gradient_calc_line_style
+                kwargs['color'] = self.exclude_from_gradient_calc_color
+            g.node(*args, **kwargs)
+        else:
+            return super()._implement_graph_node( g, rcvr, context, *args, **kwargs)
 
     def _implement_graph_edge(self, graph, proj, context, *args, **kwargs):
         """Override to assign custom attributes to edges"""
 
-        kwargs['color'] = self.default_node_color
+        if self.show_pytorch:
+            kwargs['color'] = self.default_node_color
 
-        modulatory_node = None
-        if proj.parameter_ports[0].mod_afferents:
-            modulatory_node = self.pytorch_rep.nodes_map[proj.parameter_ports[0].mod_afferents[0].sender.owner]
+            modulatory_node = None
+            if proj.parameter_ports[0].mod_afferents:
+                modulatory_node = self.pytorch_rep.nodes_map[proj.parameter_ports[0].mod_afferents[0].sender.owner]
 
-        if proj in self.pytorch_rep.projections_map:
+            if proj in self.pytorch_rep.projections_map:
 
-            # If Projection is a LearningProjection that is active, assign color and arrowhead of a LearningProjection
-            if proj.learnable or self.pytorch_rep.projections_map[proj].matrix.requires_grad:
+                # If Projection is a LearningProjection that is active, assign color and arrowhead of a LearningProjection
+                if proj.learnable or self.pytorch_rep.projections_map[proj].matrix.requires_grad:
+                    kwargs['color'] = self.learning_color
+
+                # If Projection is from a ModulatoryMechanism that is excluded from gradient calculations, assign that style
+                elif modulatory_node and modulatory_node.exclude_from_gradient_calc:
+                    kwargs['color'] = self.exclude_from_gradient_calc_color
+                    kwargs['style'] = self.exclude_from_gradient_calc_line_style
+
+            elif self._proj_in_composition(proj, self.pytorch_rep.projections_map, context) and proj.learnable:
                 kwargs['color'] = self.learning_color
 
-            # If Projection is from a ModulatoryMechanism that is excluded from gradient calculations, assign that style
-            elif modulatory_node and modulatory_node.exclude_from_gradient_calc:
-                kwargs['color'] = self.exclude_from_gradient_calc_color
-                kwargs['style'] = self.exclude_from_gradient_calc_line_style
+            graph.edge(*args, **kwargs)
 
-        elif self._proj_in_composition(proj, self.pytorch_rep.projections_map, context) and proj.learnable:
-            kwargs['color'] = self.learning_color
-            
-        graph.edge(*args, **kwargs)
+        else:
+            return super()._implement_graph_edge(graph, proj, context, *args, **kwargs)
