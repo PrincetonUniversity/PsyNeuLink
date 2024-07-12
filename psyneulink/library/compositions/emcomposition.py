@@ -1773,6 +1773,7 @@ class EMComposition(AutodiffComposition):
         else:
             self.key_names = [f'{i}' for i in range(self.num_keys)] if self.num_keys > 1 else ['KEY']
             self.value_names = [f'{i} [VALUE]' for i in range(self.num_values)] if self.num_values > 1 else ['VALUE']
+            parsed_field_names = self.key_names + self.value_names
 
         user_specified_concatenate_keys = concatenate_keys or False
         parsed_concatenate_keys = (user_specified_concatenate_keys
