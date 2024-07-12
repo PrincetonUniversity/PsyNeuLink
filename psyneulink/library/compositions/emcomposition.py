@@ -410,18 +410,21 @@ An EMComposition is created by calling its constructor, that takes the following
      `memory_fill <EMComposition_Memory_Fill>` to use small random values (e.g., ``memory_fill=(0,.001)``).
 
 .. _EMComposition_Field_Weights:
-7/10/24 FIX: ADD DISCUSSION OF INFLUENCE ON LEARNING, RELATIONSHIP TO LEARN_FIELD_WEIGHTS, AND ADD EXAMPLES
+
 * **field_weights**: specifies which fields are used as keys, and how they are weighted during retrieval. The
-  number of values specified must match the number of fields specified in ``memory_template`` (i.e., the size of
-  of its first dimension (axis 0)).  All non-zero entries must be positive, and designate *keys* -- fields
-  that are used to match queries agains entries in memory for retrieval (see `Match memories by field
+  number of entries specified must match the number of fields specified in ``memory_template`` (i.e., the size of
+  of its first dimension (axis 0)). All non-zero entries must be positive; these designate *keys* -- fields
+  that are used to match queries against entries in memory for retrieval (see `Match memories by field
   <EMComposition_Processing>`). Entries of 0 designate *values* -- fields that are ignored during the matching
   process, but the values of which are retrieved and assigned as the `value <Mechanism_Base.value>` of the
-  corresponding `retrieved_node <EMComposition.retrieved_nodes>`. This distinction between keys and value implements
-  a standard "dictionary; however, if all entries are non-zero, then all fields are treated as keys, implemented a
-  full form of content-addressable memory. If ``learn_field_weight`` is True, the field_weights can be modified
-  during training, and function like the attention head of a Transformer model); otherwise they remain fixed. The
-  following options can be used to specify ``field_weights``:
+  corresponding `retrieved_node <EMComposition.retrieved_nodes>`. This distinction between keys and value corresponds
+  to the format of a standard "dictionary," though in that case only a single key and value are allowed, whereas
+  here there can be one or more keys and any number of values;  if all fields are keys, this implements a full
+  form of content-addressable memory. If ``learn_field_weight`` is True (and `enable_learning
+  <EMComposition.enable_learning>` is either True or a list), then the field_weights can be modified
+  during training (this functions similarly to the attention head of a Transformer model, although at present the
+  field can only be scalar values rather than vecdtors); if ``learn_field_weight`` is False, then the field_weights are
+  fixed. The following options can be used to specify ``field_weights``:
 
     * *None* (the default): all fields except the last are treated as keys, and are weighted equally for retrieval,
       while the last field is treated as a value field;
@@ -489,11 +492,36 @@ An EMComposition is created by calling its constructor, that takes the following
   adaptively set the gain based on the entropy of the dot products, preserving the distribution over non-(or near)
   zero entries irrespective of how many (near) zero entries there are.
 
-* **learn_field_weight** : specifies whether `field_weights <EMComposition.field_weights>` are modifiable during training.
+.. _EMComposition_Learning:
+
+*Learning*
+
+EMComposition supports two forms of learning -- error backpropagation and the learning of `field_weights
+<EMComposition.field_weights>` -- that can be configured by the following arguments of the EMComposition's constructor:
+
+* **enable_learning** : specifies whether learning is enabled for the EMComposition and, if so, which `retrieved_nodes
+    <EMComposition.retrieved_nodes>` are used to compute errors, and propagate these back through the network. If
+    ``enable_learning`` is False, then no learning occurs, including of `field_weights <EMComposition.field_weights>`).
+    If it is True, then all of the `retrieved_nodes <EMComposition.retrieved_nodes>` participate in learning:  For
+    those that do not project to an outer Composition (i.e., one in which the EMComposition is `nested
+    <Composition_Nested>`), a `TARGET <NodeRole.TARGET>` node is constructed for each, and used to compute errors that
+    are backpropagated through the network to its `query_input_nodes <EMComposition.query_input_nodes>` and
+    `value_input_nodes <EMComposition.value_input_nodes>`, and on to any nodes that project to it from a composition
+    in which the EMComposition is `nested <Composition_Nested>`; retrieved_nodes that *do* project to an outer
+    Composition receive their errors from those nodes, which are also backpropagated through the EMComposition.
+    If ``enable_learning`` is a list, then only the `retrieved_nodes <EMComposition.retrieved_nodes>` specified in the
+    list participate in learning, and errors are computed only for those nodes.  The list must contain the same
+    number of entries as there are `fields <EMComposition_Fields>` and corresponding `retreived_nodes
+    <EMComposition.retrieved_nodes>`, and each entry must be a boolean that specifies whether the corresponding
+    `retrieved_node <EMComposition.retrieved_nodes>` is used for learning.
+
+* **learn_field_weight** : specifies whether `field_weights <EMComposition.field_weights>` are modifiable during
+    learning (see `field_weights <EMComposition.field_weights>` and `EMComposition_Learning` for additional
+    information.  For learning of `field_weights <EMComposition.field_weights>` to occur, ``enable_learning`` must
+    also be True, or it must be a list with at least one True entry.
 
 * **learning_rate** : specifies the rate at which  `field_weights <EMComposition.field_weights>` are learned if
-  ``learn_field_weight`` is True.
-
+  ``learn_field_weight`` is True; see `EMComposition_Learning` for additional information.
 
 .. _EMComposition_Structure:
 
@@ -650,29 +678,44 @@ softmaxed values for each memory with the corresponding value for each memory, a
 corresponding `output <Composition.output>` item.
 COMMENT
 
-.. _EMComposition_Learning:
+.. _EMComposition_Training:
 
-*Learning*
+*Training*
 ~~~~~~~~~~
 
-7/10/24 - FIX: MODIFY TO INDICATE THAT enable_learning + field_weights DETERMINES IMPLEMEMTNATION OF TARGET
-               NODES AND HOW ERROR IS PROPAGATED THROUGH THE NETWORK,
-     WHILE learn_field_weights ALLOWS LEARNING OF THE FIELD_WEIGHTS, WHICH REQUIRES enable_learning TO BE True
-If `learn <Composition.learn>` is called and the `learn_field_weights <EMComposition.learn_field_weights>` attribute
-is True, then the `field_weights <EMComposition.field_weights>` are modified to minimize the error passed to the
-EMComposition retrieved nodes, using the learning_rate specified in the `learning_rate <EMComposition.learning_rate>`
-attribute. If `learn_field_weights <EMComposition.learn_field_weights>` is False (or `run <Composition.run>` is called,
-then the `field_weights <EMComposition.field_weights>` are not modified and the EMComposition is simply executed
-without any modification, and the error signal is passed to the nodes that project to its `INPUT <NodeRole.INPUT>`
-`Nodes <Composition_Nodes>`.
+If `learn <Composition.learn>` is called, ``enable_learning`` is True or a list with at least one True entry,
+then errors will be computed for each of the `retrieved_nodes <EMComposition.retrieved_nodes>` that is specified for
+learning (see `EMComposition_Learning` for details about specification). These errors are derived either from
+any errors backprpated to the EMComposition from an outer Composition in which it is `nested <Composition_Nested>`, or
+locally by the difference between the `retrieved_nodes <EMComposition.retrieved_nodes>` and the `target_nodes
+<EMComposition.target_nodes>` that are created for each of the `retrieved_nodes <EMComposition.retrieved_nodes>` that
+do not project to an outer Composition.  These errors are then backpropagated through the EMComposition to the
+`query_input_nodes <EMComposition.query_input_nodes>` and `value_input_nodes <EMComposition.value_input_nodes>`, and
+on to any nodes that project to it from a composition in which the EMComposition is `nested <Composition_Nested>`.
+
+If `learn_field_weights <EMComposition.learn_field_weights>` is also True, then the `field_weights
+<EMComposition.field_weights>` are modified to minimize the error passed to the EMComposition retrieved nodes, using the
+`learning_rate <EMComposition.learning_rate>` specified in the `learning_rate <EMComposition.learning_rate>` attribute.
+If `learn_field_weights <EMComposition.learn_field_weights>` is False (or `run <Composition.run>` is called, then the
+If `learn_field_weights <EMComposition.learn_field_weights>` is False), then the `field_weights
+<EMComposition.field_weights>` are not modified and the EMComposition is simply executed
+without any modification, and error signals are passed to the nodes that project to its `query_input_nodes
+<EMComposition.query_input_nodes>` and `value_input_nodes <EMComposition.value_input_nodes>`.
 
   .. note::
-     Although memory storage is implemented as  a form of learning (though modification of MappingProjection
+     The only parameters modifable by learning in the EMComposition are its `field_weights
+     <EMComposition.field_weights>`; all other parameters (including all other Projection `matrices
+     <MappingProjection.matrix>`) are fixed, and used only to compute gradients and backpropagate errors.
+
+  .. technical_note::
+     Although memory storage is implemented as a form of learning (though modification of MappingProjection
      `matrix <MappingProjection.matrix>` parameters; see `memory storage <EMComposition_Memory_Storage>`),
      this occurs irrespective of how EMComposition is run (i.e., whether `learn <Composition.learn>` or `run
      <Composition.run>` is called), and is not affected by the `learn_field_weights <EMComposition.learn_field_weights>`
      or `learning_rate <EMComposition.learning_rate>` attributes, which pertain only to whether the `field_weights
-     <EMComposition.field_weights>` are modified during learning.
+     <EMComposition.field_weights>` are modified during learning.  Furthermore, when run in PyTorch mode, storage
+     is executed after the forward() and backward() passes are complete, and is not considered as part of the
+     gradient calculations.
 
 .. _EMComposition_Examples:
 
