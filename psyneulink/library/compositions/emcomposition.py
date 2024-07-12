@@ -912,6 +912,15 @@ __all__ = [
 
 STORAGE_PROB = 'storage_prob'
 
+QUERY_AFFIX = ' [QUERY]'
+VALUE_AFFIX = ' [VALUE]'
+MATCH_TO_KEYS_AFFIX = ' [MATCH to KEYS]'
+RETRIEVED_AFFIX = ' [RETRIEVED]'
+WEIGHTED_SOFTMAX_AFFIX = ' [WEIGHTED SOFTMAX]'
+RETRIEVE_NODE_NAME = 'RETRIEVE'
+STORE_NODE_NAME = 'STORE'
+
+
 def _memory_getter(owning_component=None, context=None)->list:
     """Return list of memories in which rows (outer dimension) are memories for each field.
     These are derived from `matrix <MappingProjection.matrix>` parameter of the `afferent
@@ -1132,13 +1141,22 @@ class EMComposition(AutodiffComposition):
         <EMComposition.memory>` (see `Match memories by field <EMComposition_Processing>` for additional details).
         By default these are assigned the name *KEY_n_INPUT* where n is the field number (starting from 0);
         however, if `field_names <EMComposition.field_names>` is specified, then the name of each query_input_node
-        is assigned the corresponding field name.
+        is assigned the corresponding field name appended with * [QUERY]*.
 
     value_input_nodes : list[TransferMechanism]
         `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receive values to be stored in `memory
         <EMComposition.memory>`; these are not used in the matching process used for retrieval.  By default these
         are assigned the name *VALUE_n_INPUT* where n is the field number (starting from 0);  however, if
         `field_names <EMComposition.field_names>` is specified, then the name of each value_input_node is assigned
+        the corresponding field name appended with * [VALUE]*.
+
+    input_nodes : list[TransferMechanism]
+        Full list of `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` ordered with query_input_nodes first
+        followed by value_input_nodes; used primarily for internal computations
+
+    field_input_nodes : list[TransferMechanism]
+        Full list of `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` in the same order specified in the
+        **field_names** argument of the constructor and in `self.field_names <EMComposition.field_names>`.
 
     concatenate_keys_node : TransferMechanism
         `TransferMechanism` that concatenates the inputs to `query_input_nodes <EMComposition.query_input_nodes>` into a
@@ -1202,7 +1220,8 @@ class EMComposition(AutodiffComposition):
         <EMComposition.memory>` (see `Retrieve values by field <EMComposition_Processing>` for additional details);
         these are assigned the same names as the `query_input_nodes <EMComposition.query_input_nodes>` and
         `value_input_nodes <EMComposition.value_input_nodes>` to which they correspond appended with the suffix
-        *_RETRIEVED*.
+        * [RETRIEVED]*, and are in the same order as  `field_input_nodes <EMComposition.field_input_nodes>` to which
+        to which they correspond.
 
     storage_node : EMStorageMechanism
         `EMStorageMechanism` that receives inputs from the `query_input_nodes <EMComposition.query_input_nodes>` and
@@ -1510,6 +1529,9 @@ class EMComposition(AutodiffComposition):
         for node in self.value_input_nodes:
             self.exclude_node_roles(node, NodeRole.OUTPUT)
 
+        # Assign TARGET nodes of the Composition
+        self._assign_target_nodes()
+
         # Warn if divide by zero will occur due to memory initialization
         memory = self.memory
         memory_capacity = self.memory_capacity
@@ -1779,6 +1801,10 @@ class EMComposition(AutodiffComposition):
         self.query_input_nodes = self._construct_query_input_nodes(field_weights)
         self.value_input_nodes = self._construct_value_input_nodes(field_weights)
         self.input_nodes = self.query_input_nodes + self.value_input_nodes
+        # Order input_nodes according to self.field_names
+        self.field_input_nodes = [node for name in self.field_names for node in self.input_nodes
+                                  if node in self.input_nodes
+                                  if (node.name in {name + QUERY_AFFIX, name + VALUE_AFFIX})]
         self.concatenate_keys_node = self._construct_concatenate_keys_node(concatenate_keys)
         self.match_nodes = self._construct_match_nodes(memory_template, memory_capacity,
                                                                    concatenate_keys,normalize_memories)
@@ -1792,6 +1818,7 @@ class EMComposition(AutodiffComposition):
                                                                            field_weighting,
                                                                            use_gating_for_weighting)
         self.retrieved_nodes = self._construct_retrieved_nodes(memory_template)
+
         if use_storage_node:
             self.storage_node = self._construct_storage_node(memory_template, field_weights,
                                                              self.concatenate_keys_node,
@@ -1975,7 +2002,7 @@ class EMComposition(AutodiffComposition):
                                                            memory_template[:,i].tolist()).transpose().astype(float),
                                                        function=LinearMatrix(normalize=normalize_memories),
                                                        name=f'MEMORY for {self.key_names[i]} [KEY]')},
-                    name=f'{self.key_names[i]} [MATCH to KEYS]')
+                    name=self.key_names[i] + MATCH_TO_KEYS_AFFIX)
                 for i in range(self.num_keys)
             ]
 
@@ -2066,7 +2093,7 @@ class EMComposition(AutodiffComposition):
                                                     matrix=FULL_CONNECTIVITY_MATRIX,
                                                     name=f'WEIGHT to WEIGHTED SOFTMAX for {self.key_names[i]}')}],
                 function=LinearCombination(operation=PRODUCT),
-                name=f'{self.key_names[i]} [WEIGHTED SOFTMAX]')
+                name=self.key_names[i] + WEIGHTED_SOFTMAX_AFFIX)
                 for i, sm_fw_pair in enumerate(zip(self.softmax_nodes,
                                                    self.field_weight_nodes))]
         return weighted_softmax_nodes
@@ -2093,7 +2120,7 @@ class EMComposition(AutodiffComposition):
                                                                              name=f'WEIGHTED SOFTMAX to RETRIEVAL for '
                                                                                   f'{self.key_names[i]}')
                                                            for i, s in enumerate(input_source)]}],
-                                name='RETRIEVE'))
+                                name=RETRIEVE_NODE_NAME))
 
         assert len(combined_softmax_node.output_port.value) == memory_capacity, \
             'PROGRAM ERROR: number of items in combined_softmax_node ' \
@@ -2104,7 +2131,6 @@ class EMComposition(AutodiffComposition):
     def _construct_retrieved_nodes(self, memory_template)->list:
         """Create nodes that report the value field(s) for the item(s) matched in memory.
         """
-
         self.retrieved_key_nodes = \
             [TransferMechanism(input_ports={SIZE: len(self.query_input_nodes[i].variable[0]),
                                             PROJECTIONS:
@@ -2113,7 +2139,7 @@ class EMComposition(AutodiffComposition):
                                                     matrix=memory_template[:,i],
                                                     name=f'MEMORY FOR {self.key_names[i]} [RETRIEVE KEY]')
                                             },
-                               name= f'{self.key_names[i]} [RETRIEVED]')
+                               name= self.key_names[i] + RETRIEVED_AFFIX)
              for i in range(self.num_keys)]
 
         self.retrieved_value_nodes = \
@@ -2124,10 +2150,13 @@ class EMComposition(AutodiffComposition):
                                                     matrix=memory_template[:,
                                                            i + self.num_keys],
                                                     name=f'MEMORY FOR {self.value_names[i]} [RETRIEVE VALUE]')},
-                               name= f'{self.value_names[i]} [RETRIEVED]')
+                               name= self.value_names[i] + RETRIEVED_AFFIX)
              for i in range(self.num_values)]
 
-        return self.retrieved_key_nodes + self.retrieved_value_nodes
+        retrieved_nodes = self.retrieved_key_nodes + self.retrieved_value_nodes
+        # Return nodes in order sorted by self.field_names
+        return [node for name in self.field_names for node in retrieved_nodes
+                               if node in retrieved_nodes if (name + RETRIEVED_AFFIX) == node.name]
 
     def _construct_storage_node(self,
                                 memory_template,
@@ -2176,7 +2205,7 @@ class EMComposition(AutodiffComposition):
                                           learning_signals=learning_signals,
                                           storage_prob=storage_prob,
                                           decay_rate = memory_decay_rate,
-                                          name='STORE')
+                                          name=STORE_NODE_NAME)
 
         return storage_node
 
@@ -2296,44 +2325,24 @@ class EMComposition(AutodiffComposition):
             execution_mode = ExecutionMode.PyTorch
         return execution_mode
 
-    # def get_nested_nodes_by_roles_at_any_level(self, comp, include_roles, exclude_roles=None)->list or None:
-    #     """Override Composition method to filter return of TARGET nodes based on learning specifications""
-    #     Restrict TARGET nodes to be returned only if enable_learning==True and only those for which fields_weights!=0.
-    #     IMPLEMENTATION NOTE:
-    #         Need to do this here, as this is the method that is called recursively (and thus can be overridden) when
-    #         infer_target_nodes_at_all_levels() is called from an AutodiffComposition in which EMComposition is nested
-    #     """
-    #     # Get TARGET nodes for all levels of nesting of Compositions
-    #     nodes = super().get_nested_nodes_by_roles_at_any_level(comp, include_roles, exclude_roles)
-    #
-    #     filtered_nodes = [node for node in nodes if node not in self.retrieved_nodes]
-    #
-    #     # Filter according to criteria for TARGET node for current comp
-    #     if NodeRole.TARGET in include_roles:
-    #         filtered_nodes += [node for node in nodes if node in self.get_target_nodes(context)]
-    #
-    #     if NodeRole.TARGET in exclude_roles:
-    #         filtered_nodes = [node for node in filtered_nodes if node not in self.get_target_nodes(context)]
-    #
-    #     return filtered_nodes
-    #
-    def get_target_nodes(self, context=None):
-        """Override to return TARGET nodes for EMComposition based on enable_learning parameter"""
-        enable_learning = self.parameters.enable_learning._get(context)
-        if enable_learning is True:
-            return self.retrieved_nodes
-        elif enable_learning is False:
-            return []
+    def _assign_target_nodes(self)->list:
+        """Identify TARGET nodes by assigning as OUTPUT Nodes only the retrieval_nodes used for learning
+           (which are used by _infer_backpropagation_learning_pathways to identify them as TARGET nodes)"""
+        enable_learning = self.enable_learning
+        # Note: if enable_learning is True, nothing to do, as all retrieved_nodes are already assigned as OUTPUT nodes
+        if enable_learning is False:
+            for node in self.retrieved_nodes:
+                self.exclude_node_roles(node, NodeRole.OUTPUT)
         elif isinstance(enable_learning, list):
             # Exclude retrieved_nodes as TARGETS if they are not specified for learning in enable_learning
-            return [node for node in self.retrieved_nodes
-                               if enable_learning[self.retrieved_nodes.index(node)] == True]
+            for node in self.retrieved_nodes:
+                if enable_learning[self.retrieved_nodes.index(node)] != True:
+                    self.exclude_node_roles(node, NodeRole.OUTPUT)
 
     def infer_backpropagation_learning_pathways(self, execution_mode, context=None):
         if self.concatenate_keys:
             raise EMCompositionError(f"EMComposition does not support learning with 'concatenate_keys'=True.")
         super().infer_backpropagation_learning_pathways(execution_mode, context=context)
-        # 7/10/24 FIX: FILTER OUT TARGET NODES FOR FIELDS IN WHICH LEARNING IS NOT ENABLED
 
     def _update_learning_parameters(self, context):
         pass

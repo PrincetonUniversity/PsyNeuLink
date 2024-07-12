@@ -669,13 +669,13 @@ class AutodiffComposition(Composition):
         if execution_mode == pnlvm.ExecutionMode.PyTorch:
             # For PyTorch mode, only need to construct dummy TARGET Nodes, to allow targets to be:
             #  - specified in the same way as for other execution_modes
-            #  - trial-by-trial values to kept aligned with inputs in batch / minibatch construction
+            #  - trial-by-trial values kept aligned with inputs in batch / minibatch construction
             #  - tracked for logging (as mechs of a Composition)
-            # IMPLEMENTATION NOTE: only add target nodes if not already present
+            # IMPLEMENTATION NOTE:
+            #    only add target nodes if not already present
             #    (to avoid duplication in multiple calls, including from command line;
             #     see test_xor_training_identicalness_standard_composition_vs_PyTorch_and_LLVM for example)
             output_mechs_for_learning = self.get_nested_output_nodes_at_all_levels()
-            # output_mechs_for_learning = self.infer_target_nodes_at_all_levels()
             assert set([mech for mech in [pathway[-1] for pathway in pathways]]) == set(output_mechs_for_learning)
             target_mechs = [ProcessingMechanism(default_variable = np.array([np.zeros_like(value)
                                                                              for value in mech.value],
@@ -883,20 +883,6 @@ class AutodiffComposition(Composition):
                 # (those are handled separately in _get_autodiff_targets_values)
                 autodiff_input_dict[node] = values
         return autodiff_input_dict
-
-    # 7/10/24 FIX: STILL WORKING ON THIS TO INSURE IT IS USED RECURSIVELY
-    # def _get_output_nodes_for_learning(self):
-    #     """Helper method that returns the OUTPUT nodes that should be learned.
-    #     By default, returns all OUTPUT nodes of outermost and all nested Compositions.
-    #     Can be overridden by subclasses (e.g., EMComposition) to restrict learning to just some OUTPUT nodes."""
-    #     return self.get_nested_output_nodes_at_all_levels()
-    # def get_nested_output_nodes_at_levels(self)->list or None:
-    #     """Return all Nodes from nested Compositions that send output directly to outermost Composition."""
-    #     output_nodes = self.get_nested_nodes_by_roles_at_any_level(self, include_roles=NodeRole.TARGET)
-    #     return [output_node for output_node in output_nodes
-    #             if not all(proj.receiver.owner._get_destination_info_for_output_CIM(proj.receiver)
-    #                        for output_port in output_node.output_ports for proj in output_port.efferents
-    #                        if isinstance(proj.receiver.owner, CompositionInterfaceMechanism))] or None
 
     def _get_autodiff_targets_values(self, input_dict):
         """Return dict with values for TARGET Nodes

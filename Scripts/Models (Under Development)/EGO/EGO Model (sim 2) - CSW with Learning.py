@@ -156,8 +156,8 @@ DISPLAY_MODEL = (                      # Only one of the following can be uncomm
 )
 RUN_MODEL = True                       # True => run the model
 # RUN_MODEL = False                      # False => don't run the model
-EXECUTION_MODE = ExecutionMode.Python
-# EXECUTION_MODE = ExecutionMode.PyTorch
+# EXECUTION_MODE = ExecutionMode.Python
+EXECUTION_MODE = ExecutionMode.PyTorch
 # ANALYZE_RESULTS = False                # True => output analysis of results of run
 # REPORT_OUTPUT = ReportOutput.FULL     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_OUTPUT = ReportOutput.OFF     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
@@ -296,7 +296,7 @@ def construct_model(model_name:str=MODEL_NAME,
                                       previous_state_retrieval_weight,
                                       context_retrieval_weight
                                       ),
-                       # enable_learning=True,
+                       enable_learning=[True, False, False],
                        learn_field_weights=False
                        )
 
@@ -353,7 +353,7 @@ def construct_model(model_name:str=MODEL_NAME,
 
     learning_components = EGO_comp.infer_backpropagation_learning_pathways(ExecutionMode.PyTorch)
     EGO_comp.add_projection(MappingProjection(sender=state_input_layer,
-                                              receiver=learning_components[2],
+                                              receiver=learning_components[0],
                                               learnable=False))
 
     # Ensure EM is executed (to encode previous state and context, and predict current state)
