@@ -2375,15 +2375,15 @@ class EMComposition(AutodiffComposition):
         enable_learning = self.parameters.enable_learning._get(context)
         # Note: if enable_learning is True, nothing to do, as all retrieved_nodes are already assigned as OUTPUT nodes
         # 7/10/24 FIX:  COMPLEMENT BY RE-INSTATING OUTPUT NodeRole if NOT IN LEARNING MODE (CONTEXT OR ENABLE_LEARNING)
-        if context._execution_phase == ContextFlags.LEARNING:
-            if enable_learning is False:
-                for node in self.retrieved_nodes:
+        # if context._execution_phase == ContextFlags.LEARNING:
+        if enable_learning is False:
+            for node in self.retrieved_nodes:
+                self.exclude_node_roles(node, NodeRole.OUTPUT)
+        elif isinstance(enable_learning, list):
+            # Exclude retrieved_nodes as TARGETS if they are not specified for learning in enable_learning
+            for node in self.retrieved_nodes:
+                if enable_learning[self.retrieved_nodes.index(node)] != True:
                     self.exclude_node_roles(node, NodeRole.OUTPUT)
-            elif isinstance(enable_learning, list):
-                # Exclude retrieved_nodes as TARGETS if they are not specified for learning in enable_learning
-                for node in self.retrieved_nodes:
-                    if enable_learning[self.retrieved_nodes.index(node)] != True:
-                        self.exclude_node_roles(node, NodeRole.OUTPUT)
         super()._assign_target_nodes(context)
 
     def infer_backpropagation_learning_pathways(self, execution_mode, context=None):

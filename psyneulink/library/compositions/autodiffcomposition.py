@@ -965,10 +965,7 @@ class AutodiffComposition(Composition):
                                                f"that are not AutodiffCompositions: {' ,'.join(nested_comps)}.")
 
         if self._built_pathways is False:
-            execution_phase_at_entry = kwargs[CONTEXT].execution_phase
-            kwargs[CONTEXT].execution_phase = ContextFlags.LEARNING
             self.infer_backpropagation_learning_pathways(execution_mode, context=kwargs[CONTEXT])
-            kwargs[CONTEXT].execution_phase = execution_phase_at_entry
             self._built_pathways = True
 
         return super().learn(*args, execution_mode=execution_mode, **kwargs)
@@ -1236,5 +1233,14 @@ class AutodiffComposition(Composition):
         return (*comp_states, optimizer_states)
 
     def show_graph(self, *args, **kwargs):
-        """Override to use PytorchShowGraph"""
+        """Override to use PytorchShowGraph if show_pytorch is True"""
+        # MODIFIED 7/10/24 OLD:
         self._show_graph.show_graph(*args, **kwargs)
+        # # MODIFIED 7/10/24 NEW:
+        # from psyneulink.library.compositions.pytorchshowgraph import SHOW_PYTORCH
+        # self.show_pytorch = kwargs.pop(SHOW_PYTORCH, False)
+        # if SHOW_PYTORCH in kwargs and kwargs['show_pytorch'] is True:
+        #     self._show_graph.show_graph(*args, **kwargs)
+        # else:
+        #     super().show_graph(*args, **kwargs)
+        # MODIFIED 7/10/24 END
