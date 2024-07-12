@@ -965,7 +965,10 @@ class AutodiffComposition(Composition):
                                                f"that are not AutodiffCompositions: {' ,'.join(nested_comps)}.")
 
         if self._built_pathways is False:
-            self.infer_backpropagation_learning_pathways(execution_mode)
+            execution_phase_at_entry = kwargs[CONTEXT].execution_phase
+            kwargs[CONTEXT].execution_phase = ContextFlags.LEARNING
+            self.infer_backpropagation_learning_pathways(execution_mode, context=kwargs[CONTEXT])
+            kwargs[CONTEXT].execution_phase = execution_phase_at_entry
             self._built_pathways = True
 
         return super().learn(*args, execution_mode=execution_mode, **kwargs)

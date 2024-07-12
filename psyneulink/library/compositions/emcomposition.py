@@ -946,6 +946,7 @@ from psyneulink.core.globals.keywords import \
     (AUTO, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, EM_COMPOSITION, FULL_CONNECTIVITY_MATRIX,
      GAIN, IDENTITY_MATRIX, MULTIPLICATIVE_PARAM, NAME, PARAMS, PRODUCT, PROJECTIONS, RANDOM, SIZE, VARIABLE)
 from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric_scalar
+from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.llvm import ExecutionMode
 
 
@@ -1572,9 +1573,6 @@ class EMComposition(AutodiffComposition):
         # Suppress value_input_nodes as OUTPUT nodes of the Composition
         for node in self.value_input_nodes:
             self.exclude_node_roles(node, NodeRole.OUTPUT)
-
-        # # Assign TARGET nodes of the Composition
-        # self._assign_target_nodes()
 
         # Warn if divide by zero will occur due to memory initialization
         memory = self.memory
@@ -2376,14 +2374,16 @@ class EMComposition(AutodiffComposition):
         (which are used by _infer_backpropagation_learning_pathways to identify them as TARGET nodes)"""
         enable_learning = self.parameters.enable_learning._get(context)
         # Note: if enable_learning is True, nothing to do, as all retrieved_nodes are already assigned as OUTPUT nodes
-        if enable_learning is False:
-            for node in self.retrieved_nodes:
-                self.exclude_node_roles(node, NodeRole.OUTPUT)
-        elif isinstance(enable_learning, list):
-            # Exclude retrieved_nodes as TARGETS if they are not specified for learning in enable_learning
-            for node in self.retrieved_nodes:
-                if enable_learning[self.retrieved_nodes.index(node)] != True:
+        # 7/10/24 FIX:  COMPLEMENT BY RE-INSTATING OUTPUT NodeRole if NOT IN LEARNING MODE (CONTEXT OR ENABLE_LEARNING)
+        if context._execution_phase == ContextFlags.LEARNING:
+            if enable_learning is False:
+                for node in self.retrieved_nodes:
                     self.exclude_node_roles(node, NodeRole.OUTPUT)
+            elif isinstance(enable_learning, list):
+                # Exclude retrieved_nodes as TARGETS if they are not specified for learning in enable_learning
+                for node in self.retrieved_nodes:
+                    if enable_learning[self.retrieved_nodes.index(node)] != True:
+                        self.exclude_node_roles(node, NodeRole.OUTPUT)
         super()._assign_target_nodes(context)
 
     def infer_backpropagation_learning_pathways(self, execution_mode, context=None):
