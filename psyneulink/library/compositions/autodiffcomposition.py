@@ -514,6 +514,7 @@ class AutodiffComposition(Composition):
         show_graph_attributes = show_graph_attributes or {}
         self._show_graph = PytorchShowGraph(self, **show_graph_attributes)
 
+    @handle_external_context()
     def infer_backpropagation_learning_pathways(self, execution_mode, context=None)->list:
         """Create backpropapagation learning pathways for every Input Node --> Output Node pathway
         Flattens nested compositions:
@@ -525,6 +526,7 @@ class AutodiffComposition(Composition):
         Returns list of target nodes for each pathway
         """
 
+        self._assign_target_nodes(context)
         self._analyze_graph()
 
         def _get_pytorch_backprop_pathway(input_node)->list:
@@ -931,6 +933,13 @@ class AutodiffComposition(Composition):
 
     def _check_nested_target_mechs(self):
         pass
+
+    def _assign_target_nodes(self, context):
+        """Recursively call all nested AutodiffCompositions to assign target nodes for learning"""
+        for node in self.nodes:
+            if isinstance(node, AutodiffComposition):
+                node._assign_target_nodes(context)
+
     @handle_external_context()
     def learn(self, *args, **kwargs):
         execution_phase_at_entry = kwargs[CONTEXT].execution_phase

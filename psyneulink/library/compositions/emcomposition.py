@@ -1089,6 +1089,7 @@ class EMComposition(AutodiffComposition):
         specifies rate at which `field_weights <EMComposition.field_weights>` are learned
         if ``learn_field_weights`` is True.
 
+    # 7/10/24 FIX: STILL TRUE?  DOES IT PRECLUDE USE OF EMComposition as a nested Composition??
     .. technical_note::
         use_storage_node : bool : default True
             specifies whether to use a `LearningMechanism` to store entries in `memory <EMComposition.memory>`.
@@ -1572,8 +1573,8 @@ class EMComposition(AutodiffComposition):
         for node in self.value_input_nodes:
             self.exclude_node_roles(node, NodeRole.OUTPUT)
 
-        # Assign TARGET nodes of the Composition
-        self._assign_target_nodes()
+        # # Assign TARGET nodes of the Composition
+        # self._assign_target_nodes()
 
         # Warn if divide by zero will occur due to memory initialization
         memory = self.memory
@@ -1773,6 +1774,7 @@ class EMComposition(AutodiffComposition):
         else:
             self.key_names = [f'{i}' for i in range(self.num_keys)] if self.num_keys > 1 else ['KEY']
             self.value_names = [f'{i} [VALUE]' for i in range(self.num_values)] if self.num_values > 1 else ['VALUE']
+            parsed_field_names = self.key_names + self.value_names
 
         user_specified_concatenate_keys = concatenate_keys or False
         parsed_concatenate_keys = (user_specified_concatenate_keys
@@ -2368,10 +2370,11 @@ class EMComposition(AutodiffComposition):
             execution_mode = ExecutionMode.PyTorch
         return execution_mode
 
-    def _assign_target_nodes(self)->list:
-        """Identify TARGET nodes by assigning as OUTPUT Nodes only the retrieval_nodes used for learning
-           (which are used by _infer_backpropagation_learning_pathways to identify them as TARGET nodes)"""
-        enable_learning = self.enable_learning
+    def _assign_target_nodes(self, context)->list:
+        """Identify TARGET nodes for EMComposition
+        Assign as OUTPUT Nodes *only* the retrieval_nodes specified by enable_learning to be used for learning
+        (which are used by _infer_backpropagation_learning_pathways to identify them as TARGET nodes)"""
+        enable_learning = self.parameters.enable_learning._get(context)
         # Note: if enable_learning is True, nothing to do, as all retrieved_nodes are already assigned as OUTPUT nodes
         if enable_learning is False:
             for node in self.retrieved_nodes:
@@ -2381,6 +2384,7 @@ class EMComposition(AutodiffComposition):
             for node in self.retrieved_nodes:
                 if enable_learning[self.retrieved_nodes.index(node)] != True:
                     self.exclude_node_roles(node, NodeRole.OUTPUT)
+        super()._assign_target_nodes(context)
 
     def infer_backpropagation_learning_pathways(self, execution_mode, context=None):
         if self.concatenate_keys:
@@ -2390,11 +2394,11 @@ class EMComposition(AutodiffComposition):
     def _update_learning_parameters(self, context):
         pass
 
-    def get_output_values(self, context=None):
-        """Override to provide ordering of retrieved_nodes that matches order of inputs.
-        This is needed since nodes were constructed as sets
-        """
-        return [retrieved_node.output_port.parameters.value.get(context)
-                for retrieved_node in self.retrieved_nodes
-                if (not self.output_CIM._sender_is_probe(self.output_CIM.port_map[retrieved_node.output_port][1])
-                    or self.include_probes_in_output)]
+    # def get_output_values(self, context=None):
+    #     """Override to provide ordering of retrieved_nodes that matches order of inputs.
+    #     This is needed since nodes were constructed as sets
+    #     """
+    #     return [retrieved_node.output_port.parameters.value.get(context)
+    #             for retrieved_node in self.retrieved_nodes
+    #             if (not self.output_CIM._sender_is_probe(self.output_CIM.port_map[retrieved_node.output_port][1])
+    #                 or self.include_probes_in_output)]

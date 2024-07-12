@@ -479,7 +479,7 @@ class TestExecution:
 
             else:
                 if exec_mode == pnl.ExecutionMode.Python:
-                    # FIX: Not sure why Pyton mode reverses last two rows/entries (dict issue?)
+                    # FIX: Not sure why Python mode reverses last two rows/entries (dict issue?)
                     expected_memory = [[[0.15625, 0.3125,  0.46875], [0.171875, 0.328125, 0.484375]],
                                        [[400., 500., 600.], [444., 555., 666.]],
                                        [[25., 50., 75.], [27.75, 55.5,  83.25]],
