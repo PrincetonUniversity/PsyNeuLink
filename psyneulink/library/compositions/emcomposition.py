@@ -2368,23 +2368,23 @@ class EMComposition(AutodiffComposition):
             execution_mode = ExecutionMode.PyTorch
         return execution_mode
 
-    def _assign_target_nodes(self, context)->list:
-        """Identify TARGET nodes for EMComposition
-        Assign as OUTPUT Nodes *only* the retrieval_nodes specified by enable_learning to be used for learning
-        (which are used by _infer_backpropagation_learning_pathways to identify them as TARGET nodes)"""
+    def _identify_target_nodes(self, context)->list:
+        """Identify retrieval_nodes specified by **enable_learning** as TARGET nodes"""
         enable_learning = self.parameters.enable_learning._get(context)
-        # Note: if enable_learning is True, nothing to do, as all retrieved_nodes are already assigned as OUTPUT nodes
-        # 7/10/24 FIX:  COMPLEMENT BY RE-INSTATING OUTPUT NodeRole if NOT IN LEARNING MODE (CONTEXT OR ENABLE_LEARNING)
-        # if context._execution_phase == ContextFlags.LEARNING:
         if enable_learning is False:
-            for node in self.retrieved_nodes:
-                self.exclude_node_roles(node, NodeRole.OUTPUT)
+            if self.learn_field_weights:
+                warnings.warn(f"The 'learn_field_weights' arg for {self.name} is True "
+                              f"but its 'enable_learning' is False, so learn_field_weights will have no effect.")
+            target_nodes = []
+        elif enable_learning is True:
+            target_nodes = [node for node in self.retrieved_nodes]
         elif isinstance(enable_learning, list):
-            # Exclude retrieved_nodes as TARGETS if they are not specified for learning in enable_learning
-            for node in self.retrieved_nodes:
-                if enable_learning[self.retrieved_nodes.index(node)] != True:
-                    self.exclude_node_roles(node, NodeRole.OUTPUT)
-        super()._assign_target_nodes(context)
+            target_nodes = [node for node in self.retrieved_nodes if enable_learning[self.retrieved_nodes.index(node)]]
+        else:
+            assert False, (f"PROGRAM ERROR: enable_learning arg for {self.name}: {enable_learning} "
+                           f"is neither True, False nor a list of bools as it should be.")
+        super()._identify_target_nodes(context)
+        return target_nodes
 
     def infer_backpropagation_learning_pathways(self, execution_mode, context=None):
         if self.concatenate_keys:
@@ -2393,12 +2393,3 @@ class EMComposition(AutodiffComposition):
 
     def _update_learning_parameters(self, context):
         pass
-
-    # def get_output_values(self, context=None):
-    #     """Override to provide ordering of retrieved_nodes that matches order of inputs.
-    #     This is needed since nodes were constructed as sets
-    #     """
-    #     return [retrieved_node.output_port.parameters.value.get(context)
-    #             for retrieved_node in self.retrieved_nodes
-    #             if (not self.output_CIM._sender_is_probe(self.output_CIM.port_map[retrieved_node.output_port][1])
-    #                 or self.include_probes_in_output)]

@@ -526,7 +526,6 @@ class AutodiffComposition(Composition):
         Returns list of target nodes for each pathway
         """
 
-        self._assign_target_nodes(context)
         self._analyze_graph()
 
         def _get_pytorch_backprop_pathway(input_node)->list:
@@ -677,8 +676,11 @@ class AutodiffComposition(Composition):
             #    only add target nodes if not already present
             #    (to avoid duplication in multiple calls, including from command line;
             #     see test_xor_training_identicalness_standard_composition_vs_PyTorch_and_LLVM for example)
-            output_mechs_for_learning = self.get_nested_output_nodes_at_all_levels()
-            assert set([mech for mech in [pathway[-1] for pathway in pathways]]) == set(output_mechs_for_learning)
+            # output_mechs_for_learning = self.get_nested_output_nodes_at_all_levels()
+            # assert set([mech for mech in [pathway[-1] for pathway in pathways]]) == set(output_mechs_for_learning)
+            pathway_terminal_nodes = [mech for mech in [pathway[-1] for pathway in pathways]]
+            identified_target_nodes = self._identify_target_nodes(context)
+            output_mechs_for_learning = [node for node in identified_target_nodes if node in pathway_terminal_nodes]
             target_mechs = [ProcessingMechanism(default_variable = np.array([np.zeros_like(value)
                                                                              for value in mech.value],
                                                                             dtype=object),
@@ -805,29 +807,39 @@ class AutodiffComposition(Composition):
         pytorch_rep = self.parameters.pytorch_representation._get(context)
         curr_tensor_outputs = pytorch_rep.forward(curr_tensor_inputs, context)
 
-        for component in curr_tensor_outputs.keys():
+        outputs_for_targets = {k:v for k,v in curr_tensor_outputs.items() if k in self.target_output_map.values()}
+        for component in outputs_for_targets.keys():
             # possibly add custom loss option, which is a loss function that takes many args
             # (outputs, targets, weights, and more) and returns a scalar
             new_loss = 0
-            for i in range(len(curr_tensor_outputs[component])):
-                new_loss += self.loss(curr_tensor_outputs[component][i],
-                                     curr_tensor_targets[component][i])
+            for i in range(len(outputs_for_targets[component])):
+                new_loss += self.loss(outputs_for_targets[component][i],
+                                      curr_tensor_targets[component][i])
             tracked_loss += new_loss
 
-        outputs = []
+        trained_outputs = []
+        trained_outputs_CIM_input_ports = [port for port in self.output_CIM.input_ports
+                                         if port.path_afferents[0].sender.owner in self.target_output_map.values()]
+        for input_port in trained_outputs_CIM_input_ports:
+            assert (len(input_port.all_afferents) == 1), \
+                f"PROGRAM ERROR: {input_port.name} of ouput_CIM for '{self.name}' has more than one afferent."
+            port, source, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
+            idx = source.output_ports.index(port)
+            trained_outputs += [outputs_for_targets[source][idx].detach().cpu().numpy().copy().tolist()]
+
+        all_outputs = []
         for input_port in self.output_CIM.input_ports:
             assert (len(input_port.all_afferents) == 1), \
                 f"PROGRAM ERROR: {input_port.name} of ouput_CIM for '{self.name}' has more than one afferent."
             port, component, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
             idx = component.output_ports.index(port)
-            outputs += [curr_tensor_outputs[component][idx].detach().cpu().numpy().copy().tolist()]
+            all_outputs += [curr_tensor_outputs[component][idx].detach().cpu().numpy().copy().tolist()]
 
         self.parameters.tracked_loss_count._set(np.array(self.parameters.tracked_loss_count._get(context=context) + 1),
                                                 context=context,
                                                 skip_history=True,
                                                 skip_log=True)
-
-        return outputs
+        return trained_outputs, all_outputs
 
     def clear_losses(self, context=None):
         self.losses = []
@@ -934,11 +946,15 @@ class AutodiffComposition(Composition):
     def _check_nested_target_mechs(self):
         pass
 
-    def _assign_target_nodes(self, context):
-        """Recursively call all nested AutodiffCompositions to assign target nodes for learning"""
+    def _identify_target_nodes(self, context):
+        """Recursively call all nested AutodiffCompositions to assign TARGET nodes for learning"""
+        # Default is to use OUTPUT
+        target_nodes = [node for node in self.get_nodes_by_role(NodeRole.OUTPUT)
+                        if not isinstance(node, Composition)]
         for node in self.nodes:
             if isinstance(node, AutodiffComposition):
-                node._assign_target_nodes(context)
+                target_nodes.extend(node._identify_target_nodes(context))
+        return target_nodes
 
     @handle_external_context()
     def learn(self, *args, **kwargs):
@@ -1051,15 +1067,15 @@ class AutodiffComposition(Composition):
                        context=context)
 
                 self._build_pytorch_representation(context)
-                output = self.autodiff_training(autodiff_inputs,
-                                                autodiff_targets,
-                                                context,
-                                                scheduler)
+                trained_outputs, all_outputs = self.autodiff_training(autodiff_inputs,
+                                                                      autodiff_targets,
+                                                                      context,
+                                                                      scheduler)
 
                 execution_phase = context.execution_phase
                 context.execution_phase = ContextFlags.PROCESSING
 
-                self.output_CIM.execute(output, context=context)
+                self.output_CIM.execute(all_outputs, context=context)
                 context.execution_phase = execution_phase
 
                 report(self,
@@ -1072,7 +1088,7 @@ class AutodiffComposition(Composition):
 
                 scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
-                return output
+                return all_outputs
 
         # Call Composition execute in Python mode
         return super(AutodiffComposition, self).execute(inputs=inputs,
