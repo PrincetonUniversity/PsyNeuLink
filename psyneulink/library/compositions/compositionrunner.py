@@ -80,7 +80,10 @@ class CompositionRunner():
                         chunk[k] = v[idx % len(v)]
                     yield copy_parameter_value(chunk)
                 if call_after_minibatch:
-                    call_after_minibatch(epoch=epoch, batch=i // batch_size, num_batches=num_trials // batch_size)
+                    call_after_minibatch(epoch=epoch,
+                                         batch=i // batch_size,
+                                         num_batches=num_trials // batch_size,
+                                         context=context)
 
                 # Update weights if in PyTorch execution_mode;
                 #  handled by Composition.execute in Python mode and in compiled version in LLVM mode

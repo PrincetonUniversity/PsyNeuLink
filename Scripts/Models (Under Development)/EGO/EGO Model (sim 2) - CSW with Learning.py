@@ -299,9 +299,9 @@ def construct_model(model_name:str=MODEL_NAME,
                                       previous_state_retrieval_weight,
                                       context_retrieval_weight
                                       ),
+                       learn_field_weights=False,
                        # enable_learning=True,
-                       enable_learning=[True, False, False],
-                       learn_field_weights=False
+                       enable_learning=[True, False, False]
                        )
 
     prediction_layer = ProcessingMechanism(name=prediction_layer_name, size=state_size)
@@ -399,15 +399,12 @@ if __name__ == '__main__':
     if RUN_MODEL:
         def print_stuff(**kwargs):
             print(kwargs)
-            print('Projections from context to EM: \n', model.projections[7].parameters.matrix.get(context)),
+            print('Context vector: \n', model.nodes['CONTEXT'].parameters.value.get(kwargs['context']))
+            print('Projections from context to EM: \n', model.projections[7].parameters.matrix.get(kwargs['context']))
 
         # print("MODEL NOT YET FULLY EXECUTABLE")
         print(f'Running {MODEL_NAME}')
         context = MODEL_NAME
-        # model.run(inputs={STATE_INPUT_LAYER_NAME:INPUTS},
-        #           # report_output=REPORT_OUTPUT,
-        #           # report_progress=REPORT_PROGRESS
-        #           )
         model.learn(inputs={STATE_INPUT_LAYER_NAME:INPUTS},
                   # report_output=REPORT_OUTPUT,
                   # report_progress=REPORT_PROGRESS
@@ -422,10 +419,16 @@ if __name__ == '__main__':
         if PRINT_RESULTS:
             print("MEMORY:")
             print(model.nodes['EM'].parameters.memory.get(model.name))
+            model.run(inputs={STATE_INPUT_LAYER_NAME:INPUTS[4]},
+                      # report_output=REPORT_OUTPUT,
+                      # report_progress=REPORT_PROGRESS
+                      )
             print("CONTEXT INPUT:")
             print(model.nodes['CONTEXT'].parameters.variable.get(model.name))
             print("CONTEXT OUTPUT:")
             print(model.nodes['CONTEXT'].parameters.value.get(model.name))
+            print("PREDICTION OUTPUT:")
+            print(model.nodes['PREDICTION'].parameters.value.get(model.name))
             print("CONTEXT WEIGHTS:")
             print(model.projections[7].parameters.matrix.get(model.name))
     #endregion

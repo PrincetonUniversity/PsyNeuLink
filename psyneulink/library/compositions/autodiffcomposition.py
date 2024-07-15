@@ -783,7 +783,7 @@ class AutodiffComposition(Composition):
     def autodiff_training(self, inputs, targets, context=None, scheduler=None):
         """Perform learning/training on all input-target pairs received for given number of epochs"""
 
-        # compute total loss across output neurons for current trial
+        # Compute total loss over OUTPUT nodes for current trial
         tracked_loss = self.parameters.tracked_loss._get(context)
         if tracked_loss is None:
             self.parameters.tracked_loss._set(torch.zeros(1, device=self.device).double(),
@@ -797,16 +797,38 @@ class AutodiffComposition(Composition):
         for component in inputs.keys():
             curr_tensor_inputs[component] = torch.tensor(inputs[component], device=self.device).double()
 
+        # Get value of TARGET nodes for current trial
         for component in targets.keys():
             curr_tensor_targets[self.target_output_map[component]] = [torch.tensor(np.atleast_1d(target),
                                                                                    device=self.device).double()
                                                                       for target in targets[component]]
 
-        # do forward computation on current inputs
+        # Do forward computation on current inputs
         #   should return 2d values for each component
         pytorch_rep = self.parameters.pytorch_representation._get(context)
         curr_tensor_outputs = pytorch_rep.forward(curr_tensor_inputs, context)
 
+        # Update values of all PNL nodes executed in forward pass (if specified)
+        # 7/10/24 - FIX: ADD THIS AS PARAMETER FOR autodiffcomposition
+        self.update_pnl_values = True
+        if self.update_pnl_values:
+            for pnl_node, pytorch_node in pytorch_rep.nodes_map.items():
+                # FIX: 7/10/24 - THE FOLLOWING NODES ARE RETURNING LISTS OF TENSORS RATHER THAN SINGLE TENSORS:
+                #                - PREVIOUS STATE [WEIGHT], PREVIOUS STATE [WEIGHT], RETRIEVE
+                #                STORE returns None
+                #              - DEAL WITH PREVIOUS VALUE OF ANY INTEGRATOR FUNCTION (INCLUDING of TRANSFERMECHANISM)
+                if pytorch_node.value is None:
+                    assert True
+                    continue
+                if isinstance(pytorch_node.value, list):
+                    pnl_node.parameters.value._set([val.detach().cpu().numpy().copy().tolist()
+                                                    for val in pytorch_node.value], context)
+                else:
+                    pnl_node.parameters.value._set(pytorch_node.value.detach().cpu().numpy().copy().tolist(), context)
+                assert True
+        assert True
+
+        # Compute the loss (TARGET-OUTPUT) for each trained OUTPUT node
         outputs_for_targets = {k:v for k,v in curr_tensor_outputs.items() if k in self.target_output_map.values()}
         for component in outputs_for_targets.keys():
             # possibly add custom loss option, which is a loss function that takes many args
@@ -817,6 +839,7 @@ class AutodiffComposition(Composition):
                                       curr_tensor_targets[component][i])
             tracked_loss += new_loss
 
+        # Get values of trained OUTPUT nodes
         trained_outputs = []
         trained_outputs_CIM_input_ports = [port for port in self.output_CIM.input_ports
                                          if port.path_afferents[0].sender.owner in self.target_output_map.values()]
@@ -827,6 +850,7 @@ class AutodiffComposition(Composition):
             idx = source.output_ports.index(port)
             trained_outputs += [outputs_for_targets[source][idx].detach().cpu().numpy().copy().tolist()]
 
+        # Get values of all OUTPUT nodes
         all_outputs = []
         for input_port in self.output_CIM.input_ports:
             assert (len(input_port.all_afferents) == 1), \
@@ -835,10 +859,12 @@ class AutodiffComposition(Composition):
             idx = component.output_ports.index(port)
             all_outputs += [curr_tensor_outputs[component][idx].detach().cpu().numpy().copy().tolist()]
 
+        # Update tracked loss and loss count
         self.parameters.tracked_loss_count._set(np.array(self.parameters.tracked_loss_count._get(context=context) + 1),
                                                 context=context,
                                                 skip_history=True,
                                                 skip_log=True)
+
         return trained_outputs, all_outputs
 
     def clear_losses(self, context=None):
@@ -846,7 +872,7 @@ class AutodiffComposition(Composition):
         self.parameters.losses.set([], context=context)
 
     def _update_learning_parameters(self, context):
-        """Carry out backpropagation learning for one or more trials.
+        """Carry out backpropagation learning (backward computation) for one or more trials.
         Update parameters (weights) based on trials run since last update,
             using Pytorch backward method to compute gradients and update weights
         Then execute (i.e., do forward computation for) nodes in pytorch_rep._nodes_to_execute_after_gradient_calc
@@ -864,6 +890,7 @@ class AutodiffComposition(Composition):
         optimizer.step()
         pytorch_rep.detach_all()
         pytorch_rep.copy_weights_to_psyneulink(context)
+        # 7/10/24 - FIX: ALSO UPDATE VALUES OF ALL PNL NODES EXECUTED IN FORWARD PASS?
 
         # do forward computation on nodes that should be executed after gradient calculation
         with torch.no_grad():
