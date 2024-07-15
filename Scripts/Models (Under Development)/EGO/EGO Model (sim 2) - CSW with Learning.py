@@ -150,11 +150,11 @@ DISPLAY_MODEL =  (                      # Only one of the following can be uncom
     None                             # suppress display of model
     # {}                               # show simple visual display of model
     # {
-    # # 'show_pytorch': True,            # show pytorch graph of model
+    # 'show_pytorch': True,            # show pytorch graph of model
     #  'show_learning': True
-    # #  # 'show_projections_not_in_composition': True,
-    # # # 'exclude_from_gradient_calc_style': 'dashed'# show target mechanisms for learning
-    # # # {'show_node_structure': True     # show detailed view of node structures and projections
+    # # 'show_projections_not_in_composition': True,
+    # # 'exclude_from_gradient_calc_style': 'dashed'# show target mechanisms for learning
+    # # {'show_node_structure': True     # show detailed view of node structures and projections
     # }
 )
 RUN_MODEL = True                       # True => run the model
@@ -299,8 +299,8 @@ def construct_model(model_name:str=MODEL_NAME,
                                       previous_state_retrieval_weight,
                                       context_retrieval_weight
                                       ),
-                       enable_learning=[True, False, False],
                        # enable_learning=True,
+                       enable_learning=[True, False, False],
                        learn_field_weights=False
                        )
 
@@ -397,6 +397,10 @@ if __name__ == '__main__':
             print("Model not yet constructed")
 
     if RUN_MODEL:
+        def print_stuff(**kwargs):
+            print(kwargs)
+            print('Projections from context to EM: \n', model.projections[7].parameters.matrix.get(context)),
+
         # print("MODEL NOT YET FULLY EXECUTABLE")
         print(f'Running {MODEL_NAME}')
         context = MODEL_NAME
@@ -407,15 +411,21 @@ if __name__ == '__main__':
         model.learn(inputs={STATE_INPUT_LAYER_NAME:INPUTS},
                   # report_output=REPORT_OUTPUT,
                   # report_progress=REPORT_PROGRESS
-                    call_after_minibatch=print('Projections from context to EM: ',
-                                               model.projections[7].parameters.matrix.get(context)),
-                                               # model.projections[7].matrix)
+                  #   call_after_minibatch=print('Projections from context to EM: ',
+                  #                              model.projections[7].parameters.matrix.get(context)),
+                  #                              # model.projections[7].matrix)
+                    call_after_minibatch=print_stuff,
                     learning_rate=.5
                   )
         if DISPLAY_MODEL is not None:
             model.show_graph(**DISPLAY_MODEL)
         if PRINT_RESULTS:
             print("MEMORY:")
-            print(model.nodes['EM'].parameters.memory.get(context))
+            print(model.nodes['EM'].parameters.memory.get(model.name))
+            print("CONTEXT INPUT:")
+            print(model.nodes['CONTEXT'].parameters.variable.get(model.name))
+            print("CONTEXT OUTPUT:")
+            print(model.nodes['CONTEXT'].parameters.value.get(model.name))
+            print("CONTEXT WEIGHTS:")
             print(model.projections[7].parameters.matrix.get(model.name))
     #endregion
