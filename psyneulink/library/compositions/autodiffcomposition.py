@@ -818,7 +818,9 @@ class AutodiffComposition(Composition):
                 #                STORE returns None
                 #              - DEAL WITH PREVIOUS VALUE OF ANY INTEGRATOR FUNCTION (INCLUDING of TRANSFERMECHANISM)
                 if pytorch_node.value is None:
-                    assert True
+                    assert pytorch_node.exclude_from_gradient_calc, \
+                        (f"PROGRAM ERROR: Value of PyTorch wrapper for {pnl_node.name} is None "
+                         f"but it is not excluded from gradient calculation.")
                     continue
                 if isinstance(pytorch_node.value, list):
                     pnl_node.parameters.value._set([val.detach().cpu().numpy().copy().tolist()

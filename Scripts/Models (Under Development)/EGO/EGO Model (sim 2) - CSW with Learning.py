@@ -131,7 +131,7 @@ MORE HERE
 
 
 """
-
+import matplotlib.pyplot as plt
 import numpy as np
 import graph_scheduler as gs
 from enum import IntEnum
@@ -182,7 +182,7 @@ model_params = dict(
     integration_rate = .69, # rate at which state is integrated into new context
     state_weight = .5, # weight of the state used during memory retrieval
     context_weight = .5, # weight of the context used during memory retrieval
-    temperature = .01 # temperature of the softmax used during memory retrieval (smaller means more argmax-like
+    temperature = .1 # temperature of the softmax used during memory retrieval (smaller means more argmax-like
 )
 
 # Fixed (structural) parameters:
@@ -289,7 +289,7 @@ def construct_model(model_name:str=MODEL_NAME,
                        # memory_fill=(0,.01),
                        memory_capacity=MEMORY_CAPACITY,
                        memory_decay_rate=0,
-                       softmax_gain=1.0,
+                       softmax_gain=.1,
                        # Input Nodes:
                        field_names=[state_input_name,
                                     previous_state_input_name,
@@ -399,7 +399,9 @@ if __name__ == '__main__':
     if RUN_MODEL:
         def print_stuff(**kwargs):
             print(kwargs)
-            print('Context vector: \n', model.nodes['CONTEXT'].parameters.value.get(kwargs['context']))
+            print('Context internal: \n', model.nodes['CONTEXT'].parameters.value.get(kwargs['context']))
+            print('Context for EM: \n',
+                  model.nodes['EM'].nodes['CONTEXT [QUERY]'].parameters.value.get(kwargs['context']))
             print('Projections from context to EM: \n', model.projections[7].parameters.matrix.get(kwargs['context']))
 
         # print("MODEL NOT YET FULLY EXECUTABLE")
@@ -431,4 +433,5 @@ if __name__ == '__main__':
             print(model.nodes['PREDICTION'].parameters.value.get(model.name))
             print("CONTEXT WEIGHTS:")
             print(model.projections[7].parameters.matrix.get(model.name))
+            plt.imshow(model.projections[7].parameters.matrix.get(model.name))
     #endregion
