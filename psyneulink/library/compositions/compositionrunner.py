@@ -49,6 +49,7 @@ class CompositionRunner():
                       epochs: int,
                       num_trials: int,
                       batch_size: int = 1,
+                      optimizations_per_minibatch: int = 1,
                       randomize: bool = True,
                       call_before_minibatch=None,
                       call_after_minibatch=None,
@@ -79,21 +80,25 @@ class CompositionRunner():
                     for k, v in inputs.items():
                         chunk[k] = v[idx % len(v)]
                     assert True
-                    yield copy_parameter_value(chunk)
+                    for rep_idx in range(optimizations_per_minibatch):
+                        yield copy_parameter_value(chunk)
+
+                        if execution_mode is ExecutionMode.PyTorch:
+                            self._composition._update_learning_parameters(context)
+
+                    if call_after_minibatch:
+                        call_after_minibatch(epoch=epoch,
+                                             batch=i // batch_size,
+                                             num_batches=num_trials // batch_size,
+                                             context=context)
+
                     # FIX: WHY IS METHOD EXITED HERE ON FIRST PASS?
 
                 assert True
 
                 # Update weights if in PyTorch execution_mode;
                 #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
-                if execution_mode is ExecutionMode.PyTorch:
-                    self._composition._update_learning_parameters(context)
 
-                if call_after_minibatch:
-                    call_after_minibatch(epoch=epoch,
-                                         batch=i // batch_size,
-                                         num_batches=num_trials // batch_size,
-                                         context=context)
 
             # Compiled mode does not need more identical inputs.
             # number_of_runs will be set appropriately to cycle over the set
@@ -163,6 +168,7 @@ class CompositionRunner():
                      epochs: int = 1,
                      learning_rate = None,
                      minibatch_size: int = 1,
+                     optimizations_per_minibatch: int = 1,
                      patience: int = None,
                      min_delta: int = 0,
                      randomize_minibatches: bool = True,
@@ -259,11 +265,12 @@ class CompositionRunner():
                                                                 execution_mode=execution_mode,
                                                                 context=context)
             else:
-                minibatched_input = self._batch_inputs(stim_input,
-                                                       stim_epoch,
-                                                       num_trials,
-                                                       minibatch_size,
-                                                       randomize_minibatches,
+                minibatched_input = self._batch_inputs(inputs=stim_input,
+                                                       epochs=stim_epoch,
+                                                       num_trials=num_trials,
+                                                       batch_size=minibatch_size,
+                                                       optimizations_per_minibatch=optimizations_per_minibatch,
+                                                       randomize=randomize_minibatches,
                                                        call_before_minibatch=call_before_minibatch,
                                                        call_after_minibatch=call_after_minibatch,
                                                        early_stopper=early_stopper,

@@ -780,7 +780,7 @@ class AutodiffComposition(Composition):
                                            f"likelihood), POISSONNLL (Poisson negative log likelihood, "
                                            f"and KL_DIV (KL divergence.")
 
-    def autodiff_training(self, inputs, targets, context=None, scheduler=None):
+    def autodiff_training(self, inputs, targets, synchronize_pnl_values:bool=True, context=None, scheduler=None):
         """Perform learning/training on all input-target pairs received for given number of epochs"""
 
         # Compute total loss over OUTPUT nodes for current trial
@@ -810,8 +810,7 @@ class AutodiffComposition(Composition):
 
         # Update values of all PNL nodes executed in forward pass (if specified)
         # 7/10/24 - FIX: ADD THIS AS PARAMETER FOR autodiffcomposition
-        self.update_pnl_values = True
-        if self.update_pnl_values:
+        if synchronize_pnl_values:
             pytorch_node_values = {}
             for pnl_node, pytorch_node in pytorch_rep.nodes_map.items():
                 # FIX: 7/10/24 - THE FOLLOWING NODES ARE RETURNING LISTS OF TENSORS RATHER THAN SINGLE TENSORS:
@@ -824,12 +823,12 @@ class AutodiffComposition(Composition):
                          f"but it is not excluded from gradient calculation.")
                     continue
                 if isinstance(pytorch_node.value, list):
-                    value = [val.detach().cpu().numpy().copy().tolist() for val in pytorch_node.value]
+                    value = np.array([val.detach().cpu().numpy().copy().tolist() for val in pytorch_node.value],
+                                     dtype=object)
                 else:
-                    value = pytorch_node.value.detach().cpu().numpy().copy().tolist()
+                    value = np.array(pytorch_node.value.detach().cpu().numpy().copy().tolist())
                 pnl_node.parameters.value._set(value, context)
                 pytorch_node_values[pnl_node] = value
-        assert True
 
         # Compute the loss (TARGET-OUTPUT) for each trained OUTPUT node
         outputs_for_targets = {k:v for k,v in curr_tensor_outputs.items() if k in self.target_output_map.values()}
@@ -987,7 +986,7 @@ class AutodiffComposition(Composition):
         return target_nodes
 
     @handle_external_context()
-    def learn(self, *args, **kwargs):
+    def learn(self, *args, synchronize_pnl_values:bool = True, **kwargs):
         execution_phase_at_entry = kwargs[CONTEXT].execution_phase
         kwargs[CONTEXT].execution_phase = ContextFlags.PREPARING
 
@@ -1051,6 +1050,7 @@ class AutodiffComposition(Composition):
                 runtime_params=None,
                 execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.PyTorch,
                 skip_initialization=False,
+                synchronize_pnl_values=True,
                 report_output:ReportOutput=ReportOutput.OFF,
                 report_params:ReportOutput=ReportParams.OFF,
                 report_progress:ReportProgress=ReportProgress.OFF,
@@ -1097,10 +1097,11 @@ class AutodiffComposition(Composition):
                        context=context)
 
                 self._build_pytorch_representation(context)
-                trained_outputs, all_outputs = self.autodiff_training(autodiff_inputs,
-                                                                      autodiff_targets,
-                                                                      context,
-                                                                      scheduler)
+                trained_outputs, all_outputs = self.autodiff_training(inputs=autodiff_inputs,
+                                                                      targets=autodiff_targets,
+                                                                      synchronize_pnl_values=True,
+                                                                      context=context,
+                                                                      scheduler=scheduler)
 
                 execution_phase = context.execution_phase
                 context.execution_phase = ContextFlags.PROCESSING

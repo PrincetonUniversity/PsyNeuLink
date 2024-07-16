@@ -11466,8 +11466,10 @@ _
             epochs: int = 1,
             learning_rate: Optional[Union[int,float]]=None,
             minibatch_size: int = 1,
+            optimizations_per_minibatch: int = 1,
             patience: Optional[int] = None,
             min_delta: int = 0,
+            synchronize_pnl_values: bool = True,
             context: Optional[Context] = None,
             execution_mode: pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
             randomize_minibatches=False,
@@ -11523,6 +11525,17 @@ _
                 specifies the size of the minibatches to use. The input trials will be batched and run, after which
                 learning mechanisms with learning mode TRIAL will update weights
 
+            optimizations_per_minibatch : int (default=1)
+                specified the number of executions and weight updates of learnable pathways are carried out for
+                each set of stimuli in a minibatch.
+
+                .. hint::
+                   This can be used to implement the `backprop-to-activation proceedure
+                   <https://web.stanford.edu/~jlmcc/papers/RogersMcCBook_7_03.pdf>`_ in which the `backpropagation
+                   learning algorithm <Backpropagation>` is used, with a high learning rate, to quickly search
+                   for a pattern of activation in response to a given input (or set of inputs) that is useful for some
+                   downstream purpose.
+
             randomize_minibatch: bool (default=False)
                 specifies whether the order of the input trials should be randomized on each epoch
 
@@ -11534,6 +11547,12 @@ _
                 the minimum reduction in average loss that an epoch must provide in order to qualify as a 'good' epoch;
                 Any reduction less than this value is considered to be a bad epoch.
                 Used for early stopping of training, in combination with `patience`.
+
+            synchronize_pnl_values : bool : default True
+                specifies whether to synchronize the `values <Mechanism_Base.value>` of the `Mechanisms <Mechanism>`
+                in the PsyNeuLink Composition with the corresponding modules of the PyTorch implementation after each
+                forward pass when an `AutodiffComposition` is used is executed in ``PyTorch mode
+                <AutodiffComposition_PyTorch>`.
 
             scheduler : Scheduler
                 the scheduler object that owns the conditions that will instruct the execution of the Composition
@@ -11608,8 +11627,10 @@ _
             epochs=epochs,
             learning_rate=learning_rate,
             minibatch_size=minibatch_size,
+            optimizations_per_minibatch=optimizations_per_minibatch,
             patience=patience,
             min_delta=min_delta,
+            synchronize_pnl_values=synchronize_pnl_values,
             randomize_minibatches=randomize_minibatches,
             call_before_minibatch=call_before_minibatch,
             call_after_minibatch=call_after_minibatch,
