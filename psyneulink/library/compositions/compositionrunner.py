@@ -78,17 +78,22 @@ class CompositionRunner():
                     chunk = {}
                     for k, v in inputs.items():
                         chunk[k] = v[idx % len(v)]
+                    assert True
                     yield copy_parameter_value(chunk)
-                if call_after_minibatch:
-                    call_after_minibatch(epoch=epoch,
-                                         batch=i // batch_size,
-                                         num_batches=num_trials // batch_size,
-                                         context=context)
+                    # FIX: WHY IS METHOD EXITED HERE ON FIRST PASS?
+
+                assert True
 
                 # Update weights if in PyTorch execution_mode;
                 #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
                 if execution_mode is ExecutionMode.PyTorch:
                     self._composition._update_learning_parameters(context)
+
+                if call_after_minibatch:
+                    call_after_minibatch(epoch=epoch,
+                                         batch=i // batch_size,
+                                         num_batches=num_trials // batch_size,
+                                         context=context)
 
             # Compiled mode does not need more identical inputs.
             # number_of_runs will be set appropriately to cycle over the set

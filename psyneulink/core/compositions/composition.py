@@ -11346,11 +11346,15 @@ _
                 # PROCESSING ------------------------------------------------------------------------
                 # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
                 try:
+                # 7/10/24 FIX: BACKWARD COMPUTATION ON LAST TRIAL
                     execution_stimuli = self._parse_trial_inputs(inputs, trial_num, context)
                 except StopIteration:
                     break
 
+                assert "AFTER BACKWARD PASS (EXCEPT ON FIRST TRIAL)"
+
                 # execute processing, passing stimuli for this trial
+                # 7/20/24 FIX: FORWARD COMPUTATION ON CURRENT TRIAL
                 trial_output = self.execute(inputs=execution_stimuli,
                                             scheduler=scheduler,
                                             termination_processing=termination_processing,
@@ -11371,6 +11375,9 @@ _
 
                 # ---------------------------------------------------------------------------------
                 # store the result of this execution in case it will be the final result
+
+
+                assert "AFFTER FOWARD PASS"
 
                 # object.results.append(result)
                 trial_output = copy_parameter_value(trial_output)
