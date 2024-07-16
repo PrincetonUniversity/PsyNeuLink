@@ -812,6 +812,7 @@ class AutodiffComposition(Composition):
         # 7/10/24 - FIX: ADD THIS AS PARAMETER FOR autodiffcomposition
         self.update_pnl_values = True
         if self.update_pnl_values:
+            pytorch_node_values = {}
             for pnl_node, pytorch_node in pytorch_rep.nodes_map.items():
                 # FIX: 7/10/24 - THE FOLLOWING NODES ARE RETURNING LISTS OF TENSORS RATHER THAN SINGLE TENSORS:
                 #                - PREVIOUS STATE [WEIGHT], PREVIOUS STATE [WEIGHT], RETRIEVE
@@ -823,11 +824,11 @@ class AutodiffComposition(Composition):
                          f"but it is not excluded from gradient calculation.")
                     continue
                 if isinstance(pytorch_node.value, list):
-                    pnl_node.parameters.value._set([val.detach().cpu().numpy().copy().tolist()
-                                                    for val in pytorch_node.value], context)
+                    value = [val.detach().cpu().numpy().copy().tolist() for val in pytorch_node.value]
                 else:
-                    pnl_node.parameters.value._set(pytorch_node.value.detach().cpu().numpy().copy().tolist(), context)
-                assert True
+                    value = pytorch_node.value.detach().cpu().numpy().copy().tolist()
+                pnl_node.parameters.value._set(value, context)
+                pytorch_node_values[pnl_node] = value
         assert True
 
         # Compute the loss (TARGET-OUTPUT) for each trained OUTPUT node

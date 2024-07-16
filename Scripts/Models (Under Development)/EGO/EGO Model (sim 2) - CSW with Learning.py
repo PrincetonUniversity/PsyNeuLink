@@ -402,6 +402,8 @@ if __name__ == '__main__':
             print('Context internal: \n', model.nodes['CONTEXT'].parameters.value.get(kwargs['context']))
             print('Context for EM: \n',
                   model.nodes['EM'].nodes['CONTEXT [QUERY]'].parameters.value.get(kwargs['context']))
+            print('Prediction: \n',
+                  model.nodes['PREDICTION'].parameters.value.get(kwargs['context']))
             print('Projections from context to EM: \n', model.projections[7].parameters.matrix.get(kwargs['context']))
 
         # print("MODEL NOT YET FULLY EXECUTABLE")
@@ -414,6 +416,7 @@ if __name__ == '__main__':
                   #                              model.projections[7].parameters.matrix.get(context)),
                   #                              # model.projections[7].matrix)
                     call_after_minibatch=print_stuff,
+                    # minibatch_size=3,
                     learning_rate=.5
                   )
         if DISPLAY_MODEL is not None:
