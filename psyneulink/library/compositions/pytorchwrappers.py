@@ -673,7 +673,6 @@ class PytorchMechanismWrapper():
                          if proj_wrapper._pnl_proj in input_port.path_afferents)
                      for input_port in self._mechanism.input_ports]
 
-
     def execute(self, variable):
         """Execute Mechanism's function on variable, enforce result to be 2d, and assign to self.value"""
         if ((isinstance(variable, list) and len(variable) == 1)

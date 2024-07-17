@@ -147,14 +147,14 @@ from psyneulink._typing import Union, Literal
 MEMORY_CAPACITY = 5
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL =  (                     # Only one of the following can be uncommented:
-    # None                             # suppress display of model
-    {                                  # show simple visual display of model
+    None                             # suppress display of model
+    # {                                  # show simple visual display of model
     # 'show_pytorch': True,            # show pytorch graph of model
     #  'show_learning': True
     # # 'show_projections_not_in_composition': True,
     # # 'exclude_from_gradient_calc_style': 'dashed'# show target mechanisms for learning
     # # {'show_node_structure': True     # show detailed view of node structures and projections
-    }
+    # }
 )
 RUN_MODEL = True                       # True => run the model
 # RUN_MODEL = False                      # False => don't run the model
@@ -415,6 +415,7 @@ if __name__ == '__main__':
                   #                              model.projections[7].parameters.matrix.get(context)),
                   #                              # model.projections[7].matrix)
                     call_after_minibatch=print_stuff,
+                    optimizations_per_minibatch=3,
                     # minibatch_size=3,
                     learning_rate=.5
                   )

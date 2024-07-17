@@ -11347,12 +11347,10 @@ _
                 # PROCESSING ------------------------------------------------------------------------
                 # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
                 try:
-                # 7/10/24 FIX: BACKWARD COMPUTATION ON LAST TRIAL
+                    # IMPLEMENTATION NOTE: for autdoiff, the following includes backward pass after forward pass
                     execution_stimuli = self._parse_trial_inputs(inputs, trial_num, context)
                 except StopIteration:
                     break
-
-                assert "AFTER BACKWARD PASS (EXCEPT ON FIRST TRIAL)"
 
                 # execute processing, passing stimuli for this trial
                 # 7/20/24 FIX: FORWARD COMPUTATION ON CURRENT TRIAL

@@ -335,8 +335,10 @@ else:
     from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper
     from psyneulink.library.compositions.pytorchshowgraph import PytorchShowGraph
 
+from psyneulink.core.components.functions.stateful.statefulfunction import StatefulFunction
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.ports.inputport import InputPort
@@ -819,11 +821,15 @@ class AutodiffComposition(Composition):
                          f"but it is not excluded from gradient calculation.")
                     continue
                 if isinstance(pytorch_node.value, list):
-                    value = np.array([val.detach().cpu().numpy().copy().tolist() for val in pytorch_node.value],
-                                     dtype=object)
+                    value = np.array([val.detach().cpu().numpy() for val in pytorch_node.value], dtype=object)
                 else:
-                    value = np.array(pytorch_node.value.detach().cpu().numpy().copy().tolist())
+                    value = pytorch_node.value.detach().cpu().numpy()
                 pnl_node.parameters.value._set(value, context)
+                if isinstance(pnl_node.function, StatefulFunction):
+                    pnl_node.function.parameters.previous_value._set(value, context)
+                # 7/10/24 - FIX: THIS NEEDS TO BE ALIGNED WITH HANDLING OF INTEGRATION BEFORE NONLINEARITY IN PYTORCH
+                # if isinstance(pnl_node, TransferMechanism) and pnl_node.integrator_mode:
+                #     pnl_node.integrator_function.parameters.previous_value._set(value, context)
                 pytorch_node_values[pnl_node] = value
 
         # Compute the loss (TARGET-OUTPUT) for each trained OUTPUT node
@@ -888,7 +894,6 @@ class AutodiffComposition(Composition):
         optimizer.step()
         pytorch_rep.detach_all()
         pytorch_rep.copy_weights_to_psyneulink(context)
-        # 7/10/24 - FIX: ALSO UPDATE VALUES OF ALL PNL NODES EXECUTED IN FORWARD PASS?
 
         # do forward computation on nodes that should be executed after gradient calculation
         with torch.no_grad():
