@@ -14,6 +14,7 @@ import torch
 import torch.nn as nn
 
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, PRODUCT, SUM
+from psyneulink.core.components.functions.stateful.integratorfunctions import IntegratorFunction
 from psyneulink.core.compositions.composition import NodeRole, CompositionInterfaceMechanism
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
@@ -556,7 +557,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         Implemented as method (and includes context as arg) so that it can be overridden
         by subclasses of PytorchCompositionWrapper
         """
-        value = node.execute(variable)
+        value = node.execute(variable, context)
         assert 'DEBUGGING BREAK POINT'
 
     def detach_all(self):
@@ -587,7 +588,16 @@ class PytorchMechanismWrapper():
     Attributes
     ----------
 
-    exclude_from_gradient_calc: bool or str[BEFORE | AFTER]: False
+    function : _gen_pytorch_fct
+        Pytorch version of the Mechanism's function assigned in __init__
+
+    integrator_function : _gen_pytorch_fct
+        Pytorch version of the Mechanism's integrator_function assigned in __init__ if mechanism
+        has an integrator_function;  this assumes the mechanism also has an integrator_mode attribute
+        that is used to determine whether to execute the integrator_function first, and use its result
+        as the input to its function.
+
+    exclude_from_gradient_calc : bool or str[BEFORE | AFTER]: False
         used to prevent a node from being included in the Pytorch gradient calculation by excluding it in calls to
         the forward() and backward().  If AFTER is specified, the node is executed after at the end of the
         `update_learning_parameters` method.  BEFORE is not currently supported
@@ -616,11 +626,15 @@ class PytorchMechanismWrapper():
             self.default_value = mechanism.defaults.value
 
         try:
-            self.function = mechanism.function._gen_pytorch_fct(device, context)
+            pnl_fct = mechanism.function
+            self.function = pnl_fct._gen_pytorch_fct(device, context)
+            if hasattr(mechanism, 'integrator_function'):
+                pnl_fct = mechanism.integrator_function
+                self.integrator_function = pnl_fct._gen_pytorch_fct(device, context)
         except:
             from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
             raise AutodiffCompositionError(
-                f"Function {mechanism.function} is not currently supported by AutodiffComposition")
+                f"Function {pnl_fct} is not currently supported by AutodiffComposition")
 
         self.value = None
         self._target_mechanism = None
@@ -673,19 +687,46 @@ class PytorchMechanismWrapper():
                          if proj_wrapper._pnl_proj in input_port.path_afferents)
                      for input_port in self._mechanism.input_ports]
 
-    def execute(self, variable):
-        """Execute Mechanism's function on variable, enforce result to be 2d, and assign to self.value"""
-        if ((isinstance(variable, list) and len(variable) == 1)
-            or (isinstance(variable, torch.Tensor) and len(variable.squeeze(0).shape) == 1)
-                or isinstance(self._mechanism.function, LinearCombination)):
-            # Enforce 2d on value of MechanismWrapper (using unsqueeze)
-            # for single InputPort or if CombinationFunction (which reduces output to single item from multi-item input)
-            if isinstance(variable, torch.Tensor):
-                variable = variable.squeeze(0)
-            self.value = self.function(variable).unsqueeze(0)
-        else:
-            # Make value 2d by creating list of values returned by function for each item in variable
-            self.value = [self.function(variable[i].squeeze(0)) for i in range(len(variable))]
+    def execute(self, variable, context):
+        """Execute Mechanism's _gen_pytorch version of function on variable.
+        Enforce result to be 2d, and assign to self.value"""
+        # MODIFIED 7/24/10 OLD:
+        # if ((isinstance(variable, list) and len(variable) == 1)
+        #     or (isinstance(variable, torch.Tensor) and len(variable.squeeze(0).shape) == 1)
+        #         or isinstance(self._mechanism.function, LinearCombination)):
+        #     # Enforce 2d on value of MechanismWrapper (using unsqueeze)
+        #     # for single InputPort or if CombinationFunction (which reduces output to single item from multi-item input)
+        #     if isinstance(variable, torch.Tensor):
+        #         variable = variable.squeeze(0)
+        #     self.value = self.function(variable).unsqueeze(0)
+        # else:
+        #     # Make value 2d by creating list of values returned by function for each item in variable
+        #     self.value = [self.function(variable[i].squeeze(0)) for i in range(len(variable))]
+        # MODIFIED 7/24/10 NEW:
+        def execute_function(function, variable):
+            """Execute _gen_pytorch_fct on variable, enforce result to be 2d, and return it"""
+            if ((isinstance(variable, list) and len(variable) == 1)
+                or (isinstance(variable, torch.Tensor) and len(variable.squeeze(0).shape) == 1)
+                    or isinstance(self._mechanism.function, LinearCombination)):
+                # Enforce 2d on value of MechanismWrapper (using unsqueeze)
+                # for single InputPort or if CombinationFunction (which reduces output to single item from multi-item input)
+                if isinstance(variable, torch.Tensor):
+                    variable = variable.squeeze(0)
+                return function(variable).unsqueeze(0)
+            else:
+                # Make value 2d by creating list of values returned by function for each item in variable
+                return [function(variable[i].squeeze(0)) for i in range(len(variable))]
+
+        # # Use integrator_mode here as the integrator_function is only relevant if integrator_mode is set to True
+        # if hasattr(self._mechanism, 'integrator_mode') and self._mechanism.parameters.integrator_mode._get(context):
+        # Assumes that _mechanism has an integrator_mode if PyTorch node has been assigned an integrator_function
+        if hasattr(self, 'integrator_function') and self._mechanism.parameters.integrator_mode._get(context):
+            variable = execute_function(self.integrator_function, variable)
+
+        self.value = execute_function(self.function, variable)
+        if isinstance(self._mechanism.function, IntegratorFunction):
+            self.function.parameters.previous_value._set(self.value, context)
+        # MODIFIED 7/24/10 END
         return self.value
 
     def _gen_llvm_execute(self, ctx, builder, state, params, mech_input, data):

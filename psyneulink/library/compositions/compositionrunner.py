@@ -80,6 +80,7 @@ class CompositionRunner():
                     for k, v in inputs.items():
                         chunk[k] = v[idx % len(v)]
                     for rep_idx in range(optimizations_per_minibatch):
+                        # Return current stimulus
                         yield copy_parameter_value(chunk)
 
                         # Update weights if in PyTorch execution_mode;
