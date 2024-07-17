@@ -87,10 +87,15 @@ class CompositionRunner():
                             self._composition._update_learning_parameters(context)
 
                     if call_after_minibatch:
-                        call_after_minibatch(epoch=epoch,
-                                             batch=i // batch_size,
-                                             num_batches=num_trials // batch_size,
-                                             context=context)
+                        try:
+                            # Try with the hope that the function uses **kwargs (or these args)
+                            call_after_minibatch(epoch=epoch,
+                                                 batch=i // batch_size,
+                                                 num_batches=num_trials // batch_size,
+                                                 context=context)
+                        except TypeError:
+                            # If not, try without the args
+                            call_after_minibatch()
 
                     # FIX: WHY IS METHOD EXITED HERE ON FIRST PASS?
 

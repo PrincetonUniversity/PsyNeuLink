@@ -809,14 +809,10 @@ class AutodiffComposition(Composition):
         curr_tensor_outputs = pytorch_rep.forward(curr_tensor_inputs, context)
 
         # Update values of all PNL nodes executed in forward pass (if specified)
-        # 7/10/24 - FIX: ADD THIS AS PARAMETER FOR autodiffcomposition
+        # 7/10/24 - FIX: ADD HANDLING OF PREVIOUS VALUES FOR NODES WITH STATEFUL / INTEGRATION FUNCTIONS
         if synchronize_pnl_values:
             pytorch_node_values = {}
             for pnl_node, pytorch_node in pytorch_rep.nodes_map.items():
-                # FIX: 7/10/24 - THE FOLLOWING NODES ARE RETURNING LISTS OF TENSORS RATHER THAN SINGLE TENSORS:
-                #                - PREVIOUS STATE [WEIGHT], PREVIOUS STATE [WEIGHT], RETRIEVE
-                #                STORE returns None
-                #              - DEAL WITH PREVIOUS VALUE OF ANY INTEGRATOR FUNCTION (INCLUDING of TRANSFERMECHANISM)
                 if pytorch_node.value is None:
                     assert pytorch_node.exclude_from_gradient_calc, \
                         (f"PROGRAM ERROR: Value of PyTorch wrapper for {pnl_node.name} is None "

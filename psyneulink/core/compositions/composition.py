@@ -10861,6 +10861,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             default_absolute_time_unit: typing.Optional[pint.Quantity] = None,
             context=None,
             base_context=Context(execution_id=None),
+            **kwargs
             ):
         """Pass inputs to Composition, then execute sets of nodes that are eligible to run until termination
         conditions are met.
