@@ -631,6 +631,7 @@ class PytorchMechanismWrapper():
             if hasattr(mechanism, 'integrator_function'):
                 pnl_fct = mechanism.integrator_function
                 self.integrator_function = pnl_fct._gen_pytorch_fct(device, context)
+                self.integrator_previous_value = pnl_fct._get_pytorch_fct_param_value('initializer', device, context)
         except:
             from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
             raise AutodiffCompositionError(
@@ -702,9 +703,13 @@ class PytorchMechanismWrapper():
         # else:
         #     # Make value 2d by creating list of values returned by function for each item in variable
         #     self.value = [self.function(variable[i].squeeze(0)) for i in range(len(variable))]
+
         # MODIFIED 7/24/10 NEW:
-        def execute_function(function, variable):
-            """Execute _gen_pytorch_fct on variable, enforce result to be 2d, and return it"""
+        def execute_function(function, variable, fct_has_mult_args=False):
+            """Execute _gen_pytorch_fct on variable, enforce result to be 2d, and return it
+            If fct_has_mult_args is True, treat each item in variable as an arg to the function
+            If False, compute function for each item in variable and return results in a list
+            """
             if ((isinstance(variable, list) and len(variable) == 1)
                 or (isinstance(variable, torch.Tensor) and len(variable.squeeze(0).shape) == 1)
                     or isinstance(self._mechanism.function, LinearCombination)):
@@ -713,19 +718,30 @@ class PytorchMechanismWrapper():
                 if isinstance(variable, torch.Tensor):
                     variable = variable.squeeze(0)
                 return function(variable).unsqueeze(0)
+            elif fct_has_mult_args:
+                # Assign each element of variable as an arg to the function
+                return function(*variable)
             else:
-                # Make value 2d by creating list of values returned by function for each item in variable
+                # Treat each item in variable as a separate input to the function and get result for each in a list:
+                # make return value 2d by creating list of the results of function returned for each item in variable
                 return [function(variable[i].squeeze(0)) for i in range(len(variable))]
 
-        # # Use integrator_mode here as the integrator_function is only relevant if integrator_mode is set to True
-        # if hasattr(self._mechanism, 'integrator_mode') and self._mechanism.parameters.integrator_mode._get(context):
-        # Assumes that _mechanism has an integrator_mode if PyTorch node has been assigned an integrator_function
+        # If mechanism has an integrator_function and integrator_mode is True,
+        #   execute it first and use result as input to the main function;
+        #   assumes that if PyTorch node has been assigned an integrator_function then _mechanism has an integrator_mode
         if hasattr(self, 'integrator_function') and self._mechanism.parameters.integrator_mode._get(context):
-            variable = execute_function(self.integrator_function, variable)
-
+            variable = execute_function(self.integrator_function,
+                                        [self.integrator_previous_value, variable],
+                                        fct_has_mult_args=True)
+            # Keep track of previous value in Pytorch node for use in next forward pass
+            self.integrator_previous_value = variable
+        # Compute main function of mechanism and return result
         self.value = execute_function(self.function, variable)
+        # Assign previous_value back to integrator_function of pnl node
+        #   so that if Python implementation is run it picks up where PyTorch execution left off
         if isinstance(self._mechanism.function, IntegratorFunction):
-            self.function.parameters.previous_value._set(self.value, context)
+            self._mechanism.integrator_function.parameters.previous_value._set(self.value, context)
+
         # MODIFIED 7/24/10 END
         return self.value
 
