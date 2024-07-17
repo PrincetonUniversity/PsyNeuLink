@@ -716,6 +716,8 @@ class AutodiffComposition(Composition):
             model = self.pytorch_composition_wrapper_type(composition=self,
                                                           device=self.device,
                                                           context=context)
+            # 7/10/24 FIX DEBUGGING
+            model.register_backward_hook(model._backward_hook)
 
             self.parameters.pytorch_representation._set(model, context, skip_history=True, skip_log=True)
 
@@ -793,6 +795,8 @@ class AutodiffComposition(Composition):
                                               skip_history=True,
                                               skip_log=True)
             tracked_loss = self.parameters.tracked_loss._get(context)
+            # 7/10/24 - FIX: DEBUGGING
+            print(f"Trial num = {self._DEBUG_TRIAL_NUM}")
 
         curr_tensor_inputs = {}
         curr_tensor_targets = {}

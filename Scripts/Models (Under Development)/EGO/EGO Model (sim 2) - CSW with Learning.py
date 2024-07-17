@@ -288,7 +288,7 @@ def construct_model(model_name:str=MODEL_NAME,
                        # memory_fill=(0,.01),
                        memory_capacity=MEMORY_CAPACITY,
                        memory_decay_rate=0,
-                       softmax_gain=.1,
+                       softmax_gain=retrieval_softmax_gain,
                        # Input Nodes:
                        field_names=[state_input_name,
                                     previous_state_input_name,
@@ -415,7 +415,7 @@ if __name__ == '__main__':
                   #                              model.projections[7].parameters.matrix.get(context)),
                   #                              # model.projections[7].matrix)
                     call_after_minibatch=print_stuff,
-                    optimizations_per_minibatch=3,
+                    optimizations_per_minibatch=1,
                     # minibatch_size=3,
                     learning_rate=.5
                   )
@@ -437,4 +437,12 @@ if __name__ == '__main__':
             print("CONTEXT WEIGHTS:")
             print(model.projections[7].parameters.matrix.get(model.name))
             plt.imshow(model.projections[7].parameters.matrix.get(model.name))
+            def test_weights(weight_mat):
+                # checks whether only 5 weights are updated.
+                weight_mat -= np.eye(11)
+                col_sum = weight_mat.sum(1)
+                row_sum = weight_mat.sum(0)
+                return np.max([(row_sum != 0).sum(), (col_sum != 0).sum()])
+            print(test_weights(model.projections[7].parameters.matrix.get(model.name)))
+
     #endregion

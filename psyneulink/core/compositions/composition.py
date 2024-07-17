@@ -11351,7 +11351,8 @@ _
                     execution_stimuli = self._parse_trial_inputs(inputs, trial_num, context)
                 except StopIteration:
                     break
-
+                # 7/10/24 - FIX: DEBUGGING
+                self._DEBUG_TRIAL_NUM = trial_num
                 # execute processing, passing stimuli for this trial
                 # 7/20/24 FIX: FORWARD COMPUTATION ON CURRENT TRIAL
                 trial_output = self.execute(inputs=execution_stimuli,

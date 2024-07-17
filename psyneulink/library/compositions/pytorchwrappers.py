@@ -237,7 +237,20 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         composition.scheduler._delete_counts(c.execution_id)
 
+        # 7/10/24 - FIX: DEBUGGING
+        self.register_backward_hook(self._backward_hook)
+
         self._regenerate_paramlist()
+
+    # 7/10/24 - FIX: DEBUGGING
+    def _backward_hook(self, module, grad_input, grad_output):
+        print(f'grad_input type: {type(grad_input)}')
+        print(len(grad_input))
+        print(type(grad_output))
+        print(len(grad_output))
+        print(grad_input[0].shape)
+        print(grad_input[1].shape)
+        print(grad_output[0].shape)
 
     __deepcopy__ = get_deepcopy_with_shared()
 
