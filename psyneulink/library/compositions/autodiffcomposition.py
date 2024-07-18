@@ -795,8 +795,6 @@ class AutodiffComposition(Composition):
                                               skip_history=True,
                                               skip_log=True)
             tracked_loss = self.parameters.tracked_loss._get(context)
-            # 7/10/24 - FIX: DEBUGGING
-            print(f"Trial num = {self._DEBUG_TRIAL_NUM}")
 
         curr_tensor_inputs = {}
         curr_tensor_targets = {}
