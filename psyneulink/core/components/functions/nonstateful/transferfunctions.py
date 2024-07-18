@@ -3392,6 +3392,31 @@ class SoftMax(TransferFunction):
         gain = self._get_pytorch_fct_param_value('gain', device, context)
         return lambda x: (torch.softmax(gain * x, 0))
 
+# 7/10/24 FIX:  SOFTMAX GAIN-SETTING FUNCTIONS
+# FROM EMComposition:
+# def get_softmax_gain(v, scale=1, base=1, entropy_weighting=.1)->float:
+#     """Compute the softmax gain (inverse temperature) based on the entropy of the distribution of values.
+#     scale * (base + (entropy_weighting * log(entropy(logistic(v))))))))
+#     """
+#     v = np.squeeze(v)
+#     gain = scale * (base +
+#                     (entropy_weighting *
+#                      np.log(
+#                          -1 * np.sum((1 / (1 + np.exp(-1 * v))) * np.log(1 / (1 + np.exp(-1 * v)))))))
+#     return gain
+#
+# FROM KAMESH:
+# class thresholded_softmax(nn.Module):
+#     def __init__(self, dim: Optional[int] = 1, thr=1e-3) -> None:
+#         super().__init__()
+#         self.dim = dim
+#         self.thr = thr
+#
+#     def forward(self, _input: Tensor) -> Tensor:
+#         _mask = torch.abs(_input) > self.thr
+#         _exp_maxsub = torch.exp( _input - torch.max(_input,self.dim,keepdim=True)[0])
+#         return _exp_maxsub*_mask/ torch.sum(_exp_maxsub*_mask,dim=self.dim,keepdim=True)
+
 
 # **********************************************************************************************************************
 #                                                 LinearMatrix
