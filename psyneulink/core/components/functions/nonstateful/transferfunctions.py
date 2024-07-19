@@ -2956,13 +2956,14 @@ class SoftMax(TransferFunction):
     default_variable : 1d array : default class_defaults.variable
         specifies a template for the value to be transformed.
 
-    gain : float or ADAPT : default 1.0
-        specifies either a value by which to multiply `variable <Linear.variable>` before SoftMax transformation or
-        that it should be determined adaptively based on the `variable <SoftMax.variable>` (see `SoftMax_AdaptGain`
-        for details).
+    gain : scalar or ADAPT : default 1.0
+        specifies the value by which to multiply `variable <Linear.variable>` before SoftMax transformation,
+        which functions as the inverse "temperature" of the function.  If it is a scalar, it must be greater than
+        zero.  If *ADAPT* is specified, the value is determined dynamically based on the `variable <SoftMax.variable>`
+        `SoftMax_AdaptGain` for details).
 
     threshold : bool : default False
-        specifies wehther to threshold the `variable <SoftMax.variable>` before applying the SoftMax function
+        specifies whether to threshold the `variable <SoftMax.variable>` before applying the SoftMax function
         (see `SoftMax_AdaptGain` for details).
 
     output : ALL, MAX_VAL, MAX_INDICATOR, or PROB : default ALL
