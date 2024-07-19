@@ -355,7 +355,8 @@ ValidParamSpecType = Union[
     Type['psyneulink.core.components.projections.MappingProjection'],
     'psyneulink.library.components.projections.MaskedMappingProjection',
     Type['psyneulink.library.components.projections.MaskedMappingProjection'],
-    Literal['LEARNING', 'bias', 'control', 'gain', 'gate', 'leak', 'offset', 'ControlSignal', 'ControlProjection'],
+    Literal['LEARNING', 'modulatory',
+    'bias', 'control', 'gain', 'gate', 'leak', 'offset', 'ControlSignal', 'ControlProjection'],
 ]
 
 
