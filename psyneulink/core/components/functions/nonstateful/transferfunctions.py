@@ -2914,8 +2914,30 @@ class SoftMax(TransferFunction):
 
         \\frac{e^{gain * variable_i}}{\\sum\\limits^{len(variable)}e^{gain * variable}}
 
-    filtered by `ouptput <SoftMax.output>` specification (see `The Softmax function and its derivative
+    filtered by `output <SoftMax.output>` specification (see `The Softmax function and its derivative
     <http://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/>`_ for a nice discussion).
+
+
+    .. _SoftMax_AdaptGain:
+
+    *AdaptGain*
+
+    The gain of the SoftMax function can be adapted based on the variable by setting the **adapt_gain** argument to
+    either *NORMALIZE* or *THRESHOLD*.
+
+    - *NORMALIZE* -- parametrically modifies the gain, using the entropy of the variable, keep the mass of the
+      distribution around the highest values as consistent as possible over different sized vectors. This is useful
+      when using one-hot or sparse vectors, to keep the softmax values for the largest values as consistent as possible
+      irrespective of the size of the vector, by increasing the gain for larger vectors (e.g., gain for [1,0,0,
+      0] will be higher than for [1,0]).
+
+    - *THRESHOLD* -- masks the variable, setting all values below a threshold to 0, and then normalizes the remaining
+      values; again, this is useful when the variable is sparse, to keep a large number of small values from diminishing
+      the softmax values for the largest values.
+
+    .. _SoftMax_Derivative:
+
+    *Derivatve*
 
     `derivative <SoftMax.derivative>` returns the derivative of the SoftMax.  If *OUTPUT_TYPE* for the SoftMax
     is *ALL*, returns Jacobian matrix (derivative for each element of the output array with respect to each of the
@@ -2934,8 +2956,14 @@ class SoftMax(TransferFunction):
     default_variable : 1d array : default class_defaults.variable
         specifies a template for the value to be transformed.
 
-    gain : float : default 1.0
-        specifies a value by which to multiply `variable <Linear.variable>` before SoftMax transformation.
+    gain : float or ADAPT : default 1.0
+        specifies either a value by which to multiply `variable <Linear.variable>` before SoftMax transformation or
+        that it should be determined adaptively based on the `variable <SoftMax.variable>` (see `SoftMax_AdaptGain`
+        for details).
+
+    threshold : bool : default False
+        specifies wehther to threshold the `variable <SoftMax.variable>` before applying the SoftMax function
+        (see `SoftMax_AdaptGain` for details).
 
     output : ALL, MAX_VAL, MAX_INDICATOR, or PROB : default ALL
         specifies the format of array returned by `function <SoftMax._function>`
@@ -2968,6 +2996,10 @@ class SoftMax(TransferFunction):
     gain : float
         value by which `variable <Logistic.variable>` is multiplied before the SoftMax transformation;  determines
         the "sharpness" of the distribution.
+
+    adapt_gain : NORMALIZE or THRESHOLD or None
+        determines whether the `gain <SoftMax.gain>` of the SoftMax function is adapted based on the variable:
+
 
     output : ALL, MAX_VAL, MAX_INDICATOR, or PROB
         determines how the SoftMax-transformed values of the elements in `variable <SoftMax.variable>` are reported
@@ -3394,7 +3426,7 @@ class SoftMax(TransferFunction):
 
 # 7/10/24 FIX:  SOFTMAX GAIN-SETTING FUNCTIONS
 # FROM EMComposition:
-# def get_softmax_gain(v, scale=1, base=1, entropy_weighting=.1)->float:
+# def normalize_softmax_gain(v, scale=1, base=1, entropy_weighting=.1)->float:
 #     """Compute the softmax gain (inverse temperature) based on the entropy of the distribution of values.
 #     scale * (base + (entropy_weighting * log(entropy(logistic(v))))))))
 #     """
@@ -3404,7 +3436,8 @@ class SoftMax(TransferFunction):
 #                      np.log(
 #                          -1 * np.sum((1 / (1 + np.exp(-1 * v))) * np.log(1 / (1 + np.exp(-1 * v)))))))
 #     return gain
-#
+
+
 # FROM KAMESH:
 # class thresholded_softmax(nn.Module):
 #     def __init__(self, dim: Optional[int] = 1, thr=1e-3) -> None:

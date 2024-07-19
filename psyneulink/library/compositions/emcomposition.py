@@ -2087,11 +2087,11 @@ class EMComposition(AutodiffComposition):
         softmax_gain_control_nodes = []
         if softmax_gain == CONTROL:
             softmax_gain_control_nodes = [ControlMechanism(monitor_for_control=match_node,
-                                                      control_signals=[(GAIN, self.softmax_nodes[i])],
-                                                      function=get_softmax_gain,
-                                                      name='SOFTMAX GAIN CONTROL' if len(self.softmax_nodes) == 1
-                                                      else f'SOFTMAX GAIN CONTROL {self.key_names[i]}')
-                                     for i, match_node in enumerate(self.match_nodes)]
+                                                           control_signals=[(GAIN, self.softmax_nodes[i])],
+                                                           function=get_softmax_gain,
+                                                           name='SOFTMAX GAIN CONTROL' if len(self.softmax_nodes) == 1
+                                                           else f'SOFTMAX GAIN CONTROL {self.key_names[i]}')
+                                          for i, match_node in enumerate(self.match_nodes)]
 
         return softmax_gain_control_nodes
 
