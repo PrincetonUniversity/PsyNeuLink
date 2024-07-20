@@ -854,8 +854,19 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter, FunctionParameter, ParameterNoValueError, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import \
-    all_within_range, is_numeric_scalar, append_type_to_name, convert_all_elements_to_np_array, iscompatible, convert_to_np_array, safe_equals, parse_valid_identifier, safe_len, try_extract_0d_array_item
+from psyneulink.core.globals.utilities import (
+    all_within_range,
+    append_type_to_name,
+    clip,
+    convert_all_elements_to_np_array,
+    convert_to_np_array,
+    is_numeric_scalar,
+    iscompatible,
+    parse_valid_identifier,
+    safe_equals,
+    safe_len,
+    try_extract_0d_array_item,
+)
 from psyneulink.core.scheduling.time import TimeScale
 
 __all__ = [
@@ -1587,12 +1598,9 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         return current_input
 
-    def _clip_result(self, clip, current_input):
-        if clip is not None:
-            minCapIndices = np.where(current_input < clip[0])
-            maxCapIndices = np.where(current_input > clip[1])
-            current_input[minCapIndices] = np.min(clip)
-            current_input[maxCapIndices] = np.max(clip)
+    def _clip_result(self, bounds, current_input):
+        if bounds is not None:
+            current_input = clip(current_input, bounds[0], bounds[1])
         return current_input
 
     def _gen_llvm_is_finished_cond(self, ctx, builder, m_base_params, m_state, m_in):
