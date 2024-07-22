@@ -181,7 +181,13 @@ model_params = dict(
     integration_rate = .69, # rate at which state is integrated into new context
     state_weight = .5, # weight of the state used during memory retrieval
     context_weight = .5, # weight of the context used during memory retrieval
-    temperature = .1 # temperature of the softmax used during memory retrieval (smaller means more argmax-like
+    # softmax_temperature = None, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
+    softmax_temperature = .1, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
+    # softmax_temperature = ADAPTIVE, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
+    # softmax_temperature = CONTROL, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
+    # softmax_threshold = .001, # threshold used to mask out small values in softmax
+    softmax_threshold = None, # threshold used to mask out small values in softmax
+    learning_rate = .5
 )
 
 # Fixed (structural) parameters:
@@ -215,8 +221,12 @@ INTEGRATION_RATE = model_params['integration_rate']  # rate at which state is in
 STATE_RETRIEVAL_WEIGHT = 0
 PREVIOUS_STATE_RETRIEVAL_WEIGHT = model_params['state_weight']     # weight of state field in retrieval from EM
 CONTEXT_RETRIEVAL_WEIGHT = model_params['context_weight'] # weight of context field in retrieval from EM
-RETRIEVAL_SOFTMAX_GAIN = 1/model_params['temperature']    # gain on softmax retrieval function
-# RETRIEVAL_SOFTMAX_GAIN = None
+if is_numeric_scalar(model_params['softmax_temperature']):
+    RETRIEVAL_SOFTMAX_GAIN = 1/model_params['softmax_temperature']    # gain on softmax retrieval function
+else:
+    RETRIEVAL_SOFTMAX_GAIN = model_params['softmax_temperature']    # gain on softmax retrieval function
+RETRIEVAL_SOFTMAX_THRESHOLD = model_params['softmax_threshold']
+LEARNING_RATE = model_params['learning_rate']
 
 
 RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projections
@@ -257,12 +267,15 @@ def construct_model(model_name:str=MODEL_NAME,
                     # EM:
                     em_name:str=EM_NAME,
                     retrieval_softmax_gain=RETRIEVAL_SOFTMAX_GAIN,
+                    retrieval_softmax_threshold=RETRIEVAL_SOFTMAX_THRESHOLD,
                     state_retrieval_weight:Union[float,int]=STATE_RETRIEVAL_WEIGHT,
                     previous_state_retrieval_weight:Union[float,int]=PREVIOUS_STATE_RETRIEVAL_WEIGHT,
                     context_retrieval_weight:Union[float,int]=CONTEXT_RETRIEVAL_WEIGHT,
 
                     # Output / decision processing:
                     prediction_layer_name:str=PREDICTION_LAYER_NAME,
+
+                    learning_rate = LEARNING_RATE
 
                     )->Composition:
 
@@ -286,10 +299,11 @@ def construct_model(model_name:str=MODEL_NAME,
                        memory_template=[[0] * state_size,   # state
                                         [0] * state_size,   # previous state
                                         [0] * state_size],  # context
-                       # memory_fill=(0,.01),
+                       # memory_fill=(0,.0001),
                        memory_capacity=MEMORY_CAPACITY,
                        memory_decay_rate=0,
                        softmax_gain=retrieval_softmax_gain,
+                       softmax_threshold=retrieval_softmax_threshold,
                        # Input Nodes:
                        field_names=[state_input_name,
                                     previous_state_input_name,
@@ -354,7 +368,7 @@ def construct_model(model_name:str=MODEL_NAME,
                                     state_to_em_pathway,
                                     previous_state_to_em_pathway,
                                     context_learning_pathway],
-                                   learning_rate=.5,
+                                   learning_rate=learning_rate,
                                    name=model_name)
 
     learning_components = EGO_comp.infer_backpropagation_learning_pathways(ExecutionMode.PyTorch)
@@ -418,7 +432,7 @@ if __name__ == '__main__':
                     call_after_minibatch=print_stuff,
                     optimizations_per_minibatch=1,
                     # minibatch_size=3,
-                    learning_rate=.5
+                    learning_rate=LEARNING_RATE
                   )
         if DISPLAY_MODEL is not None:
             model.show_graph(**DISPLAY_MODEL)

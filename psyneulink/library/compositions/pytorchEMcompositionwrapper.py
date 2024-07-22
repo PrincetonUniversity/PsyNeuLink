@@ -128,7 +128,7 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
                 axis = 0
                 entry_to_store = field_projection.sender.value
                 if concatenation_node is None:
-                    assert (entry_to_store == memory_to_store[i]).all(), \
+                    assert (entry_to_store  == memory_to_store[i]).all(), \
                         f"PROGRAM ERROR: misalignment between inputs and fields for storing them"
             else:
                 # For retrieve projections, get entry to store from memory_to_store (which has inputs to all fields)

@@ -95,9 +95,9 @@ from psyneulink.core.globals.keywords import \
      EXPONENTIAL_FUNCTION, GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION, HAS_INITIALIZERS, HOLLOW_MATRIX, \
     IDENTITY_FUNCTION, IDENTITY_MATRIX, INTERCEPT, LEAK, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, \
     TANH_FUNCTION, MATRIX_KEYWORD_NAMES, MATRIX, MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE_PARAM, NORMALIZE, \
-    OFF, OFFSET, ON, PER_ITEM, PROB, PRODUCT, OUTPUT_TYPE, PROB_INDICATOR, \
+    OFF, OFFSET, ON, OUTPUT_TYPE, PER_ITEM, PROB, PRODUCT, PROB_INDICATOR, \
     RATE, RECEIVER, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM, \
-    TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME)
+    THRESHOLD, TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME)
 from psyneulink.core.globals.parameters import \
     FunctionParameter, Parameter, get_validator_by_function, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import \
@@ -2922,6 +2922,8 @@ class SoftMax(TransferFunction):
     filtered by `output <SoftMax.output>` specification (see `The Softmax function and its derivative
     <http://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/>`_ for a nice discussion).
 
+        .. note::
+           If `variable <SoftMax.variable>` is all zeros, the SoftMax transform returns all zeros.
 
     .. _SoftMax_AdaptGain:
 
@@ -2934,11 +2936,11 @@ class SoftMax(TransferFunction):
     thresholding `variable <SoftMax.variable>` before applying the SoftMax function, or by adapting the `gain
     <SoftMax.gain>` parametrically based on the `variable <SoftMax.variable>`:
 
-    - *THRESHOLD* -- setting the **threshold** argument to a scalar value causes the `variable <SoftMax.variable>` to
-      be thresholded by that value before applying the SoftMax function using the specified `gain <SoftMax.gain>`.
-      Only values above the threshold are considered in the SoftMax function; all others are assigned 0.  This only
-      applies if the **gain** argument is specified as a scalar; if it is specified as *ADAPTIVE*, then the
-      **threshold** argument is ignored.
+    - *threshold* -- setting the **threshold** argument to a scalar value causes the `variable <SoftMax.variable>` to
+      be thresholded by that value before applying the SoftMax function; any elements of `variable <SoftMax.variable>`
+      with an absolute value below the threshold are set to 0; all others are scaled by the specified `gain
+      <SoftMax.gain>` and then passed through the SoftMax function.  This only applies if the **gain** argument is
+      specified as a scalar; if it is specified as *ADAPTIVE*, then the **threshold** argument is ignored.
 
     - *ADAPTIVE* -- setting **gain** argument to *ADAPTIVE* causes it to be dynamically adjusted,
       based on the entropy and length of the variable, to keep the mass of the distribution around the highest values
@@ -3026,10 +3028,10 @@ class SoftMax(TransferFunction):
 
     threshold : scalar or None
         determines whether the `variable <SoftMax.variable>` is thresholded before applying the SoftMax function;
-        if it is a scalar, only elements of `variable <SoftMax.variable>` greater than that value are considered
-        when applying the SoftMax function (which are then scaled by the `gain <SoftMax.gain>` parameter; all other
-        elements are assigned 0.  This only applies if `gain <SoftMax.gain>` is specified as a scalar;  otherwise it
-        is ignored (see `SoftMax_AdaptGain` for details).
+        if it is a scalar, only elements of `variable <SoftMax.variable>` with an absolute value greater than that
+        value are considered when applying the SoftMax function (which are then scaled by the `gain <SoftMax.gain>`
+        parameter; all other elements are assigned 0.  This only applies if `gain <SoftMax.gain>` is specified as a
+        scalar;  otherwise it is ignored (see `SoftMax_AdaptGain` for details).
 
     adapt_scale : scalar
         determined the *scale* parameter using by the `adapt_gain <SoftMax.adapt_gain>` method (see method for details).
@@ -3156,10 +3158,10 @@ class SoftMax(TransferFunction):
         def _validate_threshold(self, threshold):
             if threshold is not None:
                 if is_numeric_scalar(threshold):
-                    if threshold <= 0 or threshold >= 1:
-                        return 'must be a scalar between 0 and 1'
+                    if threshold <= 0:
+                        return 'must be a scalar greater than 0'
                     return None
-                return f'must be a scalar between 0 and 1'
+                return f'must be a scalar greater than 0'
 
         def _validate_adapt_scale(self, adapt_scale):
             if is_numeric_scalar(adapt_scale):
@@ -3253,15 +3255,23 @@ class SoftMax(TransferFunction):
 
         return np.asarray(variable)
 
-    def apply_softmax(self, input_value, gain, output_type):
+    def apply_softmax(self, input_value, gain, threshold, output_type):
+
         # Modulate input_value by gain
         v = gain * input_value
         # Shift by max to avoid extreme values:
         v = v - np.max(v)
         # Exponentiate
         v = np.exp(v)
+        # Threshold if specified:
+        if threshold:
+            v = v * np.where(input_value > threshold, v, 0)
         # Normalize (to sum to 1)
-        sm = v / np.sum(v, axis=0)
+        if not any(v):
+            # If v is all zeros, avoid divde by zero in normalize and return all zeros for softmax
+            sm = v
+        else:
+            sm = v / np.sum(v, axis=0)
 
         # Generate one-hot encoding based on selected output_type
 
@@ -3299,7 +3309,8 @@ class SoftMax(TransferFunction):
         # Assign the params and return the result
         output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
         gain = self._get_current_parameter_value(GAIN, context)
-        if gain == ADAPTIVE:
+        threshold = self._get_current_parameter_value(THRESHOLD, context)
+        if isinstance(gain, str) and gain == ADAPTIVE:
             gain = self.adapt_gain(variable, context)
         per_item = self._get_current_parameter_value(PER_ITEM, context)
         # Compute softmax and assign to sm
@@ -3307,12 +3318,31 @@ class SoftMax(TransferFunction):
         if per_item and len(np.shape(variable)) > 1:
             output = []
             for item in variable:
-                output.append(self.apply_softmax(item, gain, output_type))
+                output.append(self.apply_softmax(item, gain, threshold, output_type))
             output = convert_all_elements_to_np_array(output)
         else:
-            output = self.apply_softmax(variable, gain, output_type)
+            output = self.apply_softmax(variable, gain, threshold, output_type)
 
         return self.convert_output_type(output)
+
+    def adapt_gain(self, v, context)->float:
+        """Compute the softmax gain (inverse temperature) based on the entropy of the distribution of values.
+        Uses base, scale, and entropy_weighting parameters of SoftMax function to compute gain:
+
+        .. math:: gain = scale * (base + (entropy\\_weighting * log(entropy(logistic(v)))))
+        """
+        scale = self._get_current_parameter_value('adapt_scale', context)
+        base = self._get_current_parameter_value('adapt_base', context)
+        entropy_weighting = self._get_current_parameter_value('adapt_entropy_weighting', context)
+        entropy_weighting = np.log(len(v)) * entropy_weighting
+
+        v = np.squeeze(v)
+        gain = scale * (base +
+                        (entropy_weighting *
+                         np.log(
+                             -1 * np.sum((1 / (1 + np.exp(-1 * v))) * np.log(1 / (1 + np.exp(-1 * v)))))))
+        return gain
+
 
     @handle_external_context()
     def derivative(self, input=None, output=None, context=None):
@@ -3539,43 +3569,67 @@ class SoftMax(TransferFunction):
 
     def _gen_pytorch_fct(self, device, context=None):
         gain = self._get_pytorch_fct_param_value('gain', device, context)
-        return lambda x: (torch.softmax(gain * x, 0))
+        threshold = self._get_pytorch_fct_param_value('threshold', device, context)
 
-    def adapt_gain(self, v, context)->float:
-        """Compute the softmax gain (inverse temperature) based on the entropy of the distribution of values.
-        Uses base, scale, and entropy_weighting parameters of SoftMax function to compute gain:
-        .. math::
-          gain = scale * (base + (entropy\_weighting * log(entropy(logistic(v)))))
-        """
-        scale = self._get_current_parameter_value('adapt_scale', context)
-        base = self._get_current_parameter_value('adapt_base', context)
-        entropy_weighting = self._get_current_parameter_value('adapt_entropy_weighting', context)
-        entropy_weighting = np.log(len(v)) * entropy_weighting
+        if isinstance(gain, str) and gain == ADAPTIVE:
+            return lambda x: (torch.softmax(self._gen_pytorch_adapt_gain_fct(device, context)(x) * x, 0))
 
-        v = np.squeeze(v)
-        gain = scale * (base +
-                        (entropy_weighting *
-                         np.log(
-                             -1 * np.sum((1 / (1 + np.exp(-1 * v))) * np.log(1 / (1 + np.exp(-1 * v)))))))
-        return gain
+        elif threshold:
+            # FROM KAMESH:
+            # class thresholded_softmax(nn.Module):
+            #     def __init__(self, dim: Optional[int] = 1, thr=1e-3) -> None:
+            #         super().__init__()
+            #         self.dim = dim
+            #         self.thr = thr
+            #
+            #     def forward(self, _input: Tensor) -> Tensor:
+            #         _mask = torch.abs(_input) > self.thr
+            #         _exp_maxsub = torch.exp( _input - torch.max(_input,self.dim,keepdim=True)[0])
+            #         return _exp_maxsub*_mask/ torch.sum(_exp_maxsub*_mask,dim=self.dim,keepdim=True)
+
+            # dim = 0
+            # return lambda x: (torch.exp(gain * (x - torch.max(x,dim=dim,keepdim=True)[0])) *
+            #                   torch.abs(x) > threshold /
+            #                   torch.sum(gain * (torch.exp(x - torch.max(x, dim=dim, keepdim=True)[0]))
+            #                             * torch.abs(x) > threshold, dim=dim, keepdim=True))
+
+            # MODIFIED 7/10/24 OLD:
+            # # Mask out entries with absolute values below threshold before applying SoftMax
+            # return lambda x: (torch.exp(gain * (x - torch.max(x))) *
+            #                   torch.where(torch.abs(x) > threshold, 1, 0) /
+            #                   torch.sum(gain * torch.exp(x - torch.max(x))
+            #                             * torch.where(torch.abs(x) > threshold, 1, 0)))
+            # # # MODIFIED 7/10/24 NEW:
+            # # Replace nan's (from divides by zero??) with 0's
+            # return lambda x: torch.where(torch.isnan((torch.exp(gain * (x - torch.max(x))) *
+            #                                           torch.where(torch.abs(x) > threshold, 1, 0) /
+            #                                           torch.sum(gain * torch.exp(x - torch.max(x))
+            #                                                     * torch.where(torch.abs(x) > threshold, 1, 0)))), 0,
+            #                              (torch.exp(gain * (x - torch.max(x))) *
+            #                               torch.where(torch.abs(x) > threshold, 1, 0) /
+            #                               torch.sum(gain * torch.exp(x - torch.max(x))
+            #                                         * torch.where(torch.abs(x) > threshold, 1, 0))))
+            # # MODIFIED 7/10/24 NEWER:
+            def pytorch_thresholded_softmax(_input: torch.Tensor) -> torch.Tensor:
+                _mask = torch.abs(_input) > threshold
+                _exp_maxsub = torch.exp( gain * (_input - torch.max(_input,0,keepdim=True)[0]))
+                return _exp_maxsub*_mask/ torch.sum(_exp_maxsub*_mask,0,keepdim=True)
+
+            return pytorch_thresholded_softmax
+            # MODIFIED 7/10/24 END
+
+        else:
+            return lambda x: (torch.softmax(gain * x, 0))
 
     def _gen_pytorch_adapt_gain_fct(self, device, context=None):
-        scale = self._get_pytorch_fct_param_value('scale', device, context)
-        base = self._get_pytorch_fct_param_value('base', device, context)
-        entropy_weighting = self._get_pytorch_fct_param_value('entropy_weighting', device, context)
-
-# 7/10/24 FIX:
-# FROM KAMESH:
-# class thresholded_softmax(nn.Module):
-#     def __init__(self, dim: Optional[int] = 1, thr=1e-3) -> None:
-#         super().__init__()
-#         self.dim = dim
-#         self.thr = thr
-#
-#     def forward(self, _input: Tensor) -> Tensor:
-#         _mask = torch.abs(_input) > self.thr
-#         _exp_maxsub = torch.exp( _input - torch.max(_input,self.dim,keepdim=True)[0])
-#         return _exp_maxsub*_mask/ torch.sum(_exp_maxsub*_mask,dim=self.dim,keepdim=True)
+        scale = self._get_pytorch_fct_param_value('adapt_scale', device, context)
+        base = self._get_pytorch_fct_param_value('adapt_base', device, context)
+        entropy_weighting = self._get_pytorch_fct_param_value('adapt_entropy_weighting', device, context)
+        # v = torch.squeeze(v)
+        return lambda x : scale * (base +
+                                   (entropy_weighting * len(x) *
+                                    torch.log(-1 * torch.sum((1 / (1 + torch.exp(-1 * x)))
+                                                             * torch.log(1 / (1 + torch.exp(-1 * x)))))))
 
 
 # **********************************************************************************************************************

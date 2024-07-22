@@ -570,7 +570,15 @@ class PytorchCompositionWrapper(torch.nn.Module):
         Implemented as method (and includes context as arg) so that it can be overridden
         by subclasses of PytorchCompositionWrapper
         """
+        # MODIFIED 7/10/24 OLD:
         value = node.execute(variable, context)
+        # # MODIFIED 7/10/24 NEW:
+        # if "SOFTMAX" in node.name:
+        #     with torch.no_grad():
+        #         value = node.execute(variable, context)
+        # else:
+        #     value = node.execute(variable, context)
+        # # MODIFIED 7/10/24 END
         assert 'DEBUGGING BREAK POINT'
 
     def detach_all(self):
@@ -703,8 +711,9 @@ class PytorchMechanismWrapper():
 
     def execute(self, variable, context):
         """Execute Mechanism's _gen_pytorch version of function on variable.
+
         Enforce result to be 2d, and assign to self.value"""
-        # MODIFIED 7/24/10 OLD:
+        # # MODIFIED 7/10/24 OLD:
         # if ((isinstance(variable, list) and len(variable) == 1)
         #     or (isinstance(variable, torch.Tensor) and len(variable.squeeze(0).shape) == 1)
         #         or isinstance(self._mechanism.function, LinearCombination)):
@@ -717,7 +726,21 @@ class PytorchMechanismWrapper():
         #     # Make value 2d by creating list of values returned by function for each item in variable
         #     self.value = [self.function(variable[i].squeeze(0)) for i in range(len(variable))]
 
-        # MODIFIED 7/24/10 NEW:
+        # MODIFIED 7/10/24 NEW:
+        # # 7/10/24 FOR TESTING:
+        # from math import isnan
+        # if isinstance(variable, list):
+        #     for t in variable:
+        #         if any(isnan(v) for v in t.detach().numpy().squeeze()):
+        #             assert True
+        # elif isinstance(variable, torch.Tensor):
+        #     if any(isnan(v) for v in variable.detach().numpy().squeeze()):
+        #         assert True
+        # else:
+        #     import numpy as np
+        #     if any(isnan(v) for v in np.atleast_1d(variable.squeeze())):
+        #         assert True
+
         def execute_function(function, variable, fct_has_mult_args=False):
             """Execute _gen_pytorch_fct on variable, enforce result to be 2d, and return it
             If fct_has_mult_args is True, treat each item in variable as an arg to the function
@@ -754,8 +777,8 @@ class PytorchMechanismWrapper():
         #   so that if Python implementation is run it picks up where PyTorch execution left off
         if isinstance(self._mechanism.function, IntegratorFunction):
             self._mechanism.integrator_function.parameters.previous_value._set(self.value, context)
-
         # MODIFIED 7/24/10 END
+
         return self.value
 
     def _gen_llvm_execute(self, ctx, builder, state, params, mech_input, data):

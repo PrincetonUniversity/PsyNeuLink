@@ -488,9 +488,12 @@ An EMComposition is created by calling its constructor, that takes the following
 
 * **softmax_gain** : specifies the gain (inverse temperature) used for softmax normalizing the dot products of queries
   and keys in memory (see `EMComposition_Execution` below).  If a value is specified, that is used.  If the keyword
-  *CONTROL* is (or the value is None), then the `softmax_gain <EMComposition.softmax_gain>` function is used to
-  adaptively set the gain based on the entropy of the dot products, preserving the distribution over non-(or near)
-  zero entries irrespective of how many (near) zero entries there are.
+  *ADAPTIVE* is specified, then the `Softmax.adapt_gain <Softmax.adapt_gain>` function is used to adaptively set the
+  `softmax_gain <EMComposition.softmax_gain>` based on the entropy of the dot products in order to preserve the
+  the distribution over non-(or near) zero entries irrespective of how many (near) zero entries there are (see
+  `SoftMax_AdaptGain` for additional details),  If *CONTROL* is specified, this feature is implemented by creaeting a
+  `ContrlMechanism`, the `ControlSignal` of which is used to modulate the `softmax_gain <EMComposition.softmax_gain>`
+  parameter of the `Softmax` function.  If None is specified, the the default value of the `Softmax` function is used.
 
 .. _EMComposition_Learning:
 
@@ -623,10 +626,13 @@ When the EMComposition is executed, the following sequence of operations occur
 
 * **Softmax normalize matches over fields**. The dot product for each key field is passed from the `match_node
   <EMComposition.match_nodes>` to the corresponding `softmax_node <EMComposition.softmax_nodes>`, which applies
-  a softmax function to normalize the dot products for each key field.  If a numerical value is specified for
-  `softmax_gain <EMComposition.softmax_gain>`, that is used as the gain (inverse temperature) for the softmax function;
-  otherwise, if it is specified as *CONTROL* or None, then the `softmax_gain <EMComposition.softmax_gain>` function is
-  used to adaptively set the gain (see `softmax_gain <EMComposition_Softmax_Gain>` for details).
+  the `SoftMax` function to normalize the dot products for each key field.  If a numerical value is specified for
+  `softmax_gain <EMComposition.softmax_gain>`, that is used as the gain (inverse temperature) for the SoftMax function;
+  if *ADAPTIVE* is specified, then the `SoftMax.adapt_gain` function is used to adaptively set the gain based on
+  the dot products in each field (see `Softmax_AdaptGain` for additional details); if *CONTROL* is specified, then the
+  dot products are monitored by a `ControlMechanism` that uses the `adapt_gain <Softmax.adapt_gain>` method of the
+  `SoftMax` function to modulate the `gain <Softmax.gain>` parameter of the Softmax function; if None is specified,
+  the default value of the `Softmax` function is used as the `gain <Softmax.gain>` parameter.
 
 * **Weight fields**. If `field weights <EMComposition_Field_Weights>` are specified, then the softmax normalized dot
   product for each key field is passed to the corresponding `field_weight_node <EMComposition.field_weight_nodes>`
@@ -943,7 +949,7 @@ from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmecha
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import \
-    (AUTO, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, EM_COMPOSITION, FULL_CONNECTIVITY_MATRIX,
+    (ADAPTIVE, AUTO, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, EM_COMPOSITION, FULL_CONNECTIVITY_MATRIX,
      GAIN, IDENTITY_MATRIX, MULTIPLICATIVE_PARAM, NAME, PARAMS, PRODUCT, PROJECTIONS, RANDOM, SIZE, VARIABLE)
 from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric_scalar
 from psyneulink.core.globals.context import ContextFlags
@@ -1016,7 +1022,7 @@ class EMComposition(AutodiffComposition):
         field_names=None,               \
         concatenate_keys=False,         \
         normalize_memories=True,        \
-        softmax_gain=CONTROL,           \
+        softmax_gain=THRESHOLD,         \
         storage_prob=1.0,               \
         memory_decay_rate=AUTO,         \
         enable_learning=True,           \
@@ -1062,9 +1068,13 @@ class EMComposition(AutodiffComposition):
         specifies whether keys and memories are normalized before computing their dot product (similarity);
         see `Match memories by field <EMComposition_Processing>` for additional details.
 
-    softmax_gain : float : default CONTROL
+    softmax_gain : float, ADAPTIVE or CONTROL : default 1.0
         specifies the temperature used for softmax normalizing the dot products of keys and memories;
         see `Softmax normalize matches over fields <EMComposition_Processing>` for additional details.
+
+    softmax_threshold : float : default .0001
+        specifies the temperature used for softmax normalizing the dot products of keys and memories; assign ``None``
+        to disable;  see `Softmax normalize matches over fields <EMComposition_Processing>` for additional details.
 
     storage_prob : float : default 1.0
         specifies the probability that an item will be stored in `memory <EMComposition.memory>`
@@ -1146,10 +1156,14 @@ class EMComposition(AutodiffComposition):
         determines whether keys and memories are normalized before computing their dot product (similarity);
         see `Match memories by field <EMComposition_Processing>` for additional details.
 
-    softmax_gain : CONTROL
+    softmax_gain : float, ADAPTIVE or CONTROL
         determines gain (inverse temperature) used for softmax normalizing the dot products of keys and memories
         by the `softmax` function of the `softmax_nodes <EMComposition.softmax_nodes>`; see `Softmax normalize matches
         over fields <EMComposition_Processing>` for additional details.
+
+    softmax_threshold : float
+        determines the threshold used to mask out small values in the softmax calculation;  see `_SoftMax_AdaptGain`
+        for details).
 
     storage_prob : float
         determines the probability that an item will be stored in `memory <EMComposition.memory>`
@@ -1365,9 +1379,14 @@ class EMComposition(AutodiffComposition):
                     :type: ``numpy.random.RandomState``
 
                 softmax_gain
-                    see `random_state <EMComposition.softmax_gain>`
-                    :default value: CONTROL
-                    :type: ``float or CONTROL``
+                    see `softmax_gain <EMComposition.softmax_gain>`
+                    :default value: 1.0
+                    :type: ``float, ADAPTIVE or CONTROL``
+
+                softmax_threshold
+                    see `softmax_threshold <EMComposition.softmax_threshold>`
+                    :default value: .001
+                    :type: ``float``
 
                 storage_prob
                     see `storage_prob <EMComposition.storage_prob>`
@@ -1382,7 +1401,8 @@ class EMComposition(AutodiffComposition):
         field_names = Parameter(None, structural=True)
         concatenate_keys = Parameter(False, structural=True)
         normalize_memories = Parameter(True)
-        softmax_gain = Parameter(CONTROL, modulable=True)
+        softmax_gain = Parameter(1.0, modulable=True)
+        softmax_threshold = Parameter(.001, modulable=True, specify_none=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         memory_decay_rate = Parameter(AUTO, modulable=True)
         enable_learning = Parameter(True, structural=True)
@@ -1433,8 +1453,12 @@ class EMComposition(AutodiffComposition):
                 return f"must be a float in the interval [0,1]."
 
         def _validate_softmax_gain(self, softmax_gain):
-            if softmax_gain != CONTROL and not is_numeric_scalar(softmax_gain):
-                return f"must be a scalar or the keyword 'CONTROL'."
+            if not is_numeric_scalar(softmax_gain) and softmax_gain not in {ADAPTIVE, CONTROL}:
+                return f"must be a scalar or one the keywords {ADAPTIVE} or {CONTROL}."
+
+        def _validate_softmax_threshold(self, softmax_threshold):
+            if softmax_threshold is not None and (not is_numeric_scalar(softmax_threshold) or softmax_threshold <= 0):
+                return f"must be a scalar greater than 0."
 
         def _validate_storage_prob(self, storage_prob):
             if not is_numeric_scalar(storage_prob) and not (0 <= storage_prob <= 1):
@@ -1449,7 +1473,8 @@ class EMComposition(AutodiffComposition):
                  field_weights:tuple=None,
                  concatenate_keys:bool=False,
                  normalize_memories:bool=True,
-                 softmax_gain:Union[float, CONTROL]=CONTROL,
+                 softmax_gain:Union[float, ADAPTIVE, CONTROL]=1.0,
+                 softmax_threshold:Optional[float]=.001,
                  storage_prob:float=1.0,
                  memory_decay_rate:Union[float,AUTO]=AUTO,
                  enable_learning:Union[bool,list]=True,
@@ -1480,7 +1505,6 @@ class EMComposition(AutodiffComposition):
 
         self.use_storage_node = use_storage_node
 
-
         # Instantiate Composition -------------------------------------------------------------------------
 
         super().__init__(name=name,
@@ -1490,6 +1514,7 @@ class EMComposition(AutodiffComposition):
                          field_names = field_names,
                          concatenate_keys = concatenate_keys,
                          softmax_gain = softmax_gain,
+                         softmax_threshold = softmax_threshold,
                          storage_prob = storage_prob,
                          memory_decay_rate = memory_decay_rate,
                          normalize_memories = normalize_memories,
@@ -1506,6 +1531,7 @@ class EMComposition(AutodiffComposition):
                                  self.concatenate_keys,
                                  self.normalize_memories,
                                  self.softmax_gain,
+                                 self.softmax_threshold,
                                  self.storage_prob,
                                  self.memory_decay_rate,
                                  self.use_storage_node,
@@ -1827,6 +1853,7 @@ class EMComposition(AutodiffComposition):
                             concatenate_keys,
                             normalize_memories,
                             softmax_gain,
+                            softmax_threshold,
                             storage_prob,
                             memory_decay_rate,
                             use_storage_node,
@@ -1851,7 +1878,10 @@ class EMComposition(AutodiffComposition):
         self.concatenate_keys_node = self._construct_concatenate_keys_node(concatenate_keys)
         self.match_nodes = self._construct_match_nodes(memory_template, memory_capacity,
                                                                    concatenate_keys,normalize_memories)
-        self.softmax_nodes = self._construct_softmax_nodes(memory_capacity, field_weights, softmax_gain)
+        self.softmax_nodes = self._construct_softmax_nodes(memory_capacity,
+                                                           field_weights,
+                                                           softmax_gain,
+                                                           softmax_threshold)
         self.field_weight_nodes = self._construct_field_weight_nodes(field_weights,
                                                                      concatenate_keys,
                                                                      use_gating_for_weighting)
@@ -2051,7 +2081,7 @@ class EMComposition(AutodiffComposition):
 
         return match_nodes
 
-    def _construct_softmax_nodes(self, memory_capacity, field_weights, softmax_gain)->list:
+    def _construct_softmax_nodes(self, memory_capacity, field_weights, softmax_gain, softmax_threshold)->list:
         """Create nodes that, for each key field, compute the softmax over the similarities between the input and the
         memories in the corresponding match_node.
         """
@@ -2064,17 +2094,12 @@ class EMComposition(AutodiffComposition):
             f"PROGRAM ERROR: number of keys ({self.num_keys}) does not match number of " \
             f"non-zero values in field_weights ({len(key_indices)})."
 
-        # If softmax_gain is specified as CONTROL, then set to None for now
-        #    (will be set in _construct_softmax_gain_control_nodes)
-        if softmax_gain == CONTROL:
-            softmax_gain = None
-
         softmax_nodes = [TransferMechanism(input_ports={SIZE:memory_capacity,
                                                         PROJECTIONS: MappingProjection(
                                                             sender=match_node.output_port,
                                                             matrix=IDENTITY_MATRIX,
                                                             name=f'MATCH to SOFTMAX for {self.key_names[i]}')},
-                                           function=SoftMax(gain=softmax_gain),
+                                           function=SoftMax(gain=softmax_gain, threshold=softmax_threshold),
                                            name='SOFTMAX' if len(self.match_nodes) == 1
                                            else f'{self.key_names[i]} [SOFTMAX]')
                          for i, match_node in enumerate(self.match_nodes)]
