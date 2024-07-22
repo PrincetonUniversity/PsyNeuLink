@@ -2150,7 +2150,7 @@ class EMComposition(AutodiffComposition):
                                            function=SoftMax(gain=softmax_gain,
                                                             threshold=softmax_threshold,
                                                             # MODIFIED 7/10/24 NEW:
-                                                            adapt_entropy_weighting=.75),
+                                                            adapt_entropy_weighting=.95),
                                                             # MODIFIED 7/10/24 END
                                            name='SOFTMAX' if len(self.match_nodes) == 1
                                            else f'{self.key_names[i]} [SOFTMAX]')

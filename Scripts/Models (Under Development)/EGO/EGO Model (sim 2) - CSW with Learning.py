@@ -149,7 +149,7 @@ from psyneulink._typing import Union, Literal
 # ======================================================================================================================
 # Settings for running script:
 
-MEMORY_CAPACITY = 5
+MEMORY_CAPACITY = 1000
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL =  (                     # Only one of the following can be uncommented:
     None                             # suppress display of model
@@ -245,7 +245,9 @@ RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec
 # Task environment:
 import Environment
 CURRICULUM_TYPE = 'Blocked'     # 'Blocked' or 'Interleaved'
-INPUTS = Environment.generate_dataset(condition=CURRICULUM_TYPE).xs.numpy()[:5]
+dataset = Environment.generate_dataset(condition=CURRICULUM_TYPE)
+INPUTS = dataset.xs.numpy()
+OUTPUT = dataset.ys.numpy()
 
 #endregion
 
@@ -317,7 +319,10 @@ def construct_model(model_name:str=MODEL_NAME,
                                       previous_state_retrieval_weight,
                                       context_retrieval_weight
                                       ),
-                       normalize_field_weights=False,
+                       # MODIFIED 7/10/24 NEW:
+                       # normalize_field_weights=False,
+                       concatenate_keys=True,
+                       # MODIFIED 7/10/24 END
                        learn_field_weights=False,
                        # enable_learning=True,
                        enable_learning=[True, False, False]
@@ -374,6 +379,7 @@ def construct_model(model_name:str=MODEL_NAME,
                                     previous_state_to_em_pathway,
                                     context_learning_pathway],
                                    learning_rate=learning_rate,
+                                   loss_spec=Loss.BINARY_CROSS_ENTROPY,
                                    name=model_name)
 
     learning_components = EGO_comp.infer_backpropagation_learning_pathways(ExecutionMode.PyTorch)
@@ -416,6 +422,7 @@ if __name__ == '__main__':
             print("Model not yet constructed")
 
     if RUN_MODEL:
+        import timeit
         def print_stuff(**kwargs):
             print(f"\n**************\n BATCH: {kwargs['batch']}\n**************\n")
             print(kwargs)
@@ -425,25 +432,28 @@ if __name__ == '__main__':
                   model.nodes['EM'].nodes['CONTEXT [QUERY]'].parameters.value.get(kwargs['context']))
             print('\nPrediction: \n',
                   model.nodes['PREDICTION'].parameters.value.get(kwargs['context']))
-            print('\nLoss: \n',
-                  model.parameters.tracked_loss._get(kwargs['context']))
+            # print('\nLoss: \n',
+            #       model.parameters.tracked_loss._get(kwargs['context']))
             print('\nProjections from context to EM: \n', model.projections[7].parameters.matrix.get(kwargs['context']))
             print('\nEM Memory: \n', model.nodes['EM'].parameters.memory.get(model.name))
 
         # print("MODEL NOT YET FULLY EXECUTABLE")
         print(f'Running {MODEL_NAME}')
         context = MODEL_NAME
+        start_time = timeit.default_timer()
         model.learn(inputs={STATE_INPUT_LAYER_NAME:INPUTS},
                   # report_output=REPORT_OUTPUT,
                   # report_progress=REPORT_PROGRESS
                   #   call_after_minibatch=print('Projections from context to EM: ',
                   #                              model.projections[7].parameters.matrix.get(context)),
                   #                              # model.projections[7].matrix)
-                    call_after_minibatch=print_stuff,
+                  #   call_after_minibatch=print_stuff,
                     optimizations_per_minibatch=1,
                     # minibatch_size=3,
                     learning_rate=LEARNING_RATE
                   )
+        stop_time = timeit.default_timer()
+        print(f"Elapsed time: {stop_time - start_time}")
         if DISPLAY_MODEL is not None:
             model.show_graph(**DISPLAY_MODEL)
         if PRINT_RESULTS:

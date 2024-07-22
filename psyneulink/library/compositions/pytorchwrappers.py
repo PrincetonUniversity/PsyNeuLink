@@ -741,7 +741,7 @@ class PytorchMechanismWrapper():
         #     if any(isnan(v) for v in np.atleast_1d(variable.squeeze())):
         #         assert True
 
-        def execute_function(function, variable, fct_has_mult_args=False):
+        def execute_function(function, variable, fct_has_mult_args=False, is_combination_fct=False):
             """Execute _gen_pytorch_fct on variable, enforce result to be 2d, and return it
             If fct_has_mult_args is True, treat each item in variable as an arg to the function
             If False, compute function for each item in variable and return results in a list
@@ -754,6 +754,9 @@ class PytorchMechanismWrapper():
                 if isinstance(variable, torch.Tensor):
                     variable = variable.squeeze(0)
                 return function(variable).unsqueeze(0)
+            elif is_combination_fct:
+                # Function combines the elements
+                return function(variable)
             elif fct_has_mult_args:
                 # Assign each element of variable as an arg to the function
                 return function(*variable)
@@ -772,7 +775,9 @@ class PytorchMechanismWrapper():
             # Keep track of previous value in Pytorch node for use in next forward pass
             self.integrator_previous_value = variable
         # Compute main function of mechanism and return result
-        self.value = execute_function(self.function, variable)
+        from psyneulink.core.components.functions.nonstateful.combinationfunctions import CombinationFunction
+        self.value = execute_function(self.function, variable,
+                                      is_combination_fct=isinstance(self._mechanism.function, CombinationFunction))
         # Assign previous_value back to integrator_function of pnl node
         #   so that if Python implementation is run it picks up where PyTorch execution left off
         if isinstance(self._mechanism.function, IntegratorFunction):

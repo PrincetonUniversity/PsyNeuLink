@@ -356,6 +356,7 @@ class Loss(Enum):
     SSE = auto()
     MSE = auto()
     CROSS_ENTROPY = auto()
+    BINARY_CROSS_ENTROPY = auto()
     KL_DIV = auto()
     NLL = auto()
     POISSON_NLL = auto()
