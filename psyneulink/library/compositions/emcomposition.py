@@ -2099,7 +2099,11 @@ class EMComposition(AutodiffComposition):
                                                             sender=match_node.output_port,
                                                             matrix=IDENTITY_MATRIX,
                                                             name=f'MATCH to SOFTMAX for {self.key_names[i]}')},
-                                           function=SoftMax(gain=softmax_gain, threshold=softmax_threshold),
+                                           function=SoftMax(gain=softmax_gain,
+                                                            threshold=softmax_threshold,
+                                                            # MODIFIED 7/10/24 NEW:
+                                                            adapt_entropy_weighting=.75),
+                                                            # MODIFIED 7/10/24 END
                                            name='SOFTMAX' if len(self.match_nodes) == 1
                                            else f'{self.key_names[i]} [SOFTMAX]')
                          for i, match_node in enumerate(self.match_nodes)]

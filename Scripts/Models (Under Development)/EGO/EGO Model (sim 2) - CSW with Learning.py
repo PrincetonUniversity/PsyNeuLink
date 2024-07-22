@@ -142,6 +142,11 @@ torch.manual_seed(0)
 from psyneulink import *
 from psyneulink._typing import Union, Literal
 
+
+#region   SCRIPT SETTINGS
+# ======================================================================================================================
+#                                                   SCRIPT SETTINGS
+# ======================================================================================================================
 # Settings for running script:
 
 MEMORY_CAPACITY = 5
@@ -166,11 +171,11 @@ REPORT_OUTPUT = ReportOutput.OFF     # Sets console output during run [ReportOut
 REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
 PRINT_RESULTS = True                  # print model.results after execution
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
-
+#endregion
 
 #region   PARAMETERS
 # ======================================================================================================================
-#                                                   PARAMETERS
+#                                                   MODEL PARAMETERS
 # ======================================================================================================================
 
 # PyTorch Version Parameters:
@@ -179,14 +184,14 @@ model_params = dict(
     previous_state_d = 11, # length of state vector
     context_d = 11, # length of context vector
     integration_rate = .69, # rate at which state is integrated into new context
-    state_weight = .5, # weight of the state used during memory retrieval
-    context_weight = .5, # weight of the context used during memory retrieval
+    state_weight = 1, # weight of the state used during memory retrieval
+    context_weight = 1, # weight of the context used during memory retrieval
     # softmax_temperature = None, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
     softmax_temperature = .1, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
     # softmax_temperature = ADAPTIVE, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
     # softmax_temperature = CONTROL, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
-    # softmax_threshold = .001, # threshold used to mask out small values in softmax
     softmax_threshold = None, # threshold used to mask out small values in softmax
+    # softmax_threshold = .001, # threshold used to mask out small values in softmax
     learning_rate = .5
 )
 
@@ -219,15 +224,14 @@ INTEGRATION_RATE = model_params['integration_rate']  # rate at which state is in
 
 # EM retrieval
 STATE_RETRIEVAL_WEIGHT = 0
-PREVIOUS_STATE_RETRIEVAL_WEIGHT = model_params['state_weight']     # weight of state field in retrieval from EM
-CONTEXT_RETRIEVAL_WEIGHT = model_params['context_weight'] # weight of context field in retrieval from EM
-if is_numeric_scalar(model_params['softmax_temperature']):
-    RETRIEVAL_SOFTMAX_GAIN = 1/model_params['softmax_temperature']    # gain on softmax retrieval function
-else:
-    RETRIEVAL_SOFTMAX_GAIN = model_params['softmax_temperature']    # gain on softmax retrieval function
-RETRIEVAL_SOFTMAX_THRESHOLD = model_params['softmax_threshold']
+PREVIOUS_STATE_RETRIEVAL_WEIGHT = model_params['state_weight']  # weight of state field in retrieval from EM
+CONTEXT_RETRIEVAL_WEIGHT = model_params['context_weight']       # weight of context field in retrieval from EM
+if is_numeric_scalar(model_params['softmax_temperature']):      # translate to gain of softmax retrieval function
+    RETRIEVAL_SOFTMAX_GAIN = 1/model_params['softmax_temperature']
+else:                                                           # pass along ADAPTIVE or CONTROL spec
+    RETRIEVAL_SOFTMAX_GAIN = model_params['softmax_temperature']
+RETRIEVAL_SOFTMAX_THRESHOLD = model_params['softmax_threshold'] # threshold used to mask out small values in softmax
 LEARNING_RATE = model_params['learning_rate']
-
 
 RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projections
 
@@ -412,13 +416,18 @@ if __name__ == '__main__':
 
     if RUN_MODEL:
         def print_stuff(**kwargs):
+            print(f"\n**************\n BATCH: {kwargs['batch']}\n**************\n")
             print(kwargs)
-            print('Context internal: \n', model.nodes['CONTEXT'].parameters.value.get(kwargs['context']))
-            print('Context for EM: \n',
+            print('\nContext internal: \n', model.nodes['CONTEXT'].function.parameters.value.get(kwargs['context']))
+            print('\nContext hidden: \n', model.nodes['CONTEXT'].parameters.value.get(kwargs['context']))
+            print('\nContext for EM: \n',
                   model.nodes['EM'].nodes['CONTEXT [QUERY]'].parameters.value.get(kwargs['context']))
-            print('Prediction: \n',
+            print('\nPrediction: \n',
                   model.nodes['PREDICTION'].parameters.value.get(kwargs['context']))
-            print('Projections from context to EM: \n', model.projections[7].parameters.matrix.get(kwargs['context']))
+            print('\nLoss: \n',
+                  model.parameters.tracked_loss._get(kwargs['context']))
+            print('\nProjections from context to EM: \n', model.projections[7].parameters.matrix.get(kwargs['context']))
+            print('\nEM Memory: \n', model.nodes['EM'].parameters.memory.get(model.name))
 
         # print("MODEL NOT YET FULLY EXECUTABLE")
         print(f'Running {MODEL_NAME}')

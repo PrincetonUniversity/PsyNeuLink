@@ -890,6 +890,12 @@ class AutodiffComposition(Composition):
 
         tracked_loss = self.parameters.tracked_loss._get(context=context) / int(self.parameters.tracked_loss_count._get(context=context))
         tracked_loss.backward(retain_graph=not self.force_no_retain_graph)
+        # # MODIFIED 7/10/24 NEW:
+        # for proj_wrapper in pytorch_rep.projection_wrappers:
+        #     if any(torch.isnan(v) for v in proj_wrapper.matrix.detach().flatten()):
+        #         print(f"FOUND NAN IN {proj_wrapper.name}")
+        #     proj_wrapper.matrix = torch.where(torch.isnan(proj_wrapper.matrix),0,proj_wrapper.matrix)
+        # # MODIFIED 7/10/24 END
         self.parameters.losses._get(context=context).append(tracked_loss.detach().cpu().numpy()[0])
         self.parameters.tracked_loss._set(torch.zeros(1, device=self.device).double(), context=context, skip_history=True, skip_log=True)
         self.parameters.tracked_loss_count._set(np.array(0), context=context, skip_history=True, skip_log=True)
