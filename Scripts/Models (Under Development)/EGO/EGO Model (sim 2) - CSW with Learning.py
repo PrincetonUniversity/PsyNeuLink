@@ -317,6 +317,7 @@ def construct_model(model_name:str=MODEL_NAME,
                                       previous_state_retrieval_weight,
                                       context_retrieval_weight
                                       ),
+                       normalize_field_weights=False,
                        learn_field_weights=False,
                        # enable_learning=True,
                        enable_learning=[True, False, False]

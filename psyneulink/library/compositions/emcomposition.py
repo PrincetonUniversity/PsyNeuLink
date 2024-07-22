@@ -429,13 +429,25 @@ An EMComposition is created by calling its constructor, that takes the following
     * *None* (the default): all fields except the last are treated as keys, and are weighted equally for retrieval,
       while the last field is treated as a value field;
 
-    * *single entry*: its value is ignored, and all fields are treated as keys (i.e., used for
-      retrieval) and equally weighted for retrieval;
+    * *single entry*: all fields are treated as keys (i.e., used for retrieval) and weighted equally for retrieval.
+      if `normalize_field_weights <EMComposition_Normalize_Field_Weights>` is True, the value is ignored and all
+      of keys are weighted by 1 / number of keys (i.e., normalized), whereas if `normalize_field_weights
+      <EMComposition_Normalize_Field_Weights>` is False, then the value specified is used to weight the retrieval of
+      every keys.
 
     * *multiple non-zero entries*: If all entries are identical, the value is ignored and the corresponding keys
       are weighted equally for retrieval; if the non-zero entries are non-identical, they are used to weight the
       corresponding fields during retrieval (see `Weight fields <EMComposition_Processing>`).  In either case,
       the remaining fields (with zero weights) are treated as value fields.
+
+.. _EMComposition_Normalize_Field_Weights:
+
+* **normalize_field_weights**: specifies whether the `field_weights <EMComposition.field_weights>` are normalized
+    or their raw values are used.  If True, the `field_weights <EMComposition.field_weights>` are normalized so that
+    they sum to 1.0, and are used to weight the corresponding fields during retrieval (see `Weight fields
+    <EMComposition_Processing>`). If False, the raw values of the `field_weights <EMComposition.field_weights>` are
+    used to weight (i.e., multiply) the retrieved value of each field.  This setting is ignored if **field_weights**
+    is None or `concatenate_keys <EMComposition_Concatenate_Keys>` is in effect.
 
 .. _EMComposition_Field_Names:
 
@@ -451,7 +463,7 @@ An EMComposition is created by calling its constructor, that takes the following
   `normalize_memories <EMComposition.normalize_memories>` is set to False. Setting concatenate_keys to True in either
   of those cases issues a warning, and the setting is ignored. If the key `field_weights <EMComposition.field_weights>`
   (i.e., all non-zero values) are all equal *and* ``normalize_memories`` is set to True, then setting
-  ``concatenate_keys`` then a concatenate_keys_node <EMComposition.concatenate_keys_node>` is created that
+  ``concatenate_keys`` causes a concatenate_keys_node <EMComposition.concatenate_keys_node>` to be created that
   receives input from all of the `query_input_nodes <EMComposition.query_input_nodes>` and passes them as a single
   vector to the `mactch_node <EMComposition.match_nodes>`.
 
@@ -1019,6 +1031,7 @@ class EMComposition(AutodiffComposition):
         memory_fill=0,                  \
         memory_capacity=None,           \
         field_weights=None,             \
+        normalize_field_weights=True,   \
         field_names=None,               \
         concatenate_keys=False,         \
         normalize_memories=True,        \
@@ -1033,7 +1046,7 @@ class EMComposition(AutodiffComposition):
         )
 
     Subclass of `AutodiffComposition` that implements the functions of an `EpisodicMemoryMechanism` in a
-    differentiable form and in which it `field_weights <EMComposition.field_weights>` parameter can be learned.
+    differentiable form and in which it's `field_weights <EMComposition.field_weights>` parameter can be learned.
 
     Takes only the following arguments, all of which are optional
 
@@ -1055,6 +1068,11 @@ class EMComposition(AutodiffComposition):
     field_weights : tuple : default (1,0)
         specifies the relative weight assigned to each key when matching an item in memory;
         see `field weights <EMComposition_Field_Weights>` for additional details.
+
+    normalize_field_weights : bool : default True
+        specifies whether the **fields_weights** are normalized over the number of keys, or used as absolute
+        weighting values when retrieving an item from memory; see `normalize_field weights
+        <EMComposition_Normalize_Field_Weights>` for additional details.
 
     field_names : list : default None
         specifies the optional names assigned to each field in the memory_template;
@@ -1143,6 +1161,11 @@ class EMComposition(AutodiffComposition):
         `memory <EMComposition.memory>` for retrieval, and which are used as "values" (zero values), that are stored
         and retrieved from memory, but not used in the match process (see `Match memories by field
         <EMComposition_Processing>`. see `field_weights <EMComposition_Field_Weights>` additional details.
+
+    normalize_field_weights : bool : default True
+        determines whether `fields_weights <EMComposition.field_weights>` are normalized over the number of keys, or
+        used as absolute weighting values when retrieving an item from memory; see `normalize_field weights
+        <EMComposition_Normalize_Field_Weights>` for additional details.
 
     field_names : list[str]
         determines which names that can be used to label fields in `memory <EMComposition.memory>`;  see
@@ -1366,6 +1389,12 @@ class EMComposition(AutodiffComposition):
                     :default value: np.array([[0],[0]])
                     :type: ``np.ndarray``
 
+                normalize_field_weights
+                    see `normalize_field_weights <EMComposition.normalize_field_weights>`
+
+                    :default value: True
+                    :type: ``bool``
+
                 normalize_memories
                     see `normalize_memories <EMComposition.normalize_memories>`
 
@@ -1398,6 +1427,7 @@ class EMComposition(AutodiffComposition):
         memory_template = Parameter([[0],[0]], structural=True, valid_types=(tuple, list, np.ndarray), read_only=True)
         memory_capacity = Parameter(1000, structural=True)
         field_weights = Parameter(None)
+        normalize_field_weights = Parameter(True)
         field_names = Parameter(None, structural=True)
         concatenate_keys = Parameter(False, structural=True)
         normalize_memories = Parameter(True)
@@ -1435,6 +1465,10 @@ class EMComposition(AutodiffComposition):
                 if any([field_weight < 0 for field_weight in field_weights]):
                     return f"must be all be positive values."
 
+        def _validate_normalize_field_weights(self, normalize_field_weights):
+            if not isinstance(normalize_field_weights, bool):
+                    return f"must be all be a boolean value."
+
         def _validate_field_names(self, field_names):
             if field_names and not all(isinstance(item, str) for item in field_names):
                 return f"must be a list of strings."
@@ -1471,6 +1505,7 @@ class EMComposition(AutodiffComposition):
                  memory_fill:Union[int, float, tuple, RANDOM]=0,
                  field_names:Optional[list]=None,
                  field_weights:tuple=None,
+                 normalize_field_weights:bool=True,
                  concatenate_keys:bool=False,
                  normalize_memories:bool=True,
                  softmax_gain:Union[float, ADAPTIVE, CONTROL]=1.0,
@@ -1495,6 +1530,7 @@ class EMComposition(AutodiffComposition):
                                                                        memory_fill,
                                                                        field_weights)
         field_weights, field_names, concatenate_keys = self._parse_fields(field_weights,
+                                                                          normalize_field_weights,
                                                                           field_names,
                                                                           concatenate_keys,
                                                                           normalize_memories,
@@ -1757,6 +1793,7 @@ class EMComposition(AutodiffComposition):
 
     def _parse_fields(self,
                       field_weights,
+                      normalize_field_weights,
                       field_names,
                       concatenate_keys,
                       normalize_memories,
@@ -1774,11 +1811,22 @@ class EMComposition(AutodiffComposition):
                 field_weights = [1] * num_fields
                 field_weights[-1] = 0
         field_weights = np.atleast_1d(field_weights)
-        # Fill out and normalize all field_weights
+        # Fill out field_weights, normalizing if specified:
+
         if len(field_weights) == 1:
-            parsed_field_weights = np.repeat(field_weights / np.sum(field_weights), len(self.entry_template))
+            if normalize_field_weights:
+                parsed_field_weights = np.repeat(field_weights / np.sum(field_weights), len(self.entry_template))
+            else:
+                parsed_field_weights = np.repeat(field_weights[0], len(self.entry_template))
         else:
-            parsed_field_weights = np.array(field_weights) / np.sum(field_weights)
+            # # MODIFIED 7/10/24 OLD:
+            # parsed_field_weights = np.array(field_weights) / np.sum(field_weights)
+            # MODIFIED 7/10/24 NEW:
+            if normalize_field_weights:
+                parsed_field_weights = np.array(field_weights) / np.sum(field_weights)
+            else:
+                parsed_field_weights = field_weights
+            # MODIFIED 7/10/24 END
 
         # Memory structure Parameters
         parsed_field_names = field_names.copy() if field_names is not None else None
