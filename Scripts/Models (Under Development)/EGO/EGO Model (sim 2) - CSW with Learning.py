@@ -151,23 +151,23 @@ from psyneulink._typing import Union, Literal
 
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL =  (                     # Only one of the following can be uncommented:
-    None                             # suppress display of model
-    # {                                  # show simple visual display of model
-    # 'show_pytorch': True,            # show pytorch graph of model
-    #  'show_learning': True
+    # None                             # suppress display of model
+    {                                  # show simple visual display of model
+    'show_pytorch': True,            # show pytorch graph of model
+     'show_learning': True
     # # 'show_projections_not_in_composition': True,
     # # 'exclude_from_gradient_calc_style': 'dashed'# show target mechanisms for learning
     # # {'show_node_structure': True     # show detailed view of node structures and projections
-    # }
+    }
 )
-RUN_MODEL = True                       # True => run the model
-# RUN_MODEL = False                      # False => don't run the model
+# RUN_MODEL = True,                       # True => run the model
+RUN_MODEL = False                      # False => don't run the model
 # EXECUTION_MODE = ExecutionMode.Python
 EXECUTION_MODE = ExecutionMode.PyTorch
 # REPORT_OUTPUT = ReportOutput.FULL  # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_OUTPUT = ReportOutput.OFF     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_PROGRESS = ReportProgress.OFF # Sets console progress bar during run
-PRINT_RESULTS = False                # print model.results to console after execution
+# PRINT_RESULTS = False                # print model.results to console after execution
 SAVE_RESULTS = True                  # save model.results to disk
 PLOT_RESULTS = True                  # plot results (PREDICTIONS) vs. TARGETS
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
@@ -217,7 +217,7 @@ model_params = dict(
     memory_capacity = TOTAL_NUM_STIMS, # number of entries in EM memory
     # memory_init = (0,.0001),  # Initialize memory with random values in interval
     memory_init = None,  # Initialize with zeros
-    concatenate_keys = True,
+    concatenate_keys = False,
 
     # Processing
     integration_rate = .69, # rate at which state is integrated into new context
