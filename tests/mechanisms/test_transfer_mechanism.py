@@ -348,6 +348,11 @@ class TestTransferMechanismFunctions:
         result = T.execute([[1.0, 2.0], [3.0, 4.0]])
         np.testing.assert_allclose(result, [[2.0, 4.0], [6.0, 8.0]])
 
+    def test_udf_without_wrapper(self):
+        T = pnl.TransferMechanism(input_shapes=(2, 2), function=lambda x, context: x * 3)  # noqa: U100
+        result = T.execute([[1.0, 2.0], [3.0, 4.0]])
+        np.testing.assert_allclose(result, [[3.0, 6.0], [9.0, 12.0]])
+
     def tests_invalid_udf(self):
         def sum_all_elements(variable):
             return sum(np.array(variable))
