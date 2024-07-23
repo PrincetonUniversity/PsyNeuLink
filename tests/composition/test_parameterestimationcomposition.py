@@ -260,34 +260,19 @@ def test_parameter_optimization_ddm(func_mode, opt_method, optuna_kwargs, result
     # If we are testing an instantiated optuna sampler, make sure the warning is generated about
     # random seeds
     if isinstance(opt_method, optuna.samplers.RandomSampler):
-        with pytest.warns(UserWarning) as record:
+        with pytest.warns(UserWarning, match="initial_seed on PEC is not None, but instantiated optuna sampler is being used."):
             pec.run(inputs=inputs_dict)
 
-        # Search through the warnings to make sure the one we are looking for is there
-        found_warning = False
-        for warning in record:
-            if "initial_seed on PEC is not None, but instantiated optuna sampler is being used." in str(warning.message):
-                found_warning = True
-
-        if not found_warning:
-            raise AssertionError("Did not find warning about random seed")
     elif isinstance(opt_method, type) and issubclass(opt_method, optuna.samplers.BaseSampler):
-        with pytest.warns(UserWarning) as record:
+        with pytest.warns(UserWarning, match="Overriding seed passed to optuna sampler with seed passed to PEC."):
             pec.run(inputs=inputs_dict)
 
-        # Search through the warnings to make sure the one we are looking for is there
-        found_warning = False
-        for warning in record:
-            if "Overriding seed passed to optuna sampler with seed passed to PEC." in str(warning.message):
-                found_warning = True
-
-        if not found_warning:
-            raise AssertionError("Did not find warning about overriding seed passed")
     else:
         pec.run(inputs={comp: trial_inputs})
 
     if result is not None:
         np.testing.assert_allclose(list(pec.optimized_parameter_values.values()), result)
+
 
 def test_parameter_estimation_ddm_cond(func_mode):
 
