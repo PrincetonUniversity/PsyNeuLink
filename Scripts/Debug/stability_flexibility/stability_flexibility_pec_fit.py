@@ -91,6 +91,7 @@ fit_parameters = {
     ("non_decision_time", decisionMaker): np.linspace(0.1, 0.4, 1000),  # Threshold
 }
 
+import optuna
 pec = pnl.ParameterEstimationComposition(
     name="pec",
     nodes=comp,
@@ -100,7 +101,7 @@ pec = pnl.ParameterEstimationComposition(
         responseGate.output_ports[0],
     ],
     data=data_to_fit,
-    optimization_function=pnl.PECOptimizationFunction(method='differential_evolution', vectorized=False),
+    optimization_function=pnl.PECOptimizationFunction(method=optuna.samplers.CmaEsSampler(seed=0), max_iterations=1000),
     num_estimates=num_estimates,
 )
 

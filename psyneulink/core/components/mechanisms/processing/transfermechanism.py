@@ -888,8 +888,8 @@ class TransferError(MechanismError):
     pass
 
 
-def _integrator_mode_setter(value, owning_component=None, context=None):
-    if value:
+def _integrator_mode_setter(value, owning_component=None, context=None, *, compilation_sync=False):
+    if value and not compilation_sync:
         if not owning_component.parameters.integrator_mode._get(context):
             # when first creating parameters, integrator_function is not
             # instantiated yet
@@ -908,7 +908,8 @@ def _integrator_mode_setter(value, owning_component=None, context=None):
                 elif owning_component.on_resume_integrator_mode == RESET:
                     owning_component.reset(force=True, context=context)
 
-    owning_component.parameters.has_initializers._set(value, context)
+    if not compilation_sync:
+        owning_component.parameters.has_initializers._set(value, context)
 
     return value
 
@@ -1533,13 +1534,20 @@ class TransferMechanism(ProcessingMechanism_Base):
         return current_input
 
     def _gen_llvm_is_finished_cond(self, ctx, builder, m_base_params, m_state, m_in):
-        current = ctx.get_param_or_state_ptr(builder, self, "value", state_struct_ptr=m_state)
 
         m_params, builder = self._gen_llvm_param_ports_for_obj(
                 self, m_base_params, ctx, builder, m_base_params, m_state, m_in)
+
         threshold_ptr = ctx.get_param_or_state_ptr(builder, self, "termination_threshold", param_struct_ptr=m_params)
+        current_mech_value_ptr = ctx.get_param_or_state_ptr(builder, self, "value", state_struct_ptr=m_state)
+        measure_ptrs = ctx.get_param_or_state_ptr(builder,
+                                                  self,
+                                                  "termination_measure",
+                                                  param_struct_ptr=m_base_params,
+                                                  state_struct_ptr=m_state)
 
         if isinstance(threshold_ptr.type.pointee, pnlvm.ir.LiteralStructType):
+
             # Threshold is not defined, return the old value of finished flag
             assert len(threshold_ptr.type.pointee) == 0
             is_finished_ptr = ctx.get_param_or_state_ptr(builder, self, "is_finished_flag", state_struct_ptr=m_state)
@@ -1548,27 +1556,34 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # If modulated, termination threshold is single element array.
         # Otherwise, it is scalar
-        threshold = pnlvm.helpers.load_extract_scalar_array_one(builder,
-                                                                threshold_ptr)
+        threshold = pnlvm.helpers.load_extract_scalar_array_one(builder, threshold_ptr)
 
-        cmp_val_ptr = builder.alloca(threshold.type, name="is_finished_value")
-        if self.termination_measure is max:
+        # Extract value to compare with threshold above
+        cmp_val_ptr = builder.alloca(threshold.type, name="is_finished_threshold")
+
+        is_in_params = "termination_measure" in self.llvm_param_ids
+        is_in_state = "termination_measure" in self.llvm_state_ids
+
+        if not is_in_params and not is_in_state:
+
+            # This can be any builtint function, but currently only max() is supported
+            assert measure_ptrs is None
+            assert self.termination_measure is max
             assert self._termination_measure_num_items_expected == 1
+
             # Get inside of the structure
-            val = builder.gep(current, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            first_val = builder.load(builder.gep(val, [ctx.int32_ty(0), ctx.int32_ty(0)]))
+            value = builder.gep(current_mech_value_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            first_val = builder.load(builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(0)]))
             builder.store(first_val, cmp_val_ptr)
-            with pnlvm.helpers.array_ptr_loop(builder, val, "max_loop") as (b, idx):
-                test_val = b.load(b.gep(val, [ctx.int32_ty(0), idx]))
+            with pnlvm.helpers.array_ptr_loop(builder, value, "max_loop") as (b, idx):
+                test_val = b.load(b.gep(value, [ctx.int32_ty(0), idx]))
                 max_val = b.load(cmp_val_ptr)
+
                 cond = b.fcmp_ordered(">=", test_val, max_val)
                 max_val = b.select(cond, test_val, max_val)
                 b.store(max_val, cmp_val_ptr)
-            assert "termination_measure" not in self.llvm_param_ids, "'termination_measure' in {}: {}".format(self.name, pnlvm.helpers.get_param_ptr(builder, self, m_base_params, "termination_measure").type.pointee)
 
-        elif isinstance(self.termination_measure, Function):
-            prev_val_ptr = ctx.get_param_or_state_ptr(builder, self, "value", state_struct_ptr=m_state, history=1)
-            prev_val = builder.load(prev_val_ptr)
+        elif is_in_params and is_in_state:
 
             expected = np.empty_like([self.defaults.value[0], self.defaults.value[0]])
             got = np.empty_like(self.termination_measure.defaults.variable)
@@ -1576,36 +1591,34 @@ class TransferMechanism(ProcessingMechanism_Base):
                 warnings.warn("Shape mismatch: Termination measure input: "
                               "{} should be {}.".format(self.termination_measure.defaults.variable, expected.shape),
                               pnlvm.PNLCompilerWarning)
-                # FIXME: HACK the distance function is not initialized
+
+                # FIXME: HACK: the distance function is not initialized
                 self.termination_measure.defaults.variable = expected
 
             func = ctx.import_llvm_function(self.termination_measure)
-            func_params, func_state = ctx.get_param_or_state_ptr(builder,
-                                                                 self,
-                                                                 "termination_measure",
-                                                                 param_struct_ptr=m_base_params,
-                                                                 state_struct_ptr=m_state)
-            func_in = builder.alloca(func.args[2].type.pointee, name="is_finished_func_in")
-            # Populate input
-            func_in_current_ptr = builder.gep(func_in, [ctx.int32_ty(0),
-                                                        ctx.int32_ty(0)])
-            current_ptr = builder.gep(current, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            builder.store(builder.load(current_ptr), func_in_current_ptr)
+            func_params, func_state = measure_ptrs
+            func_in = builder.alloca(func.args[2].type.pointee, name="termination_func_in")
 
-            func_in_prev_ptr = builder.gep(func_in, [ctx.int32_ty(0),
-                                                     ctx.int32_ty(1)])
-            builder.store(builder.extract_value(prev_val, 0), func_in_prev_ptr)
+            # Populate input
+            func_in_current_ptr = builder.gep(func_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            func_in_prev_ptr = builder.gep(func_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
+
+            # Remove second dimension from 'value' and 'previous_value'
+            current_ptr = builder.gep(current_mech_value_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            prev_mech_value_ptr = ctx.get_param_or_state_ptr(builder, self, "value", state_struct_ptr=m_state, history=1)
+            prev_ptr = builder.gep(prev_mech_value_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            builder.store(builder.load(current_ptr), func_in_current_ptr)
+            builder.store(builder.load(prev_ptr), func_in_prev_ptr)
 
             builder.call(func, [func_params, func_state, func_in, cmp_val_ptr])
 
-        elif isinstance(self.termination_measure, TimeScale) or isinstance(self.termination_measure, np.ndarray) or self.termination_measure in {ts.value for ts in TimeScale}:
-            if isinstance(self.termination_measure, TimeScale):
-                measure = self.termination_measure.value
-            else:
-                measure = self.termination_measure
+        elif is_in_params and not is_in_state:
+
             num_executions_array_ptr = ctx.get_param_or_state_ptr(builder, self, "num_executions", state_struct_ptr=m_state)
-            elem_ptr = builder.gep(num_executions_array_ptr, [ctx.int32_ty(0), ctx.int32_ty(measure)])
-            elem_val = builder.sitofp(builder.load(elem_ptr), threshold.type)
+            index = pnlvm.helpers.load_extract_scalar_array_one(builder, measure_ptrs)
+            elem_ptr = builder.gep(num_executions_array_ptr, [ctx.int32_ty(0), index])
+            elem_val = builder.sitofp(builder.load(elem_ptr), cmp_val_ptr.type.pointee)
             builder.store(elem_val, cmp_val_ptr)
 
         else:
@@ -1780,13 +1793,14 @@ class TransferMechanism(ProcessingMechanism_Base):
             # return True
             return self.parameters.is_finished_flag._get(context)
 
-        assert self.parameters.value.history_min_length + 1 >= self._termination_measure_num_items_expected,\
-            "History of 'value' is not guaranteed enough entries for termination_mesasure"
+        assert self.parameters.value.history_min_length + 1 >= self._termination_measure_num_items_expected, \
+            "History of 'value' is not guaranteed enough entries for termination_measure"
+
         measure = self.termination_measure
         value = self.parameters.value._get(context)
 
         if self._termination_measure_num_items_expected==0:
-            status = self.parameters.num_executions._get(context)._get_by_time_scale(self.termination_measure)
+            status = self.parameters.num_executions._get(context)._get_by_time_scale(TimeScale(self.termination_measure))
 
         elif self._termination_measure_num_items_expected==1:
             # Squeeze to collapse 2d array with single item

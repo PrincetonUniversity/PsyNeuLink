@@ -715,15 +715,11 @@ def test_DDM_threshold_modulation_integrator(comp_mode):
                             (10.0, 10.0, [[10.0], [29.0]]),
                             (100.0, 100.0, [[100.0], [76.0]]),
                         ])
+# 3/5/2021 - DDM' default behaviour now requires resetting stateful
+# functions after each trial. This is not supported in LLVM execution mode.
+# See: https://github.com/PrincetonUniversity/PsyNeuLink/issues/1935
+@pytest.mark.usefixtures("comp_mode_no_llvm")
 def test_ddm_is_finished(comp_mode, noise, threshold, expected_results):
-
-    # 3/5/2021 - DDM' default behaviour now requires resetting stateful
-    # functions after each trial. This is not supported in LLVM execution mode.
-    # See: https://github.com/PrincetonUniversity/PsyNeuLink/issues/1935
-    if comp_mode == pnl.ExecutionMode.LLVM:
-        pytest.xfail(reason="DDM' default behaviour now requires resetting stateful functions after each trial. "
-                            "This is not supported in LLVM execution mode. "
-                            "See: https://github.com/PrincetonUniversity/PsyNeuLink/issues/1935")
 
     comp = Composition()
     ddm = DDM(function=DriftDiffusionIntegrator(threshold=threshold, noise=np.sqrt(noise), time_step_size=1.0),
@@ -737,17 +733,13 @@ def test_ddm_is_finished(comp_mode, noise, threshold, expected_results):
 @pytest.mark.composition
 @pytest.mark.parametrize("until_finished", ["until_finished", "not_until_finished"])
 @pytest.mark.parametrize("threshold_mod", ["threshold_modulated", "threshold_not_modulated"])
+# 3/5/2021 - DDM' default behaviour now requires resetting stateful
+# functions after each trial. This is not supported in LLVM execution mode.
+# See: https://github.com/PrincetonUniversity/PsyNeuLink/issues/1935
+# Moreover, evaluating scheduler conditions in Python is not supported
+# for compiled execution
+@pytest.mark.usefixtures("comp_mode_no_llvm")
 def test_ddm_is_finished_with_dependency(comp_mode, until_finished, threshold_mod):
-
-    # 3/5/2021 - DDM' default behaviour now requires resetting stateful
-    # functions after each trial. This is not supported in LLVM execution mode.
-    # See: https://github.com/PrincetonUniversity/PsyNeuLink/issues/1935
-    # Moreover, evaluating scheduler conditions in Python is not supported
-    # for compiled execution
-    if comp_mode == pnl.ExecutionMode.LLVM:
-        pytest.xfail(reason="DDM' default behaviour now requires resetting stateful functions after each trial. "
-                            "This is not supported in LLVM execution mode. "
-                            "See: https://github.com/PrincetonUniversity/PsyNeuLink/issues/1935")
 
     comp = Composition()
     ddm = DDM(function=DriftDiffusionIntegrator(),
@@ -831,18 +823,14 @@ def test_sequence_of_DDM_mechs_in_Composition_Pathway():
 
 @pytest.mark.composition
 @pytest.mark.ddm_mechanism
+# 3/5/2021 - DDM' default behaviour now requires resetting stateful
+# functions after each trial. This is not supported in LLVM execution mode.
+# See: https://github.com/PrincetonUniversity/PsyNeuLink/issues/1935
+@pytest.mark.usefixtures("comp_mode_no_llvm")
 def test_DDMMechanism_LCA_equivalent(comp_mode):
 
-    # 3/5/2021 - DDM' default behaviour now requires resetting stateful
-    # functions after each trial. This is not supported in LLVM execution mode.
-    # See: https://github.com/PrincetonUniversity/PsyNeuLink/issues/1935
-    if comp_mode == pnl.ExecutionMode.LLVM:
-        pytest.xfail(reason="DDM' default behaviour now requires resetting stateful functions after each trial. "
-                            "This is not supported in LLVM execution mode. "
-                            "See: https://github.com/PrincetonUniversity/PsyNeuLink/issues/1935")
-
-
-    ddm = DDM(default_variable=[0], function=DriftDiffusionIntegrator(rate=1, time_step_size=0.1),
+    ddm = DDM(default_variable=[0],
+              function=DriftDiffusionIntegrator(rate=1, time_step_size=0.1),
               execute_until_finished=False)
     comp2 = Composition()
     comp2.add_node(ddm)

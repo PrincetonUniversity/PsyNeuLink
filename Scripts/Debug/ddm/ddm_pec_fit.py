@@ -11,7 +11,7 @@ set_global_seed(0)
 # High-level parameters the impact performance of the test
 num_trials = 50
 time_step_size = 0.01
-num_estimates = 40000
+num_estimates = 4000
 
 ddm_params = dict(
     starting_value=0.0,
@@ -73,6 +73,8 @@ fit_parameters = {
 }
 
 #%%
+import optuna
+
 pec = pnl.ParameterEstimationComposition(
     name="pec",
     nodes=[comp],
@@ -82,7 +84,7 @@ pec = pnl.ParameterEstimationComposition(
         decision.output_ports[pnl.RESPONSE_TIME],
     ],
     data=data_to_fit,
-    optimization_function="differential_evolution",
+    optimization_function=pnl.PECOptimizationFunction(method=optuna.samplers.CmaEsSampler(seed=0), max_iterations=1000),
     num_estimates=num_estimates,
     initial_seed=42,
 )

@@ -3379,7 +3379,8 @@ class OptimizationControlMechanism(ControlMechanism):
             if "evaluate_type_objective" in tags:
                 out_idx = idx
             elif "evaluate_type_all_results" in tags:
-                out_idx = builder.mul(idx, builder.load(num_trials_per_estimate_ptr))
+                num_trials_per_estimate = builder.load(num_trials_per_estimate_ptr)
+                out_idx = builder.mul(idx, builder.trunc(num_trials_per_estimate, idx.type))
             else:
                 assert False, "Evaluation type not detected in tags, or unknown: {}".format(tags)
 
@@ -3497,13 +3498,16 @@ class OptimizationControlMechanism(ControlMechanism):
         num_trials_per_estimate = builder.load(num_trials_per_estimate_ptr, "num_trials_per_estimate")
 
         # if num_trials_per_estimate is 0, run 1 trial
-        param_is_zero = builder.icmp_unsigned("==", num_trials_per_estimate,
-                                                    ctx.int32_ty(0))
-        num_sims = builder.select(param_is_zero, ctx.int32_ty(1),
-                                  num_trials_per_estimate, "corrected_trials per_estimate")
+        num_trials_param_is_zero = builder.icmp_unsigned("==",
+                                                         num_trials_per_estimate,
+                                                         num_trials_per_estimate.type(0))
+        num_trials_per_estimate_fixed = builder.select(num_trials_param_is_zero,
+                                                       num_trials_per_estimate.type(1),
+                                                       num_trials_per_estimate,
+                                                       "corrected_num_trials_per_estimate")
 
-        num_trials = builder.alloca(ctx.int32_ty, name="num_sim_trials")
-        builder.store(num_sims, num_trials)
+        num_trials = builder.alloca(sim_f.args[5].type.pointee, name="num_sim_trials")
+        builder.store(builder.trunc(num_trials_per_estimate_fixed, num_trials.type.pointee), num_trials)
 
         # Simulations don't store output unless we run parameter fitting
         if 'evaluate_type_objective' in tags:
@@ -3513,14 +3517,13 @@ class OptimizationControlMechanism(ControlMechanism):
         else:
             assert False, "Evaluation type not detected in tags, or unknown: {}".format(tags)
 
-        builder.call(sim_f, [comp_state, comp_params, comp_data, comp_input,
-                             comp_output, num_trials, num_inputs])
+        builder.call(sim_f, [comp_state, comp_params, comp_data, comp_input, comp_output, num_trials, num_inputs])
 
         if "evaluate_type_objective" in tags:
             # Extract objective mechanism value
 
-            assert self.objective_mechanism, f"objective_mechanism on OptimizationControlMechanism cannot be None " \
-                                             f"in compiled mode"
+            assert self.objective_mechanism, \
+                "objective_mechanism on OptimizationControlMechanism cannot be None in 'evaluate_type_objective'"
 
             obj_idx = self.agent_rep._get_node_index(self.objective_mechanism)
             # Mechanisms' results are stored in the first substructure

@@ -8,7 +8,6 @@
 
 # ********************************************* Binary Execution Wrappers **************************************************************
 
-from collections import Counter
 import concurrent.futures
 import copy
 import ctypes
@@ -18,6 +17,7 @@ import os
 import sys
 import time
 from typing import Callable, Optional
+import weakref
 
 
 from psyneulink.core import llvm as pnlvm
@@ -84,8 +84,8 @@ class Execution:
         self._debug_env = debug_env
 
     def _get_compilation_param(self, name, init_method, arg):
-        struct = getattr(self, name, None)
-        if struct is None:
+        saved = getattr(self, name, None)
+        if saved is None:
             struct_ty = self._bin_func.byref_arg_types[arg]
             init_f = getattr(self._obj, init_method)
             if len(self._execution_contexts) > 1:
@@ -100,7 +100,12 @@ class Execution:
             struct = struct_ty(*initializer)
             struct_end = time.time()
 
-            setattr(self, name, struct)
+            numpy_struct = np.ctypeslib.as_array(struct)
+            assert numpy_struct.nbytes == ctypes.sizeof(struct), \
+                "Size mismatch ({}), numpy: {} vs. ctypes:{}".format(name, numpy_struct.nbytes, ctypes.sizeof(struct))
+
+            saved = (struct, numpy_struct)
+            setattr(self, name, saved)
 
             if "time_stat" in self._debug_env:
                 print("Time to get initializer for struct:", name,
@@ -114,33 +119,38 @@ class Execution:
                       "for", self._obj.name)
 
             if len(self._execution_contexts) == 1:
+
                 if name == '_state':
                     self._copy_params_to_pnl(self._execution_contexts[0],
                                              self._obj,
-                                             self._state_struct,
+                                             numpy_struct,
                                              "llvm_state_ids")
 
                 elif name == '_param':
                     self._copy_params_to_pnl(self._execution_contexts[0],
                                              self._obj,
-                                             self._param_struct,
+                                             numpy_struct,
                                              "llvm_param_ids")
 
-        return struct
+        return saved
 
     def _copy_params_to_pnl(self, context, component, params, ids:str):
 
-        for idx, attribute in enumerate(getattr(component, ids)):
-            compiled_attribute_param = getattr(params, params._fields_[idx][0])
-            compiled_attribute_param_ctype = params._fields_[idx][1]
+        assert len(params.dtype.names) == len(getattr(component, ids))
+
+        for numpy_name, attribute in zip(params.dtype.names, getattr(component, ids)):
+
+            numpy_field = params[numpy_name]
+            assert numpy_field.base is params or numpy_field.base is params.base
 
             def _enumerate_recurse(elements):
-                for element_id, element in enumerate(elements):
-                    element_params = getattr(compiled_attribute_param,
-                                             compiled_attribute_param._fields_[element_id][0])
+                for numpy_element_name, element in zip(numpy_field.dtype.names, elements):
+                    numpy_element = numpy_field[numpy_element_name]
+                    assert numpy_element.base is numpy_field.base
+
                     self._copy_params_to_pnl(context=context,
                                              component=element,
-                                             params=element_params,
+                                             params=numpy_element,
                                              ids=ids)
 
             # Handle custom compiled-only structures by name
@@ -187,7 +197,7 @@ class Execution:
                 if hasattr(pnl_value, 'parameters'):
                     self._copy_params_to_pnl(context=context,
                                              component=pnl_value,
-                                             params=compiled_attribute_param,
+                                             params=numpy_field,
                                              ids=ids)
 
                 elif attribute == "input_ports" or attribute == "output_ports":
@@ -197,10 +207,10 @@ class Execution:
                 else:
 
                     # Replace empty structures with None
-                    if ctypes.sizeof(compiled_attribute_param_ctype) == 0:
+                    if numpy_field.nbytes == 0:
                         value = None
                     else:
-                        value = np.ctypeslib.as_array(compiled_attribute_param)
+                        value = numpy_field
 
                         # Stateful parameters include history, get the most recent value
                         if "state" in ids:
@@ -229,86 +239,46 @@ class CUDAExecution(Execution):
         self._gpu_buffers = {}
         for b in buffers:
             self._gpu_buffers["_" + b] = None
-        self._uploaded_bytes = Counter()
-        self._downloaded_bytes = Counter()
-
-    def __del__(self):
-        if "stat" in self._debug_env:
-            try:
-                name = self._bin_func.name
-            except AttributeError:
-                name = self._composition.name
-
-            for k, v in self._uploaded_bytes.items():
-                print("{} CUDA uploaded `{}': {}".format(name, k, _pretty_size(v)))
-            if len(self._uploaded_bytes) > 1:
-                print("{} CUDA uploaded `total': {}".format(name, _pretty_size(sum(self._uploaded_bytes.values()))))
-            for k, v in self._downloaded_bytes.items():
-                print("{} CUDA downloaded `{}': {}".format(name, k, _pretty_size(v)))
-            if len(self._downloaded_bytes) > 1:
-                print("{} CUDA downloaded `total': {}".format(name, _pretty_size(sum(self._downloaded_bytes.values()))))
 
     @property
     def _bin_func_multirun(self):
         # CUDA uses the same function for single and multi run
         return self._bin_func
 
-    def upload_ctype(self, data, name='other'):
-        self._uploaded_bytes[name] += ctypes.sizeof(data)
-        if ctypes.sizeof(data) == 0:
-            # 0-sized structures fail to upload
-            # provide a small device buffer instead
-            return jit_engine.pycuda.driver.mem_alloc(4)
-        return jit_engine.pycuda.driver.to_device(bytes(data))
-
-    def download_to(self, dst, source, name='other', *, move=False):
-        bounce = self.download_ctype(source, type(dst), name)
-        ctypes.memmove(ctypes.addressof(dst), ctypes.addressof(bounce), ctypes.sizeof(dst))
-        if move:
-            for k, v in self._gpu_buffers.items():
-                if v is source:
-                    self._gpu_buffers[k] = None
-
-    def download_ctype(self, source, ty, name='other'):
-        self._downloaded_bytes[name] += ctypes.sizeof(ty)
-        out_buf = bytearray(ctypes.sizeof(ty))
-        jit_engine.pycuda.driver.memcpy_dtoh(out_buf, source)
-        return ty.from_buffer(out_buf)
-
-    def __get_cuda_buffer(self, struct_name):
+    def __get_cuda_arg(self, struct_name, arg_handler):
         gpu_buffer = self._gpu_buffers[struct_name]
 
-        # Param struct needs to be reuploaded every time because the values
-        # might have changed.
-        if gpu_buffer is None or struct_name == "_param_struct":
-            # Set private attribute to a new buffer
-            gpu_buffer = self.upload_ctype(getattr(self, struct_name), struct_name)
+        np_struct = getattr(self, struct_name)[1]
+        if gpu_buffer is None or gpu_buffer.array is not np_struct:
+
+            # 0-sized structures fail to upload use a small device buffer instead
+            gpu_buffer = arg_handler(np_struct) if np_struct.nbytes > 0 else jit_engine.pycuda.driver.mem_alloc(8)
+
             self._gpu_buffers[struct_name] = gpu_buffer
 
         return gpu_buffer
 
     @property
     def _cuda_param_struct(self):
-        return self.__get_cuda_buffer("_param_struct")
+        return self.__get_cuda_arg("_param_struct", jit_engine.pycuda.driver.In)
 
     @property
     def _cuda_state_struct(self):
-        return self.__get_cuda_buffer("_state_struct")
+        return self.__get_cuda_arg("_state_struct", jit_engine.pycuda.driver.InOut)
 
     @property
     def _cuda_data_struct(self):
-        return self.__get_cuda_buffer("_data_struct")
+        return self.__get_cuda_arg("_data_struct", jit_engine.pycuda.driver.InOut)
 
     @property
     def _cuda_conditions(self):
-        return self.__get_cuda_buffer("_conditions")
+        return self.__get_cuda_arg("_conditions", jit_engine.pycuda.driver.InOut)
 
     @property
     def _cuda_out(self):
         gpu_buffer = self._gpu_buffers["_out"]
         if gpu_buffer is None:
-            size = ctypes.sizeof(self._ct_vo)
-            gpu_buffer = jit_engine.pycuda.driver.mem_alloc(size)
+            gpu_buffer = jit_engine.pycuda.driver.Out(np.ctypeslib.as_array(self._ct_vo))
             self._gpu_buffers["_out"] = gpu_buffer
 
         return gpu_buffer
@@ -317,16 +287,13 @@ class CUDAExecution(Execution):
         # Create input argument
         new_var = np.asfarray(variable, dtype=self._vi_dty)
         data_in = jit_engine.pycuda.driver.In(new_var)
-        self._uploaded_bytes['input'] += new_var.nbytes
 
         self._bin_func.cuda_call(self._cuda_param_struct,
                                  self._cuda_state_struct,
-                                 data_in, self._cuda_out,
+                                 data_in,
+                                 self._cuda_out,
                                  threads=len(self._execution_contexts))
 
-        # Copy the result from the device
-        self.download_to(self._ct_vo, self._cuda_out, 'result')
-        self.download_to(self._state_struct, self._cuda_state_struct, 'state', move=True)
         return _convert_ctype_to_python(self._ct_vo)
 
 
@@ -378,13 +345,13 @@ class FuncExecution(CUDAExecution):
         if len(self._execution_contexts) > 1:
             # wrap_call casts the arguments so we only need contiguous data
             # layout
-            self._bin_multirun.wrap_call(self._param_struct,
-                                         self._state_struct,
-                                         ct_vi, self._ct_vo, self._ct_len)
+            self._bin_multirun.wrap_call(self._param_struct[0],
+                                         self._state_struct[0],
+                                         ct_vi,
+                                         self._ct_vo,
+                                         self._ct_len)
         else:
-            self._bin_func(ctypes.byref(self._param_struct),
-                           ctypes.byref(self._state_struct),
-                           ct_vi, ctypes.byref(self._ct_vo))
+            self._bin_func(self._param_struct[0], self._state_struct[0], ct_vi, self._ct_vo)
 
         return _convert_ctype_to_python(self._ct_vo)
 
@@ -402,6 +369,8 @@ class MechExecution(FuncExecution):
 
 
 class CompExecution(CUDAExecution):
+
+    active_executions = weakref.WeakSet()
 
     def __init__(self, composition, execution_ids=[None], *, additional_tags=frozenset()):
         super().__init__(buffers=['state_struct', 'param_struct', 'data_struct', 'conditions'])
@@ -421,6 +390,11 @@ class CompExecution(CUDAExecution):
 
         if len(execution_ids) > 1:
             self._ct_len = ctypes.c_int(len(execution_ids))
+
+        self.active_executions.add(self)
+
+    def __del__(self):
+        self.active_executions.discard(self)
 
     @staticmethod
     def get(composition, context, additional_tags=frozenset()):
@@ -473,16 +447,17 @@ class CompExecution(CUDAExecution):
         if self.__conds is None:
             gen = helpers.ConditionGenerator(None, self._composition)
             if len(self._execution_contexts) > 1:
-                cond_type = self._bin_func_multirun.byref_arg_types[4] * len(self._execution_contexts)
+                cond_ctype = self._bin_func_multirun.byref_arg_types[4] * len(self._execution_contexts)
                 cond_initializer = (gen.get_condition_initializer() for _ in self._execution_contexts)
             else:
-                cond_type = self._bin_func.byref_arg_types[4]
+                cond_ctype = self._bin_func.byref_arg_types[4]
                 cond_initializer = gen.get_condition_initializer()
 
-            self.__conds = cond_type(*cond_initializer)
+            c_conds = cond_ctype(*cond_initializer)
+            self.__conds = (c_conds, np.ctypeslib.as_array(c_conds))
             if "stat" in self._debug_env:
                 print("Instantiated condition struct ( size:" ,
-                      _pretty_size(ctypes.sizeof(cond_type)), ")",
+                      _pretty_size(ctypes.sizeof(cond_ctype)), ")",
                       "for", self._composition.name)
 
         return self.__conds
@@ -532,17 +507,17 @@ class CompExecution(CUDAExecution):
         return self.extract_node_struct(node, self.__frozen_vals)
 
     def extract_node_output(self, node):
-        return self.extract_node_struct(node, self._data_struct)
+        return self.extract_node_struct(node, self._data_struct[0])
 
     def extract_node_state(self, node):
-        return self.extract_node_struct(node, self._state_struct)
+        return self.extract_node_struct(node, self._state_struct[0])
 
     def extract_node_params(self, node):
-        return self.extract_node_struct(node, self._param_struct)
+        return self.extract_node_struct(node, self._param_struct[0])
 
     def insert_node_output(self, node, data):
-        my_field_name = self._data_struct._fields_[0][0]
-        my_res_struct = getattr(self._data_struct, my_field_name)
+        my_field_name = self._data_struct[0]._fields_[0][0]
+        my_res_struct = getattr(self._data_struct[0], my_field_name)
         index = self._composition._get_node_index(node)
         node_field_name = my_res_struct._fields_[index][0]
         setattr(my_res_struct, node_field_name, _tupleize(data))
@@ -550,23 +525,24 @@ class CompExecution(CUDAExecution):
     def _get_input_struct(self, inputs):
         # Either node or composition execute.
         # All execute functions expect inputs to be 3rd param.
-        c_input = self._bin_func.byref_arg_types[2]
+        c_input_type = self._bin_func.byref_arg_types[2]
 
         # Read provided input data and parse into an array (generator)
         if len(self._execution_contexts) > 1:
             assert len(self._execution_contexts) == len(inputs)
-            c_input = c_input * len(self._execution_contexts)
+            c_input_type = c_input_type * len(self._execution_contexts)
             input_data = (([x] for x in self._composition._build_variable_for_input_CIM(inp)) for inp in inputs)
         else:
             input_data = ([x] for x in self._composition._build_variable_for_input_CIM(inputs))
 
         if "stat" in self._debug_env:
-            print("Input struct size:", _pretty_size(ctypes.sizeof(c_input)),
+            print("Input struct size:", _pretty_size(ctypes.sizeof(c_input_type)),
                   "for", self._composition.name)
-        return c_input(*_tupleize(input_data))
+        c_input = c_input_type(*_tupleize(input_data))
+        return c_input, np.ctypeslib.as_array(c_input)
 
     def freeze_values(self):
-        self.__frozen_vals = copy.deepcopy(self._data_struct)
+        self.__frozen_vals = copy.deepcopy(self._data_struct[0])
 
     def execute_node(self, node, inputs=None, context=None):
         # We need to reconstruct the input dictionary here if it was not provided.
@@ -586,7 +562,7 @@ class CompExecution(CUDAExecution):
         # Set bin node to make sure self._*struct works as expected
         self._set_bin_node(node)
         if inputs is not None:
-            inputs = self._get_input_struct(inputs)
+            inputs = self._get_input_struct(inputs)[0]
 
         assert inputs is not None or node is not self._composition.input_CIM
 
@@ -594,8 +570,11 @@ class CompExecution(CUDAExecution):
         if node is not self._composition.input_CIM and self.__frozen_vals is None:
             self.freeze_values()
 
-        self._bin_func(self._state_struct, self._param_struct,
-                       inputs, self.__frozen_vals, self._data_struct)
+        self._bin_func(self._state_struct[0],
+                       self._param_struct[0],
+                       inputs,
+                       self.__frozen_vals,
+                       self._data_struct[0])
 
         if "comp_node_debug" in self._debug_env:
             print("RAN: {}. State: {}".format(node, self.extract_node_state(node)))
@@ -623,29 +602,28 @@ class CompExecution(CUDAExecution):
         # NOTE: Make sure that input struct generation is inlined.
         # We need the binary function to be setup for it to work correctly.
         if len(self._execution_contexts) > 1:
-            self._bin_exec_multi_func.wrap_call(self._state_struct,
-                                                self._param_struct,
-                                                self._get_input_struct(inputs),
-                                                self._data_struct,
-                                                self._conditions, self._ct_len)
+            self._bin_exec_multi_func.wrap_call(self._state_struct[0],
+                                                self._param_struct[0],
+                                                self._get_input_struct(inputs)[0],
+                                                self._data_struct[0],
+                                                self._conditions[0],
+                                                self._ct_len)
         else:
-            self._bin_exec_func(self._state_struct, self._param_struct,
-                                self._get_input_struct(inputs),
-                                self._data_struct, self._conditions)
+            self._bin_exec_func(self._state_struct[0],
+                                self._param_struct[0],
+                                self._get_input_struct(inputs)[0],
+                                self._data_struct[0],
+                                self._conditions[0])
 
     def cuda_execute(self, inputs):
         # NOTE: Make sure that input struct generation is inlined.
         # We need the binary function to be setup for it to work correctly.
         self._bin_exec_func.cuda_call(self._cuda_state_struct,
                                       self._cuda_param_struct,
-                                      self.upload_ctype(self._get_input_struct(inputs), 'input'),
+                                      jit_engine.pycuda.driver.In(self._get_input_struct(inputs)[1]),
                                       self._cuda_data_struct,
                                       self._cuda_conditions,
                                       threads=len(self._execution_contexts))
-
-        # Copy the data structs from the device
-        self.download_to(self._data_struct, self._cuda_data_struct, 'data', move=True)
-        self.download_to(self._state_struct, self._cuda_state_struct, 'state', move=True)
 
     # Methods used to accelerate "Run"
     def _get_run_input_struct(self, inputs, num_input_sets, arg=3):
@@ -653,18 +631,20 @@ class CompExecution(CUDAExecution):
         bin_f = self._bin_run_func if arg == 3 else self._bin_func
 
         input_type = bin_f.byref_arg_types[arg]
-        c_input = (input_type * num_input_sets) * len(self._execution_contexts)
+        c_input_type = (input_type * num_input_sets) * len(self._execution_contexts)
         if len(self._execution_contexts) == 1:
             inputs = [inputs]
 
         assert len(inputs) == len(self._execution_contexts)
         # Extract input for each trial and execution id
         run_inputs = ((([x] for x in self._composition._build_variable_for_input_CIM({k:v[i] for k,v in inp.items()})) for i in range(num_input_sets)) for inp in inputs)
-        c_inputs = c_input(*_tupleize(run_inputs))
+        c_inputs = c_input_type(*_tupleize(run_inputs))
         if "stat" in self._debug_env:
             print("Instantiated struct: input ( size:" ,
-                  _pretty_size(ctypes.sizeof(c_inputs)), ")",
-                  "for", self._obj.name)
+                  _pretty_size(ctypes.sizeof(c_inputs)),
+                  ")",
+                  "for",
+                  self._obj.name)
 
         return c_inputs
 
@@ -675,8 +655,8 @@ class CompExecution(CUDAExecution):
         run_inputs = _tupleize(run_inputs)
         num_input_sets = len(run_inputs)
         runs = num_input_sets if runs == 0 or runs == sys.maxsize else runs
-        c_input = self._bin_run_func.byref_arg_types[3] * num_input_sets
-        return c_input(*run_inputs), runs
+        c_input_type = self._bin_run_func.byref_arg_types[3] * num_input_sets
+        return c_input_type(*run_inputs), runs
 
     @property
     def _bin_run_func(self):
@@ -704,6 +684,7 @@ class CompExecution(CUDAExecution):
         ct_vo = self._bin_run_func.byref_arg_types[4] * runs
         if len(self._execution_contexts) > 1:
             ct_vo = ct_vo * len(self._execution_contexts)
+
         outputs = ct_vo()
 
         if "stat" in self._debug_env:
@@ -712,17 +693,30 @@ class CompExecution(CUDAExecution):
             print("Output struct size:", _pretty_size(ctypes.sizeof(outputs)),
                   "for", self._composition.name)
 
-        runs_count = ctypes.c_int(runs)
-        input_count = ctypes.c_int(num_input_sets)
+        runs_count = ctypes.c_uint(runs)
+        input_count = ctypes.c_uint(num_input_sets)
         if len(self._execution_contexts) > 1:
-            self._bin_run_multi_func.wrap_call(self._state_struct, self._param_struct,
-                                               self._data_struct, inputs, outputs,
-                                               runs_count, input_count, self._ct_len)
+            self._bin_run_multi_func.wrap_call(self._state_struct[0],
+                                               self._param_struct[0],
+                                               self._data_struct[0],
+                                               inputs,
+                                               outputs,
+                                               runs_count,
+                                               input_count,
+                                               self._ct_len)
+
             return _convert_ctype_to_python(outputs)
         else:
-            self._bin_run_func.wrap_call(self._state_struct, self._param_struct,
-                                         self._data_struct, inputs, outputs,
-                                         runs_count, input_count)
+            # This is only needed for non-generator inputs that are wrapped in an extra context dimension
+            inputs = ctypes.cast(inputs, self._bin_run_func.c_func.argtypes[3])
+
+            self._bin_run_func(self._state_struct[0],
+                               self._param_struct[0],
+                               self._data_struct[0],
+                               inputs,
+                               outputs,
+                               runs_count,
+                               input_count)
 
             # Extract only #trials elements in case the run exited early
             assert runs_count.value <= runs, "Composition ran more times than allowed!"
@@ -731,47 +725,38 @@ class CompExecution(CUDAExecution):
     def cuda_run(self, inputs, runs, num_input_sets):
         # Create input buffer
         if isgenerator(inputs):
-            inputs, runs = self._get_generator_run_input_struct(inputs, runs)
+            ct_inputs, runs = self._get_generator_run_input_struct(inputs, runs)
             assert num_input_sets == 0 or num_input_sets == sys.maxsize
-            num_input_sets = len(inputs)
+            num_input_sets = len(ct_inputs)
         else:
-            inputs = self._get_run_input_struct(inputs, num_input_sets)
-        data_in = self.upload_ctype(inputs, 'input')
+            ct_inputs = self._get_run_input_struct(inputs, num_input_sets)
 
         # Create output buffer
         output_type = (self._bin_run_func.byref_arg_types[4] * runs)
         if len(self._execution_contexts) > 1:
             output_type = output_type * len(self._execution_contexts)
-        output_size = ctypes.sizeof(output_type)
-        data_out = jit_engine.pycuda.driver.mem_alloc(output_size)
+
+        ct_out = output_type()
 
         # number of trials argument
-        runs_np = np.full(len(self._execution_contexts), runs, dtype=np.int32)
-        runs_count = jit_engine.pycuda.driver.InOut(runs_np)
-        self._uploaded_bytes['input'] += runs_np.nbytes
-        self._downloaded_bytes['input'] += runs_np.nbytes
-
-        # input_count argument
-        input_count = jit_engine.pycuda.driver.In(np.int32(num_input_sets))
-        self._uploaded_bytes['input'] += 4
+        np_runs = np.full(len(self._execution_contexts), runs, dtype=np.int32)
 
         self._bin_run_func.cuda_call(self._cuda_state_struct,
                                      self._cuda_param_struct,
                                      self._cuda_data_struct,
-                                     data_in, data_out, runs_count, input_count,
+                                     jit_engine.pycuda.driver.In(np.ctypeslib.as_array(ct_inputs)), # input
+                                     jit_engine.pycuda.driver.Out(np.ctypeslib.as_array(ct_out)),   # output
+                                     jit_engine.pycuda.driver.InOut(np_runs),                       # runs
+                                     jit_engine.pycuda.driver.In(np.int32(num_input_sets)),         # number of inputs
                                      threads=len(self._execution_contexts))
 
-        # Copy the data struct from the device
-        self.download_to(self._data_struct, self._cuda_data_struct, 'data', move=True)
-        self.download_to(self._state_struct, self._cuda_state_struct, 'state', move=True)
+        assert all(np_runs <= runs), "Composition ran more times than allowed: {}".format(runs)
 
-        ct_out = self.download_ctype(data_out, output_type, 'result')
         if len(self._execution_contexts) > 1:
             return _convert_ctype_to_python(ct_out)
         else:
             # Extract only #trials elements in case the run exited early
-            assert runs_np[0] <= runs, "Composition ran more times than allowed!"
-            return _convert_ctype_to_python(ct_out)[0:runs_np[0]]
+            return _convert_ctype_to_python(ct_out)[0:np_runs[0]]
 
     def _prepare_evaluate(self, inputs, num_input_sets, num_evaluations, all_results:bool):
         ocm = self._composition.controller
@@ -789,9 +774,9 @@ class CompExecution(CUDAExecution):
 
         # Directly initialized structures
         assert ocm.agent_rep is self._composition
-        ct_comp_param = self._get_compilation_param('_eval_param', '_get_param_initializer', 0)
-        ct_comp_state = self._get_compilation_param('_eval_state', '_get_state_initializer', 1)
-        ct_comp_data = self._get_compilation_param('_eval_data', '_get_data_initializer', 6)
+        comp_params = self._get_compilation_param('_eval_param', '_get_param_initializer', 0)
+        comp_state = self._get_compilation_param('_eval_state', '_get_state_initializer', 1)
+        comp_data = self._get_compilation_param('_eval_data', '_get_data_initializer', 6)
 
         # Construct input variable, the 5th parameter of the evaluate function
         ct_inputs = self._get_run_input_struct(inputs, num_input_sets, 5)
@@ -813,28 +798,28 @@ class CompExecution(CUDAExecution):
                   "for", self._obj.name)
 
         # return variable as numpy array. pycuda can use it directly
-        return ct_comp_param, ct_comp_state, ct_comp_data, ct_inputs, out_ty, ct_num_inputs
+        return comp_params, comp_state, comp_data, ct_inputs, out_ty, ct_num_inputs
 
     def cuda_evaluate(self, inputs, num_input_sets, num_evaluations, all_results:bool=False):
-        ct_comp_param, ct_comp_state, ct_comp_data, ct_inputs, out_ty, ct_num_inputs = \
+        comp_params, comp_state, comp_data, ct_inputs, out_ty, _ = \
             self._prepare_evaluate(inputs, num_input_sets, num_evaluations, all_results)
 
-        # Output is allocated on device, but we need the ctype (out_ty).
-        cuda_args = (self.upload_ctype(ct_comp_param, 'params'),
-                     self.upload_ctype(ct_comp_state, 'state'),
-                     jit_engine.pycuda.driver.mem_alloc(ctypes.sizeof(out_ty)),
-                     self.upload_ctype(ct_inputs, 'input'),
-                     self.upload_ctype(ct_comp_data, 'data'),
-                     self.upload_ctype(ct_num_inputs, 'input'),
+        ct_results = out_ty()
+
+        cuda_args = (jit_engine.pycuda.driver.In(comp_params[1]),
+                     jit_engine.pycuda.driver.InOut(comp_state[1]),
+                     jit_engine.pycuda.driver.Out(np.ctypeslib.as_array(ct_results)),   # results
+                     jit_engine.pycuda.driver.In(np.ctypeslib.as_array(ct_inputs)),     # inputs
+                     jit_engine.pycuda.driver.InOut(comp_data[1]),                      # composition data
+                     jit_engine.pycuda.driver.In(np.int32(num_input_sets)),             # number of inputs
                     )
 
         self.__bin_func.cuda_call(*cuda_args, threads=int(num_evaluations))
-        ct_results = self.download_ctype(cuda_args[2], out_ty, 'result')
 
         return ct_results
 
     def thread_evaluate(self, inputs, num_input_sets, num_evaluations, all_results:bool=False):
-        ct_param, ct_state, ct_data, ct_inputs, out_ty, ct_num_inputs = \
+        comp_params, comp_state, comp_data, ct_inputs, out_ty, ct_num_inputs = \
             self._prepare_evaluate(inputs, num_input_sets, num_evaluations, all_results)
 
         ct_results = out_ty()
@@ -846,17 +831,19 @@ class CompExecution(CUDAExecution):
 
             # Create input and result typed casts once, they are the same
             # for every submitted job.
-            input_param = ctypes.cast(ctypes.byref(ct_inputs), self.__bin_func.c_func.argtypes[5])
+            input_param = ctypes.cast(ct_inputs, self.__bin_func.c_func.argtypes[5])
             results_param = ctypes.cast(ct_results, self.__bin_func.c_func.argtypes[4])
 
             # There are 7 arguments to evaluate_alloc_range:
             # comp_param, comp_state, from, to, results, input, comp_data
-            results = [ex.submit(self.__bin_func, ct_param, ct_state,
+            results = [ex.submit(self.__bin_func,
+                                 comp_params[0],
+                                 comp_state[0],
                                  int(i * evals_per_job),
                                  min((i + 1) * evals_per_job, num_evaluations),
                                  results_param,
                                  input_param,
-                                 ct_data,
+                                 comp_data[0],
                                  ct_num_inputs)
                        for i in range(jobs)]
 
