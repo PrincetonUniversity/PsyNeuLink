@@ -160,14 +160,14 @@ DISPLAY_MODEL =  (                     # Only one of the following can be uncomm
     # # {'show_node_structure': True     # show detailed view of node structures and projections
     }
 )
-# RUN_MODEL = True,                       # True => run the model
-RUN_MODEL = False                      # False => don't run the model
+RUN_MODEL = True,                       # True => run the model
+# RUN_MODEL = False                      # False => don't run the model
 # EXECUTION_MODE = ExecutionMode.Python
 EXECUTION_MODE = ExecutionMode.PyTorch
 # REPORT_OUTPUT = ReportOutput.FULL  # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_OUTPUT = ReportOutput.OFF     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_PROGRESS = ReportProgress.OFF # Sets console progress bar during run
-# PRINT_RESULTS = False                # print model.results to console after execution
+PRINT_RESULTS = False                # print model.results to console after execution
 SAVE_RESULTS = True                  # save model.results to disk
 PLOT_RESULTS = True                  # plot results (PREDICTIONS) vs. TARGETS
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
@@ -215,8 +215,8 @@ model_params = dict(
     previous_state_d = 11, # length of state vector
     context_d = 11, # length of context vector
     memory_capacity = TOTAL_NUM_STIMS, # number of entries in EM memory
-    # memory_init = (0,.0001),  # Initialize memory with random values in interval
-    memory_init = None,  # Initialize with zeros
+    memory_init = (0,.1),  # Initialize memory with random values in interval
+    # memory_init = None,  # Initialize with zeros
     concatenate_keys = False,
 
     # Processing
@@ -229,10 +229,11 @@ model_params = dict(
     # softmax_temperature = ADAPTIVE, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
     # softmax_temperature = CONTROL, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
     # softmax_threshold = None, # threshold used to mask out small values in softmax
-    softmax_threshold = .001, # threshold used to mask out small values in softmax
+    softmax_threshold = .00001, # threshold used to mask out small values in softmax
     enable_learning=[True, False, False], # Enable learning for PREDICTION (STATE) but not CONTEXT or PREVIOUS STATE
     learn_field_weights = False,
     loss_spec = Loss.BINARY_CROSS_ENTROPY,
+    # loss_spec = Loss.MSE,
     learning_rate = .5,
     device = CPU,
     # device = MPS,
