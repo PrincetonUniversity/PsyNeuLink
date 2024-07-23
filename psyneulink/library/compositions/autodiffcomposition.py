@@ -523,7 +523,17 @@ class AutodiffComposition(Composition):
         # ordered execution sets for the pytorch model
         self.execution_sets = None
 
+        # # MODIFIED 7/10/24 OLD:
+        # if not disable_cuda and torch.cuda.is_available():
+        #     if cuda_index is None:
+        #         self.device = torch.device('cuda')
+        #     else:
+        #         self.device = torch.device('cuda:' + str(cuda_index))
+        # elif torch_available:
+        #         self.device = torch.device('cpu')
+        # MODIFIED 7/10/24 NEW:
         if device is None:
+            # Try setting device by default
             if not disable_cuda and torch.cuda.is_available():
                 if cuda_index is None:
                     self.device = torch.device(CUDA)
@@ -531,11 +541,17 @@ class AutodiffComposition(Composition):
                     self.device = torch.device('cuda:' + str(cuda_index))
             elif torch_available:
                 if torch.backends.mps.is_available():
-                    self.device = torch.device(MPS)
+                    from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
+                    try:
+                        self.device = torch.device(MPS)
+                        test_pytorch_fct_with_mps = Linear()._gen_pytorch_fct(self.device, Context())
+                    except AssertionError:
+                        self.device = torch.device(CPU)
                 else:
                     self.device = torch.device(CPU)
         else:
             self.device = device
+        # MODIFIED 7/10/24 END
 
         # Set to True after first warning about failure to specify execution mode so warning is issued only once
         self.execution_mode_warned_about_default = False

@@ -646,6 +646,8 @@ class PytorchMechanismWrapper():
         else:
             self.default_value = mechanism.defaults.value
 
+        from psyneulink.core.components.functions.function import FunctionError
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
         try:
             pnl_fct = mechanism.function
             self.function = pnl_fct._gen_pytorch_fct(device, context)
@@ -653,10 +655,11 @@ class PytorchMechanismWrapper():
                 pnl_fct = mechanism.integrator_function
                 self.integrator_function = pnl_fct._gen_pytorch_fct(device, context)
                 self.integrator_previous_value = pnl_fct._get_pytorch_fct_param_value('initializer', device, context)
-        except:
+        except FunctionError as error:
             from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
-            raise AutodiffCompositionError(
-                f"Function {pnl_fct} is not currently supported by AutodiffComposition")
+            raise AutodiffCompositionError(error.args[0])
+        except:
+            raise AutodiffCompositionError(f"Function {pnl_fct} is not currently supported by AutodiffComposition")
 
         self.value = None
         self._target_mechanism = None

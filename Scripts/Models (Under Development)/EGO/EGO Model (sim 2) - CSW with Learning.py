@@ -226,7 +226,8 @@ model_params = dict(
     enable_learning=[True, False, False],
     learn_field_weights = False,
     learning_rate = .5,
-    device = CPU,
+    # device = CPU,
+    device = MPS,
 )
 
 # EM structdural params:
