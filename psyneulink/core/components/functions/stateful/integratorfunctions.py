@@ -1243,8 +1243,6 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         rate = self._get_pytorch_fct_param_value('rate', device, context)
         offset = self._get_pytorch_fct_param_value('offset', device, context)
         noise = self._get_pytorch_fct_param_value('noise', device, context)
-        # 7/10/24 FIX: THIS SHOULD PROBABLY BE ASSIGNED FROM PYTORCH NODE:
-        # previous_value = self._get_pytorch_fct_param_value('previous_value', device, context)
         return lambda prev_val, variable: self._EWMA_filter(prev_val, rate, variable) + noise + offset
 
     def as_expression(self):

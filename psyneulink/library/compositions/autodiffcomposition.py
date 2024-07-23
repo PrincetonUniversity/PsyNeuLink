@@ -523,14 +523,15 @@ class AutodiffComposition(Composition):
         # ordered execution sets for the pytorch model
         self.execution_sets = None
 
-        # # MODIFIED 7/10/24 OLD:
+        # # # MODIFIED 7/10/24 OLD:
         # if not disable_cuda and torch.cuda.is_available():
         #     if cuda_index is None:
         #         self.device = torch.device('cuda')
         #     else:
         #         self.device = torch.device('cuda:' + str(cuda_index))
         # elif torch_available:
-        #         self.device = torch.device('cpu')
+        #     self.device = torch.device('cpu')
+
         # MODIFIED 7/10/24 NEW:
         if device is None:
             # Try setting device by default
@@ -764,8 +765,8 @@ class AutodiffComposition(Composition):
             model = self.pytorch_composition_wrapper_type(composition=self,
                                                           device=self.device,
                                                           context=context)
-            # 7/10/24 FIX DEBUGGING
-            model.register_backward_hook(model._backward_hook)
+            # # 7/10/24 FIX DEBUGGING
+            # model.register_backward_hook(model._backward_hook)
 
             self.parameters.pytorch_representation._set(model, context, skip_history=True, skip_log=True)
 

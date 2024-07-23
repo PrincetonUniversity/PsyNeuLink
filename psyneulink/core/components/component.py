@@ -1489,7 +1489,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "learning_results", "learning_signal", "learning_signals",
                      "error_matrix", "error_signal", "activation_input",
                      "activation_output", "error_sources", "covariates_sources",
-                     "target", "sample", "learning_function"
+                     "target", "sample", "learning_function",
+                     "device",
                      }
         # Mechanism's need few extra entries:
         # * matrix -- is never used directly, and is flatened below

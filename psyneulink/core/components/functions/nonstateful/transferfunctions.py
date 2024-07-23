@@ -3611,12 +3611,11 @@ class SoftMax(TransferFunction):
             #                               torch.where(torch.abs(x) > threshold, 1, 0) /
             #                               torch.sum(gain * torch.exp(x - torch.max(x))
             #                                         * torch.where(torch.abs(x) > threshold, 1, 0))))
-            # # MODIFIED 7/10/24 NEWER:
+            # # MODIFIED 7/10/24 NEWER (USING KAMESH's VERSION):
             def pytorch_thresholded_softmax(_input: torch.Tensor) -> torch.Tensor:
                 _mask = torch.abs(_input) > threshold
                 _exp_maxsub = torch.exp( gain * (_input - torch.max(_input,0,keepdim=True)[0]))
                 return _exp_maxsub*_mask/ torch.sum(_exp_maxsub*_mask,0,keepdim=True)
-
             return pytorch_thresholded_softmax
             # MODIFIED 7/10/24 END
 

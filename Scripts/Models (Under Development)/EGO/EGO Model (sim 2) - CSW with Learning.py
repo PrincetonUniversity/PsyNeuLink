@@ -164,11 +164,12 @@ RUN_MODEL = True                       # True => run the model
 # RUN_MODEL = False                      # False => don't run the model
 # EXECUTION_MODE = ExecutionMode.Python
 EXECUTION_MODE = ExecutionMode.PyTorch
-# ANALYZE_RESULTS = False                # True => output analysis of results of run
-# REPORT_OUTPUT = ReportOutput.FULL     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
+# REPORT_OUTPUT = ReportOutput.FULL  # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_OUTPUT = ReportOutput.OFF     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
-REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
-PRINT_RESULTS = True                  # print model.results after execution
+REPORT_PROGRESS = ReportProgress.OFF # Sets console progress bar during run
+PRINT_RESULTS = False                # print model.results to console after execution
+SAVE_RESULTS = True                  # save model.results to disk
+PLOT_RESULTS = True                  # plot results (PREDICTIONS) vs. TARGETS
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 #endregion
 
@@ -179,11 +180,17 @@ ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation
 
 # Task environment:
 import Environment
-CURRICULUM_TYPE = 'Blocked'     # 'Blocked' or 'Interleaved'
+# CURRICULUM_TYPE = 'Blocked'     # 'Blocked' or 'Interleaved'
+CURRICULUM_TYPE = 'Interleaved'     # 'Blocked' or 'Interleaved'
+NUM_STIMS = 5
 # dataset = Environment.generate_dataset(condition=CURRICULUM_TYPE)
 dataset = Environment.generate_dataset(condition=CURRICULUM_TYPE)
-INPUTS = dataset.xs.numpy()[:5]
-OUTPUT = dataset.ys.numpy()[:5]
+if NUM_STIMS is ALL:
+    INPUTS = dataset.xs.numpy()
+    TARGETS = dataset.ys.numpy()
+else:
+    INPUTS = dataset.xs.numpy()[:NUM_STIMS]
+    TARGETS = dataset.ys.numpy()[:NUM_STIMS]
 TOTAL_NUM_STIMS = len(INPUTS)
 
 #endregion
@@ -216,18 +223,19 @@ model_params = dict(
     integration_rate = .69, # rate at which state is integrated into new context
     state_weight = 1, # weight of the state used during memory retrieval
     context_weight = 1, # weight of the context used during memory retrieval
-    normalize_field_weights = False, # whether to normalize the field weights during memory retrieval
+    normalize_field_weights = True, # whether to normalize the field weights during memory retrieval
     # softmax_temperature = None, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
     softmax_temperature = .1, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
     # softmax_temperature = ADAPTIVE, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
     # softmax_temperature = CONTROL, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
-    softmax_threshold = None, # threshold used to mask out small values in softmax
-    # softmax_threshold = .001, # threshold used to mask out small values in softmax
-    enable_learning=[True, False, False],
+    # softmax_threshold = None, # threshold used to mask out small values in softmax
+    softmax_threshold = .001, # threshold used to mask out small values in softmax
+    enable_learning=[True, False, False], # Enable learning for PREDICTION (STATE) but not CONTEXT or PREVIOUS STATE
     learn_field_weights = False,
+    loss_spec = Loss.BINARY_CROSS_ENTROPY,
     learning_rate = .5,
-    # device = CPU,
-    device = MPS,
+    device = CPU,
+    # device = MPS,
 )
 
 # EM structdural params:
@@ -281,6 +289,7 @@ def construct_model(model_name:str=model_params['name'],
                     prediction_layer_name:str=model_params['prediction_layer_name'],
 
                     # Learning
+                    loss_spec=model_params['loss_spec'],
                     enable_learning=model_params['enable_learning'],
                     learning_rate = model_params['learning_rate'],
                     device=model_params['device']
@@ -380,7 +389,7 @@ def construct_model(model_name:str=model_params['name'],
                                     previous_state_to_em_pathway,
                                     context_learning_pathway],
                                    learning_rate=learning_rate,
-                                   loss_spec=Loss.BINARY_CROSS_ENTROPY,
+                                   loss_spec=loss_spec,
                                    name=model_name,
                                    device=device)
 
@@ -482,5 +491,15 @@ if __name__ == '__main__':
                 row_sum = weight_mat.sum(0)
                 return np.max([(row_sum != 0).sum(), (col_sum != 0).sum()])
             print(test_weights(model.projections[7].parameters.matrix.get(model.name)))
+
+        if SAVE_RESULTS:
+            np.save('EGO PREDICTIONS', model.results)
+            np.save('EGO INPUTS', INPUTS)
+            np.save('EGO TARGETS', TARGETS)
+
+        if PLOT_RESULTS:
+            plt.plot(1 - np.abs(model.results[2:998,2]-TARGETS[:996]))
+            plt.show()
+            plt.savefig('EGO PLOT.png')
 
     #endregion

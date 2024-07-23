@@ -528,12 +528,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                 variable.append(input_port.defaults.variable)
                             elif not input_port.internal_only:
                                 # otherwise, use the node's input_port's afferents
-                                variable.append(node.collate_afferents(i).squeeze(0))
+                                variable.append(node.aggregate_afferents(i).squeeze(0))
                         if len(variable) == 1:
                             variable = variable[0]
                 else:
                     # Node is not INPUT to Composition or BIAS, so get all input from its afferents
-                    variable = node.collate_afferents()
+                    variable = node.aggregate_afferents()
 
                 if node.exclude_from_gradient_calc:
                     if node.exclude_from_gradient_calc == AFTER:
@@ -672,11 +672,11 @@ class PytorchMechanismWrapper():
 
     def add_afferent(self, afferent):
         """Add ProjectionWrapper for afferent to MechanismWrapper.
-        For use in call to collate_afferents"""
+        For use in call to aggregate_afferents"""
         assert afferent not in self.afferents
         self.afferents.append(afferent)
 
-    def collate_afferents(self, port=None):
+    def aggregate_afferents(self, port=None):
         """Return weight-multiplied sum of afferent projections for input_port(s) of the Mechanism
         If there is only one input_port, return the sum of its afferents (for those in Composition)
         If there are multiple input_ports, return an array with the sum for each input_port
@@ -886,7 +886,7 @@ class PytorchProjectionWrapper():
         self._pnl_proj = pnl_proj # Projection that directly projects to/from sender/receiver (see above)
         self._idx = component_idx     # Index of Projection in Composition's list of projections
         self._port_idx = port_idx     # Index of sender's port (used by LLVM)
-        self._value_idx = 0           # Index of value in sender's value (used in collate_afferents)
+        self._value_idx = 0           # Index of value in sender's value (used in aggregate_afferents)
         self._curr_sender_value = None
 
         self.name = f"PytorchProjectionWrapper[{projection.name}]"
