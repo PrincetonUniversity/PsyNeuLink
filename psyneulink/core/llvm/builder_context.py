@@ -766,3 +766,53 @@ def _convert_llvm_ir_to_ctype(t: ir.Type):
         assert False, "Don't know how to convert LLVM type: {}".format(t)
 
     return ret_t
+
+@functools.lru_cache(maxsize=16)
+def _convert_llvm_ir_to_dtype(t: ir.Type):
+
+    if isinstance(t, ir.IntType):
+        if t.width == 8:
+            return np.uint8().dtype
+
+        elif t.width == 16:
+            return np.uint16().dtype
+
+        elif t.width == 32:
+            return np.uint32().dtype
+
+        elif t.width == 64:
+            return np.uint64().dtype
+
+        else:
+            assert False, "Unsupported integer type: {}".format(type(t))
+
+    elif isinstance(t, ir.DoubleType):
+        return np.float64().dtype
+
+    elif isinstance(t, ir.FloatType):
+        return np.float32().dtype
+
+    elif isinstance(t, ir.HalfType):
+        return np.float16().dtype
+
+    elif isinstance(t, ir.ArrayType):
+        element_type = _convert_llvm_ir_to_dtype(t.element)
+
+        # Create multidimensional array instead of nesting
+        if element_type.subdtype is not None:
+            element_type, shape = element_type.subdtype
+        else:
+            shape = ()
+
+        ret_t = np.dtype((element_type, (len(t),) + shape))
+
+    elif isinstance(t, ir.LiteralStructType):
+        field_list = []
+        for i, e in enumerate(t.elements):
+            field_list.append(("field_" + str(i), _convert_llvm_ir_to_dtype(e)))
+
+        ret_t = np.dtype(field_list, align=True)
+    else:
+        assert False, "Don't know how to convert LLVM type to dtype: {}".format(t)
+
+    return ret_t

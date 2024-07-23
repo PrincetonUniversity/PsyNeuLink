@@ -23,7 +23,7 @@ from llvmlite import ir
 
 from . import codegen
 from .builder_context import *
-from .builder_context import _all_modules, _convert_llvm_ir_to_ctype
+from .builder_context import _all_modules, _convert_llvm_ir_to_ctype, _convert_llvm_ir_to_dtype
 from .debug import debug_env
 from .execution import *
 from .execution import _tupleize
@@ -155,6 +155,8 @@ class LLVMBinaryFunction:
         # '_type_' special attribute stores pointee type for pointers
         # https://docs.python.org/3/library/ctypes.html#ctypes._Pointer._type_
         self.byref_arg_types = [a._type_ if hasattr(a, "contents") else None for a in args]
+
+        self.np_params = [_convert_llvm_ir_to_dtype(getattr(a.type, "pointee", a.type)) for a in f.args]
 
     @property
     def c_func(self):
