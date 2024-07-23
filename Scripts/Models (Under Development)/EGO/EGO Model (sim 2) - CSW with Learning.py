@@ -149,7 +149,6 @@ from psyneulink._typing import Union, Literal
 # ======================================================================================================================
 # Settings for running script:
 
-MEMORY_CAPACITY = 1000
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL =  (                     # Only one of the following can be uncommented:
     None                             # suppress display of model
@@ -173,70 +172,6 @@ PRINT_RESULTS = True                  # print model.results after execution
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 #endregion
 
-#region   PARAMETERS
-# ======================================================================================================================
-#                                                   MODEL PARAMETERS
-# ======================================================================================================================
-
-# PyTorch Version Parameters:
-model_params = dict(
-    state_d = 11, # length of state vector
-    previous_state_d = 11, # length of state vector
-    context_d = 11, # length of context vector
-    integration_rate = .69, # rate at which state is integrated into new context
-    state_weight = 1, # weight of the state used during memory retrieval
-    context_weight = 1, # weight of the context used during memory retrieval
-    # softmax_temperature = None, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
-    softmax_temperature = .1, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
-    # softmax_temperature = ADAPTIVE, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
-    # softmax_temperature = CONTROL, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
-    softmax_threshold = None, # threshold used to mask out small values in softmax
-    # softmax_threshold = .001, # threshold used to mask out small values in softmax
-    learning_rate = .5
-)
-
-# Fixed (structural) parameters:
-
-# Names:
-MODEL_NAME = "EGO Model CSW"
-STATE_INPUT_LAYER_NAME = "STATE"
-PREVIOUS_STATE_LAYER_NAME = "PREVIOUS STATE"
-CONTEXT_LAYER_NAME = 'CONTEXT'
-
-EM_NAME = "EM"
-PREDICTION_LAYER_NAME = "PREDICTION"
-
-EMFieldsIndex = IntEnum('EMFields',
-                        ['STATE',
-                         'CONTEXT',
-                         'PREVIOUS_STATE'],
-                        start=0)
-
-
-# CONSTRUCTION PARAMETERS
-
-# Layer sizes:
-STATE_SIZE = model_params['state_d']  # length of state vector
-CONTEXT_SIZE = model_params['context_d']  # length of state vector
-
-# Context processing:
-INTEGRATION_RATE = model_params['integration_rate']  # rate at which state is integrated into integrator layer
-
-# EM retrieval
-STATE_RETRIEVAL_WEIGHT = 0
-PREVIOUS_STATE_RETRIEVAL_WEIGHT = model_params['state_weight']  # weight of state field in retrieval from EM
-CONTEXT_RETRIEVAL_WEIGHT = model_params['context_weight']       # weight of context field in retrieval from EM
-if is_numeric_scalar(model_params['softmax_temperature']):      # translate to gain of softmax retrieval function
-    RETRIEVAL_SOFTMAX_GAIN = 1/model_params['softmax_temperature']
-else:                                                           # pass along ADAPTIVE or CONTROL spec
-    RETRIEVAL_SOFTMAX_GAIN = model_params['softmax_temperature']
-RETRIEVAL_SOFTMAX_THRESHOLD = model_params['softmax_threshold'] # threshold used to mask out small values in softmax
-LEARNING_RATE = model_params['learning_rate']
-
-RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projections
-
-#endregion
-
 #region ENVIRONMENT
 # ======================================================================================================================
 #                                                   ENVIRONMENT
@@ -245,10 +180,68 @@ RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec
 # Task environment:
 import Environment
 CURRICULUM_TYPE = 'Blocked'     # 'Blocked' or 'Interleaved'
+# dataset = Environment.generate_dataset(condition=CURRICULUM_TYPE)
 dataset = Environment.generate_dataset(condition=CURRICULUM_TYPE)
-INPUTS = dataset.xs.numpy()
-OUTPUT = dataset.ys.numpy()
+INPUTS = dataset.xs.numpy()[:5]
+OUTPUT = dataset.ys.numpy()[:5]
+TOTAL_NUM_STIMS = len(INPUTS)
 
+#endregion
+
+#region   PARAMETERS
+# ======================================================================================================================
+#                                                   MODEL PARAMETERS
+# ======================================================================================================================
+
+model_params = dict(
+
+    # Names:
+    name = "EGO Model CSW",
+    state_input_layer_name = "STATE",
+    previous_state_layer_name = "PREVIOUS STATE",
+    context_layer_name = 'CONTEXT',
+    em_name = "EM",
+    prediction_layer_name = "PREDICTION",
+
+    # Structral
+    state_d = 11, # length of state vector
+    previous_state_d = 11, # length of state vector
+    context_d = 11, # length of context vector
+    memory_capacity = TOTAL_NUM_STIMS, # number of entries in EM memory
+    # memory_init = (0,.0001),  # Initialize memory with random values in interval
+    memory_init = None,  # Initialize with zeros
+    concatenate_keys = True,
+
+    # Processing
+    integration_rate = .69, # rate at which state is integrated into new context
+    state_weight = 1, # weight of the state used during memory retrieval
+    context_weight = 1, # weight of the context used during memory retrieval
+    normalize_field_weights = False, # whether to normalize the field weights during memory retrieval
+    # softmax_temperature = None, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
+    softmax_temperature = .1, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
+    # softmax_temperature = ADAPTIVE, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
+    # softmax_temperature = CONTROL, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
+    softmax_threshold = None, # threshold used to mask out small values in softmax
+    # softmax_threshold = .001, # threshold used to mask out small values in softmax
+    enable_learning=[True, False, False],
+    learn_field_weights = False,
+    learning_rate = .5,
+    device = CPU,
+)
+
+# EM structdural params:
+EMFieldsIndex = IntEnum('EMFields',
+                        ['STATE',
+                         'CONTEXT',
+                         'PREVIOUS_STATE'],
+                        start=0)
+STATE_RETRIEVAL_WEIGHT = 0
+RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projections
+
+if is_numeric_scalar(model_params['softmax_temperature']):      # translate to gain of softmax retrieval function
+    RETRIEVAL_SOFTMAX_GAIN = 1/model_params['softmax_temperature']
+else:                                                           # pass along ADAPTIVE or CONTROL spec
+    RETRIEVAL_SOFTMAX_GAIN = model_params['softmax_temperature']
 #endregion
 
 #region   MODEL
@@ -256,32 +249,40 @@ OUTPUT = dataset.ys.numpy()
 #                                                      MODEL
 # ======================================================================================================================
 
-def construct_model(model_name:str=MODEL_NAME,
+def construct_model(model_name:str=model_params['name'],
 
                     # Input layer:
-                    state_input_name:str=STATE_INPUT_LAYER_NAME,
-                    state_size:int=STATE_SIZE,
+                    state_input_name:str=model_params['state_input_layer_name'],
+                    state_size:int=model_params['state_d'],
 
                     # Previous state
-                    previous_state_input_name:str=PREVIOUS_STATE_LAYER_NAME,
+                    previous_state_input_name:str=model_params['previous_state_layer_name'],
 
                     # Context representation (learned):
-                    context_name:str=CONTEXT_LAYER_NAME,
-                    context_size:Union[float,int]=CONTEXT_SIZE,
-                    integration_rate:float=INTEGRATION_RATE,
+                    context_name:str=model_params['context_layer_name'],
+                    context_size:Union[float,int]=model_params['context_d'],
+                    integration_rate:float=model_params['integration_rate'],
 
                     # EM:
-                    em_name:str=EM_NAME,
+                    em_name:str=model_params['em_name'],
                     retrieval_softmax_gain=RETRIEVAL_SOFTMAX_GAIN,
-                    retrieval_softmax_threshold=RETRIEVAL_SOFTMAX_THRESHOLD,
+                    retrieval_softmax_threshold=model_params['softmax_threshold'],
                     state_retrieval_weight:Union[float,int]=STATE_RETRIEVAL_WEIGHT,
-                    previous_state_retrieval_weight:Union[float,int]=PREVIOUS_STATE_RETRIEVAL_WEIGHT,
-                    context_retrieval_weight:Union[float,int]=CONTEXT_RETRIEVAL_WEIGHT,
+                    previous_state_retrieval_weight:Union[float,int]=model_params['state_weight'],
+                    context_retrieval_weight:Union[float,int]=model_params['context_weight'],
+                    normalize_field_weights = model_params['normalize_field_weights'],
+                    concatenate_keys = model_params['concatenate_keys'],
+                    learn_field_weights = model_params['learn_field_weights'],
+                    memory_capacity = model_params['memory_capacity'],
+                    memory_init=model_params['memory_init'],
 
-                    # Output / decision processing:
-                    prediction_layer_name:str=PREDICTION_LAYER_NAME,
+                    # Output:
+                    prediction_layer_name:str=model_params['prediction_layer_name'],
 
-                    learning_rate = LEARNING_RATE
+                    # Learning
+                    enable_learning=model_params['enable_learning'],
+                    learning_rate = model_params['learning_rate'],
+                    device=model_params['device']
 
                     )->Composition:
 
@@ -305,8 +306,8 @@ def construct_model(model_name:str=MODEL_NAME,
                        memory_template=[[0] * state_size,   # state
                                         [0] * state_size,   # previous state
                                         [0] * state_size],  # context
-                       # memory_fill=(0,.0001),
-                       memory_capacity=MEMORY_CAPACITY,
+                       memory_fill=memory_init,
+                       memory_capacity=memory_capacity,
                        memory_decay_rate=0,
                        softmax_gain=retrieval_softmax_gain,
                        softmax_threshold=retrieval_softmax_threshold,
@@ -319,13 +320,12 @@ def construct_model(model_name:str=MODEL_NAME,
                                       previous_state_retrieval_weight,
                                       context_retrieval_weight
                                       ),
-                       # MODIFIED 7/10/24 NEW:
-                       # normalize_field_weights=False,
-                       concatenate_keys=True,
-                       # MODIFIED 7/10/24 END
-                       learn_field_weights=False,
-                       # enable_learning=True,
-                       enable_learning=[True, False, False]
+                       normalize_field_weights=normalize_field_weights,
+                       concatenate_keys=concatenate_keys,
+                       learn_field_weights=learn_field_weights,
+                       learning_rate=learning_rate,
+                       enable_learning=enable_learning,
+                       device=device
                        )
 
     prediction_layer = ProcessingMechanism(name=prediction_layer_name, size=state_size)
@@ -380,7 +380,8 @@ def construct_model(model_name:str=MODEL_NAME,
                                     context_learning_pathway],
                                    learning_rate=learning_rate,
                                    loss_spec=Loss.BINARY_CROSS_ENTROPY,
-                                   name=model_name)
+                                   name=model_name,
+                                   device=device)
 
     learning_components = EGO_comp.infer_backpropagation_learning_pathways(ExecutionMode.PyTorch)
     EGO_comp.add_projection(MappingProjection(sender=state_input_layer,
@@ -409,7 +410,7 @@ if __name__ == '__main__':
     model = None
 
     if CONSTRUCT_MODEL:
-        print(f'Constructing {MODEL_NAME}')
+        print(f'Constructing {model_params["name"]}')
         model = construct_model()
         assert 'DEBUGGING BREAK POINT'
         # print(model.scheduler.consideration_queue)
@@ -438,10 +439,10 @@ if __name__ == '__main__':
             print('\nEM Memory: \n', model.nodes['EM'].parameters.memory.get(model.name))
 
         # print("MODEL NOT YET FULLY EXECUTABLE")
-        print(f'Running {MODEL_NAME}')
-        context = MODEL_NAME
+        print(f"Running {model_params['name']}")
+        context = model_params['name']
         start_time = timeit.default_timer()
-        model.learn(inputs={STATE_INPUT_LAYER_NAME:INPUTS},
+        model.learn(inputs={model_params['state_input_layer_name']:INPUTS},
                   # report_output=REPORT_OUTPUT,
                   # report_progress=REPORT_PROGRESS
                   #   call_after_minibatch=print('Projections from context to EM: ',
@@ -449,8 +450,9 @@ if __name__ == '__main__':
                   #                              # model.projections[7].matrix)
                   #   call_after_minibatch=print_stuff,
                     optimizations_per_minibatch=1,
+                    learning_rate=model_params['learning_rate'],
+                    execution_mode=ExecutionMode.PyTorch,
                     # minibatch_size=3,
-                    learning_rate=LEARNING_RATE
                   )
         stop_time = timeit.default_timer()
         print(f"Elapsed time: {stop_time - start_time}")
@@ -459,7 +461,7 @@ if __name__ == '__main__':
         if PRINT_RESULTS:
             print("MEMORY:")
             print(model.nodes['EM'].parameters.memory.get(model.name))
-            model.run(inputs={STATE_INPUT_LAYER_NAME:INPUTS[4]},
+            model.run(inputs={model_params["state_input_layer_name"]:INPUTS[4]},
                       # report_output=REPORT_OUTPUT,
                       # report_progress=REPORT_PROGRESS
                       )

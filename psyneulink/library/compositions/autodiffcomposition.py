@@ -358,8 +358,12 @@ logger = logging.getLogger(__name__)
 
 
 __all__ = [
-    'AutodiffComposition'
+    'AutodiffComposition', 'CUDA', 'CPU', 'CPU', 'MPS'
 ]
+
+CUDA = 'cuda'
+CPU = 'cpu'
+MPS = 'mps'
 
 class AutodiffCompositionError(CompositionError):
 
@@ -378,6 +382,15 @@ class AutodiffComposition(Composition):
     Arguments
     ---------
 
+    optimizer_type : str : default 'sgd'
+        the kind of optimizer used in training. The current options are 'sgd' or 'adam'.
+        
+    loss_spec : Loss or PyTorch loss function : default Loss.MSE
+        specifies the loss function for training; see `Loss` for arguments.
+
+    weight_decay : float : default 0
+        specifies the L2 penalty (which discourages large weights) used by the optimizer.
+
     learning_rate : float : default 0.001
         specifies the learning rate passed to the optimizer if none is specified in the `learn
         <AutdodiffComposition.learn>` method of the AutodiffComposition
@@ -387,21 +400,22 @@ class AutodiffComposition(Composition):
         specifies whether the AutodiffComposition should disable learning when run in `learning mode
         <Composition.learn>`.
 
-    optimizer_type : str : default 'sgd'
-        the kind of optimizer used in training. The current options are 'sgd' or 'adam'.
+    device : torch.device : default device-dependnet
+        specifies the device on which the model is run. If None, the device is set to 'cuda' if available,
+        then 'mps`, otherwise 'cpu'.
 
-    weight_decay : float : default 0
-        specifies the L2 penalty (which discourages large weights) used by the optimizer.
-
-    loss_spec : Loss or PyTorch loss function : default Loss.MSE
-        specifies the loss function for training; see `Loss` for arguments.
 
     Attributes
     ----------
 
+    pytorch_representation = None
+
     optimizer : PyTorch optimizer function
         the optimizer used for training. Depends on the **optimizer_type**, **learning_rate**, and **weight_decay**
         arguments from initialization.
+        
+    loss : PyTorch loss function
+        the loss function used for training. Depends on the **loss_spec** argument from initialization.
 
     learning_rate : float
         determines the learning_rate passed the optimizer, and is applied to all `Projection`\\s in the
@@ -420,11 +434,17 @@ class AutodiffComposition(Composition):
            **learnable** parameter of its constructor as `False`; this applies to MappingProjections at any
            level of `nesting <AutodiffComposition_Nesting>`.
 
-    loss : PyTorch loss function
-        the loss function used for training. Depends on the **loss_spec** argument from initialization.
+    device : torch.device
+        the device on which the model is run.
 
     losses : list of floats
         tracks the average loss after each weight update (i.e. each minibatch) during learning.
+
+    trial_losses = Parameter([])
+
+    tracked_loss = Parameter(None, pnl_internal=True)
+
+    tracked_loss_count = Parameter(0, pnl_internal=True)
 
     last_saved_weights : path
         path for file to which weights were last saved.
@@ -440,27 +460,33 @@ class AutodiffComposition(Composition):
         pytorch_composition_wrapper_type = PytorchCompositionWrapper
 
     class Parameters(Composition.Parameters):
+        pytorch_representation = None
         optimizer = None
         learning_rate = Parameter(.001, fallback_default=True)
         losses = Parameter([])
         trial_losses = Parameter([])
         tracked_loss = Parameter(None, pnl_internal=True)
         tracked_loss_count = Parameter(0, pnl_internal=True)
-        pytorch_representation = None
+        device = None
+
+        def _validate_memory_template(self, device):
+            if isinstance(device, str) and not device in [CPU, CUDA, MPS]:
+                raise AutodiffCompositionError(f"Device must be one of {CPU}, {CUDA}, or {MPS}")
 
     # TODO (CW 9/28/18): add compositions to registry so default arg for name is no longer needed
     @check_user_specified
     def __init__(self,
                  pathways=None,
-                 learning_rate=None,
                  optimizer_type='sgd',
-                 weight_decay=0,
                  loss_spec=Loss.MSE,
+                 learning_rate=None,
+                 weight_decay=0,
                  disable_learning=False,
+                 force_no_retain_graph=False,
                  refresh_losses=False,
+                 device=None,
                  disable_cuda=True,
                  cuda_index=None,
-                 force_no_retain_graph=False,
                  name="autodiff_composition",
                  **kwargs):
 
@@ -471,25 +497,25 @@ class AutodiffComposition(Composition):
         show_graph_attributes = kwargs.pop('show_graph_attributes', {})
 
         super(AutodiffComposition, self).__init__(name = name,
-                                                  learning_rate = learning_rate,
-                                                  optimizer_type = optimizer_type,
-                                                  weight_decay = weight_decay,
-                                                  loss_spec = loss_spec,
                                                   pathways=pathways,
+                                                  optimizer_type = optimizer_type,
+                                                  loss_spec = loss_spec,
+                                                  learning_rate = learning_rate,
+                                                  weight_decay = weight_decay,
                                                   **kwargs)
 
+        self._built_pathways = False
+        self.target_output_map = {}
         self.optimizer_type = optimizer_type
         self.loss_spec = loss_spec
-        self.refresh_losses = refresh_losses
-        self._built_pathways = False
-        self.weight_decay = weight_decay
-        self.force_no_retain_graph = force_no_retain_graph
-        self.loss = None
-        self.disable_learning = disable_learning
         self._runtime_learning_rate = None
+        self.force_no_retain_graph = force_no_retain_graph
+        self.refresh_losses = refresh_losses
+        self.weight_decay = weight_decay
+        self.disable_learning = disable_learning
+        self.loss = None
         self.last_saved_weights = None
         self.last_loaded_weights = None
-        self.target_output_map = {}
 
         # keeps track of average loss per epoch
         self.losses = []
@@ -497,13 +523,19 @@ class AutodiffComposition(Composition):
         # ordered execution sets for the pytorch model
         self.execution_sets = None
 
-        if not disable_cuda and torch.cuda.is_available():
-            if cuda_index is None:
-                self.device = torch.device('cuda')
-            else:
-                self.device = torch.device('cuda:' + str(cuda_index))
-        elif torch_available:
-            self.device = torch.device('cpu')
+        if device is None:
+            if not disable_cuda and torch.cuda.is_available():
+                if cuda_index is None:
+                    self.device = torch.device(CUDA)
+                else:
+                    self.device = torch.device('cuda:' + str(cuda_index))
+            elif torch_available:
+                if torch.backends.mps.is_available():
+                    self.device = torch.device(MPS)
+                else:
+                    self.device = torch.device(CPU)
+        else:
+            self.device = device
 
         # Set to True after first warning about failure to specify execution mode so warning is issued only once
         self.execution_mode_warned_about_default = False

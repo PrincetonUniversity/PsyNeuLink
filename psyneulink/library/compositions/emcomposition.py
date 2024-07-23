@@ -1519,7 +1519,8 @@ class EMComposition(AutodiffComposition):
                  use_gating_for_weighting:bool=False,
                  random_state=None,
                  seed=None,
-                 name="EM_Composition"):
+                 name="EM_Composition",
+                 **kwargs):
 
         # Construct memory --------------------------------------------------------------------------------
 
@@ -1558,7 +1559,8 @@ class EMComposition(AutodiffComposition):
                          learn_field_weights = learn_field_weights,
                          learning_rate = learning_rate,
                          random_state = random_state,
-                         seed = seed
+                         seed = seed,
+                         **kwargs
                          )
 
         self._construct_pathways(self.memory_template,
