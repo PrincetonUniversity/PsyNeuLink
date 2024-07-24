@@ -143,16 +143,18 @@ class LLVMBinaryFunction:
         # Create ctype function instance
         start = time.perf_counter()
         return_type = _convert_llvm_ir_to_ctype(f.return_value.type)
-        params = [_convert_llvm_ir_to_ctype(a.type) for a in f.args]
+        args = [_convert_llvm_ir_to_ctype(a.type) for a in f.args]
         middle = time.perf_counter()
-        self.__c_func_type = ctypes.CFUNCTYPE(return_type, *params)
+        self.__c_func_type = ctypes.CFUNCTYPE(return_type, *args)
         finish = time.perf_counter()
 
         if "time_stat" in debug_env:
             print("Time to create ctype function '{}': {} ({} to create types)".format(
                   name, finish - start, middle - start))
 
-        self.byref_arg_types = [p._type_ for p in params]
+        # '_type_' special attribute stores pointee type for pointers
+        # https://docs.python.org/3/library/ctypes.html#ctypes._Pointer._type_
+        self.byref_arg_types = [a._type_ if hasattr(a, "contents") else None for a in args]
 
     @property
     def c_func(self):
