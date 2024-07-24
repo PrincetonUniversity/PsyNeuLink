@@ -1491,6 +1491,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "activation_output", "error_sources", "covariates_sources",
                      "target", "sample", "learning_function",
                      "device",
+                     # should be added to relevant _gen_llvm_function... when aug:
+                     # SoftMax:
+                     'mask_threshold', 'adapt_scale', 'adapt_base', 'adapt_entropy_weighting'
                      }
         # Mechanism's need few extra entries:
         # * matrix -- is never used directly, and is flatened below

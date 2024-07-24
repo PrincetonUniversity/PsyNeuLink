@@ -151,14 +151,14 @@ from psyneulink._typing import Union, Literal
 
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL =  (                     # Only one of the following can be uncommented:
-    # None                             # suppress display of model
-    {                                  # show simple visual display of model
-    'show_pytorch': True,            # show pytorch graph of model
-     'show_learning': True
-    # # 'show_projections_not_in_composition': True,
-    # # 'exclude_from_gradient_calc_style': 'dashed'# show target mechanisms for learning
-    # # {'show_node_structure': True     # show detailed view of node structures and projections
-    }
+    None                             # suppress display of model
+    # {                                  # show simple visual display of model
+    # 'show_pytorch': True,            # show pytorch graph of model
+    #  'show_learning': True
+    # # # 'show_projections_not_in_composition': True,
+    # # # 'exclude_from_gradient_calc_style': 'dashed'# show target mechanisms for learning
+    # # # {'show_node_structure': True     # show detailed view of node structures and projections
+    # }
 )
 RUN_MODEL = True,                       # True => run the model
 # RUN_MODEL = False                      # False => don't run the model
@@ -228,15 +228,15 @@ model_params = dict(
     softmax_temperature = .1, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
     # softmax_temperature = ADAPTIVE, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
     # softmax_temperature = CONTROL, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
-    # softmax_threshold = None, # threshold used to mask out small values in softmax
-    softmax_threshold = .00001, # threshold used to mask out small values in softmax
+    softmax_threshold = None, # threshold used to mask out small values in softmax
+    # softmax_threshold = .00001, # threshold used to mask out small values in softmax
     enable_learning=[True, False, False], # Enable learning for PREDICTION (STATE) but not CONTEXT or PREVIOUS STATE
     learn_field_weights = False,
     loss_spec = Loss.BINARY_CROSS_ENTROPY,
     # loss_spec = Loss.MSE,
     learning_rate = .5,
-    device = CPU,
-    # device = MPS,
+    # device = CPU,
+    device = MPS,
 )
 
 # EM structdural params:

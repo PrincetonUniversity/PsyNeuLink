@@ -131,8 +131,8 @@ try:
 except ImportError:
     torch = None
 
-from psyneulink.core.globals.keywords import \
-    comparison_operators, DISTANCE_METRICS, EXPONENTIAL, GAUSSIAN, LINEAR, MATRIX_KEYWORD_VALUES, NAME, SINUSOID, VALUE
+from psyneulink.core.globals.keywords import (comparison_operators, DISTANCE_METRICS, EXPONENTIAL, GAUSSIAN, LINEAR,
+                                              MATRIX_KEYWORD_VALUES, MPS, NAME, SINUSOID, VALUE)
 
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_list', 'convert_to_np_array',
@@ -258,7 +258,7 @@ class AutoNumber(IntEnum):
         return obj
 
 
-# ******************************** GLOBAL STRUCTURES, CONSTANTS AND METHODS  *******************************************
+#region ******************************** GLOBAL STRUCTURES, CONSTANTS AND METHODS  *************************************
 TEST_CONDTION = False
 
 
@@ -677,8 +677,9 @@ def iscompatible(candidate, reference=None, **kargs):
     else:
         return False
 
+#endregion
 
-# MATHEMATICAL  ********************************************************************************************************
+#region MATHEMATICAL ***************************************************************************************************
 
 def normpdf(x, mu=0, sigma=1):
     u = float((x - mu) / abs(sigma))
@@ -697,7 +698,6 @@ def scalar_distance(measure, value, scale=1, offset=0):
         return np.exp(scale * value + offset)
     if measure == SINUSOID:
         return sinusoid(value, frequency=scale, phase=offset)
-
 
 def powerset(iterable):
     """powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"""
@@ -744,9 +744,9 @@ def tensor_power(items, levels: Optional[range] = None, flat=False):
             else:
                 pp.append(tp.reshape(-1))
     return pp
+#endregion
 
-
-# LIST MANAGEMENT ******************************************************************************************************
+#region LIST MANAGEMENT ************************************************************************************************
 
 def insert_list(list1, position, list2):
     """Insert list2 into list1 at position"""
@@ -773,10 +773,9 @@ def nesting_depth(l):
     if isinstance(l, np.ndarray):
         l = l.tolist()
     return isinstance(l, list) and max(map(nesting_depth, l)) + 1
+#endregion
 
-
-# OTHER ****************************************************************************************************************
-
+#region OTHER **********************************************************************************************************
 def get_args(frame):
     """Gets dictionary of arguments and their values for a function
     Frame should be assigned as follows in the function itself:  frame = inspect.currentframe()
@@ -1019,7 +1018,7 @@ def get_alias_property_setter(name, attr=None):
             setattr(obj, name, value)
 
     return setter
-
+#endregion
 
 #region NUMPY ARRAY METHODS ******************************************************************************************
 
@@ -1035,44 +1034,6 @@ def np_array_less_than_2d(array):
         return True
     else:
         return False
-
-
-def safe_create_np_array(value):
-    with warnings.catch_warnings():
-
-        # If we have a torch tensor, allow it to pass through unchanged
-        if torch and torch.is_tensor(value):
-            return value
-
-        warnings.filterwarnings('error', category=np.VisibleDeprecationWarning)
-        # NOTE: this will raise a ValueError in the future.
-        # See https://numpy.org/neps/nep-0034-infer-dtype-is-object.html
-        try:
-            try:
-                return np.asarray(value)
-            except np.VisibleDeprecationWarning:
-                return np.asarray(value, dtype=object)
-            except ValueError as e:
-                # numpy 1.24 removed the above deprecation and raises
-                # ValueError instead. Note that the below call can still
-                # raise other ValueErrors
-                if 'The requested array has an inhomogeneous shape' in str(e):
-                    return np.asarray(value, dtype=object)
-                raise
-
-        except ValueError as e:
-            msg = str(e)
-            if 'cannot guess the desired dtype from the input' in msg:
-                return np.asarray(value, dtype=object)
-            # KDM 6/29/20: this case handles a previously noted case
-            # by KAM 6/28/18, #877:
-            # [[0.0], [0.0], np.array([[0.0, 0.0]])]
-            # but was only handled for dimension=1
-            elif 'could not broadcast' in msg:
-                return convert_all_elements_to_np_array(value)
-            else:
-                raise
-
 
 def convert_to_np_array(value, dimension=None):
     """
@@ -1211,8 +1172,6 @@ def append_type_to_name(object, type=None):
         string = "\'" + name + "\'" + ' ' + type.lower()
         # string = name + ' ' + type.lower()
     return string
-#endregion
-
 
 class ReadOnlyOrderedDict(UserDict):
     def __init__(self, dict=None, name=None, **kwargs):
@@ -2401,3 +2360,63 @@ def array_from_matrix_string(
         arr.append([c for c in r.split(col_sep) if len(c)])
 
     return np.asarray(arr, dtype=dtype)
+
+#endregion
+
+#region PYTORCH TENSOR METHODS *****************************************************************************************
+
+# def get_torch_tensor(value, device):
+#     if device == MPS or device == torch.device(MPS):
+#         if isinstance(value, torch.Tensor):
+#             return value
+#         return torch.tensor(np.array(value, dtype=np.float32), device=device)
+#     else:
+#         return torch.tensor(value, device=device).double()
+# MODIFIED 7/10/24 NEW:
+def get_torch_tensor(value, device):
+    # if device == MPS or device == torch.device(MPS):
+    #     if isinstance(value, torch.Tensor):
+    #         return value
+    #     return torch.tensor(np.array(value, dtype=np.float32), device=device)
+    # else:
+    #     return torch.tensor(value, device=device).double()
+    return torch.tensor(value, device=device).double()
+# MODIFIED 7/10/24 END
+
+def safe_create_np_array(value):
+    with warnings.catch_warnings():
+
+        # If we have a torch tensor, allow it to pass through unchanged
+        if torch and torch.is_tensor(value):
+            return value
+
+        warnings.filterwarnings('error', category=np.VisibleDeprecationWarning)
+        # NOTE: this will raise a ValueError in the future.
+        # See https://numpy.org/neps/nep-0034-infer-dtype-is-object.html
+        try:
+            try:
+                return np.asarray(value)
+            except np.VisibleDeprecationWarning:
+                return np.asarray(value, dtype=object)
+            except ValueError as e:
+                # numpy 1.24 removed the above deprecation and raises
+                # ValueError instead. Note that the below call can still
+                # raise other ValueErrors
+                if 'The requested array has an inhomogeneous shape' in str(e):
+                    return np.asarray(value, dtype=object)
+                raise
+
+        except ValueError as e:
+            msg = str(e)
+            if 'cannot guess the desired dtype from the input' in msg:
+                return np.asarray(value, dtype=object)
+            # KDM 6/29/20: this case handles a previously noted case
+            # by KAM 6/28/18, #877:
+            # [[0.0], [0.0], np.array([[0.0, 0.0]])]
+            # but was only handled for dimension=1
+            elif 'could not broadcast' in msg:
+                return convert_all_elements_to_np_array(value)
+            else:
+                raise
+
+#endregion

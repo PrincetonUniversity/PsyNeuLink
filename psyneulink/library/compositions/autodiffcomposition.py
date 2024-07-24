@@ -346,8 +346,8 @@ from psyneulink.core.compositions.composition import Composition, NodeRole, Comp
 from psyneulink.core.compositions.report import (ReportOutput, ReportParams, ReportProgress, ReportSimulations,
                                                  ReportDevices, EXECUTE_REPORT, LEARN_REPORT, PROGRESS_REPORT)
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context, CONTEXT
-from psyneulink.core.globals.keywords import AUTODIFF_COMPOSITION, SOFT_CLAMP, Loss
-from psyneulink.core.globals.utilities import is_numeric_scalar
+from psyneulink.core.globals.keywords import AUTODIFF_COMPOSITION, CPU, CUDA, Loss, MPS, SOFT_CLAMP
+from psyneulink.core.globals.utilities import is_numeric_scalar, get_torch_tensor
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.scheduling.time import TimeScale
@@ -358,12 +358,8 @@ logger = logging.getLogger(__name__)
 
 
 __all__ = [
-    'AutodiffComposition', 'CUDA', 'CPU', 'CPU', 'MPS'
+    'AutodiffComposition'
 ]
-
-CUDA = 'cuda'
-CPU = 'cpu'
-MPS = 'mps'
 
 class AutodiffCompositionError(CompositionError):
 
@@ -523,36 +519,40 @@ class AutodiffComposition(Composition):
         # ordered execution sets for the pytorch model
         self.execution_sets = None
 
-        # # # MODIFIED 7/10/24 OLD:
-        # if not disable_cuda and torch.cuda.is_available():
-        #     if cuda_index is None:
-        #         self.device = torch.device('cuda')
-        #     else:
-        #         self.device = torch.device('cuda:' + str(cuda_index))
-        # elif torch_available:
-        #     self.device = torch.device('cpu')
+        # # MODIFIED 7/10/24 OLD:
+        if not disable_cuda and torch.cuda.is_available():
+            if cuda_index is None:
+                self.device = torch.device('cuda')
+            else:
+                self.device = torch.device('cuda:' + str(cuda_index))
+        elif torch_available:
+            self.device = torch.device('cpu')
 
-        # MODIFIED 7/10/24 NEW:
-        if device is None:
-            # Try setting device by default
-            if not disable_cuda and torch.cuda.is_available():
-                if cuda_index is None:
-                    self.device = torch.device(CUDA)
-                else:
-                    self.device = torch.device('cuda:' + str(cuda_index))
-            elif torch_available:
-                if torch.backends.mps.is_available():
-                    from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
-                    try:
-                        self.device = torch.device(MPS)
-                        test_pytorch_fct_with_mps = Linear()._gen_pytorch_fct(self.device, Context())
-                    except AssertionError:
-                        self.device = torch.device(CPU)
-                else:
-                    self.device = torch.device(CPU)
-        else:
-            self.device = device
-        # MODIFIED 7/10/24 END
+        # # MODIFIED 7/10/24 NEW:
+        # if device is None:
+        #     # Try setting device by default
+        #     if not disable_cuda and torch.cuda.is_available():
+        #         if cuda_index is None:
+        #             self.device = torch.device(CUDA)
+        #         else:
+        #             self.device = torch.device('cuda:' + str(cuda_index))
+        #     elif torch_available:
+        #         # MODIFIED 7/10/24 OLD: USE CPU AS DEFAULT
+        #         self.device = torch.device(CPU)
+        #         # MODIFIED 7/10/24 NEW:  TEST IF MPS IS AVAILABLE AND, IF SO, USE:
+        #         # if torch.backends.mps.is_available():
+        #         #     from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
+        #         #     try:
+        #         #         self.device = torch.device(MPS)
+        #         #         test_pytorch_fct_with_mps = Linear()._gen_pytorch_fct(self.device, Context())
+        #         #     except AssertionError:
+        #         #         self.device = torch.device(CPU)
+        #         # else:
+        #         #     self.device = torch.device(CPU)
+        #         # MODIFIED 7/10/24 END
+        # else:
+        #     self.device = device
+        # # MODIFIED 7/10/24 END
 
         # Set to True after first warning about failure to specify execution mode so warning is issued only once
         self.execution_mode_warned_about_default = False
@@ -841,7 +841,7 @@ class AutodiffComposition(Composition):
         # Compute total loss over OUTPUT nodes for current trial
         tracked_loss = self.parameters.tracked_loss._get(context)
         if tracked_loss is None:
-            self.parameters.tracked_loss._set(torch.zeros(1, device=self.device).double(),
+            self.parameters.tracked_loss._set(get_torch_tensor([0],self.device),
                                               context=context,
                                               skip_history=True,
                                               skip_log=True)
@@ -850,18 +850,17 @@ class AutodiffComposition(Composition):
         curr_tensor_inputs = {}
         curr_tensor_targets = {}
         for component in inputs.keys():
-            curr_tensor_inputs[component] = torch.tensor(inputs[component], device=self.device).double()
+            curr_tensor_inputs[component] = get_torch_tensor(inputs[component], self.device)
 
         # Get value of TARGET nodes for current trial
         for component in targets.keys():
-            curr_tensor_targets[self.target_output_map[component]] = [torch.tensor(np.atleast_1d(target),
-                                                                                   device=self.device).double()
-                                                                      for target in targets[component]]
+            curr_tensor_targets[self.target_output_map[component]] =\
+                [get_torch_tensor(np.atleast_1d(target), self.device) for target in targets[component]]
 
         # Do forward computation on current inputs
         #   should return 2d values for each component
         pytorch_rep = self.parameters.pytorch_representation._get(context)
-        curr_tensor_outputs = pytorch_rep.forward(curr_tensor_inputs, context)
+        curr_tensor_outputs = pytorch_rep.forward(curr_tensor_inputs, self.device, context)
 
         # Update values of all PNL nodes executed in forward pass (if specified)
         # 7/10/24 - FIX: ADD HANDLING OF PREVIOUS VALUES FOR NODES WITH STATEFUL / INTEGRATION FUNCTIONS
@@ -939,19 +938,14 @@ class AutodiffComposition(Composition):
 
         optimizer.zero_grad()
 
-        tracked_loss = self.parameters.tracked_loss._get(context=context) / int(self.parameters.tracked_loss_count._get(context=context))
+        tracked_loss = (self.parameters.tracked_loss._get(context=context) / 
+                        int(self.parameters.tracked_loss_count._get(context=context)))
         tracked_loss.backward(retain_graph=not self.force_no_retain_graph)
-        # # MODIFIED 7/10/24 NEW:
-        # print(f"TRACKED_LOSS: {tracked_loss}")
-        # # MODIFIED 7/10/24 NEW:
-        # for proj_wrapper in pytorch_rep.projection_wrappers:
-        #     if any(torch.isnan(v) for v in proj_wrapper.matrix.detach().flatten()):
-        #         print(f"FOUND NAN IN {proj_wrapper.name}")
-        #     proj_wrapper.matrix = torch.where(torch.isnan(proj_wrapper.matrix),0,proj_wrapper.matrix)
-        # # MODIFIED 7/10/24 END
         self.parameters.losses._get(context=context).append(tracked_loss.detach().cpu().numpy()[0])
-        self.parameters.tracked_loss._set(torch.zeros(1, device=self.device).double(), context=context, skip_history=True, skip_log=True)
-        self.parameters.tracked_loss_count._set(np.array(0), context=context, skip_history=True, skip_log=True)
+        self.parameters.tracked_loss._set(get_torch_tensor([0],self.device),
+                                          context=context, skip_history=True,skip_log=True)
+        self.parameters.tracked_loss_count._set(np.array(0), 
+                                                context=context, skip_history=True, skip_log=True)
         optimizer.step()
         pytorch_rep.detach_all()
         pytorch_rep.copy_weights_to_psyneulink(context)
@@ -1089,7 +1083,7 @@ class AutodiffComposition(Composition):
             execution_mode = pnlvm.ExecutionMode.PyTorch
 
         return execution_mode
-
+    
     @handle_external_context()
     def execute(self,
                 inputs=None,
