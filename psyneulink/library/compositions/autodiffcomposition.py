@@ -855,7 +855,11 @@ class AutodiffComposition(Composition):
         curr_tensor_inputs = {}
         curr_tensor_targets = {}
         for component in inputs.keys():
-            curr_tensor_inputs[component] = torch.tensor(inputs[component], device=device).double()
+            # # MODIFIED 7/10/24 OLD:
+            # curr_tensor_inputs[component] = torch.tensor(inputs[component], device=device).double()
+            # MODIFIED 7/10/24 NEW:
+            curr_tensor_inputs[component] = get_torch_tensor(inputs[component], torch.float64, device=device)
+            # MODIFIED 7/10/24 END
 
         # Get value of TARGET nodes for current trial
         for component in targets.keys():
@@ -866,7 +870,7 @@ class AutodiffComposition(Composition):
             #
             # MODIFIED 7/10/24 NEW:
             curr_tensor_targets[self.target_output_map[component]] =\
-                [get_torch_tensor(np.atleast_1d(target), np.float64, device) for target in targets[component]]
+                [get_torch_tensor(np.atleast_1d(target), torch.float64, device) for target in targets[component]]
             # MODIFIED 7/10/24 END
 
         # Do forward computation on current inputs
