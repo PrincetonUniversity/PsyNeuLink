@@ -696,10 +696,13 @@ class PytorchMechanismWrapper():
             if curr_val is not None:
                 curr_sender_value = proj_wrapper.sender.value[proj_wrapper._value_idx]
                 dtype = curr_sender_value.dtype
+                orig_version = proj_wrapper.sender.value[proj_wrapper._value_idx]
             else:
                 curr_sender_value = proj_wrapper.default_value
                 dtype = curr_sender_value.dtype
+                orig_version = torch.tensor(proj_wrapper.default_value)
             proj_wrapper._curr_sender_value = get_torch_tensor(curr_sender_value, dtype, device)
+            assert all([val for val in (get_torch_tensor(curr_sender_value, dtype, device) == orig_version).flatten()])
             # MODIFIED 7/10/24 END
 
         # Specific port is specified
@@ -931,6 +934,8 @@ class PytorchProjectionWrapper():
         #                                  dtype=torch.double))
         # MODIFIED 7/10/24 NEW:
         self.matrix = torch.nn.Parameter(get_torch_tensor(matrix.copy(), torch.float64, device))
+        assert all([val for val in (get_torch_tensor(matrix.copy(), torch.float64, device) == \
+                 torch.tensor(matrix.copy(),device=device,dtype=torch.double)).flatten()])
         # MODIFIED 7/10/24 END
         if projection.learnable is False:
             self.matrix.requires_grad = False

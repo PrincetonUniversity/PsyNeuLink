@@ -859,6 +859,11 @@ class AutodiffComposition(Composition):
             # curr_tensor_inputs[component] = torch.tensor(inputs[component], device=device).double()
             # MODIFIED 7/10/24 NEW:
             curr_tensor_inputs[component] = get_torch_tensor(inputs[component], torch.float64, device=device)
+            assert all([val for val in (get_torch_tensor(inputs[component], torch.float64, device=device)
+                    == torch.tensor(inputs[component], device=device).double()).squeeze()])
+            np.testing.assert_allclose(get_torch_tensor(inputs[component], torch.float64, device=device),
+                                    torch.tensor(inputs[component], device=device).double(),
+                                    atol=1e-08, rtol=1e-08)
             # MODIFIED 7/10/24 END
 
         # Get value of TARGET nodes for current trial
@@ -871,6 +876,8 @@ class AutodiffComposition(Composition):
             # MODIFIED 7/10/24 NEW:
             curr_tensor_targets[self.target_output_map[component]] =\
                 [get_torch_tensor(np.atleast_1d(target), torch.float64, device) for target in targets[component]]
+            assert ([get_torch_tensor(np.atleast_1d(target), torch.float64, device) for target in targets[component]]
+                    ==[torch.tensor(np.atleast_1d(target), device).double() for target in targets[component]])
             # MODIFIED 7/10/24 END
 
         # Do forward computation on current inputs
