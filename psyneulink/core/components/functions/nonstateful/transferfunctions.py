@@ -3269,16 +3269,13 @@ class SoftMax(TransferFunction):
         # Threshold if specified:
         if mask_threshold:
             v = v * np.where(input_value > mask_threshold, v, 0)
-        # # MODIFIED 7/10/24 OLD:
-        # sm = v / np.sum(v, axis=0)
-        # MODIFIED 7/10/24 NEW:
+            # pass
         # Normalize (to sum to 1)
         if not any(v):
             # If v is all zeros, avoid divide by zero in normalize and return all zeros for softmax
             sm = v
         else:
             sm = v / np.sum(v, axis=0)
-        # MODIFIED 7/10/24 END
 
         # Generate one-hot encoding based on selected output_type
 

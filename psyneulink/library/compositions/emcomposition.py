@@ -1488,7 +1488,7 @@ class EMComposition(AutodiffComposition):
 
         def _validate_softmax_gain(self, softmax_gain):
             if not is_numeric_scalar(softmax_gain) and softmax_gain not in {ADAPTIVE, CONTROL}:
-                return f"must be a scalar or one the keywords {ADAPTIVE} or {CONTROL}."
+                return f"must be a scalar or one the keywords '{ADAPTIVE}' or '{CONTROL}'."
 
         def _validate_softmax_threshold(self, softmax_threshold):
             if softmax_threshold is not None and (not is_numeric_scalar(softmax_threshold) or softmax_threshold <= 0):
@@ -1541,6 +1541,10 @@ class EMComposition(AutodiffComposition):
             memory_decay_rate = 1 / memory_capacity
 
         self.use_storage_node = use_storage_node
+
+        if softmax_gain == CONTROL:
+            self.parameters.softmax_gain.modulable = False
+
 
         # Instantiate Composition -------------------------------------------------------------------------
 

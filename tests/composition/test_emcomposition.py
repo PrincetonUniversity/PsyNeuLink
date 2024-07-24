@@ -53,14 +53,14 @@ class TestConstruction:
         # NOTE: None => use default value (i.e., don't specify in constructor, rather than forcing None as value of arg)
         # ------------------ SPECS ---------------------------------------------   ------- EXPECTED -------------------
         #   memory_template       memory_fill   field_wts cncat_ky nmlze sm_gain   repeat  #fields #keys #vals  concat
-        # (0,    (2,3),                  None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        # (0.1,  (2,3),                   .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        # (0.2,  (2,3),                 (0,.1),     None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        # (0.3,  (4,2,3),                 .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        # (1,    [[0,0],[0,0]],          None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
-        # (1.1,  [[0,0],[0,0]],          None,      [1,1],   None,    None,  None,    False,    2,     2,   0,    False,),
-        # (2,    [[0,0],[0,0],[0,0]],    None,      None,    None,    None,  None,    False,    3,     2,   1,    False,),
-        # (2.1,  [[0,0],[0,0],[0,0]],    None,      None,    None,    None,   1.5,    False,    3,     2,   1,    False,),
+        (0,    (2,3),                  None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (0.1,  (2,3),                   .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (0.2,  (2,3),                 (0,.1),     None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (0.3,  (4,2,3),                 .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (1,    [[0,0],[0,0]],          None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
+        (1.1,  [[0,0],[0,0]],          None,      [1,1],   None,    None,  None,    False,    2,     2,   0,    False,),
+        (2,    [[0,0],[0,0],[0,0]],    None,      None,    None,    None,  None,    False,    3,     2,   1,    False,),
+        (2.1,  [[0,0],[0,0],[0,0]],    None,      None,    None,    None,   1.5,    False,    3,     2,   1,    False,),
         (2.2,  [[0,0],[0,0],[0,0]],    None,      None,    None,    None, CONTROL,  False,    3,     2,   1,    False,),
         (3,    [[0,0,0],[0,0]],        None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
         (4,    [[0,0,0],[0],[0,0]],    None,      None,    None,    None,  None,    False,    3,     2,   1,    False,),
@@ -194,7 +194,7 @@ class TestConstruction:
         assert isinstance(em.concatenate_keys_node, Mechanism) == concatenate_node
         if em.concatenate_keys:
             assert em.field_weight_nodes == []
-            assert bool(softmax_gain in {None, CONTROL}) == bool(len(em.softmax_gain_control_nodes))
+            assert bool(softmax_gain == CONTROL) == bool(len(em.softmax_gain_control_nodes))
         else:
             if num_keys > 1:
                 assert len(em.field_weight_nodes) == num_keys
@@ -339,7 +339,7 @@ class TestExecution:
     @pytest.mark.parametrize('enable_learning', [False, True], ids=['no_learning','learning'])
     @pytest.mark.composition
     @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch])
-    def test_simple_execution_without_learning(self,
+    def test_simple_execution_witemhout_learning(self,
                                                exec_mode,
                                                enable_learning,
                                                test_num,
@@ -384,6 +384,8 @@ class TestExecution:
             params.update({'softmax_gain': softmax_gain})
         if storage_prob is not None:
             params.update({'storage_prob': storage_prob})
+        params.update({'softmax_threshold': None})
+        # FIX: ADD TESTS FOR VALIDATION USING SOFTMAX_THRESHOLD
 
         em = EMComposition(**params)
 
