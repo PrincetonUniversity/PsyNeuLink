@@ -21,7 +21,7 @@ from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGD
 from psyneulink.library.compositions.compiledloss import MSELoss, CROSS_ENTROPYLoss
 from psyneulink.core.globals.keywords import AFTER, BEFORE, DEFAULT_VARIABLE, Loss, NODE, TARGET_MECHANISM
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.utilities import get_deepcopy_with_shared
+from psyneulink.core.globals.utilities import get_deepcopy_with_shared, get_torch_tensor
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core import llvm as pnlvm
 
@@ -63,6 +63,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
 
         self.name = f"PytorchCompositionWrapper[{composition.name}]"
+        self.device = device
 
         self.wrapped_nodes = []  # can be PytorchMechanismWrapper or PytorchCompositionWrapper
         self.nodes_map = {} # maps Node (Mech or nested Comp) -> PytorchMechanismWrapper or PytorchCompositionWrapper
@@ -71,7 +72,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.projections_map = {}  # maps Projections -> PytorchProjectionWrappers
 
         self.params = nn.ParameterList()
-        self.device = device
 
         self._composition = composition
         self._nodes_to_execute_after_gradient_calc = {} # Nodes requiring execution after Pytorch forward/backward pass
@@ -93,10 +93,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 pytorch_node = node.pytorch_composition_wrapper_type(node, device, outer_creator=self, context=context)
             # Wrap Mechanism
             else:
-                pytorch_node = PytorchMechanismWrapper(node,
-                                                       self,
-                                                       self._composition._get_node_index(node),
-                                                       device,
+                pytorch_node = PytorchMechanismWrapper(mechanism=node,
+                                                       composition=self,
+                                                       component_idx=self._composition._get_node_index(node),
+                                                       device=device,
                                                        context=context)
                 pytorch_node._is_bias = any(input_port.default_input == DEFAULT_VARIABLE
                                             for input_port in node.input_ports)
@@ -482,7 +482,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         return optimizer
 
     @handle_external_context()
-    def forward(self, inputs, context=None)->dict:
+    def forward(self, inputs, device, context=None)->dict:
         """Forward method of the model for PyTorch and LLVM modes
         Returns a dictionary {output_node:value} of output values for the model
         """
@@ -493,7 +493,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 # If node is nested Composition (wrapped in PytorchCompositionWrapper),
                 #    calls its forward method recursively
                 if isinstance(node, PytorchCompositionWrapper):
-                    node.forward(inputs=None)
+                    node.forward(inputs=None, device=device, context=context)
                     continue
 
                 elif node._is_input or node._is_bias:
@@ -528,12 +528,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                 variable.append(input_port.defaults.variable)
                             elif not input_port.internal_only:
                                 # otherwise, use the node's input_port's afferents
-                                variable.append(node.aggregate_afferents(i).squeeze(0))
+                                variable.append(node.aggregate_afferents(i, device).squeeze(0))
                         if len(variable) == 1:
                             variable = variable[0]
                 else:
                     # Node is not INPUT to Composition or BIAS, so get all input from its afferents
-                    variable = node.aggregate_afferents()
+                    variable = node.aggregate_afferents(device)
 
                 if node.exclude_from_gradient_calc:
                     if node.exclude_from_gradient_calc == AFTER:
@@ -676,7 +676,7 @@ class PytorchMechanismWrapper():
         assert afferent not in self.afferents
         self.afferents.append(afferent)
 
-    def aggregate_afferents(self, port=None):
+    def aggregate_afferents(self, device, port=None):
         """Return weight-multiplied sum of afferent projections for input_port(s) of the Mechanism
         If there is only one input_port, return the sum of its afferents (for those in Composition)
         If there are multiple input_ports, return an array with the sum for each input_port
@@ -687,10 +687,20 @@ class PytorchMechanismWrapper():
 
         for proj_wrapper in self.afferents:
             curr_val = proj_wrapper.sender.value
+            # # MODIFIED 7/10/24 OLD:
+            # if curr_val is not None:
+            #     proj_wrapper._curr_sender_value = proj_wrapper.sender.value[proj_wrapper._value_idx]
+            # else:
+            #     proj_wrapper._curr_sender_value = torch.tensor(proj_wrapper.default_value)
+            # MODIFIED 7/10/24 NEW:
             if curr_val is not None:
-                proj_wrapper._curr_sender_value = proj_wrapper.sender.value[proj_wrapper._value_idx]
+                curr_sender_value = proj_wrapper.sender.value[proj_wrapper._value_idx]
+                dtype = curr_sender_value.dtype
             else:
-                proj_wrapper._curr_sender_value = torch.tensor(proj_wrapper.default_value)
+                curr_sender_value = proj_wrapper.default_value
+                dtype = curr_sender_value.dtype
+            proj_wrapper._curr_sender_value = get_torch_tensor(curr_sender_value, dtype, device)
+            # MODIFIED 7/10/24 END
 
         # Specific port is specified
         # FIX: USING _port_idx TO INDEX INTO sender.value GETS IT WRONG IF THE MECHANISM HAS AN OUTPUT PORT
@@ -878,7 +888,8 @@ class PytorchProjectionWrapper():
     def __init__(self, projection,
                  pnl_proj,
                  component_idx,
-                 port_idx, device,
+                 port_idx,
+                 device,
                  sender=None,
                  receiver=None,
                  context=None):
@@ -914,9 +925,13 @@ class PytorchProjectionWrapper():
         matrix = projection.parameters.matrix.get(context=context)
         if matrix is None:
             matrix = projection.parameters.matrix.get(context=None)
-        self.matrix = torch.nn.Parameter(torch.tensor(matrix.copy(),
-                                         device=device,
-                                         dtype=torch.double))
+        # # MODIFIED 7/10/24 OLD:
+        # self.matrix = torch.nn.Parameter(torch.tensor(matrix.copy(),
+        #                                  device=device,
+        #                                  dtype=torch.double))
+        # MODIFIED 7/10/24 NEW:
+        self.matrix = torch.nn.Parameter(get_torch_tensor(matrix.copy(), torch.float64, device))
+        # MODIFIED 7/10/24 END
         if projection.learnable is False:
             self.matrix.requires_grad = False
 

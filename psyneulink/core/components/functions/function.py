@@ -173,7 +173,7 @@ from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import (
     convert_all_elements_to_np_array, convert_to_np_array, get_global_seed, is_instance_or_subclass, object_has_single_value, parameter_spec, parse_valid_identifier, safe_len,
     SeededRandomState, try_extract_0d_array_item, contains_type, is_numeric, NumericCollections,
-    random_matrix, array_from_matrix_string
+    random_matrix, array_from_matrix_string, get_torch_tensor
 )
 
 __all__ = [
@@ -989,8 +989,11 @@ class Function_Base(Function):
         elif np.isscalar(np.array(val)):
             return float(val)
         try:
+            # MODIFIED 7/10/24 OLD:
             # return torch.tensor(val, device=device).double()
-            return torch.tensor(val, device=device)
+            # MODIFIED 7/10/24 NEW:
+            return get_torch_tensor(val, torch.float64, device=device)
+            # MODIFIED 7/10/24 END
         except Exception as error:
             raise FunctionError(f"PROGRAM ERROR: unsupported value of parameter '{param_name}' ({val}) "
                                 f"encountered in pytorch_function_creator(): {error.args[0]}")

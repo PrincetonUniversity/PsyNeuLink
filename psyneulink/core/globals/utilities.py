@@ -2365,23 +2365,18 @@ def array_from_matrix_string(
 
 #region PYTORCH TENSOR METHODS *****************************************************************************************
 
-# def get_torch_tensor(value, device):
-#     if device == MPS or device == torch.device(MPS):
-#         if isinstance(value, torch.Tensor):
-#             return value
-#         return torch.tensor(np.array(value, dtype=np.float32), device=device)
-#     else:
-#         return torch.tensor(value, device=device).double()
-# MODIFIED 7/10/24 NEW:
-def get_torch_tensor(value, device):
-    # if device == MPS or device == torch.device(MPS):
-    #     if isinstance(value, torch.Tensor):
-    #         return value
-    #     return torch.tensor(np.array(value, dtype=np.float32), device=device)
-    # else:
-    #     return torch.tensor(value, device=device).double()
-    return torch.tensor(value, device=device).double()
-# MODIFIED 7/10/24 END
+def get_torch_tensor(value, dtype, device):
+    if device == MPS or device == torch.device(MPS):
+        if isinstance(value, torch.Tensor):
+            return torch.tensor(value, dtype=torch.float32, device=device)
+        return torch.tensor(np.array(value, dtype=np.float32), device=device)
+    else:
+        if dtype in {np.float32, torch.float32}:
+            return torch.tensor(value, device=device).float()
+        elif dtype in {np.float64, torch.float64}:
+            return torch.tensor(value, device=device).double()
+        else:
+            return torch.tensor(value, device=device)
 
 def safe_create_np_array(value):
     with warnings.catch_warnings():
