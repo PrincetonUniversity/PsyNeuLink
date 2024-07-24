@@ -346,8 +346,8 @@ from psyneulink.core.compositions.composition import Composition, NodeRole, Comp
 from psyneulink.core.compositions.report import (ReportOutput, ReportParams, ReportProgress, ReportSimulations,
                                                  ReportDevices, EXECUTE_REPORT, LEARN_REPORT, PROGRESS_REPORT)
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context, CONTEXT
-from psyneulink.core.globals.keywords import AUTODIFF_COMPOSITION, SOFT_CLAMP, Loss
-from psyneulink.core.globals.utilities import is_numeric_scalar
+from psyneulink.core.globals.keywords import AUTODIFF_COMPOSITION, CPU, CUDA, Loss, MPS, SOFT_CLAMP
+from psyneulink.core.globals.utilities import is_numeric_scalar, get_torch_tensor
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.scheduling.time import TimeScale
@@ -358,12 +358,8 @@ logger = logging.getLogger(__name__)
 
 
 __all__ = [
-    'AutodiffComposition', 'CUDA', 'CPU', 'CPU', 'MPS'
+    'AutodiffComposition'
 ]
-
-CUDA = 'cuda'
-CPU = 'cpu'
-MPS = 'mps'
 
 class AutodiffCompositionError(CompositionError):
 
@@ -531,6 +527,8 @@ class AutodiffComposition(Composition):
                 self.device = torch.device('cuda:' + str(cuda_index))
         elif torch_available:
             self.device = torch.device('cpu')
+        else:
+            self.device = device
 
         # # MODIFIED 7/10/24 NEW:
         # if device is None:

@@ -38,8 +38,8 @@ __all__ = [
     'ContentAddressableMemory_FUNCTION', 'CONTEXT',
     'CONTROL', 'CONTROL_MECHANISM', 'CONTROL_PATHWAY', 'CONTROL_PROJECTION',  'CONTROL_PROJECTION_PARAMS',
     'CONTROL_PROJECTIONS', 'CONTROL_SIGNAL', 'CONTROL_SIGNAL_SPECS', 'CONTROL_SIGNALS', 'CONTROLLED_PARAMS',
-    'CONTROLLER', 'CONTROLLER_OBJECTIVE', 'CORRELATION', 'COSINE', 'COSINE_SIMILARITY',
-    'COST_FUNCTION', 'COUNT', 'CROSS_ENTROPY', 'CURRENT_EXECUTION_TIME', 'CUSTOM_FUNCTION', 'CYCLE',
+    'CONTROLLER', 'CONTROLLER_OBJECTIVE', 'CORRELATION', 'CPU', 'COSINE', 'COSINE_SIMILARITY',
+    'COST_FUNCTION', 'COUNT', 'CROSS_ENTROPY', 'CURRENT_EXECUTION_TIME', 'CUSTOM_FUNCTION', 'CUDA', 'CYCLE',
     'DDM_MECHANISM', 'DECAY', 'DEFAULT', 'DEFAULT_CONTROL_MECHANISM', 'DEFAULT_INPUT', 'DEFAULT_MATRIX',
     'DEFAULT_PREFERENCE_SET_OWNER', 'DEFAULT_PROCESSING_MECHANISM', 'DEFAULT_VARIABLE',
     'DEFERRED_ASSIGNMENT', 'DEFERRED_DEFAULT_NAME', 'DEFERRED_INITIALIZATION', 'DICT', 'DictionaryMemory_FUNCTION',
@@ -85,7 +85,7 @@ __all__ = [
     'MODEL_SPEC_ID_GENERIC', 'MODEL_SPEC_ID_INPUT_PORTS', 'MODEL_SPEC_ID_OUTPUT_PORTS',
     'MODEL_SPEC_ID_PSYNEULINK', 'MODEL_SPEC_ID_SENDER_MECH', 'MODEL_SPEC_ID_SENDER_PORT',
     'MODEL_SPEC_ID_RECEIVER_MECH', 'MODEL_SPEC_ID_RECEIVER_PORT',
-    'MODEL_SPEC_ID_PARAMETER_INITIAL_VALUE', 'MODEL_SPEC_ID_PARAMETER_SOURCE',
+    'MODEL_SPEC_ID_PARAMETER_INITIAL_VALUE', 'MODEL_SPEC_ID_PARAMETER_SOURCE', 'MPS',
     'MODEL_SPEC_ID_PARAMETER_VALUE', 'MODEL_SPEC_ID_TYPE',
     'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM', 'MUTUAL_ENTROPY',
     'NAME', 'NESTED', 'NEWEST',  'NODE', 'NODES', 'NOISE', 'NORMAL_DIST_FUNCTION', 'NORMALIZE', 'NORMED_L0_SIMILARITY',
@@ -367,6 +367,17 @@ class Loss(Enum):
 # ******************************************    CONSTANTS  *************************************************************
 # **********************************************************************************************************************
 
+#region ---------------------------------------------    DEVICES    ----------------------------------------------------
+# Devices
+CUDA = 'cuda'
+CPU = 'cpu'
+MPS = 'mps'
+#endregion
+
+#region ---------------------------------------------    GENERAL    ----------------------------------------------------
+# General
+
+
 ON = True
 OFF = False
 DEFAULT = False
@@ -378,9 +389,6 @@ INIT_FULL_EXECUTE_METHOD = 'init using the full base class execute method'
 INIT_EXECUTE_METHOD_ONLY = 'init using only the subclass _execute method'
 INIT_FUNCTION_METHOD_ONLY = 'init using only the subclass __function__ method'
 
-
-#region ---------------------------------------------    GENERAL    ----------------------------------------------------
-# General
 
 ALL = 'all'
 ANY = 'any'
