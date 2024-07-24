@@ -2150,7 +2150,7 @@ class EMComposition(AutodiffComposition):
                                                             matrix=IDENTITY_MATRIX,
                                                             name=f'MATCH to SOFTMAX for {self.key_names[i]}')},
                                            function=SoftMax(gain=softmax_gain,
-                                                            threshold=softmax_threshold,
+                                                            mask_threshold=softmax_threshold,
                                                             # MODIFIED 7/10/24 NEW:
                                                             adapt_entropy_weighting=.95),
                                                             # MODIFIED 7/10/24 END
