@@ -237,20 +237,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         composition.scheduler._delete_counts(c.execution_id)
 
-        # 7/10/24 - FIX: DEBUGGING
-        self.register_backward_hook(self._backward_hook)
-
         self._regenerate_paramlist()
-
-    # 7/10/24 - FIX: DEBUGGING
-    def _backward_hook(self, module, grad_input, grad_output):
-        print(f'grad_input type: {type(grad_input)}')
-        print(len(grad_input))
-        print(type(grad_output))
-        print(len(grad_output))
-        print(grad_input[0].shape)
-        print(grad_input[1].shape)
-        print(grad_output[0].shape)
 
     __deepcopy__ = get_deepcopy_with_shared()
 
@@ -570,15 +557,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         Implemented as method (and includes context as arg) so that it can be overridden
         by subclasses of PytorchCompositionWrapper
         """
-        # MODIFIED 7/10/24 OLD:
         value = node.execute(variable, context)
-        # # MODIFIED 7/10/24 NEW:
-        # if "SOFTMAX" in node.name:
-        #     with torch.no_grad():
-        #         value = node.execute(variable, context)
-        # else:
-        #     value = node.execute(variable, context)
-        # # MODIFIED 7/10/24 END
         assert 'DEBUGGING BREAK POINT'
 
     def detach_all(self):
@@ -714,35 +693,7 @@ class PytorchMechanismWrapper():
 
     def execute(self, variable, context):
         """Execute Mechanism's _gen_pytorch version of function on variable.
-
         Enforce result to be 2d, and assign to self.value"""
-        # # MODIFIED 7/10/24 OLD:
-        # if ((isinstance(variable, list) and len(variable) == 1)
-        #     or (isinstance(variable, torch.Tensor) and len(variable.squeeze(0).shape) == 1)
-        #         or isinstance(self._mechanism.function, LinearCombination)):
-        #     # Enforce 2d on value of MechanismWrapper (using unsqueeze)
-        #     # for single InputPort or if CombinationFunction (which reduces output to single item from multi-item input)
-        #     if isinstance(variable, torch.Tensor):
-        #         variable = variable.squeeze(0)
-        #     self.value = self.function(variable).unsqueeze(0)
-        # else:
-        #     # Make value 2d by creating list of values returned by function for each item in variable
-        #     self.value = [self.function(variable[i].squeeze(0)) for i in range(len(variable))]
-
-        # MODIFIED 7/10/24 NEW:
-        # # 7/10/24 FOR TESTING:
-        # from math import isnan
-        # if isinstance(variable, list):
-        #     for t in variable:
-        #         if any(isnan(v) for v in t.detach().numpy().squeeze()):
-        #             assert True
-        # elif isinstance(variable, torch.Tensor):
-        #     if any(isnan(v) for v in variable.detach().numpy().squeeze()):
-        #         assert True
-        # else:
-        #     import numpy as np
-        #     if any(isnan(v) for v in np.atleast_1d(variable.squeeze())):
-        #         assert True
 
         def execute_function(function, variable, fct_has_mult_args=False, is_combination_fct=False):
             """Execute _gen_pytorch_fct on variable, enforce result to be 2d, and return it
@@ -785,7 +736,6 @@ class PytorchMechanismWrapper():
         #   so that if Python implementation is run it picks up where PyTorch execution left off
         if isinstance(self._mechanism.function, IntegratorFunction):
             self._mechanism.integrator_function.parameters.previous_value._set(self.value, context)
-        # MODIFIED 7/24/10 END
 
         return self.value
 

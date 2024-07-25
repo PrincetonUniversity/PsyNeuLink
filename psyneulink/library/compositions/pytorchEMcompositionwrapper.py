@@ -128,15 +128,6 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
                 axis = 0
                 entry_to_store = field_projection.sender.value
                 if concatenation_node is None:
-                    # # MODIFIED 7/10/24 NEW:
-                    # # FIX: Get rid of nan values in entry_to_store and memory_to_store
-                    # entry_to_store = torch.where(torch.isnan(entry_to_store),
-                    #                              torch.zeros_like(entry_to_store),
-                    #                              entry_to_store)
-                    # memory_to_store[i] = torch.where(torch.isnan(memory_to_store[i]),
-                    #                              torch.zeros_like(memory_to_store[i]),
-                    #                              memory_to_store[i])
-                    # MODIFIED 7/10/24 END
                     assert (entry_to_store  == memory_to_store[i]).all(), \
                         f"PROGRAM ERROR: misalignment between inputs and fields for storing them"
             else:

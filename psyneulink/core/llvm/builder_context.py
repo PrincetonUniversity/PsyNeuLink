@@ -378,13 +378,11 @@ class LLVMBuilderContext:
         if hasattr(component, 'evaluate_agent_rep'):
             used_param_ids.add('num_trials_per_estimate')
 
-        # MODIFIED 7/10/24 NEW:
         if hasattr(component, 'adapt_scale'):
             used_param_ids.add('threshold')
             used_param_ids.add('adapt_scale')
             used_param_ids.add('adapt_base')
             used_param_ids.add('adapt_entropy_weighting')
-        # MODIFIED 7/10/24 END
 
         unused_param_ids = component_param_ids - used_param_ids - initializers
         unused_state_ids = component_state_ids - used_state_ids

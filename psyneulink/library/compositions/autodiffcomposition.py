@@ -529,8 +529,8 @@ class AutodiffComposition(Composition):
             self.device = torch.device('cpu')
         else:
             self.device = device
-
         # # MODIFIED 7/10/24 NEW:
+        #  FIX: ADD WHEN VALIDATED WITH USE OF utilities.get_torch_tensor() AND COMPATIBLITY WITH MPS
         # if device is None:
         #     # Try setting device by default
         #     if not disable_cuda and torch.cuda.is_available():
@@ -763,8 +763,6 @@ class AutodiffComposition(Composition):
             model = self.pytorch_composition_wrapper_type(composition=self,
                                                           device=self.device,
                                                           context=context)
-            # # 7/10/24 FIX DEBUGGING
-            # model.register_backward_hook(model._backward_hook)
 
             self.parameters.pytorch_representation._set(model, context, skip_history=True, skip_log=True)
 
@@ -862,7 +860,6 @@ class AutodiffComposition(Composition):
         curr_tensor_outputs = pytorch_rep.forward(curr_tensor_inputs, context)
 
         # Update values of all PNL nodes executed in forward pass (if specified)
-        # 7/10/24 - FIX: ADD HANDLING OF PREVIOUS VALUES FOR NODES WITH STATEFUL / INTEGRATION FUNCTIONS
         if synchronize_pnl_values:
             pytorch_node_values = {}
             for pnl_node, pytorch_node in pytorch_rep.nodes_map.items():
@@ -879,6 +876,7 @@ class AutodiffComposition(Composition):
                 if isinstance(pnl_node.function, StatefulFunction):
                     pnl_node.function.parameters.previous_value._set(value, context)
                 # 7/10/24 - FIX: THIS NEEDS TO BE ALIGNED WITH HANDLING OF INTEGRATION BEFORE NONLINEARITY IN PYTORCH
+                #           HANDLED IN forward() METHOD OF PytorchMechanismWrapper??
                 # if isinstance(pnl_node, TransferMechanism) and pnl_node.integrator_mode:
                 #     pnl_node.integrator_function.parameters.previous_value._set(value, context)
                 pytorch_node_values[pnl_node] = value
@@ -937,19 +935,14 @@ class AutodiffComposition(Composition):
 
         optimizer.zero_grad()
 
+        # Compute and log average loss over all trials since last update
         tracked_loss = self.parameters.tracked_loss._get(context=context) / int(self.parameters.tracked_loss_count._get(context=context))
         tracked_loss.backward(retain_graph=not self.force_no_retain_graph)
-        # # MODIFIED 7/10/24 NEW:
-        # print(f"TRACKED_LOSS: {tracked_loss}")
-        # # MODIFIED 7/10/24 NEW:
-        # for proj_wrapper in pytorch_rep.projection_wrappers:
-        #     if any(torch.isnan(v) for v in proj_wrapper.matrix.detach().flatten()):
-        #         print(f"FOUND NAN IN {proj_wrapper.name}")
-        #     proj_wrapper.matrix = torch.where(torch.isnan(proj_wrapper.matrix),0,proj_wrapper.matrix)
-        # # MODIFIED 7/10/24 END
         self.parameters.losses._get(context=context).append(tracked_loss.detach().cpu().numpy()[0])
         self.parameters.tracked_loss._set(torch.zeros(1, device=self.device).double(), context=context, skip_history=True, skip_log=True)
         self.parameters.tracked_loss_count._set(np.array(0), context=context, skip_history=True, skip_log=True)
+
+        # Update weights and copy to PNL
         optimizer.step()
         pytorch_rep.detach_all()
         pytorch_rep.copy_weights_to_psyneulink(context)
@@ -1341,13 +1334,4 @@ class AutodiffComposition(Composition):
 
     def show_graph(self, *args, **kwargs):
         """Override to use PytorchShowGraph if show_pytorch is True"""
-        # MODIFIED 7/10/24 OLD:
         self._show_graph.show_graph(*args, **kwargs)
-        # # MODIFIED 7/10/24 NEW:
-        # from psyneulink.library.compositions.pytorchshowgraph import SHOW_PYTORCH
-        # self.show_pytorch = kwargs.pop(SHOW_PYTORCH, False)
-        # if SHOW_PYTORCH in kwargs and kwargs['show_pytorch'] is True:
-        #     self._show_graph.show_graph(*args, **kwargs)
-        # else:
-        #     super().show_graph(*args, **kwargs)
-        # MODIFIED 7/10/24 END

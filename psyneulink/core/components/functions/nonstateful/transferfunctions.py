@@ -3142,7 +3142,7 @@ class SoftMax(TransferFunction):
         mask_threshold = Parameter(None, modulable=True)
         adapt_scale = Parameter(1.0, modulable=True)
         adapt_base = Parameter(1.0, modulable=True)
-        adapt_entropy_weighting = Parameter(0.1, modulable=True)
+        adapt_entropy_weighting = Parameter(0.95, modulable=True)
         bounds = (0, 1)
         output = ALL
         per_item = Parameter(True, pnl_internal=True)

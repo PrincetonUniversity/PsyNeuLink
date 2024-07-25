@@ -1825,14 +1825,10 @@ class EMComposition(AutodiffComposition):
             else:
                 parsed_field_weights = np.repeat(field_weights[0], len(self.entry_template))
         else:
-            # # MODIFIED 7/10/24 OLD:
-            # parsed_field_weights = np.array(field_weights) / np.sum(field_weights)
-            # MODIFIED 7/10/24 NEW:
             if normalize_field_weights:
                 parsed_field_weights = np.array(field_weights) / np.sum(field_weights)
             else:
                 parsed_field_weights = field_weights
-            # MODIFIED 7/10/24 END
 
         # Memory structure Parameters
         parsed_field_names = field_names.copy() if field_names is not None else None
@@ -2155,9 +2151,7 @@ class EMComposition(AutodiffComposition):
                                                             name=f'MATCH to SOFTMAX for {self.key_names[i]}')},
                                            function=SoftMax(gain=softmax_gain,
                                                             mask_threshold=softmax_threshold,
-                                                            # MODIFIED 7/10/24 NEW:
                                                             adapt_entropy_weighting=.95),
-                                                            # MODIFIED 7/10/24 END
                                            name='SOFTMAX' if len(self.match_nodes) == 1
                                            else f'{self.key_names[i]} [SOFTMAX]')
                          for i, match_node in enumerate(self.match_nodes)]
@@ -2338,7 +2332,8 @@ class EMComposition(AutodiffComposition):
     def _set_learning_attributes(self):
         """Set learning-related attributes for Node and Projections
         """
-        # 7/10/24 FIX: SHOULD THIS ALSO BE CONSTRAINTED BY VALUE OF field_weights FOR CORRESPONDING FIELD?
+        # 7/10/24 FIX: SHOULD THIS ALSO BE CONSTRAINED BY VALUE OF field_weights FOR CORRESPONDING FIELD?
+        #         (i.e., if it is zero then not learnable? or is that a valid initial condition?)
         for projection in self.projections:
             if (projection.sender.owner in self.field_weight_nodes
                     and self.enable_learning
