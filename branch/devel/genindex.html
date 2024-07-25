@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; PsyNeuLink 0.15.1.0+270.g5f5359c79 documentation</title>
+  <title>Index &mdash; PsyNeuLink 0.15.1.0+271.g7933df97e documentation</title>
   
 
   
@@ -98,7 +98,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+270
+                  0.15.1.0+271
                 </div>
               
             
@@ -509,6 +509,10 @@
         <li><a href="UserDefinedFunction.html#psyneulink.core.components.functions.userdefinedfunction.UserDefinedFunction._get_allowed_arguments">(psyneulink.core.components.functions.userdefinedfunction.UserDefinedFunction method)</a>
 </li>
       </ul></li>
+      <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._get_autodiff_inputs_values">_get_autodiff_inputs_values() (psyneulink.library.compositions.autodiffcomposition.AutodiffComposition method)</a>
+</li>
+      <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._get_autodiff_targets_values">_get_autodiff_targets_values() (psyneulink.library.compositions.autodiffcomposition.AutodiffComposition method)</a>
+</li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition._get_back_prop_error_sources">_get_back_prop_error_sources() (psyneulink.core.compositions.composition.Composition method)</a>
 </li>
       <li><a href="Time.html#psyneulink.core.scheduling.time.Time._get_by_time_scale">_get_by_time_scale() (psyneulink.core.scheduling.time.Time method)</a>
@@ -637,11 +641,13 @@
         <li><a href="Port.html#psyneulink.core.components.ports.port.Port_Base._handle_size">(psyneulink.core.components.ports.port.Port_Base method)</a>
 </li>
       </ul></li>
+      <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._identify_target_nodes">_identify_target_nodes() (psyneulink.library.compositions.autodiffcomposition.AutodiffComposition method)</a>
+
+      <ul>
+        <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition._identify_target_nodes">(psyneulink.library.compositions.emcomposition.EMComposition method)</a>
+</li>
+      </ul></li>
       <li><a href="Time.html#psyneulink.core.scheduling.time.Time._increment_by_time_scale">_increment_by_time_scale() (psyneulink.core.scheduling.time.Time method)</a>
-</li>
-      <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._infer_input_nodes">_infer_input_nodes() (psyneulink.library.compositions.autodiffcomposition.AutodiffComposition method)</a>
-</li>
-      <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._infer_output_nodes">_infer_output_nodes() (psyneulink.library.compositions.autodiffcomposition.AutodiffComposition method)</a>
 </li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition._infer_target_nodes">_infer_target_nodes() (psyneulink.core.compositions.composition.Composition method)</a>
 </li>
@@ -1287,6 +1293,14 @@
         <li><a href="RegressionCFA.html#psyneulink.library.compositions.regressioncfa.RegressionCFA.adapt">(psyneulink.library.compositions.regressioncfa.RegressionCFA method)</a>
 </li>
       </ul></li>
+      <li><a href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_base">adapt_base (psyneulink.core.components.functions.transferfunctions.SoftMax attribute)</a>
+</li>
+      <li><a href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_entropy_weighting">adapt_entropy_weighting (psyneulink.core.components.functions.transferfunctions.SoftMax attribute)</a>
+</li>
+      <li><a href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain">adapt_gain() (psyneulink.core.components.functions.transferfunctions.SoftMax method)</a>
+</li>
+      <li><a href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_scale">adapt_scale (psyneulink.core.components.functions.transferfunctions.SoftMax attribute)</a>
+</li>
       <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.AdaptiveIntegrator">AdaptiveIntegrator (class in psyneulink.core.components.functions.stateful.integratorfunctions)</a>
 </li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.add_backpropagation_learning_pathway">add_backpropagation_learning_pathway() (psyneulink.core.compositions.composition.Composition method)</a>
@@ -1395,10 +1409,10 @@
 </li>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.AfterNode">AfterNode (class in psyneulink.core.scheduling.condition)</a>
 </li>
-      <li><a href="Condition.html#psyneulink.core.scheduling.condition.AfterNodes">AfterNodes (class in psyneulink.core.scheduling.condition)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="Condition.html#psyneulink.core.scheduling.condition.AfterNodes">AfterNodes (class in psyneulink.core.scheduling.condition)</a>
+</li>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.AfterNPasses">AfterNPasses (class in psyneulink.core.scheduling.condition)</a>
 </li>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.AfterNRuns">AfterNRuns (class in psyneulink.core.scheduling.condition)</a>
@@ -1481,6 +1495,12 @@
 </li>
       <li><a href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.assign_costs">assign_costs() (psyneulink.core.components.functions.transferfunctions.TransferWithCosts method)</a>
 </li>
+      <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.assign_ShowGraph">assign_ShowGraph() (psyneulink.core.compositions.composition.Composition method)</a>
+
+      <ul>
+        <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.assign_ShowGraph">(psyneulink.library.compositions.autodiffcomposition.AutodiffComposition method)</a>
+</li>
+      </ul></li>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.AtConsiderationSetExecution">AtConsiderationSetExecution (class in psyneulink.core.scheduling.condition)</a>
 </li>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.AtEnvironmentSequence">AtEnvironmentSequence (class in psyneulink.core.scheduling.condition)</a>
@@ -2015,6 +2035,8 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.device">device (psyneulink.library.compositions.autodiffcomposition.AutodiffComposition attribute)</a>
+</li>
       <li><a href="MemoryFunctions.html#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory">DictionaryMemory (class in psyneulink.core.components.functions.stateful.memoryfunctions)</a>
 </li>
       <li><a href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics.DIFFERENCE">DIFFERENCE (psyneulink.core.globals.keywords.DistanceMetrics attribute)</a>
@@ -2209,6 +2231,8 @@
 </li>
       <li><a href="Scheduler.html#psyneulink.core.scheduling.scheduler.SchedulingMode.EXACT_TIME">EXACT_TIME (psyneulink.core.scheduling.scheduler.SchedulingMode attribute)</a>
 </li>
+      <li><a href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.exclude_in_autodiff">exclude_in_autodiff (psyneulink.core.components.projections.projection.Projection_Base attribute)</a>
+</li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.exclude_node_roles">exclude_node_roles() (psyneulink.core.compositions.composition.Composition method)</a>
 </li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.excluded_node_roles">excluded_node_roles (psyneulink.core.compositions.composition.Composition attribute)</a>
@@ -2282,7 +2306,7 @@
 </li>
         <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.external_input_shape">(psyneulink.core.compositions.composition.Composition attribute)</a>
 </li>
-        <li><a href="Composition.html#id10">(psyneulink.core.compositions.composition.Composition property)</a>
+        <li><a href="Composition.html#id12">(psyneulink.core.compositions.composition.Composition property)</a>
 </li>
       </ul></li>
       <li><a href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.external_input_values">external_input_values (psyneulink.core.components.mechanisms.mechanism.Mechanism_Base attribute)</a>
@@ -2290,7 +2314,7 @@
       <ul>
         <li><a href="Composition.html#id0">(psyneulink.core.compositions.composition.Composition attribute)</a>, <a href="Composition.html#psyneulink.core.compositions.composition.Composition.external_input_values">[1]</a>
 </li>
-        <li><a href="Composition.html#id12">(psyneulink.core.compositions.composition.Composition property)</a>
+        <li><a href="Composition.html#id14">(psyneulink.core.compositions.composition.Composition property)</a>
 </li>
       </ul></li>
       <li><a href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.external_input_variables">external_input_variables (psyneulink.core.components.mechanisms.mechanism.Mechanism_Base attribute)</a>
@@ -2300,7 +2324,7 @@
 </li>
         <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.external_input_variables">(psyneulink.core.compositions.composition.Composition attribute)</a>
 </li>
-        <li><a href="Composition.html#id11">(psyneulink.core.compositions.composition.Composition property)</a>
+        <li><a href="Composition.html#id13">(psyneulink.core.compositions.composition.Composition property)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -2336,6 +2360,8 @@
       <li><a href="RegressionCFA.html#psyneulink.library.compositions.regressioncfa.PV.FFC">FFC (psyneulink.library.compositions.regressioncfa.PV attribute)</a>
 </li>
       <li><a href="RegressionCFA.html#psyneulink.library.compositions.regressioncfa.PV.FFCC">FFCC (psyneulink.library.compositions.regressioncfa.PV attribute)</a>
+</li>
+      <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition.field_input_nodes">field_input_nodes (psyneulink.library.compositions.emcomposition.EMComposition attribute)</a>
 </li>
       <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition.field_names">field_names (psyneulink.library.compositions.emcomposition.EMComposition attribute)</a>
 </li>
@@ -2517,14 +2543,14 @@
 </li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Graph.get_children_from_component">get_children_from_component() (psyneulink.core.compositions.composition.Graph method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="Parameters.html#psyneulink.core.globals.parameters.Parameter.get_delta">get_delta() (psyneulink.core.globals.parameters.Parameter method)</a>
 
       <ul>
         <li><a href="Parameters.html#psyneulink.core.globals.parameters.SharedParameter.get_delta">(psyneulink.core.globals.parameters.SharedParameter method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="Component.html#psyneulink.core.components.component.Component.get_efferents">get_efferents() (psyneulink.core.components.component.Component method)</a>
 
       <ul>
@@ -2541,15 +2567,13 @@
         <li><a href="MemoryFunctions.html#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.get_memory">(psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory method)</a>
 </li>
       </ul></li>
+      <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.get_nested_input_nodes_at_all_levels">get_nested_input_nodes_at_all_levels() (psyneulink.core.compositions.composition.Composition method)</a>
+</li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.get_nested_nodes_by_roles_at_any_level">get_nested_nodes_by_roles_at_any_level() (psyneulink.core.compositions.composition.Composition method)</a>
 </li>
-      <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.get_nested_nodes_input_nodes_at_levels">get_nested_nodes_input_nodes_at_levels() (psyneulink.core.compositions.composition.Composition method)</a>
-</li>
-      <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.get_nested_nodes_output_nodes_at_levels">get_nested_nodes_output_nodes_at_levels() (psyneulink.core.compositions.composition.Composition method)</a>
+      <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.get_nested_output_nodes_at_all_levels">get_nested_output_nodes_at_all_levels() (psyneulink.core.compositions.composition.Composition method)</a>
 </li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.get_nodes_by_role">get_nodes_by_role() (psyneulink.core.compositions.composition.Composition method)</a>
-</li>
-      <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition.get_output_values">get_output_values() (psyneulink.library.compositions.emcomposition.EMComposition method)</a>
 </li>
       <li><a href="Time.html#psyneulink.core.scheduling.time.TimeScale.get_parent">get_parent() (psyneulink.core.scheduling.time.TimeScale class method)</a>
 </li>
@@ -2753,6 +2777,8 @@
 </li>
       <li><a href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_labels_dict">input_labels_dict (psyneulink.core.components.mechanisms.mechanism.Mechanism_Base attribute)</a>
 </li>
+      <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition.input_nodes">input_nodes (psyneulink.library.compositions.emcomposition.EMComposition attribute)</a>
+</li>
       <li><a href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_port">input_port (psyneulink.core.components.mechanisms.mechanism.Mechanism_Base attribute)</a>
 
       <ul>
@@ -2872,7 +2898,7 @@
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.is_nested">is_nested (psyneulink.core.compositions.composition.Composition attribute)</a>
 
       <ul>
-        <li><a href="Composition.html#id14">(psyneulink.core.compositions.composition.Composition property)</a>
+        <li><a href="Composition.html#id16">(psyneulink.core.compositions.composition.Composition property)</a>
 </li>
       </ul></li>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.Condition.is_satisfied">is_satisfied() (psyneulink.core.scheduling.condition.Condition method)</a>
@@ -3214,6 +3240,8 @@
       <li><a href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection">MappingProjection (class in psyneulink.core.components.projections.pathway.mappingprojection)</a>
 </li>
       <li><a href="MaskedMappingProjection.html#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.mask">mask (psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection attribute)</a>
+</li>
+      <li><a href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.SoftMax.mask_threshold">mask_threshold (psyneulink.core.components.functions.transferfunctions.SoftMax attribute)</a>
 </li>
       <li><a href="MaskedMappingProjection.html#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection">MaskedMappingProjection (class in psyneulink.library.components.projections.pathway.maskedmappingprojection)</a>
 </li>
@@ -3806,6 +3834,8 @@
         <li><a href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.LinearMatrix.normalize">(psyneulink.core.components.functions.transferfunctions.LinearMatrix attribute)</a>
 </li>
       </ul></li>
+      <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition.normalize_field_weights">normalize_field_weights (psyneulink.library.compositions.emcomposition.EMComposition attribute)</a>
+</li>
       <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition.normalize_memories">normalize_memories (psyneulink.library.compositions.emcomposition.EMComposition attribute)</a>
 </li>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.Not">Not (class in psyneulink.core.scheduling.condition)</a>
@@ -4043,7 +4073,7 @@
 </li>
         <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.output_values">(psyneulink.core.compositions.composition.Composition attribute)</a>
 </li>
-        <li><a href="Composition.html#id9">(psyneulink.core.compositions.composition.Composition property)</a>
+        <li><a href="Composition.html#id11">(psyneulink.core.compositions.composition.Composition property)</a>
 </li>
         <li><a href="LCControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.output_values">(psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism attribute)</a>
 </li>
@@ -4522,7 +4552,7 @@
       </ul></li>
       <li><a href="Log.html#psyneulink.core.globals.log.Log.print_entries">print_entries() (psyneulink.core.globals.log.Log method)</a>
 </li>
-      <li><a href="Composition.html#id15">PROBE (psyneulink.core.compositions.composition.NodeRole attribute)</a>, <a href="Composition.html#psyneulink.core.compositions.composition.NodeRole.PROBE">[1]</a>
+      <li><a href="Composition.html#id17">PROBE (psyneulink.core.compositions.composition.NodeRole attribute)</a>, <a href="Composition.html#psyneulink.core.compositions.composition.NodeRole.PROBE">[1]</a>
 </li>
       <li><a href="Context.html#psyneulink.core.globals.context.ContextFlags.PROCESSING">PROCESSING (psyneulink.core.globals.context.ContextFlags attribute)</a>
 
@@ -5166,7 +5196,7 @@
       <ul>
         <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.random_variables">(psyneulink.core.compositions.composition.Composition attribute)</a>
 </li>
-        <li><a href="Composition.html#id13">(psyneulink.core.compositions.composition.Composition property)</a>
+        <li><a href="Composition.html#id15">(psyneulink.core.compositions.composition.Composition property)</a>
 </li>
       </ul></li>
       <li><a href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.randomization_dimension">randomization_dimension (psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction attribute)</a>
@@ -5591,10 +5621,16 @@
         <li><a href="LCControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.show">(psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism method)</a>
 </li>
       </ul></li>
+      <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.show_graph">show_graph() (psyneulink.core.compositions.composition.Composition method)</a>
+
+      <ul>
+        <li><a href="Visualization.html#psyneulink.core.compositions.showgraph.ShowGraph.show_graph">(psyneulink.core.compositions.showgraph.ShowGraph method)</a>
+</li>
+        <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.show_graph">(psyneulink.library.compositions.autodiffcomposition.AutodiffComposition method)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="Visualization.html#psyneulink.core.compositions.showgraph.ShowGraph.show_graph">show_graph() (psyneulink.core.compositions.showgraph.ShowGraph method)</a>
-</li>
       <li><a href="Visualization.html#psyneulink.core.compositions.showgraph.ShowGraph">ShowGraph (class in psyneulink.core.compositions.showgraph)</a>
 </li>
       <li><a href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.BayesGLM.sigma_0">sigma_0 (psyneulink.core.components.functions.learningfunctions.BayesGLM attribute)</a>
@@ -5630,6 +5666,8 @@
       <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition.softmax_gain_control_nodes">softmax_gain_control_nodes (psyneulink.library.compositions.emcomposition.EMComposition attribute)</a>
 </li>
       <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition.softmax_nodes">softmax_nodes (psyneulink.library.compositions.emcomposition.EMComposition attribute)</a>
+</li>
+      <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition.softmax_threshold">softmax_threshold (psyneulink.library.compositions.emcomposition.EMComposition attribute)</a>
 </li>
       <li><a href="Context.html#psyneulink.core.globals.context.Context.source">source (psyneulink.core.globals.context.Context attribute)</a>
 </li>

@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Projection &mdash; PsyNeuLink 0.15.1.0+270.g5f5359c79 documentation</title>
+  <title>Projection &mdash; PsyNeuLink 0.15.1.0+271.g7933df97e documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+270
+                  0.15.1.0+271
                 </div>
               
             
@@ -588,6 +588,7 @@ the context in which the Projection is used, or its initialization will be <a cl
 it is assigned (see <a class="reference internal" href="Composition.html#composition-cycles-and-feedback"><span class="std std-ref">Cycles and Feedback</span></a>); specifying True or the keyword <em>FEEDBACK</em> forces its
 assignment as a <em>feedback</em> Projection, whereas False precludes it from being assigned as a feedback Projection;
 None (the default) allows the Composition to determine whether it is assigned as a feedback Projection.</p></li>
+<li><p><strong>exclude_in_autodiff</strong> (<em>bool : default False</em>) – specifies whether Projection is included in <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a> gradient calculations.</p></li>
 </ul>
 </dd>
 </dl>
@@ -655,6 +656,17 @@ in the same manner as they can for a <a class="reference internal" href="Mechani
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>ContentAddressableList[str, <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort" title="psyneulink.core.components.ports.parameterport.ParameterPort">ParameterPort</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.projection.Projection_Base.exclude_in_autodiff">
+<span class="sig-name descname"><span class="pre">exclude_in_autodiff</span></span><a class="headerlink" href="#psyneulink.core.components.projections.projection.Projection_Base.exclude_in_autodiff" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines whether Projection is included in <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a> gradient calculations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool : default False</p>
 </dd>
 </dl>
 </dd></dl>
