@@ -184,7 +184,7 @@ import Environment
 # CURRICULUM_TYPE = 'Blocked'     # 'Blocked' or 'Interleaved'
 CURRICULUM_TYPE = 'Interleaved'     # 'Blocked' or 'Interleaved'
 
-NUM_STIMS = 5  # Integer or ALL
+NUM_STIMS = 7  # Integer or ALL
 dataset = Environment.generate_dataset(condition=CURRICULUM_TYPE)
 if NUM_STIMS is ALL:
     INPUTS = dataset.xs.numpy()
