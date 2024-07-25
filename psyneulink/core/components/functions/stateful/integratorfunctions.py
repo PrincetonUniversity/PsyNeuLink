@@ -1220,11 +1220,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         # execute noise if it is a function
         noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), variable, context=context)
 
-        # # MODIFIED 6/14/19 OLD:
-        # previous_value = np.atleast_2d(self.parameters.previous_value._get(context))
-        # # MODIFIED 6/14/19 NEW: [JDC]
         previous_value = self.parameters.previous_value._get(context)
-        # MODIFIED 6/14/19 END
 
         try:
             value = self._EWMA_filter(previous_value, rate, variable) + noise
@@ -1241,11 +1237,13 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         if not self.is_initializing:
             self.parameters.previous_value._set(adjusted_value, context)
 
-        # # MODIFIED 6/21/19 OLD:
-        # return self.convert_output_type(adjusted_value)
-        # MODIFIED 6/21/19 NEW: [JDC]
         return self.convert_output_type(adjusted_value, variable)
-        # MODIFIED 6/21/19 END
+
+    def _gen_pytorch_fct(self, device, context=None):
+        rate = self._get_pytorch_fct_param_value('rate', device, context)
+        offset = self._get_pytorch_fct_param_value('offset', device, context)
+        noise = self._get_pytorch_fct_param_value('noise', device, context)
+        return lambda prev_val, variable: self._EWMA_filter(prev_val, rate, variable) + noise + offset
 
     def as_expression(self):
         return f'(1 - rate) * previous_value + rate * {MODEL_SPEC_ID_MDF_VARIABLE} + noise + offset'

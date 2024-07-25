@@ -1,0 +1,433 @@
+# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and limitations under the License.
+
+# TODO:
+
+# ADD PREVIOUS STATES
+# ADD next_state to EM and control to support that
+# - CONTROL FLOW:
+#   - UPDATE CONTEXT LAYER:  INTEGRATE CURRENT STATE IN CONTEXT LAYER
+#   - USE UPDATED CONTEXT + CURRENT STATE TO RETRIEVE PREDICTED NEXT STATE
+#   - GET NEXT STATE
+#   - ENCODE "CURRENT" (I.E., PREVIOUS) STATE + "NEXT" (NOW ACTUALLY CURRENT) STATE + CONTEXT (PRIOR TO
+#           INTEGRATION OF "NEXT") INTO EM
+
+# - CONTROL FLOW (FROM VANTAGE OF "NEXT" STATE):
+#   - USE CONTEXT + PREVIOUS STATE TO RETRIEVE PREDICTION OF CURRENT STATE
+#   - ENCODE PREVIOUS STATE + CURRENT STATE + CONTEXT INTO EM
+#   - UPDATE CONTEXT LAYER:  INTEGRATE CURRENT STATE IN CONTEXT LAYER:
+#   SO:
+#   - EM SHOULD EXECUTE FIRST:
+#     - USE VALUES OF WM (PREVIOUS STATE) NODE AND CONTEXT LAYER TO RETRIEVE PREDICTED CURRENT STATE
+#     - ENCODE VALUES OF WM (PREVIOUS STATE), CURRENT STATE (INPUT), AND CONTEXT LAYER IN EM
+#   - THEN WM SHOULD EXECUTE TO UPDATE WITH CURRENT STATE (INPUT)
+#   - THEN CONTEXT LAYER SHOULD EXECUTE, INTEGRATING CURRENT STATE (INPUT) [OR WM]
+#   - LEARNING SHOULD USE CURRENT STATE AS TARGET TO TRAIN PREDICTED CURRENT STATE
+
+
+
+# FIX: TERMINATION CONDITION IS GETTING TRIGGED AFTER 1st TRIAL
+
+# FOR INPUT NODES: scheduler.add_condition(A, BeforeNCalls(A,1)
+# Termination: AfterNCalls(Ctl,2)
+
+"""
+QUESTIONS:
+
+NOTES:
+    *MUST* run Experience before Predict, as the latter requires retrieved_reward to be non-zero
+           (from last trial of Experience) in order to know to encode the next state (see control policy)
+
+**Overview**
+------------
+
+This implements a model of...
+
+The model is an example of...
+
+The script contains methods to construct, train, and run the model, and analyze the results of its execution:
+
+* `construct_model <EGO.construct_model>`:
+  takes as arguments parameters used to construct the model;  for convenience, defaults are defined below,
+  (under "Construction parameters")
+
+* `train_network <EGO.train_network>`:
+   ...
+
+* `run_model <EGO.run_model>`:
+   ...
+
+* `analyze_results <EGO.analyze_results>`:
+  takes as arguments the results of executing the model, and optionally a number of trials and EGO_level to analyze;
+  returns...
+
+
+**The Model**
+-------------
+
+The model is comprised of...
+
+.. _EGO_Fig:
+
+.. figure:: _static/<FIG FILE
+   :align: left
+   :alt: EGO Model for Revaluation Experiment
+
+.. _EGO_model_composition:
+
+*EGO_model Composition*
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This is comprised of...  three input Mechanisms, and the nested `ffn <EGO_ffn_composition>` `Composition`.
+
+
+**Construction and Execution**
+------------------------------
+
+.. _EGO_settings:
+
+*Settings*
+~~~~~~~~~~
+
+The default parameters are ones that have been fit to empirical data concerning human performance
+(taken from `Kane et al., 2007 <https://psycnet.apa.org/record/2007-06096-010?doi=1>`_).
+
+See "Settings for running the script" to specify whether the model is trained and/or executed when the script is run,
+and whether a graphic display of the network is generated when it is constructed.
+
+.. _EGO_stimuli:
+
+*Stimuli*
+~~~~~~~~~
+
+Sequences of stimuli are constructed either using `SweetPea <URL HERE>`_
+(using the script in stim/SweetPea) or replicate those used in...
+
+    .. note::
+       Use of SweetPea for stimulus generation requires it be installed::
+       >> pip install sweetpea
+
+
+.. _EGO_training:
+
+*Training*
+~~~~~~~~~~
+
+MORE HERE
+
+.. _EGO_execution:
+
+*Execution*
+~~~~~~~~~~~
+
+MORE HERE
+
+.. _EGO_methods_reference:
+
+**Methods Reference**
+---------------------
+
+
+"""
+
+import numpy as np
+from enum import IntEnum
+
+from psyneulink import *
+from psyneulink._typing import Union, Literal
+from psyneulink.core.scheduling.condition import Any, And, AllHaveRun, AtRunStart
+
+# Settings for running script:
+
+NUM_EXP_SEQS = 5               # Number of sequences to run in EXPERIENCE Phase (includes baseline + revaluation)
+NUM_PRED_TRIALS = 10           # Number of trials (ROLL OUTS) to run in PREDICTION Phase
+
+CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
+DISPLAY_MODEL = (                      # Only one of the following can be uncommented:
+    # None                             # suppress display of model
+    {}                               # show simple visual display of model
+    # {'show_node_structure': True}    # show detailed view of node structures and projections
+)
+# RUN_MODEL = True                       # True => run the model
+RUN_MODEL = False                      # False => don't run the model
+EXECUTION_MODE = ExecutionMode.Python
+# EXECUTION_MODE = ExecutionMode.PyTorch
+ANALYZE_RESULTS = False                # True => output analysis of results of run
+# REPORT_OUTPUT = ReportOutput.FULL     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
+REPORT_OUTPUT = ReportOutput.OFF     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
+REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
+PRINT_RESULTS = False                  # print model.results after execution
+ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
+
+
+#region   PARAMETERS
+# ======================================================================================================================
+#                                                   PARAMETERS
+# ======================================================================================================================
+
+# PyTorch Version Parameters:
+model_params = dict(
+    n_participants=58,
+    n_simulations = 100, # number of rollouts per participant
+    num_seqs = 20, # total number of sequences to be executed (used to set size of EM)
+    n_steps = 3, # number of steps per rollout
+    state_d = 7, # length of state vector
+    context_d = 7, # length of context vector
+    time_d = 25, # length of time vector
+    self_excitation = .25, # rate at which old context is carried over to new context
+    integration_rate = .5, # rate at which state is integrated into new context
+    state_weight = .5, # weight of the state used during memory retrieval
+    context_weight = .3, # weight of the context used during memory retrieval
+    time_noise=.01,# noise std for time integrator (drift is set to 0)
+    temperature = .05 # temperature of the softmax used during memory retrieval (smaller means more argmax-like
+)
+
+# Fixed (structural) parameters:
+
+# Names:
+MODEL_NAME = "EGO Model CSW"
+STATE_INPUT_LAYER_NAME = "STATE"
+CONTEXT_LAYER_NAME = 'CONTEXT'
+NEXT_STATE_NAME = 'NEXT_STATE'
+EM_NAME = "EM"
+PREDICTION_LAYER_NAME = "PREDICTION"
+
+EMFieldsIndex = IntEnum('EMFields',
+                        ['STATE',
+                         'CONTEXT',
+                         'NEXT_STATE'],
+                        start=0)
+
+
+# CONSTRUCTION PARAMETERS
+
+# Layer sizes:
+STATE_SIZE = model_params['state_d']  # length of state vector
+CONTEXT_SIZE = model_params['context_d']  # length of state vector
+
+# Context processing:
+INTEGRATION_RATE = model_params['integration_rate']  # rate at which state is integrated into context_layer
+
+# EM retrieval
+STATE_RETRIEVAL_WEIGHT = model_params['state_weight']     # weight of state field in retrieval from EM
+CONTEXT_RETRIEVAL_WEIGHT = model_params['context_weight'] # weight of context field in retrieval from EM
+RETRIEVAL_SOFTMAX_GAIN = 1/model_params['temperature']    # gain on softmax retrieval function
+
+NEXT_STATE_WEIGHT = 0
+
+RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projections
+
+#endregion
+
+#region ENVIRONMENT
+# ======================================================================================================================
+#                                                   ENVIRONMENT
+# ======================================================================================================================
+
+# Task environment:
+NUM_STIM_PER_SEQ = model_params['n_steps'] # number of stimuli in a sequence
+NUM_SEQS = model_params['num_seqs']  # total number of sequences to be executed (to set size of EM)
+
+STIM_SEQS = [list(range(1,NUM_STIM_PER_SEQ*2,2)),
+            list(range(2,NUM_STIM_PER_SEQ*2+1,2))]
+CURRICULUM_TYE = 'blocked'     # 'blocked' or 'interleaved'
+
+#endregion
+
+#region   MODEL
+# ======================================================================================================================
+#                                                      MODEL
+# ======================================================================================================================
+
+def construct_model(model_name:str=MODEL_NAME,
+
+                    # Inputs:
+                    state_input_name:str=STATE_INPUT_LAYER_NAME,
+                    state_size:int=STATE_SIZE,
+
+                    # Context processing:
+                    context_name:str=CONTEXT_LAYER_NAME,
+                    integration_rate:Union[float,int]=INTEGRATION_RATE,
+
+                    # EM:
+                    em_name:str=EM_NAME,
+                    retrieval_softmax_gain=RETRIEVAL_SOFTMAX_GAIN,
+                    state_retrieval_weight:Union[float,int]=STATE_RETRIEVAL_WEIGHT,
+                    context_retrieval_weight:Union[float,int]=CONTEXT_RETRIEVAL_WEIGHT,
+                    next_state_name=NEXT_STATE_NAME,
+                    next_state_weight:Union[float,int]=NEXT_STATE_WEIGHT,
+
+                    # Output / decision processing:
+                    PREDICTION_LAYER_NAME:str=PREDICTION_LAYER_NAME,
+
+                    )->Composition:
+
+    # Apportionment of contributions of state (actual or em) vs. context (em) to context_layer integration:
+
+
+    assert 0 <= integration_rate <= 1,\
+        f"context_retrieval_weight must be a number from 0 to 1"
+
+    # ----------------------------------------------------------------------------------------------------------------
+    # -------------------------------------------------  Nodes  ------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------------------------
+
+    state_input_layer = ProcessingMechanism(name=state_input_name, size=state_size)
+    context_layer = RecurrentTransferMechanism(name=context_name,
+                                               size=state_size,
+                                               auto=1-integration_rate,
+                                               hetero=0.0)
+    em = EMComposition(name=em_name,
+                       memory_template=[[0] * state_size,   # state
+                                        [0] * state_size,   # previous state
+                                        [0] * state_size],  # context
+                       memory_fill=(0,.01),
+                       memory_capacity=NUM_SEQS,
+                       softmax_gain=1.0,
+                       # Input Nodes:
+                       field_names=[state_input_name,
+                                    next_state_name,
+                                    context_name,
+                                    ],
+                       field_weights=(state_retrieval_weight,
+                                      next_state_weight,
+                                      context_retrieval_weight
+                                      )
+                       )
+
+    prediction_layer = ProcessingMechanism(name=PREDICTION_LAYER_NAME)
+
+    
+    # ----------------------------------------------------------------------------------------------------------------
+    # -------------------------------------------------  EGO Composition  --------------------------------------------
+    # ----------------------------------------------------------------------------------------------------------------
+    
+
+    EGO_comp = Composition(name=model_name,
+                           # # Terminate a Task.PREDICT trial after prediction_layer executes if a reward is retrieved
+                           # termination_processing={
+                           #     # TimeScale.TRIAL: And(Condition(lambda: task_input_layer.value == Task.PREDICT),
+                           #     #                      Condition(lambda: retrieved_reward_layer.value),
+                           #     #                      JustRan(prediction_layer))}
+                           #     # CRASHES:
+                           #     # TimeScale.TRIAL: Any(And(Condition(lambda: task_input_layer.value == Task.EXPERIENCE),
+                           #     #                          JustRan(em)),
+                           #     #                      And(Condition(lambda: task_input_layer.value == Task.PREDICT),
+                           #     #                          Condition(lambda: retrieved_reward_layer.value),
+                           #     #                          JustRan(prediction_layer)))}
+                           #     TimeScale.TRIAL: Any(And(Condition(lambda: task_input_layer.value == Task.EXPERIENCE),
+                           #                              AllHaveRun()),
+                           #                          And(Condition(lambda: task_input_layer.value == Task.PREDICT),
+                           #                              Condition(lambda: retrieved_reward_layer.value),
+                           #                              AllHaveRun()))}
+                           )
+
+    # Nodes not included in (decision output) Pathway specified above
+    EGO_comp.add_nodes([state_input_layer, context_layer, em, prediction_layer])
+
+    # Projections:
+    QUERY = ' [QUERY]'
+    VALUE = ' [VALUE]'
+    RETRIEVED = ' [RETRIEVED]'
+
+    # EM encoding --------------------------------------------------------------------------------
+    # state -> em
+    EGO_comp.add_projection(MappingProjection(state_input_layer,
+                                              em.nodes[state_input_name + QUERY]))
+    # context -> em
+    EGO_comp.add_projection(MappingProjection(context_layer,
+                                              em.nodes[context_name + QUERY]))
+
+    # Inputs to Context ---------------------------------------------------------------------------
+    # retrieved context -> context_layer
+    EGO_comp.add_projection(MappingProjection(state_input_layer,
+                                              context_layer,
+                                              # matrix=np.eye(STATE_SIZE) * state_weight
+                                              ))
+
+    # Response pathway ---------------------------------------------------------------------------
+    # retrieved state -> prediction_layer
+    EGO_comp.add_projection(MappingProjection(em.nodes[next_state_name + RETRIEVED],
+                                              prediction_layer))
+
+
+    # FIX: REMAINS TO BE FIXED:
+    # Validate construction
+    assert context_layer.input_port.path_afferents[0].sender.owner == context_layer # recurrent projection
+    assert context_layer.input_port.path_afferents[0].parameters.matrix.get()[0][0] == 1-integration_rate
+    # assert context_layer.input_port.path_afferents[1].sender.owner == em.nodes[CONTEXT_LAYER_NAME + RETRIEVED]  #
+    assert context_layer.input_port.path_afferents[1].sender.owner == state_input_layer  #
+    # memory of context
+    # assert context_layer.input_port.path_afferents[1].parameters.matrix.get()[0][0] == state_weight
+
+    return EGO_comp
+#endregion
+
+
+#region SCRIPT EXECUTION
+# ======================================================================================================================
+#                                                   SCRIPT EXECUTION
+# ======================================================================================================================
+
+if __name__ == '__main__':
+    model = None
+
+    if CONSTRUCT_MODEL:
+        print(f'Constructing {MODEL_NAME}')
+        model = construct_model()
+        assert 'DEBUGGING BREAK POINT'
+
+    if DISPLAY_MODEL is not None:
+        if model:
+            model.show_graph(**DISPLAY_MODEL)
+        else:
+            print("Model not yet constructed")
+
+    if RUN_MODEL:
+        experience_inputs = build_experience_inputs(state_size=STATE_SIZE,
+                                                    time_drift_rate=TIME_DRIFT_RATE,
+                                                    num_baseline_seqs=NUM_BASELINE_SEQS,
+                                                    num_revaluation_seqs=NUM_REVALUATION_SEQS,
+                                                    reward_vals=REWARD_VALS,
+                                                    CURRICULUM_TYE=CURRICULUM_TYE,
+                                                    ratio=RATIO,
+                                                    stim_seqs=STIM_SEQS)
+        input_layers = [TIME_INPUT_LAYER_NAME,
+                        TASK_INPUT_LAYER_NAME,
+                        STATE_INPUT_LAYER_NAME,
+                        REWARD_INPUT_LAYER_NAME]
+
+        # Experience Phase
+        print(f"Presenting {model.name} with {TOTAL_NUM_EXPERIENCE_STIMS} EXPERIENCE stimuli")
+        model.run(inputs={k: v for k, v in zip(input_layers, experience_inputs)},
+                  execution_mode=EXECUTION_MODE,
+                  report_output=REPORT_OUTPUT,
+                  report_progress=REPORT_PROGRESS)
+
+        # Prediction Phase
+        prediction_inputs = build_prediction_inputs(state_size=STATE_SIZE,
+                                                    time_drift_rate=TIME_DRIFT_RATE,
+                                                    num_roll_outs_per_stim=int(NUM_ROLL_OUTS / 2),
+                                                    stim_seqs=STIM_SEQS,
+                                                    reward_vals=REWARD_VALS,
+                                                    seq_type=PREDICT_SEQ_TYPE)
+        print(f"Running {model.name} for {NUM_ROLL_OUTS} PREDICT (ROLL OUT) trials")
+        model.termination_processing = {
+            TimeScale.TRIAL: And(Condition(lambda: model.nodes[TASK_INPUT_LAYER_NAME].value == Task.PREDICT),
+                                 Condition(lambda: model.nodes[RETRIEVED_REWARD_NAME].value),
+                                 # JustRan(model.nodes[PREDICTION_LAYER_NAME])
+                                 AllHaveRun()
+                                 )
+        }
+        model.run(inputs={k: v for k, v in zip(input_layers, prediction_inputs)},
+                  report_output=REPORT_OUTPUT,
+                  report_progress=REPORT_PROGRESS
+                  )
+
+        if PRINT_RESULTS:
+            print(f"Predicted reward for last stimulus: {model.results}")
+    #endregion

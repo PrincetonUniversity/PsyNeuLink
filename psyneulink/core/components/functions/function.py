@@ -551,7 +551,10 @@ class Function_Base(Function):
         for details).
 
     changes_shape : bool : False
-        specifies whether the return value of the function is different than the shape of its `variable <Function_Base.variable>.  Used to determine whether the shape of the inputs to the `Component` to which the function is assigned should be based on the `variable <Function_Base.variable>` of the function or its `value <Function.value>`.
+        specifies whether the return value of the function is different than the shape of either is outermost dimension
+        (axis 0) of its  its `variable <Function_Base.variable>`, or any of the items in the next dimension (axis 1).
+        Used to determine whether the shape of the inputs to the `Component` to which the function is assigned
+        should be based on the `variable <Function_Base.variable>` of the function or its `value <Function.value>`.
     COMMENT
 
     owner : Component
@@ -986,10 +989,11 @@ class Function_Base(Function):
         elif np.isscalar(np.array(val)):
             return float(val)
         try:
-            return torch.tensor(val, device=device).double()
-        except Exception:
-            assert False, (f"PROGRAM ERROR: unsupported value of parameter '{param_name}' ({val}) "
-                           f"encountered in pytorch_function_creator().")
+            # return torch.tensor(val, device=device).double()
+            return torch.tensor(val, device=device)
+        except Exception as error:
+            raise FunctionError(f"PROGRAM ERROR: unsupported value of parameter '{param_name}' ({val}) "
+                                f"encountered in pytorch_function_creator(): {error.args[0]}")
 
 
 # *****************************************   EXAMPLE FUNCTION   *******************************************************
