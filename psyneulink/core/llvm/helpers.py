@@ -521,7 +521,7 @@ class ConditionGenerator:
         for idx in range(len(ts.type)):
             if all(v == 0 for v in count[:idx]):
                 el = builder.extract_value(ts, idx)
-                el = builder.add(el, self.ctx.int32_ty(count[idx]))
+                el = builder.add(el, el.type(count[idx]))
             else:
                 el = self.ctx.int32_ty(0)
             ts = builder.insert_value(ts, el, idx)
@@ -573,7 +573,7 @@ class ConditionGenerator:
 
         # Update number of runs
         runs = builder.extract_value(status, 0)
-        runs = builder.add(runs, self.ctx.int32_ty(1))
+        runs = builder.add(runs, runs.type(1))
         status = builder.insert_value(status, runs, 0)
 
         # Update time stamp
@@ -682,7 +682,7 @@ class ConditionGenerator:
                                                      self.ctx.int32_ty(scale)])
             num_execs = builder.load(target_num_execs_in_scale)
 
-            return builder.icmp_unsigned('<', num_execs, self.ctx.int32_ty(count))
+            return builder.icmp_unsigned('<', num_execs, num_execs.type(count))
 
         elif isinstance(condition, AtNCalls):
             target, count = condition.args
@@ -691,7 +691,7 @@ class ConditionGenerator:
                                                     [self.ctx.int32_ty(0),
                                                      self.ctx.int32_ty(scale)])
             num_execs = builder.load(target_num_execs_in_scale)
-            return builder.icmp_unsigned('==', num_execs, self.ctx.int32_ty(count))
+            return builder.icmp_unsigned('==', num_execs, num_execs.type(count))
 
         elif isinstance(condition, AfterNCalls):
             target, count = condition.args
@@ -700,7 +700,7 @@ class ConditionGenerator:
                                                     [self.ctx.int32_ty(0),
                                                      self.ctx.int32_ty(scale)])
             num_execs = builder.load(target_num_execs_in_scale)
-            return builder.icmp_unsigned('>=', num_execs, self.ctx.int32_ty(count))
+            return builder.icmp_unsigned('>=', num_execs, num_execs.type(count))
 
         elif isinstance(condition, WhenFinished):
             # The first argument is the target node

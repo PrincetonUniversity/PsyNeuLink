@@ -321,6 +321,13 @@ class Concatenate(CombinationFunction):  # -------------------------------------
 
         return self._get_current_parameter_value(SCALE, context)
 
+    def _gen_pytorch_fct(self, device, context=None):
+        scale = self._get_pytorch_fct_param_value('scale', device, context)
+        offset = self._get_pytorch_fct_param_value('offset', device, context)
+        # return lambda x: torch.concatenate(tuple(x)) * scale + offset
+        return lambda x: torch.hstack(tuple(x)) * scale + offset
+
+
 class Rearrange(CombinationFunction):  # ------------------------------------------------------------------------
     """
     Rearrange(                                     \

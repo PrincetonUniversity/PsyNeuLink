@@ -3501,7 +3501,6 @@ class Mechanism_Base(Mechanism):
             return f'<td port="{self.name}" colspan="{cols}">' + \
                    mech_name + mech_roles + mech_condition + mech_function + mech_value + '</td>'
 
-        @beartype
         def port_table(port_list: ContentAddressableList,
                        port_type: Union[Type[InputPort], Type[ParameterPort], Type[OutputPort]]):
             """Return html with table for each port in port_list, including functions and/or values as specified

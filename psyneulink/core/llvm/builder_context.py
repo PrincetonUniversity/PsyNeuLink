@@ -370,13 +370,21 @@ class LLVMBuilderContext:
         # has_initializers is only used in "reset" variants
         initializers.add('has_initializers')
 
-        # 'termination_mesasure" is only used in "is_finished" variant
+        # 'termination_measure" is only used in "is_finished" variant
         used_param_ids.add('termination_measure')
         used_state_ids.add('termination_measure')
 
         # 'num_trials_per_estimate' is only used in "evaluate" variants
         if hasattr(component, 'evaluate_agent_rep'):
             used_param_ids.add('num_trials_per_estimate')
+
+        # MODIFIED 7/10/24 NEW:
+        if hasattr(component, 'adapt_scale'):
+            used_param_ids.add('threshold')
+            used_param_ids.add('adapt_scale')
+            used_param_ids.add('adapt_base')
+            used_param_ids.add('adapt_entropy_weighting')
+        # MODIFIED 7/10/24 END
 
         unused_param_ids = component_param_ids - used_param_ids - initializers
         unused_state_ids = component_state_ids - used_state_ids
@@ -531,6 +539,11 @@ class LLVMBuilderContext:
             # Python 'int' is handled above as it is the default type for '0'
             return ir.IntType(t.nbytes * 8)
         elif isinstance(t, np.ndarray):
+            # 0d uint32 values were likely created from enums (above) and are
+            # observed here after compilation sync.
+            # Avoid silent promotion to float (via Python's builtin int-type)
+            if t.ndim == 0 and t.dtype == np.uint32:
+                return self.convert_python_struct_to_llvm_ir(t.reshape(1)[0])
             return self.convert_python_struct_to_llvm_ir(t.tolist())
         elif isinstance(t, np.random.RandomState):
             return pnlvm.builtins.get_mersenne_twister_state_struct(self)

@@ -989,10 +989,11 @@ class Function_Base(Function):
         elif np.isscalar(np.array(val)):
             return float(val)
         try:
-            return torch.tensor(val, device=device).double()
-        except Exception:
-            assert False, (f"PROGRAM ERROR: unsupported value of parameter '{param_name}' ({val}) "
-                           f"encountered in pytorch_function_creator().")
+            # return torch.tensor(val, device=device).double()
+            return torch.tensor(val, device=device)
+        except Exception as error:
+            raise FunctionError(f"PROGRAM ERROR: unsupported value of parameter '{param_name}' ({val}) "
+                                f"encountered in pytorch_function_creator(): {error.args[0]}")
 
 
 # *****************************************   EXAMPLE FUNCTION   *******************************************************

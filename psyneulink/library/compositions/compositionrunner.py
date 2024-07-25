@@ -49,6 +49,7 @@ class CompositionRunner():
                       epochs: int,
                       num_trials: int,
                       batch_size: int = 1,
+                      optimizations_per_minibatch: int = 1,
                       randomize: bool = True,
                       call_before_minibatch=None,
                       call_after_minibatch=None,
@@ -78,14 +79,25 @@ class CompositionRunner():
                     chunk = {}
                     for k, v in inputs.items():
                         chunk[k] = v[idx % len(v)]
-                    yield copy_parameter_value(chunk)
-                if call_after_minibatch:
-                    call_after_minibatch()
+                    for rep_idx in range(optimizations_per_minibatch):
+                        # Return current stimulus
+                        yield copy_parameter_value(chunk)
 
-                # Update weights if in PyTorch execution_mode;
-                #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
-                if execution_mode is ExecutionMode.PyTorch:
-                    self._composition._update_learning_parameters(context)
+                        # Update weights if in PyTorch execution_mode;
+                        #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
+                        if execution_mode is ExecutionMode.PyTorch:
+                            self._composition._update_learning_parameters(context)
+
+                    if call_after_minibatch:
+                        try:
+                            # Try with the hope that the function uses **kwargs (or these args)
+                            call_after_minibatch(epoch=epoch,
+                                                 batch=i // batch_size,
+                                                 num_batches=num_trials // batch_size,
+                                                 context=context)
+                        except TypeError:
+                            # If not, try without the args
+                            call_after_minibatch()
 
             # Compiled mode does not need more identical inputs.
             # number_of_runs will be set appropriately to cycle over the set
@@ -155,6 +167,7 @@ class CompositionRunner():
                      epochs: int = 1,
                      learning_rate = None,
                      minibatch_size: int = 1,
+                     optimizations_per_minibatch: int = 1,
                      patience: int = None,
                      min_delta: int = 0,
                      randomize_minibatches: bool = True,
@@ -251,11 +264,12 @@ class CompositionRunner():
                                                                 execution_mode=execution_mode,
                                                                 context=context)
             else:
-                minibatched_input = self._batch_inputs(stim_input,
-                                                       stim_epoch,
-                                                       num_trials,
-                                                       minibatch_size,
-                                                       randomize_minibatches,
+                minibatched_input = self._batch_inputs(inputs=stim_input,
+                                                       epochs=stim_epoch,
+                                                       num_trials=num_trials,
+                                                       batch_size=minibatch_size,
+                                                       optimizations_per_minibatch=optimizations_per_minibatch,
+                                                       randomize=randomize_minibatches,
                                                        call_before_minibatch=call_before_minibatch,
                                                        call_after_minibatch=call_after_minibatch,
                                                        early_stopper=early_stopper,

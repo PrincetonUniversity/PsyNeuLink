@@ -1135,6 +1135,8 @@ class TestCustomCombinationFunction:
         C.run(inputs={I1: [[1.0]], I2: [[1.0]]}, num_trials=7, execution_mode=comp_mode)
 
         np.testing.assert_allclose(exp, C.results)
+        assert I1.has_initializers == has_initializers1
+        assert I2.has_initializers == has_initializers2
 
     @pytest.mark.composition
     @pytest.mark.integrator_mechanism

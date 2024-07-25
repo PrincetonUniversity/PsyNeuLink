@@ -694,11 +694,11 @@ def make_parameter_property(param):
     return property(getter).setter(setter)
 
 
-def _has_initializers_setter(value, owning_component=None, context=None):
+def _has_initializers_setter(value, owning_component=None, context=None, *, compilation_sync=False):
     """
     Assign has_initializers status to Component and any of its owners up the hierarchy.
     """
-    if value:
+    if value and not compilation_sync:
         # only update owner's attribute if setting to True, because there may be
         # other children that have initializers
         try:
@@ -1410,13 +1410,25 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             if p.name == 'matrix': # Flatten matrix
                 val = tuple(np.asfarray(x).flatten())
             elif isinstance(x, np.random.RandomState):
-                # Skip first element of random state (id string)
-                val = pnlvm._tupleize((*x.get_state()[1:], x.used_seed[0]))
+                state = x.get_state(legacy=False)
+
+                # Keep the indices in sync with bultins.py:get_mersenne_twister_state_struct
+                val = pnlvm._tupleize((state['state']['key'],
+                                       state['gauss'],
+                                       state['state']['pos'],
+                                       state['has_gauss'],
+                                       x.used_seed[0]))
             elif isinstance(x, np.random.Generator):
                 state = x.bit_generator.state
-                val = pnlvm._tupleize((state['state']['counter'], state['state']['key'],
-                                       state['buffer'], state['uinteger'], state['buffer_pos'],
-                                       state['has_uint32'], x.used_seed[0]))
+
+                # Keep the indices in sync with bultins.py:get_philox_state_struct
+                val = pnlvm._tupleize((state['state']['counter'],
+                                       state['state']['key'],
+                                       state['buffer'],
+                                       state['uinteger'],
+                                       state['buffer_pos'],
+                                       state['has_uint32'],
+                                       x.used_seed[0]))
             elif isinstance(x, Time):
                 val = tuple(x._get_by_time_scale(t) for t in TimeScale)
             elif isinstance(x, Component):
@@ -1477,7 +1489,11 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "learning_results", "learning_signal", "learning_signals",
                      "error_matrix", "error_signal", "activation_input",
                      "activation_output", "error_sources", "covariates_sources",
-                     "target", "sample", "learning_function"
+                     "target", "sample", "learning_function",
+                     "device",
+                     # should be added to relevant _gen_llvm_function... when aug:
+                     # SoftMax:
+                     'mask_threshold', 'adapt_scale', 'adapt_base', 'adapt_entropy_weighting'
                      }
         # Mechanism's need few extra entries:
         # * matrix -- is never used directly, and is flatened below

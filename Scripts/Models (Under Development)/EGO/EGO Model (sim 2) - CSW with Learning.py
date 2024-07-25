@@ -131,87 +131,46 @@ MORE HERE
 
 
 """
-
+import matplotlib.pyplot as plt
 import numpy as np
 import graph_scheduler as gs
 from enum import IntEnum
 
+import torch
+torch.manual_seed(0)
+
 from psyneulink import *
 from psyneulink._typing import Union, Literal
 
+#region   SCRIPT SETTINGS
+# ======================================================================================================================
+#                                                   SCRIPT SETTINGS
+# ======================================================================================================================
 # Settings for running script:
 
-MEMORY_CAPACITY = 5
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
-DISPLAY_MODEL = (                      # Only one of the following can be uncommented:
+DISPLAY_MODEL =  (                     # Only one of the following can be uncommented:
     None                             # suppress display of model
-    # {}                               # show simple visual display of model
-    # {'show_node_structure': True}    # show detailed view of node structures and projections
+    # {                                  # show simple visual display of model
+    # 'show_pytorch': True,            # show pytorch graph of model
+    #  'show_learning': True
+    # # 'show_projections_not_in_composition': True,
+    # # 'exclude_from_gradient_calc_style': 'dashed'# show target mechanisms for learning
+    # # {'show_node_structure': True     # show detailed view of node structures and projections
+    # }
 )
-RUN_MODEL = True                       # True => run the model
+RUN_MODEL = True,                       # True => run the model
 # RUN_MODEL = False                      # False => don't run the model
-EXECUTION_MODE = ExecutionMode.Python
-# EXECUTION_MODE = ExecutionMode.PyTorch
-# ANALYZE_RESULTS = False                # True => output analysis of results of run
-# REPORT_OUTPUT = ReportOutput.FULL     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
+# EXECUTION_MODE = ExecutionMode.Python
+EXECUTION_MODE = ExecutionMode.PyTorch
+# REPORT_OUTPUT = ReportOutput.FULL  # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_OUTPUT = ReportOutput.OFF     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
-REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
-PRINT_RESULTS = True                  # print model.results after execution
-ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
-
-
-#region   PARAMETERS
-# ======================================================================================================================
-#                                                   PARAMETERS
-# ======================================================================================================================
-
-# PyTorch Version Parameters:
-model_params = dict(
-    state_d = 11, # length of state vector
-    previous_state_d = 11, # length of state vector
-    context_d = 11, # length of context vector
-    integration_rate = .69, # rate at which state is integrated into new context
-    state_weight = .5, # weight of the state used during memory retrieval
-    context_weight = .5, # weight of the context used during memory retrieval
-    temperature = .01 # temperature of the softmax used during memory retrieval (smaller means more argmax-like
-)
-
-# Fixed (structural) parameters:
-
-# Names:
-MODEL_NAME = "EGO Model CSW"
-STATE_INPUT_LAYER_NAME = "STATE"
-PREVIOUS_STATE_LAYER_NAME = "PREVIOUS STATE"
-CONTEXT_LAYER_NAME = 'CONTEXT'
-
-EM_NAME = "EM"
-PREDICTION_LAYER_NAME = "PREDICTION"
-
-EMFieldsIndex = IntEnum('EMFields',
-                        ['STATE',
-                         'CONTEXT',
-                         'PREVIOUS_STATE'],
-                        start=0)
-
-
-# CONSTRUCTION PARAMETERS
-
-# Layer sizes:
-STATE_SIZE = model_params['state_d']  # length of state vector
-CONTEXT_SIZE = model_params['context_d']  # length of state vector
-
-# Context processing:
-INTEGRATION_RATE = model_params['integration_rate']  # rate at which state is integrated into integrator layer
-
-# EM retrieval
-STATE_RETRIEVAL_WEIGHT = 0
-PREVIOUS_STATE_RETRIEVAL_WEIGHT = model_params['state_weight']     # weight of state field in retrieval from EM
-CONTEXT_RETRIEVAL_WEIGHT = model_params['context_weight'] # weight of context field in retrieval from EM
-RETRIEVAL_SOFTMAX_GAIN = 1/model_params['temperature']    # gain on softmax retrieval function
-
-
-RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projections
-
+REPORT_PROGRESS = ReportProgress.OFF # Sets console progress bar during run
+PRINT_RESULTS = True                 # print model.results to console after execution
+SAVE_RESULTS = False                 # save model.results to disk
+# PLOT_RESULTS = True                  # plot results (PREDICTIONS) vs. TARGETS
+PLOT_RESULTS = False                  # plot results (PREDICTIONS) vs. TARGETS
+ANIMATE = False                       # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
 #endregion
 
 #region ENVIRONMENT
@@ -221,11 +180,79 @@ RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec
 
 # Task environment:
 import Environment
-CURRICULUM_TYPE = 'Blocked'     # 'Blocked' or 'Interleaved'
-INPUTS = Environment.generate_dataset(condition=CURRICULUM_TYPE).xs.numpy()[:5]
-# INPUTS = [env_inputs[i][:10] for i in range(len(env_inputs))]
 
+# CURRICULUM_TYPE = 'Blocked'     # 'Blocked' or 'Interleaved'
+CURRICULUM_TYPE = 'Interleaved'     # 'Blocked' or 'Interleaved'
 
+NUM_STIMS = 7  # Integer or ALL
+dataset = Environment.generate_dataset(condition=CURRICULUM_TYPE)
+if NUM_STIMS is ALL:
+    INPUTS = dataset.xs.numpy()
+    TARGETS = dataset.ys.numpy()
+else:
+    INPUTS = dataset.xs.numpy()[:NUM_STIMS]
+    TARGETS = dataset.ys.numpy()[:NUM_STIMS]
+TOTAL_NUM_STIMS = len(INPUTS)
+
+#endregion
+
+#region   PARAMETERS
+# ======================================================================================================================
+#                                                   MODEL PARAMETERS
+# ======================================================================================================================
+
+model_params = dict(
+
+    # Names:
+    name = "EGO Model CSW",
+    state_input_layer_name = "STATE",
+    previous_state_layer_name = "PREVIOUS STATE",
+    context_layer_name = 'CONTEXT',
+    em_name = "EM",
+    prediction_layer_name = "PREDICTION",
+
+    # Structral
+    state_d = 11, # length of state vector
+    previous_state_d = 11, # length of state vector
+    context_d = 11, # length of context vector
+    memory_capacity = TOTAL_NUM_STIMS, # number of entries in EM memory
+    memory_init = (0,.001),  # Initialize memory with random values in interval
+    # memory_init = None,  # Initialize with zeros
+    concatenate_keys = False,
+
+    # Processing
+    integration_rate = .69, # rate at which state is integrated into new context
+    state_weight = 1, # weight of the state used during memory retrieval
+    context_weight = 1, # weight of the context used during memory retrieval
+    normalize_field_weights = True, # whether to normalize the field weights during memory retrieval
+    # softmax_temperature = None, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
+    softmax_temperature = .1, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
+    # softmax_temperature = ADAPTIVE, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
+    # softmax_temperature = CONTROL, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
+    # softmax_threshold = None, # threshold used to mask out small values in softmax
+    softmax_threshold = .001, # threshold used to mask out small values in softmax
+    enable_learning=[True, False, False], # Enable learning for PREDICTION (STATE) but not CONTEXT or PREVIOUS STATE
+    learn_field_weights = False,
+    loss_spec = Loss.BINARY_CROSS_ENTROPY,
+    # loss_spec = Loss.MSE,
+    learning_rate = .5,
+    device = CPU,
+    # device = MPS,
+)
+
+# EM structdural params:
+EMFieldsIndex = IntEnum('EMFields',
+                        ['STATE',
+                         'CONTEXT',
+                         'PREVIOUS_STATE'],
+                        start=0)
+STATE_RETRIEVAL_WEIGHT = 0
+RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projections
+
+if is_numeric_scalar(model_params['softmax_temperature']):      # translate to gain of softmax retrieval function
+    RETRIEVAL_SOFTMAX_GAIN = 1/model_params['softmax_temperature']
+else:                                                           # pass along ADAPTIVE or CONTROL spec
+    RETRIEVAL_SOFTMAX_GAIN = model_params['softmax_temperature']
 #endregion
 
 #region   MODEL
@@ -233,29 +260,41 @@ INPUTS = Environment.generate_dataset(condition=CURRICULUM_TYPE).xs.numpy()[:5]
 #                                                      MODEL
 # ======================================================================================================================
 
-def construct_model(model_name:str=MODEL_NAME,
+def construct_model(model_name:str=model_params['name'],
 
                     # Input layer:
-                    state_input_name:str=STATE_INPUT_LAYER_NAME,
-                    state_size:int=STATE_SIZE,
+                    state_input_name:str=model_params['state_input_layer_name'],
+                    state_size:int=model_params['state_d'],
 
                     # Previous state
-                    previous_state_input_name:str=PREVIOUS_STATE_LAYER_NAME,
+                    previous_state_input_name:str=model_params['previous_state_layer_name'],
 
                     # Context representation (learned):
-                    context_name:str=CONTEXT_LAYER_NAME,
-                    context_size:Union[float,int]=CONTEXT_SIZE,
-                    integration_rate:float=INTEGRATION_RATE,
+                    context_name:str=model_params['context_layer_name'],
+                    context_size:Union[float,int]=model_params['context_d'],
+                    integration_rate:float=model_params['integration_rate'],
 
                     # EM:
-                    em_name:str=EM_NAME,
+                    em_name:str=model_params['em_name'],
                     retrieval_softmax_gain=RETRIEVAL_SOFTMAX_GAIN,
+                    retrieval_softmax_threshold=model_params['softmax_threshold'],
                     state_retrieval_weight:Union[float,int]=STATE_RETRIEVAL_WEIGHT,
-                    previous_state_retrieval_weight:Union[float,int]=PREVIOUS_STATE_RETRIEVAL_WEIGHT,
-                    context_retrieval_weight:Union[float,int]=CONTEXT_RETRIEVAL_WEIGHT,
+                    previous_state_retrieval_weight:Union[float,int]=model_params['state_weight'],
+                    context_retrieval_weight:Union[float,int]=model_params['context_weight'],
+                    normalize_field_weights = model_params['normalize_field_weights'],
+                    concatenate_keys = model_params['concatenate_keys'],
+                    learn_field_weights = model_params['learn_field_weights'],
+                    memory_capacity = model_params['memory_capacity'],
+                    memory_init=model_params['memory_init'],
 
-                    # Output / decision processing:
-                    prediction_layer_name:str=PREDICTION_LAYER_NAME,
+                    # Output:
+                    prediction_layer_name:str=model_params['prediction_layer_name'],
+
+                    # Learning
+                    loss_spec=model_params['loss_spec'],
+                    enable_learning=model_params['enable_learning'],
+                    learning_rate = model_params['learning_rate'],
+                    device=model_params['device']
 
                     )->Composition:
 
@@ -279,10 +318,11 @@ def construct_model(model_name:str=MODEL_NAME,
                        memory_template=[[0] * state_size,   # state
                                         [0] * state_size,   # previous state
                                         [0] * state_size],  # context
-                       # memory_fill=(0,.01),
-                       memory_capacity=MEMORY_CAPACITY,
+                       memory_fill=memory_init,
+                       memory_capacity=memory_capacity,
                        memory_decay_rate=0,
-                       softmax_gain=1.0,
+                       softmax_gain=retrieval_softmax_gain,
+                       softmax_threshold=retrieval_softmax_threshold,
                        # Input Nodes:
                        field_names=[state_input_name,
                                     previous_state_input_name,
@@ -292,8 +332,12 @@ def construct_model(model_name:str=MODEL_NAME,
                                       previous_state_retrieval_weight,
                                       context_retrieval_weight
                                       ),
-                       # enable_learning=True,
-                       learn_field_weights=False
+                       normalize_field_weights=normalize_field_weights,
+                       concatenate_keys=concatenate_keys,
+                       learn_field_weights=learn_field_weights,
+                       learning_rate=learning_rate,
+                       enable_learning=enable_learning,
+                       device=device
                        )
 
     prediction_layer = ProcessingMechanism(name=prediction_layer_name, size=state_size)
@@ -308,18 +352,36 @@ def construct_model(model_name:str=MODEL_NAME,
     RETRIEVED = ' [RETRIEVED]'
 
     # Pathways
-    state_to_previous_state_pathway = [state_input_layer, previous_state_layer]
-    state_to_context_pathway = [state_input_layer, context_layer]
+    state_to_previous_state_pathway = [state_input_layer,
+                                       MappingProjection(matrix=IDENTITY_MATRIX,
+                                                         learnable=False),
+                                       previous_state_layer]
+    state_to_context_pathway = [state_input_layer,
+                                MappingProjection(matrix=IDENTITY_MATRIX,
+                                                  learnable=False),
+                                context_layer]
     state_to_em_pathway = [state_input_layer,
-                           MappingProjection(state_input_layer, em.nodes[state_input_name+VALUE]),
+                           MappingProjection(sender=state_input_layer,
+                                             receiver=em.nodes[state_input_name+VALUE],
+                                             matrix=IDENTITY_MATRIX,
+                                             learnable=False),
                            em]
     previous_state_to_em_pathway = [previous_state_layer,
-                                    MappingProjection(previous_state_layer, em.nodes[previous_state_input_name+QUERY]),
+                                    MappingProjection(sender=previous_state_layer,
+                                                      receiver=em.nodes[previous_state_input_name+QUERY],
+                                                      matrix=IDENTITY_MATRIX,
+                                                      learnable=False),
                                     em]
     context_learning_pathway = [context_layer,
-                                MappingProjection(context_layer, em.nodes[context_name + QUERY], learnable=True),
+                                MappingProjection(sender=context_layer,
+                                                  matrix=IDENTITY_MATRIX,
+                                                  receiver=em.nodes[context_name + QUERY],
+                                                  learnable=True),
                                 em,
-                                MappingProjection(em.nodes[state_input_name + RETRIEVED], prediction_layer),
+                                MappingProjection(sender=em.nodes[state_input_name + RETRIEVED],
+                                                  receiver=prediction_layer,
+                                                  matrix=IDENTITY_MATRIX,
+                                                  learnable=False),
                                 prediction_layer]
 
     # Composition
@@ -328,11 +390,15 @@ def construct_model(model_name:str=MODEL_NAME,
                                     state_to_em_pathway,
                                     previous_state_to_em_pathway,
                                     context_learning_pathway],
-                                   name=model_name)
+                                   learning_rate=learning_rate,
+                                   loss_spec=loss_spec,
+                                   name=model_name,
+                                   device=device)
 
-    # EGO_comp.show_graph(show_learning=True)
     learning_components = EGO_comp.infer_backpropagation_learning_pathways(ExecutionMode.PyTorch)
-    EGO_comp.add_projection(sender=state_input_layer, receiver=learning_components[2])
+    EGO_comp.add_projection(MappingProjection(sender=state_input_layer,
+                                              receiver=learning_components[0],
+                                              learnable=False))
 
     # Ensure EM is executed (to encode previous state and context, and predict current state)
     #     before updating state and context
@@ -346,7 +412,6 @@ def construct_model(model_name:str=MODEL_NAME,
     return EGO_comp
 #endregion
 
-
 #region SCRIPT EXECUTION
 # ======================================================================================================================
 #                                                   SCRIPT EXECUTION
@@ -356,7 +421,7 @@ if __name__ == '__main__':
     model = None
 
     if CONSTRUCT_MODEL:
-        print(f'Constructing {MODEL_NAME}')
+        print(f'Constructing {model_params["name"]}')
         model = construct_model()
         assert 'DEBUGGING BREAK POINT'
         # print(model.scheduler.consideration_queue)
@@ -369,21 +434,73 @@ if __name__ == '__main__':
             print("Model not yet constructed")
 
     if RUN_MODEL:
+        import timeit
+        def print_stuff(**kwargs):
+            print(f"\n**************\n BATCH: {kwargs['batch']}\n**************\n")
+            print(kwargs)
+            print('\nContext internal: \n', model.nodes['CONTEXT'].function.parameters.value.get(kwargs['context']))
+            print('\nContext hidden: \n', model.nodes['CONTEXT'].parameters.value.get(kwargs['context']))
+            print('\nContext for EM: \n',
+                  model.nodes['EM'].nodes['CONTEXT [QUERY]'].parameters.value.get(kwargs['context']))
+            print('\nPrediction: \n',
+                  model.nodes['PREDICTION'].parameters.value.get(kwargs['context']))
+            # print('\nLoss: \n',
+            #       model.parameters.tracked_loss._get(kwargs['context']))
+            print('\nProjections from context to EM: \n', model.projections[7].parameters.matrix.get(kwargs['context']))
+            print('\nEM Memory: \n', model.nodes['EM'].parameters.memory.get(model.name))
+
         # print("MODEL NOT YET FULLY EXECUTABLE")
-        print(f'Running {MODEL_NAME}')
-        # model.run(inputs={STATE_INPUT_LAYER_NAME:INPUTS},
-        #           # report_output=REPORT_OUTPUT,
-        #           # report_progress=REPORT_PROGRESS
-        #           )
-        context = MODEL_NAME
-        model.learn(inputs={STATE_INPUT_LAYER_NAME:INPUTS},
+        print(f"Running {model_params['name']}")
+        context = model_params['name']
+        start_time = timeit.default_timer()
+        model.learn(inputs={model_params['state_input_layer_name']:INPUTS},
                   # report_output=REPORT_OUTPUT,
                   # report_progress=REPORT_PROGRESS
-                    call_after_minibatch=print('Projections from context to EM: ',
-                                               model.projections[7].parameters.matrix.get(context))
-                                               # model.projections[7].matrix)
+                  #   call_after_minibatch=print('Projections from context to EM: ',
+                  #                              model.projections[7].parameters.matrix.get(context)),
+                  #                              # model.projections[7].matrix)
+                  #   call_after_minibatch=print_stuff,
+                    optimizations_per_minibatch=1,
+                    learning_rate=model_params['learning_rate'],
+                    execution_mode=ExecutionMode.PyTorch,
+                    # minibatch_size=3,
                   )
+        stop_time = timeit.default_timer()
+        print(f"Elapsed time: {stop_time - start_time}")
+        if DISPLAY_MODEL is not None:
+            model.show_graph(**DISPLAY_MODEL)
         if PRINT_RESULTS:
             print("MEMORY:")
-            print(model.nodes['EM'].parameters.memory.get(context))
+            print(model.nodes['EM'].parameters.memory.get(model.name))
+            model.run(inputs={model_params["state_input_layer_name"]:INPUTS[4]},
+                      # report_output=REPORT_OUTPUT,
+                      # report_progress=REPORT_PROGRESS
+                      )
+            print("CONTEXT INPUT:")
+            print(model.nodes['CONTEXT'].parameters.variable.get(model.name))
+            print("CONTEXT OUTPUT:")
+            print(model.nodes['CONTEXT'].parameters.value.get(model.name))
+            print("PREDICTION OUTPUT:")
+            print(model.nodes['PREDICTION'].parameters.value.get(model.name))
+            print("CONTEXT WEIGHTS:")
+            print(model.projections[7].parameters.matrix.get(model.name))
+            plt.imshow(model.projections[7].parameters.matrix.get(model.name))
+            def test_weights(weight_mat):
+                # checks whether only 5 weights are updated.
+                weight_mat -= np.eye(11)
+                col_sum = weight_mat.sum(1)
+                row_sum = weight_mat.sum(0)
+                return np.max([(row_sum != 0).sum(), (col_sum != 0).sum()])
+            print(test_weights(model.projections[7].parameters.matrix.get(model.name)))
+
+        if SAVE_RESULTS:
+            np.save('EGO PREDICTIONS', model.results)
+            np.save('EGO INPUTS', INPUTS)
+            np.save('EGO TARGETS', TARGETS)
+
+        if PLOT_RESULTS:
+            plt.plot(1 - np.abs(model.results[2:TOTAL_NUM_STIMS,2]-TARGETS[:TOTAL_NUM_STIMS-2]))
+            plt.show()
+            plt.savefig('EGO PLOT.png')
+
     #endregion

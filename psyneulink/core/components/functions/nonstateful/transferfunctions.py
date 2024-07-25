@@ -89,14 +89,15 @@ from psyneulink.core.components.functions.nonstateful.selectionfunctions import 
 from psyneulink.core.components.functions.stateful.integratorfunctions import SimpleIntegrator
 from psyneulink.core.components.shellclasses import Projection
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
+from psyneulink.core.globals.utilities import is_numeric_scalar
 from psyneulink.core.globals.keywords import \
-    ADDITIVE_PARAM, ALL, ANGLE_FUNCTION, BIAS, BINOMIAL_DISTORT_FUNCTION, DROPOUT_FUNCTION, EXPONENTIAL_FUNCTION, \
-    GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION, HAS_INITIALIZERS, HOLLOW_MATRIX, \
+    (ADAPTIVE, ADDITIVE_PARAM, ALL, ANGLE_FUNCTION, BIAS, BINOMIAL_DISTORT_FUNCTION, DROPOUT_FUNCTION,
+     EXPONENTIAL_FUNCTION, GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION, HAS_INITIALIZERS, HOLLOW_MATRIX, \
     IDENTITY_FUNCTION, IDENTITY_MATRIX, INTERCEPT, LEAK, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, \
     TANH_FUNCTION, MATRIX_KEYWORD_NAMES, MATRIX, MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE_PARAM, NORMALIZE, \
-    OFF, OFFSET, ON, PER_ITEM, PROB, PRODUCT, OUTPUT_TYPE, PROB_INDICATOR, \
+    OFF, OFFSET, ON, OUTPUT_TYPE, PER_ITEM, PROB, PRODUCT, PROB_INDICATOR, \
     RATE, RECEIVER, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM, \
-    TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME
+    THRESHOLD, TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME)
 from psyneulink.core.globals.parameters import \
     FunctionParameter, Parameter, get_validator_by_function, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import \
@@ -1435,7 +1436,9 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         gain = self._get_pytorch_fct_param_value('gain', device, context)
         bias = self._get_pytorch_fct_param_value('bias', device, context)
         offset = self._get_pytorch_fct_param_value('offset', device, context)
-        return lambda x: 1 / (1 + torch.exp(-gain * (x + bias) + offset))
+        # return lambda x: 1 / (1 + torch.exp(-gain * (x + bias) + offset))
+        return lambda x: ((torch.exp(-gain * (x + bias) + offset) - torch.exp(-gain * (-x + bias) + offset))
+                          / (torch.exp(-gain * (x + bias) + offset) + torch.exp(-gain * (-x + bias) + offset)))
 
 # **********************************************************************************************************************
 #                                                    ReLU
@@ -2894,14 +2897,18 @@ class Dropout(TransferFunction):  #
 
 class SoftMax(TransferFunction):
     """
-    SoftMax(               \
-         default_variable, \
-         gain=1.0,         \
-         output=ALL,       \
-         params=None,      \
-         owner=None,       \
-         name=None,        \
-         prefs=None        \
+    SoftMax(                        \
+         default_variable,          \
+         gain=1.0,                  \
+         mask_threshold=None,       \
+         adapt_scale=1,             \
+         adapt_base=1,              \
+         adapt_entropy_weighting=.1 \
+         output=ALL,                \
+         params=None,               \
+         owner=None,                \
+         name=None,                 \
+         prefs=None                 \
          )
 
     .. _SoftMax:
@@ -2914,8 +2921,41 @@ class SoftMax(TransferFunction):
 
         \\frac{e^{gain * variable_i}}{\\sum\\limits^{len(variable)}e^{gain * variable}}
 
-    filtered by `ouptput <SoftMax.output>` specification (see `The Softmax function and its derivative
+    filtered by `output <SoftMax.output>` specification (see `The Softmax function and its derivative
     <http://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/>`_ for a nice discussion).
+
+        .. note::
+           If `variable <SoftMax.variable>` is all zeros, the SoftMax transform returns all zeros.
+
+    .. _SoftMax_AdaptGain:
+
+    *Thresholding and Adaptive Gain*
+
+    For cases in which SoftMax is used with vector that sparse (e.g., one-hots), the value(s) of the (most( significant
+    entries (e.g., the one's in a one-hot) can be sensitive to (diminished by) the number of other values in the vector
+    (i.e., its length). For example, whereas for ``[1 0]`` the SoftMax is ``[0.73105858 0.26894142]``, for ``[1 0 0 0]``
+    it is ``[0.47536689 0.1748777  0.1748777  0.1748777]``. This can be addressed in one of two ways: either by
+    thresholding `variable <SoftMax.variable>` before applying the SoftMax function, or by adapting the `gain
+    <SoftMax.gain>` parametrically based on the `variable <SoftMax.variable>`:
+
+    - *mask_threshold* -- setting the **mask_threshold** argument to a scalar value causes the `variable
+      <SoftMax.variable>` to be thresholded by that value before applying the SoftMax function; any elements of
+      `variable <SoftMax.variable>` with an absolute value below the threshold are set to 0; all others are scaled
+      by the specified `gain <SoftMax.gain>` and then passed through the SoftMax function.  This only applies if the
+      **gain** argument is specified as a scalar; if it is specified as *ADAPTIVE*, then the **mask_threshold**
+      argument is ignored.
+
+    - *ADAPTIVE* -- setting **gain** argument to *ADAPTIVE* causes it to be dynamically adjusted,
+      based on the entropy and length of the variable, to keep the mass of the distribution around the highest values
+      as consistent as possible over different sized vectors. If *ADAPTIVE* is specified, then the `mask_threshold
+      <SoftMax.mask_threshold>` argument is ignored. The gain is adapted by calling the SoftMax function's `adapt_gain
+      <SoftMax.adapt_gain>` method. This can be finicky, and may need to be further tuned to the length of `variable
+      <SoftMax.variable>`, which can be done using the SoftMax Function's **adapt_scale**, **adapt_base**, and
+      **adapt_entropy_weighting** arguments.
+
+    .. _SoftMax_Derivative:
+
+    *Derivatve*
 
     `derivative <SoftMax.derivative>` returns the derivative of the SoftMax.  If *OUTPUT_TYPE* for the SoftMax
     is *ALL*, returns Jacobian matrix (derivative for each element of the output array with respect to each of the
@@ -2934,8 +2974,26 @@ class SoftMax(TransferFunction):
     default_variable : 1d array : default class_defaults.variable
         specifies a template for the value to be transformed.
 
-    gain : float : default 1.0
-        specifies a value by which to multiply `variable <Linear.variable>` before SoftMax transformation.
+    gain : scalar or ADAPTIVE : default 1.0
+        specifies the value by which to multiply `variable <Linear.variable>` before SoftMax transformation,
+        which functions as the inverse "temperature" of the function.  If it is a scalar, it must be greater
+        than zero.  If *ADAPTIVE* is specified, the value is determined dynamically based on the `variable
+        <SoftMax.variable>` `SoftMax_AdaptGain` for details).
+
+    mask_threshold : scalar : default None
+        specifies whether to mask_threshold the `variable <SoftMax.variable>` before applying the SoftMax function;
+        this only applies if `gain <SoftMax.gain>` is specified as a scalar;  otherwise it is ignored
+        (see `SoftMax_AdaptGain` for details).
+
+    adapt_scale : scalar : default 1
+        specifies the *scale* parameter using by the `adapt_gain <SoftMax.adapt_gain>` method (see method for details).
+
+    adapt_base : scalar : default 1
+        specifies the *base* parameter using by the `adapt_gain <SoftMax.adapt_gain>` method (see method for details).
+
+    adapt_entropy_weighting : default .1
+        specifies the *entropy_weighting* parameter using by the `adapt_gain <SoftMax.adapt_gain>` method
+        (see method for details).
 
     output : ALL, MAX_VAL, MAX_INDICATOR, or PROB : default ALL
         specifies the format of array returned by `function <SoftMax._function>`
@@ -2965,9 +3023,28 @@ class SoftMax(TransferFunction):
     variable : 1d array
         contains value to be transformed.
 
-    gain : float
-        value by which `variable <Logistic.variable>` is multiplied before the SoftMax transformation;  determines
-        the "sharpness" of the distribution.
+    gain : scalar or ADAPTIVE
+        determines how `variable <Logistic.variable>` is scaled before the SoftMax transformation, determining the
+        "sharpness" of the distribution (it is equivalent to the inverse of the temperature of the SoftMax function);
+        if it is 'ADAPTIVE', it is determined dynamically adjusted using the `adapt_gain <SoftMax.adapt_gain>` method
+        (see `SoftMax_AdaptGain` for additional details).
+
+    mask_threshold : scalar or None
+        determines whether the `variable <SoftMax.variable>` is thresholded before applying the SoftMax function;
+        if it is a scalar, only elements of `variable <SoftMax.variable>` with an absolute value greater than that
+        value are considered when applying the SoftMax function (which are then scaled by the `gain <SoftMax.gain>`
+        parameter; all other elements are assigned 0.  This only applies if `gain <SoftMax.gain>` is specified as a
+        scalar;  otherwise it is ignored (see `SoftMax_AdaptGain` for details).
+
+    adapt_scale : scalar
+        determined the *scale* parameter using by the `adapt_gain <SoftMax.adapt_gain>` method (see method for details).
+
+    adapt_base : scalar
+        determines the *base* parameter using by the `adapt_gain <SoftMax.adapt_gain>` method (see method for details).
+
+    adapt_entropy_weighting : scalar
+        determines the *entropy_weighting* parameter using by the `adapt_gain <SoftMax.adapt_gain>` method
+        (see method for details).
 
     output : ALL, MAX_VAL, MAX_INDICATOR, or PROB
         determines how the SoftMax-transformed values of the elements in `variable <SoftMax.variable>` are reported
@@ -3012,6 +3089,24 @@ class SoftMax(TransferFunction):
                     :type: ``numpy.ndarray``
                     :read only: True
 
+                adapt_scale
+                    see `adapt_scale <SoftMax.adapt_scale>`
+
+                    :default value: 1.0
+                    :type: ``float``
+
+                adapt_base
+                    see `adapt_base <SoftMax.adapt_base>`
+
+                    :default value: 1.0
+                    :type: ``float``
+
+                adapt_entropy_weighting
+                    see `adapt_entropy_weighting <SoftMax.adapt_entropy_weighting>`
+
+                    :default value: 0.1
+                    :type: ``float``
+
                 bounds
                     see `bounds <SoftMax.bounds>`
 
@@ -3035,13 +3130,62 @@ class SoftMax(TransferFunction):
 
                     :default value: True
                     :type: ``bool``
+
+                mask_threshold
+                    see `mask_threshold <SoftMax.mask_threshold>`
+
+                    :default value: None
+                    :type: ``float``
         """
         variable = Parameter(np.array([[0.0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        mask_threshold = Parameter(None, modulable=True)
+        adapt_scale = Parameter(1.0, modulable=True)
+        adapt_base = Parameter(1.0, modulable=True)
+        adapt_entropy_weighting = Parameter(0.1, modulable=True)
         bounds = (0, 1)
         output = ALL
         per_item = Parameter(True, pnl_internal=True)
         one_hot_function = Parameter(None, stateful=False, loggable=False)
+
+        def _validate_gain(self, gain):
+            if is_numeric_scalar(gain):
+                if gain <= 0:
+                    return 'must be a scalar greater than 0'
+            elif isinstance(gain, str):
+                if gain != ADAPTIVE:
+                    return f'the keyword for adaptive gain is {ADAPTIVE}'
+            else:
+                return f'must be a scalar greater than 0 or the keyword {ADAPTIVE}'
+
+        def _validate_mask_threshold(self, mask_threshold):
+            if mask_threshold is not None:
+                if is_numeric_scalar(mask_threshold):
+                    if mask_threshold <= 0:
+                        return 'must be a scalar greater than 0'
+                    return None
+                return f'must be a scalar greater than 0'
+
+        def _validate_adapt_scale(self, adapt_scale):
+            if is_numeric_scalar(adapt_scale):
+                if adapt_scale <= 0:
+                    return 'must be a scalar greater than 0'
+                return None
+            return f'must be a scalar greater than 0'
+
+        def _validate_adapt_base(self, adapt_base):
+            if is_numeric_scalar(adapt_base):
+                if adapt_base <= 0:
+                    return 'must be a scalar greater than 0'
+                return None
+            return f'must be a scalar greater than 0'
+
+        def _validate_adapt_entropy_weighting(self, adapt_entropy_weighting):
+            if is_numeric_scalar(adapt_entropy_weighting):
+                if adapt_entropy_weighting <= 0:
+                    return 'must be a scalar greater than 0'
+                return None
+            return f'must be a scalar greater than 0'
 
         def _validate_output(self, output):
             options = {ALL, MAX_VAL, MAX_INDICATOR, PROB}
@@ -3055,6 +3199,10 @@ class SoftMax(TransferFunction):
     def __init__(self,
                  default_variable=None,
                  gain: Optional[ValidParamSpecType] = None,
+                 mask_threshold: Optional[ValidParamSpecType] = None,
+                 adapt_scale: Optional[ValidParamSpecType] = None,
+                 adapt_base: Optional[ValidParamSpecType] = None,
+                 adapt_entropy_weighting: Optional[ValidParamSpecType] = None,
                  output=None,
                  per_item=None,
                  params: Optional[dict] = None,
@@ -3076,6 +3224,10 @@ class SoftMax(TransferFunction):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
+            mask_threshold=mask_threshold,
+            adapt_scale=adapt_scale,
+            adapt_base=adapt_base,
+            adapt_entropy_weighting=adapt_entropy_weighting,
             per_item=per_item,
             output=output,
             one_hot_function=one_hot_function,
@@ -3106,15 +3258,23 @@ class SoftMax(TransferFunction):
 
         return np.asarray(variable)
 
-    def apply_softmax(self, input_value, gain, output_type):
+    def apply_softmax(self, input_value, gain, mask_threshold, output_type):
+
         # Modulate input_value by gain
         v = gain * input_value
         # Shift by max to avoid extreme values:
         v = v - np.max(v)
         # Exponentiate
         v = np.exp(v)
+        # Threshold if specified:
+        if mask_threshold:
+            v = v * np.where(input_value > mask_threshold, v, 0)
         # Normalize (to sum to 1)
-        sm = v / np.sum(v, axis=0)
+        if not any(v):
+            # If v is all zeros, avoid divide by zero in normalize and return all zeros for softmax
+            sm = v
+        else:
+            sm = v / np.sum(v, axis=0)
 
         # Generate one-hot encoding based on selected output_type
 
@@ -3152,18 +3312,40 @@ class SoftMax(TransferFunction):
         # Assign the params and return the result
         output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
         gain = self._get_current_parameter_value(GAIN, context)
+        mask_threshold = self._get_current_parameter_value('mask_threshold', context)
+        if isinstance(gain, str) and gain == ADAPTIVE:
+            gain = self.adapt_gain(variable, context)
         per_item = self._get_current_parameter_value(PER_ITEM, context)
         # Compute softmax and assign to sm
 
         if per_item and len(np.shape(variable)) > 1:
             output = []
             for item in variable:
-                output.append(self.apply_softmax(item, gain, output_type))
+                output.append(self.apply_softmax(item, gain, mask_threshold, output_type))
             output = convert_all_elements_to_np_array(output)
         else:
-            output = self.apply_softmax(variable, gain, output_type)
+            output = self.apply_softmax(variable, gain, mask_threshold, output_type)
 
         return self.convert_output_type(output)
+
+    def adapt_gain(self, v, context)->float:
+        """Compute the softmax gain (inverse temperature) based on the entropy of the distribution of values.
+        Uses base, scale, and entropy_weighting parameters of SoftMax function to compute gain:
+
+        .. math:: gain = scale * (base + (entropy\\_weighting * log(entropy(logistic(v)))))
+        """
+        scale = self._get_current_parameter_value('adapt_scale', context)
+        base = self._get_current_parameter_value('adapt_base', context)
+        entropy_weighting = self._get_current_parameter_value('adapt_entropy_weighting', context)
+        entropy_weighting = np.log(len(v)) * entropy_weighting
+
+        v = np.squeeze(v)
+        gain = scale * (base +
+                        (entropy_weighting *
+                         np.log(
+                             -1 * np.sum((1 / (1 + np.exp(-1 * v))) * np.log(1 / (1 + np.exp(-1 * v)))))))
+        return gain
+
 
     @handle_external_context()
     def derivative(self, input=None, output=None, context=None):
@@ -3390,7 +3572,35 @@ class SoftMax(TransferFunction):
 
     def _gen_pytorch_fct(self, device, context=None):
         gain = self._get_pytorch_fct_param_value('gain', device, context)
-        return lambda x: (torch.softmax(gain * x, 0))
+        mask_threshold = self._get_pytorch_fct_param_value('mask_threshold', device, context)
+
+        if isinstance(gain, str) and gain == ADAPTIVE:
+            return lambda x: (torch.softmax(self._gen_pytorch_adapt_gain_fct(device, context)(x) * x, 0))
+
+        elif mask_threshold:
+            def pytorch_thresholded_softmax(_input: torch.Tensor) -> torch.Tensor:
+                # Mask elements of input below threshold
+                _mask = (torch.abs(_input) > mask_threshold)
+                # Subtract off the max value in the input to eliminate extreme values, exponentiate, and apply mask
+                masked_exp = _mask * torch.exp(gain * (_input - torch.max(_input, 0, keepdim=True)[0]))
+                if not any(masked_exp):
+                    return masked_exp
+                return masked_exp / torch.sum(masked_exp, 0, keepdim=True)
+            # Return the function
+            return pytorch_thresholded_softmax
+
+        else:
+            return lambda x: (torch.softmax(gain * x, 0))
+
+    def _gen_pytorch_adapt_gain_fct(self, device, context=None):
+        scale = self._get_pytorch_fct_param_value('adapt_scale', device, context)
+        base = self._get_pytorch_fct_param_value('adapt_base', device, context)
+        entropy_weighting = self._get_pytorch_fct_param_value('adapt_entropy_weighting', device, context)
+        # v = torch.squeeze(v)
+        return lambda x : scale * (base +
+                                   (entropy_weighting * len(x) *
+                                    torch.log(-1 * torch.sum((1 / (1 + torch.exp(-1 * x)))
+                                                             * torch.log(1 / (1 + torch.exp(-1 * x)))))))
 
 
 # **********************************************************************************************************************
