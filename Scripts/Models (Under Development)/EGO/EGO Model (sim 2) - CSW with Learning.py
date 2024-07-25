@@ -142,7 +142,6 @@ torch.manual_seed(0)
 from psyneulink import *
 from psyneulink._typing import Union, Literal
 
-
 #region   SCRIPT SETTINGS
 # ======================================================================================================================
 #                                                   SCRIPT SETTINGS
@@ -167,8 +166,8 @@ EXECUTION_MODE = ExecutionMode.PyTorch
 # REPORT_OUTPUT = ReportOutput.FULL  # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_OUTPUT = ReportOutput.OFF     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_PROGRESS = ReportProgress.OFF # Sets console progress bar during run
-PRINT_RESULTS = False                # print model.results to console after execution
-SAVE_RESULTS = True                  # save model.results to disk
+PRINT_RESULTS = True                 # print model.results to console after execution
+SAVE_RESULTS = False                 # save model.results to disk
 # PLOT_RESULTS = True                  # plot results (PREDICTIONS) vs. TARGETS
 PLOT_RESULTS = False                  # plot results (PREDICTIONS) vs. TARGETS
 ANIMATE = False                       # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
@@ -181,10 +180,11 @@ ANIMATE = False                       # {UNIT:EXECUTION_SET} # Specifies whether
 
 # Task environment:
 import Environment
+
 # CURRICULUM_TYPE = 'Blocked'     # 'Blocked' or 'Interleaved'
 CURRICULUM_TYPE = 'Interleaved'     # 'Blocked' or 'Interleaved'
-NUM_STIMS = 5
-# dataset = Environment.generate_dataset(condition=CURRICULUM_TYPE)
+
+NUM_STIMS = 5  # Integer or ALL
 dataset = Environment.generate_dataset(condition=CURRICULUM_TYPE)
 if NUM_STIMS is ALL:
     INPUTS = dataset.xs.numpy()
@@ -216,7 +216,7 @@ model_params = dict(
     previous_state_d = 11, # length of state vector
     context_d = 11, # length of context vector
     memory_capacity = TOTAL_NUM_STIMS, # number of entries in EM memory
-    memory_init = (0,.1),  # Initialize memory with random values in interval
+    memory_init = (0,.001),  # Initialize memory with random values in interval
     # memory_init = None,  # Initialize with zeros
     concatenate_keys = False,
 
@@ -226,11 +226,11 @@ model_params = dict(
     context_weight = 1, # weight of the context used during memory retrieval
     normalize_field_weights = True, # whether to normalize the field weights during memory retrieval
     # softmax_temperature = None, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
-    # softmax_temperature = .1, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
-    softmax_temperature = ADAPTIVE, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
+    softmax_temperature = .1, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
+    # softmax_temperature = ADAPTIVE, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
     # softmax_temperature = CONTROL, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
-    softmax_threshold = None, # threshold used to mask out small values in softmax
-    # softmax_threshold = .00001, # threshold used to mask out small values in softmax
+    # softmax_threshold = None, # threshold used to mask out small values in softmax
+    softmax_threshold = .001, # threshold used to mask out small values in softmax
     enable_learning=[True, False, False], # Enable learning for PREDICTION (STATE) but not CONTEXT or PREVIOUS STATE
     learn_field_weights = False,
     loss_spec = Loss.BINARY_CROSS_ENTROPY,
@@ -411,7 +411,6 @@ def construct_model(model_name:str=model_params['name'],
 
     return EGO_comp
 #endregion
-
 
 #region SCRIPT EXECUTION
 # ======================================================================================================================

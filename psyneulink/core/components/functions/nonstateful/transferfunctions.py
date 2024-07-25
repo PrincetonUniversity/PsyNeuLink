@@ -3269,7 +3269,6 @@ class SoftMax(TransferFunction):
         # Threshold if specified:
         if mask_threshold:
             v = v * np.where(input_value > mask_threshold, v, 0)
-            # pass
         # Normalize (to sum to 1)
         if not any(v):
             # If v is all zeros, avoid divide by zero in normalize and return all zeros for softmax
@@ -3579,49 +3578,16 @@ class SoftMax(TransferFunction):
             return lambda x: (torch.softmax(self._gen_pytorch_adapt_gain_fct(device, context)(x) * x, 0))
 
         elif mask_threshold:
-            # FROM KAMESH:
-            # class thresholded_softmax(nn.Module):
-            #     def __init__(self, dim: Optional[int] = 1, thr=1e-3) -> None:
-            #         super().__init__()
-            #         self.dim = dim
-            #         self.thr = thr
-            #
-            #     def forward(self, _input: Tensor) -> Tensor:
-            #         _mask = torch.abs(_input) > self.thr
-            #         _exp_maxsub = torch.exp( _input - torch.max(_input,self.dim,keepdim=True)[0])
-            #         return _exp_maxsub*_mask/ torch.sum(_exp_maxsub*_mask,dim=self.dim,keepdim=True)
-
-            # dim = 0
-            # return lambda x: (torch.exp(gain * (x - torch.max(x,dim=dim,keepdim=True)[0])) *
-            #                   torch.abs(x) > mask_threshold /
-            #                   torch.sum(gain * (torch.exp(x - torch.max(x, dim=dim, keepdim=True)[0]))
-            #                             * torch.abs(x) > mask_threshold, dim=dim, keepdim=True))
-
-            # MODIFIED 7/10/24 OLD:
-            # # Mask out entries with absolute values below mask_threshold before applying SoftMax
-            # return lambda x: (torch.exp(gain * (x - torch.max(x))) *
-            #                   torch.where(torch.abs(x) > mask_threshold, 1, 0) /
-            #                   torch.sum(gain * torch.exp(x - torch.max(x))
-            #                             * torch.where(torch.abs(x) > mask_threshold, 1, 0)))
-            # # # MODIFIED 7/10/24 NEW:
-            # # Replace nan's (from divides by zero??) with 0's
-            # return lambda x: torch.where(torch.isnan((torch.exp(gain * (x - torch.max(x))) *
-            #                                           torch.where(torch.abs(x) > mask_threshold, 1, 0) /
-            #                                           torch.sum(gain * torch.exp(x - torch.max(x))
-            #                                                     * torch.where(torch.abs(x) > mask_threshold, 1, 0)))), 0,
-            #                              (torch.exp(gain * (x - torch.max(x))) *
-            #                               torch.where(torch.abs(x) > mask_threshold, 1, 0) /
-            #                               torch.sum(gain * torch.exp(x - torch.max(x))
-            #                                         * torch.where(torch.abs(x) > mask_threshold, 1, 0))))
-            # # MODIFIED 7/10/24 NEWER (USING KAMESH's VERSION):
             def pytorch_thresholded_softmax(_input: torch.Tensor) -> torch.Tensor:
+                # Mask elements of input below threshold
                 _mask = (torch.abs(_input) > mask_threshold)
-                assert _mask.sum() > 0, f"SoftMax mask_threshold mask all zeros"
-                # _mask = (torch.abs(_input) > mask_threshold) + 1e-6
-                _exp_maxsub = torch.exp( gain * (_input - torch.max(_input,0,keepdim=True)[0]))
-                return _exp_maxsub*_mask/ torch.sum(_exp_maxsub*_mask,0,keepdim=True)
+                # Subtract off the max value in the input to eliminate extreme values, exponentiate, and apply mask
+                masked_exp = _mask * torch.exp(gain * (_input - torch.max(_input, 0, keepdim=True)[0]))
+                if not any(masked_exp):
+                    return masked_exp
+                return masked_exp / torch.sum(masked_exp, 0, keepdim=True)
+            # Return the function
             return pytorch_thresholded_softmax
-            # MODIFIED 7/10/24 END
 
         else:
             return lambda x: (torch.softmax(gain * x, 0))
