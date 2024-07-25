@@ -645,13 +645,15 @@ class PytorchMechanismWrapper():
 
     def add_efferent(self, efferent):
         """Add ProjectionWrapper for efferent from MechanismWrapper.
-        Implemented for completeness;  not currently used"""
+        Implemented for completeness;  not currently used
+        """
         assert efferent not in self.efferents
         self.efferents.append(efferent)
 
     def add_afferent(self, afferent):
         """Add ProjectionWrapper for afferent to MechanismWrapper.
-        For use in call to aggregate_afferents"""
+        For use in call to aggregate_afferents
+        """
         assert afferent not in self.afferents
         self.afferents.append(afferent)
 
@@ -693,8 +695,8 @@ class PytorchMechanismWrapper():
 
     def execute(self, variable, context):
         """Execute Mechanism's _gen_pytorch version of function on variable.
-        Enforce result to be 2d, and assign to self.value"""
-
+        Enforce result to be 2d, and assign to self.value
+        """
         def execute_function(function, variable, fct_has_mult_args=False, is_combination_fct=False):
             """Execute _gen_pytorch_fct on variable, enforce result to be 2d, and return it
             If fct_has_mult_args is True, treat each item in variable as an arg to the function
