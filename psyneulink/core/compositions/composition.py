@@ -13585,7 +13585,8 @@ _
                    output_fmt='pdf',
                    context=None):
         """Patch to ShowGraph method
-        IMPLEMENTATION NOTE: arguments are listed explicitly so they show up in IDEs that support argument completion"""
+        IMPLEMENTATION NOTE: arguments are listed explicitly so they show up in IDEs that support argument completion
+        """
         return self._show_graph(show_all=show_all,
                                 show_node_structure=show_node_structure,
                                 show_nested=show_nested,

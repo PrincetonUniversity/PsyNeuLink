@@ -133,7 +133,7 @@ class PytorchShowGraph(ShowGraph):
             except:
                 return [NodeRole.INTERNAL]
         if self.show_pytorch and node not in self.composition.nodes:
-                return [NodeRole.INTERNAL]
+            return [NodeRole.INTERNAL]
         else:
             return super()._get_roles_by_node(composition, node, context)
 

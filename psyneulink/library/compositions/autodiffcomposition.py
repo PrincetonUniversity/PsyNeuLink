@@ -380,7 +380,7 @@ class AutodiffComposition(Composition):
 
     optimizer_type : str : default 'sgd'
         the kind of optimizer used in training. The current options are 'sgd' or 'adam'.
-        
+
     loss_spec : Loss or PyTorch loss function : default Loss.MSE
         specifies the loss function for training; see `Loss` for arguments.
 
@@ -409,7 +409,7 @@ class AutodiffComposition(Composition):
     optimizer : PyTorch optimizer function
         the optimizer used for training. Depends on the **optimizer_type**, **learning_rate**, and **weight_decay**
         arguments from initialization.
-        
+
     loss : PyTorch loss function
         the loss function used for training. Depends on the **loss_spec** argument from initialization.
 
@@ -466,7 +466,7 @@ class AutodiffComposition(Composition):
         device = None
 
         def _validate_memory_template(self, device):
-            if isinstance(device, str) and not device in [CPU, CUDA, MPS]:
+            if isinstance(device, str) and device not in [CPU, CUDA, MPS]:
                 raise AutodiffCompositionError(f"Device must be one of {CPU}, {CUDA}, or {MPS}")
 
     # TODO (CW 9/28/18): add compositions to registry so default arg for name is no longer needed
@@ -520,6 +520,7 @@ class AutodiffComposition(Composition):
         self.execution_sets = None
 
         # # MODIFIED 7/10/24 OLD:
+        #  FIX: REMOVE WHEN SUPPORT FOR MPS ADDED BELOW
         if not disable_cuda and torch.cuda.is_available():
             if cuda_index is None:
                 self.device = torch.device('cuda')
@@ -530,7 +531,7 @@ class AutodiffComposition(Composition):
         else:
             self.device = device
         # # MODIFIED 7/10/24 NEW:
-        #  FIX: ADD WHEN VALIDATED WITH USE OF utilities.get_torch_tensor() AND COMPATIBLITY WITH MPS
+        #  FIX: ADD AFTER USE OF utilities.get_torch_tensor() AND COMPATIBLITY WITH MPS IS VALIDATED
         # if device is None:
         #     # Try setting device by default
         #     if not disable_cuda and torch.cuda.is_available():

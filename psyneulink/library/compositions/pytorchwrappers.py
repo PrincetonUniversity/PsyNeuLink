@@ -659,7 +659,7 @@ class PytorchMechanismWrapper():
         """Return weight-multiplied sum of afferent projections for input_port(s) of the Mechanism
         If there is only one input_port, return the sum of its afferents (for those in Composition)
         If there are multiple input_ports, return an array with the sum for each input_port
-        # FIX: AUGMENT THIS TO SUPPORT InputPort's function
+        FIX: AUGMENT THIS TO SUPPORT InputPort's function
         """
         assert self.afferents,\
             f"PROGRAM ERROR: No afferents found for '{self._mechanism.name}' in AutodiffComposition"

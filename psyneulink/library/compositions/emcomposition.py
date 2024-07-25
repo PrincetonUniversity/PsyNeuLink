@@ -1467,7 +1467,7 @@ class EMComposition(AutodiffComposition):
 
         def _validate_normalize_field_weights(self, normalize_field_weights):
             if not isinstance(normalize_field_weights, bool):
-                    return f"must be all be a boolean value."
+                return f"must be all be a boolean value."
 
         def _validate_field_names(self, field_names):
             if field_names and not all(isinstance(item, str) for item in field_names):
