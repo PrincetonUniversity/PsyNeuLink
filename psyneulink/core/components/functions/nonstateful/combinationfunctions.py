@@ -45,11 +45,13 @@ from psyneulink._typing import Optional, Union, Literal
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import Function_Base, FunctionError, FunctionOutputType
 from psyneulink.core.globals.keywords import \
-    ADDITIVE_PARAM, ARRANGEMENT, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONCATENATE_FUNCTION, \
-    CROSS_ENTROPY, DEFAULT_VARIABLE, EXPONENTS, LINEAR_COMBINATION_FUNCTION, MULTIPLICATIVE_PARAM, OFFSET, OPERATION, \
-    PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT, REARRANGE_FUNCTION, REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, \
-    PREFERENCE_SET_NAME
-from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, convert_to_np_array, is_numeric, is_numeric_scalar, np_array_less_than_2d, ValidParamSpecType
+    (ADDITIVE_PARAM, ARRANGEMENT, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONCATENATE_FUNCTION,
+    CROSS_ENTROPY, DEFAULT_VARIABLE, EXPONENTS, LINEAR_COMBINATION_FUNCTION, MULTIPLICATIVE_PARAM,
+    OFFSET, OPERATION, PREDICTION_ERROR_DELTA_FUNCTION, PREFERENCE_SET_NAME, PRODUCT,
+    REARRANGE_FUNCTION, REDUCE_FUNCTION, SCALE, SUM, WEIGHTS)
+from psyneulink.core.globals.utilities import \
+    (convert_all_elements_to_np_array, convert_to_np_array, is_numeric, is_numeric_scalar,
+     np_array_less_than_2d, get_torch_tensor, ValidParamSpecType)
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import \
@@ -1579,7 +1581,11 @@ class LinearCombination(
     def _gen_pytorch_fct(self, device, context=None):
         weights = self._get_pytorch_fct_param_value('weights', device, context)
         if weights is not None:
-            weights = torch.tensor(weights, device=device).double()
+            # # MODIFIED 7/10/24 OLD:
+            # weights = torch.tensor(weights, device=device).double()
+            # MODIFIED 7/10/24 NEW:
+            weights = get_torch_tensor(weights, torch.float64, device)
+            # MODIFIED 7/10/24 END
         if self.operation == SUM:
             if weights is not None:
                 return lambda x: torch.sum(torch.stack(x) * weights, 0)

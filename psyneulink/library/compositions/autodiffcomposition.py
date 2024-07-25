@@ -413,6 +413,9 @@ class AutodiffComposition(Composition):
     loss : PyTorch loss function
         the loss function used for training. Depends on the **loss_spec** argument from initialization.
 
+    loss : PyTorch loss function
+        the loss function used for training. Depends on the **loss_spec** argument from initialization.
+
     learning_rate : float
         determines the learning_rate passed the optimizer, and is applied to all `Projection`\\s in the
         AutodiffComposition that are `learnable <MappingProjection.learnable>`.
@@ -544,6 +547,7 @@ class AutodiffComposition(Composition):
         #             from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
         #             try:
         #                 self.device = torch.device(MPS)
+        #                 # torch.set_default_device(self.device)
         #                 test_pytorch_fct_with_mps = Linear()._gen_pytorch_fct(self.device, Context())
         #             except AssertionError:
         #                 self.device = torch.device(CPU)
@@ -562,7 +566,11 @@ class AutodiffComposition(Composition):
     def assign_ShowGraph(self, show_graph_attributes):
         """Override to replace assignment of ShowGraph class with PytorchShowGraph"""
         show_graph_attributes = show_graph_attributes or {}
-        self._show_graph = PytorchShowGraph(self, **show_graph_attributes)
+        if torch_available:
+            self._show_graph = PytorchShowGraph(self, **show_graph_attributes)
+        else:
+            from psyneulink.core.compositions.showgraph import ShowGraph
+            self._show_graph = ShowGraph(self, **show_graph_attributes)
 
     @handle_external_context()
     def infer_backpropagation_learning_pathways(self, execution_mode, context=None)->list:
@@ -764,6 +772,8 @@ class AutodiffComposition(Composition):
             model = self.pytorch_composition_wrapper_type(composition=self,
                                                           device=self.device,
                                                           context=context)
+            # # 7/10/24 FIX DEBUGGING
+            # model.register_backward_hook(model._backward_hook)
 
             self.parameters.pytorch_representation._set(model, context, skip_history=True, skip_log=True)
 
@@ -838,27 +848,45 @@ class AutodiffComposition(Composition):
         # Compute total loss over OUTPUT nodes for current trial
         tracked_loss = self.parameters.tracked_loss._get(context)
         if tracked_loss is None:
-            self.parameters.tracked_loss._set(torch.zeros(1, device=self.device).double(),
+            # # MODIFIED 7/10/24 OLD:
+            # self.parameters.tracked_loss._set(torch.zeros(1, device=self.device).double(),
+            #                                   context=context,
+            #                                   skip_history=True,
+            #                                   skip_log=True)
+            # MODIFIED 7/10/24 NEW:
+            self.parameters.tracked_loss._set(get_torch_tensor([0], dtype=torch.float64, device=device),
                                               context=context,
                                               skip_history=True,
                                               skip_log=True)
+            # MODIFIED 7/10/24 END
             tracked_loss = self.parameters.tracked_loss._get(context)
 
         curr_tensor_inputs = {}
         curr_tensor_targets = {}
         for component in inputs.keys():
-            curr_tensor_inputs[component] = torch.tensor(inputs[component], device=self.device).double()
+            # # MODIFIED 7/10/24 OLD:
+            # curr_tensor_inputs[component] = torch.tensor(inputs[component], device=device).double()
+            # MODIFIED 7/10/24 NEW:
+            curr_tensor_inputs[component] = get_torch_tensor(inputs[component], torch.float64, device=device)
+            # MODIFIED 7/10/24 END
 
         # Get value of TARGET nodes for current trial
         for component in targets.keys():
-            curr_tensor_targets[self.target_output_map[component]] = [torch.tensor(np.atleast_1d(target),
-                                                                                   device=self.device).double()
-                                                                      for target in targets[component]]
+            # # MODIFIED 7/10/24 OLD:
+            # curr_tensor_targets[self.target_output_map[component]] = [torch.tensor(np.atleast_1d(target),
+            #                                                                        device=self.device).double()
+            #                                                           for target in targets[component]]
+            # MODIFIED 7/10/24 NEW:
+            curr_tensor_targets[self.target_output_map[component]] =\
+                [get_torch_tensor(np.atleast_1d(target), torch.float64, device) for target in targets[component]]
+            # assert ([get_torch_tensor(np.atleast_1d(target), torch.float64, device) for target in targets[component]]
+            #         ==[torch.tensor(np.atleast_1d(target)).double() for target in targets[component]])
+            # MODIFIED 7/10/24 END
 
         # Do forward computation on current inputs
         #   should return 2d values for each component
         pytorch_rep = self.parameters.pytorch_representation._get(context)
-        curr_tensor_outputs = pytorch_rep.forward(curr_tensor_inputs, context)
+        curr_tensor_outputs = pytorch_rep.forward(curr_tensor_inputs, device, context)
 
         # Update values of all PNL nodes executed in forward pass (if specified)
         if synchronize_pnl_values:
@@ -937,10 +965,19 @@ class AutodiffComposition(Composition):
         optimizer.zero_grad()
 
         # Compute and log average loss over all trials since last update
-        tracked_loss = self.parameters.tracked_loss._get(context=context) / int(self.parameters.tracked_loss_count._get(context=context))
+        tracked_loss = (self.parameters.tracked_loss._get(context=context) /
+                        int(self.parameters.tracked_loss_count._get(context=context)))
         tracked_loss.backward(retain_graph=not self.force_no_retain_graph)
+
+        # FIX: ?DOES THIS NEED TO BE TRANSLATED TO 32-BIT FLOAT:
         self.parameters.losses._get(context=context).append(tracked_loss.detach().cpu().numpy()[0])
-        self.parameters.tracked_loss._set(torch.zeros(1, device=self.device).double(), context=context, skip_history=True, skip_log=True)
+        # # MODIFIED 7/10/24 OLD:
+        # self.parameters.tracked_loss._set(torch.zeros(1, device=self.device).double(), context=context,
+        #                                   skip_history=True, skip_log=True)
+        # MODIFIED 7/10/24 NEW:
+        self.parameters.tracked_loss._set(get_torch_tensor([0], dtype=torch.float64, device=self.device),
+                                          context=context, skip_history=True, skip_log=True)
+        # MODIFIED 7/10/24 END
         self.parameters.tracked_loss_count._set(np.array(0), context=context, skip_history=True, skip_log=True)
 
         # Update weights and copy to PNL

@@ -216,7 +216,7 @@ model_params = dict(
     previous_state_d = 11, # length of state vector
     context_d = 11, # length of context vector
     memory_capacity = TOTAL_NUM_STIMS, # number of entries in EM memory
-    memory_init = (0,.001),  # Initialize memory with random values in interval
+    memory_init = (0,.0001),  # Initialize memory with random values in interval
     # memory_init = None,  # Initialize with zeros
     concatenate_keys = False,
 
