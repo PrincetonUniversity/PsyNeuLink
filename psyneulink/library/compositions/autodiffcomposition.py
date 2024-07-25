@@ -877,7 +877,7 @@ class AutodiffComposition(Composition):
             curr_tensor_targets[self.target_output_map[component]] =\
                 [get_torch_tensor(np.atleast_1d(target), torch.float64, device) for target in targets[component]]
             assert ([get_torch_tensor(np.atleast_1d(target), torch.float64, device) for target in targets[component]]
-                    ==[torch.tensor(np.atleast_1d(target), device).double() for target in targets[component]])
+                    ==[torch.tensor(np.atleast_1d(target)).double() for target in targets[component]])
             # MODIFIED 7/10/24 END
 
         # Do forward computation on current inputs
