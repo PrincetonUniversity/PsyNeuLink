@@ -1585,7 +1585,6 @@ class LinearCombination(
             # weights = torch.tensor(weights, device=device).double()
             # MODIFIED 7/10/24 NEW:
             weights = get_torch_tensor(weights, torch.float64, device)
-            assert all(val for val in [torch.tensor(weights, device=device).double() == weights])
             # MODIFIED 7/10/24 END
         if self.operation == SUM:
             if weights is not None:

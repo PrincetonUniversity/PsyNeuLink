@@ -528,7 +528,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                 variable.append(input_port.defaults.variable)
                             elif not input_port.internal_only:
                                 # otherwise, use the node's input_port's afferents
-                                variable.append(node.aggregate_afferents(i, device).squeeze(0))
+                                variable.append(node.aggregate_afferents(device, i).squeeze(0))
                         if len(variable) == 1:
                             variable = variable[0]
                 else:
@@ -688,22 +688,17 @@ class PytorchMechanismWrapper():
         for proj_wrapper in self.afferents:
             curr_val = proj_wrapper.sender.value
             # # MODIFIED 7/10/24 OLD:
-            # if curr_val is not None:
-            #     proj_wrapper._curr_sender_value = proj_wrapper.sender.value[proj_wrapper._value_idx]
-            # else:
+            # if curr_val is None:
             #     proj_wrapper._curr_sender_value = torch.tensor(proj_wrapper.default_value)
+            # else:
+            #     proj_wrapper._curr_sender_value = curr_val[proj_wrapper._value_idx]
             # MODIFIED 7/10/24 NEW:
-            if curr_val is not None:
-                curr_sender_value = proj_wrapper.sender.value[proj_wrapper._value_idx]
-                dtype = curr_sender_value.dtype
-                orig_version = proj_wrapper.sender.value[proj_wrapper._value_idx]
+            if curr_val is None:
+                proj_wrapper._curr_sender_value = get_torch_tensor(proj_wrapper.default_value,
+                                                                   proj_wrapper.default_value.dtype,
+                                                                   device)
             else:
-                curr_sender_value = proj_wrapper.default_value
-                dtype = curr_sender_value.dtype
-                orig_version = torch.tensor(proj_wrapper.default_value)
-            proj_wrapper._curr_sender_value = get_torch_tensor(curr_sender_value, dtype, device)
-            new_version = proj_wrapper._curr_sender_value
-            assert all([val for val in (new_version == orig_version)])
+                proj_wrapper._curr_sender_value = curr_val[proj_wrapper._value_idx]
             # MODIFIED 7/10/24 END
 
         # Specific port is specified

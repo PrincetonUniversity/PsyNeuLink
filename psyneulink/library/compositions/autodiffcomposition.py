@@ -543,6 +543,7 @@ class AutodiffComposition(Composition):
         #             from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
         #             try:
         #                 self.device = torch.device(MPS)
+        #                 torch.set_default_device(self.device)
         #                 test_pytorch_fct_with_mps = Linear()._gen_pytorch_fct(self.device, Context())
         #             except AssertionError:
         #                 self.device = torch.device(CPU)
@@ -550,7 +551,7 @@ class AutodiffComposition(Composition):
         #             self.device = torch.device(CPU)
         # else:
         #     self.device = device
-        # # MODIFIED 7/10/24 END
+        # # # MODIFIED 7/10/24 END
 
         # Set to True after first warning about failure to specify execution mode so warning is issued only once
         self.execution_mode_warned_about_default = False
@@ -561,7 +562,11 @@ class AutodiffComposition(Composition):
     def assign_ShowGraph(self, show_graph_attributes):
         """Override to replace assignment of ShowGraph class with PytorchShowGraph"""
         show_graph_attributes = show_graph_attributes or {}
-        self._show_graph = PytorchShowGraph(self, **show_graph_attributes)
+        if torch_available:
+            self._show_graph = PytorchShowGraph(self, **show_graph_attributes)
+        else:
+            from psyneulink.core.compositions.showgraph import ShowGraph
+            self._show_graph = ShowGraph(self, **show_graph_attributes)
 
     @handle_external_context()
     def infer_backpropagation_learning_pathways(self, execution_mode, context=None)->list:
@@ -844,11 +849,6 @@ class AutodiffComposition(Composition):
             #                                   context=context,
             #                                   skip_history=True,
             #                                   skip_log=True)
-            # # MODIFIED 7/10/24 NEW:
-            # self.parameters.tracked_loss._set(get_torch_tensor([0], dtype=torch.float64, device=device),
-            #                                   context=context,
-            #                                   skip_history=True,
-            #                                   skip_log=True)
             # MODIFIED 7/10/24 NEW:
             self.parameters.tracked_loss._set(get_torch_tensor([0], dtype=torch.float64, device=device),
                                               context=context,
@@ -864,11 +864,6 @@ class AutodiffComposition(Composition):
             # curr_tensor_inputs[component] = torch.tensor(inputs[component], device=device).double()
             # MODIFIED 7/10/24 NEW:
             curr_tensor_inputs[component] = get_torch_tensor(inputs[component], torch.float64, device=device)
-            assert all([val for val in (get_torch_tensor(inputs[component], torch.float64, device=device)
-                    == torch.tensor(inputs[component], device=device).double()).squeeze()])
-            np.testing.assert_allclose(get_torch_tensor(inputs[component], torch.float64, device=device),
-                                    torch.tensor(inputs[component], device=device).double(),
-                                    atol=1e-08, rtol=1e-08)
             # MODIFIED 7/10/24 END
 
         # Get value of TARGET nodes for current trial
@@ -880,8 +875,8 @@ class AutodiffComposition(Composition):
             # MODIFIED 7/10/24 NEW:
             curr_tensor_targets[self.target_output_map[component]] =\
                 [get_torch_tensor(np.atleast_1d(target), torch.float64, device) for target in targets[component]]
-            assert ([get_torch_tensor(np.atleast_1d(target), torch.float64, device) for target in targets[component]]
-                    ==[torch.tensor(np.atleast_1d(target)).double() for target in targets[component]])
+            # assert ([get_torch_tensor(np.atleast_1d(target), torch.float64, device) for target in targets[component]]
+            #         ==[torch.tensor(np.atleast_1d(target)).double() for target in targets[component]])
             # MODIFIED 7/10/24 END
 
         # Do forward computation on current inputs

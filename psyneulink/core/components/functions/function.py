@@ -992,8 +992,6 @@ class Function_Base(Function):
             # # MODIFIED 7/10/24 OLD:
             # return torch.tensor(val, device=device).double()
             # MODIFIED 7/10/24 NEW:
-            assert all([val for val in (get_torch_tensor(val, torch.float64, device=device) ==
-                    torch.tensor(val, device=device).double()).flatten()])
             return get_torch_tensor(val, torch.float64, device=device)
             # MODIFIED 7/10/24 END
         except Exception as error:
