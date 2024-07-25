@@ -989,7 +989,7 @@ class Function_Base(Function):
         elif np.isscalar(np.array(val)):
             return float(val)
         try:
-            # MODIFIED 7/10/24 OLD:
+            # # MODIFIED 7/10/24 OLD:
             # return torch.tensor(val, device=device).double()
             # MODIFIED 7/10/24 NEW:
             assert all([val for val in (get_torch_tensor(val, torch.float64, device=device) ==

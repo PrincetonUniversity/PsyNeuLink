@@ -844,6 +844,11 @@ class AutodiffComposition(Composition):
             #                                   context=context,
             #                                   skip_history=True,
             #                                   skip_log=True)
+            # # MODIFIED 7/10/24 NEW:
+            # self.parameters.tracked_loss._set(get_torch_tensor([0], dtype=torch.float64, device=device),
+            #                                   context=context,
+            #                                   skip_history=True,
+            #                                   skip_log=True)
             # MODIFIED 7/10/24 NEW:
             self.parameters.tracked_loss._set(get_torch_tensor([0], dtype=torch.float64, device=device),
                                               context=context,
@@ -872,7 +877,6 @@ class AutodiffComposition(Composition):
             # curr_tensor_targets[self.target_output_map[component]] = [torch.tensor(np.atleast_1d(target),
             #                                                                        device=self.device).double()
             #                                                           for target in targets[component]]
-            #
             # MODIFIED 7/10/24 NEW:
             curr_tensor_targets[self.target_output_map[component]] =\
                 [get_torch_tensor(np.atleast_1d(target), torch.float64, device) for target in targets[component]]

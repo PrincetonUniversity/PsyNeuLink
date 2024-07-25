@@ -1581,7 +1581,7 @@ class LinearCombination(
     def _gen_pytorch_fct(self, device, context=None):
         weights = self._get_pytorch_fct_param_value('weights', device, context)
         if weights is not None:
-            # MODIFIED 7/10/24 OLD:
+            # # MODIFIED 7/10/24 OLD:
             # weights = torch.tensor(weights, device=device).double()
             # MODIFIED 7/10/24 NEW:
             weights = get_torch_tensor(weights, torch.float64, device)
