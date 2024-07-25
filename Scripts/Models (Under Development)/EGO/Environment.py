@@ -18,7 +18,6 @@ class DeterministicCSWDataset(dataset.Dataset):
             [[10,1,4,5,8],[10,2,3,6,7]]
         ])
         
-        n_samples_per_context = n_samples_per_context
         item_indices = np.random.choice(raw_xs.shape[1],sum(n_samples_per_context),replace=True)
         task_names = [0,1] # Flexible so these can be renamed later
         task_indices = [task_names.index(name) for name in contexts_to_load]
