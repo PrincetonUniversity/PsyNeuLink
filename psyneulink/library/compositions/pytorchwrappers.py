@@ -676,7 +676,8 @@ class PytorchMechanismWrapper():
             # MODIFIED 7/10/24 NEW:
             if curr_val is None:
                 proj_wrapper._curr_sender_value = get_torch_tensor(proj_wrapper.default_value,
-                                                                   proj_wrapper.default_value.dtype,
+                                                                   # proj_wrapper.default_value.dtype,
+                                                                   torch.float64,
                                                                    device)
             else:
                 proj_wrapper._curr_sender_value = curr_val[proj_wrapper._value_idx]
@@ -882,8 +883,6 @@ class PytorchProjectionWrapper():
         #                                  dtype=torch.double))
         # MODIFIED 7/10/24 NEW:
         self.matrix = torch.nn.Parameter(get_torch_tensor(matrix.copy(), torch.float64, device))
-        assert all([val for val in (get_torch_tensor(matrix.copy(), torch.float64, device) == \
-                 torch.tensor(matrix.copy(),device=device,dtype=torch.double)).flatten()])
         # MODIFIED 7/10/24 END
         if projection.learnable is False:
             self.matrix.requires_grad = False
@@ -901,7 +900,7 @@ class PytorchProjectionWrapper():
         proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(self._idx)])
         proj_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(self._idx)])
 
-        dim_x, dim_y = self.matrix.detach().numpy().shape
+        dim_x, dim_y = self.matrix.cpu().detach().numpy().shape
 
         func_p, func_s = ctx.get_param_or_state_ptr(builder,
                                                     self._projection,

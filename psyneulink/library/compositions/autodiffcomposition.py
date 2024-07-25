@@ -522,40 +522,43 @@ class AutodiffComposition(Composition):
         # ordered execution sets for the pytorch model
         self.execution_sets = None
 
-        # # MODIFIED 7/10/24 OLD:
-        #  FIX: REMOVE WHEN SUPPORT FOR MPS ADDED BELOW
-        if not disable_cuda and torch.cuda.is_available():
-            if cuda_index is None:
-                self.device = torch.device('cuda')
-            else:
-                self.device = torch.device('cuda:' + str(cuda_index))
-        elif torch_available:
-            self.device = torch.device('cpu')
-        else:
-            self.device = device
-        # # MODIFIED 7/10/24 NEW:
-        #  FIX: ADD AFTER USE OF utilities.get_torch_tensor() AND COMPATIBLITY WITH MPS IS VALIDATED
-        # if device is None:
-        #     # Try setting device by default
-        #     if not disable_cuda and torch.cuda.is_available():
-        #         if cuda_index is None:
-        #             self.device = torch.device(CUDA)
-        #         else:
-        #             self.device = torch.device('cuda:' + str(cuda_index))
-        #     elif torch_available:
-        #         if torch.backends.mps.is_available():
-        #             from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
-        #             try:
-        #                 self.device = torch.device(MPS)
-        #                 # torch.set_default_device(self.device)
-        #                 test_pytorch_fct_with_mps = Linear()._gen_pytorch_fct(self.device, Context())
-        #             except AssertionError:
-        #                 self.device = torch.device(CPU)
-        #         else:
-        #             self.device = torch.device(CPU)
+        # # # MODIFIED 7/10/24 OLD:
+        # #  FIX: REMOVE WHEN SUPPORT FOR MPS ADDED BELOW
+        # if not disable_cuda and torch.cuda.is_available():
+        #     if cuda_index is None:
+        #         self.device = torch.device('cuda')
+        #     else:
+        #         self.device = torch.device('cuda:' + str(cuda_index))
+        # elif torch_available:
+        #     self.device = torch.device('cpu')
         # else:
         #     self.device = device
-        # # MODIFIED 7/10/24 END
+        # # MODIFIED 7/10/24 NEW:
+        #  FIX:
+        #   RUNS BUT DOESN"T PASS TESTS DUE TO TOLERANCE FAILURES WHEN RUN ON MAC
+        #          (TESTS ASSUME float64 BUT NOW ON MAC WILL RUN USING MPS AND float32
+        #   ADD AFTER USE OF utilities.get_torch_tensor() AND COMPATIBLITY WITH MPS IS VALIDATED
+        #   OR REPLACE with assignment of torch.set_default_device(self.device)
+        if device is None:
+            # Try setting device by default
+            if not disable_cuda and torch.cuda.is_available():
+                if cuda_index is None:
+                    self.device = torch.device(CUDA)
+                else:
+                    self.device = torch.device('cuda:' + str(cuda_index))
+            elif torch_available:
+                if torch.backends.mps.is_available():
+                    from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
+                    try:
+                        self.device = torch.device(MPS)
+                        test_pytorch_fct_with_mps = Linear()._gen_pytorch_fct(self.device, Context())
+                    except AssertionError:
+                        self.device = torch.device(CPU)
+                else:
+                    self.device = torch.device(CPU)
+        else:
+            self.device = device
+        # MODIFIED 7/10/24 END
 
         # Set to True after first warning about failure to specify execution mode so warning is issued only once
         self.execution_mode_warned_about_default = False
@@ -842,7 +845,7 @@ class AutodiffComposition(Composition):
                                            f"likelihood), POISSONNLL (Poisson negative log likelihood, "
                                            f"and KL_DIV (KL divergence.")
 
-    def autodiff_training(self, inputs, targets, synchronize_pnl_values:bool=True, context=None, scheduler=None):
+    def autodiff_training(self, inputs, targets, device, synchronize_pnl_values:bool=True, context=None,scheduler=None):
         """Perform learning/training on all input-target pairs received for given number of epochs"""
 
         # Compute total loss over OUTPUT nodes for current trial
@@ -879,8 +882,6 @@ class AutodiffComposition(Composition):
             # MODIFIED 7/10/24 NEW:
             curr_tensor_targets[self.target_output_map[component]] =\
                 [get_torch_tensor(np.atleast_1d(target), torch.float64, device) for target in targets[component]]
-            # assert ([get_torch_tensor(np.atleast_1d(target), torch.float64, device) for target in targets[component]]
-            #         ==[torch.tensor(np.atleast_1d(target)).double() for target in targets[component]])
             # MODIFIED 7/10/24 END
 
         # Do forward computation on current inputs
@@ -1191,6 +1192,7 @@ class AutodiffComposition(Composition):
                 trained_outputs, all_outputs = self.autodiff_training(inputs=autodiff_inputs,
                                                                       targets=autodiff_targets,
                                                                       synchronize_pnl_values=True,
+                                                                      device=self.device,
                                                                       context=context,
                                                                       scheduler=scheduler)
 

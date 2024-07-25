@@ -2366,19 +2366,16 @@ def array_from_matrix_string(
 #region PYTORCH TENSOR METHODS *****************************************************************************************
 
 def get_torch_tensor(value, dtype, device):
+    """Convert value to torch.dtype for device"""
     assert isinstance(dtype, torch.dtype)
     if device == MPS or device == torch.device(MPS):
-        if isinstance(value, torch.Tensor):
-            return value.type(torch.float32).to(device)
-        # Need to convert to numpy first for MPS
-        return torch.tensor(value.astype(np.float32)).to(device)
+        dtype = torch.float32
+    if isinstance(value, np.ndarray):
+        return torch.tensor(value, dtype=dtype, device=device)
+    elif isinstance(value, torch.Tensor):
+        return value.type(dtype).to(device)
     else:
-        if isinstance(value, np.ndarray):
-            return torch.tensor(value, dtype=dtype, device=device)
-        elif isinstance(value, torch.Tensor):
-            return value.type(dtype).to(device)
-        else:
-            return torch.tensor(value, dtype=dtype, device=device)
+        return torch.tensor(value, dtype=dtype, device=device)
 
 def safe_create_np_array(value):
     with warnings.catch_warnings():

@@ -236,8 +236,8 @@ model_params = dict(
     loss_spec = Loss.BINARY_CROSS_ENTROPY,
     # loss_spec = Loss.MSE,
     learning_rate = .5,
-    device = CPU,
-    # device = MPS,
+    # device = CPU,
+    device = MPS,
 )
 
 # EM structdural params:
