@@ -702,7 +702,8 @@ class PytorchMechanismWrapper():
                 dtype = curr_sender_value.dtype
                 orig_version = torch.tensor(proj_wrapper.default_value)
             proj_wrapper._curr_sender_value = get_torch_tensor(curr_sender_value, dtype, device)
-            assert all([val for val in (get_torch_tensor(curr_sender_value, dtype, device) == orig_version).flatten()])
+            new_version = proj_wrapper._curr_sender_value
+            assert all([val for val in (new_version == orig_version)])
             # MODIFIED 7/10/24 END
 
         # Specific port is specified
