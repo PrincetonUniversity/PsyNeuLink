@@ -131,12 +131,13 @@ MORE HERE
 
 
 """
-import matplotlib.pyplot as plt
 import numpy as np
 import graph_scheduler as gs
 from enum import IntEnum
 
+import matplotlib.pyplot as plt
 import torch
+
 torch.manual_seed(0)
 
 from psyneulink import *
@@ -236,8 +237,8 @@ model_params = dict(
     loss_spec = Loss.BINARY_CROSS_ENTROPY,
     # loss_spec = Loss.MSE,
     learning_rate = .5,
-    # device = CPU,
-    device = MPS,
+    device = CPU,
+    # device = MPS,
 )
 
 # EM structdural params:
@@ -449,8 +450,17 @@ if __name__ == '__main__':
             print('\nProjections from context to EM: \n', model.projections[7].parameters.matrix.get(kwargs['context']))
             print('\nEM Memory: \n', model.nodes['EM'].parameters.memory.get(model.name))
 
-        # print("MODEL NOT YET FULLY EXECUTABLE")
-        print(f"Running {model_params['name']}")
+        if INPUTS[0][9]:
+            sequence_context = 'context 1'
+        else:
+            sequence_context = 'context 2'
+        if INPUTS[1][1]:
+            sequence_state = 'state 1'
+        else:
+            sequence_state = 'state 2'
+
+        print(f"Running '{model_params['name']}' for {NUM_STIMS} stims "
+              f"starting with {sequence_context}, {sequence_state}...")
         context = model_params['name']
         start_time = timeit.default_timer()
         model.learn(inputs={model_params['state_input_layer_name']:INPUTS},
@@ -470,28 +480,28 @@ if __name__ == '__main__':
         if DISPLAY_MODEL is not None:
             model.show_graph(**DISPLAY_MODEL)
         if PRINT_RESULTS:
-            print("MEMORY:")
-            print(model.nodes['EM'].parameters.memory.get(model.name))
-            model.run(inputs={model_params["state_input_layer_name"]:INPUTS[4]},
-                      # report_output=REPORT_OUTPUT,
-                      # report_progress=REPORT_PROGRESS
-                      )
-            print("CONTEXT INPUT:")
-            print(model.nodes['CONTEXT'].parameters.variable.get(model.name))
-            print("CONTEXT OUTPUT:")
-            print(model.nodes['CONTEXT'].parameters.value.get(model.name))
-            print("PREDICTION OUTPUT:")
-            print(model.nodes['PREDICTION'].parameters.value.get(model.name))
+            # print("MEMORY:")
+            # print(model.nodes['EM'].parameters.memory.get(model.name))
+            # model.run(inputs={model_params["state_input_layer_name"]:INPUTS[4]},
+            #           # report_output=REPORT_OUTPUT,
+            #           # report_progress=REPORT_PROGRESS
+            #           )
+            # print("CONTEXT INPUT:")
+            # print(model.nodes['CONTEXT'].parameters.variable.get(model.name))
+            # print("CONTEXT OUTPUT:")
+            # print(model.nodes['CONTEXT'].parameters.value.get(model.name))
+            # print("PREDICTION OUTPUT:")
+            # print(model.nodes['PREDICTION'].parameters.value.get(model.name))
             print("CONTEXT WEIGHTS:")
             print(model.projections[7].parameters.matrix.get(model.name))
-            plt.imshow(model.projections[7].parameters.matrix.get(model.name))
-            def test_weights(weight_mat):
+            # plt.imshow(model.projections[7].parameters.matrix.get(model.name))
+            def eval_weights(weight_mat):
                 # checks whether only 5 weights are updated.
                 weight_mat -= np.eye(11)
                 col_sum = weight_mat.sum(1)
                 row_sum = weight_mat.sum(0)
                 return np.max([(row_sum != 0).sum(), (col_sum != 0).sum()])
-            print(test_weights(model.projections[7].parameters.matrix.get(model.name)))
+            print(eval_weights(model.projections[7].parameters.matrix.get(model.name)))
 
         if SAVE_RESULTS:
             np.save('EGO PREDICTIONS', model.results)
