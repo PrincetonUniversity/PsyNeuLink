@@ -185,7 +185,8 @@ import Environment
 # CURRICULUM_TYPE = 'Blocked'     # 'Blocked' or 'Interleaved'
 CURRICULUM_TYPE = 'Interleaved'     # 'Blocked' or 'Interleaved'
 
-NUM_STIMS = 7  # Integer or ALL
+# NUM_STIMS = 7  # Integer or ALL
+NUM_STIMS = ALL
 dataset = Environment.generate_dataset(condition=CURRICULUM_TYPE)
 if NUM_STIMS is ALL:
     INPUTS = dataset.xs.numpy()
@@ -422,7 +423,7 @@ if __name__ == '__main__':
     model = None
 
     if CONSTRUCT_MODEL:
-        print(f'Constructing {model_params["name"]}')
+        print(f"Constructing '{model_params["name"]}'...")
         model = construct_model()
         assert 'DEBUGGING BREAK POINT'
         # print(model.scheduler.consideration_queue)
