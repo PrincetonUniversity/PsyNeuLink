@@ -3593,7 +3593,6 @@ class SoftMax(TransferFunction):
                 return masked_exp / torch.sum(masked_exp, 0, keepdim=True)
             # Return the function
             return pytorch_thresholded_softmax
-
         else:
             return lambda x: (torch.softmax(gain * x, 0))
 

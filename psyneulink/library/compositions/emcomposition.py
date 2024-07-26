@@ -1314,7 +1314,7 @@ class EMComposition(AutodiffComposition):
         .. technical_note::
            The `storage_node <EMComposition.storage_node>` is assigned a Condition to execute after the `retrieved_nodes
            <EMComposition.retrieved_nodes>` have executed, to ensure that storage occurs after retrieval, but before
-           any subequent processing is done (i.e., in a composition in which the EMComposition may be embededded.
+           any subsequent processing is done (i.e., in a composition in which the EMComposition may be embededded).
     """
 
     componentCategory = EM_COMPOSITION

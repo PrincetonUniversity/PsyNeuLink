@@ -185,8 +185,8 @@ import Environment
 # CURRICULUM_TYPE = 'Blocked'     # 'Blocked' or 'Interleaved'
 CURRICULUM_TYPE = 'Interleaved'     # 'Blocked' or 'Interleaved'
 
-# NUM_STIMS = 7  # Integer or ALL
-NUM_STIMS = ALL
+NUM_STIMS = 3  # Integer or ALL
+# NUM_STIMS = ALL
 dataset = Environment.generate_dataset(condition=CURRICULUM_TYPE)
 if NUM_STIMS is ALL:
     INPUTS = dataset.xs.numpy()
@@ -226,13 +226,14 @@ model_params = dict(
     integration_rate = .69, # rate at which state is integrated into new context
     state_weight = 1, # weight of the state used during memory retrieval
     context_weight = 1, # weight of the context used during memory retrieval
-    normalize_field_weights = True, # whether to normalize the field weights during memory retrieval
+    # normalize_field_weights = True, # whether to normalize the field weights during memory retrieval
+    normalize_field_weights = False, # whether to normalize the field weights during memory retrieval
     # softmax_temperature = None, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
     softmax_temperature = .1, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
     # softmax_temperature = ADAPTIVE, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
     # softmax_temperature = CONTROL, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
-    # softmax_threshold = None, # threshold used to mask out small values in softmax
-    softmax_threshold = .001, # threshold used to mask out small values in softmax
+    softmax_threshold = None, # threshold used to mask out small values in softmax
+    # softmax_threshold = .001, # threshold used to mask out small values in softmax
     enable_learning=[True, False, False], # Enable learning for PREDICTION (STATE) but not CONTEXT or PREVIOUS STATE
     learn_field_weights = False,
     loss_spec = Loss.BINARY_CROSS_ENTROPY,
@@ -423,7 +424,7 @@ if __name__ == '__main__':
     model = None
 
     if CONSTRUCT_MODEL:
-        print(f"Constructing '{model_params["name"]}'...")
+        # print(f"Constructing '{model_params["name"]}'...")
         model = construct_model()
         assert 'DEBUGGING BREAK POINT'
         # print(model.scheduler.consideration_queue)

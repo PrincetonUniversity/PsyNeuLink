@@ -729,6 +729,8 @@ class EMStorageMechanism(LearningMechanism):
                  runtime_params=None):
         """Execute EMStorageMechanism.function and return learning_signals
 
+        NOTE: This is superceded by pytorchEMcomposition.store_memory for ExecutionMode.PyTorch
+
         For each node in query_input_nodes and value_input_nodes,
         assign its value to afferent weights of corresponding retrieved_node.
         - memory = matrix of entries made up vectors for each field in each entry (row)

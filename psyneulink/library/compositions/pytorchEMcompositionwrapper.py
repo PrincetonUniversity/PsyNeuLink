@@ -80,6 +80,8 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
     def store_memory(self, memory_to_store, context):
         """Store variable in memory_matrix (parallel EMStorageMechanism._execute)
 
+        NOTE: This supercedes the _execute method of EMStorageMechanism for ExecutionMode.PyTorch
+
         For each node in query_input_nodes and value_input_nodes,
         assign its value to weights of corresponding afferents to corresponding match_node and/or retrieved_node.
         - memory = matrix of entries made up vectors for each field in each entry (row)
