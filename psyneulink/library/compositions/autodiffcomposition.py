@@ -560,7 +560,7 @@ class AutodiffComposition(Composition):
         # ShowGraph
         self.assign_ShowGraph(show_graph_attributes)
     def assign_ShowGraph(self, show_graph_attributes):
-        """Override to replace assignment of ShowGraph class with PytorchShowGraph"""
+        """Override to replace assignment of ShowGraph class with PytorchShowGraph if torch is available"""
         show_graph_attributes = show_graph_attributes or {}
         if torch_available:
             self._show_graph = PytorchShowGraph(self, **show_graph_attributes)
