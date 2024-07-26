@@ -3273,8 +3273,15 @@ def _parse_port_spec(port_type=None,
 
                 mech = port_specific_args[MECHANISM]
                 if not isinstance(mech, Mechanism):
-                    raise PortError(f"Value of the {MECHANISM} entry ('{mech.name}') in the specification dictionary "
-                                    f"for {port_type.__name__} of '{owner.name}' is not a {Mechanism.__name__}.")
+                    entry_name = ''
+                    from psyneulink.core.components.component import ParameterValue
+                    if hasattr(mech, 'name'):
+                        entry_name = f" ('{mech.name}')"
+                    elif isinstance(mech, ParameterValue):
+                        entry_name = f" ('{mech._parameter.name}' of '{mech._owner.name}')"
+                    raise PortError(f"The type of the {MECHANISM} entry{entry_name} in the specification dictionary "
+                                    f"for {port_type.__name__} of '{owner.name}' is {type(mech).__name__};  "
+                                    f"it must be a {Mechanism.__name__}.")
 
                 # For Ports with which the one being specified can connect:
                 for PORTS in port_type.connectsWithAttribute:
