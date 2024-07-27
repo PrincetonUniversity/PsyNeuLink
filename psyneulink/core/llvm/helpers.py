@@ -706,7 +706,7 @@ class ConditionGenerator:
             # The first argument is the target node
             assert len(condition.args) == 1
             target = is_finished_callbacks[condition.args[0]]
-            is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_wrapper"}))
+            is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_assembly"}))
             return builder.call(is_finished_f, target[1])
 
         elif isinstance(condition, WhenFinishedAny):
@@ -715,7 +715,7 @@ class ConditionGenerator:
             run_cond = self.ctx.bool_ty(0)
             for node in condition.args:
                 target = is_finished_callbacks[node]
-                is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_wrapper"}))
+                is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_assembly"}))
                 node_is_finished = builder.call(is_finished_f, target[1])
 
                 run_cond = builder.or_(run_cond, node_is_finished)
@@ -728,7 +728,7 @@ class ConditionGenerator:
             run_cond = self.ctx.bool_ty(1)
             for node in condition.args:
                 target = is_finished_callbacks[node]
-                is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_wrapper"}))
+                is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_assembly"}))
                 node_is_finished = builder.call(is_finished_f, target[1])
 
                 run_cond = builder.and_(run_cond, node_is_finished)

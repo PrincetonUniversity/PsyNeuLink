@@ -52,7 +52,7 @@ _builtin_intrinsics = frozenset(('pow', 'log', 'exp', 'tanh', 'coth', 'csch',
                                  'mt_rand_init', 'philox_rand_init'))
 
 
-class _node_wrapper():
+class _node_assembly():
     def __init__(self, composition, node):
         self._comp = weakref.proxy(composition)
         self._node = node
@@ -61,7 +61,7 @@ class _node_wrapper():
         return "Node wrapper for node '{}' in composition '{}'".format(self._node, self._comp)
 
     def _gen_llvm_function(self, *, ctx, tags:frozenset):
-        return codegen.gen_node_wrapper(ctx, self._comp, self._node, tags=tags)
+        return codegen.gen_node_assembly(ctx, self._comp, self._node, tags=tags)
 
 def _comp_cached(func):
     @functools.wraps(func)
@@ -349,6 +349,13 @@ class LLVMBuilderContext:
         return helpers.get_state_space(builder, component, state_ptr, param_name)
 
     def check_used_params(self, component, *, tags:frozenset):
+        """
+        This function checks that parameters included in the compiled structures are used in compiled code.
+
+        If the assertion in this function triggers the parameter name should be added to the parameter
+        block list in the Component class.
+        """
+
         # Skip the check if the parameter use is not tracked. Some components (like node wrappers)
         # don't even have parameters.
         if component not in self._component_state_use and component not in self._component_param_use:
@@ -377,12 +384,6 @@ class LLVMBuilderContext:
         # 'num_trials_per_estimate' is only used in "evaluate" variants
         if hasattr(component, 'evaluate_agent_rep'):
             used_param_ids.add('num_trials_per_estimate')
-
-        if hasattr(component, 'adapt_scale'):
-            used_param_ids.add('threshold')
-            used_param_ids.add('adapt_scale')
-            used_param_ids.add('adapt_base')
-            used_param_ids.add('adapt_entropy_weighting')
 
         unused_param_ids = component_param_ids - used_param_ids - initializers
         unused_state_ids = component_state_ids - used_state_ids
@@ -504,12 +505,12 @@ class LLVMBuilderContext:
 
         return ir.LiteralStructType([])
 
-    def get_node_wrapper(self, composition, node):
-        cache = getattr(composition, '_wrapped_nodes', None)
+    def get_node_assembly(self, composition, node):
+        cache = getattr(composition, '_node_assemblies', None)
         if cache is None:
             cache = weakref.WeakKeyDictionary()
-            setattr(composition, '_wrapped_nodes', cache)
-        return cache.setdefault(node, _node_wrapper(composition, node))
+            setattr(composition, '_node_assemblies', cache)
+        return cache.setdefault(node, _node_assembly(composition, node))
 
     def convert_python_struct_to_llvm_ir(self, t):
         self._stats["types_converted"] += 1

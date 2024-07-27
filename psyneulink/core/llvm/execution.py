@@ -440,9 +440,9 @@ class CompExecution(CUDAExecution):
 
     def _set_bin_node(self, node):
         assert node in self._composition._all_nodes
-        wrapper = builder_context.LLVMBuilderContext.get_current().get_node_wrapper(self._composition, node)
+        wrapper = builder_context.LLVMBuilderContext.get_current().get_node_assembly(self._composition, node)
         self.__bin_func = pnlvm.LLVMBinaryFunction.from_obj(
-            wrapper, tags=self.__tags.union({"node_wrapper"}))
+            wrapper, tags=self.__tags.union({"node_assembly"}))
 
     @property
     def _conditions(self):
