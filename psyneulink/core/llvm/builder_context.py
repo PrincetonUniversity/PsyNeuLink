@@ -52,7 +52,7 @@ _builtin_intrinsics = frozenset(('pow', 'log', 'exp', 'tanh', 'coth', 'csch',
                                  'mt_rand_init', 'philox_rand_init'))
 
 
-class _node_wrapper():
+class _node_assembly():
     def __init__(self, composition, node):
         self._comp = weakref.proxy(composition)
         self._node = node
@@ -61,7 +61,7 @@ class _node_wrapper():
         return "Node wrapper for node '{}' in composition '{}'".format(self._node, self._comp)
 
     def _gen_llvm_function(self, *, ctx, tags:frozenset):
-        return codegen.gen_node_wrapper(ctx, self._comp, self._node, tags=tags)
+        return codegen.gen_node_assembly(ctx, self._comp, self._node, tags=tags)
 
 def _comp_cached(func):
     @functools.wraps(func)
@@ -505,12 +505,12 @@ class LLVMBuilderContext:
 
         return ir.LiteralStructType([])
 
-    def get_node_wrapper(self, composition, node):
-        cache = getattr(composition, '_wrapped_nodes', None)
+    def get_node_assembly(self, composition, node):
+        cache = getattr(composition, '_node_assemblies', None)
         if cache is None:
             cache = weakref.WeakKeyDictionary()
-            setattr(composition, '_wrapped_nodes', cache)
-        return cache.setdefault(node, _node_wrapper(composition, node))
+            setattr(composition, '_node_assemblies', cache)
+        return cache.setdefault(node, _node_assembly(composition, node))
 
     def convert_python_struct_to_llvm_ir(self, t):
         self._stats["types_converted"] += 1
