@@ -397,7 +397,7 @@ if __name__ == '__main__':
                   #                              model.projections[7].parameters.matrix.get(context)),
                   #                              # model.projections[7].matrix)
                   #   call_after_minibatch=print_stuff,
-                    optimizations_per_minibatch=1,
+                    optimizations_per_minibatch=model_params['num_optimization_steps'],
                     learning_rate=model_params['learning_rate'],
                     execution_mode= model_params['execution_mode'],
                     # minibatch_size=3,

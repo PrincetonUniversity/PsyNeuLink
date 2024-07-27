@@ -43,6 +43,7 @@ model_params = dict(
     loss_spec = Loss.BINARY_CROSS_ENTROPY,
     # loss_spec = Loss.MSE,
     learning_rate = .5,
+    num_optimization_steps = 1,
     # execution_mode = ExecutionMode.Python,
     execution_mode = ExecutionMode.PyTorch,
     device = CPU,

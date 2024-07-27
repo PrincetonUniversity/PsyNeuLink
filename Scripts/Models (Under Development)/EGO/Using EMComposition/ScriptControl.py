@@ -2,6 +2,8 @@ from psyneulink.core.compositions.report import ReportOutput, ReportProgress
 
 # Settings for running script:
 
+MODEL_PARAMS = 'TestParams'
+
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL =  (                     # Only one of the following can be uncommented:
     None                             # suppress display of model
@@ -24,5 +26,3 @@ SAVE_RESULTS = False                 # save model.results to disk
 # PLOT_RESULTS = False                  # don't plot results (PREDICTIONS) vs. TARGETS
 PLOT_RESULTS = True                  # plot results (PREDICTIONS) vs. TARGETS
 ANIMATE = False                       # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
-
-MODEL_PARAMS = 'TestParams'
