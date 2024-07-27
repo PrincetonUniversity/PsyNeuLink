@@ -3,37 +3,36 @@
 #     http://www.apache.org/licenses/LICENSE-2.0
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and limitations under the License.
-
-# CONTROL FLOW:
-#   - EM EXECUTES FIRST:
-#     - RETRIEVES USING PREVIOUS STATE NODE AND CONTEXT (PRE-INTEGRATION) TO RETRIEVE PREDICTED CURRENT STATE
-#     - STORES VALUES OF PREVIOUS STATE, CURRENT STATE (INPUT) AND CONTEXT (PRE-INTEGRATION) INTO EM
-#   - THEN:
-#     - PREVIOUS_STATE EXECUTES TO GET CURRENT_STATE_INPUT (FOR RETRIEVAL ON NEXT TRIAL)
-#     - INTEGRATOR LAYER EXECUTES, INTEGRATING CURRENT_STATE_INPUT INTO MEMORY
-#     - CONTEXT LAYER EXECUTES TO GET LEARNED CONTEXT (FOR RETRIEVAL ON NEXT TRIAL)
-#   - PREDICTED CURRENT STATE IS COMPARED WITH ACTUAL CURRENT STATE (TARGET) TO UPDATE INTEGRATOR -> CONTEXT WEIGHTS
-
-# ISSUES:
-#   * Using TransferMechanism (to avoid recurrent in PyTorch):
-#     -> input is always just linearly integrated, and the integral is tanh'd
-#        (not sure tanh is even necessary, since integral is always between 0 and 1)
-#     -> how is recurrence implemented in PyTorch?
-#   * ??Possible bug:  for nodes in nested composition (such as EMComposition):  calling of execute_node on the
-#                      nested Composition rather than the outer one to which they now belong in
-#                      PytorchCompositionWrapper
-
-# TODO:
-#
-# SCRIPT STUFF:
-# √ REPLACE INTEGRATOR RECURRENTTRANSFERMECHANISM WITH TRANSFERMECHANISM IN INTEGRATOR MODE
-#   OR TRY USING LCA with DECAY?
-# - CHECK THAT VERSION WITH TRANSFERMECHANISM FOR CONTEXT PRODUCES CORRECT EM ENTRIES PER PREVOUS BENCHMARKING
-# - DEBUG LEARNING
-#
 
 """
+
+CONTROL FLOW:
+  - EM EXECUTES FIRST:
+    - RETRIEVES USING PREVIOUS STATE NODE AND CONTEXT (PRE-INTEGRATION) TO RETRIEVE PREDICTED CURRENT STATE
+    - STORES VALUES OF PREVIOUS STATE, CURRENT STATE (INPUT) AND CONTEXT (PRE-INTEGRATION) INTO EM
+  - THEN:
+    - PREVIOUS_STATE EXECUTES TO GET CURRENT_STATE_INPUT (FOR RETRIEVAL ON NEXT TRIAL)
+    - INTEGRATOR LAYER EXECUTES, INTEGRATING CURRENT_STATE_INPUT INTO MEMORY
+    - CONTEXT LAYER EXECUTES TO GET LEARNED CONTEXT (FOR RETRIEVAL ON NEXT TRIAL)
+  - PREDICTED CURRENT STATE IS COMPARED WITH ACTUAL CURRENT STATE (TARGET) TO UPDATE INTEGRATOR -> CONTEXT WEIGHTS
+
+ISSUES:
+  * Using TransferMechanism (to avoid recurrent in PyTorch):
+    -> input is always just linearly integrated, and the integral is tanh'd
+       (not sure tanh is even necessary, since integral is always between 0 and 1)
+    -> how is recurrence implemented in PyTorch?
+  * ??Possible bug:  for nodes in nested composition (such as EMComposition):  calling of execute_node on the
+                     nested Composition rather than the outer one to which they now belong in
+                     PytorchCompositionWrapper
+
+TODO:
+
+SCRIPT STUFF:
+√ REPLACE INTEGRATOR RECURRENTTRANSFERMECHANISM WITH TRANSFERMECHANISM IN INTEGRATOR MODE
+  OR TRY USING LCA with DECAY?
+- CHECK THAT VERSION WITH TRANSFERMECHANISM FOR CONTEXT PRODUCES CORRECT EM ENTRIES PER PREVOUS BENCHMARKING
+- DEBUG LEARNING
+
 QUESTIONS:
 
 NOTES:
@@ -131,134 +130,63 @@ MORE HERE
 
 
 """
-import matplotlib.pyplot as plt
+
 import numpy as np
 import graph_scheduler as gs
+from importlib import import_module
 from enum import IntEnum
-
+import matplotlib.pyplot as plt
 import torch
 torch.manual_seed(0)
-
 from psyneulink import *
 from psyneulink._typing import Union, Literal
 
-#region   SCRIPT SETTINGS
-# ======================================================================================================================
-#                                                   SCRIPT SETTINGS
-# ======================================================================================================================
-# Settings for running script:
-
-CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
-DISPLAY_MODEL =  (                     # Only one of the following can be uncommented:
-    None                             # suppress display of model
-    # {                                  # show simple visual display of model
-    # 'show_pytorch': True,            # show pytorch graph of model
-    #  'show_learning': True
-    # # 'show_projections_not_in_composition': True,
-    # # 'exclude_from_gradient_calc_style': 'dashed'# show target mechanisms for learning
-    # # {'show_node_structure': True     # show detailed view of node structures and projections
-    # }
-)
-RUN_MODEL = True,                       # True => run the model
-# RUN_MODEL = False                      # False => don't run the model
-# EXECUTION_MODE = ExecutionMode.Python
-EXECUTION_MODE = ExecutionMode.PyTorch
-# REPORT_OUTPUT = ReportOutput.FULL  # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
-REPORT_OUTPUT = ReportOutput.OFF     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
-REPORT_PROGRESS = ReportProgress.OFF # Sets console progress bar during run
-PRINT_RESULTS = True                 # print model.results to console after execution
-SAVE_RESULTS = False                 # save model.results to disk
-# PLOT_RESULTS = True                  # plot results (PREDICTIONS) vs. TARGETS
-PLOT_RESULTS = False                  # plot results (PREDICTIONS) vs. TARGETS
-ANIMATE = False                       # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
-#endregion
-
-#region ENVIRONMENT
-# ======================================================================================================================
-#                                                   ENVIRONMENT
-# ======================================================================================================================
-
-# Task environment:
+from ScriptControl import (MODEL_PARAMS, CONSTRUCT_MODEL, DISPLAY_MODEL, RUN_MODEL,
+                           REPORT_OUTPUT, REPORT_PROGRESS, PRINT_RESULTS, SAVE_RESULTS, PLOT_RESULTS)
 import Environment
+import_module(MODEL_PARAMS)
+model_params = import_module(MODEL_PARAMS).model_params
 
-# CURRICULUM_TYPE = 'Blocked'     # 'Blocked' or 'Interleaved'
-CURRICULUM_TYPE = 'Interleaved'     # 'Blocked' or 'Interleaved'
 
-NUM_STIMS = 7  # Integer or ALL
-dataset = Environment.generate_dataset(condition=CURRICULUM_TYPE)
-if NUM_STIMS is ALL:
+#region  TASK ENVIRONMENT
+# ======================================================================================================================
+#                                                   TASK ENVIRONMENT
+# ======================================================================================================================
+
+dataset = Environment.generate_dataset(condition=model_params['curriculum_type'],)
+if model_params['num_stims'] is ALL:
     INPUTS = dataset.xs.numpy()
     TARGETS = dataset.ys.numpy()
 else:
-    INPUTS = dataset.xs.numpy()[:NUM_STIMS]
-    TARGETS = dataset.ys.numpy()[:NUM_STIMS]
+    INPUTS = dataset.xs.numpy()[:model_params['num_stims']]
+    TARGETS = dataset.ys.numpy()[::model_params['num_stims']]
 TOTAL_NUM_STIMS = len(INPUTS)
 
 #endregion
 
-#region   PARAMETERS
+#region  MODEL
 # ======================================================================================================================
-#                                                   MODEL PARAMETERS
+#                                                      MODEL
 # ======================================================================================================================
 
-model_params = dict(
-
-    # Names:
-    name = "EGO Model CSW",
-    state_input_layer_name = "STATE",
-    previous_state_layer_name = "PREVIOUS STATE",
-    context_layer_name = 'CONTEXT',
-    em_name = "EM",
-    prediction_layer_name = "PREDICTION",
-
-    # Structral
-    state_d = 11, # length of state vector
-    previous_state_d = 11, # length of state vector
-    context_d = 11, # length of context vector
-    memory_capacity = TOTAL_NUM_STIMS, # number of entries in EM memory
-    memory_init = (0,.001),  # Initialize memory with random values in interval
-    # memory_init = None,  # Initialize with zeros
-    concatenate_keys = False,
-
-    # Processing
-    integration_rate = .69, # rate at which state is integrated into new context
-    state_weight = 1, # weight of the state used during memory retrieval
-    context_weight = 1, # weight of the context used during memory retrieval
-    normalize_field_weights = True, # whether to normalize the field weights during memory retrieval
-    # softmax_temperature = None, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
-    softmax_temperature = .1, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
-    # softmax_temperature = ADAPTIVE, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
-    # softmax_temperature = CONTROL, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
-    # softmax_threshold = None, # threshold used to mask out small values in softmax
-    softmax_threshold = .001, # threshold used to mask out small values in softmax
-    enable_learning=[True, False, False], # Enable learning for PREDICTION (STATE) but not CONTEXT or PREVIOUS STATE
-    learn_field_weights = False,
-    loss_spec = Loss.BINARY_CROSS_ENTROPY,
-    # loss_spec = Loss.MSE,
-    learning_rate = .5,
-    # device = CPU,
-    device = MPS,
-)
-
-# EM structdural params:
+# EM structural params:
 EMFieldsIndex = IntEnum('EMFields',
                         ['STATE',
                          'CONTEXT',
                          'PREVIOUS_STATE'],
                         start=0)
-STATE_RETRIEVAL_WEIGHT = 0
+state_retrieval_weight = 0
 RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projections
 
 if is_numeric_scalar(model_params['softmax_temperature']):      # translate to gain of softmax retrieval function
-    RETRIEVAL_SOFTMAX_GAIN = 1/model_params['softmax_temperature']
+    retrieval_softmax_gain = 1/model_params['softmax_temperature']
 else:                                                           # pass along ADAPTIVE or CONTROL spec
-    RETRIEVAL_SOFTMAX_GAIN = model_params['softmax_temperature']
-#endregion
+    retrieval_softmax_gain = model_params['softmax_temperature']
 
-#region   MODEL
-# ======================================================================================================================
-#                                                      MODEL
-# ======================================================================================================================
+if model_params['memory_capacity'] is ALL:
+    memory_capacity = model_params['num_stims']
+elif not isinstance(model_params['memory_capacity'], int):
+    raise ValueError(f"memory_capacity must be an integer or ALL; got {model_params['memory_capacity']}")
 
 def construct_model(model_name:str=model_params['name'],
 
@@ -276,15 +204,15 @@ def construct_model(model_name:str=model_params['name'],
 
                     # EM:
                     em_name:str=model_params['em_name'],
-                    retrieval_softmax_gain=RETRIEVAL_SOFTMAX_GAIN,
+                    retrieval_softmax_gain=retrieval_softmax_gain,
                     retrieval_softmax_threshold=model_params['softmax_threshold'],
-                    state_retrieval_weight:Union[float,int]=STATE_RETRIEVAL_WEIGHT,
+                    state_retrieval_weight:Union[float,int]=state_retrieval_weight,
                     previous_state_retrieval_weight:Union[float,int]=model_params['state_weight'],
                     context_retrieval_weight:Union[float,int]=model_params['context_weight'],
                     normalize_field_weights = model_params['normalize_field_weights'],
                     concatenate_keys = model_params['concatenate_keys'],
                     learn_field_weights = model_params['learn_field_weights'],
-                    memory_capacity = model_params['memory_capacity'],
+                    memory_capacity = memory_capacity,
                     memory_init=model_params['memory_init'],
 
                     # Output:
@@ -421,7 +349,7 @@ if __name__ == '__main__':
     model = None
 
     if CONSTRUCT_MODEL:
-        print(f'Constructing {model_params["name"]}')
+        print(f"Constructing '{model_params['name']}'...")
         model = construct_model()
         assert 'DEBUGGING BREAK POINT'
         # print(model.scheduler.consideration_queue)
@@ -449,8 +377,17 @@ if __name__ == '__main__':
             print('\nProjections from context to EM: \n', model.projections[7].parameters.matrix.get(kwargs['context']))
             print('\nEM Memory: \n', model.nodes['EM'].parameters.memory.get(model.name))
 
-        # print("MODEL NOT YET FULLY EXECUTABLE")
-        print(f"Running {model_params['name']}")
+        if INPUTS[0][9]:
+            sequence_context = 'context 1'
+        else:
+            sequence_context = 'context 2'
+        if INPUTS[1][1]:
+            sequence_state = 'state 1'
+        else:
+            sequence_state = 'state 2'
+
+        print(f"Running '{model_params['name']}' for {model_params['num_stims']} stims "
+              f"starting with {sequence_context}, {sequence_state}...")
         context = model_params['name']
         start_time = timeit.default_timer()
         model.learn(inputs={model_params['state_input_layer_name']:INPUTS},
@@ -462,7 +399,7 @@ if __name__ == '__main__':
                   #   call_after_minibatch=print_stuff,
                     optimizations_per_minibatch=1,
                     learning_rate=model_params['learning_rate'],
-                    execution_mode=ExecutionMode.PyTorch,
+                    execution_mode= model_params['execution_mode'],
                     # minibatch_size=3,
                   )
         stop_time = timeit.default_timer()
@@ -472,7 +409,7 @@ if __name__ == '__main__':
         if PRINT_RESULTS:
             print("MEMORY:")
             print(model.nodes['EM'].parameters.memory.get(model.name))
-            model.run(inputs={model_params["state_input_layer_name"]:INPUTS[4]},
+            model.run(inputs={model_params["state_input_layer_name"]:INPUTS[model_params['num_stims']-1]},
                       # report_output=REPORT_OUTPUT,
                       # report_progress=REPORT_PROGRESS
                       )
@@ -501,6 +438,6 @@ if __name__ == '__main__':
         if PLOT_RESULTS:
             plt.plot(1 - np.abs(model.results[2:TOTAL_NUM_STIMS,2]-TARGETS[:TOTAL_NUM_STIMS-2]))
             plt.show()
-            plt.savefig('EGO PLOT.png')
+            plt.savefig('../show_graph OUTPUT/EGO PLOT.png')
 
     #endregion
