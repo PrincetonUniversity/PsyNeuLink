@@ -184,9 +184,9 @@ import Environment
 
 # CURRICULUM_TYPE = 'Blocked'     # 'Blocked' or 'Interleaved'
 CURRICULUM_TYPE = 'Interleaved'     # 'Blocked' or 'Interleaved'
-NUM_STIMS = 7  # Integer or ALL
-# NUM_STIMS = ALL
 
+# NUM_STIMS = 2  # Integer or ALL
+NUM_STIMS = ALL
 dataset = Environment.generate_dataset(condition=CURRICULUM_TYPE)
 if NUM_STIMS is ALL:
     INPUTS = dataset.xs.numpy()
@@ -226,8 +226,8 @@ model_params = dict(
     integration_rate = .69, # rate at which state is integrated into new context
     state_weight = 1, # weight of the state used during memory retrieval
     context_weight = 1, # weight of the context used during memory retrieval
-    normalize_field_weights = True, # whether to normalize the field weights during memory retrieval
-    # normalize_field_weights = False, # whether to normalize the field weights during memory retrieval
+    normalize_field_weights = False, # whether to normalize the field weights during memory retrieval
+    # normalize_field_weights = True, # whether to normalize the field weights during memory retrieval
     # softmax_temperature = None, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
     softmax_temperature = .1, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
     # softmax_temperature = ADAPTIVE, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
