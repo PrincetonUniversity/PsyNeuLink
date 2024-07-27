@@ -349,6 +349,13 @@ class LLVMBuilderContext:
         return helpers.get_state_space(builder, component, state_ptr, param_name)
 
     def check_used_params(self, component, *, tags:frozenset):
+        """
+        This function checks that parameters included in the compiled structures are used in compiled code.
+
+        If the assertion in this function triggers the parameter name should be added to the parameter
+        block list in the Component class.
+        """
+
         # Skip the check if the parameter use is not tracked. Some components (like node wrappers)
         # don't even have parameters.
         if component not in self._component_state_use and component not in self._component_param_use:
@@ -377,12 +384,6 @@ class LLVMBuilderContext:
         # 'num_trials_per_estimate' is only used in "evaluate" variants
         if hasattr(component, 'evaluate_agent_rep'):
             used_param_ids.add('num_trials_per_estimate')
-
-        if hasattr(component, 'adapt_scale'):
-            used_param_ids.add('threshold')
-            used_param_ids.add('adapt_scale')
-            used_param_ids.add('adapt_base')
-            used_param_ids.add('adapt_entropy_weighting')
 
         unused_param_ids = component_param_ids - used_param_ids - initializers
         unused_state_ids = component_state_ids - used_state_ids
