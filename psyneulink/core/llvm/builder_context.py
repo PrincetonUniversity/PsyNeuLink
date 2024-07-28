@@ -516,27 +516,26 @@ class LLVMBuilderContext:
         self._stats["types_converted"] += 1
         if t is None:
             return ir.LiteralStructType([])
-        elif type(t) is list:
-            if len(t) == 0:
-                return ir.LiteralStructType([])
-            elems_t = [self.convert_python_struct_to_llvm_ir(x) for x in t]
-            if all(x == elems_t[0] for x in elems_t):
-                return ir.ArrayType(elems_t[0], len(elems_t))
-            return ir.LiteralStructType(elems_t)
-        elif type(t) is tuple:
+
+        elif isinstance(t, (list, tuple)):
             elems_t = [self.convert_python_struct_to_llvm_ir(x) for x in t]
             if len(elems_t) > 0 and all(x == elems_t[0] for x in elems_t):
                 return ir.ArrayType(elems_t[0], len(elems_t))
+
             return ir.LiteralStructType(elems_t)
+
         elif isinstance(t, enum.Enum):
             # FIXME: Consider enums of non-int type
             assert all(round(x.value) == x.value for x in type(t))
             return self.int32_ty
+
         elif isinstance(t, (int, float, np.floating)):
             return self.float_ty
+
         elif isinstance(t, np.integer):
             # Python 'int' is handled above as it is the default type for '0'
             return ir.IntType(t.nbytes * 8)
+
         elif isinstance(t, np.ndarray):
             # 0d uint32 values were likely created from enums (above) and are
             # observed here after compilation sync.
@@ -544,18 +543,24 @@ class LLVMBuilderContext:
             if t.ndim == 0 and t.dtype == np.uint32:
                 return self.convert_python_struct_to_llvm_ir(t.reshape(1)[0])
             return self.convert_python_struct_to_llvm_ir(t.tolist())
+
         elif isinstance(t, np.random.RandomState):
             return pnlvm.builtins.get_mersenne_twister_state_struct(self)
+
         elif isinstance(t, np.random.Generator):
             assert isinstance(t.bit_generator, np.random.Philox)
             return pnlvm.builtins.get_philox_state_struct(self)
+
         elif isinstance(t, Time):
             return ir.ArrayType(self.int32_ty, len(TimeScale))
+
         elif isinstance(t, SampleIterator):
             if isinstance(t.generator, list):
                 return ir.ArrayType(self.float_ty, len(t.generator))
+
             # Generic iterator is {start, increment, count}
             return ir.LiteralStructType((self.float_ty, self.float_ty, self.int32_ty))
+
         assert False, "Don't know how to convert {}".format(type(t))
 
 
