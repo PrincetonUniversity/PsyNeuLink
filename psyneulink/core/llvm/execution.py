@@ -100,7 +100,9 @@ class Execution:
             struct = struct_ty(*initializer)
             struct_end = time.time()
 
-            numpy_struct = np.ctypeslib.as_array(struct)
+            # numpy "frombuffer" creates a shared memory view of the provided buffer
+            numpy_struct = np.frombuffer(struct, dtype=self._bin_func.np_params[arg], count=len(self._execution_contexts))
+
             assert numpy_struct.nbytes == ctypes.sizeof(struct), \
                 "Size mismatch ({}), numpy: {} vs. ctypes:{}".format(name, numpy_struct.nbytes, ctypes.sizeof(struct))
 
@@ -119,6 +121,8 @@ class Execution:
                       "for", self._obj.name)
 
             if len(self._execution_contexts) == 1:
+
+                numpy_struct.shape = ()
 
                 if name == '_state':
                     self._copy_params_to_pnl(self._execution_contexts[0],
