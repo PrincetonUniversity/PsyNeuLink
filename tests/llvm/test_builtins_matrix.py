@@ -39,9 +39,6 @@ def _get_const_dim_func(builtin, *dims):
         builtin = ctx.import_llvm_function(builtin)
         pointer_arg_types = [a for a in builtin.type.pointee.args if pnlvm.helpers.is_pointer(a)]
 
-        func_ty = ir.FunctionType(ir.VoidType(), pointer_arg_types)
-
-
         # Create square vector matrix multiply
         function = ir.Function(ctx.module, builtin.type.pointee, name=custom_name)
         const_dims = (ctx.int32_ty(d) for d in dims)
@@ -65,6 +62,21 @@ def _get_const_dim_func(builtin, *dims):
                          ], ids=["ADD", "SUB", "MUL", "ADDS", "MULS", "DOT", "TRANS DOT"])
 @pytest.mark.parametrize("dims", [(DIM_X, DIM_Y), (0, 0)], ids=["VAR-DIM", "CONST-DIM"])
 def test_matrix_op(benchmark, op, x, y, builtin, result, func_mode, dims):
+
+    def _numpy_args(bin_f):
+        dty = np.dtype(bin_f.byref_arg_types[0])
+
+        # non-pointer arguments have None is the respective byref_arg_types position
+        if bin_f.byref_arg_types[1] is not None:
+            assert dty == np.dtype(bin_f.byref_arg_types[1])
+        assert dty == np.dtype(bin_f.byref_arg_types[4])
+
+        lx = x.astype(dty)
+        ly = dty.type(y) if np.isscalar(y) else y.astype(dty)
+        lres = np.empty_like(result, dtype=dty)
+
+        return lx, ly, lres
+
     if func_mode == 'Python':
         def ex():
             return op(x, y)
@@ -76,13 +88,7 @@ def test_matrix_op(benchmark, op, x, y, builtin, result, func_mode, dims):
             func_name = builtin
 
         bin_f = pnlvm.LLVMBinaryFunction.get(func_name)
-        dty = np.dtype(bin_f.byref_arg_types[0])
-        assert dty == np.dtype(bin_f.byref_arg_types[1])
-        assert dty == np.dtype(bin_f.byref_arg_types[4])
-
-        lx = x.astype(dty)
-        ly = dty.type(y) if np.isscalar(y) else y.astype(dty)
-        lres = np.empty_like(result, dtype=dty)
+        lx, ly, lres = _numpy_args(bin_f)
 
         ct_x = lx.ctypes.data_as(bin_f.c_func.argtypes[0])
         ct_y = ly if np.isscalar(ly) else ly.ctypes.data_as(bin_f.c_func.argtypes[1])
@@ -99,17 +105,12 @@ def test_matrix_op(benchmark, op, x, y, builtin, result, func_mode, dims):
             func_name = builtin
 
         bin_f = pnlvm.LLVMBinaryFunction.get(func_name)
-        dty = np.dtype(bin_f.byref_arg_types[0])
-        assert dty == np.dtype(bin_f.byref_arg_types[1])
-        assert dty == np.dtype(bin_f.byref_arg_types[4])
-
-        lx = x.astype(dty)
-        ly = dty.type(y) if np.isscalar(y) else y.astype(dty)
-        lres = np.empty_like(result, dtype=dty)
+        lx, ly, lres = _numpy_args(bin_f)
 
         cuda_x = pnlvm.jit_engine.pycuda.driver.In(lx)
         cuda_y = ly if np.isscalar(ly) else pnlvm.jit_engine.pycuda.driver.In(ly)
         cuda_res = pnlvm.jit_engine.pycuda.driver.Out(lres)
+
         def ex():
             bin_f.cuda_call(cuda_x, cuda_y, np.int32(dims[0]), np.int32(dims[1]), cuda_res)
             return lres
