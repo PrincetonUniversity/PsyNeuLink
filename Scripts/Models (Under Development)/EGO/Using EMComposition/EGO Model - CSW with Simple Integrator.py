@@ -184,7 +184,7 @@ else:                                                           # pass along ADA
     retrieval_softmax_gain = model_params['softmax_temperature']
 
 if model_params['memory_capacity'] is ALL:
-    memory_capacity = model_params['num_stims']
+    memory_capacity =  TOTAL_NUM_STIMS
 elif not isinstance(model_params['memory_capacity'], int):
     raise ValueError(f"memory_capacity must be an integer or ALL; got {model_params['memory_capacity']}")
 
@@ -386,8 +386,8 @@ if __name__ == '__main__':
         else:
             sequence_state = 'state 2'
 
-        print(f"Running '{model_params['name']}' for {model_params['num_stims']} stims "
-              f"starting with {sequence_context}, {sequence_state}...")
+        print(f"Running '{model_params['name']}' with {MODEL_PARAMS} for {model_params['num_stims']} stims "
+              f"using {model_params['curriculum_type']} training starting with {sequence_context}, {sequence_state}...")
         context = model_params['name']
         start_time = timeit.default_timer()
         model.learn(inputs={model_params['state_input_layer_name']:INPUTS},
@@ -409,7 +409,7 @@ if __name__ == '__main__':
         if PRINT_RESULTS:
             print("MEMORY:")
             print(model.nodes['EM'].parameters.memory.get(model.name))
-            model.run(inputs={model_params["state_input_layer_name"]:INPUTS[model_params['num_stims']-1]},
+            model.run(inputs={model_params["state_input_layer_name"]:INPUTS[TOTAL_NUM_STIMS-1]},
                       # report_output=REPORT_OUTPUT,
                       # report_progress=REPORT_PROGRESS
                       )
@@ -421,7 +421,10 @@ if __name__ == '__main__':
             print(model.nodes['PREDICTION'].parameters.value.get(model.name))
             print("CONTEXT WEIGHTS:")
             print(model.projections[7].parameters.matrix.get(model.name))
+
             plt.imshow(model.projections[7].parameters.matrix.get(model.name))
+            # plt.figure()
+
             def eval_weights(weight_mat):
                 # checks whether only 5 weights are updated.
                 weight_mat -= np.eye(11)
@@ -437,7 +440,10 @@ if __name__ == '__main__':
 
         if PLOT_RESULTS:
             plt.plot(1 - np.abs(model.results[2:TOTAL_NUM_STIMS,2]-TARGETS[:TOTAL_NUM_STIMS-2]))
-            plt.show()
+            plt.title(f"{model_params['curriculum_type']} Training")
+            plt.xlabel('Stimuli')
+            plt.ylabel(model_params['loss_spec'])
+            plt.show(vmin=0, vmax=10)
             plt.savefig('../show_graph OUTPUT/EGO PLOT.png')
 
     #endregion

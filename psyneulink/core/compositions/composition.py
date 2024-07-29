@@ -11619,6 +11619,8 @@ _
 
         context.execution_phase = execution_phase_at_entry
 
+        self._optimizations_per_minibatch = optimizations_per_minibatch
+
         result = runner.run_learning(
             inputs=inputs,
             targets=targets,
@@ -12811,7 +12813,7 @@ _
         else:
             return {k:np.array(v).tolist() for k,v in result_set}
 
-    def _update_learning_parameters(self, context):
+    def _update_learning_parameters(self, optimization_rep, context):
         pass
 
     @handle_external_context(fallback_most_recent=True)

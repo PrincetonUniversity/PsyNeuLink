@@ -336,7 +336,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 if node._mechanism in input_nodes:
                     continue
                 node_z_value = z_values[node]
-                activation_func_derivative = node._gen_llvm_execute_derivative_func(ctx, builder, state, params, node_z_value)
+                activation_func_derivative = node._gen_llvm_execute_derivative_func(ctx, builder,
+                                                                                    state, params, node_z_value)
                 error_val = builder.alloca(z_values[node].type.pointee)
                 error_dict[node] = error_val
 
@@ -351,7 +352,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     node_target = builder.gep(model_input, [ctx.int32_ty(0), ctx.int32_ty(target_idx)])
 
                     # 2) Lookup desired output value
-                    node_output = builder.gep(model_output, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(node._idx), ctx.int32_ty(0)])
+                    node_output = builder.gep(model_output, [ctx.int32_ty(0), ctx.int32_ty(0),
+                                                             ctx.int32_ty(node._idx),
+                                                             ctx.int32_ty(0)])
 
                     tmp_loss = loss.gen_inject_lossfunc_call(
                         ctx, builder, loss_fn, node_output, node_target)
@@ -404,17 +407,24 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 continue
             for proj in node.afferents:
                 # get a_(l-1)
-                afferent_node_activation = builder.gep(model_output, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(proj.sender._idx), ctx.int32_ty(0)])
+                afferent_node_activation = builder.gep(model_output, [ctx.int32_ty(0),
+                                                                      ctx.int32_ty(0),
+                                                                      ctx.int32_ty(proj.sender._idx),
+                                                                      ctx.int32_ty(0)])
 
                 # get dimensions of weight matrix
                 weights_llvmlite = proj._extract_llvm_matrix(ctx, builder, state, params)
-                pnlvm.helpers.printf_float_matrix(builder, weights_llvmlite, prefix= f"{proj.sender._mechanism} -> {proj.receiver._mechanism}\n", override_debug=False)
+                pnlvm.helpers.printf_float_matrix(builder, weights_llvmlite,
+                                                  prefix= f"{proj.sender._mechanism} -> {proj.receiver._mechanism}\n",
+                                                  override_debug=False)
                 # update delta_W
                 node_delta_w = builder.gep(delta_w, [ctx.int32_ty(0), ctx.int32_ty(proj._idx)])
 
                 dim_x, dim_y = proj.matrix.shape
-                with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(dim_x), "weight_update_loop_outer") as (b1, weight_row):
-                    with pnlvm.helpers.for_loop_zero_inc(b1, ctx.int32_ty(dim_y), "weight_update_loop_inner") as (b2, weight_column):
+                with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(dim_x),
+                                                     "weight_update_loop_outer") as (b1, weight_row):
+                    with pnlvm.helpers.for_loop_zero_inc(b1, ctx.int32_ty(dim_y),
+                                                         "weight_update_loop_inner") as (b2, weight_column):
                         a_val = b2.load(b2.gep(afferent_node_activation,
                                                [ctx.int32_ty(0), weight_row]))
                         d_val = b2.load(b2.gep(err_val,
@@ -469,7 +479,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         return optimizer
 
     @handle_external_context()
-    def forward(self, inputs, context=None)->dict:
+    def forward(self, inputs, optimization_rep, context=None)->dict:
         """Forward method of the model for PyTorch and LLVM modes
         Returns a dictionary {output_node:value} of output values for the model
         """
@@ -480,7 +490,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 # If node is nested Composition (wrapped in PytorchCompositionWrapper),
                 #    calls its forward method recursively
                 if isinstance(node, PytorchCompositionWrapper):
-                    node.forward(inputs=None)
+                    node.forward(inputs=None, optimization_rep=optimization_rep, context=context)
                     continue
 
                 elif node._is_input or node._is_bias:
@@ -524,6 +534,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
                 if node.exclude_from_gradient_calc:
                     if node.exclude_from_gradient_calc == AFTER:
+                        # Cache variable for later exce execution
                         self._nodes_to_execute_after_gradient_calc[node] = variable
                         continue
                     elif node.exclude_from_gradient_calc == BEFORE:
@@ -535,7 +546,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
                 # Execute the node using wrapper_type for Composition to which it belongs
                 # Note: this is to support overrides of execute_node method by subclasses (such as in EMComposition)
-                node.wrapper_type.execute_node(node, variable, context)
+                node.wrapper_type.execute_node(node, variable, optimization_rep, context)
 
                 # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
                 #  note: these may be different than for actual Composition, as they are flattened
@@ -552,7 +563,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         return outputs
 
-    def execute_node(self, node, variable, context=None):
+    def execute_node(self, node, variable, optimization_rep, context=None):
         """Execute node and store the result in the node's value attribute
         Implemented as method (and includes context as arg) so that it can be overridden
         by subclasses of PytorchCompositionWrapper
@@ -705,8 +716,8 @@ class PytorchMechanismWrapper():
             if ((isinstance(variable, list) and len(variable) == 1)
                 or (isinstance(variable, torch.Tensor) and len(variable.squeeze(0).shape) == 1)
                     or isinstance(self._mechanism.function, LinearCombination)):
-                # Enforce 2d on value of MechanismWrapper (using unsqueeze)
-                # for single InputPort or if CombinationFunction (which reduces output to single item from multi-item input)
+                # Enforce 2d on value of MechanismWrapper (using unsqueeze) for single InputPort
+                # or if CombinationFunction (which reduces output to single item from multi-item input)
                 if isinstance(variable, torch.Tensor):
                     variable = variable.squeeze(0)
                 return function(variable).unsqueeze(0)
@@ -761,7 +772,10 @@ class PytorchMechanismWrapper():
                                  mech_input,
                                  mech_output])
 
-        pnlvm.helpers.printf_float_array(builder, builder.gep(mech_output, [ctx.int32_ty(0), ctx.int32_ty(0)]), prefix=f"{self} output:\n", override_debug=False)
+        pnlvm.helpers.printf_float_array(builder,
+                                         builder.gep(mech_output, [ctx.int32_ty(0), ctx.int32_ty(0)]),
+                                         prefix=f"{self} output:\n",
+                                         override_debug=False)
 
         return mech_output
 
@@ -914,9 +928,15 @@ class PytorchProjectionWrapper():
 
         output_vec = gen_inject_vxm(ctx, builder, input_vec, proj_matrix)
 
-        pnlvm.helpers.printf_float_array(builder, input_vec, prefix=f"{self.sender._mechanism} -> {self.receiver._mechanism} input:\n", override_debug=False)
-        pnlvm.helpers.printf_float_matrix(builder, proj_matrix, prefix=f"{self.sender._mechanism} -> {self.receiver._mechanism} mat:\n", override_debug=False)
-        pnlvm.helpers.printf_float_array(builder, output_vec, prefix=f"{self.sender._mechanism} -> {self.receiver._mechanism} output:\n", override_debug=False)
+        pnlvm.helpers.printf_float_array(builder, input_vec,
+                                         prefix=f"{self.sender._mechanism} -> {self.receiver._mechanism} input:\n",
+                                         override_debug=False)
+        pnlvm.helpers.printf_float_matrix(builder, proj_matrix,
+                                          prefix=f"{self.sender._mechanism} -> {self.receiver._mechanism} mat:\n",
+                                          override_debug=False)
+        pnlvm.helpers.printf_float_array(builder, output_vec,
+                                         prefix=f"{self.sender._mechanism} -> {self.receiver._mechanism} output:\n",
+                                         override_debug=False)
 
         return output_vec
 

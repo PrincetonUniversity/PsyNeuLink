@@ -86,7 +86,7 @@ class CompositionRunner():
                         # Update weights if in PyTorch execution_mode;
                         #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
                         if execution_mode is ExecutionMode.PyTorch:
-                            self._composition._update_learning_parameters(context)
+                            self._composition._update_learning_parameters(rep_idx, context)
 
                     if call_after_minibatch:
                         try:

@@ -57,12 +57,14 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         self.retrieve_projection_wrappers = [self.projections_map[pnl_retrieve_proj]
                            for pnl_retrieve_proj in pnl_retrieve_projs]
 
-    def execute_node(self, node, variable, context):
+    def execute_node(self, node, variable, optimization_rep, context):
         """Override to handle storage of entry to memory_matrix by EMStorage Function"""
         if node is self.storage_node:
-            self.store_memory(variable, context)
+            # Only execute store after last optimization repetition for current mini-batch
+            if not (optimization_rep + 1) % context.composition._optimizations_per_minibatch:
+                self.store_memory(variable, context)
         else:
-            super().execute_node(node, variable, context)
+            super().execute_node(node, variable, optimization_rep, context)
 
     @property
     def memory(self)->Optional[torch.Tensor]:

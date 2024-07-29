@@ -1,8 +1,8 @@
 """
 DECLAN Params: **************************************************************************
-episodic_lr = 1  # learning rate for the episodic pathway
-temperature = 0.1  # temperature for EM retrieval (lower is more argmax-like)
-n_optimization_steps = 10  # number of update steps
+√ episodic_lr = 1  # learning rate for the episodic pathway
+√ temperature = 0.1  # temperature for EM retrieval (lower is more argmax-like)
+√ n_optimization_steps = 10  # number of update steps
 sim_thresh = 0.8 # threshold for discarding bad seeds -- can probably ignore this for now
 Filter runs whose context representations are too uniform (i.e. not similar to "checkerboard" foil)
 
@@ -56,9 +56,9 @@ model_params = dict(
 
     # environment
     curriculum_type = 'Interleaved',
-    # curriculum_type = 'Blocked'
-    num_stims = 7,  # Integer or ALL
-    # num_stims = ALL,  # Integer or ALL
+    # curriculum_type = 'Blocked',
+    # num_stims = 7,  # Integer or ALL
+    num_stims = ALL,  # Integer or ALL
 
     # Processing
     integration_rate = .69, # rate at which state is integrated into new context
@@ -77,6 +77,7 @@ model_params = dict(
     loss_spec = Loss.BINARY_CROSS_ENTROPY,
     # loss_spec = Loss.MSE,
     learning_rate = 1,
+    # num_optimization_steps = 1,
     num_optimization_steps = 10,
     # execution_mode = ExecutionMode.Python,
     execution_mode = ExecutionMode.PyTorch,

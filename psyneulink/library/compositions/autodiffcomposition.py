@@ -929,7 +929,7 @@ class AutodiffComposition(Composition):
         self.losses = []
         self.parameters.losses.set([], context=context)
 
-    def _update_learning_parameters(self, context):
+    def _update_learning_parameters(self, optimization_rep, context):
         """Carry out backpropagation learning (backward computation) for one or more trials.
         Update parameters (weights) based on trials run since last update,
             using Pytorch backward method to compute gradients and update weights
@@ -955,7 +955,7 @@ class AutodiffComposition(Composition):
         # do forward computation on nodes that should be executed after gradient calculation
         with torch.no_grad():
             for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
-                node.wrapper_type.execute_node(node, variable, context)
+                node.wrapper_type.execute_node(node, variable, optimization_rep, context)
 
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         if "run" in tags:
