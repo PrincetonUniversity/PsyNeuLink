@@ -11466,7 +11466,7 @@ _
             learning_rate: Optional[Union[int,float]]=None,
             minibatch_size: int = 1,
             optimizations_per_minibatch: int = 1,
-            copy_weights_to_pnl:str = 'MINIBATCH',
+            copy_weights_to_psyneulink_after:str = 'MINIBATCH',
             patience: Optional[int] = None,
             min_delta: int = 0,
             synchronize_pnl_values: bool = True,
@@ -11621,7 +11621,7 @@ _
         context.execution_phase = execution_phase_at_entry
 
         self._optimizations_per_minibatch = optimizations_per_minibatch
-        self._copy_weights_to_pnl = copy_weights_to_pnl
+        self.copy_weights_to_psyneulink_after = copy_weights_to_psyneulink_after
 
         result = runner.run_learning(
             inputs=inputs,

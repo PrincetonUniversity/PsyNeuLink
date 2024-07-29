@@ -108,9 +108,8 @@ class CompositionRunner():
                 # end early if patience exceeded
                 pass
 
-        if context._composition._copy_weights_to_pnl == 'RUN':
+        if context._composition.copy_weights_to_psyneulink_after == 'RUN':
             pytorch_rep = self._composition.parameters.pytorch_representation._get(context=context)
-            pytorch_rep.detach_all()
             pytorch_rep.copy_weights_to_psyneulink(context)
 
     def _batch_function_inputs(self,
@@ -155,7 +154,7 @@ class CompositionRunner():
                     # Update weights if in PyTorch execution_mode;
                     #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
                     if execution_mode is ExecutionMode.PyTorch:
-                        self._composition._update_learning_parameters(context)
+                        self._composition._update_learning_parameters(None, context)
                 else:
                     break
 
