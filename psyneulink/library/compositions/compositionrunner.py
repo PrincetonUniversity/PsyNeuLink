@@ -108,6 +108,11 @@ class CompositionRunner():
                 # end early if patience exceeded
                 pass
 
+        if context._composition._copy_weights_to_pnl == 'RUN':
+            pytorch_rep = self._composition.parameters.pytorch_representation._get(context=context)
+            pytorch_rep.detach_all()
+            pytorch_rep.copy_weights_to_psyneulink(context)
+
     def _batch_function_inputs(self,
                                inputs: dict,
                                epochs: int,

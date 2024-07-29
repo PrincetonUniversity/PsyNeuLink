@@ -396,6 +396,11 @@ class AutodiffComposition(Composition):
         specifies whether the AutodiffComposition should disable learning when run in `learning mode
         <Composition.learn>`.
 
+    copy_parameters_to_psyneulink : RUN or EPOCH or MINIBATCH or OPTIMIZATION_STEP : default RUN
+        specifies the default for the AutodiffCompositoin for how often to copy weights from Pytorch parameters to
+        PsyNeuLink matrix weights; this can be overridden by specifying the  **copy_parameters_to_psyneulink** argument
+        in the `learn <Composition.learn>` method; (see `copy_parameters_to_psyneulink` for additional details)
+
     device : torch.device : default device-dependnet
         specifies the device on which the model is run. If None, the device is set to 'cuda' if available,
         then 'mps`, otherwise 'cpu'.
@@ -430,9 +435,6 @@ class AutodiffComposition(Composition):
            **learnable** parameter of its constructor as `False`; this applies to MappingProjections at any
            level of `nesting <AutodiffComposition_Nesting>`.
 
-    device : torch.device
-        the device on which the model is run.
-
     losses : list of floats
         tracks the average loss after each weight update (i.e. each minibatch) during learning.
 
@@ -442,12 +444,24 @@ class AutodiffComposition(Composition):
 
     tracked_loss_count = Parameter(0, pnl_internal=True)
 
+    copy_parameters_to_psyneulink : RUN or EPOCH or MINIBATCH or OPTIMIZATION_STEP
+        determines how often to copy PyTorch parameters to PsyNeuLink `Projection matrices
+        <MappingProjection.matrix>` (connection weights); copying more frequently keeps the psyneulink
+        representation more closely synchronized with parameter updates in Pytorch, but slows performance.
+        *RUN* copies parameters at the end of each call to `learn <Composition.learn>`; *EPOCH* copies parameters
+        at the end of each epoch (i.e., stimuli presented in all minibatces); *MINIBATCH* copies parameters at the
+        end of each minibatch (i.e. after each stimulus presentation, or PsyNeuLink `TRIAL <TimeScale.TRIAL`);
+        *OPTIMIZATION_STEP* copies parameters after each optimization step which, if `optimizations_per_minibatch
+        <Composition.optimizations_per_minibatch>` is greater than 1, occurs multiple times per minibatch (stimulus).
+
     last_saved_weights : path
         path for file to which weights were last saved.
 
     last_loaded_weights : path
         path for file from which weights were last loaded.
 
+    device : torch.device
+        the device on which the model is run.
     """
 
     componentCategory = AUTODIFF_COMPOSITION
@@ -949,8 +963,20 @@ class AutodiffComposition(Composition):
 
         # Update weights and copy to PNL
         optimizer.step()
-        pytorch_rep.detach_all()
-        pytorch_rep.copy_weights_to_psyneulink(context)
+        # # MODIFIED 7/29/24 OLD:
+        # pytorch_rep.detach_all()
+        # pytorch_rep.copy_weights_to_psyneulink(context)
+        # MODIFIED 7/29/24 NEW:
+        # pytorch_rep.detach_all()  # FIX: <- IS THIS NEEDED ONLY WHEN WRITING TO PNL OR BY PYTORCH?
+        if context._composition._copy_weights_to_pnl == 'OPTIMIZATION_STEP':
+            pytorch_rep.detach_all()  # FIX: <- IS THIS NEEDED ONLY WHEN WRITING TO PNL OR BY PYTORCH?
+            pytorch_rep.copy_weights_to_psyneulink(context)
+        elif (context._composition._copy_weights_to_pnl == 'MINIBATCH'
+              and not (optimization_rep + 1) % context.composition._optimizations_per_minibatch):
+            pytorch_rep.detach_all()
+            pytorch_rep.copy_weights_to_psyneulink(context)
+        # FIX: NEED TO ADD COPY AT END OF RUN IF _copy_weights_to_PNL == 'RUN'
+        # MODIFIED 7/29/24 END
 
         # do forward computation on nodes that should be executed after gradient calculation
         with torch.no_grad():

@@ -2470,4 +2470,5 @@ class EMComposition(AutodiffComposition):
         super().infer_backpropagation_learning_pathways(execution_mode, context=context)
 
     def _update_learning_parameters(self, optimization_rep, context):
+        # 7/10/24 - MAKE THIS CONTEXT DEPENDENT:  CALL super() IF BEING EXECUTED ON ITS OWN?
         pass
