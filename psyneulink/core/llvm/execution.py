@@ -236,13 +236,27 @@ class Execution:
 
                     pnl_param.set(value, context=context, override=True, compilation_sync=True)
 
+    def _get_empty_for_arg(self, arg_num):
+
+        out_base = self._bin_func.np_params[arg_num].base
+        out_shape = self._bin_func.np_params[arg_num].shape
+
+        if len(self._execution_contexts) > 1:
+            out_shape = (len(self._execution_contexts),) + out_shape
+
+        # "empty" is in fact filled with NaN poison
+        return np.full(out_shape, np.nan, dtype=out_base)
+
+    def _get_indexable(self, np_array):
+        # outputs in recarrays need to be converted to list/tuple to be indexable
+        return np_array.tolist() if np_array.dtype.base.shape == () else np_array
 
 class CUDAExecution(Execution):
-    def __init__(self, buffers=['param_struct', 'state_struct', 'out']):
+    def __init__(self, buffers=['param_struct', 'state_struct']):
         super().__init__()
-        self._gpu_buffers = {}
-        for b in buffers:
-            self._gpu_buffers["_" + b] = None
+
+        # Initialize GPU buffer map
+        self._gpu_buffers = {"_" + b: None for b in buffers}
 
     @property
     def _bin_func_multirun(self):
@@ -257,7 +271,7 @@ class CUDAExecution(Execution):
         # .array is a public member of pycuda's In/Out ArgumentHandler classes
         if gpu_buffer is None or gpu_buffer.array is not np_struct:
 
-            # 0-sized structures fail to upload use a dummy numpy array isntead
+            # 0-sized structures fail to upload use a dummy numpy array instead
             gpu_buffer = arg_handler(np_struct if np_struct.nbytes > 0 else np.zeros(2))
 
             self._gpu_buffers[struct_name] = gpu_buffer
@@ -280,27 +294,20 @@ class CUDAExecution(Execution):
     def _cuda_conditions(self):
         return self.__get_cuda_arg("_conditions", jit_engine.pycuda.driver.InOut)
 
-    @property
-    def _cuda_out(self):
-        gpu_buffer = self._gpu_buffers["_out"]
-        if gpu_buffer is None:
-            gpu_buffer = jit_engine.pycuda.driver.Out(np.ctypeslib.as_array(self._ct_vo))
-            self._gpu_buffers["_out"] = gpu_buffer
-
-        return gpu_buffer
-
     def cuda_execute(self, variable):
         # Create input argument
         new_var = np.asfarray(variable, dtype=self._vi_dty)
         data_in = jit_engine.pycuda.driver.In(new_var)
 
+        data_out = self._get_empty_for_arg(3)
+
         self._bin_func.cuda_call(self._cuda_param_struct,
                                  self._cuda_state_struct,
                                  data_in,
-                                 self._cuda_out,
+                                 jit_engine.pycuda.driver.Out(data_out),
                                  threads=len(self._execution_contexts))
 
-        return _convert_ctype_to_python(self._ct_vo)
+        return self._get_indexable(data_out)
 
 
 class FuncExecution(CUDAExecution):
@@ -308,7 +315,7 @@ class FuncExecution(CUDAExecution):
     def __init__(self, component, execution_ids=[None], *, tags=frozenset()):
         super().__init__()
 
-        self._bin_func = pnlvm.LLVMBinaryFunction.from_obj(component, tags=tags, numpy_args=(0, 1))
+        self._bin_func = pnlvm.LLVMBinaryFunction.from_obj(component, tags=tags, numpy_args=(0, 1, 3))
         self._execution_contexts = [
             Context(execution_id=eid) for eid in execution_ids
         ]
@@ -322,7 +329,8 @@ class FuncExecution(CUDAExecution):
             vo_ty = vo_ty * len(execution_ids)
             vi_ty = vi_ty * len(execution_ids)
 
-        self._ct_vo = vo_ty()
+            self._ct_vo = vo_ty()
+
         self._vi_dty = _element_dtype(vi_ty)
         if "stat" in self._debug_env:
             print("Input struct size:", _pretty_size(ctypes.sizeof(vi_ty)),
@@ -346,8 +354,8 @@ class FuncExecution(CUDAExecution):
         # Make sure function inputs are 2d.
         # Mechanism inputs are already 3d so the first part is nop.
         new_variable = np.asfarray(np.atleast_2d(variable), dtype=self._vi_dty)
-
         ct_vi = np.ctypeslib.as_ctypes(new_variable)
+
         if len(self._execution_contexts) > 1:
             # wrap_call casts the arguments so we only need contiguous data layout
             self._bin_multirun.wrap_call(self._param_struct[0],
@@ -355,10 +363,13 @@ class FuncExecution(CUDAExecution):
                                          ct_vi,
                                          self._ct_vo,
                                          self._ct_len)
+            return _convert_ctype_to_python(self._ct_vo)
         else:
-            self._bin_func(self._param_struct[1], self._state_struct[1], ct_vi, self._ct_vo)
+            data_out = self._get_empty_for_arg(3)
 
-        return _convert_ctype_to_python(self._ct_vo)
+            self._bin_func(self._param_struct[1], self._state_struct[1], ct_vi, data_out)
+
+        return self._get_indexable(data_out)
 
 
 class MechExecution(FuncExecution):
