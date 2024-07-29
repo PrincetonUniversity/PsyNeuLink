@@ -307,7 +307,8 @@ class FuncExecution(CUDAExecution):
 
     def __init__(self, component, execution_ids=[None], *, tags=frozenset()):
         super().__init__()
-        self._bin_func = pnlvm.LLVMBinaryFunction.from_obj(component, tags=tags)
+
+        self._bin_func = pnlvm.LLVMBinaryFunction.from_obj(component, tags=tags, numpy_args=(0, 1))
         self._execution_contexts = [
             Context(execution_id=eid) for eid in execution_ids
         ]
@@ -344,20 +345,18 @@ class FuncExecution(CUDAExecution):
     def execute(self, variable):
         # Make sure function inputs are 2d.
         # Mechanism inputs are already 3d so the first part is nop.
-        new_variable = np.asfarray(np.atleast_2d(variable),
-                                   dtype=self._vi_dty)
+        new_variable = np.asfarray(np.atleast_2d(variable), dtype=self._vi_dty)
 
         ct_vi = np.ctypeslib.as_ctypes(new_variable)
         if len(self._execution_contexts) > 1:
-            # wrap_call casts the arguments so we only need contiguous data
-            # layout
+            # wrap_call casts the arguments so we only need contiguous data layout
             self._bin_multirun.wrap_call(self._param_struct[0],
                                          self._state_struct[0],
                                          ct_vi,
                                          self._ct_vo,
                                          self._ct_len)
         else:
-            self._bin_func(self._param_struct[0], self._state_struct[0], ct_vi, self._ct_vo)
+            self._bin_func(self._param_struct[1], self._state_struct[1], ct_vi, self._ct_vo)
 
         return _convert_ctype_to_python(self._ct_vo)
 
@@ -446,7 +445,7 @@ class CompExecution(CUDAExecution):
         assert node in self._composition._all_nodes
         wrapper = builder_context.LLVMBuilderContext.get_current().get_node_assembly(self._composition, node)
         self.__bin_func = pnlvm.LLVMBinaryFunction.from_obj(
-            wrapper, tags=self.__tags.union({"node_assembly"}))
+            wrapper, tags=self.__tags.union({"node_assembly"}), numpy_args=(0, 1, 4))
 
     @property
     def _conditions(self):
@@ -576,11 +575,11 @@ class CompExecution(CUDAExecution):
         if node is not self._composition.input_CIM and self.__frozen_vals is None:
             self.freeze_values()
 
-        self._bin_func(self._state_struct[0],
-                       self._param_struct[0],
+        self._bin_func(self._state_struct[1],
+                       self._param_struct[1],
                        inputs,
                        self.__frozen_vals,
-                       self._data_struct[0])
+                       self._data_struct[1])
 
         if "comp_node_debug" in self._debug_env:
             print("RAN: {}. State: {}".format(node, self.extract_node_state(node)))
@@ -593,7 +592,7 @@ class CompExecution(CUDAExecution):
     def _bin_exec_func(self):
         if self.__bin_exec_func is None:
             self.__bin_exec_func = pnlvm.LLVMBinaryFunction.from_obj(
-                self._composition, tags=self.__tags)
+                self._composition, tags=self.__tags, numpy_args=(0, 1, 3))
 
         return self.__bin_exec_func
 
@@ -615,10 +614,10 @@ class CompExecution(CUDAExecution):
                                                 self._conditions[0],
                                                 self._ct_len)
         else:
-            self._bin_exec_func(self._state_struct[0],
-                                self._param_struct[0],
+            self._bin_exec_func(self._state_struct[1],
+                                self._param_struct[1],
                                 self._get_input_struct(inputs)[0],
-                                self._data_struct[0],
+                                self._data_struct[1],
                                 self._conditions[0])
 
     def cuda_execute(self, inputs):
@@ -668,7 +667,7 @@ class CompExecution(CUDAExecution):
     def _bin_run_func(self):
         if self.__bin_run_func is None:
             self.__bin_run_func = pnlvm.LLVMBinaryFunction.from_obj(
-                self._composition, tags=self.__tags.union({"run"}))
+                self._composition, tags=self.__tags.union({"run"}), numpy_args=(0, 1, 2))
 
         return self.__bin_run_func
 
@@ -716,9 +715,9 @@ class CompExecution(CUDAExecution):
             # This is only needed for non-generator inputs that are wrapped in an extra context dimension
             inputs = ctypes.cast(inputs, self._bin_run_func.c_func.argtypes[3])
 
-            self._bin_run_func(self._state_struct[0],
-                               self._param_struct[0],
-                               self._data_struct[0],
+            self._bin_run_func(self._state_struct[1],
+                               self._param_struct[1],
+                               self._data_struct[1],
                                inputs,
                                outputs,
                                runs_count,
@@ -770,7 +769,7 @@ class CompExecution(CUDAExecution):
 
         eval_type = "evaluate_type_all_results" if all_results else "evaluate_type_objective"
         tags = {"evaluate", "alloc_range", eval_type}
-        bin_func = pnlvm.LLVMBinaryFunction.from_obj(ocm, tags=frozenset(tags))
+        bin_func = pnlvm.LLVMBinaryFunction.from_obj(ocm, tags=frozenset(tags), numpy_args=(0, 1, 6))
         self.__bin_func = bin_func
 
         # There are 8 arguments to evaluate_alloc_range:
@@ -780,9 +779,9 @@ class CompExecution(CUDAExecution):
 
         # Directly initialized structures
         assert ocm.agent_rep is self._composition
-        comp_params = self._get_compilation_param('_eval_param', '_get_param_initializer', 0)
-        comp_state = self._get_compilation_param('_eval_state', '_get_state_initializer', 1)
-        comp_data = self._get_compilation_param('_eval_data', '_get_data_initializer', 6)
+        comp_params = self._get_compilation_param('_eval_param', '_get_param_initializer', 0)[1]
+        comp_state = self._get_compilation_param('_eval_state', '_get_state_initializer', 1)[1]
+        comp_data = self._get_compilation_param('_eval_data', '_get_data_initializer', 6)[1]
 
         # Construct input variable, the 5th parameter of the evaluate function
         ct_inputs = self._get_run_input_struct(inputs, num_input_sets, 5)
@@ -803,7 +802,6 @@ class CompExecution(CUDAExecution):
                   "( evaluations:", num_evaluations, "element size:", ctypes.sizeof(out_el_ty), ")",
                   "for", self._obj.name)
 
-        # return variable as numpy array. pycuda can use it directly
         return comp_params, comp_state, comp_data, ct_inputs, out_ty, ct_num_inputs
 
     def cuda_evaluate(self, inputs, num_input_sets, num_evaluations, all_results:bool=False):
@@ -812,11 +810,11 @@ class CompExecution(CUDAExecution):
 
         ct_results = out_ty()
 
-        cuda_args = (jit_engine.pycuda.driver.In(comp_params[1]),
-                     jit_engine.pycuda.driver.InOut(comp_state[1]),
+        cuda_args = (jit_engine.pycuda.driver.In(comp_params),
+                     jit_engine.pycuda.driver.InOut(comp_state),
                      jit_engine.pycuda.driver.Out(np.ctypeslib.as_array(ct_results)),   # results
                      jit_engine.pycuda.driver.In(np.ctypeslib.as_array(ct_inputs)),     # inputs
-                     jit_engine.pycuda.driver.InOut(comp_data[1]),                      # composition data
+                     jit_engine.pycuda.driver.InOut(comp_data),                         # composition data
                      jit_engine.pycuda.driver.In(np.int32(num_input_sets)),             # number of inputs
                     )
 
@@ -837,19 +835,19 @@ class CompExecution(CUDAExecution):
 
             # Create input and result typed casts once, they are the same
             # for every submitted job.
-            input_param = ctypes.cast(ct_inputs, self.__bin_func.c_func.argtypes[5])
-            results_param = ctypes.cast(ct_results, self.__bin_func.c_func.argtypes[4])
+            input_arg = ctypes.cast(ct_inputs, self.__bin_func.c_func.argtypes[5])
+            results_arg = ctypes.cast(ct_results, self.__bin_func.c_func.argtypes[4])
 
             # There are 7 arguments to evaluate_alloc_range:
             # comp_param, comp_state, from, to, results, input, comp_data
             results = [ex.submit(self.__bin_func,
-                                 comp_params[0],
-                                 comp_state[0],
+                                 comp_params,
+                                 comp_state,
                                  int(i * evals_per_job),
                                  min((i + 1) * evals_per_job, num_evaluations),
-                                 results_param,
-                                 input_param,
-                                 comp_data[0],
+                                 results_arg,
+                                 input_arg,
+                                 comp_data,
                                  ct_num_inputs)
                        for i in range(jobs)]
 
