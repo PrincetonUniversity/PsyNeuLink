@@ -61,6 +61,7 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         """Override to handle storage of entry to memory_matrix by EMStorage Function"""
         if node is self.storage_node:
             # Only execute store after last optimization repetition for current mini-batch
+            # 7/10/24:  FIX: MOVE PASSING OF THESE PARAMETERS TO context
             if not (optimization_rep + 1) % context.composition._optimizations_per_minibatch:
                 self.store_memory(variable, context)
         else:
