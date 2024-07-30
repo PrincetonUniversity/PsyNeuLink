@@ -366,7 +366,8 @@ class CompExecution(CUDAExecution):
         self.__frozen_vals = None
         self.__tags = frozenset(additional_tags)
 
-        self.__conds = None
+        # Scheduling conditions, only used by "execute"
+        self.__conditions = None
 
         if len(execution_ids) > 1:
             self._ct_len = ctypes.c_int(len(execution_ids))
@@ -424,23 +425,30 @@ class CompExecution(CUDAExecution):
 
     @property
     def _conditions(self):
-        if self.__conds is None:
+        if self.__conditions is None:
             gen = helpers.ConditionGenerator(None, self._composition)
-            if len(self._execution_contexts) > 1:
-                cond_ctype = self._bin_func_multirun.byref_arg_types[4] * len(self._execution_contexts)
-                cond_initializer = (gen.get_condition_initializer() for _ in self._execution_contexts)
-            else:
-                cond_ctype = self._bin_func.byref_arg_types[4]
-                cond_initializer = gen.get_condition_initializer()
 
-            c_conds = cond_ctype(*cond_initializer)
-            self.__conds = (c_conds, np.ctypeslib.as_array(c_conds))
+            if len(self._execution_contexts) > 1:
+                conditions_ctype = self._bin_func_multirun.byref_arg_types[4] * len(self._execution_contexts)
+                conditions_initializer = (gen.get_condition_initializer() for _ in self._execution_contexts)
+            else:
+                conditions_ctype = self._bin_func.byref_arg_types[4]
+                conditions_initializer = gen.get_condition_initializer()
+
+            ct_conditions = conditions_ctype(*conditions_initializer)
+            np_conditions = np.frombuffer(ct_conditions, dtype=self._bin_func.np_params[4], count=len(self._execution_contexts))
+
+            if len(self._execution_contexts) == 1:
+                np_conditions.shape = ()
+
+            self.__conditions = (ct_conditions, np_conditions)
+
             if "stat" in self._debug_env:
                 print("Instantiated condition struct ( size:" ,
-                      _pretty_size(ctypes.sizeof(cond_ctype)), ")",
+                      _pretty_size(ctypes.sizeof(conditions_ctype)), ")",
                       "for", self._composition.name)
 
-        return self.__conds
+        return self.__conditions
 
     @property
     def _param_struct(self):
@@ -518,6 +526,7 @@ class CompExecution(CUDAExecution):
         if "stat" in self._debug_env:
             print("Input struct size:", _pretty_size(ctypes.sizeof(c_input_type)),
                   "for", self._composition.name)
+
         c_input = c_input_type(*_tupleize(input_data))
         return c_input, np.ctypeslib.as_array(c_input)
 
@@ -567,7 +576,7 @@ class CompExecution(CUDAExecution):
     def _bin_exec_func(self):
         if self.__bin_exec_func is None:
             self.__bin_exec_func = pnlvm.LLVMBinaryFunction.from_obj(
-                self._composition, tags=self.__tags, numpy_args=(0, 1, 3))
+                self._composition, tags=self.__tags, numpy_args=(0, 1, 3, 4))
 
         return self.__bin_exec_func
 
@@ -593,7 +602,7 @@ class CompExecution(CUDAExecution):
                                 self._param_struct[1],
                                 self._get_input_struct(inputs)[0],
                                 self._data_struct[1],
-                                self._conditions[0])
+                                self._conditions[1])
 
     def cuda_execute(self, inputs):
         # NOTE: Make sure that input struct generation is inlined.
