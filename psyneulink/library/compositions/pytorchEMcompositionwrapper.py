@@ -81,7 +81,7 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
                                   for i in range(memory_capacity)]))
 
     # MODIFIED 7/29/24 NEW:
-    @torch.jit.script_method
+    # @torch.jit.script_method
     # MODIFIED 7/29/24 END
     def store_memory(self, memory_to_store, context):
         """Store variable in memory_matrix (parallel EMStorageMechanism._execute)
