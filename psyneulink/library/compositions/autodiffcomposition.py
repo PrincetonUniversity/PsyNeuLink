@@ -876,7 +876,7 @@ class AutodiffComposition(Composition):
         # Do forward computation on current inputs
         #   should return 2d values for each component
         pytorch_rep = self.parameters.pytorch_representation._get(context)
-        curr_tensor_outputs = pytorch_rep.forward(curr_tensor_inputs, context)
+        curr_tensor_outputs = pytorch_rep.forward(curr_tensor_inputs, None, context)
 
         # Update values of all PNL nodes executed in forward pass (if specified)
         if synchronize_pnl_values:
