@@ -48,25 +48,6 @@ def _tupleize(x):
     except TypeError:
         return x if x is not None else tuple()
 
-def _element_dtype(x):
-    """
-    Extract base builtin type from aggregate type.
-
-    Throws assertion failure if the aggregate type includes more than one base type.
-    The assumption is that array of builtin type has the same binary layout as
-    the original aggregate and it's easier to construct
-    """
-    dt = np.dtype(x)
-    while dt.subdtype is not None:
-        dt = dt.subdtype[0]
-
-    if not dt.isbuiltin:
-        fdts = (_element_dtype(f[0]) for f in dt.fields.values())
-        dt = next(fdts)
-        assert all(dt == fdt for fdt in fdts)
-
-    assert dt.isbuiltin, "Element type is not builtin: {} from {}".format(dt, np.dtype(x))
-    return dt
 
 def _pretty_size(size):
     units = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB']
@@ -295,8 +276,8 @@ class CUDAExecution(Execution):
         return self.__get_cuda_arg("_conditions", jit_engine.pycuda.driver.InOut)
 
     def cuda_execute(self, variable):
-        # Create input argument
-        new_var = np.asfarray(variable, dtype=self._vi_dty)
+        # Create input argument, PyCUDA doesn't care about shape
+        new_var = np.asfarray(variable, dtype=self._bin_func.np_params[2].base)
         data_in = jit_engine.pycuda.driver.In(new_var)
 
         data_out = self._get_empty_for_arg(3)
@@ -315,28 +296,19 @@ class FuncExecution(CUDAExecution):
     def __init__(self, component, execution_ids=[None], *, tags=frozenset()):
         super().__init__()
 
-        self._bin_func = pnlvm.LLVMBinaryFunction.from_obj(component, tags=tags, numpy_args=(0, 1, 3))
+        self._bin_func = pnlvm.LLVMBinaryFunction.from_obj(component, tags=tags, numpy_args=(0, 1, 2, 3))
         self._execution_contexts = [
             Context(execution_id=eid) for eid in execution_ids
         ]
         self._component = component
 
-        _, _, vi_ty, vo_ty = self._bin_func.byref_arg_types
 
         if len(execution_ids) > 1:
             self._bin_multirun = self._bin_func.get_multi_run()
             self._ct_len = ctypes.c_int(len(execution_ids))
-            vo_ty = vo_ty * len(execution_ids)
-            vi_ty = vi_ty * len(execution_ids)
 
+            vo_ty = self._bin_func.byref_arg_types[3] * len(execution_ids)
             self._ct_vo = vo_ty()
-
-        self._vi_dty = _element_dtype(vi_ty)
-        if "stat" in self._debug_env:
-            print("Input struct size:", _pretty_size(ctypes.sizeof(vi_ty)),
-                  "for", self._component.name)
-            print("Output struct size:", _pretty_size(ctypes.sizeof(vo_ty)),
-                  "for", self._component.name)
 
     @property
     def _obj(self):
@@ -351,13 +323,12 @@ class FuncExecution(CUDAExecution):
         return self._get_compilation_param('_state', '_get_state_initializer', 1)
 
     def execute(self, variable):
-        # Make sure function inputs are 2d.
-        # Mechanism inputs are already 3d so the first part is nop.
-        new_variable = np.asfarray(np.atleast_2d(variable), dtype=self._vi_dty)
-        ct_vi = np.ctypeslib.as_ctypes(new_variable)
+        new_variable = np.asfarray(variable, dtype=self._bin_func.np_params[2].base)
 
         if len(self._execution_contexts) > 1:
             # wrap_call casts the arguments so we only need contiguous data layout
+            ct_vi = np.ctypeslib.as_ctypes(new_variable)
+
             self._bin_multirun.wrap_call(self._param_struct[0],
                                          self._state_struct[0],
                                          ct_vi,
@@ -366,22 +337,15 @@ class FuncExecution(CUDAExecution):
             return _convert_ctype_to_python(self._ct_vo)
         else:
             data_out = self._get_empty_for_arg(3)
+            data_in = new_variable.reshape(self._bin_func.np_params[2].shape)
 
-            self._bin_func(self._param_struct[1], self._state_struct[1], ct_vi, data_out)
+            self._bin_func(self._param_struct[1], self._state_struct[1], data_in, data_out)
 
         return self._get_indexable(data_out)
 
 
 class MechExecution(FuncExecution):
-
-    def execute(self, variable):
-        # Convert to 3d. We always assume that:
-        #   a) the input is vector of input ports
-        #   b) input ports take vector of projection outputs
-        #   c) projection output is a vector (even 1 element vector)
-        new_var = np.atleast_3d(variable)
-        new_var.shape = (len(self._component.input_ports), 1, -1)
-        return super().execute(new_var)
+    pass
 
 
 class CompExecution(CUDAExecution):
