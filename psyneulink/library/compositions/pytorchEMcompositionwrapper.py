@@ -80,6 +80,9 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
                                                for j in range(num_fields)])
                                   for i in range(memory_capacity)]))
 
+    # MODIFIED 7/29/24 NEW:
+    @torch.jit.script_method
+    # MODIFIED 7/29/24 END
     def store_memory(self, memory_to_store, context):
         """Store variable in memory_matrix (parallel EMStorageMechanism._execute)
 
@@ -111,8 +114,17 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         storage_prob = mech.parameters.storage_prob._get(context)  # modulable, so use getter
         field_weights = mech.parameters.field_weights.get(context) # modulable, so use getter
         concatenation_node = mech.concatenation_node
-        num_match_fields = 1 if concatenation_node else len([i for i in mech.field_types if i==1])
-
+        # MODIFIED 7/29/24 OLD:
+        # num_match_fields = 1 if concatenation_node else len([i for i in mech.field_types if i==1])
+        # MODIFIED 7/29/24 NEW:
+        if concatenation_node:
+            num_match_fields = 1
+        else:
+            num_match_fields = 0
+            for i in mech.field_types:
+                if i==1:
+                    num_match_fields += 1
+        # MODIFIED 7/29/24 END
         # Find weakest memory (i.e., with lowest norm)
         field_norms = torch.empty((len(memory),len(memory[0])))
         for row in range(len(memory)):

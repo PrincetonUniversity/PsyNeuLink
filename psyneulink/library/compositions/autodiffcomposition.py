@@ -982,7 +982,7 @@ class AutodiffComposition(Composition):
         # do forward computation on nodes that should be executed after gradient calculation
         with torch.no_grad():
             for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
-                node.wrapper_type.execute_node(node, variable, optimization_rep, context)
+                node.composition_wrapper_owner.execute_node(node, variable, optimization_rep, context)
 
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         if "run" in tags:

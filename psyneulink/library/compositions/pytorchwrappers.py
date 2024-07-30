@@ -27,7 +27,11 @@ from psyneulink.core import llvm as pnlvm
 
 __all__ = ['PytorchCompositionWrapper', 'PytorchMechanismWrapper', 'PytorchProjectionWrapper']
 
-class PytorchCompositionWrapper(torch.nn.Module):
+# MODIFIED 7/29/24 OLD:
+# class PytorchCompositionWrapper(torch.nn.Module):
+# MODIFIED 7/29/24 NEW:
+class PytorchCompositionWrapper(torch.jit.ScriptModule):
+# MODIFIED 7/29/24 END
     """Wrapper for a Composition as a Pytorch Module
     Set up parameters of PyTorch model & information required for forward computation
 
@@ -544,9 +548,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
                             (f'PROGRAM ERROR: Bad assignment to {node.name}.exclude_from_gradient_calc: '
                              f'{node.exclude_from_gradient_calc}; only {AFTER} is currently supported')
 
-                # Execute the node using wrapper_type for Composition to which it belongs
+                # Execute the node using composition_wrapper_owner for Composition wrapper to which it belongs
                 # Note: this is to support overrides of execute_node method by subclasses (such as in EMComposition)
-                node.wrapper_type.execute_node(node, variable, optimization_rep, context)
+                node.composition_wrapper_owner.execute_node(node, variable, optimization_rep, context)
 
                 # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
                 #  note: these may be different than for actual Composition, as they are flattened
@@ -614,11 +618,12 @@ class PytorchMechanismWrapper():
         `update_learning_parameters` method.  BEFORE is not currently supported
     """
     def __init__(self,
-                 mechanism,         # Mechanism to be wrapped
-                 composition,       # Composition to which node belongs (used for execution of nested Compositions)
-                 component_idx,     # index of the Mechanism in the Composition
-                 device,            # needed for Pytorch
+                 mechanism,            # Mechanism to be wrapped
+                 composition_wrapper,  # Composition wrapper to which node belongs (for executing nested Compositions)
+                 component_idx,        # index of the Mechanism in the Composition
+                 device,               # needed for Pytorch
                  context=None):
+        super().__init__()
         self._mechanism = mechanism
         self._idx = component_idx
         self._context = context
@@ -626,7 +631,7 @@ class PytorchMechanismWrapper():
         self._is_bias = False
         self._curr_sender_value = None # Used to assign initializer or default if value == None (i.e., not yet executed)
         self.exclude_from_gradient_calc = False # Used to execute node before or after forward/backward pass methods
-        self.wrapper_type = composition
+        self.composition_wrapper_owner = composition_wrapper
 
         self.name = f"PytorchMechanismWrapper[{mechanism.name}]"
         self.afferents = []
