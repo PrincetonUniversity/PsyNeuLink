@@ -27,7 +27,7 @@ from psyneulink.core import llvm as pnlvm
 
 __all__ = ['PytorchCompositionWrapper', 'PytorchMechanismWrapper', 'PytorchProjectionWrapper']
 
-# MODIFIED 7/29/24 OLD:
+# # MODIFIED 7/29/24 OLD:
 class PytorchCompositionWrapper(torch.nn.Module):
 # # MODIFIED 7/29/24 NEW:
 # class PytorchCompositionWrapper(torch.jit.ScriptModule):

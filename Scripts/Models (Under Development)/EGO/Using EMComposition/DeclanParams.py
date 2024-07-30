@@ -55,8 +55,8 @@ model_params = dict(
     concatenate_keys = False,
 
     # environment
-    curriculum_type = 'Interleaved',
-    # curriculum_type = 'Blocked',
+    # curriculum_type = 'Interleaved',
+    curriculum_type = 'Blocked',
     # num_stims = 7,  # Integer or ALL
     num_stims = ALL,  # Integer or ALL
 
@@ -76,7 +76,7 @@ model_params = dict(
     learn_field_weights = False,
     loss_spec = Loss.BINARY_CROSS_ENTROPY,
     # loss_spec = Loss.MSE,
-    learning_rate = 1,
+    learning_rate = .5,
     # num_optimization_steps = 1,
     num_optimization_steps = 10,
     # execution_mode = ExecutionMode.Python,

@@ -80,7 +80,7 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
                                                for j in range(num_fields)])
                                   for i in range(memory_capacity)]))
 
-    # MODIFIED 7/29/24 NEW:
+    # # MODIFIED 7/29/24 NEW:
     # @torch.jit.script_method
     # MODIFIED 7/29/24 END
     def store_memory(self, memory_to_store, context):
@@ -127,9 +127,13 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         # MODIFIED 7/29/24 END
         # Find weakest memory (i.e., with lowest norm)
         field_norms = torch.empty((len(memory),len(memory[0])))
-        for row in range(len(memory)):
-            for col in range(len(memory[0])):
-                field_norms[row][col] = torch.linalg.norm(memory[row][col])
+        # # # MODIFIED 7/29/24 OLD:
+        # for row in range(len(memory)):
+        #     for col in range(len(memory[0])):
+        #         field_norms[row][col] = torch.linalg.norm(memory[row][col])
+        # MODIFIED 7/29/24 NEW:
+        field_norms = torch.linalg.norm(memory, dim=2)
+        # MODIFIED 7/29/24 END
         if field_weights is not None:
             field_norms *= field_weights
         row_norms = torch.sum(field_norms, axis=1)
