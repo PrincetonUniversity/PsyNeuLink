@@ -16,8 +16,9 @@ import torch
 #     torch = None
 from typing import Optional
 
-from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper
+from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper
 from psyneulink.library.components.mechanisms.modulatory.learning.EMstoragemechanism import EMStorageMechanism
+from psyneulink.core.globals.keywords import AFTER
 
 __all__ = ['PytorchEMCompositionWrapper']
 
@@ -27,13 +28,17 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Assign storage_node (EMComposition's EMStorageMechanism)
+        # Assign storage_node (EMComposition's EMStorageMechanism) (assumes there is only one)
         self.storage_node = [node for node in self.nodes_map.values()
                              if isinstance(node._mechanism, EMStorageMechanism)][0]
+        # Execute storage_node after gradient calculation,
+        #     since it assigns weights manually which messes up PyTorch gradient tracking in forward() and backward()
+        self.storage_node.exclude_from_gradient_calc = AFTER
 
         # Get PytorchProjectionWrappers for Projections to match and retrieve nodes;
         #   used by get_memory() to construct memory_matrix and store_memory() to store entry in it
         pnl_storage_mech = self.storage_node._mechanism
+
         num_fields = len(pnl_storage_mech.input_ports)
         num_learning_signals = len(pnl_storage_mech.learning_signals)
         num_match_fields = num_learning_signals - num_fields
@@ -123,7 +128,7 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
                 axis = 0
                 entry_to_store = field_projection.sender.value
                 if concatenation_node is None:
-                    assert (entry_to_store == memory_to_store[i]).all(), \
+                    assert (entry_to_store  == memory_to_store[i]).all(), \
                         f"PROGRAM ERROR: misalignment between inputs and fields for storing them"
             else:
                 # For retrieve projections, get entry to store from memory_to_store (which has inputs to all fields)

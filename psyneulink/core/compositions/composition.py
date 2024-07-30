@@ -2943,7 +2943,7 @@ from psyneulink.core.globals.keywords import \
     AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, CROSS_ENTROPY, \
     DEFAULT, DEFAULT_VARIABLE, DICT, FEEDBACK, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, \
     INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
-    LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
+    LEARNABLE, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     LEARNING_SIGNAL, Loss, \
     MATRIX, MAYBE, MODEL_SPEC_ID_METADATA, MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, NODES, \
     OBJECTIVE_MECHANISM, ONLINE, ONLY, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
@@ -4116,11 +4116,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Call with context = COMPOSITION to avoid calling _check_initialization_status again
         self._analyze_graph(context=context)
 
-        show_graph_attributes = show_graph_attributes or {}
-        self._show_graph = ShowGraph(self, **show_graph_attributes)
+        # ShowGraph
+        self.assign_ShowGraph(show_graph_attributes)
 
         if termination_processing is not None:
             self.termination_processing = termination_processing
+
+    def assign_ShowGraph(self, show_graph_attributes):
+        """Helper function to allow override of the ShowGraph class in subclasses (e.g., AutodiffComposition)"""
+        show_graph_attributes = show_graph_attributes or {}
+        self._show_graph = ShowGraph(self, **show_graph_attributes)
 
     @property
     def graph_processing(self):
@@ -4751,15 +4756,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError('Node missing from {0}.nodes_to_roles: {1}'.format(self, e))
 
     def get_nested_nodes_by_roles_at_any_level(self, comp, include_roles, exclude_roles=None)->list or None:
-        """Return all Nodes from nested Compositions that have *include_roles* but not *exclude_roles at all levels*.
-        Returns Nodes that have or don't have the specified roles at *any* level of nesting,
-            irrespective of their status at other levels of nesting.
+        """Return all Nodes from comp or any nested within it that have *include_roles* but not *exclude_roles*.
+        Returns Nodes that have or don't have the specified roles in the Composition specified by **comp**
+        or any Composition nested within it, irrespective of their status at other levels of nesting.
         To get nodes that are either INPUT or OUTPUT Nodes at *all* levels of nesting, use either
             get_nested_input_nodes_at_all_levels() or get_nested_output_nodes_at_all_levels()
         Note:  do this recursively, checking roles on the "way down," as a Node may have a role in a
                deeply nested Composition, but that Composition itself may not have the same role in the Composition
                within which *it* is nested (e.g., a Node might be an INPUT Node of a nested Composition, but that
                nested Composition may not be an INPUT Node of the Composition in which it is nested).
+        Note: exclude_roles takes precedence, so that if a NodeRole is listed in both,
+              nodes with that role will be *excluded*.
         """
         nested_nodes = []
         include_roles = [] if include_roles is None else convert_to_list(include_roles)
@@ -4777,7 +4784,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     nested_nodes.append(node)
         return nested_nodes if any(nested_nodes) else None
 
-    def get_nested_nodes_input_nodes_at_levels(self)->list or None:
+    def get_nested_input_nodes_at_all_levels(self)->list or None:
         """Return all Nodes from nested Compositions that receive input directly from input to outermost Composition."""
         input_nodes = self.get_nested_nodes_by_roles_at_any_level(self, include_roles=NodeRole.INPUT)
         return [input_node for input_node in input_nodes
@@ -4786,7 +4793,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            for input_port in input_node.input_ports for proj in input_port.path_afferents
                            if isinstance(proj.sender.owner, CompositionInterfaceMechanism))] or None
 
-    def get_nested_nodes_output_nodes_at_levels(self)->list or None:
+    def get_nested_output_nodes_at_all_levels(self)->list or None:
         """Return all Nodes from nested Compositions that send output directly to outermost Composition."""
         output_nodes = self.get_nested_nodes_by_roles_at_any_level(self, include_roles=NodeRole.OUTPUT)
         return [output_node for output_node in output_nodes
@@ -6486,8 +6493,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 proj_spec = {PROJECTION_TYPE:projection.className,
                               PROJECTION_PARAMS:{
                                   FUNCTION:projection.function,
-                                  MATRIX:projection.matrix.base}
-                              }
+                                  MATRIX:projection.matrix.base,
+                                  LEARNABLE:projection.learnable}}
                 return self.add_projection(proj_spec, sender=projection.sender, receiver=projection.receiver)
 
         # Create Projection if it doesn't exist
@@ -6692,7 +6699,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if isinstance(projection, dict):
             proj_type = projection.pop(PROJECTION_TYPE, None) or MappingProjection
             params = projection.pop(PROJECTION_PARAMS, None)
-            projection = MappingProjection(params=params)
+            projection = MappingProjection(**params)
         elif isinstance(projection, (np.ndarray, np.matrix, list, RandomMatrix)):
             return MappingProjection(matrix=projection, sender=sender, receiver=receiver, name=name)
         elif isinstance(projection, str):
@@ -8390,7 +8397,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 default_projection_matrix=default_projection_matrix,
                                                 name=name)
 
-    # NOTES:
+    # IMPLEMENTATION NOTE:
     # Learning-type-specific creation methods should:
     # - create ComparatorMechanism and pass in as error_source (for 1st LearningMechanism in sequence in bp)
     # - Determine and pass error_sources (aka previous_learning_mechanism) (for bp)
@@ -10856,6 +10863,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             default_absolute_time_unit: typing.Optional[pint.Quantity] = None,
             context=None,
             base_context=Context(execution_id=None),
+            **kwargs
             ):
         """Pass inputs to Composition, then execute sets of nodes that are eligible to run until termination
         conditions are met.
@@ -11341,11 +11349,13 @@ _
                 # PROCESSING ------------------------------------------------------------------------
                 # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
                 try:
+                    # IMPLEMENTATION NOTE: for autdoiff, the following includes backward pass after forward pass
                     execution_stimuli = self._parse_trial_inputs(inputs, trial_num, context)
                 except StopIteration:
                     break
 
                 # execute processing, passing stimuli for this trial
+                # IMPLEMENTATION NOTE: for autdoiff, the following is the forward pass for the current trial
                 trial_output = self.execute(inputs=execution_stimuli,
                                             scheduler=scheduler,
                                             termination_processing=termination_processing,
@@ -11366,6 +11376,9 @@ _
 
                 # ---------------------------------------------------------------------------------
                 # store the result of this execution in case it will be the final result
+
+
+                assert "AFFTER FOWARD PASS"
 
                 # object.results.append(result)
                 trial_output = copy_parameter_value(trial_output)
@@ -11454,8 +11467,10 @@ _
             epochs: int = 1,
             learning_rate: Optional[Union[int,float]]=None,
             minibatch_size: int = 1,
+            optimizations_per_minibatch: int = 1,
             patience: Optional[int] = None,
             min_delta: int = 0,
+            synchronize_pnl_values: bool = True,
             context: Optional[Context] = None,
             execution_mode: pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
             randomize_minibatches=False,
@@ -11511,6 +11526,17 @@ _
                 specifies the size of the minibatches to use. The input trials will be batched and run, after which
                 learning mechanisms with learning mode TRIAL will update weights
 
+            optimizations_per_minibatch : int (default=1)
+                specified the number of executions and weight updates of learnable pathways are carried out for
+                each set of stimuli in a minibatch.
+
+                .. hint::
+                   This can be used to implement the `backprop-to-activation proceedure
+                   <https://web.stanford.edu/~jlmcc/papers/RogersMcCBook_7_03.pdf>`_ in which the `backpropagation
+                   learning algorithm <Backpropagation>` is used, with a high learning rate, to quickly search
+                   for a pattern of activation in response to a given input (or set of inputs) that is useful for some
+                   downstream purpose.
+
             randomize_minibatch: bool (default=False)
                 specifies whether the order of the input trials should be randomized on each epoch
 
@@ -11522,6 +11548,12 @@ _
                 the minimum reduction in average loss that an epoch must provide in order to qualify as a 'good' epoch;
                 Any reduction less than this value is considered to be a bad epoch.
                 Used for early stopping of training, in combination with `patience`.
+
+            synchronize_pnl_values : bool : default True
+                specifies whether to synchronize the `values <Mechanism_Base.value>` of the `Mechanisms <Mechanism>`
+                in the PsyNeuLink Composition with the corresponding modules of the PyTorch implementation after each
+                forward pass when an `AutodiffComposition` is used is executed in ``PyTorch mode
+                <AutodiffComposition_PyTorch>`.
 
             scheduler : Scheduler
                 the scheduler object that owns the conditions that will instruct the execution of the Composition
@@ -11596,8 +11628,10 @@ _
             epochs=epochs,
             learning_rate=learning_rate,
             minibatch_size=minibatch_size,
+            optimizations_per_minibatch=optimizations_per_minibatch,
             patience=patience,
             min_delta=min_delta,
+            synchronize_pnl_values=synchronize_pnl_values,
             randomize_minibatches=randomize_minibatches,
             call_before_minibatch=call_before_minibatch,
             call_after_minibatch=call_after_minibatch,
@@ -12275,7 +12309,7 @@ _
                                              report_num=report_num,
                                              runtime_params=execution_runtime_params,
                                              )
-                                assert True
+                                assert 'DEBUGGING BREAK POINT'
 
                         # Set execution_phase for node's context back to IDLE
                         if self._is_learning(context):
@@ -13552,7 +13586,9 @@ _
                    active_items=None,
                    output_fmt='pdf',
                    context=None):
-
+        """Patch to ShowGraph method
+        IMPLEMENTATION NOTE: arguments are listed explicitly so they show up in IDEs that support argument completion
+        """
         return self._show_graph(show_all=show_all,
                                 show_node_structure=show_node_structure,
                                 show_nested=show_nested,

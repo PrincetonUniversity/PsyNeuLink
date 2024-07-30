@@ -249,10 +249,12 @@ class CUDAExecution(Execution):
         gpu_buffer = self._gpu_buffers[struct_name]
 
         np_struct = getattr(self, struct_name)[1]
+
+        # .array is a public member of pycuda's In/Out ArgumentHandler classes
         if gpu_buffer is None or gpu_buffer.array is not np_struct:
 
-            # 0-sized structures fail to upload use a small device buffer instead
-            gpu_buffer = arg_handler(np_struct) if np_struct.nbytes > 0 else jit_engine.pycuda.driver.mem_alloc(8)
+            # 0-sized structures fail to upload use a dummy numpy array isntead
+            gpu_buffer = arg_handler(np_struct if np_struct.nbytes > 0 else np.zeros(2))
 
             self._gpu_buffers[struct_name] = gpu_buffer
 
@@ -438,9 +440,9 @@ class CompExecution(CUDAExecution):
 
     def _set_bin_node(self, node):
         assert node in self._composition._all_nodes
-        wrapper = builder_context.LLVMBuilderContext.get_current().get_node_wrapper(self._composition, node)
+        wrapper = builder_context.LLVMBuilderContext.get_current().get_node_assembly(self._composition, node)
         self.__bin_func = pnlvm.LLVMBinaryFunction.from_obj(
-            wrapper, tags=self.__tags.union({"node_wrapper"}))
+            wrapper, tags=self.__tags.union({"node_assembly"}))
 
     @property
     def _conditions(self):

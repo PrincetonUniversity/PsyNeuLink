@@ -33,17 +33,14 @@ The script contains methods to construct, train, and run the model, and analyze 
   (under "Construction parameters")
 
 * `train_network <EGO.train_network>`:
-  takes as arguments the feedforward neural network Composition (FFN_COMPOSITION) and number of epochs to train.
-  Note: learning_rate is set at construction (can specify using LEARNING_RATE under "Training parameters" below).
+   ...
 
 * `run_model <EGO.run_model>`:
-  takes as arguments the drift rate in the temporal context vector to be applied on each trial,
-  and the number of trials to execute, as well as reporting and animation specifications
-  (see "Execution parameters").
+   ...
 
 * `analyze_results <EGO.analyze_results>`:
   takes as arguments the results of executing the model, and optionally a number of trials and EGO_level to analyze;
-  returns d-prime statistics and plots results for different conditions at each EGO_level executed.
+  returns...
 
 
 **The Model**
@@ -53,32 +50,16 @@ The model is comprised of...
 
 .. _EGO_Fig:
 
-.. figure:: _static/N-Back_Model_movie.gif
+.. figure:: _static/<FIG FILE
    :align: left
-   :alt: N-Back Model Animation
+   :alt: EGO Model for Revaluation Experiment
 
 .. _EGO_model_composition:
 
 *EGO_model Composition*
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This is comprised of three input Mechanisms, and the nested `ffn <EGO_ffn_composition>` `Composition`.
-
-.. _EGO_ffn_composition:
-
-*FFN Composition*
-~~~~~~~~~~~~~~~~~
-
-The temporal context is provided by a randomly drifting high dimensional vector that maintains a constant norm (i.e.,
-drifts on a sphere).  The FFN is trained, given an n-back level of *n*, to identify when the current stimulus matches
-one stored in EM with a temporal context vector that differs by an amount corresponding to *n* time steps of drift.
-During n-back performance, the model encodes the current stimulus and temporal context, retrieves an item from EM
-that matches the current stimulus, weighted by the similarity of its temporal context vector (i.e., most recent), and
-then uses the FFN to evaluate whether it is an n-back match.  The model responds "match" if the FFN detects a match;
-otherwise, it either uses the current stimulus and temporal context to retrieve another sample from EM and repeat the
-evaluation or, with a fixed probability (hazard rate), it responds "non-match".
-
-The ffn Composition is trained using the train_network() method
+This is comprised of...  three input Mechanisms, and the nested `ffn <EGO_ffn_composition>` `Composition`.
 
 
 **Construction and Execution**
@@ -100,9 +81,8 @@ and whether a graphic display of the network is generated when it is constructed
 *Stimuli*
 ~~~~~~~~~
 
-Sequences of stimuli are constructed either using `SweetPea <https://sites.google.com/view/sweetpea-ai?pli=1>`_
-(using the script in stim/SweetPea) or replicate those used in the study by `Kane et al.,
-2007 <https://psycnet.apa.org/record/2007-06096-010?doi=1>`_ (from stimulus files in stim/Kane_et_al).
+Sequences of stimuli are constructed either using `SweetPea <URL HERE>`_
+(using the script in stim/SweetPea) or replicate those used in...
 
     .. note::
        Use of SweetPea for stimulus generation requires it be installed::
@@ -151,10 +131,11 @@ DISPLAY_MODEL = (                      # Only one of the following can be uncomm
 )
 RUN_MODEL = True                       # True => run the model
 # RUN_MODEL = False                      # False => don't run the model
-# EXECUTION_MODE = ExecutionMode.Python
-EXECUTION_MODE = ExecutionMode.PyTorch
+EXECUTION_MODE = ExecutionMode.Python
+# EXECUTION_MODE = ExecutionMode.PyTorch
 ANALYZE_RESULTS = False                # True => output analysis of results of run
-REPORT_OUTPUT = ReportOutput.FULL     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
+# REPORT_OUTPUT = ReportOutput.FULL     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
+REPORT_OUTPUT = ReportOutput.OFF     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
 PRINT_RESULTS = False                  # print model.results after execution
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
@@ -484,7 +465,7 @@ def construct_model(model_name:str=MODEL_NAME,
     context_weight *= context_integration_rate
 
     # ----------------------------------------------------------------------------------------------------------------
-    # -------------------------------------------------  Mechanisms  -------------------------------------------------
+    # -------------------------------------------------  Nodes  ------------------------------------------------------
     # ----------------------------------------------------------------------------------------------------------------
 
     task_input_layer = ProcessingMechanism(name=task_input_name, size=task_size)
@@ -498,22 +479,6 @@ def construct_model(model_name:str=MODEL_NAME,
                                                size=state_size,
                                                auto=1-context_integration_rate,
                                                hetero=0.0)
-    # em = EpisodicMemoryMechanism(name=em_name,
-    #                              default_variable=[[0] * state_size,   # state
-    #                                                [0] * time_size,    # time
-    #                                                [0] * state_size,   # context
-    #                                                [0] * reward_size], # reward
-    #                              input_ports=[{NAME:state_input_name, SIZE:state_size},
-    #                                           {NAME:time_input_name, SIZE:time_size},
-    #                                           {NAME:context_name, SIZE:state_size},
-    #                                           {NAME:reward_input_name, SIZE:reward_size}],
-    #                              function=ContentAddressableMemory(
-    #                                  # selection_function=SoftMax(gain=retrieval_softmax_gain),
-    #                                  distance_field_weights=[state_retrieval_weight,
-    #                                                          time_retrieval_weight,
-    #                                                          context_retrieval_weight,
-    #                                                          reward_retrieval_weight]))
-    # # em.output_ports[RETRIEVED_TIME_NAME].parameters.require_projection_in_composition.set(False, override=True)
     em = EMComposition(name=em_name,
                        memory_template=[[0] * state_size,   # state
                                         [0] * time_size,    # time
