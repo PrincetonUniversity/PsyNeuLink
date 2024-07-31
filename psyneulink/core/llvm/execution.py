@@ -363,7 +363,7 @@ class CompExecution(CUDAExecution):
         self.__bin_func = None
         self.__bin_run_func = None
         self.__bin_run_multi_func = None
-        self.__frozen_vals = None
+        self.__frozen_values = None
         self.__tags = frozenset(additional_tags)
 
         # Scheduling conditions, only used by "execute"
@@ -419,9 +419,10 @@ class CompExecution(CUDAExecution):
 
     def _set_bin_node(self, node):
         assert node in self._composition._all_nodes
-        wrapper = builder_context.LLVMBuilderContext.get_current().get_node_assembly(self._composition, node)
-        self.__bin_func = pnlvm.LLVMBinaryFunction.from_obj(
-            wrapper, tags=self.__tags.union({"node_assembly"}), numpy_args=(0, 1, 4))
+        node_assembly = builder_context.LLVMBuilderContext.get_current().get_node_assembly(self._composition, node)
+        self.__bin_func = pnlvm.LLVMBinaryFunction.from_obj(node_assembly,
+                                                            tags=self.__tags.union({"node_assembly"}),
+                                                            numpy_args=(0, 1, 3, 4))
 
     @property
     def _conditions(self):
@@ -492,7 +493,7 @@ class CompExecution(CUDAExecution):
             return self._extract_node_struct(node, struct)
 
     def extract_frozen_node_output(self, node):
-        return self.extract_node_struct(node, self.__frozen_vals)
+        return self.extract_node_struct(node, self.__frozen_values[0])
 
     def extract_node_output(self, node):
         return self.extract_node_struct(node, self._data_struct[0])
@@ -531,7 +532,10 @@ class CompExecution(CUDAExecution):
         return c_input, np.ctypeslib.as_array(c_input)
 
     def freeze_values(self):
-        self.__frozen_vals = copy.deepcopy(self._data_struct[0])
+        np_copy = self._data_struct[1].copy()
+        ct_copy = np_copy.ctypes.data_as(type(ctypes.pointer(self._data_struct[0]))).contents
+
+        self.__frozen_values = (ct_copy, np_copy)
 
     def execute_node(self, node, inputs=None, context=None):
         # We need to reconstruct the input dictionary here if it was not provided.
@@ -555,14 +559,20 @@ class CompExecution(CUDAExecution):
 
         assert inputs is not None or node is not self._composition.input_CIM
 
-        # Freeze output values if this is the first time we need them
-        if node is not self._composition.input_CIM and self.__frozen_vals is None:
-            self.freeze_values()
+        # Nodes other than input_CIM/parameter_CIM take inputs from projections
+        # and need frozen values available
+        if node is not self._composition.input_CIM and node is not self._composition.parameter_CIM:
+            assert self.__frozen_values is not None
+            data_in = self.__frozen_values[1]
+        else:
+            # The ndarray argument check doesn't allow None for null so just provide
+            # the same structure as outputs.
+            data_in = self._data_struct[1]
 
         self._bin_func(self._state_struct[1],
                        self._param_struct[1],
                        inputs,
-                       self.__frozen_vals,
+                       data_in,
                        self._data_struct[1])
 
         if "comp_node_debug" in self._debug_env:

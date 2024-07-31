@@ -11681,6 +11681,7 @@ _
                     assert (execution_mode == pnlvm.ExecutionMode.LLVM
                             or execution_mode & pnlvm.ExecutionMode._Fallback),\
                         f"PROGRAM ERROR: Unrecognized compiled execution_mode: '{execution_mode}'."
+                    _comp_ex.freeze_values()
                     _comp_ex.execute_node(self.controller, context=context)
 
                 context.remove_flag(ContextFlags.PROCESSING)
