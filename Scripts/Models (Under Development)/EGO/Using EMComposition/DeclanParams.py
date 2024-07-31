@@ -55,8 +55,8 @@ model_params = dict(
     concatenate_keys = False,
 
     # environment
-    # curriculum_type = 'Interleaved',
-    curriculum_type = 'Blocked',
+    curriculum_type = 'Interleaved',
+    # curriculum_type = 'Blocked',
     # num_stims = 7,  # Integer or ALL
     num_stims = ALL,  # Integer or ALL
 

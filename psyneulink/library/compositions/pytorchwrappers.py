@@ -552,6 +552,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 # Note: this is to support overrides of execute_node method by subclasses (such as in EMComposition)
                 node.composition_wrapper_owner.execute_node(node, variable, optimization_rep, context)
 
+                # 7/20/24 FIX: CACHE get_nested_output_nodes_at_all_levels() IN _composition
                 # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
                 #  note: these may be different than for actual Composition, as they are flattened
                 if (node._mechanism in self._composition.get_nested_output_nodes_at_all_levels()):
@@ -656,7 +657,13 @@ class PytorchMechanismWrapper():
         except:
             raise AutodiffCompositionError(f"Function {pnl_fct} is not currently supported by AutodiffComposition")
 
+        # 7/10/24 FIX: ASSIGN TO mechanism's current value so that Pytorch Starts where PNL left off
+        # MODIFIED 7/10/24 OLD:
         self.value = None
+        # # MODIFIED 7/10/24 NEW:
+        # FIX: DO SAME FOR integrator_previous_value:
+        # self.value = self._mechanism.parameters.value.get(context)
+        # MODIFIED 7/10/24 END
         self._target_mechanism = None
 
     def add_efferent(self, efferent):

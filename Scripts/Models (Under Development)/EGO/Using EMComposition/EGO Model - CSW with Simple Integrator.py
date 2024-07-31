@@ -159,7 +159,7 @@ if model_params['num_stims'] is ALL:
     TARGETS = dataset.ys.numpy()
 else:
     INPUTS = dataset.xs.numpy()[:model_params['num_stims']]
-    TARGETS = dataset.ys.numpy()[::model_params['num_stims']]
+    TARGETS = dataset.ys.numpy()[:model_params['num_stims']]
 TOTAL_NUM_STIMS = len(INPUTS)
 
 #endregion
@@ -442,8 +442,8 @@ if __name__ == '__main__':
             axes[0].imshow(model.projections[7].parameters.matrix.get(model.name), interpolation=None)
             # print(f"RESULTS: {model.results[2:TOTAL_NUM_STIMS,2].shape}")
             # print(f"TARGETS: {TARGETS[:TOTAL_NUM_STIMS-2].shape}")
-            # axes[1].plot(1 - np.abs(model.results[2:TOTAL_NUM_STIMS,2]-TARGETS[:TOTAL_NUM_STIMS-2]))
-            axes[1].plot( (model.results[2:TOTAL_NUM_STIMS,2]*TARGETS[:TOTAL_NUM_STIMS-2]).sum(-1) )
+            axes[1].plot((1 - np.abs(model.results[2:TOTAL_NUM_STIMS,2]-TARGETS[:TOTAL_NUM_STIMS-2])).sum(-1))
+            # axes[1].plot( (model.results[2:TOTAL_NUM_STIMS,2]*TARGETS[:TOTAL_NUM_STIMS-2]).sum(-1) )
             plt.suptitle(f"{model_params['curriculum_type']} Training")
             axes[1].set_xlabel('Stimuli')
             axes[1].set_ylabel(model_params['loss_spec'])
