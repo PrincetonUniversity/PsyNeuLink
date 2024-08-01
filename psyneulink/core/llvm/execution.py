@@ -422,7 +422,7 @@ class CompExecution(CUDAExecution):
         node_assembly = builder_context.LLVMBuilderContext.get_current().get_node_assembly(self._composition, node)
         self.__bin_func = pnlvm.LLVMBinaryFunction.from_obj(node_assembly,
                                                             tags=self.__tags.union({"node_assembly"}),
-                                                            numpy_args=(0, 1, 3, 4))
+                                                            numpy_args=(0, 1, 2, 3, 4))
 
     @property
     def _conditions(self):
@@ -533,23 +533,29 @@ class CompExecution(CUDAExecution):
 
     def _get_input_struct(self, inputs):
         # Either node or composition execute.
-        # All execute functions expect inputs to be 3rd param.
-        c_input_type = self._bin_func.byref_arg_types[2]
 
         # Read provided input data and parse into an array (generator)
         if len(self._execution_contexts) > 1:
             assert len(self._execution_contexts) == len(inputs)
-            c_input_type = c_input_type * len(self._execution_contexts)
+
+            # All execute functions expect inputs to be 3rd param.
+            ct_input_type = self._bin_func.byref_arg_types[2] * len(self._execution_contexts)
+
             input_data = (([x] for x in self._composition._build_variable_for_input_CIM(inp)) for inp in inputs)
+
+            ct_input = ct_input_type(*_tupleize(input_data))
+            np_input = np.ctypeslib.as_array(ct_input)
         else:
-            input_data = ([x] for x in self._composition._build_variable_for_input_CIM(inputs))
+            ct_input = None
+            data = self._composition._build_variable_for_input_CIM(inputs)
+
+            np_input = np.asarray(_tupleize(data), dtype=self._bin_func.np_params[2].base)
+            np_input = np_input.reshape(self._bin_func.np_params[2].shape)
 
         if "stat" in self._debug_env:
-            print("Input struct size:", _pretty_size(ctypes.sizeof(c_input_type)),
-                  "for", self._composition.name)
+            print("Input struct size:", _pretty_size(np_input.nbytes), "for", self._composition.name)
 
-        c_input = c_input_type(*_tupleize(input_data))
-        return c_input, np.ctypeslib.as_array(c_input)
+        return ct_input, np_input
 
     def freeze_values(self):
         np_copy = self._data_struct[1].copy()
@@ -571,13 +577,17 @@ class CompExecution(CUDAExecution):
                 index = p.owner.input_ports.index(p)
                 data[index] = v[0]
 
+        assert inputs is not None or node is not self._composition.input_CIM
 
         # Set bin node to make sure self._*struct works as expected
         self._set_bin_node(node)
-        if inputs is not None:
-            inputs = self._get_input_struct(inputs)[0]
 
-        assert inputs is not None or node is not self._composition.input_CIM
+        # Numpy doesn't allow to pass NULL to the called function.
+        # Create and pass a dummy buffer filled with NaN instead.
+        if inputs is not None:
+            inputs = self._get_input_struct(inputs)[1]
+        else:
+            inputs = self._get_empty_for_arg(2)
 
         # Nodes other than input_CIM/parameter_CIM take inputs from projections
         # and need frozen values available
@@ -606,7 +616,7 @@ class CompExecution(CUDAExecution):
     def _bin_exec_func(self):
         if self.__bin_exec_func is None:
             self.__bin_exec_func = pnlvm.LLVMBinaryFunction.from_obj(
-                self._composition, tags=self.__tags, numpy_args=(0, 1, 3, 4))
+                self._composition, tags=self.__tags, numpy_args=(0, 1, 2, 3, 4))
 
         return self.__bin_exec_func
 
@@ -630,7 +640,7 @@ class CompExecution(CUDAExecution):
         else:
             self._bin_exec_func(self._state_struct[1],
                                 self._param_struct[1],
-                                self._get_input_struct(inputs)[0],
+                                self._get_input_struct(inputs)[1],
                                 self._data_struct[1],
                                 self._conditions[1])
 
