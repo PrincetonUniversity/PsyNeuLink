@@ -115,16 +115,15 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         field_weights = mech.parameters.field_weights.get(context) # modulable, so use getter
         concatenation_node = mech.concatenation_node
         # MODIFIED 7/29/24 OLD:
-        # num_match_fields = 1 if concatenation_node else len([i for i in mech.field_types if i==1])
-        # MODIFIED 7/29/24 NEW:
-        if concatenation_node:
-            num_match_fields = 1
-        else:
-            num_match_fields = 0
-            for i in mech.field_types:
-                if i==1:
-                    num_match_fields += 1
-        # MODIFIED 7/29/24 END
+        num_match_fields = 1 if concatenation_node else len([i for i in mech.field_types if i==1])
+        # # MODIFIED 7/29/24 NEW:
+        # if concatenation_node:
+        #     num_match_fields = 1
+        # else:
+        #     num_match_fields = 0
+        #     for i in mech.field_types:
+        #         if i==1:
+        #             num_match_fields += 1
         # Find weakest memory (i.e., with lowest norm)
         field_norms = torch.empty((len(memory),len(memory[0])))
         # # # MODIFIED 7/29/24 OLD:

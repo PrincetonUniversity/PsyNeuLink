@@ -21,8 +21,8 @@ model_params = dict(
     concatenate_keys = False,
 
     # environment
-    curriculum_type = 'Interleaved',
-    # curriculum_type = 'Blocked'
+    # curriculum_type = 'Interleaved',
+    curriculum_type = 'Blocked',
     num_stims = 7,  # Integer or ALL
     # num_stims = ALL,  # Integer or ALL
 
@@ -43,7 +43,7 @@ model_params = dict(
     loss_spec = Loss.BINARY_CROSS_ENTROPY,
     # loss_spec = Loss.MSE,
     learning_rate = .5,
-    num_optimization_steps = 3,
+    num_optimization_steps = 1,
     # execution_mode = ExecutionMode.Python,
     execution_mode = ExecutionMode.PyTorch,
     device = CPU,
