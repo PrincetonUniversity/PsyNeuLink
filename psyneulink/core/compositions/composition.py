@@ -11465,7 +11465,10 @@ _
             learning_rate: Optional[Union[int,float]]=None,
             minibatch_size: int = 1,
             optimizations_per_minibatch: int = 1,
-            copy_weights_to_psyneulink_after:str = 'MINIBATCH',
+            track_pytorch_params_in_psyneulink:str = 'MINIBATCH',
+            track_pytorch_values_in_psyneulink:str = 'MINIBATCH',
+            track_pytorch_outputs_in_psyneulink:str = 'MINIBATCH',
+            track_pytorch_targets_in_psyneulink:str = 'MINIBATCH',
             patience: Optional[int] = None,
             min_delta: int = 0,
             synchronize_pnl_values: bool = True,
@@ -11620,7 +11623,10 @@ _
         context.execution_phase = execution_phase_at_entry
 
         self._optimizations_per_minibatch = optimizations_per_minibatch
-        self.copy_weights_to_psyneulink_after = copy_weights_to_psyneulink_after
+        self.track_pytorch_params_in_psyneulink = track_pytorch_params_in_psyneulink
+        self.track_pytorch_values_in_psyneulink:str = track_pytorch_values_in_psyneulink
+        self.track_pytorch_outputs_in_psyneulink:str = track_pytorch_outputs_in_psyneulink
+        self.track_pytorch_targets_in_psyneulink:str = track_pytorch_targets_in_psyneulink
 
         result = runner.run_learning(
             inputs=inputs,

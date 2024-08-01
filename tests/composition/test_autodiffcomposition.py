@@ -3578,7 +3578,7 @@ class TestACLogging:
         xor.learn(inputs={"inputs": {xor_in: xor_inputs},
                           "targets": {xor_out: xor_targets},
                           "epochs": num_epochs},
-                  copy_weights_to_psyneulink_after='MINIBATCH',
+                  track_pytorch_params_in_psyneulink='MINIBATCH',
                   execution_mode=pnl.ExecutionMode.PyTorch)
 
         exec_id = xor.default_execution_id
