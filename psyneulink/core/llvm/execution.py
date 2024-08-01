@@ -522,11 +522,14 @@ class CompExecution(CUDAExecution):
         return self.extract_node_struct(node, self._param_struct)
 
     def insert_node_output(self, node, data):
-        my_field_name = self._data_struct[0]._fields_[0][0]
-        my_res_struct = getattr(self._data_struct[0], my_field_name)
+        # output structure consists of a list of node outputs,
+        #   followed by a list of nested data structures; get the first one
+        all_nodes = self._data_struct[1][self._data_struct[1].dtype.names[0]]
+
+        # Get the index into the array of all nodes
         index = self._composition._get_node_index(node)
-        node_field_name = my_res_struct._fields_[index][0]
-        setattr(my_res_struct, node_field_name, _tupleize(data))
+        value = all_nodes[all_nodes.dtype.names[index]]
+        np.copyto(value, np.asarray(data, dtype=value.dtype))
 
     def _get_input_struct(self, inputs):
         # Either node or composition execute.
