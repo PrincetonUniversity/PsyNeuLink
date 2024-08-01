@@ -623,7 +623,9 @@ class PytorchMechanismWrapper():
                  component_idx,        # index of the Mechanism in the Composition
                  device,               # needed for Pytorch
                  context=None):
-        super().__init__()
+        # # MODIFIED 7/10/24 NEW:
+        # super().__init__()
+        # MODIFIED 7/10/24 END
         self._mechanism = mechanism
         self._idx = component_idx
         self._context = context
