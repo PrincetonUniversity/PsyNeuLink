@@ -556,13 +556,14 @@ class CompExecution(CUDAExecution):
 
         self.__frozen_values = (None, np_copy)
 
-    def execute_node(self, node, inputs=None, context=None):
+    def execute_node(self, node, inputs=None):
         # We need to reconstruct the input dictionary here if it was not provided.
         # This happens during node execution of nested compositions.
         assert len(self._execution_contexts) == 1
+        context = self._execution_contexts[0]
+
         if inputs is None and node is self._composition.input_CIM:
-            if context is None:
-                context = self._execution_contexts[0]
+
             port_inputs = {origin_port:[proj.parameters.value._get(context) for proj in p[0].path_afferents] for (origin_port, p) in self._composition.input_CIM_ports.items()}
             inputs = {}
             for p, v in port_inputs.items():
