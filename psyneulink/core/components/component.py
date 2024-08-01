@@ -1463,7 +1463,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "objective_mechanism", "agent_rep", "projections",
                      "outcome_input_ports", "state_input_ports",
                      # autodiff specific types
-                     "pytorch_representation", "optimizer", "track_pytorch_params_in_psyneulink",
+                     "pytorch_representation", "optimizer", "synch_projection_matrices_with_torch",
                      # duplicate
                      "allocation_samples", "control_allocation_search_space",
                      # not used in computation

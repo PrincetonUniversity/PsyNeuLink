@@ -11465,10 +11465,12 @@ _
             learning_rate: Optional[Union[int,float]]=None,
             minibatch_size: int = 1,
             optimizations_per_minibatch: int = 1,
-            track_pytorch_params_in_psyneulink:str = 'MINIBATCH',
-            track_pytorch_values_in_psyneulink:str = 'MINIBATCH',
-            track_pytorch_outputs_in_psyneulink:str = 'MINIBATCH',
-            track_pytorch_targets_in_psyneulink:str = 'MINIBATCH',
+            # MODIFIED 7/10/24 OLD:
+            # synch_projection_matrices_with_torch:str = 'MINIBATCH',
+            # synch_mech_values_with_torch:str = 'MINIBATCH',
+            # synch_autodiff_results_with_torch:str = 'MINIBATCH',
+            # track_torch_targets:str = 'MINIBATCH',
+            # MODIFIED 7/10/24 END
             patience: Optional[int] = None,
             min_delta: int = 0,
             synchronize_pnl_values: bool = True,
@@ -11623,10 +11625,10 @@ _
         context.execution_phase = execution_phase_at_entry
 
         self._optimizations_per_minibatch = optimizations_per_minibatch
-        self.track_pytorch_params_in_psyneulink = track_pytorch_params_in_psyneulink
-        self.track_pytorch_values_in_psyneulink:str = track_pytorch_values_in_psyneulink
-        self.track_pytorch_outputs_in_psyneulink:str = track_pytorch_outputs_in_psyneulink
-        self.track_pytorch_targets_in_psyneulink:str = track_pytorch_targets_in_psyneulink
+        self.synch_projection_matrices_with_torch = synch_projection_matrices_with_torch
+        self.synch_mech_values_with_torch:str = synch_mech_values_with_torch
+        self.synch_autodiff_results_with_torch:str = synch_autodiff_results_with_torch
+        self.track_torch_targets:str = track_torch_targets
 
         result = runner.run_learning(
             inputs=inputs,

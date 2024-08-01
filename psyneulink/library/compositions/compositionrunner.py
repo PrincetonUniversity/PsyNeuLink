@@ -108,7 +108,7 @@ class CompositionRunner():
                 # end early if patience exceeded
                 pass
 
-        if context._composition.track_pytorch_params_in_psyneulink == 'RUN':
+        if context._composition.synch_projection_matrices_with_torch == 'RUN':
             pytorch_rep = self._composition.parameters.pytorch_representation._get(context=context)
             pytorch_rep.copy_weights_to_psyneulink(context)
 

@@ -48,8 +48,8 @@ __all__ = [
     'DRIFT_DIFFUSION_INTEGRATOR_FUNCTION', 'DRIFT_ON_A_SPHERE_INTEGRATOR_FUNCTION', 'DROPOUT_FUNCTION',
     'DUAL_ADAPTIVE_INTEGRATOR_FUNCTION',
     'EFFERENTS', 'EID_SIMULATION', 'EID_FROZEN', 'EITHER', 'ENABLE_CONTROLLER', 'ENABLED', 'ENERGY', 'ENTROPY',
-    'EM_COMPOSITION', 'EM_STORAGE_FUNCTION', 'EM_STORAGE_MECHANISM', 'EPISODIC_MEMORY_MECHANISM', 'EPOCHS', 'EQUAL',
-    'ERROR_DERIVATIVE_FUNCTION', 'EUCLIDEAN', 'EVC_MECHANISM', 'EVC_SIMULATION',  'EXAMPLE_FUNCTION_TYPE',
+    'EM_COMPOSITION', 'EM_STORAGE_FUNCTION', 'EM_STORAGE_MECHANISM', 'EPISODIC_MEMORY_MECHANISM', 'EPOCH', 'EPOCHS',
+    'EQUAL', 'ERROR_DERIVATIVE_FUNCTION', 'EUCLIDEAN', 'EVC_MECHANISM', 'EVC_SIMULATION',  'EXAMPLE_FUNCTION_TYPE',
     'EXECUTE_UNTIL_FINISHED', 'EXECUTING', 'EXECUTION', 'EXECUTION_COUNT', 'EXECUTION_ID', 'EXECUTION_PHASE',
     'EXPONENTIAL', 'EXPONENT', 'EXPONENTIAL_DIST_FUNCTION', 'EXPONENTIAL_FUNCTION', 'EXPONENTS',
     'FEEDBACK', 'FITZHUGHNAGUMO_INTEGRATOR_FUNCTION', 'FINAL', 'FLAGS', 'FULL', 'FULL_CONNECTIVITY_MATRIX',
@@ -67,10 +67,10 @@ __all__ = [
     'INTEGRATOR_FUNCTION','INTEGRATOR_FUNCTION', 'INTEGRATOR_FUNCTION_TYPE', 'INTEGRATOR_MECHANISM',
     'LAST_INTEGRATED_VALUE', 'INTERCEPT', 'INTERNAL', 'INTERNAL_ONLY',
     'K_VALUE', 'KOHONEN_FUNCTION', 'KOHONEN_MECHANISM', 'KOHONEN_LEARNING_MECHANISM', 'KWTA_MECHANISM',
-    'LABELS', 'LCA_MECHANISM', 'LEAKY_COMPETING_INTEGRATOR_FUNCTION', 'LEAK', 'LEARNABLE',
-    'LEARNED_PROJECTIONS', 'LEARNING', 'LEARNING_FUNCTION', 'LEARNING_FUNCTION_TYPE',
-    'LEARNING_OBJECTIVE', 'LEARNING_MECHANISM', 'LEARNING_MECHANISMS', 'LEARNING_PATHWAY', 'LEARNING_PROJECTION',
-    'LEARNING_PROJECTION_PARAMS', 'LEARNING_RATE', 'LEARNING_SIGNAL', 'LEARNING_SIGNAL_SPECS', 'LEARNING_SIGNALS',
+    'LABELS', 'LCA_MECHANISM', 'LEAKY_COMPETING_INTEGRATOR_FUNCTION', 'LEAK', 'LEARNABLE', 'LEARNED_PROJECTIONS',
+    'LEARNING', 'LEARNING_FUNCTION', 'LEARNING_FUNCTION_TYPE', 'LEARNING_OBJECTIVE', 'LEARNING_MECHANISM',
+    'LEARNING_MECHANISMS', 'LEARNING_PATHWAY', 'LEARNING_PROJECTION', 'LEARNING_PROJECTION_PARAMS', 'LEARNING_RATE',
+    'LEARNING_SCALE', 'LEARNING_SCALE_NAMES', 'LEARNING_SIGNAL', 'LEARNING_SIGNAL_SPECS', 'LEARNING_SIGNALS',
     'LESS_THAN', 'LESS_THAN_OR_EQUAL', 'LINEAR', 'LINEAR_COMBINATION_FUNCTION', 'LINEAR_FUNCTION',
     'LINEAR_MATRIX_FUNCTION', 'LOG_ENTRIES', 'LOGISTIC_FUNCTION', 'Loss', 'LOW', 'LVOC_CONTROL_MECHANISM',
     'MAPPING_PROJECTION', 'MAPPING_PROJECTION_PARAMS', 'MASKED_MAPPING_PROJECTION',
@@ -79,7 +79,7 @@ __all__ = [
     'MAX_EXECUTIONS_BEFORE_FINISHED', 'MAX_INDICATOR', 'MAX_VAL', 'MAYBE', 'MEAN',
     'MECHANISM', 'MECHANISM_COMPONENT_CATEGORY', 'MECHANISM_DEFAULT', 'MECHANISM_DEFAULT_INPUT_VALUE',
     'MECHANISM_DEFAULTParams', 'MECHANISM_EXECUTED_LOG_ENTRY', 'MECHANISM_NAME', 'MECHANISM_PARAM_VALUE',
-    'MECHANISM_TYPE', 'MECHANISM_VALUE', 'MEDIAN', 'METRIC', 'MIN_VAL', 'MIN_ABS_VAL', 'MIN_ABS_INDICATOR',
+    'MECHANISM_TYPE', 'MECHANISM_VALUE', 'MEDIAN', 'METRIC', 'MIN_VAL', 'MIN_ABS_VAL', 'MIN_ABS_INDICATOR', 'MINIBATCH',
     'MOD_AFFERENTS', 'MODE', 'MODULATES','MODULATION', 'MODULATORY_PROJECTION', 'MODULATORY_SIGNAL',
     'MODULATORY_SIGNALS', 'MONITOR', 'MONITOR_FOR_CONTROL', 'MONITOR_FOR_LEARNING', 'MONITOR_FOR_MODULATION',
     'MODEL_SPEC_ID_GENERIC', 'MODEL_SPEC_ID_INPUT_PORTS', 'MODEL_SPEC_ID_OUTPUT_PORTS',
@@ -91,7 +91,8 @@ __all__ = [
     'NAME', 'NESTED', 'NEWEST',  'NODE', 'NODES', 'NOISE', 'NORMAL_DIST_FUNCTION', 'NORMALIZE', 'NORMED_L0_SIMILARITY',
     'NOT_EQUAL', 'NUM_EXECUTIONS_BEFORE_FINISHED',
     'OBJECTIVE_FUNCTION_TYPE', 'OBJECTIVE_MECHANISM', 'OBJECTIVE_MECHANISM_OBJECT', 'OFF', 'OFFSET', 'OLDEST', 'ON',
-    'ONLINE', 'ONLY', 'OPERATION', 'OPTIMIZATION_FUNCTION_TYPE', 'ORIGIN','ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION',
+    'ONLINE', 'ONLY', 'OPERATION', 'OPTIMIZATION_FUNCTION_TYPE', 'OPTIMIZATION_STEP', 'ORIGIN',
+    'ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION',
     'OUTCOME', 'OUTCOME_FUNCTION', 'OUTPUT', 'OUTPUT_CIM_NAME', 'OUTPUT_LABELS_DICT', 'OUTPUT_MECHANISM',
     'OUTPUT_PORT', 'OUTPUT_PORT_PARAMS', 'output_port_spec_to_parameter_name', 'OUTPUT_PORTS', 'OUTPUT_TYPE',
     'OVERRIDE', 'OVERRIDE_PARAM', 'OVERWRITE', 'OWNER', 'OWNER_EXECUTION_COUNT', 'OWNER_EXECUTION_TIME',
@@ -132,6 +133,8 @@ from enum import Enum, auto
 
 from psyneulink._typing import Literal
 
+
+#region ----------------------------------------- MATRICES   -----------------------------------------------------------
 
 class MatrixKeywords:
     """
@@ -206,7 +209,9 @@ MATRIX_KEYWORDS = MatrixKeywords()
 MATRIX_KEYWORD_SET = MATRIX_KEYWORDS._set()
 MATRIX_KEYWORD_VALUES = MATRIX_KEYWORDS._values()
 MATRIX_KEYWORD_NAMES = MATRIX_KEYWORDS._names()
+#endregion
 
+#region ----------------------------------------  DISTANCE METRICS  ----------------------------------------------------
 
 class DistanceMetrics:
     """Distance between two arrays.
@@ -305,6 +310,62 @@ DISTANCE_METRICS_NAMES = DISTANCE_METRICS._names()
 
 # ENTROPY = 'entropy'
 CONVERGENCE = 'CONVERGENCE'
+#endregion
+
+#region -------------------------------------------    LEARNING    -----------------------------------------------------
+
+
+class LearningScale:
+    """Scales at which `learning <Composition_Learning>` occurs
+
+    Used to specify the scales over which learning-related events occur when `learning <Composition_Learning>` is
+    executed in a `Composition`.
+
+    Attributes
+    ----------
+
+    OPTIMIZATION_STEP
+        single step of gradient calculation.
+
+    MINIBATCH
+        a subset of the training set used to calculate the gradient.
+
+    TRIAL
+        identical to MINIBACH when `minibatch_size <Composition.minibatch_size>`= 1; otherwise raises an error.
+
+    EPOCH
+        a complete pass through the training set.
+
+    RUN
+        a complete execution of the `learn <Composition.learn>` method of the Composition.
+
+    """
+    def __init__(self):
+        self.OPTIMIZATION_STEP = OPTIMIZATION_STEP
+        self.MINIBATCH = MINIBATCH
+        self.TRIAL = MINIBATCH
+        self.EPOCH = EPOCH
+        self.RUN = RUN
+
+    def _values(self):
+        return list(self.__dict__.values())
+
+    def _set(self):
+        return set(self.__dict__.values())
+
+    def _names(self):
+        return list(self.__dict__)
+
+OPTIMIZATION_STEP = 'optimization_step'
+MINIBATCH = 'minibatch'
+TRIAL = 'trial'
+EPOCH = 'epoch'
+RUN = 'run'
+
+LEARNING_SCALE = LearningScale()
+LEARNING_SCALE_SET = LEARNING_SCALE._set()
+LEARNING_SCALE_VALUES = LEARNING_SCALE._values()
+LEARNING_SCALE_NAMES = LEARNING_SCALE._names()
 
 
 class Loss(Enum):
@@ -362,6 +423,7 @@ class Loss(Enum):
     POISSON_NLL = auto()
     SUM = L0
 
+#endregion
 
 # **********************************************************************************************************************
 # ******************************************    CONSTANTS  *************************************************************
