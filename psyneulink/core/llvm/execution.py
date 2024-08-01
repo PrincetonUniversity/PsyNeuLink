@@ -469,8 +469,8 @@ class CompExecution(CUDAExecution):
     def _data_struct(self, data_struct):
         self._data = data_struct
 
-    def _extract_node_struct(self, node, data):
-        # context structure consists of a list of node contexts,
+    def _extract_node_struct_from_ctype(self, node, data):
+        # state structure consists of a list of node states,
         #   followed by a list of projection contexts; get the first one
         # parameter structure consists of a list of node parameters,
         #   followed by a list of projection parameters; get the first one
@@ -486,23 +486,40 @@ class CompExecution(CUDAExecution):
 
         return _convert_ctype_to_python(res_struct)
 
+    def _extract_node_struct_from_numpy(self, node, data):
+        # state structure consists of a list of node states,
+        #   followed by a list of projection contexts; get the first one
+        # parameter structure consists of a list of node parameters,
+        #   followed by a list of projection parameters; get the first one
+        # output structure consists of a list of node outputs,
+        #   followed by a list of nested data structures; get the first one
+        all_nodes = data[data.dtype.names[0]]
+
+        # Get the index into the array of all nodes
+        index = self._composition._get_node_index(node)
+        node_struct = all_nodes[all_nodes.dtype.names[index]]
+
+        # Return copies of the extracted functions to avoid corrupting the
+        # returned results in next execution
+        return node_struct.copy().tolist() if node_struct.shape == () else node_struct.copy()
+
     def extract_node_struct(self, node, struct):
         if len(self._execution_contexts) > 1:
-            return [self._extract_node_struct(node, struct[i]) for i, _ in enumerate(self._execution_contexts)]
+            return [self._extract_node_struct_from_ctype(node, struct[0][i]) for i, _ in enumerate(self._execution_contexts)]
         else:
-            return self._extract_node_struct(node, struct)
+            return self._extract_node_struct_from_numpy(node, struct[1])
 
     def extract_frozen_node_output(self, node):
-        return self.extract_node_struct(node, self.__frozen_values[0])
+        return self.extract_node_struct(node, self.__frozen_values)
 
     def extract_node_output(self, node):
-        return self.extract_node_struct(node, self._data_struct[0])
+        return self.extract_node_struct(node, self._data_struct)
 
     def extract_node_state(self, node):
-        return self.extract_node_struct(node, self._state_struct[0])
+        return self.extract_node_struct(node, self._state_struct)
 
     def extract_node_params(self, node):
-        return self.extract_node_struct(node, self._param_struct[0])
+        return self.extract_node_struct(node, self._param_struct)
 
     def insert_node_output(self, node, data):
         my_field_name = self._data_struct[0]._fields_[0][0]
