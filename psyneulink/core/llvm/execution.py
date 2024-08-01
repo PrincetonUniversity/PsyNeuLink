@@ -553,9 +553,8 @@ class CompExecution(CUDAExecution):
 
     def freeze_values(self):
         np_copy = self._data_struct[1].copy()
-        ct_copy = np_copy.ctypes.data_as(type(ctypes.pointer(self._data_struct[0]))).contents
 
-        self.__frozen_values = (ct_copy, np_copy)
+        self.__frozen_values = (None, np_copy)
 
     def execute_node(self, node, inputs=None, context=None):
         # We need to reconstruct the input dictionary here if it was not provided.
