@@ -11372,11 +11372,10 @@ _
                                             report_num=report_num
                                             )
 
+                assert "AFTER PYTORCH FORWARD PASS"
+
                 # ---------------------------------------------------------------------------------
                 # store the result of this execution in case it will be the final result
-
-
-                assert "AFFTER FOWARD PASS"
 
                 # object.results.append(result)
                 trial_output = copy_parameter_value(trial_output)
