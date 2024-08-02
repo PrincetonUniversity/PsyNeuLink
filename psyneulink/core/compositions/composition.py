@@ -3859,12 +3859,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     minibatch_size : int
         determines the number of input stimuli from the training set used to compute the `error_signal
-        <LearningMechanism.error_signal>` in one gradient step of learning.
+        <LearningMechanism.error_signal>` in one gradient step of learning if this is not specified in the call to
+        `learn <Composition.learn>` (see `minibatch <LearningScale.MINIBATCH>` for additional details).
 
     optimizations_per_minibatch : int
-        determines the number of repetitions of each stimulus in the training set used to compute ana
-        `error_signal <LearningMechanism.error_signal>` (gradient step) for learning (see `minibatch
-        <LearningScale.MINIBATCH>`).
+        determines the number of repetitions of each stimulus in the training set used to compute an `error_signal
+        <LearningMechanism.error_signal>` for single gradient step in learning if this is not specified in the call
+        to `learn <Composition.learn>` (see `minibatch <LearningScale.OPTIMIZATION_STEP>` for additional details).
 
     learning_components : list[list]
         a list of the learning-related components in the Composition, all or many of which may have been
