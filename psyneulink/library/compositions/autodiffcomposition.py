@@ -1302,7 +1302,7 @@ class AutodiffComposition(Composition):
                  TARGETS: track_torch_targets or self.parameters.track_torch_targets._get(context),
                  LOSSES: track_losses or self.parameters.track_losses._get(context)}
 
-        return super().learn(*args, synch, track, execution_mode=execution_mode, **kwargs)
+        return super().learn(*args, synch=synch, track=track, execution_mode=execution_mode, **kwargs)
 
     def _get_execution_mode(self, execution_mode):
         """Parse execution_mode argument and return a valid execution mode for the learn() method
