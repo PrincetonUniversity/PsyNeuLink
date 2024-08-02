@@ -11526,7 +11526,7 @@ _
             context: Optional[Context] = None,
             *args,
             **kwargs
-    ):
+    )->list:
         """
             Runs the composition in learning mode - that is, any components with disable_learning False will be
             executed in learning mode. See `Composition_Learning` for details.
@@ -11612,9 +11612,6 @@ _
                 the scheduler object that owns the conditions that will instruct the execution of the Composition
                 If not specified, the Composition will use its automatically generated scheduler.
 
-            context
-                context will be set to self.default_execution_id if unspecified
-
             call_before_minibatch : callable
                 called before each minibatch is executed
 
@@ -11642,6 +11639,9 @@ _
                 specifies where output and progress should be reported; see `Report_To_Device` for additional
                 details and `ReportDevices` for options.
 
+            context
+                context will be set to self.default_execution_id if unspecified
+
             Returns
             ---------
 
@@ -11664,6 +11664,10 @@ _
             warnings.warn(f"learn() method called on '{self.name}', but it has no learning components; "
                           f"it will be run but no learning will occur.")
 
+        # Get any synchronization and/or tracking specifications from sublcasses (e.g.,AutdoiffComposition)
+        synch = kwargs.pop('synch', None)
+        track = kwargs.pop('track', None)
+
         # Prepare graph and context for learning
         context.add_flag(ContextFlags.LEARNING_MODE)
         execution_phase_at_entry = context.execution_phase
@@ -11685,6 +11689,8 @@ _
             min_delta=min_delta,
             # synchronize_pnl_values=synchronize_pnl_values,
             randomize_minibatches=randomize_minibatches,
+            synch=synch,
+            track=track,
             call_before_minibatch=call_before_minibatch,
             call_after_minibatch=call_after_minibatch,
             context=context,
@@ -11779,8 +11785,8 @@ _
             report_simulations:ReportSimulations=ReportSimulations.OFF,
             report_to_devices:ReportDevices=None,
             report=None,
-            report_num=None,
-            ):
+            report_num=None
+            )->list:  # <- 7/10/24 FIX: CORRECT?
         """
             Passes inputs to any `Nodes <Composition_Nodes>` receiving inputs directly from the user (via the "inputs"
             argument) then coordinates with the `Scheduler` to execute sets of Nodes that are eligible to execute until
@@ -12865,7 +12871,7 @@ _
         else:
             return {k:np.array(v).tolist() for k,v in result_set}
 
-    def _update_learning_parameters(self, optimization_rep, context):
+    def _update_learning_parameters(self, optimization_rep, synch, track, context):
         pass
 
     @handle_external_context(fallback_most_recent=True)

@@ -2433,7 +2433,8 @@ class EMComposition(AutodiffComposition):
             # Assign updated matrix to Projection
             self.retrieved_nodes[i].path_afferents[0].parameters.matrix.set(field_memories, context)
 
-    def learn(self, *args, **kwargs):
+    # 7/10/24 - FIX:  WHY BOTHER WITH OVERRIDE IF NOTHING IS DONE:
+    def learn(self, *args, **kwargs)->list:
         return super().learn(*args, **kwargs)
 
     def _get_execution_mode(self, execution_mode):
@@ -2469,6 +2470,6 @@ class EMComposition(AutodiffComposition):
             raise EMCompositionError(f"EMComposition does not support learning with 'concatenate_keys'=True.")
         super().infer_backpropagation_learning_pathways(execution_mode, context=context)
 
-    def _update_learning_parameters(self, optimization_rep, context):
+    def _update_learning_parameters(self, optimization_rep, synch, track, context):
         # 7/10/24 - MAKE THIS CONTEXT DEPENDENT:  CALL super() IF BEING EXECUTED ON ITS OWN?
         pass

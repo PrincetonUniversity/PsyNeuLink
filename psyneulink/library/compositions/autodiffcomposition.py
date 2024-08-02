@@ -348,7 +348,8 @@ from psyneulink.core.compositions.report import (ReportOutput, ReportParams, Rep
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context, CONTEXT
 from psyneulink.core.globals.keywords import (AUTODIFF_COMPOSITION, CPU, CUDA, EPOCH, LearningScale,
                                               LEARNING_SCALE_LITERALS, LEARNING_SCALE_NAMES, LEARNING_SCALE_VALUES,
-                                              Loss, MINIBATCH, MPS, OPTIMIZATION_STEP, RUN, SOFT_CLAMP, TRIAL)
+                                              Loss, LOSSES, MINIBATCH, MPS, OPTIMIZATION_STEP, OUTPUTS,
+                                              RESULTS, RUN, SOFT_CLAMP, TARGETS, TRIAL, VALUES, WEIGHTS)
 from psyneulink.core.globals.utilities import is_numeric_scalar, get_torch_tensor
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
@@ -990,7 +991,7 @@ class AutodiffComposition(Composition):
                                            f"likelihood), POISSONNLL (Poisson negative log likelihood, "
                                            f"and KL_DIV (KL divergence.")
 
-    def autodiff_training(self, inputs, targets, synchronize_pnl_values:bool=True, context=None, scheduler=None):
+    def autodiff_training(self, inputs, targets, synch, track, context=None, scheduler=None):
         """Perform learning/training on all input-target pairs received for given number of epochs"""
 
         # Compute total loss over OUTPUT nodes for current trial
@@ -1018,8 +1019,11 @@ class AutodiffComposition(Composition):
         pytorch_rep = self.parameters.pytorch_representation._get(context)
         curr_tensor_outputs = pytorch_rep.forward(curr_tensor_inputs, None, context)
 
+        # 7/10/24 - FIX:
+        #                - CHECK THAT SCOPE IS RELEVANT FOR CALL TO EXECUTE???
+        #                - IMPLEMENT HELPER METHOD THAT CAN BE CALLED IN OTHER SCOPES?
         # Update values of all PNL nodes executed in forward pass (if specified)
-        if synchronize_pnl_values:
+        if synch[VALUES] in {TRIAL, MINIBATCH}:
             pytorch_node_values = {}
             for pnl_node, pytorch_node in pytorch_rep.nodes_map.items():
                 if pytorch_node.value is None:
@@ -1083,7 +1087,7 @@ class AutodiffComposition(Composition):
         self.losses = []
         self.parameters.losses.set([], context=context)
 
-    def _update_learning_parameters(self, optimization_rep, context):
+    def _update_learning_parameters(self, optimization_rep, synch, track, context):
         """Carry out backpropagation learning (backward computation) for one or more trials.
         Update parameters (weights) based on trials run since last update,
             using Pytorch backward method to compute gradients and update weights
@@ -1106,15 +1110,23 @@ class AutodiffComposition(Composition):
         # # MODIFIED 7/29/24 OLD:
         # pytorch_rep.detach_all()
         # pytorch_rep.copy_weights_to_psyneulink(context)
-        # MODIFIED 7/29/24 NEW:
-        # pytorch_rep.detach_all()  # FIX: <- IS THIS NEEDED ONLY WHEN WRITING TO PNL OR BY PYTORCH?
+        # # MODIFIED 7/29/24 NEW:
+        # # pytorch_rep.detach_all()  # FIX: <- IS THIS NEEDED ONLY WHEN WRITING TO PNL OR BY PYTORCH?
+        # optimizations_per_minibatch = context.composition.parameters.optimizations_per_minibatch.get(context)
+        # if context._composition.synch_projection_matrices_with_torch == 'OPTIMIZATION_STEP':
+        #     # pytorch_rep.detach_all()  # FIX: <- IS THIS NEEDED ONLY WHEN WRITING TO PNL OR BY PYTORCH?
+        #     pytorch_rep.copy_weights_to_psyneulink(context)
+        # elif (context._composition.synch_projection_matrices_with_torch == MINIBATCH
+        #       and (optimization_rep is None or not (optimization_rep + 1) % optimizations_per_minibatch)):
+        #     # pytorch_rep.detach_all()
+        #     pytorch_rep.copy_weights_to_psyneulink(context)
+        # # FIX: NEED TO ADD COPY AT END OF RUN IF synch_projection_matrices_with_torch == 'RUN'
+        # MODIFIED 7/29/24 NEWER:
         optimizations_per_minibatch = context.composition.parameters.optimizations_per_minibatch.get(context)
-        if context._composition.synch_projection_matrices_with_torch == 'OPTIMIZATION_STEP':
-            # pytorch_rep.detach_all()  # FIX: <- IS THIS NEEDED ONLY WHEN WRITING TO PNL OR BY PYTORCH?
+        if synch[WEIGHTS] == 'OPTIMIZATION_STEP':
             pytorch_rep.copy_weights_to_psyneulink(context)
-        elif (context._composition.synch_projection_matrices_with_torch == MINIBATCH
+        elif (synch[WEIGHTS] == MINIBATCH
               and (optimization_rep is None or not (optimization_rep + 1) % optimizations_per_minibatch)):
-            # pytorch_rep.detach_all()
             pytorch_rep.copy_weights_to_psyneulink(context)
         # FIX: NEED TO ADD COPY AT END OF RUN IF synch_projection_matrices_with_torch == 'RUN'
         # MODIFIED 7/29/24 END
@@ -1219,9 +1231,9 @@ class AutodiffComposition(Composition):
               track_torch_outputs_in_results:Optional[LEARNING_SCALE_LITERALS]=None,
               track_torch_targets:Optional[LEARNING_SCALE_LITERALS]=None,
               track_losses:Optional[LEARNING_SCALE_LITERALS]=None,
-              **kwargs):
+              **kwargs)->list:
 
-        context = kwargs.pop(CONTEXT)
+        context = kwargs[CONTEXT]
 
         if track_torch_outputs_in_results == TRIAL:
             if self.minibatch_size == 1:
@@ -1251,6 +1263,7 @@ class AutodiffComposition(Composition):
                                     f"LearningScale keyword.")
 
 
+
         execution_phase_at_entry = context.execution_phase
         context.execution_phase = ContextFlags.PREPARING
 
@@ -1277,19 +1290,19 @@ class AutodiffComposition(Composition):
             self.infer_backpropagation_learning_pathways(execution_mode, context=context)
             self._built_pathways = True
 
-        return super().learn(
-            *args,
-            synch_projection_matrices_with_torch = synch_projection_matrices_with_torch or
-                                                   self.parameters.synch_projection_matrices_with_torch._get(context),
-            synch_mech_values_with_torch = synch_mech_values_with_torch or
-                                           self.parameters.synch_mech_values_with_torch._get(context),
-            synch_autodiff_results_with_torch = synch_autodiff_results_with_torch or
-                                                self.parameters.synch_autodiff_results_with_torch._get(context),
-            track_torch_outputs_in_results = track_torch_outputs_in_results or
-                                             self.parameters.track_torch_outputs_in_results._get(context),
-            track_torch_targets = track_torch_targets or self.parameters.track_torch_targets._get(context),
-            track_losses = track_losses or self.parameters.track_losses._get(context),
-            execution_mode=execution_mode, **kwargs)
+        synch = {WEIGHTS: synch_projection_matrices_with_torch
+                          or self.parameters.synch_projection_matrices_with_torch._get(context),
+                 VALUES: synch_mech_values_with_torch
+                         or self.parameters.synch_mech_values_with_torch._get(context),
+                 RESULTS: synch_autodiff_results_with_torch
+                          or self.parameters.synch_autodiff_results_with_torch._get(context)}
+
+        track = {OUTPUTS: track_torch_outputs_in_results
+                          or self.parameters.track_torch_outputs_in_results._get(context),
+                 TARGETS: track_torch_targets or self.parameters.track_torch_targets._get(context),
+                 LOSSES: track_losses or self.parameters.track_losses._get(context)}
+
+        return super().learn(*args, synch, track, execution_mode=execution_mode, **kwargs)
 
     def _get_execution_mode(self, execution_mode):
         """Parse execution_mode argument and return a valid execution mode for the learn() method
@@ -1326,7 +1339,8 @@ class AutodiffComposition(Composition):
                 runtime_params=None,
                 execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.PyTorch,
                 skip_initialization=False,
-                synchronize_pnl_values=True,
+                synch:Optional[dict]=None,
+                track:Optional[dict]=None,
                 report_output:ReportOutput=ReportOutput.OFF,
                 report_params:ReportOutput=ReportParams.OFF,
                 report_progress:ReportProgress=ReportProgress.OFF,
@@ -1334,7 +1348,8 @@ class AutodiffComposition(Composition):
                 report_to_devices:ReportDevices=None,
                 report=None,
                 report_num=None,
-                ):
+                )->np.ndarray: # <- 7/10/24 FIX: CORRECT?
+
         """Override to execute autodiff_training() in learning mode if execute_mode is not Python"""
 
         if (self._is_learning(context) and execution_mode is not pnlvm.ExecutionMode.PyTorch and
@@ -1375,7 +1390,8 @@ class AutodiffComposition(Composition):
                 self._build_pytorch_representation(context)
                 trained_outputs, all_outputs = self.autodiff_training(inputs=autodiff_inputs,
                                                                       targets=autodiff_targets,
-                                                                      synchronize_pnl_values=True,
+                                                                      synch=synch,
+                                                                      track=track,
                                                                       context=context,
                                                                       scheduler=scheduler)
 

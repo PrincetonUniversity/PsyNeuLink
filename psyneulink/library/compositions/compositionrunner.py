@@ -9,12 +9,13 @@
 # ********************************************* AutodiffComposition *************************************************
 
 import numpy as np
+from typing import Optional
 
 from psyneulink.core.llvm import ExecutionMode
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.compositions.report import Report, ReportProgress, ReportDevices, LEARN_REPORT, PROGRESS_REPORT
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
-from psyneulink.core.globals.keywords import OBJECTIVE_MECHANISM, TRAINING_SET
+from psyneulink.core.globals.keywords import OBJECTIVE_MECHANISM, TRAINING_SET, WEIGHTS
 from psyneulink.core.globals.parameters import copy_parameter_value
 from inspect import isgeneratorfunction
 
@@ -51,6 +52,8 @@ class CompositionRunner():
                       batch_size: int = 1,
                       optimizations_per_minibatch: int = 1,
                       randomize: bool = True,
+                      synch:Optional[dict] = None,
+                      track:Optional[dict] = None,
                       call_before_minibatch=None,
                       call_after_minibatch=None,
                       early_stopper=None,
@@ -86,7 +89,7 @@ class CompositionRunner():
                         # Update weights if in PyTorch execution_mode;
                         #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
                         if execution_mode is ExecutionMode.PyTorch:
-                            self._composition._update_learning_parameters(rep_idx, context)
+                            self._composition._update_learning_parameters(rep_idx, synch, track, context)
 
                     if call_after_minibatch:
                         try:
@@ -117,6 +120,8 @@ class CompositionRunner():
                                epochs: int,
                                num_trials: int,
                                batch_size: int = 1,
+                               synch:Optional[dict] = None,
+                               track:Optional[dict] = None,
                                call_before_minibatch=None,
                                call_after_minibatch=None,
                                early_stopper=None,
@@ -154,7 +159,7 @@ class CompositionRunner():
                     # Update weights if in PyTorch execution_mode;
                     #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
                     if execution_mode is ExecutionMode.PyTorch:
-                        self._composition._update_learning_parameters(None, context)
+                        self._composition._update_learning_parameters(None, synch, track, context)
                 else:
                     break
 
@@ -175,11 +180,13 @@ class CompositionRunner():
                      patience: int = None,
                      min_delta: int = 0,
                      randomize_minibatches: bool = True,
+                     synch:Optional[dict] = None,
+                     track:Optional[dict] = None,
                      call_before_minibatch = None,
                      call_after_minibatch = None,
                      context=None,
                      execution_mode:ExecutionMode = ExecutionMode.Python,
-                     **kwargs):
+                     **kwargs)->np.ndarray:
         """
         Runs the composition repeatedly with the specified parameters.
 
@@ -258,10 +265,12 @@ class CompositionRunner():
                 early_stopper = EarlyStopping(min_delta=min_delta, patience=patience)
 
             if callable(stim_input) and not isgeneratorfunction(stim_input):
-                minibatched_input = self._batch_function_inputs(stim_input,
-                                                                stim_epoch,
-                                                                num_trials,
-                                                                minibatch_size,
+                minibatched_input = self._batch_function_inputs(stim_input=stim_input,
+                                                                stim_epoch=stim_epoch,
+                                                                num_trials=num_trials,
+                                                                minibatch_size=minibatch_size,
+                                                                synch=synch,
+                                                                track=track,
                                                                 call_before_minibatch=call_before_minibatch,
                                                                 call_after_minibatch=call_after_minibatch,
                                                                 early_stopper=early_stopper,
@@ -274,6 +283,8 @@ class CompositionRunner():
                                                        batch_size=minibatch_size,
                                                        optimizations_per_minibatch=optimizations_per_minibatch,
                                                        randomize=randomize_minibatches,
+                                                       synch=synch,
+                                                       track=track,
                                                        call_before_minibatch=call_before_minibatch,
                                                        call_after_minibatch=call_after_minibatch,
                                                        early_stopper=early_stopper,
