@@ -347,7 +347,7 @@ from psyneulink.core.compositions.report import (ReportOutput, ReportParams, Rep
                                                  ReportDevices, EXECUTE_REPORT, LEARN_REPORT, PROGRESS_REPORT)
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context, CONTEXT
 from psyneulink.core.globals.keywords import (AUTODIFF_COMPOSITION, CPU, CUDA, EPOCH, LearningScale,
-                                              LEARNING_SCALE, LEARNING_SCALE_NAMES, LEARNING_SCALE_VALUES,
+                                              LEARNING_SCALE_LITERALS, LEARNING_SCALE_NAMES, LEARNING_SCALE_VALUES,
                                               Loss, MINIBATCH, MPS, OPTIMIZATION_STEP, RUN, SOFT_CLAMP, TRIAL)
 from psyneulink.core.globals.utilities import is_numeric_scalar, get_torch_tensor
 from psyneulink.core.scheduling.scheduler import Scheduler
@@ -1209,12 +1209,12 @@ class AutodiffComposition(Composition):
     @handle_external_context()
     def learn(self,
               *args, 
-              synch_projection_matrices_with_torch:Optional[Literal[OPTIMIZATION_STEP,TRIAL,MINIBATCH,EPOCH,RUN]]=None,
-              synch_mech_values_with_torch:Optional[Literal[OPTIMIZATION_STEP,TRIAL,MINIBATCH,EPOCH,RUN]]=None,
-              synch_autodiff_results_with_torch:Optional[Literal[OPTIMIZATION_STEP,TRIAL,MINIBATCH,EPOCH,RUN]]=None,
-              track_torch_outputs_in_results:Optional[Literal[OPTIMIZATION_STEP,TRIAL,MINIBATCH,EPOCH,RUN]]=None,
-              track_torch_targets:Optional[Literal[OPTIMIZATION_STEP,TRIAL,MINIBATCH,EPOCH,RUN]]=None,
-              track_losses:Optional[Literal[OPTIMIZATION_STEP,TRIAL,MINIBATCH,EPOCH,RUN]]=None,
+              synch_projection_matrices_with_torch:Optional[LEARNING_SCALE_LITERALS]=None,
+              synch_mech_values_with_torch:Optional[LEARNING_SCALE_LITERALS]=None,
+              synch_autodiff_results_with_torch:Optional[LEARNING_SCALE_LITERALS]=None,
+              track_torch_outputs_in_results:Optional[LEARNING_SCALE_LITERALS]=None,
+              track_torch_targets:Optional[LEARNING_SCALE_LITERALS]=None,
+              track_losses:Optional[LEARNING_SCALE_LITERALS]=None,
               **kwargs):
 
         context = kwargs.pop(CONTEXT)
