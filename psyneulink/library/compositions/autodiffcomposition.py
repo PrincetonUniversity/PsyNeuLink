@@ -1224,7 +1224,7 @@ class AutodiffComposition(Composition):
 
     @handle_external_context()
     def learn(self,
-              *args, 
+              *args,
               synch_projection_matrices_with_torch:Optional[LEARNING_SCALE_LITERALS]=None,
               synch_mech_values_with_torch:Optional[LEARNING_SCALE_LITERALS]=None,
               synch_autodiff_results_with_torch:Optional[LEARNING_SCALE_LITERALS]=None,
