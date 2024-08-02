@@ -10,12 +10,13 @@
 
 import numpy as np
 from typing import Optional
+from types import GeneratorType
 
 from psyneulink.core.llvm import ExecutionMode
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.compositions.report import Report, ReportProgress, ReportDevices, LEARN_REPORT, PROGRESS_REPORT
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
-from psyneulink.core.globals.keywords import OBJECTIVE_MECHANISM, TRAINING_SET, WEIGHTS
+from psyneulink.core.globals.keywords import EPOCH, OBJECTIVE_MECHANISM, RUN, TRAINING_SET, WEIGHTS
 from psyneulink.core.globals.parameters import copy_parameter_value
 from inspect import isgeneratorfunction
 
@@ -58,7 +59,7 @@ class CompositionRunner():
                       call_after_minibatch=None,
                       early_stopper=None,
                       execution_mode:ExecutionMode=ExecutionMode.Python,
-                      context=None):
+                      context=None)->GeneratorType:
         """
         Chunks input dict into pieces where each chunk is a dict with values of length batch_size
         (or for the last chunk, the remainder)
@@ -111,9 +112,12 @@ class CompositionRunner():
                 # end early if patience exceeded
                 pass
 
-        if context._composition.synch_projection_matrices_with_torch == 'RUN':
-            pytorch_rep = self._composition.parameters.pytorch_representation._get(context=context)
-            pytorch_rep.copy_weights_to_psyneulink(context)
+        # # MODIFIED 7/10/24 OLD:
+        # FIX: REPLACE WITH == EPOCH??
+        # if context._composition.synch_projection_matrices_with_torch == 'RUN':
+        #     pytorch_rep = self._composition.parameters.pytorch_representation._get(context=context)
+        #     pytorch_rep.copy_weights_to_psyneulink(context)
+        # MODIFIED 7/10/24 END
 
     def _batch_function_inputs(self,
                                inputs: dict,
@@ -126,7 +130,7 @@ class CompositionRunner():
                                call_after_minibatch=None,
                                early_stopper=None,
                                execution_mode:ExecutionMode=ExecutionMode.Python,
-                               context=None):
+                               context=None)->GeneratorType:
 
         assert early_stopper is None or not self._is_llvm_mode, "Early stopper doesn't work in compiled mode"
         assert call_before_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
@@ -311,12 +315,20 @@ class CompositionRunner():
                                   **kwargs)
             skip_initialization = True
 
+            if synch[WEIGHTS] == EPOCH:
+                self._composition.pytorch_representation.copy_weights_to_psyneulink(context)
+
         num_epoch_results = num_trials // minibatch_size # number of results expected from final epoch
         # return self._composition.parameters.results.get(context)[-1 * num_epoch_results:]
         # assign results from last *epoch* to learning_results
         self._composition.parameters.learning_results._set(
             self._composition.parameters.results.get(context)[-1 * num_epoch_results:], context)
         # return result of last *trial* (as usual for a call to run)
+
+        if synch[WEIGHTS] == RUN:
+            # Copy weights at end of learning run
+            self._composition.pytorch_representation.copy_weights_to_psyneulink(context)
+
         return self._composition.parameters.results.get(context)[-1]
 
 class EarlyStopping(object):

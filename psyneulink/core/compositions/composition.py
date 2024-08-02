@@ -10914,7 +10914,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             context=None,
             base_context=Context(execution_id=None),
             **kwargs
-            ):
+            )->list:
         """Pass inputs to Composition, then execute sets of nodes that are eligible to run until termination
         conditions are met.
 
@@ -11601,14 +11601,6 @@ _
                 Any reduction less than this value is considered to be a bad epoch.
                 Used for early stopping of training, in combination with `patience`.
 
-            COMMENT:
-            synchronize_pnl_values : bool : default True
-                specifies whether to synchronize the `values <Mechanism_Base.value>` of the `Mechanisms <Mechanism>`
-                in the PsyNeuLink Composition with the corresponding modules of the PyTorch implementation after each
-                forward pass when an `AutodiffComposition` is used is executed in ``PyTorch mode
-                <AutodiffComposition_PyTorch>`.
-            COMMENT
-
             scheduler : Scheduler
                 the scheduler object that owns the conditions that will instruct the execution of the Composition
                 If not specified, the Composition will use its automatically generated scheduler.
@@ -11688,7 +11680,6 @@ _
                                          self.parameters.optimizations_per_minibatch._get(context)),
             patience=patience,
             min_delta=min_delta,
-            # synchronize_pnl_values=synchronize_pnl_values,
             randomize_minibatches=randomize_minibatches,
             synch=synch,
             track=track,
@@ -11787,7 +11778,7 @@ _
             report_to_devices:ReportDevices=None,
             report=None,
             report_num=None
-            )->list:  # <- 7/10/24 FIX: CORRECT?
+            )->np.ndarray:
         """
             Passes inputs to any `Nodes <Composition_Nodes>` receiving inputs directly from the user (via the "inputs"
             argument) then coordinates with the `Scheduler` to execute sets of Nodes that are eligible to execute until
@@ -11869,7 +11860,7 @@ _
 
             Returns
             ---------
-            output_values : List
+            output_values : np.ndarray
             These are the values of the Composition's output_CIM.output_ports, excluding those the source of which
             are from a (potentially nested) Node with NodeRole.PROBE in its enclosing Composition.
         """
