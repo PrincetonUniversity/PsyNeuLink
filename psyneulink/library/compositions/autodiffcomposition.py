@@ -348,7 +348,7 @@ from psyneulink.core.compositions.report import (ReportOutput, ReportParams, Rep
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context, CONTEXT
 from psyneulink.core.globals.keywords import (AUTODIFF_COMPOSITION, CPU, CUDA, EPOCH, LearningScale,
                                               LEARNING_SCALE, LEARNING_SCALE_NAMES, LEARNING_SCALE_VALUES,
-                                              Loss, MINIBATCH, MPS, OPTIMIZATION_STEP, RUN, SOFT_CLAMP)
+                                              Loss, MINIBATCH, MPS, OPTIMIZATION_STEP, RUN, SOFT_CLAMP, TRIAL)
 from psyneulink.core.globals.utilities import is_numeric_scalar, get_torch_tensor
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
@@ -551,6 +551,7 @@ class AutodiffComposition(Composition):
         pytorch_representation = None
         optimizer = None
         learning_rate = Parameter(.001, fallback_default=True)
+        optimizations_per_minibatch = Parameter(1, fallback_default=True)
         synch_projection_matrices_with_torch = Parameter(RUN, fallback_default=True)
         synch_mech_values_with_torch = Parameter(RUN, fallback_default=True)
         synch_autodiff_results_with_torch = Parameter(RUN, fallback_default=True)
@@ -1106,7 +1107,7 @@ class AutodiffComposition(Composition):
         if context._composition.synch_projection_matrices_with_torch == 'OPTIMIZATION_STEP':
             # pytorch_rep.detach_all()  # FIX: <- IS THIS NEEDED ONLY WHEN WRITING TO PNL OR BY PYTORCH?
             pytorch_rep.copy_weights_to_psyneulink(context)
-        elif (context._composition.synch_projection_matrices_with_torch == LearningScale.MINIBATCH
+        elif (context._composition.synch_projection_matrices_with_torch == MINIBATCH
               and (optimization_rep is None
                    or not (optimization_rep + 1) % context.composition._optimizations_per_minibatch)):
             # pytorch_rep.detach_all()
@@ -1212,9 +1213,38 @@ class AutodiffComposition(Composition):
               synch_mech_values_with_torch = None,
               synch_autodiff_results_with_torch = None,
               track_torch_outputs_in_results = None,
-              track_torch_targets = None,            
+              track_torch_targets = None,
               track_losses = None,
               **kwargs):
+
+        if track_torch_outputs_in_results == TRIAL:
+            if self.minibatch_size == 1:
+                track_torch_outputs_in_results = MINIBATCH
+            else:
+                raise warnings.warn(f"The 'track_torch_outputs_in_results' arg in the learn() method for '{self.name}' "
+                                    f"is specifed as 'TRIAL' but 'minibatch_size` ({self.minibatch_sie}) != 1, "
+                                    f"so unexpected results may occur; should use 'MINIBATCH' or another "
+                                    f"LearningScale keyword.")
+
+        if track_torch_targets == TRIAL:
+            if self.minibatch_size == 1:
+                track_torch_targets = MINIBATCH
+            else:
+                raise warnings.warn(f"The 'track_torch_targets' arg in the learn() method for '{self.name}' "
+                                    f"is specifed as 'TRIAL' but 'minibatch_size` ({self.minibatch_sie}) != 1, "
+                                    f"so unexpected results may occur; should use 'MINIBATCH' or another "
+                                    f"LearningScale keyword.")
+
+        if track_losses == TRIAL:
+            if self.minibatch_size == 1:
+                track_losses = MINIBATCH
+            else:
+                raise warnings.warn(f"The 'track_losses' arg in the learn() method for '{self.name}' is specifed "
+                                    f"as 'TRIAL' but 'minibatch_size` ({self.minibatch_sie}) != 1, "
+                                    f"so unexpected results may occur; should use 'MINIBATCH' or another "
+                                    f"LearningScale keyword.")
+
+
         execution_phase_at_entry = kwargs[CONTEXT].execution_phase
         kwargs[CONTEXT].execution_phase = ContextFlags.PREPARING
 
@@ -1241,7 +1271,14 @@ class AutodiffComposition(Composition):
             self.infer_backpropagation_learning_pathways(execution_mode, context=kwargs[CONTEXT])
             self._built_pathways = True
 
-        return super().learn(*args, execution_mode=execution_mode, **kwargs)
+        return super().learn(*args,
+                             synch_projection_matrices_with_torch=synch_projection_matrices_with_torch,
+                             synch_mech_values_with_torch=synch_mech_values_with_torch,
+                             synch_autodiff_results_with_torch=synch_autodiff_results_with_torch,
+                             track_torch_outputs_in_results=track_torch_outputs_in_results,
+                             track_torch_targets=track_torch_targets,
+                             track_losses=track_losses,
+                             execution_mode=execution_mode, **kwargs)
 
     def _get_execution_mode(self, execution_mode):
         """Parse execution_mode argument and return a valid execution mode for the learn() method

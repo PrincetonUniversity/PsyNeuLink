@@ -62,7 +62,7 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         if node is self.storage_node:
             # Only execute store after last optimization repetition for current mini-batch
             # 7/10/24:  FIX: MOVE PASSING OF THESE PARAMETERS TO context
-            if not (optimization_rep + 1) % context.composition._optimizations_per_minibatch:
+            if not (optimization_rep + 1) % context.composition.parameters.optimizations_per_minibatch.get(context):
                 self.store_memory(variable, context)
         else:
             super().execute_node(node, variable, optimization_rep, context)

@@ -3504,6 +3504,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         include_probes_in_output=False     \
         disable_learning=False,            \
         learning_rate=None,                \
+        minibatch_size=1,                  \
+        optimizations_per_minibatch=1,     \
         controller=None,                   \
         enable_controller=None,            \
         controller_mode=AFTER,             \
@@ -3570,6 +3572,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         specifies the learning_rate to be used by `LearningMechanisms <LearningMechanism>` in the Composition
         that do not have their own `learning_rate <LearningMechanism.learning_rate>` otherwise specified
         (see `Composition_Learning_Rate` for additional details).
+
+    minibatch_size : int : default 1
+        specifies the default for the Composition for the number of distinct inputs from the training set used to
+        compute the `error_signal <LearningMechanism.error_signal>` in one step of learning; it can be overridden by
+        specifying the **minibatch_size** argument in the `learn <Composition.learn>` method (see `minibatch_size
+        <Composition.minibatch_size>` for additional details.
+
+    optimizations_per_minibatch : int : default 1
+        specifies the default for the Composition for the number of repetitions of each stimulus in the training set
+        is used to compute the `error_signal <LearningMechanism.error_signal>` for a given `minibatch
+        <LearningScale.MINIBATCH>`; it can be overridden by specifying the **minibatch_size** argument in the `learn
+        <Composition.learn>` method (see `optimizations_per_minibatch <Composition.optimizations_per_minibatch>` for
+        additional details.
 
     controller : `OptimizationControlMechanism` : default None
         specifies the `OptimizationControlMechanism` to use as the `Composition's controller
@@ -3842,6 +3857,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <LearningMechanism.learning_rate>` Parameter of a LearningMechanism (see `Composition_Learning_Rate` for
         additional details).
 
+    minibatch_size : int
+        determines the number of input stimuli from the training set used to compute the `error_signal
+        <LearningMechanism.error_signal>` in one gradient step of learning.
+
+    optimizations_per_minibatch : int
+        determines the number of repetitions of each stimulus in the training set used to compute ana
+        `error_signal <LearningMechanism.error_signal>` (gradient step) for learning (see `minibatch
+        <LearningScale.MINIBATCH>`).
+
     learning_components : list[list]
         a list of the learning-related components in the Composition, all or many of which may have been
         created automatically in a call to one of its `add_<*learning_type*>_pathway' methods (see
@@ -3936,6 +3960,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     :default value: []
                     :type: ``list``
 
+                minibatch_size
+                    see `minibatch_size <Composition.minibatch_size>`
+
+                    :default value: 1
+                    :type: ``int``
+
+                optimizations_per_minibatch
+                    see `optimizations_per_minibatch <Composition.optimizations_per_minibatch>`
+
+                    :default value: 1
+                    :type: ``int``
+
                 results
                     see `results <Composition.results>`
 
@@ -3954,12 +3990,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     :default value: []
                     :type: ``list``
         """
+        minibatch_size = Parameter(1, modulable=True)
+        optimizations_per_minibatch = Parameter(1, modulable=True)
         results = Parameter([], loggable=False, pnl_internal=True)
         learning_results = Parameter([], loggable=False, pnl_internal=True)
         simulation_results = Parameter([], loggable=False, pnl_internal=True)
         retain_old_simulation_data = Parameter(False, stateful=False, loggable=False, pnl_internal=True)
         input_specification = Parameter(None, stateful=False, loggable=False, pnl_internal=True)
         value = Parameter(NotImplemented, read_only=True)  # replaces deletion in constructor below
+
+        def _validate_minibatch_size(self, minibatch_size):
+            if minibatch_size < 1:
+                raise CompositionError(f"`minibatch_size` ({minibatch_size}) must an int greater than or equal to 1.")
+
+        def _validate_optimizations_per_minibatch(self, optimizations_per_minibatch):
+            if optimizations_per_minibatch < 1:
+                raise CompositionError(f"`optimizations_per_minibatch` ({optimizations_per_minibatch}) "
+                                       f"must an int greater than or equal to 1.")
 
     class _CompilationData(ParametersBase):
         execution = None
@@ -3974,6 +4021,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             include_probes_in_output: bool = False,
             disable_learning: bool = False,
             learning_rate:Optional[Union[float, int]] = None,
+            minibatch_size:int = 1,
+            optimizations_per_minibatch:int = 1,
             controller: ControlMechanism = None,
             enable_controller=None,
             controller_mode: Literal['before', 'after'] = 'after',
@@ -4059,6 +4108,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._initialize_parameters(
             **param_defaults,
+            minibatch_size=minibatch_size,
+            optimizations_per_minibatch=optimizations_per_minibatch,
             retain_old_simulation_data=retain_old_simulation_data,
             context=context
         )
@@ -11463,17 +11514,10 @@ _
             num_trials: Optional[int] = None,
             epochs: int = 1,
             learning_rate: Optional[Union[int,float]]=None,
-            minibatch_size: int = 1,
-            optimizations_per_minibatch: int = 1,
-            # MODIFIED 7/10/24 OLD:
-            # synch_projection_matrices_with_torch:str = 'MINIBATCH',
-            # synch_mech_values_with_torch:str = 'MINIBATCH',
-            # synch_autodiff_results_with_torch:str = 'MINIBATCH',
-            # track_torch_targets:str = 'MINIBATCH',
-            # MODIFIED 7/10/24 END
+            minibatch_size:Optional[int]=None,
+            optimizations_per_minibatch:Optional[int]=None,
             patience: Optional[int] = None,
             min_delta: int = 0,
-            synchronize_pnl_values: bool = True,
             context: Optional[Context] = None,
             execution_mode: pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
             randomize_minibatches=False,
@@ -11526,12 +11570,15 @@ _
                 the learn method (see `Composition_Learning_Rate` for additional details).
 
             minibatch_size : int (default=1)
-                specifies the size of the minibatches to use. The input trials will be batched and run, after which
-                learning mechanisms with learning mode TRIAL will update weights
+                specifies the number of inputs used to calculate the `error_signal <LearningMechanism.error_signal>`
+                for one step (gradient update) of learning, after which LearningMechanisms with learning mode TRIAL
+                will update the `matrix <MappingProjection.matrix>` parameter of the `MappingProjection` for which
+                they are responsible; this overrides the Composition's default value.
 
             optimizations_per_minibatch : int (default=1)
-                specified the number of executions and weight updates of learnable pathways are carried out for
-                each set of stimuli in a minibatch.
+                specifies the number of executions and weight updates of learnable pathways that are carried out for
+                each set of stimuli in a `minibatch <LearningScale.MINIBATCH>`; this overrides the Composition's
+                default value.
 
                 .. hint::
                    This can be used to implement the `backprop-to-activation proceedure
@@ -11541,7 +11588,7 @@ _
                    downstream purpose.
 
             randomize_minibatch: bool (default=False)
-                specifies whether the order of the input trials should be randomized on each epoch
+                specifies whether the order of the input trials should be randomized in each epoch
 
             patience : int or None (default=None)
                 used for early stopping of training; If a model has more than `patience` bad consecutive epochs,
@@ -11552,11 +11599,13 @@ _
                 Any reduction less than this value is considered to be a bad epoch.
                 Used for early stopping of training, in combination with `patience`.
 
+            COMMENT:
             synchronize_pnl_values : bool : default True
                 specifies whether to synchronize the `values <Mechanism_Base.value>` of the `Mechanisms <Mechanism>`
                 in the PsyNeuLink Composition with the corresponding modules of the PyTorch implementation after each
                 forward pass when an `AutodiffComposition` is used is executed in ``PyTorch mode
                 <AutodiffComposition_PyTorch>`.
+            COMMENT
 
             scheduler : Scheduler
                 the scheduler object that owns the conditions that will instruct the execution of the Composition
@@ -11614,21 +11663,13 @@ _
             warnings.warn(f"learn() method called on '{self.name}', but it has no learning components; "
                           f"it will be run but no learning will occur.")
 
+        # Prepare graph and context for learning
         context.add_flag(ContextFlags.LEARNING_MODE)
-
         execution_phase_at_entry = context.execution_phase
         context.execution_phase=ContextFlags.PREPARING
-
         self._analyze_graph()
         self._check_nested_target_mechs()
-
         context.execution_phase = execution_phase_at_entry
-
-        self._optimizations_per_minibatch = optimizations_per_minibatch
-        self.synch_projection_matrices_with_torch = synch_projection_matrices_with_torch
-        self.synch_mech_values_with_torch:str = synch_mech_values_with_torch
-        self.synch_autodiff_results_with_torch:str = synch_autodiff_results_with_torch
-        self.track_torch_targets:str = track_torch_targets
 
         result = runner.run_learning(
             inputs=inputs,
@@ -11636,11 +11677,12 @@ _
             num_trials=num_trials,
             epochs=epochs,
             learning_rate=learning_rate,
-            minibatch_size=minibatch_size,
-            optimizations_per_minibatch=optimizations_per_minibatch,
+            minibatch_size=minibatch_size or self.parameters.minibatch_size._get(context),
+            optimizations_per_minibatch=(optimizations_per_minibatch or
+                                         self.parameters.optimizations_per_minibatch._get(context)),
             patience=patience,
             min_delta=min_delta,
-            synchronize_pnl_values=synchronize_pnl_values,
+            # synchronize_pnl_values=synchronize_pnl_values,
             randomize_minibatches=randomize_minibatches,
             call_before_minibatch=call_before_minibatch,
             call_after_minibatch=call_after_minibatch,

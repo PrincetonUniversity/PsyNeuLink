@@ -325,19 +325,27 @@ class LearningScale:
     ----------
 
     OPTIMIZATION_STEP
-        single step of gradient calculation.
+        a single step of gradient calculation, of which there can be one or more in a `minibatch
+        <LearningScale.minibatch>`, based on a Composition's `mini_batch_size <Composition.mini_batch_size>`
+        Parameter.
 
     MINIBATCH
-        a subset of the training set used to calculate the gradient.
+        a subset of the training set used to calculate an `error_signal <Composition.error_signal>`
+        (i.e. one step along the gradient) used to  and update the weights of a MappingProjection's
+        `matrix <MappingProjection.matrix>` Parameter.
 
     TRIAL
-        identical to MINIBACH when `minibatch_size <Composition.minibatch_size>`= 1; otherwise raises an error.
+        identical to MINIBACH when `minibatch_size <Composition.minibatch_size>`= 1; otherwise a warning is raised,
+        and unanticipated results can occur.
 
     EPOCH
-        a complete pass through the training set.
+        a complete pass through the training set;  the number of gradient calculations and weight updates that occur
+        in an epoch depends on the `mini_batch_size <Composition.mini_batch_size>` and `optimizations_per_minibatch
+        <Composition.optimizations_per_minibatch>` Parameters of the Composition.
 
     RUN
-        a complete execution of the `learn <Composition.learn>` method of the Composition.
+        a complete execution of the `learn <Composition.learn>` method of the Composition, involving
+        `num_epochs <Composition.num_epochs>` epochs.
 
     """
     def __init__(self):
