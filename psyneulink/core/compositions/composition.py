@@ -11518,11 +11518,11 @@ _
             optimizations_per_minibatch:Optional[int]=None,
             patience: Optional[int] = None,
             min_delta: int = 0,
-            context: Optional[Context] = None,
             execution_mode: pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
             randomize_minibatches=False,
             call_before_minibatch=None,
             call_after_minibatch=None,
+            context: Optional[Context] = None,
             *args,
             **kwargs
     ):
