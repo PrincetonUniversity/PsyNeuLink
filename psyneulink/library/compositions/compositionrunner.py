@@ -304,6 +304,8 @@ class CompositionRunner():
                                   num_trials=run_trials,
                                   skip_initialization=skip_initialization,
                                   skip_analyze_graph=True,
+                                  synch=synch,
+                                  track=track,
                                   execution_mode=execution_mode,
                                   context=context,
                                   **kwargs)

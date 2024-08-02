@@ -11421,7 +11421,8 @@ _
                                             skip_initialization=True,
                                             execution_mode=execution_mode,
                                             report=report,
-                                            report_num=report_num
+                                            report_num=report_num,
+                                            **kwargs
                                             )
 
                 assert "AFTER PYTORCH FORWARD PASS"
