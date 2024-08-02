@@ -16,7 +16,7 @@ from psyneulink.core.llvm import ExecutionMode
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.compositions.report import Report, ReportProgress, ReportDevices, LEARN_REPORT, PROGRESS_REPORT
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
-from psyneulink.core.globals.keywords import EPOCH, OBJECTIVE_MECHANISM, RUN, TRAINING_SET, WEIGHTS
+from psyneulink.core.globals.keywords import EPOCH, MINIBATCH, OBJECTIVE_MECHANISM, RUN, TRAINING_SET, WEIGHTS
 from psyneulink.core.globals.parameters import copy_parameter_value
 from inspect import isgeneratorfunction
 
@@ -304,6 +304,7 @@ class CompositionRunner():
             # (Passing num_trials * stim_epoch + 1 works)
             run_trials = num_trials * stim_epoch if self._is_llvm_mode else None
 
+            # IMPLEMENTATION NOTE: for autodiff composition, the following executes an MINIBATCH's worth of training
             self._composition.run(inputs=minibatched_input,
                                   num_trials=run_trials,
                                   skip_initialization=skip_initialization,
@@ -315,7 +316,7 @@ class CompositionRunner():
                                   **kwargs)
             skip_initialization = True
 
-            if synch[WEIGHTS] == EPOCH:
+            if synch[WEIGHTS] == MINIBATCH:
                 self._composition.pytorch_representation.copy_weights_to_psyneulink(context)
 
         num_epoch_results = num_trials // minibatch_size # number of results expected from final epoch
@@ -325,7 +326,7 @@ class CompositionRunner():
             self._composition.parameters.results.get(context)[-1 * num_epoch_results:], context)
         # return result of last *trial* (as usual for a call to run)
 
-        if synch[WEIGHTS] == RUN:
+        if synch[WEIGHTS] == EPOCH:
             # Copy weights at end of learning run
             self._composition.pytorch_representation.copy_weights_to_psyneulink(context)
 

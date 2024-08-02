@@ -11405,7 +11405,7 @@ _
                     break
 
                 # execute processing, passing stimuli for this trial
-                # IMPLEMENTATION NOTE: for autdoiff, the following is the forward pass for the current trial
+                # IMPLEMENTATION NOTE: for autodiff, the following executes the forward pass for the current trial
                 trial_output = self.execute(inputs=execution_stimuli,
                                             scheduler=scheduler,
                                             termination_processing=termination_processing,

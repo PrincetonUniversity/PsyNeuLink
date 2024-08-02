@@ -389,7 +389,7 @@ class AutodiffComposition(Composition):
         learning_rate=0.001,
         disable_learning=False,
         synch_projection_matrices_with_torch=RUN,
-        synch_mech_values_with_torch=RUN,
+        synch_node_values_with_torch=RUN,
         synch_autodiff_results_with_torch=RUN,
         track_torch_outputs_in_results=MINIBATCH,
         track_torch_targets=MINIBATCH,
@@ -429,12 +429,12 @@ class AutodiffComposition(Composition):
         see `synch_projection_matrices_with_torch <AutodiffComposition.synch_projection_matrices_with_torch>`
         for additional details.
 
-    synch_mech_values_with_torch : `LearningScale` : default RUN
+    synch_node_values_with_torch : `LearningScale` : default RUN
         specifies the default for the AutodiffComposition for when to copy the current value of Pytorch nodes to
         PsyNeuLink `value <Mechanism_Base.value>` attribute of the corresponding PsyNeuLink `nodes <Composition_Node>`,
-        which can be overridden by specifying the **synch_mech_values_with_torch** argument in the `learn
-        <Composition.learn>` method; see `synch_mech_values_with_torch
-        <AutodiffComposition.synch_mech_values_with_torch>` for additional details.
+        which can be overridden by specifying the **synch_node_values_with_torch** argument in the `learn
+        <Composition.learn>` method; see `synch_node_values_with_torch
+        <AutodiffComposition.synch_node_values_with_torch>` for additional details.
 
     synch_autodiff_results_with_torch : `LearningScale` : default RUN
         specifies the default for the AutodiffComposition for when to copy the outputs of the Pytorch model to the
@@ -504,7 +504,7 @@ class AutodiffComposition(Composition):
         frequently keeps the PsyNeuLink representation more closely synchronized with parameter updates in Pytorch,
         but slows performance (see `AutodiffComposition_PyTorch_LearningScale` for information about settings).
 
-    synch_mech_values_with_torch : OPTIMIZATION_STEP, MINIBATCH, EPOCH or RUN
+    synch_node_values_with_torch : OPTIMIZATION_STEP, MINIBATCH, EPOCH or RUN
         determines when to copy the current value of Pytorch nodes (modules) to the PsyNeuLink `value
         <Mechanism_Base.value>` attribute of the corresponding PsyNeuLink `nodes <Composition_Node>`, if this is not
         specified in the call to `learn <AutodiffComposition.learn>`. Copying more frequently keeps the PsyNeuLink
@@ -566,7 +566,7 @@ class AutodiffComposition(Composition):
         learning_rate = Parameter(.001, fallback_default=True)
         optimizations_per_minibatch = Parameter(1, fallback_default=True)
         synch_projection_matrices_with_torch = Parameter(RUN, fallback_default=True)
-        synch_mech_values_with_torch = Parameter(RUN, fallback_default=True)
+        synch_node_values_with_torch = Parameter(RUN, fallback_default=True)
         synch_autodiff_results_with_torch = Parameter(RUN, fallback_default=True)
         track_torch_outputs_in_results = Parameter(MINIBATCH, fallback_default=True)
         track_torch_targets = Parameter(MINIBATCH, fallback_default=True)
@@ -588,9 +588,9 @@ class AutodiffComposition(Composition):
                                                f"must be one of the following keywords: "
                                                f"{', '.join(LEARNING_SCALE_NAMES)}")
 
-        def _validate_synch_mech_values_with_torch(self, spec):
+        def _validate_synch_node_values_with_torch(self, spec):
             if not spec in LEARNING_SCALE_VALUES:
-                raise AutodiffCompositionError(f"Value of `synch_mech_values_with_torch` arg "
+                raise AutodiffCompositionError(f"Value of `synch_node_values_with_torch` arg "
                                                f"must be one of the following keywords: "
                                                f"{', '.join(LEARNING_SCALE_NAMES)}")
 
@@ -631,7 +631,7 @@ class AutodiffComposition(Composition):
                  force_no_retain_graph=False,
                  refresh_losses=False,
                  synch_projection_matrices_with_torch:Optional[str]=RUN,
-                 synch_mech_values_with_torch:Optional[str]=RUN,
+                 synch_node_values_with_torch:Optional[str]=RUN,
                  synch_autodiff_results_with_torch:Optional[str]=RUN,
                  track_torch_outputs_in_results:Optional[str]=MINIBATCH,
                  track_torch_targets:Optional[str]=MINIBATCH,
@@ -656,7 +656,7 @@ class AutodiffComposition(Composition):
             learning_rate = learning_rate,
             weight_decay = weight_decay,
             synch_projection_matrices_with_torch = synch_projection_matrices_with_torch,
-            synch_mech_values_with_torch = synch_mech_values_with_torch,
+            synch_node_values_with_torch = synch_node_values_with_torch,
             synch_autodiff_results_with_torch = synch_autodiff_results_with_torch,
             track_torch_outputs_in_results = track_torch_outputs_in_results,
             track_torch_targets = track_torch_targets,
@@ -1134,7 +1134,7 @@ class AutodiffComposition(Composition):
         if synch[WEIGHTS] == OPTIMIZATION_STEP:
             # Copy weights for every optimization step within the minibatch
             pytorch_rep.copy_weights_to_psyneulink(context)
-        elif (synch[WEIGHTS] == MINIBATCH
+        elif (synch[WEIGHTS] == TRIAL
               and (optimization_rep is None or not (optimization_rep + 1) % optimizations_per_minibatch)):
             # Copy weights only at the end of the optimizations for a given minibatch
             pytorch_rep.copy_weights_to_psyneulink(context)
@@ -1235,7 +1235,7 @@ class AutodiffComposition(Composition):
     def learn(self,
               *args,
               synch_projection_matrices_with_torch:Optional[LEARNING_SCALE_LITERALS]=None,
-              synch_mech_values_with_torch:Optional[LEARNING_SCALE_LITERALS]=None,
+              synch_node_values_with_torch:Optional[LEARNING_SCALE_LITERALS]=None,
               synch_autodiff_results_with_torch:Optional[LEARNING_SCALE_LITERALS]=None,
               track_torch_outputs_in_results:Optional[LEARNING_SCALE_LITERALS]=None,
               track_torch_targets:Optional[LEARNING_SCALE_LITERALS]=None,
@@ -1297,10 +1297,11 @@ class AutodiffComposition(Composition):
             self.infer_backpropagation_learning_pathways(execution_mode, context=context)
             self._built_pathways = True
 
+        # Consolidate the options for synching and tracking into dictionaries as arguments to learning and exec methods
         synch = {WEIGHTS: synch_projection_matrices_with_torch
                           or self.parameters.synch_projection_matrices_with_torch._get(context),
-                 VALUES: synch_mech_values_with_torch
-                         or self.parameters.synch_mech_values_with_torch._get(context),
+                 VALUES: synch_node_values_with_torch
+                         or self.parameters.synch_node_values_with_torch._get(context),
                  RESULTS: synch_autodiff_results_with_torch
                           or self.parameters.synch_autodiff_results_with_torch._get(context)}
 
@@ -1395,6 +1396,7 @@ class AutodiffComposition(Composition):
                        context=context)
 
                 self._build_pytorch_representation(context)
+                # IMPLEMENTATION NOTE: for autodiff, the following executes an EPOCH's worth of training
                 trained_outputs, all_outputs = self.autodiff_training(inputs=autodiff_inputs,
                                                                       targets=autodiff_targets,
                                                                       synch=synch,
