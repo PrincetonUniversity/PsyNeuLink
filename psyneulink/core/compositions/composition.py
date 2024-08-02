@@ -11490,7 +11490,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Construct input_dict from input_nodes of self
         for INPUT_Node in input_nodes:
 
-            if not inputs:
+            if inputs is None:
                 input_dict[INPUT_Node] = [INPUT_Node.external_input_shape]
                 continue
 
@@ -11848,7 +11848,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         The number of inputs sets included in the input
         """
         # handle user-provided input based on input type. return processd inputs and num_inputs_sets
-        if not inputs:
+        if inputs is None:
             _inputs, num_inputs_sets = self._parse_input_dict({})
         elif isgeneratorfunction(inputs):
             _inputs, num_inputs_sets = self._parse_generator_function(inputs)
