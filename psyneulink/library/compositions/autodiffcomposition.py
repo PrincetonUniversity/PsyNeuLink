@@ -1224,32 +1224,22 @@ class AutodiffComposition(Composition):
 
         context = kwargs[CONTEXT]
 
-        if track_torch_outputs_in_results == TRIAL:
-            if self.minibatch_size == 1:
-                track_torch_outputs_in_results = MINIBATCH
-            else:
-                raise warnings.warn(f"The 'track_torch_outputs_in_results' arg in the learn() method for '{self.name}' "
-                                    f"is specifed as 'TRIAL' but 'minibatch_size` ({self.minibatch_sie}) != 1, "
-                                    f"so unexpected results may occur; should use 'MINIBATCH' or another "
-                                    f"LearningScale keyword.")
-
-        if track_torch_targets == TRIAL:
-            if self.minibatch_size == 1:
-                track_torch_targets = MINIBATCH
-            else:
-                raise warnings.warn(f"The 'track_torch_targets' arg in the learn() method for '{self.name}' "
-                                    f"is specifed as 'TRIAL' but 'minibatch_size` ({self.minibatch_sie}) != 1, "
-                                    f"so unexpected results may occur; should use 'MINIBATCH' or another "
-                                    f"LearningScale keyword.")
-
-        if track_losses == TRIAL:
-            if self.minibatch_size == 1:
-                track_losses = MINIBATCH
-            else:
-                raise warnings.warn(f"The 'track_losses' arg in the learn() method for '{self.name}' is specifed "
-                                    f"as 'TRIAL' but 'minibatch_size` ({self.minibatch_sie}) != 1, "
-                                    f"so unexpected results may occur; should use 'MINIBATCH' or another "
-                                    f"LearningScale keyword.")
+        if self.minibatch_size > 1:
+            args_str = []
+            if track_torch_outputs_in_results in {OPTIMIZATION_STEP, TRIAL}:
+                args_str.append('track_torch_outputs_in_results')
+            if track_losses in {OPTIMIZATION_STEP,TRIAL}:
+                args_str.append('track_losses')
+            if track_torch_targets in {OPTIMIZATION_STEP,TRIAL}:
+                args_str.append('track_torch_targets')
+            if args_str:
+                arg_args = 'args' if len(args_str) == 1 else 'arg'
+                is_are = 'is' if len(args_str) == 1 else 'are'
+                error_msg = (f"The {' ,'.join(args_str)} {arg_args} in the learn() method for '{self.name}' "
+                             f"{is_are} specifed as 'OPTIMIZATION' or 'TRIAL', but 'minibatch_size` "
+                             f"({self.minibatch_size}) != 1, so {', '.join([arg.split('_')[-1] for arg in args_str])} "
+                             f"will be updated only at the end of a minibatch; "
+                             f"use 'MINIBATCH' for the {arg_args} to avoid this warning.")
 
         execution_phase_at_entry = context.execution_phase
         context.execution_phase = ContextFlags.PREPARING
