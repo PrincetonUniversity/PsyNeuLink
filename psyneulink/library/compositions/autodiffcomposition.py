@@ -1235,11 +1235,12 @@ class AutodiffComposition(Composition):
             if args_str:
                 arg_args = 'args' if len(args_str) == 1 else 'arg'
                 is_are = 'is' if len(args_str) == 1 else 'are'
-                error_msg = (f"The {' ,'.join(args_str)} {arg_args} in the learn() method for '{self.name}' "
-                             f"{is_are} specifed as 'OPTIMIZATION' or 'TRIAL', but 'minibatch_size` "
-                             f"({self.minibatch_size}) != 1, so {', '.join([arg.split('_')[-1] for arg in args_str])} "
-                             f"will be updated only at the end of a minibatch; "
-                             f"use 'MINIBATCH' for the {arg_args} to avoid this warning.")
+                raise AutodiffCompositionError(f"The {' ,'.join(args_str)} {arg_args} in the learn() method for "
+                                               f"'{self.name}' {is_are} specifed as 'OPTIMIZATION' or 'TRIAL', but "
+                                               f"'minibatch_size` ({self.minibatch_size}) != 1, so "
+                                               f"{', '.join([arg.split('_')[-1] for arg in args_str])} "
+                                               f"will be updated only at the end of a minibatch; "
+                                               f"use 'MINIBATCH' for the {arg_args} to avoid this warning.")
 
         execution_phase_at_entry = context.execution_phase
         context.execution_phase = ContextFlags.PREPARING
