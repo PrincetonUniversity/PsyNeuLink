@@ -2470,6 +2470,6 @@ class EMComposition(AutodiffComposition):
             raise EMCompositionError(f"EMComposition does not support learning with 'concatenate_keys'=True.")
         super().infer_backpropagation_learning_pathways(execution_mode, context=context)
 
-    def _update_learning_parameters(self, optimization_rep, synch, track, context):
+    def _update_learning_parameters(self, optimization_rep, optimizations_per_minibatch, synch, track, context):
         # 7/10/24 - MAKE THIS CONTEXT DEPENDENT:  CALL super() IF BEING EXECUTED ON ITS OWN?
         pass

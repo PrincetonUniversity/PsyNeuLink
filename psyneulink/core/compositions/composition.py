@@ -11378,8 +11378,13 @@ _
                    content='run_start',
                    context=context)
 
+            self.TRIAL_NUM = -1
+
             # Loop over the length of the list of inputs - each input represents a TRIAL
             for trial_num in range(num_trials):
+
+                # 7/10/24 - FIX: FOR DEBUGGING ONLY - REMOVE WHEN DONE
+                self.TRIAL_NUM = trial_num
 
                 # Execute call before trial "hook" (user defined function)
                 if call_before_trial:
@@ -11405,7 +11410,7 @@ _
                     break
 
                 # execute processing, passing stimuli for this trial
-                # IMPLEMENTATION NOTE: for autodiff, the following executes the forward pass for the current trial
+                # IMPLEMENTATION NOTE: for autodiff, the following executes the forward pass for a single input
                 trial_output = self.execute(inputs=execution_stimuli,
                                             scheduler=scheduler,
                                             termination_processing=termination_processing,
@@ -11424,8 +11429,6 @@ _
                                             report_num=report_num,
                                             **kwargs
                                             )
-
-                assert "AFTER PYTORCH FORWARD PASS"
 
                 # ---------------------------------------------------------------------------------
                 # store the result of this execution in case it will be the final result
@@ -12863,7 +12866,7 @@ _
         else:
             return {k:np.array(v).tolist() for k,v in result_set}
 
-    def _update_learning_parameters(self, optimization_rep, synch, track, context):
+    def _update_learning_parameters(self, optimization_rep, optimizations_per_minibatch, synch, track, context):
         pass
 
     @handle_external_context(fallback_most_recent=True)

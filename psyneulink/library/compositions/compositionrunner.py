@@ -90,7 +90,11 @@ class CompositionRunner():
                         # Update weights if in PyTorch execution_mode;
                         #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
                         if execution_mode is ExecutionMode.PyTorch:
-                            self._composition._update_learning_parameters(rep_idx, synch, track, context)
+                            self._composition._update_learning_parameters(rep_idx,
+                                                                          optimizations_per_minibatch,
+                                                                          synch,
+                                                                          track,
+                                                                          context)
 
                     if call_after_minibatch:
                         try:
@@ -124,6 +128,7 @@ class CompositionRunner():
                                epochs: int,
                                num_trials: int,
                                batch_size: int = 1,
+                               optimizations_per_minibatch: int = 1,
                                synch:Optional[dict] = None,
                                track:Optional[dict] = None,
                                call_before_minibatch=None,
@@ -163,7 +168,11 @@ class CompositionRunner():
                     # Update weights if in PyTorch execution_mode;
                     #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
                     if execution_mode is ExecutionMode.PyTorch:
-                        self._composition._update_learning_parameters(None, synch, track, context)
+                        self._composition._update_learning_parameters(None,
+                                                                      optimizations_per_minibatch,
+                                                                      synch,
+                                                                      track,
+                                                                      context)
                 else:
                     break
 
@@ -273,6 +282,7 @@ class CompositionRunner():
                                                                 stim_epoch=stim_epoch,
                                                                 num_trials=num_trials,
                                                                 minibatch_size=minibatch_size,
+                                                                optimizations_per_minibatch=optimizations_per_minibatch,
                                                                 synch=synch,
                                                                 track=track,
                                                                 call_before_minibatch=call_before_minibatch,
@@ -309,6 +319,7 @@ class CompositionRunner():
                                   num_trials=run_trials,
                                   skip_initialization=skip_initialization,
                                   skip_analyze_graph=True,
+                                  optimizations_per_minibatch=optimizations_per_minibatch,
                                   synch=synch,
                                   track=track,
                                   execution_mode=execution_mode,
