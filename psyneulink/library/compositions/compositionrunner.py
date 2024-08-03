@@ -70,7 +70,6 @@ class CompositionRunner():
         assert early_stopper is None or not self._is_llvm_mode, "Early stopper doesn't work in compiled mode"
         assert call_before_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
         assert call_after_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
-        pytorch_rep = self._composition.parameters.pytorch_representation._get(context=context)
 
         #This is a generator for performance reasons,
         #    since we don't want to copy any data (especially for very large inputs or epoch counts!)
@@ -96,13 +95,14 @@ class CompositionRunner():
                             self._composition._update_learning_parameters(context, optimization_num)
                             # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
                             # MODIFIED 7/10/24 NEW:
-                            pytorch_rep.synch_with_psyneulink(synch_with_pnl[WEIGHTS], OPTIMIZATION_STEP, context,
+                            pytorch_rep = self._composition.parameters.pytorch_representation._get(context=context)
+                            pytorch_rep.synch_with_psyneulink(synch_with_pnl, WEIGHTS, OPTIMIZATION_STEP, context,
                                                               optimizations_per_minibatch, optimization_num)
 
                             # MODIFIED 7/10/24 END
 
                 # # MODIFIED 7/10/24 NEW:
-                pytorch_rep.synch_with_psyneulink(synch_with_pnl[WEIGHTS], MINIBATCH, context)
+                pytorch_rep.synch_with_psyneulink(synch_with_pnl, WEIGHTS, MINIBATCH, context)
                 # MODIFIED 7/10/24 END
 
                 if call_after_minibatch:
@@ -117,7 +117,7 @@ class CompositionRunner():
                         call_after_minibatch()
 
             # # MODIFIED 7/10/24 NEW:
-            pytorch_rep.synch_with_psyneulink(synch_with_pnl[WEIGHTS], EPOCH, context)
+            pytorch_rep.synch_with_psyneulink(synch_with_pnl, WEIGHTS, EPOCH, context)
             # MODIFIED 7/10/24 END
 
             # Compiled mode does not need more identical inputs.
@@ -130,7 +130,7 @@ class CompositionRunner():
                 pass
 
         # # MODIFIED 7/10/24 NEW:
-        pytorch_rep.synch_with_psyneulink(synch_with_pnl[WEIGHTS], RUN, context)
+        pytorch_rep.synch_with_psyneulink(synch_with_pnl, WEIGHTS, RUN, context)
         # MODIFIED 7/10/24 END
 
 

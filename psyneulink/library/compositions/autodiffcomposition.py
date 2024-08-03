@@ -1015,7 +1015,7 @@ class AutodiffComposition(Composition):
 
         # Get value of OUTPUT nodes for current trial
         curr_tensor_outputs = pytorch_rep.forward(curr_tensor_inputs, None, context)
-        pytorch_rep.synch_with_psyneulink(synch_with_pnl[VALUES], TRIAL, context)
+        pytorch_rep.synch_with_psyneulink(synch_with_pnl, VALUES, TRIAL, context)
 
         # --------- Compute the loss (TARGET-OUTPUT) for each trained OUTPUT node  ---------------------------
 

@@ -580,13 +580,15 @@ class PytorchCompositionWrapper(torch.nn.Module):
         assert 'DEBUGGING BREAK POINT'
 
     def synch_with_psyneulink(self,
+                              synch_with_pnl:dict,
                               attr:Literal[WEIGHTS, VALUES, RESULTS],
-                              condition_specification:LEARNING_SCALE_LITERALS,
                               current_condition:LEARNING_SCALE_LITERALS,
                               context:Context,
                               optimizations_per_minibatch:Optional[int]=None,
                               optimization_num:Optional[int]=None):
         """Copy weights, values, or results at specified times between Pytorch and PsyNeuLink representations"""
+
+        condition_specification = synch_with_pnl[attr]
 
         if attr == WEIGHTS and condition_specification == current_condition:
             if current_condition == TRIAL:
@@ -605,13 +607,16 @@ class PytorchCompositionWrapper(torch.nn.Module):
             self.copy_results_to_psyneulink(context)
 
     def track_in_pnl(self,
+                     track_in_pnl:dict,
                      attr:Literal[LOSSES, OUTPUTS, RESULTS],
-                     condition_specification:LEARNING_SCALE_LITERALS,
                      current_condition:LEARNING_SCALE_LITERALS,
                      context:Context,
                      optimizations_per_minibatch:Optional[int]=None,
                      optimization_num:Optional[int]=None):
         """Keep track of losses, outputs and results and copy to PsyNeuLink at end of learning run."""
+
+        condition_specification = track_in_pnl[attr]
+
         if attr == LOSSES and condition_specification == current_condition:
             self.copy_losses_to_psyneulink(context)
         if attr == OUTPUTS and condition_specification == current_condition:
