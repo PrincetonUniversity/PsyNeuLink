@@ -8,6 +8,7 @@
 # ********************************************* PytorchComponent *************************************************
 
 """PyTorch wrappers for Composition, Mechanism, Projection, and Functions for use in AutodiffComposition"""
+from typing import Optional, Literal
 
 import graph_scheduler
 import torch
@@ -15,11 +16,13 @@ import torch.nn as nn
 
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, PRODUCT, SUM
 from psyneulink.core.components.functions.stateful.integratorfunctions import IntegratorFunction
+from psyneulink.core.components.functions.stateful import StatefulFunction
 from psyneulink.core.compositions.composition import NodeRole, CompositionInterfaceMechanism
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
 from psyneulink.library.compositions.compiledloss import MSELoss, CROSS_ENTROPYLoss
-from psyneulink.core.globals.keywords import AFTER, BEFORE, DEFAULT_VARIABLE, Loss, NODE, TARGET_MECHANISM
+from psyneulink.core.globals.keywords import (AFTER, BEFORE, DEFAULT_VARIABLE, LEARNING_SCALE_LITERALS, Loss, LOSSES,
+                                              NODE, OUTPUTS, RESULTS, TARGET_MECHANISM, TRIAL, VALUES, WEIGHTS)
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared
 from psyneulink.core.globals.log import LogCondition
@@ -576,9 +579,45 @@ class PytorchCompositionWrapper(torch.nn.Module):
         value = node.execute(variable, context)
         assert 'DEBUGGING BREAK POINT'
 
-    def detach_all(self):
-        for projection in self.projections_map.values():
-            projection.matrix.detach()
+    def synch_with_psyneulink(self,
+                              attr:Literal[WEIGHTS, VALUES, RESULTS],
+                              condition_specification:LEARNING_SCALE_LITERALS,
+                              current_condition:LEARNING_SCALE_LITERALS,
+                              context:Context,
+                              optimizations_per_minibatch:Optional[int]=None,
+                              optimization_num:Optional[int]=None):
+        """Copy weights, values, or results at specified times between Pytorch and PsyNeuLink representations"""
+
+        if attr == WEIGHTS and condition_specification == current_condition:
+            if current_condition == TRIAL:
+                # Restrict copy to after all optimization steps for a given stimulus (i.e., trial)
+                assert optimizations_per_minibatch is not None, (f"PROGRAM ERROR: optimizations_per_minibatch is None "
+                                                                 f"for synch_projection_matrices_with_torch == TRIAL")
+                if optimization_num is None or ((optimization_num + 1) % optimizations_per_minibatch) == 0:
+                    self.copy_weights_to_psyneulink(context)
+            else:
+                self.copy_weights_to_psyneulink(context)
+
+        elif attr == VALUES and condition_specification == current_condition:
+            self.copy_values_to_psyneulink(context)
+
+        elif attr == RESULTS and condition_specification == current_condition:
+            self.copy_results_to_psyneulink(context)
+
+    def track_in_pnl(self,
+                     attr:Literal[LOSSES, OUTPUTS, RESULTS],
+                     condition_specification:LEARNING_SCALE_LITERALS,
+                     current_condition:LEARNING_SCALE_LITERALS,
+                     context:Context,
+                     optimizations_per_minibatch:Optional[int]=None,
+                     optimization_num:Optional[int]=None):
+        """Keep track of losses, outputs and results and copy to PsyNeuLink at end of learning run."""
+        if attr == LOSSES and condition_specification == current_condition:
+            self.copy_losses_to_psyneulink(context)
+        if attr == OUTPUTS and condition_specification == current_condition:
+            self.copy_outputs_to_psyneulink(context)
+        if attr == RESULTS and condition_specification == current_condition:
+            self.copy_results_to_psyneulink(context)
 
     def copy_weights_to_psyneulink(self, context=None):
         for projection, pytorch_rep in self.projections_map.items():
@@ -595,13 +634,52 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def copy_values_to_psyneulink(self, context=None):
         pass
-
-    def copy_results_to_psyneulink(self, context=None):
-        pass
+        # 7/10/24 - FIX: SHOULD THIS TAKE ARGUMENT THAT SPECIFIES WHICH NODES, WITH DEFAULT AS ALL?
+        # 7/10/24 - FIX:
+        #                - CHECK THAT SCOPE IS RELEVANT FOR CALL TO EXECUTE???
+        #                - IMPLEMENT HELPER METHOD THAT CAN BE CALLED IN OTHER SCOPES?
+        # Update values of all PNL nodes executed in forward pass (if specified)
+        if synch_with_pnl[VALUES] == TRIAL:
+            pytorch_node_values = {} # 7/10/24 - FIX <- DOESN'T SEEM TO BE USED FOR ANYTHING
+            for pnl_node, pytorch_node in self.nodes_map.items():
+                if pytorch_node.value is None:
+                    assert pytorch_node.exclude_from_gradient_calc, \
+                        (f"PROGRAM ERROR: Value of PyTorch wrapper for {pnl_node.name} is None "
+                         f"but it is not excluded from gradient calculation.")
+                    continue
+                if isinstance(pytorch_node.value, list):
+                    value = np.array([val.detach().cpu().numpy() for val in pytorch_node.value], dtype=object)
+                else:
+                    value = pytorch_node.value.detach().cpu().numpy()
+                pnl_node.parameters.value._set(value, context)
+                if isinstance(pnl_node.function, StatefulFunction):
+                    pnl_node.function.parameters.previous_value._set(value, context)
+                # 7/10/24 - FIX: THIS NEEDS TO BE ALIGNED WITH HANDLING OF INTEGRATION BEFORE NONLINEARITY IN PYTORCH
+                #           HANDLED IN forward() METHOD OF PytorchMechanismWrapper??
+                # if isinstance(pnl_node, TransferMechanism) and pnl_node.integrator_mode:
+                #     pnl_node.integrator_function.parameters.previous_value._set(value, context)
+                pytorch_node_values[pnl_node] = value
 
     def log_values(self):
         for node_wrapper in [n for n in self.wrapped_nodes if not isinstance(n, PytorchCompositionWrapper)]:
             node_wrapper.log_value()
+
+    def copy_losses_to_psyneulink(self, context=None):
+        """Copy losses from Pytorch to AutodiffComposition.losses attribute."""
+        pass
+
+    def copy_outputs_to_psyneulink(self, context=None):
+        """Copy outputs of Pytorch nodes to AutodiffComposition.pytorch_outputs attribute."""
+        # 7/10/24 - FIX: SHOULD THIS BE A VERSION OF copy_values_to_psyneulink() that is restricted to OUTPUT nodes?
+        pass
+
+    def copy_results_to_psyneulink(self, context=None):
+        """Copy outputs of Pytorch forward() to AutodiffComposition.results attribute."""
+        pass
+
+    def detach_all(self):
+        for projection in self.projections_map.values():
+            projection.matrix.detach()
 
 
 class PytorchMechanismWrapper():

@@ -70,6 +70,7 @@ class CompositionRunner():
         assert early_stopper is None or not self._is_llvm_mode, "Early stopper doesn't work in compiled mode"
         assert call_before_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
         assert call_after_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
+        pytorch_rep = self._composition.parameters.pytorch_representation._get(context=context)
 
         #This is a generator for performance reasons,
         #    since we don't want to copy any data (especially for very large inputs or epoch counts!)
@@ -95,13 +96,13 @@ class CompositionRunner():
                             self._composition._update_learning_parameters(context, optimization_num)
                             # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
                             # MODIFIED 7/10/24 NEW:
-                            self.synch_with_psyneulink(synch_with_pnl, track_in_pnl, OPTIMIZATION_STEP, context,
-                                                       optimizations_per_minibatch, optimization_num)
+                            pytorch_rep.synch_with_psyneulink(synch_with_pnl[WEIGHTS], OPTIMIZATION_STEP, context,
+                                                              optimizations_per_minibatch, optimization_num)
 
                             # MODIFIED 7/10/24 END
 
                 # # MODIFIED 7/10/24 NEW:
-                self.synch_with_psyneulink(synch_with_pnl, track_in_pnl, MINIBATCH, context)
+                pytorch_rep.synch_with_psyneulink(synch_with_pnl[WEIGHTS], MINIBATCH, context)
                 # MODIFIED 7/10/24 END
 
                 if call_after_minibatch:
@@ -116,7 +117,7 @@ class CompositionRunner():
                         call_after_minibatch()
 
             # # MODIFIED 7/10/24 NEW:
-            self.synch_with_psyneulink(synch_with_pnl, track_in_pnl, EPOCH, context)
+            pytorch_rep.synch_with_psyneulink(synch_with_pnl[WEIGHTS], EPOCH, context)
             # MODIFIED 7/10/24 END
 
             # Compiled mode does not need more identical inputs.
@@ -129,7 +130,7 @@ class CompositionRunner():
                 pass
 
         # # MODIFIED 7/10/24 NEW:
-        self.synch_with_psyneulink(synch_with_pnl, track_in_pnl, EPOCH, context)
+        pytorch_rep.synch_with_psyneulink(synch_with_pnl[WEIGHTS], RUN, context)
         # MODIFIED 7/10/24 END
 
 
@@ -189,34 +190,6 @@ class CompositionRunner():
                     and early_stopper.step(self._calculate_loss(num_trials, execution_mode, context))):
                 # end early if patience exceeded
                 pass
-
-    def synch_with_psyneulink(self,
-                              synch_with_pnl:dict,
-                              track_in_pnl:dict,
-                              condition:LEARNING_SCALE_LITERALS,
-                              context:Context,
-                              optimizations_per_minibatch:Optional[int]=None,
-                              optimization_num:Optional[int]=None
-                              ):
-
-        pytorch_rep = self._composition.parameters.pytorch_representation._get(context=context)
-
-        if synch_with_pnl[WEIGHTS] == condition:
-            if condition == TRIAL:
-                # Restrict copy to after all optimization steps for a given stimulus (i.e., trial)
-                assert optimizations_per_minibatch is not None, (f"PROGRAM ERROR: optimizations_per_minibatch is None "
-                                                                 f"for synch_projection_matrices_with_torch == TRIAL")
-                if optimization_num is None or ((optimization_num + 1) % optimizations_per_minibatch) == 0:
-                    pytorch_rep.copy_weights_to_psyneulink(context)
-            else:
-                pytorch_rep.copy_weights_to_psyneulink(context)
-
-        if synch_with_pnl[VALUES] == condition:
-            pytorch_rep.copy_values_to_psyneulink(context)
-        if synch_with_pnl[RESULTS] == condition:
-            pytorch_rep.copy_results_to_psyneulink(context)
-
-
 
     def run_learning(self,
                      inputs: dict,

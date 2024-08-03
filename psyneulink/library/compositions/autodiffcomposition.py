@@ -998,10 +998,37 @@ class AutodiffComposition(Composition):
                                            f"likelihood), POISSONNLL (Poisson negative log likelihood, "
                                            f"and KL_DIV (KL divergence.")
 
-    def autodiff_training(self, inputs, targets, synch_with_pnl, track_in_pnl, context=None, scheduler=None):
-        """Perform learning/training for a single trial (i.e., a single input)"""
+    def autodiff_forward(self, inputs, targets, synch_with_pnl, track_in_pnl, context=None, scheduler=None):
+        """Perform forward pass of model and compute loss for a single trial (i.e., a single input) in Pytorch mode.
+        Note: backward() is called from _update_learning_parameters() under _batch_inputs() or _batch_function_inputs()
+              in compositionrunner.run_learning(), before the next time it calls run() and the present method is called.
+        """
+        pytorch_rep = self.parameters.pytorch_representation._get(context)
 
-        # Compute total loss over OUTPUT nodes for current trial
+        # --------- Do forward computation on current inputs -------------------------------------------------
+        #   should return 2d values for each component
+
+        # Get value of INPUT nodes for current trial
+        curr_tensor_inputs = {}
+        for component in inputs.keys():
+            curr_tensor_inputs[component] = torch.tensor(inputs[component], device=self.device).double()
+
+        # Get value of OUTPUT nodes for current trial
+        curr_tensor_outputs = pytorch_rep.forward(curr_tensor_inputs, None, context)
+        pytorch_rep.synch_with_psyneulink(synch_with_pnl[VALUES], TRIAL, context)
+
+        # --------- Compute the loss (TARGET-OUTPUT) for each trained OUTPUT node  ---------------------------
+
+        # Get value of OUTPUT nodes that are being trained
+        outputs_for_targets = {k:v for k,v in curr_tensor_outputs.items() if k in self.target_output_map.values()}
+
+        # Get value of TARGET nodes for current trial
+        curr_tensor_targets = {}
+        for component in targets.keys():
+            curr_tensor_targets[self.target_output_map[component]] = [torch.tensor(np.atleast_1d(target),
+                                                                                   device=self.device).double()
+                                                                      for target in targets[component]]
+        # Calculate and track the loss over the trained OUTPUT nodes
         tracked_loss = self.parameters.tracked_loss._get(context)
         if tracked_loss is None:
             self.parameters.tracked_loss._set(torch.zeros(1, device=self.device).double(),
@@ -1010,49 +1037,6 @@ class AutodiffComposition(Composition):
                                               skip_log=True)
             tracked_loss = self.parameters.tracked_loss._get(context)
 
-        curr_tensor_inputs = {}
-        curr_tensor_targets = {}
-        for component in inputs.keys():
-            curr_tensor_inputs[component] = torch.tensor(inputs[component], device=self.device).double()
-
-        # Get value of TARGET nodes for current trial
-        for component in targets.keys():
-            curr_tensor_targets[self.target_output_map[component]] = [torch.tensor(np.atleast_1d(target),
-                                                                                   device=self.device).double()
-                                                                      for target in targets[component]]
-
-        # Do forward computation on current inputs
-        #   should return 2d values for each component
-        pytorch_rep = self.parameters.pytorch_representation._get(context)
-        curr_tensor_outputs = pytorch_rep.forward(curr_tensor_inputs, None, context)
-
-        # 7/10/24 - FIX:
-        #                - CHECK THAT SCOPE IS RELEVANT FOR CALL TO EXECUTE???
-        #                - IMPLEMENT HELPER METHOD THAT CAN BE CALLED IN OTHER SCOPES?
-        # Update values of all PNL nodes executed in forward pass (if specified)
-        if synch_with_pnl[VALUES] == TRIAL:
-            pytorch_node_values = {} # 7/10/24 - FIX <- DOESN'T SEEM TO BE USED FOR ANYTHING
-            for pnl_node, pytorch_node in pytorch_rep.nodes_map.items():
-                if pytorch_node.value is None:
-                    assert pytorch_node.exclude_from_gradient_calc, \
-                        (f"PROGRAM ERROR: Value of PyTorch wrapper for {pnl_node.name} is None "
-                         f"but it is not excluded from gradient calculation.")
-                    continue
-                if isinstance(pytorch_node.value, list):
-                    value = np.array([val.detach().cpu().numpy() for val in pytorch_node.value], dtype=object)
-                else:
-                    value = pytorch_node.value.detach().cpu().numpy()
-                pnl_node.parameters.value._set(value, context)
-                if isinstance(pnl_node.function, StatefulFunction):
-                    pnl_node.function.parameters.previous_value._set(value, context)
-                # 7/10/24 - FIX: THIS NEEDS TO BE ALIGNED WITH HANDLING OF INTEGRATION BEFORE NONLINEARITY IN PYTORCH
-                #           HANDLED IN forward() METHOD OF PytorchMechanismWrapper??
-                # if isinstance(pnl_node, TransferMechanism) and pnl_node.integrator_mode:
-                #     pnl_node.integrator_function.parameters.previous_value._set(value, context)
-                pytorch_node_values[pnl_node] = value
-
-        # Compute the loss (TARGET-OUTPUT) for each trained OUTPUT node
-        outputs_for_targets = {k:v for k,v in curr_tensor_outputs.items() if k in self.target_output_map.values()}
         for component in outputs_for_targets.keys():
             # possibly add custom loss option, which is a loss function that takes many args
             # (outputs, targets, weights, and more) and returns a scalar
@@ -1061,6 +1045,14 @@ class AutodiffComposition(Composition):
                 new_loss += self.loss(outputs_for_targets[component][i],
                                       curr_tensor_targets[component][i])
             tracked_loss += new_loss
+
+        # Update tracked loss and loss count
+        self.parameters.tracked_loss_count._set(np.array(self.parameters.tracked_loss_count._get(context=context) + 1),
+                                                context=context,
+                                                skip_history=True,
+                                                skip_log=True)
+
+        # --------- Return the values of OUTPUT trained and all nodes  ---------------------------------------
 
         # Get values of trained OUTPUT nodes
         trained_outputs = []
@@ -1081,12 +1073,6 @@ class AutodiffComposition(Composition):
             port, component, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
             idx = component.output_ports.index(port)
             all_outputs += [curr_tensor_outputs[component][idx].detach().cpu().numpy().copy().tolist()]
-
-        # Update tracked loss and loss count
-        self.parameters.tracked_loss_count._set(np.array(self.parameters.tracked_loss_count._get(context=context) + 1),
-                                                context=context,
-                                                skip_history=True,
-                                                skip_log=True)
 
         return trained_outputs, all_outputs
 
@@ -1155,7 +1141,7 @@ class AutodiffComposition(Composition):
 
     def _get_autodiff_targets_values(self, input_dict):
         """Return dict with values for TARGET Nodes
-        Get Inputs to TARGET Nodes used for computation of loss in autodiff_training().
+        Get Inputs to TARGET Nodes used for computation of loss in autodiff_forward().
         Uses input_dict to get values for TARGET Nodes that are INPUT Nodes of the AutodiffComposition,
         If a TARGET Node is not an INPUT Node, it is assumed to be the target of a projection from an INPUT Node
         and the value is determined by searching recursively for the input Node that projects to the TARGET Node.
@@ -1334,7 +1320,7 @@ class AutodiffComposition(Composition):
                 report_num=None,
                 )->np.ndarray:
 
-        """Override to execute autodiff_training() in learning mode if execute_mode is not Python"""
+        """Override to execute autodiff_forward() in learning mode if execute_mode is not Python"""
 
         if (self._is_learning(context) and execution_mode is not pnlvm.ExecutionMode.PyTorch and
                 any([isinstance(node, Composition) for node in self.nodes])):
@@ -1373,7 +1359,7 @@ class AutodiffComposition(Composition):
 
                 self._build_pytorch_representation(context)
                 # IMPLEMENTATION NOTE: for autodiff, the following executes an EPOCH's worth of training
-                trained_outputs, all_outputs = self.autodiff_training(inputs=autodiff_inputs,
+                trained_outputs, all_outputs = self.autodiff_forward(inputs=autodiff_inputs,
                                                                       targets=autodiff_targets,
                                                                       synch_with_pnl=synch_with_pnl,
                                                                       track_in_pnl=track_in_pnl,
