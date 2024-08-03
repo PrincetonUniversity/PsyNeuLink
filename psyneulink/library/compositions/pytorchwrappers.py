@@ -23,9 +23,9 @@ from psyneulink.core.compositions.composition import NodeRole, CompositionInterf
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
 from psyneulink.library.compositions.compiledloss import MSELoss, CROSS_ENTROPYLoss
-from psyneulink.core.globals.keywords import (AFTER, ALL, BEFORE, DEFAULT_VARIABLE, LEARNING_SCALE_LITERALS,
-                                              Loss, LOSSES,NODE, OUTPUTS, RESULTS, TARGET_MECHANISM,
-                                              TRIAL, VALUES, WEIGHTS)
+from psyneulink.core.globals.keywords import (AFTER, ALL, AUTODIFF_RESULTS, BEFORE, DEFAULT_VARIABLE,
+                                              LEARNING_SCALE_LITERALS, Loss, LOSSES, MATRIX_WEIGHTS,
+                                              NODE, NODE_VALUES, OUTPUTS, TARGET_MECHANISM, TRIAL)
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared
 from psyneulink.core.globals.log import LogCondition
@@ -590,7 +590,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                               optimization_num:Optional[int]=None,
                               attrs:Union[list,ALL]=ALL):
         """Copy weights, values, or results at specified times between Pytorch and PsyNeuLink representations"""
-        legal_attrs = [WEIGHTS, VALUES, RESULTS]
+        legal_attrs = [MATRIX_WEIGHTS, NODE_VALUES, AUTODIFF_RESULTS]
         if attrs == ALL:
             attrs = legal_attrs
         illegal_attrs = [attr not in legal_attrs for attr in attrs]
@@ -603,24 +603,24 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                              f"for {' ,'.join(attrs)} == TRIAL")
             END_OF_TRIAL = optimization_num is None or ((optimization_num + 1) % optimizations_per_minibatch) == 0
 
-        if WEIGHTS in attrs and synch_with_pnl[WEIGHTS] == current_condition:
+        if MATRIX_WEIGHTS in attrs and synch_with_pnl[MATRIX_WEIGHTS] == current_condition:
             if current_condition == TRIAL and not END_OF_TRIAL:
                 pass
             self.copy_weights_to_psyneulink(context)
 
-        if VALUES in attrs and synch_with_pnl[VALUES] == current_condition:
+        if NODE_VALUES in attrs and synch_with_pnl[NODE_VALUES] == current_condition:
             if current_condition == TRIAL and not END_OF_TRIAL:
                 pass
             self.copy_values_to_psyneulink(ALL, context)
 
-        if RESULTS in attrs and synch_with_pnl[RESULTS] == current_condition:
+        if AUTODIFF_RESULTS in attrs and synch_with_pnl[AUTODIFF_RESULTS] == current_condition:
             if current_condition == TRIAL and not END_OF_TRIAL:
                 pass
             self.copy_results_to_psyneulink(context)
 
     def track_in_pnl(self,
                      track_in_pnl:dict,
-                     attr:Literal[LOSSES, OUTPUTS, RESULTS],
+                     attr:Literal[LOSSES, OUTPUTS, AUTODIFF_RESULTS],
                      current_condition:LEARNING_SCALE_LITERALS,
                      context:Context,
                      optimizations_per_minibatch:Optional[int]=None,
@@ -633,7 +633,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             self.copy_losses_to_psyneulink(context)
         if attr == OUTPUTS and condition_specification == current_condition:
             self.copy_outputs_to_psyneulink(context)
-        if attr == RESULTS and condition_specification == current_condition:
+        if attr == AUTODIFF_RESULTS and condition_specification == current_condition:
             self.copy_results_to_psyneulink(context)
 
     def copy_weights_to_psyneulink(self, context=None):

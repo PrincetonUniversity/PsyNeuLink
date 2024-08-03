@@ -353,10 +353,10 @@ from psyneulink.core.compositions.composition import Composition, NodeRole, Comp
 from psyneulink.core.compositions.report import (ReportOutput, ReportParams, ReportProgress, ReportSimulations,
                                                  ReportDevices, EXECUTE_REPORT, LEARN_REPORT, PROGRESS_REPORT)
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context, CONTEXT
-from psyneulink.core.globals.keywords import (AUTODIFF_COMPOSITION, CPU, CUDA, EPOCH, LearningScale,
+from psyneulink.core.globals.keywords import (AUTODIFF_COMPOSITION, AUTODIFF_RESULTS, CPU, CUDA, EPOCH, LearningScale,
                                               LEARNING_SCALE_LITERALS, LEARNING_SCALE_NAMES, LEARNING_SCALE_VALUES,
-                                              Loss, LOSSES, MINIBATCH, MPS, OPTIMIZATION_STEP, OUTPUTS,
-                                              RESULTS, RUN, SOFT_CLAMP, TARGETS, TRIAL, VALUES, WEIGHTS)
+                                              Loss, LOSSES, MATRIX_WEIGHTS, MINIBATCH, MPS, NODE_VALUES,
+                                              OPTIMIZATION_STEP, OUTPUTS, RUN, SOFT_CLAMP, TARGETS, TRIAL)
 from psyneulink.core.globals.utilities import is_numeric_scalar, get_torch_tensor
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
@@ -1016,7 +1016,7 @@ class AutodiffComposition(Composition):
         # Get value of OUTPUT nodes for current trial
         curr_tensor_outputs = pytorch_rep.forward(curr_tensor_inputs, None, context)
         # 7/10/24 - FIX: MOVE TO autodiff._batch_inputs() AFTER
-        # pytorch_rep.synch_with_psyneulink(synch_with_pnl, VALUES, TRIAL, context)
+        # pytorch_rep.synch_with_psyneulink(synch_with_pnl, NODE_VALUES, TRIAL, context)
 
         # --------- Compute the loss (TARGET-OUTPUT) for each trained OUTPUT node  ---------------------------
 
@@ -1256,11 +1256,11 @@ class AutodiffComposition(Composition):
             self._built_pathways = True
 
         # Consolidate the options for synching and tracking into dictionaries as arguments to learning and exec methods
-        synch_with_pnl = {WEIGHTS: synch_projection_matrices_with_torch
+        synch_with_pnl = {MATRIX_WEIGHTS: synch_projection_matrices_with_torch
                                    or self.parameters.synch_projection_matrices_with_torch._get(context),
-                          VALUES: synch_node_values_with_torch
+                          NODE_VALUES: synch_node_values_with_torch
                                   or self.parameters.synch_node_values_with_torch._get(context),
-                          RESULTS: synch_autodiff_results_with_torch
+                          AUTODIFF_RESULTS: synch_autodiff_results_with_torch
                                    or self.parameters.synch_autodiff_results_with_torch._get(context)}
 
         track_in_pnl = {OUTPUTS: track_torch_outputs_in_results
