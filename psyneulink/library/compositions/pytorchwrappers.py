@@ -568,10 +568,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         return outputs
 
-    def execute_node(self, node, variable, optimization_rep, context=None):
+    def execute_node(self, node, variable, optimization_num, context=None):
         """Execute node and store the result in the node's value attribute
-        Implemented as method (and includes context as arg) so that it can be overridden
-        by subclasses of PytorchCompositionWrapper
+        Implemented as method (and includes optimization_rep and context as args)
+          so that it can be overridden by subclasses of PytorchCompositionWrapper
         """
         value = node.execute(variable, context)
         assert 'DEBUGGING BREAK POINT'
@@ -592,6 +592,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
     def log_weights(self):
         for proj_wrapper in self.projection_wrappers:
             proj_wrapper.log_matrix()
+
+    def copy_values_to_psyneulink(self, context=None):
+        pass
+
+    def copy_results_to_psyneulink(self, context=None):
+        pass
 
     def log_values(self):
         for node_wrapper in [n for n in self.wrapped_nodes if not isinstance(n, PytorchCompositionWrapper)]:

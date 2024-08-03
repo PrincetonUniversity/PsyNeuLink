@@ -998,7 +998,7 @@ class AutodiffComposition(Composition):
                                            f"likelihood), POISSONNLL (Poisson negative log likelihood, "
                                            f"and KL_DIV (KL divergence.")
 
-    def autodiff_training(self, inputs, targets, synch, track, context=None, scheduler=None):
+    def autodiff_training(self, inputs, targets, synch_with_pnl, track_in_pnl, context=None, scheduler=None):
         """Perform learning/training for a single trial (i.e., a single input)"""
 
         # Compute total loss over OUTPUT nodes for current trial
@@ -1030,7 +1030,7 @@ class AutodiffComposition(Composition):
         #                - CHECK THAT SCOPE IS RELEVANT FOR CALL TO EXECUTE???
         #                - IMPLEMENT HELPER METHOD THAT CAN BE CALLED IN OTHER SCOPES?
         # Update values of all PNL nodes executed in forward pass (if specified)
-        if synch[VALUES] == TRIAL:
+        if synch_with_pnl[VALUES] == TRIAL:
             pytorch_node_values = {} # 7/10/24 - FIX <- DOESN'T SEEM TO BE USED FOR ANYTHING
             for pnl_node, pytorch_node in pytorch_rep.nodes_map.items():
                 if pytorch_node.value is None:
@@ -1094,7 +1094,7 @@ class AutodiffComposition(Composition):
         self.losses = []
         self.parameters.losses.set([], context=context)
 
-    def _update_learning_parameters(self, optimization_rep, optimizations_per_minibatch, synch, track, context):
+    def _update_learning_parameters(self, context, optimization_num=None):
         """Carry out backpropagation learning (backward computation) for last trial executed.
         Update parameters (weights) based on trial run since last update,
             using Pytorch backward method to compute gradients and update weights
@@ -1106,28 +1106,24 @@ class AutodiffComposition(Composition):
         optimizer.zero_grad()
 
         # Compute and log average loss over all trials since last update
-        tracked_loss = self.parameters.tracked_loss._get(context=context) / int(self.parameters.tracked_loss_count._get(context=context))
+        tracked_loss = (self.parameters.tracked_loss._get(context=context) /
+                        int(self.parameters.tracked_loss_count._get(context=context)))
         tracked_loss.backward(retain_graph=not self.force_no_retain_graph)
         self.parameters.losses._get(context=context).append(tracked_loss.detach().cpu().numpy()[0])
-        self.parameters.tracked_loss._set(torch.zeros(1, device=self.device).double(), context=context, skip_history=True, skip_log=True)
-        self.parameters.tracked_loss_count._set(np.array(0), context=context, skip_history=True, skip_log=True)
+        self.parameters.tracked_loss._set(torch.zeros(1, device=self.device).double(),
+                                          context=context,
+                                          skip_history=True, skip_log=True)
+        self.parameters.tracked_loss_count._set(np.array(0),
+                                                context=context,
+                                                skip_history=True, skip_log=True)
 
         # Update pytorch parameters
         optimizer.step()
-        # Copy to weights of PsyNeuLink Projection matrices if specified
-        optimizations_per_minibatch = context.composition.parameters.optimizations_per_minibatch.get(context)
-        if synch[WEIGHTS] == OPTIMIZATION_STEP:
-            # Copy weights for every optimization step for a given stimulus (i.e., trial)
-            pytorch_rep.copy_weights_to_psyneulink(context)
-        elif (synch[WEIGHTS] == TRIAL
-              and (optimization_rep is None or not (optimization_rep + 1) % optimizations_per_minibatch)):
-            # Copy weights only at the end of the optimizations for a given stimulus (i.e., trial)
-            pytorch_rep.copy_weights_to_psyneulink(context)
 
         # do forward computation on nodes that should be executed after gradient calculation
         with torch.no_grad():
             for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
-                node.composition_wrapper_owner.execute_node(node, variable, optimization_rep, context)
+                node.composition_wrapper_owner.execute_node(node, variable, optimization_num, context)
 
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         if "run" in tags:
@@ -1282,19 +1278,23 @@ class AutodiffComposition(Composition):
             self._built_pathways = True
 
         # Consolidate the options for synching and tracking into dictionaries as arguments to learning and exec methods
-        synch = {WEIGHTS: synch_projection_matrices_with_torch
-                          or self.parameters.synch_projection_matrices_with_torch._get(context),
-                 VALUES: synch_node_values_with_torch
-                         or self.parameters.synch_node_values_with_torch._get(context),
-                 RESULTS: synch_autodiff_results_with_torch
-                          or self.parameters.synch_autodiff_results_with_torch._get(context)}
+        synch_with_pnl = {WEIGHTS: synch_projection_matrices_with_torch
+                                   or self.parameters.synch_projection_matrices_with_torch._get(context),
+                          VALUES: synch_node_values_with_torch
+                                  or self.parameters.synch_node_values_with_torch._get(context),
+                          RESULTS: synch_autodiff_results_with_torch
+                                   or self.parameters.synch_autodiff_results_with_torch._get(context)}
 
-        track = {OUTPUTS: track_torch_outputs_in_results
-                          or self.parameters.track_torch_outputs_in_results._get(context),
-                 TARGETS: track_torch_targets or self.parameters.track_torch_targets._get(context),
-                 LOSSES: track_losses or self.parameters.track_losses._get(context)}
+        track_in_pnl = {OUTPUTS: track_torch_outputs_in_results
+                                 or self.parameters.track_torch_outputs_in_results._get(context),
+                        TARGETS: track_torch_targets or self.parameters.track_torch_targets._get(context),
+                        LOSSES: track_losses or self.parameters.track_losses._get(context)}
 
-        return super().learn(*args, synch=synch, track=track, execution_mode=execution_mode, **kwargs)
+        return super().learn(*args,
+                             synch_with_pnl=synch_with_pnl,
+                             track_in_pnl=track_in_pnl,
+                             execution_mode=execution_mode,
+                             **kwargs)
 
     def _get_execution_mode(self, execution_mode):
         """Parse execution_mode argument and return a valid execution mode for the learn() method
@@ -1332,8 +1332,8 @@ class AutodiffComposition(Composition):
                 runtime_params=None,
                 execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.PyTorch,
                 skip_initialization=False,
-                synch:Optional[dict]=None,
-                track:Optional[dict]=None,
+                synch_with_pnl:Optional[dict]=None,
+                track_in_pnl:Optional[dict]=None,
                 report_output:ReportOutput=ReportOutput.OFF,
                 report_params:ReportOutput=ReportParams.OFF,
                 report_progress:ReportProgress=ReportProgress.OFF,
@@ -1384,8 +1384,8 @@ class AutodiffComposition(Composition):
                 # IMPLEMENTATION NOTE: for autodiff, the following executes an EPOCH's worth of training
                 trained_outputs, all_outputs = self.autodiff_training(inputs=autodiff_inputs,
                                                                       targets=autodiff_targets,
-                                                                      synch=synch,
-                                                                      track=track,
+                                                                      synch_with_pnl=synch_with_pnl,
+                                                                      track_in_pnl=track_in_pnl,
                                                                       context=context,
                                                                       scheduler=scheduler)
                 # 7/10/24 - FIX: FOR DEBUGGING ONLY - REMOVE WHEN DONE

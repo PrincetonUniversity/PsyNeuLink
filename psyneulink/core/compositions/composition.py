@@ -11661,8 +11661,8 @@ _
                           f"it will be run but no learning will occur.")
 
         # Get any synchronization and/or tracking specifications from sublcasses (e.g.,AutdoiffComposition)
-        synch = kwargs.pop('synch', None)
-        track = kwargs.pop('track', None)
+        synch_with_pnl = kwargs.pop('synch_in_pnl', None)
+        track_in_pnl = kwargs.pop('track_with_pnl', None)
 
         # Prepare graph and context for learning
         context.add_flag(ContextFlags.LEARNING_MODE)
@@ -11684,8 +11684,8 @@ _
             patience=patience,
             min_delta=min_delta,
             randomize_minibatches=randomize_minibatches,
-            synch=synch,
-            track=track,
+            synch_with_pnl=synch_with_pnl,
+            track_in_pnl=track_in_pnl,
             call_before_minibatch=call_before_minibatch,
             call_after_minibatch=call_after_minibatch,
             context=context,
@@ -12866,7 +12866,7 @@ _
         else:
             return {k:np.array(v).tolist() for k,v in result_set}
 
-    def _update_learning_parameters(self, optimization_rep, optimizations_per_minibatch, synch, track, context):
+    def _update_learning_parameters(self, context, optimization_num=None):
         pass
 
     @handle_external_context(fallback_most_recent=True)
