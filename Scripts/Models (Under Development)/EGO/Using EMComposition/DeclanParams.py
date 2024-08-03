@@ -33,7 +33,7 @@ Calculate the retrieval probability of the correct response as a performance met
 probs, trial_probs = calc_prob(em_preds, test_ys)
 """
 from psyneulink.core.llvm import ExecutionMode
-from psyneulink.core.globals.keywords import ALL, ADAPTIVE, CONTROL, CPU, MPS, Loss
+from psyneulink.core.globals.keywords import ALL, ADAPTIVE, CONTROL, CPU, Loss, MPS, OPTIMIZATION_STEP, RUN, TRIAL
 
 model_params = dict(
 
@@ -80,6 +80,9 @@ model_params = dict(
     learning_rate = .5,
     # num_optimization_steps = 1,
     num_optimization_steps = 10,
+    synch_weights = RUN,
+    synch_values = RUN,
+    synch_results = RUN,
     # execution_mode = ExecutionMode.Python,
     execution_mode = ExecutionMode.PyTorch,
     device = CPU,

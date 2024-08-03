@@ -398,14 +398,17 @@ if __name__ == '__main__':
                   #                              # model.projections[7].matrix)
                   #   call_after_minibatch=print_stuff,
                   #   optimizations_per_minibatch=model_params['num_optimization_steps'],
-                    synch_projection_matrices_with_torch=RUN,
+                    synch_projection_matrices_with_torch=model_params['synch_weights'],
+                    synch_node_values_with_torch=model_params['synch_values'],
+                    synch_autodiff_results_with_torch=model_params['synch_results'],
+                    # synch_node=TRIAL,
                     # synch_projection_matrices_with_torch=EPOCH,
                     # synch_projection_matrices_with_torch=MINIBATCH,
                     # synch_projection_matrices_with_torch=OPTIMIZATION_STEP,
                     learning_rate=model_params['learning_rate'],
                     execution_mode= model_params['execution_mode'],
-                    minibatch_size=3,
-                    epochs=5
+                    # minibatch_size=1,
+                    # epochs=1
                   )
         stop_time = timeit.default_timer()
         print(f"Elapsed time: {stop_time - start_time}")

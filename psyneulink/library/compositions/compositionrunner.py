@@ -96,13 +96,20 @@ class CompositionRunner():
                             # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
                             # MODIFIED 7/10/24 NEW:
                             pytorch_rep = self._composition.parameters.pytorch_representation._get(context=context)
-                            pytorch_rep.synch_with_psyneulink(synch_with_pnl, WEIGHTS, OPTIMIZATION_STEP, context,
+                            # FIX: CALL synch_with_pnl WITH *LIST* OF CONDITIONS TO SYNCHRONIZE, OR
+                            pytorch_rep.synch_with_psyneulink(synch_with_pnl, OPTIMIZATION_STEP, context,
                                                               optimizations_per_minibatch, optimization_num)
+                            # FIX: ADD UPDATE OF VALUES OF execute_after_gradient_calc NODES HERE
+                            pytorch_rep.synch_with_psyneulink(synch_with_pnl, OPTIMIZATION_STEP, context,
+                                                              optimizations_per_minibatch, optimization_num)
+                                        # for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
+                                        #     node.composition_wrapper_owner.execute_node(node, variable, optimization_num, context)
+
 
                             # MODIFIED 7/10/24 END
 
                 # # MODIFIED 7/10/24 NEW:
-                pytorch_rep.synch_with_psyneulink(synch_with_pnl, WEIGHTS, MINIBATCH, context)
+                pytorch_rep.synch_with_psyneulink(synch_with_pnl, MINIBATCH, context)
                 # MODIFIED 7/10/24 END
 
                 if call_after_minibatch:
@@ -117,7 +124,7 @@ class CompositionRunner():
                         call_after_minibatch()
 
             # # MODIFIED 7/10/24 NEW:
-            pytorch_rep.synch_with_psyneulink(synch_with_pnl, WEIGHTS, EPOCH, context)
+            pytorch_rep.synch_with_psyneulink(synch_with_pnl, EPOCH, context)
             # MODIFIED 7/10/24 END
 
             # Compiled mode does not need more identical inputs.
@@ -130,7 +137,7 @@ class CompositionRunner():
                 pass
 
         # # MODIFIED 7/10/24 NEW:
-        pytorch_rep.synch_with_psyneulink(synch_with_pnl, WEIGHTS, RUN, context)
+        pytorch_rep.synch_with_psyneulink(synch_with_pnl, RUN, context)
         # MODIFIED 7/10/24 END
 
 
