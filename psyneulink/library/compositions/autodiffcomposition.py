@@ -564,7 +564,6 @@ class AutodiffComposition(Composition):
         pytorch_representation = None
         optimizer = None
         learning_rate = Parameter(.001, fallback_default=True)
-        optimizations_per_minibatch = Parameter(1, fallback_default=True)
         synch_projection_matrices_with_torch = Parameter(RUN, fallback_default=True)
         synch_node_values_with_torch = Parameter(RUN, fallback_default=True)
         synch_autodiff_results_with_torch = Parameter(RUN, fallback_default=True)
@@ -1000,7 +999,7 @@ class AutodiffComposition(Composition):
                                            f"and KL_DIV (KL divergence.")
 
     def autodiff_training(self, inputs, targets, synch, track, context=None, scheduler=None):
-        """Perform learning/training on all input-target pairs received for given number of epochs"""
+        """Perform learning/training for a single trial (i.e., a single input)"""
 
         # Compute total loss over OUTPUT nodes for current trial
         tracked_loss = self.parameters.tracked_loss._get(context)
@@ -1031,8 +1030,8 @@ class AutodiffComposition(Composition):
         #                - CHECK THAT SCOPE IS RELEVANT FOR CALL TO EXECUTE???
         #                - IMPLEMENT HELPER METHOD THAT CAN BE CALLED IN OTHER SCOPES?
         # Update values of all PNL nodes executed in forward pass (if specified)
-        if synch[VALUES] in {TRIAL, MINIBATCH}:
-            pytorch_node_values = {}
+        if synch[VALUES] == TRIAL:
+            pytorch_node_values = {} # 7/10/24 - FIX <- DOESN'T SEEM TO BE USED FOR ANYTHING
             for pnl_node, pytorch_node in pytorch_rep.nodes_map.items():
                 if pytorch_node.value is None:
                     assert pytorch_node.exclude_from_gradient_calc, \
@@ -1095,9 +1094,9 @@ class AutodiffComposition(Composition):
         self.losses = []
         self.parameters.losses.set([], context=context)
 
-    def _update_learning_parameters(self, optimization_rep, synch, track, context):
-        """Carry out backpropagation learning (backward computation) for one or more trials.
-        Update parameters (weights) based on trials run since last update,
+    def _update_learning_parameters(self, optimization_rep, optimizations_per_minibatch, synch, track, context):
+        """Carry out backpropagation learning (backward computation) for last trial executed.
+        Update parameters (weights) based on trial run since last update,
             using Pytorch backward method to compute gradients and update weights
         Then execute (i.e., do forward computation for) nodes in pytorch_rep._nodes_to_execute_after_gradient_calc
         """
@@ -1113,32 +1112,17 @@ class AutodiffComposition(Composition):
         self.parameters.tracked_loss._set(torch.zeros(1, device=self.device).double(), context=context, skip_history=True, skip_log=True)
         self.parameters.tracked_loss_count._set(np.array(0), context=context, skip_history=True, skip_log=True)
 
-        # Update weights and copy to PNL
+        # Update pytorch parameters
         optimizer.step()
-        # # MODIFIED 7/29/24 OLD:
-        # pytorch_rep.detach_all()
-        # pytorch_rep.copy_weights_to_psyneulink(context)
-        # # MODIFIED 7/29/24 NEW:
-        # # pytorch_rep.detach_all()  # FIX: <- IS THIS NEEDED ONLY WHEN WRITING TO PNL OR BY PYTORCH?
-        # optimizations_per_minibatch = context.composition.parameters.optimizations_per_minibatch.get(context)
-        # if context._composition.synch_projection_matrices_with_torch == 'OPTIMIZATION_STEP':
-        #     # pytorch_rep.detach_all()  # FIX: <- IS THIS NEEDED ONLY WHEN WRITING TO PNL OR BY PYTORCH?
-        #     pytorch_rep.copy_weights_to_psyneulink(context)
-        # elif (context._composition.synch_projection_matrices_with_torch == MINIBATCH
-        #       and (optimization_rep is None or not (optimization_rep + 1) % optimizations_per_minibatch)):
-        #     # pytorch_rep.detach_all()
-        #     pytorch_rep.copy_weights_to_psyneulink(context)
-        # # FIX: NEED TO ADD COPY AT END OF RUN IF synch_projection_matrices_with_torch == 'RUN'
-        # MODIFIED 7/29/24 NEWER:
+        # Copy to weights of PsyNeuLink Projection matrices if specified
         optimizations_per_minibatch = context.composition.parameters.optimizations_per_minibatch.get(context)
         if synch[WEIGHTS] == OPTIMIZATION_STEP:
-            # Copy weights for every optimization step within the minibatch
+            # Copy weights for every optimization step for a given stimulus (i.e., trial)
             pytorch_rep.copy_weights_to_psyneulink(context)
         elif (synch[WEIGHTS] == TRIAL
               and (optimization_rep is None or not (optimization_rep + 1) % optimizations_per_minibatch)):
-            # Copy weights only at the end of the optimizations for a given minibatch
+            # Copy weights only at the end of the optimizations for a given stimulus (i.e., trial)
             pytorch_rep.copy_weights_to_psyneulink(context)
-        # MODIFIED 7/29/24 END
 
         # do forward computation on nodes that should be executed after gradient calculation
         with torch.no_grad():
@@ -1330,6 +1314,7 @@ class AutodiffComposition(Composition):
                 inputs=None,
                 num_trials=None,
                 minibatch_size=1,
+                optimizations_per_minibatch=1,
                 do_logging=False,
                 scheduler=None,
                 termination_processing=None,
@@ -1403,6 +1388,8 @@ class AutodiffComposition(Composition):
                                                                       track=track,
                                                                       context=context,
                                                                       scheduler=scheduler)
+                # 7/10/24 - FIX: FOR DEBUGGING ONLY - REMOVE WHEN DONE
+                self.INPUTS = autodiff_inputs
 
                 execution_phase = context.execution_phase
                 context.execution_phase = ContextFlags.PROCESSING
