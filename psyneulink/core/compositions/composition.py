@@ -11684,8 +11684,6 @@ _
             patience=patience,
             min_delta=min_delta,
             randomize_minibatches=randomize_minibatches,
-            synch_with_pnl=synch_with_pnl,
-            track_in_pnl=track_in_pnl,
             call_before_minibatch=call_before_minibatch,
             call_after_minibatch=call_after_minibatch,
             context=context,
