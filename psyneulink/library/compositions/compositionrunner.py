@@ -107,7 +107,8 @@ class CompositionRunner():
                             # MODIFIED 7/10/24 END
 
                 # # MODIFIED 7/10/24 NEW:
-                pytorch_rep.synch_with_psyneulink(synch_with_pnl, MINIBATCH, context)
+                if execution_mode is ExecutionMode.PyTorch:
+                    pytorch_rep.synch_with_psyneulink(synch_with_pnl, MINIBATCH, context)
                 # MODIFIED 7/10/24 END
 
                 if call_after_minibatch:
@@ -122,7 +123,8 @@ class CompositionRunner():
                         call_after_minibatch()
 
             # # MODIFIED 7/10/24 NEW:
-            pytorch_rep.synch_with_psyneulink(synch_with_pnl, EPOCH, context)
+            if execution_mode is ExecutionMode.PyTorch:
+                pytorch_rep.synch_with_psyneulink(synch_with_pnl, EPOCH, context)
             # MODIFIED 7/10/24 END
 
             # Compiled mode does not need more identical inputs.
@@ -135,7 +137,8 @@ class CompositionRunner():
                 pass
 
         # # MODIFIED 7/10/24 NEW:
-        pytorch_rep.synch_with_psyneulink(synch_with_pnl, RUN, context)
+        if execution_mode is ExecutionMode.PyTorch:
+            pytorch_rep.synch_with_psyneulink(synch_with_pnl, RUN, context)
         # MODIFIED 7/10/24 END
 
 
@@ -292,10 +295,10 @@ class CompositionRunner():
                 early_stopper = EarlyStopping(min_delta=min_delta, patience=patience)
 
             if callable(stim_input) and not isgeneratorfunction(stim_input):
-                minibatched_input = self._batch_function_inputs(stim_input=stim_input,
-                                                                stim_epoch=stim_epoch,
-                                                                num_trials=num_trials,
-                                                                minibatch_size=minibatch_size,
+                minibatched_input = self._batch_function_inputs(stim_input,
+                                                                stim_epoch,
+                                                                num_trials,
+                                                                minibatch_size,
                                                                 optimizations_per_minibatch=optimizations_per_minibatch,
                                                                 synch_with_pnl=synch_with_pnl,
                                                                 track_in_pnl=track_in_pnl,
@@ -341,7 +344,7 @@ class CompositionRunner():
                                   **kwargs)
             skip_initialization = True
 
-            if synch_with_pnl[MATRIX_WEIGHTS] == MINIBATCH:
+            if execution_mode == ExecutionMode.PyTorch and synch_with_pnl[MATRIX_WEIGHTS] == MINIBATCH:
                 self._composition.pytorch_representation.copy_weights_to_psyneulink(context)
 
         num_epoch_results = num_trials // minibatch_size # number of results expected from final epoch
@@ -351,7 +354,7 @@ class CompositionRunner():
             self._composition.parameters.results.get(context)[-1 * num_epoch_results:], context)
         # return result of last *trial* (as usual for a call to run)
 
-        if synch_with_pnl[MATRIX_WEIGHTS] == EPOCH:
+        if execution_mode == ExecutionMode.PyTorch and synch_with_pnl[MATRIX_WEIGHTS] == EPOCH:
             # Copy weights at end of learning run
             self._composition.pytorch_representation.copy_weights_to_psyneulink(context)
 

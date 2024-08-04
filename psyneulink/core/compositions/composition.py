@@ -3991,8 +3991,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     :default value: []
                     :type: ``list``
         """
-        minibatch_size = Parameter(1, modulable=True)
-        optimizations_per_minibatch = Parameter(1, modulable=True)
+        minibatch_size = Parameter(1, modulable=True, pnl_internal=True)
+        optimizations_per_minibatch = Parameter(1, modulable=True, pnl_internal=True)
         results = Parameter([], loggable=False, pnl_internal=True)
         learning_results = Parameter([], loggable=False, pnl_internal=True)
         simulation_results = Parameter([], loggable=False, pnl_internal=True)
@@ -11778,7 +11778,8 @@ _
             report_simulations:ReportSimulations=ReportSimulations.OFF,
             report_to_devices:ReportDevices=None,
             report=None,
-            report_num=None
+            report_num=None,
+            **kwargs
             )->np.ndarray:
         """
             Passes inputs to any `Nodes <Composition_Nodes>` receiving inputs directly from the user (via the "inputs"
