@@ -652,15 +652,23 @@ class PytorchCompositionWrapper(torch.nn.Module):
             proj_wrapper.log_matrix()
 
     def copy_values_to_psyneulink(self, nodes:Optional[Union[list,Literal[ALL, OUTPUTS]]]=ALL, context=None):
-        """ Copy value of Pytorch nodes to AutodiffComposition nodes."""
+        """ Copy value of Pytorch nodes to AutodiffComposition nodes.
+        IMPLEMENTATION NOTE:  list included in nodes arg to allow for future specification of specific nodes to copy
+        """
 
         if nodes == ALL:
             nodes = self.nodes_map.items()
         # elif nodes == OUTPUTS:
         #     nodes = [(node, self.nodes_map[node]) for node in self._composition.get_output_nodes()]
 
+        def update_autodiff_output_values():
+            """ Update autodiff's output_values by executing its output_CIM's with pytorch_rep's output values"""
+            if self.output_values:
+                self._composition.output_CIM.execute(self.output_values, context=context)
+
+        # Allow selective updating of autodiff.output_values if specified
         if nodes == OUTPUTS:
-            self.output_CIM.execute(all_outputs, context=context)
+            update_autodiff_output_values()
             return
 
         for pnl_node, pytorch_node in nodes:
@@ -686,6 +694,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
             if isinstance(pnl_node, TransferMechanism) and pnl_node.integrator_mode:
                 pnl_node.integrator_function.parameters.previous_value._set(pytorch_node.integrator_previous_value,
                                                                             context)
+        update_autodiff_output_values()
+
 
     def log_values(self):
         for node_wrapper in [n for n in self.wrapped_nodes if not isinstance(n, PytorchCompositionWrapper)]:
