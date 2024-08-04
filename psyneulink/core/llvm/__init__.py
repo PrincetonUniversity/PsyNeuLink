@@ -226,6 +226,14 @@ class LLVMBinaryFunction:
         wrap_args = (jit_engine.pycuda.driver.InOut(a) if isinstance(a, np.ndarray) else a for a in args)
         self.cuda_call(*wrap_args, **kwargs)
 
+    def np_buffer_for_arg(self, arg_num, *, extra_dimensions=()):
+
+        out_base = self.np_params[arg_num].base
+        out_shape = extra_dimensions + self.np_params[arg_num].shape
+
+        # fill the buffer with NaN poison
+        return np.full(out_shape, np.nan, dtype=out_base)
+
     @staticmethod
     @functools.lru_cache(maxsize=32)
     def from_obj(obj, *, tags:frozenset=frozenset(), numpy_args:tuple=()):

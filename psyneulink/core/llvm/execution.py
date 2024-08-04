@@ -217,17 +217,6 @@ class Execution:
 
                     pnl_param.set(value, context=context, override=True, compilation_sync=True)
 
-    def _get_empty_for_arg(self, arg_num):
-
-        out_base = self._bin_func.np_params[arg_num].base
-        out_shape = self._bin_func.np_params[arg_num].shape
-
-        if len(self._execution_contexts) > 1:
-            out_shape = (len(self._execution_contexts),) + out_shape
-
-        # "empty" is in fact filled with NaN poison
-        return np.full(out_shape, np.nan, dtype=out_base)
-
     def _get_indexable(self, np_array):
         # outputs in recarrays need to be converted to list/tuple to be indexable
         return np_array.tolist() if np_array.dtype.base.shape == () else np_array
@@ -280,7 +269,8 @@ class CUDAExecution(Execution):
         new_var = np.asfarray(variable, dtype=self._bin_func.np_params[2].base)
         data_in = jit_engine.pycuda.driver.In(new_var)
 
-        data_out = self._get_empty_for_arg(3)
+        extra_dims = (len(self._execution_contexts),) if len(self._execution_contexts) > 1 else ()
+        data_out = self._bin_func.np_buffer_for_arg(3, extra_dimensions=extra_dims)
 
         self._bin_func.cuda_call(self._cuda_param_struct,
                                  self._cuda_state_struct,
@@ -336,7 +326,7 @@ class FuncExecution(CUDAExecution):
                                          self._ct_len)
             return _convert_ctype_to_python(self._ct_vo)
         else:
-            data_out = self._get_empty_for_arg(3)
+            data_out = self._bin_func.np_buffer_for_arg(3)
             data_in = new_variable.reshape(self._bin_func.np_params[2].shape)
 
             self._bin_func(self._param_struct[1], self._state_struct[1], data_in, data_out)
@@ -587,7 +577,7 @@ class CompExecution(CUDAExecution):
         if inputs is not None:
             inputs = self._get_input_struct(inputs)[1]
         else:
-            inputs = self._get_empty_for_arg(2)
+            inputs = self._bin_func.np_buffer_for_arg(2)
 
         # Nodes other than input_CIM/parameter_CIM take inputs from projections
         # and need frozen values available
