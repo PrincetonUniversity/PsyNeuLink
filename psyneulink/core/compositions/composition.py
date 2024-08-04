@@ -11678,9 +11678,12 @@ _
             num_trials=num_trials,
             epochs=epochs,
             learning_rate=learning_rate,
-            minibatch_size=minibatch_size or self.parameters.minibatch_size._get(context),
-            optimizations_per_minibatch=(optimizations_per_minibatch or
-                                         self.parameters.optimizations_per_minibatch._get(context)),
+            minibatch_size=minibatch_size
+                            or self.parameters.minibatch_size._get(context)
+                            or self.parameters.minibatch_size.default_value,
+            optimizations_per_minibatch=optimizations_per_minibatch
+                                        or self.parameters.optimizations_per_minibatch._get(context)
+                                        or self.parameters.optimizations_per_minibatch.default_value,
             patience=patience,
             min_delta=min_delta,
             randomize_minibatches=randomize_minibatches,
