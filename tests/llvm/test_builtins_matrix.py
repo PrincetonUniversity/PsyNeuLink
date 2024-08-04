@@ -64,18 +64,11 @@ def _get_const_dim_func(builtin, *dims):
 def test_matrix_op(benchmark, op, x, y, builtin, result, func_mode, dims):
 
     def _numpy_args(bin_f):
-        dty = np.dtype(bin_f.byref_arg_types[0])
+        np_x = x.astype(bin_f.np_params[0])
+        np_y = bin_f.np_params[1].type(y) if np.isscalar(y) else y.astype(bin_f.np_params[1])
+        np_res = np.empty_like(result, dtype=bin_f.np_params[-1])
 
-        # non-pointer arguments have None is the respective byref_arg_types position
-        if bin_f.byref_arg_types[1] is not None:
-            assert dty == np.dtype(bin_f.byref_arg_types[1])
-        assert dty == np.dtype(bin_f.byref_arg_types[4])
-
-        lx = x.astype(dty)
-        ly = dty.type(y) if np.isscalar(y) else y.astype(dty)
-        lres = np.empty_like(result, dtype=dty)
-
-        return lx, ly, lres
+        return np_x, np_y, np_res
 
     if func_mode == 'Python':
         def ex():
