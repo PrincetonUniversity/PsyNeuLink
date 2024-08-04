@@ -620,13 +620,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 pass
             self.copy_results_to_psyneulink(context)
 
-    def track_in_pnl(self,
-                     track_in_pnl:dict,
-                     attr:Literal[LOSSES, OUTPUTS, AUTODIFF_RESULTS],
-                     current_condition:LEARNING_SCALE_LITERALS,
-                     context:Context,
-                     optimizations_per_minibatch:Optional[int]=None,
-                     optimization_num:Optional[int]=None):
+    def track_in_psyneulink(self,
+                            track_in_pnl:dict,
+                            attr:Literal[LOSSES, OUTPUTS, AUTODIFF_RESULTS],
+                            current_condition:LEARNING_SCALE_LITERALS,
+                            context:Context,
+                            optimizations_per_minibatch:Optional[int]=None,
+                            optimization_num:Optional[int]=None):
         """Keep track of losses, outputs and results and copy to PsyNeuLink at end of learning run."""
 
         condition_specification = track_in_pnl[attr]
