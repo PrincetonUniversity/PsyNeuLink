@@ -1074,6 +1074,7 @@ class AutodiffComposition(Composition):
             port, component, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
             idx = component.output_ports.index(port)
             all_outputs += [curr_tensor_outputs[component][idx].detach().cpu().numpy().copy().tolist()]
+            pytorch_rep.output_nodes = all_outputs
 
         return trained_outputs, all_outputs
 
@@ -1107,10 +1108,11 @@ class AutodiffComposition(Composition):
         # Update pytorch parameters
         optimizer.step()
 
-        # do forward computation on nodes that should be executed after gradient calculation
-        with torch.no_grad():
-            for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
-                node.composition_wrapper_owner.execute_node(node, variable, optimization_num, context)
+        # 7/10/24 - FIX: ??MOVED THE FOLLOWING TO _batch_inputs()
+        # # do forward computation on nodes that should be executed after gradient calculation
+        # with torch.no_grad():
+        #     for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
+        #         node.composition_wrapper_owner.execute_node(node, variable, optimization_num, context)
 
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         if "run" in tags:
@@ -1359,20 +1361,14 @@ class AutodiffComposition(Composition):
                        context=context)
 
                 self._build_pytorch_representation(context)
-                # IMPLEMENTATION NOTE: for autodiff, the following executes an EPOCH's worth of training
                 trained_outputs, all_outputs = self.autodiff_forward(inputs=autodiff_inputs,
-                                                                      targets=autodiff_targets,
-                                                                      synch_with_pnl=synch_with_pnl,
-                                                                      track_in_pnl=track_in_pnl,
-                                                                      context=context,
-                                                                      scheduler=scheduler)
-                # 7/10/24 - FIX: FOR DEBUGGING ONLY - REMOVE WHEN DONE
-                self.INPUTS = autodiff_inputs
-
+                                                                     targets=autodiff_targets,
+                                                                     synch_with_pnl=synch_with_pnl,
+                                                                     track_in_pnl=track_in_pnl,
+                                                                     context=context,
+                                                                     scheduler=scheduler)
                 execution_phase = context.execution_phase
                 context.execution_phase = ContextFlags.PROCESSING
-
-                self.output_CIM.execute(all_outputs, context=context)
                 context.execution_phase = execution_phase
 
                 report(self,

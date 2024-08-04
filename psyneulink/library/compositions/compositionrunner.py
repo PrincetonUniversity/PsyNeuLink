@@ -93,19 +93,17 @@ class CompositionRunner():
                         #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
                         if execution_mode is ExecutionMode.PyTorch:
                             self._composition._update_learning_parameters(context, optimization_num)
-                            # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
                             # MODIFIED 7/10/24 NEW:
                             pytorch_rep = self._composition.parameters.pytorch_representation._get(context=context)
-                            # FIX: CALL synch_with_pnl WITH *LIST* OF CONDITIONS TO SYNCHRONIZE, OR
+                            # do forward computation on nodes that should be executed after gradient calculation
+                            from torch import no_grad
+                            with no_grad():
+                                for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
+                                    node.composition_wrapper_owner.execute_node(node, variable,
+                                                                                optimization_num, context)
+                            # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
                             pytorch_rep.synch_with_psyneulink(synch_with_pnl, OPTIMIZATION_STEP, context,
                                                               optimizations_per_minibatch, optimization_num)
-                            # FIX: ADD UPDATE OF NODE_VALUES OF execute_after_gradient_calc NODES HERE
-                            pytorch_rep.synch_with_psyneulink(synch_with_pnl, OPTIMIZATION_STEP, context,
-                                                              optimizations_per_minibatch, optimization_num)
-                                        # for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
-                                        #     node.composition_wrapper_owner.execute_node(node, variable, optimization_num, context)
-
-
                             # MODIFIED 7/10/24 END
 
                 # # MODIFIED 7/10/24 NEW:

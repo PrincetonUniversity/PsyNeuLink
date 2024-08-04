@@ -42,8 +42,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
     Set up parameters of PyTorch model & information required for forward computation
 
     Handle nested compositions (flattened in infer_backpropagation_learning_pathways):
-    Deal with Projections into or out of a nested Composition as follows:
-
+    Deal with Projections into and/or out of a nested Composition as shown in figure below:
+        (note: Projections in outer Composition to/from a nested Composition's CIMs are learnable,
+               and ones in a nested Composition from/to its CIMs are not)
      [      OUTER     ][                            NESTED                               ][     OUTER      ]
             \\learnable//   \\not learnable//                     \\not learnable//    \\learnable//
      ---> [Node] ----> [input_CIM] ~~~> [INPUT Node] ----> [OUTPUT Node] ~~~> [output_CIM] ----> [Node] --->
@@ -73,17 +74,18 @@ class PytorchCompositionWrapper(torch.nn.Module):
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
 
         self.name = f"PytorchCompositionWrapper[{composition.name}]"
+        self._composition = composition
+        self.device = device
 
         self.wrapped_nodes = []  # can be PytorchMechanismWrapper or PytorchCompositionWrapper
-        self.nodes_map = {} # maps Node (Mech or nested Comp) -> PytorchMechanismWrapper or PytorchCompositionWrapper
+        self.nodes_map = {}    # maps Node (Mech or nested Comp) -> PytorchMechanismWrapper or PytorchCompositionWrapper
+        self.output_values = [] # assigned current value of PytorchMechanismWrapper's OUTPUT Nodes after forward pass
 
         self.projection_wrappers = [] # PytorchProjectionWrappers
         self.projections_map = {}  # maps Projections -> PytorchProjectionWrappers
 
         self.params = nn.ParameterList()
-        self.device = device
 
-        self._composition = composition
         self._nodes_to_execute_after_gradient_calc = {} # Nodes requiring execution after Pytorch forward/backward pass
 
         # Instantiate pytorch Mechanisms
@@ -654,8 +656,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         if nodes == ALL:
             nodes = self.nodes_map.items()
-        elif nodes == OUTPUTS:
-            nodes = [(node, self.nodes_map[node]) for node in self._composition.get_output_nodes()]
+        # elif nodes == OUTPUTS:
+        #     nodes = [(node, self.nodes_map[node]) for node in self._composition.get_output_nodes()]
+
+        if nodes == OUTPUTS:
+            self.output_CIM.execute(all_outputs, context=context)
+            return
 
         for pnl_node, pytorch_node in nodes:
             if pytorch_node.value is None:
