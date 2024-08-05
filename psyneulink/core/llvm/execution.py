@@ -622,7 +622,7 @@ class CompExecution(CUDAExecution):
 
         eval_type = "evaluate_type_all_results" if all_results else "evaluate_type_objective"
         tags = {"evaluate", "alloc_range", eval_type}
-        bin_func = pnlvm.LLVMBinaryFunction.from_obj(ocm, tags=frozenset(tags), numpy_args=(0, 1, 6))
+        bin_func = pnlvm.LLVMBinaryFunction.from_obj(ocm, tags=frozenset(tags), numpy_args=(0, 1, 6, 7))
         self.__bin_func = bin_func
 
         # There are 8 arguments to evaluate_alloc_range:
@@ -648,27 +648,25 @@ class CompExecution(CUDAExecution):
             out_el_ty *= num_trials
         out_ty = out_el_ty * num_evaluations
 
-        ct_num_inputs = bin_func.byref_arg_types[7](num_input_sets)
+        num_inputs = np.asarray(num_input_sets, dtype=np.uint32)
         if "stat" in self._debug_env:
             print("Evaluate result struct type size:",
                   _pretty_size(ctypes.sizeof(out_ty)),
                   "( evaluations:", num_evaluations, "element size:", ctypes.sizeof(out_el_ty), ")",
                   "for", self._obj.name)
 
-        return comp_params, comp_state, comp_data, ct_inputs, out_ty, ct_num_inputs
+        return comp_params, comp_state, comp_data, ct_inputs, out_ty(), num_inputs
 
     def cuda_evaluate(self, inputs, num_input_sets, num_evaluations, all_results:bool=False):
-        comp_params, comp_state, comp_data, ct_inputs, out_ty, _ = \
+        comp_params, comp_state, comp_data, ct_inputs, ct_results, num_inputs = \
             self._prepare_evaluate(inputs, num_input_sets, num_evaluations, all_results)
 
-        ct_results = out_ty()
-
         cuda_args = (jit_engine.pycuda.driver.In(comp_params),
-                     jit_engine.pycuda.driver.InOut(comp_state),
+                     jit_engine.pycuda.driver.In(comp_state),
                      jit_engine.pycuda.driver.Out(np.ctypeslib.as_array(ct_results)),   # results
                      jit_engine.pycuda.driver.In(np.ctypeslib.as_array(ct_inputs)),     # inputs
-                     jit_engine.pycuda.driver.InOut(comp_data),                         # composition data
-                     jit_engine.pycuda.driver.In(np.int32(num_input_sets)),             # number of inputs
+                     jit_engine.pycuda.driver.In(comp_data),                            # composition data
+                     jit_engine.pycuda.driver.In(num_inputs),                           # number of inputs
                     )
 
         self.__bin_func.cuda_call(*cuda_args, threads=int(num_evaluations))
@@ -676,10 +674,9 @@ class CompExecution(CUDAExecution):
         return ct_results
 
     def thread_evaluate(self, inputs, num_input_sets, num_evaluations, all_results:bool=False):
-        comp_params, comp_state, comp_data, ct_inputs, out_ty, ct_num_inputs = \
+        comp_params, comp_state, comp_data, ct_inputs, ct_results, num_inputs = \
             self._prepare_evaluate(inputs, num_input_sets, num_evaluations, all_results)
 
-        ct_results = out_ty()
         jobs = min(os.cpu_count(), num_evaluations)
         evals_per_job = (num_evaluations + jobs - 1) // jobs
 
@@ -688,11 +685,11 @@ class CompExecution(CUDAExecution):
 
             # Create input and result typed casts once, they are the same
             # for every submitted job.
-            input_arg = ctypes.cast(ct_inputs, self.__bin_func.c_func.argtypes[5])
             results_arg = ctypes.cast(ct_results, self.__bin_func.c_func.argtypes[4])
+            input_arg = ctypes.cast(ct_inputs, self.__bin_func.c_func.argtypes[5])
 
-            # There are 7 arguments to evaluate_alloc_range:
-            # comp_param, comp_state, from, to, results, input, comp_data
+            # There are 8 arguments to evaluate_alloc_range:
+            # comp_param, comp_state, from, to, results, input, comp_data, input length
             results = [ex.submit(self.__bin_func,
                                  comp_params,
                                  comp_state,
@@ -701,7 +698,7 @@ class CompExecution(CUDAExecution):
                                  results_arg,
                                  input_arg,
                                  comp_data,
-                                 ct_num_inputs)
+                                 num_inputs)
                        for i in range(jobs)]
 
         parallel_stop = time.time()
