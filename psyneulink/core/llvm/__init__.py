@@ -245,16 +245,6 @@ class LLVMBinaryFunction:
     def get(name: str, *, numpy_args:tuple=()):
         return LLVMBinaryFunction(name, numpy_args=numpy_args)
 
-    def get_multi_run(self, *, numpy_args=()):
-        try:
-            multirun_llvm = _find_llvm_function(self.name + "_multirun")
-        except ValueError:
-            function = _find_llvm_function(self.name)
-            with LLVMBuilderContext.get_current() as ctx:
-                multirun_llvm = codegen.gen_multirun_wrapper(ctx, function)
-
-        return LLVMBinaryFunction.get(multirun_llvm.name, numpy_args=numpy_args)
-
 
 _cpu_engine = None
 _ptx_engine = None

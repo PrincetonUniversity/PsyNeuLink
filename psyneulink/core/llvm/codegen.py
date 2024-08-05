@@ -1119,56 +1119,6 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
     return llvm_func
 
 
-def gen_multirun_wrapper(ctx, function: ir.Function) -> ir.Function:
-    if function.module is not ctx.module:
-        function = ir.Function(ctx.module, function.type.pointee, function.name)
-        assert function.is_declaration
-
-    args = [a.type for a in function.args]
-    args.append(ctx.int32_ty.as_pointer())
-    multirun_ty = ir.FunctionType(function.type.pointee.return_type, args)
-    multirun_f = ir.Function(ctx.module, multirun_ty, function.name + "_multirun")
-    block = multirun_f.append_basic_block(name="entry")
-    builder = ir.IRBuilder(block)
-
-    multi_runs = builder.load(multirun_f.args[-1])
-    # Runs need special handling. data_in and data_out are one dimensional,
-    # but hold entries for all parallel invocations.
-    is_comp_run = len(function.args) == 7
-    if is_comp_run:
-        trials_count = builder.load(multirun_f.args[5])
-        input_count = builder.load(multirun_f.args[6])
-
-    with helpers.for_loop_zero_inc(builder, multi_runs, "multi_run_loop") as (b, index):
-        # Index all pointer arguments
-        indexed_args = []
-        for i, arg in enumerate(multirun_f.args[:-1]):
-            # Don't adjust #inputs and #trials
-            if isinstance(arg.type, ir.PointerType):
-                offset = index
-                # #runs and #trials needs to be the same for every invocation
-                if is_comp_run and i >= 5:
-                    offset = ctx.int32_ty(0)
-                    # Reset trial count for every invocation.
-                    # Previous runs might have finished earlier
-                    if i == 5:
-                        builder.store(trials_count, arg)
-                # data arrays need special handling
-                elif is_comp_run and i == 4:  # data_out
-                    offset = b.mul(index, trials_count)
-                elif is_comp_run and i == 3:  # data_in
-                    offset = b.mul(index, input_count)
-
-                arg = b.gep(arg, [offset])
-
-            indexed_args.append(arg)
-
-        b.call(function, indexed_args)
-
-    builder.ret_void()
-    return multirun_f
-
-
 def gen_autodiffcomp_exec(ctx, composition, *, tags:frozenset):
     """Creates llvm bin execute for autodiffcomp"""
     assert composition.controller is None
