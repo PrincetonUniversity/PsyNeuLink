@@ -82,7 +82,7 @@ class Execution:
             assert numpy_struct.nbytes == ctypes.sizeof(struct), \
                 "Size mismatch ({}), numpy: {} vs. ctypes:{}".format(name, numpy_struct.nbytes, ctypes.sizeof(struct))
 
-            saved = (struct, numpy_struct)
+            saved = numpy_struct
             setattr(self, name, saved)
 
             if "time_stat" in self._debug_env:
@@ -224,7 +224,7 @@ class CUDAExecution(Execution):
     def __get_cuda_arg(self, struct_name, arg_handler):
         gpu_buffer = self._gpu_buffers[struct_name]
 
-        np_struct = getattr(self, struct_name)[1]
+        np_struct = getattr(self, struct_name)
 
         # .array is a public member of pycuda's In/Out ArgumentHandler classes
         if gpu_buffer is None or gpu_buffer.array is not np_struct:
@@ -294,7 +294,7 @@ class FuncExecution(CUDAExecution):
         data_in = new_variable.reshape(self._bin_func.np_params[2].shape)
         data_out = self._bin_func.np_buffer_for_arg(3)
 
-        self._bin_func(self._param_struct[1], self._state_struct[1], data_in, data_out)
+        self._bin_func(self._param_struct, self._state_struct, data_in, data_out)
 
         return self._get_indexable(data_out)
 
@@ -374,11 +374,11 @@ class CompExecution(CUDAExecution):
 
             np_conditions.shape = ()
 
-            self.__conditions = (ct_conditions, np_conditions)
+            self.__conditions = np_conditions
 
             if "stat" in self._debug_env:
                 print("Instantiated condition struct ( size:" ,
-                      _pretty_size(ctypes.sizeof(conditions_ctype)), ")",
+                      _pretty_size(np_conditions.nbytes), ")",
                       "for", self._composition.name)
 
         return self.__conditions
@@ -401,7 +401,7 @@ class CompExecution(CUDAExecution):
     def _data_struct(self, data_struct):
         self._data = data_struct
 
-    def _extract_node_struct_from_numpy(self, node, data):
+    def extract_node_struct(self, node, data):
         # state structure consists of a list of node states,
         #   followed by a list of projection contexts; get the first one
         # parameter structure consists of a list of node parameters,
@@ -418,9 +418,6 @@ class CompExecution(CUDAExecution):
         # returned results in next execution
         return node_struct.copy().tolist() if node_struct.shape == () else node_struct.copy()
 
-    def extract_node_struct(self, node, struct):
-        return self._extract_node_struct_from_numpy(node, struct[1])
-
     def extract_frozen_node_output(self, node):
         return self.extract_node_struct(node, self.__frozen_values)
 
@@ -436,7 +433,7 @@ class CompExecution(CUDAExecution):
     def insert_node_output(self, node, data):
         # output structure consists of a list of node outputs,
         #   followed by a list of nested data structures; get the first one
-        all_nodes = self._data_struct[1][self._data_struct[1].dtype.names[0]]
+        all_nodes = self._data_struct[self._data_struct.dtype.names[0]]
 
         # Get the index into the array of all nodes
         index = self._composition._get_node_index(node)
@@ -447,7 +444,6 @@ class CompExecution(CUDAExecution):
         # Either node or composition execute.
 
         # Read provided input data and parse into an array (generator)
-        ct_input = None
         data = self._composition._build_variable_for_input_CIM(inputs)
 
         np_input = np.asarray(_tupleize(data), dtype=self._bin_func.np_params[2].base)
@@ -456,12 +452,10 @@ class CompExecution(CUDAExecution):
         if "stat" in self._debug_env:
             print("Input struct size:", _pretty_size(np_input.nbytes), "for", self._composition.name)
 
-        return ct_input, np_input
+        return np_input
 
     def freeze_values(self):
-        np_copy = self._data_struct[1].copy()
-
-        self.__frozen_values = (None, np_copy)
+        self.__frozen_values = self._data_struct.copy()
 
     def execute_node(self, node, inputs=None):
         # We need to reconstruct the input dictionary here if it was not provided.
@@ -485,7 +479,7 @@ class CompExecution(CUDAExecution):
         # Numpy doesn't allow to pass NULL to the called function.
         # Create and pass a dummy buffer filled with NaN instead.
         if inputs is not None:
-            inputs = self._get_input_struct(inputs)[1]
+            inputs = self._get_input_struct(inputs)
         else:
             inputs = self._bin_func.np_buffer_for_arg(2)
 
@@ -493,17 +487,13 @@ class CompExecution(CUDAExecution):
         # and need frozen values available
         if node is not self._composition.input_CIM and node is not self._composition.parameter_CIM:
             assert self.__frozen_values is not None
-            data_in = self.__frozen_values[1]
+            data_in = self.__frozen_values
         else:
             # The ndarray argument check doesn't allow None for null so just provide
             # the same structure as outputs.
-            data_in = self._data_struct[1]
+            data_in = self._data_struct
 
-        self._bin_func(self._state_struct[1],
-                       self._param_struct[1],
-                       inputs,
-                       data_in,
-                       self._data_struct[1])
+        self._bin_func(self._state_struct, self._param_struct, inputs, data_in, self._data_struct)
 
         if "comp_node_debug" in self._debug_env:
             print("RAN: {}. State: {}".format(node, self.extract_node_state(node)))
@@ -523,18 +513,18 @@ class CompExecution(CUDAExecution):
     def execute(self, inputs):
         # NOTE: Make sure that input struct generation is inlined.
         # We need the binary function to be setup for it to work correctly.
-        self._bin_exec_func(self._state_struct[1],
-                            self._param_struct[1],
-                            self._get_input_struct(inputs)[1],
-                            self._data_struct[1],
-                            self._conditions[1])
+        self._bin_exec_func(self._state_struct,
+                            self._param_struct,
+                            self._get_input_struct(inputs),
+                            self._data_struct,
+                            self._conditions)
 
     def cuda_execute(self, inputs):
         # NOTE: Make sure that input struct generation is inlined.
         # We need the binary function to be setup for it to work correctly.
         self._bin_exec_func.cuda_call(self._cuda_state_struct,
                                       self._cuda_param_struct,
-                                      jit_engine.pycuda.driver.In(self._get_input_struct(inputs)[1]),
+                                      jit_engine.pycuda.driver.In(self._get_input_struct(inputs)),
                                       self._cuda_data_struct,
                                       self._cuda_conditions)
 
@@ -544,11 +534,10 @@ class CompExecution(CUDAExecution):
         bin_f = self._bin_run_func if arg == 3 else self._bin_func
 
         input_type = bin_f.byref_arg_types[arg]
-        c_input_type = (input_type * num_input_sets) * 1
-        inputs = [inputs]
+        c_input_type = (input_type * num_input_sets)
 
         # Extract input for each trial and execution id
-        run_inputs = ((([x] for x in self._composition._build_variable_for_input_CIM({k:v[i] for k,v in inp.items()})) for i in range(num_input_sets)) for inp in inputs)
+        run_inputs = (([x] for x in self._composition._build_variable_for_input_CIM({k:v[i] for k,v in inputs.items()})) for i in range(num_input_sets))
         c_inputs = c_input_type(*_tupleize(run_inputs))
         if "stat" in self._debug_env:
             print("Instantiated struct: input ( size:" ,
@@ -597,12 +586,9 @@ class CompExecution(CUDAExecution):
         runs_count = ctypes.c_uint(runs)
         input_count = ctypes.c_uint(num_input_sets)
 
-        # The cast is only needed for non-generator inputs that are wrapped in an extra context dimension
-        inputs = ctypes.cast(inputs, self._bin_run_func.c_func.argtypes[3])
-
-        self._bin_run_func(self._state_struct[1],
-                           self._param_struct[1],
-                           self._data_struct[1],
+        self._bin_run_func(self._state_struct,
+                           self._param_struct,
+                           self._data_struct,
                            inputs,
                            outputs,
                            runs_count,
@@ -657,9 +643,9 @@ class CompExecution(CUDAExecution):
 
         # Directly initialized structures
         assert ocm.agent_rep is self._composition
-        comp_params = self._get_compilation_param('_eval_param', '_get_param_initializer', 0)[1]
-        comp_state = self._get_compilation_param('_eval_state', '_get_state_initializer', 1)[1]
-        comp_data = self._get_compilation_param('_eval_data', '_get_data_initializer', 6)[1]
+        comp_params = self._get_compilation_param('_eval_param', '_get_param_initializer', 0)
+        comp_state = self._get_compilation_param('_eval_state', '_get_state_initializer', 1)
+        comp_data = self._get_compilation_param('_eval_data', '_get_data_initializer', 6)
 
         # Construct input variable, the 5th parameter of the evaluate function
         ct_inputs = self._get_run_input_struct(inputs, num_input_sets, 5)
