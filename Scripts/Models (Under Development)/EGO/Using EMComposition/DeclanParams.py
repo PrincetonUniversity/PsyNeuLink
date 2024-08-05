@@ -58,7 +58,7 @@ model_params = dict(
     # environment
     curriculum_type = 'Interleaved',
     # curriculum_type = 'Blocked',
-    # num_stims = 7,  # Integer or ALL
+    # num_stims = 100,  # Integer or ALL
     num_stims = ALL,  # Integer or ALL
 
     # Processing

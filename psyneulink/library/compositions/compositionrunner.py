@@ -63,8 +63,8 @@ class CompositionRunner():
                       execution_mode:ExecutionMode=ExecutionMode.Python,
                       context=None)->GeneratorType:
         """Execute inputs and update pytroch parameters for one minibatch at a time.
-        Partition inputs dict into ones of length minibatch_size (or for the last chunk, the remainder)
-        Execute all inputs in that dict and then update weights, and repeat for all batches within an epoch
+        Partition inputs dict into ones of length minibatch_size (or, for the last set, the remainder)
+        Execute all inputs in that dict and then update weights (parameters), and repeat for all batches within an epoch
         Synchronize weights, values & results w/ PsyNeuLink as specified in synch_with_pnl & track_in_pnl options dicts.
         """
         assert early_stopper is None or not self._is_llvm_mode, "Early stopper doesn't work in compiled mode"
@@ -74,20 +74,27 @@ class CompositionRunner():
         #This is a generator for performance reasons,
         #    since we don't want to copy any data (especially for very large inputs or epoch counts!)
         for epoch in range(epochs):
-            indices = list(range(0, num_trials))
+            all_trials = list(range(0, num_trials))
             if randomize:
-                np.random.shuffle(indices)
+                np.random.shuffle(all_trials)
+
+            # Cycle over minibatches
             for i in range(0, num_trials, minibatch_size):
                 if call_before_minibatch:
                     call_before_minibatch()
-                curr_indices = indices[i:i + minibatch_size]
-                for idx in curr_indices:
-                    chunk = {}
+
+                # Cycle over trials (stimui) within a minibatch
+                trials_in_batch = all_trials[i:i + minibatch_size]
+                for trial in trials_in_batch:
+                    inputs_for_minibatch = {}
+                    # Get inputs for the current minibatch
                     for k, v in inputs.items():
-                        chunk[k] = v[idx % len(v)]
+                        inputs_for_minibatch[k] = v[trial % len(v)]
+
+                    # Cycle over optimizations per trial (stimulus
                     for optimization_num in range(optimizations_per_minibatch):
-                        # Return current stimulus
-                        yield copy_parameter_value(chunk)
+                        # Return current set of stimuli for minibatch
+                        yield copy_parameter_value(inputs_for_minibatch)
 
                         # Update weights if in PyTorch execution_mode;
                         #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
