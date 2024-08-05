@@ -23,7 +23,7 @@ from llvmlite import ir
 
 from . import codegen
 from .builder_context import *
-from .builder_context import _all_modules, _convert_llvm_ir_to_ctype
+from .builder_context import _all_modules, _convert_llvm_ir_to_ctype, _convert_llvm_ir_to_dtype
 from .debug import debug_env
 from .execution import *
 from .execution import _tupleize
@@ -123,7 +123,7 @@ def _llvm_build(target_generation=_binary_generation + 1):
 
 
 class LLVMBinaryFunction:
-    def __init__(self, name: str):
+    def __init__(self, name: str, *, numpy_args=()):
         self.name = name
 
         self.__c_func = None
@@ -144,6 +144,16 @@ class LLVMBinaryFunction:
         start = time.perf_counter()
         return_type = _convert_llvm_ir_to_ctype(f.return_value.type)
         args = [_convert_llvm_ir_to_ctype(a.type) for a in f.args]
+
+        # '_type_' special attribute stores pointee type for pointers
+        # https://docs.python.org/3/library/ctypes.html#ctypes._Pointer._type_
+        self.byref_arg_types = [a._type_ if hasattr(a, "contents") else None for a in args]
+        self.np_params = [_convert_llvm_ir_to_dtype(getattr(a.type, "pointee", a.type)) for a in f.args]
+
+        for a in numpy_args:
+            assert self.byref_arg_types[a] is not None
+            args[a] = np.ctypeslib.ndpointer(dtype=self.np_params[a].base, shape=self.np_params[a].shape)
+
         middle = time.perf_counter()
         self.__c_func_type = ctypes.CFUNCTYPE(return_type, *args)
         finish = time.perf_counter()
@@ -151,10 +161,6 @@ class LLVMBinaryFunction:
         if "time_stat" in debug_env:
             print("Time to create ctype function '{}': {} ({} to create types)".format(
                   name, finish - start, middle - start))
-
-        # '_type_' special attribute stores pointee type for pointers
-        # https://docs.python.org/3/library/ctypes.html#ctypes._Pointer._type_
-        self.byref_arg_types = [a._type_ if hasattr(a, "contents") else None for a in args]
 
     @property
     def c_func(self):
@@ -220,18 +226,26 @@ class LLVMBinaryFunction:
         wrap_args = (jit_engine.pycuda.driver.InOut(a) if isinstance(a, np.ndarray) else a for a in args)
         self.cuda_call(*wrap_args, **kwargs)
 
+    def np_buffer_for_arg(self, arg_num, *, extra_dimensions=(), fill_value=np.nan):
+
+        out_base = self.np_params[arg_num].base
+        out_shape = extra_dimensions + self.np_params[arg_num].shape
+
+        # fill the buffer with NaN poison
+        return np.full(out_shape, fill_value, dtype=out_base)
+
     @staticmethod
     @functools.lru_cache(maxsize=32)
-    def from_obj(obj, *, tags:frozenset=frozenset()):
+    def from_obj(obj, *, tags:frozenset=frozenset(), numpy_args:tuple=()):
         name = LLVMBuilderContext.get_current().gen_llvm_function(obj, tags=tags).name
-        return LLVMBinaryFunction.get(name)
+        return LLVMBinaryFunction.get(name, numpy_args=numpy_args)
 
     @staticmethod
     @functools.lru_cache(maxsize=32)
-    def get(name: str):
-        return LLVMBinaryFunction(name)
+    def get(name: str, *, numpy_args:tuple=()):
+        return LLVMBinaryFunction(name, numpy_args=numpy_args)
 
-    def get_multi_run(self):
+    def get_multi_run(self, *, numpy_args=()):
         try:
             multirun_llvm = _find_llvm_function(self.name + "_multirun")
         except ValueError:
@@ -239,7 +253,7 @@ class LLVMBinaryFunction:
             with LLVMBuilderContext.get_current() as ctx:
                 multirun_llvm = codegen.gen_multirun_wrapper(ctx, function)
 
-        return LLVMBinaryFunction.get(multirun_llvm.name)
+        return LLVMBinaryFunction.get(multirun_llvm.name, numpy_args=numpy_args)
 
 
 _cpu_engine = None

@@ -11681,7 +11681,8 @@ _
                     assert (execution_mode == pnlvm.ExecutionMode.LLVM
                             or execution_mode & pnlvm.ExecutionMode._Fallback),\
                         f"PROGRAM ERROR: Unrecognized compiled execution_mode: '{execution_mode}'."
-                    _comp_ex.execute_node(self.controller, context=context)
+                    _comp_ex.freeze_values()
+                    _comp_ex.execute_node(self.controller)
 
                 context.remove_flag(ContextFlags.PROCESSING)
 
@@ -12010,7 +12011,7 @@ _
                 build_CIM_input = self._build_variable_for_input_CIM(inputs)
 
             if execution_mode & pnlvm.ExecutionMode.COMPILED:
-                _comp_ex.execute_node(self.input_CIM, inputs, context)
+                _comp_ex.execute_node(self.input_CIM, inputs)
                 # FIXME: parameter_CIM should be executed here as well,
                 #        but node execution of nested compositions with
                 #        outside control is not supported yet.
@@ -12295,7 +12296,7 @@ _
 
                         # Execute Mechanism
                         if execution_mode & pnlvm.ExecutionMode.COMPILED:
-                            _comp_ex.execute_node(node, context=context)
+                            _comp_ex.execute_node(node)
                         else:
                             if node is not self.controller:
                                 mech_context = copy(context)
@@ -12507,7 +12508,7 @@ _
             # Extract result here
             if execution_mode & pnlvm.ExecutionMode.COMPILED:
                 _comp_ex.freeze_values()
-                _comp_ex.execute_node(self.output_CIM, context=context)
+                _comp_ex.execute_node(self.output_CIM)
                 report(self,
                        PROGRESS_REPORT,
                        report_num=report_num,
