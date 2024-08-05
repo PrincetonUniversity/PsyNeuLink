@@ -588,36 +588,23 @@ class PytorchCompositionWrapper(torch.nn.Module):
                               synch_with_pnl:dict,
                               current_condition:LEARNING_SCALE_LITERALS,
                               context:Context,
-                              optimizations_per_minibatch:Optional[int]=None,
-                              optimization_num:Optional[int]=None,
-                              attrs:Union[list,ALL]=ALL):
-        """Copy weights, values, or results at specified times between Pytorch and PsyNeuLink representations"""
-        legal_attrs = [MATRIX_WEIGHTS, NODE_VALUES, AUTODIFF_RESULTS]
-        if attrs == ALL:
-            attrs = legal_attrs
-        illegal_attrs = [attr not in legal_attrs for attr in attrs]
-        assert len([attr not in legal_attrs for attr in attrs]),\
-            f"PROGRAM ERROR: Illegal attributes ({' ,'.join(illegal_attrs)}) specified in call to "
+                              params:Optional[list]=None):
+        """Copy weights, values, and/or results from Pytorch to PsyNeuLink at specified junctures
+        If params is not specified, all are copied;
+        """
+        all = [MATRIX_WEIGHTS, NODE_VALUES, AUTODIFF_RESULTS]
+        params = params or all
+        illegal_params = [param for param in params if param not in all]
+        assert not illegal_params, \
+            f"PROGRAM ERROR: Illegal attributes ({' ,'.join(illegal_params)}) specified in call to synch_with_psyneulink"
 
-        if current_condition == TRIAL:
-            # Determine if current optimization is last for trial to restrict synch to that one
-            assert optimizations_per_minibatch is not None, (f"PROGRAM ERROR: optimizations_per_minibatch is None "
-                                                             f"for {' ,'.join(attrs)} == TRIAL")
-            END_OF_TRIAL = optimization_num is None or ((optimization_num + 1) % optimizations_per_minibatch) == 0
-
-        if MATRIX_WEIGHTS in attrs and synch_with_pnl[MATRIX_WEIGHTS] == current_condition:
-            if current_condition == TRIAL and not END_OF_TRIAL:
-                pass
+        if MATRIX_WEIGHTS in params and synch_with_pnl[MATRIX_WEIGHTS] == current_condition:
             self.copy_weights_to_psyneulink(context)
 
-        if NODE_VALUES in attrs and synch_with_pnl[NODE_VALUES] == current_condition:
-            if current_condition == TRIAL and not END_OF_TRIAL:
-                pass
+        if NODE_VALUES in params and synch_with_pnl[NODE_VALUES] == current_condition:
             self.copy_values_to_psyneulink(ALL, context)
 
-        if AUTODIFF_RESULTS in attrs and synch_with_pnl[AUTODIFF_RESULTS] == current_condition:
-            if current_condition == TRIAL and not END_OF_TRIAL:
-                pass
+        if AUTODIFF_RESULTS in params and synch_with_pnl[AUTODIFF_RESULTS] == current_condition:
             self.copy_results_to_psyneulink(context)
 
     def track_in_psyneulink(self,
@@ -712,7 +699,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def copy_results_to_psyneulink(self, context=None):
         """Copy outputs of Pytorch forward() to AutodiffComposition.results attribute."""
-        # 7/10/24 - FIX: THIS NEEDS TO HAPPEN *AFTER* THE COMOPSITION HAS WRITTEN THE RESULTS,
+        # 7/10/24 - FIX: THIS NEEDS TO HAPPEN *AFTER* THE COMPOSITION HAS WRITTEN THE RESULTS,
         #                 IN ORDER TO REPLACE THAT
         # self._composition.results[-1] = self.output_values
         pass
@@ -748,7 +735,7 @@ class PytorchMechanismWrapper():
                  component_idx,        # index of the Mechanism in the Composition
                  device,               # needed for Pytorch
                  context=None):
-        # # MODIFIED 7/10/24 NEW:
+        # # MODIFIED 7/10/24 NEW: NEEDED FOR MPS
         # super().__init__()
         # MODIFIED 7/10/24 END
         self._mechanism = mechanism

@@ -52,7 +52,7 @@ class CompositionRunner():
                       inputs: dict,
                       epochs: int,
                       num_trials: int,
-                      batch_size: int = 1,
+                      minibatch_size: int = 1,
                       optimizations_per_minibatch: int = 1,
                       randomize: bool = True,
                       synch_with_pnl:Optional[dict] = None,
@@ -62,8 +62,8 @@ class CompositionRunner():
                       early_stopper=None,
                       execution_mode:ExecutionMode=ExecutionMode.Python,
                       context=None)->GeneratorType:
-        """Execute inputs and update pytroch parameters for one batch at a time.
-        Partition inputs dict into ones of length batch_size (or for the last chunk, the remainder)
+        """Execute inputs and update pytroch parameters for one minibatch at a time.
+        Partition inputs dict into ones of length minibatch_size (or for the last chunk, the remainder)
         Execute all inputs in that dict and then update weights, and repeat for all batches within an epoch
         Synchronize weights, values & results w/ PsyNeuLink as specified in synch_with_pnl & track_in_pnl options dicts.
         """
@@ -77,10 +77,10 @@ class CompositionRunner():
             indices = list(range(0, num_trials))
             if randomize:
                 np.random.shuffle(indices)
-            for i in range(0, num_trials, batch_size):
+            for i in range(0, num_trials, minibatch_size):
                 if call_before_minibatch:
                     call_before_minibatch()
-                curr_indices = indices[i:i + batch_size]
+                curr_indices = indices[i:i + minibatch_size]
                 for idx in curr_indices:
                     chunk = {}
                     for k, v in inputs.items():
@@ -93,43 +93,39 @@ class CompositionRunner():
                         #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
                         if execution_mode is ExecutionMode.PyTorch:
                             self._composition._update_learning_parameters(context, optimization_num)
-                            # MODIFIED 7/10/24 NEW:
-                            pytorch_rep = self._composition.parameters.pytorch_representation._get(context=context)
+
                             # do forward computation on nodes that should be executed after gradient calculation
+                            pytorch_rep = self._composition.parameters.pytorch_representation._get(context=context)
                             from torch import no_grad
                             with no_grad():
                                 for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
                                     node.composition_wrapper_owner.execute_node(node, variable,
                                                                                 optimization_num, context)
+
                             # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
-                            pytorch_rep.synch_with_psyneulink(synch_with_pnl, OPTIMIZATION_STEP, context,
-                                                              optimizations_per_minibatch, optimization_num)
-                            # MODIFIED 7/10/24 END
+                            pytorch_rep.synch_with_psyneulink(synch_with_pnl, OPTIMIZATION_STEP, context)
 
-                    # Synchronize after every stimulus (i.e., trial) if specified
-                    pytorch_rep.synch_with_psyneulink(synch_with_pnl, TRIAL, context,
-                                                      optimizations_per_minibatch, optimization_num)
+                    if execution_mode is ExecutionMode.PyTorch:
+                        # Synchronize specified params after every stimulus (i.e., trial)
+                        pytorch_rep.synch_with_psyneulink(synch_with_pnl, TRIAL, context)
 
-                # # MODIFIED 7/10/24 NEW:
                 if execution_mode is ExecutionMode.PyTorch:
+                    # Synchronize specified params after every minibatch
                     pytorch_rep.synch_with_psyneulink(synch_with_pnl, MINIBATCH, context)
-                # MODIFIED 7/10/24 END
 
                 if call_after_minibatch:
                     try:
                         # Try with the hope that the function uses **kwargs (or these args)
                         call_after_minibatch(epoch=epoch,
-                                             batch=i // batch_size,
-                                             num_batches=num_trials // batch_size,
-                                             context=context)
+                                             minibatch = i // minibatch_size,
+                                             num_minibatches = num_trials // minibatch_size,
+                                             context = context)
                     except TypeError:
                         # If not, try without the args
                         call_after_minibatch()
 
-            # # MODIFIED 7/10/24 NEW:
             if execution_mode is ExecutionMode.PyTorch:
                 pytorch_rep.synch_with_psyneulink(synch_with_pnl, EPOCH, context)
-            # MODIFIED 7/10/24 END
 
             # Compiled mode does not need more identical inputs.
             # number_of_runs will be set appropriately to cycle over the set
@@ -140,10 +136,9 @@ class CompositionRunner():
                 # end early if patience exceeded
                 pass
 
-        # # MODIFIED 7/10/24 NEW:
         if execution_mode is ExecutionMode.PyTorch:
+            # Synchronize specified params at end of learning run
             pytorch_rep.synch_with_psyneulink(synch_with_pnl, RUN, context)
-        # MODIFIED 7/10/24 END
 
 
     def _batch_function_inputs(self,
@@ -315,7 +310,7 @@ class CompositionRunner():
                 minibatched_input = self._batch_inputs(inputs=stim_input,
                                                        epochs=stim_epoch,
                                                        num_trials=num_trials,
-                                                       batch_size=minibatch_size,
+                                                       minibatch_size=minibatch_size,
                                                        optimizations_per_minibatch=optimizations_per_minibatch,
                                                        randomize=randomize_minibatches,
                                                        synch_with_pnl=synch_with_pnl,

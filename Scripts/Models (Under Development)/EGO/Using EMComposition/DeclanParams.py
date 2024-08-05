@@ -52,12 +52,12 @@ model_params = dict(
     memory_capacity = ALL, # number of entries in EM memory; ALL=> match to number of stims
     memory_init = (0,.0001),  # Initialize memory with random values in interval
     # memory_init = None,  # Initialize with zeros
-    # concatenate_keys = False,
-    concatenate_keys = True,
+    concatenate_keys = False,
+    # concatenate_keys = True,
 
     # environment
-    # curriculum_type = 'Interleaved',
-    curriculum_type = 'Blocked',
+    curriculum_type = 'Interleaved',
+    # curriculum_type = 'Blocked',
     # num_stims = 7,  # Integer or ALL
     num_stims = ALL,  # Integer or ALL
 
