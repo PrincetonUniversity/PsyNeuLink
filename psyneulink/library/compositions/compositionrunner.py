@@ -74,9 +74,9 @@ class CompositionRunner():
         #This is a generator for performance reasons,
         #    since we don't want to copy any data (especially for very large inputs or epoch counts!)
         for epoch in range(epochs):
-            all_trials = list(range(0, num_trials))
+            indices_of_all_trials = list(range(0, num_trials))
             if randomize:
-                np.random.shuffle(all_trials)
+                np.random.shuffle(indices_of_all_trials)
 
             # Cycle over minibatches
             for i in range(0, num_trials, minibatch_size):
@@ -84,12 +84,19 @@ class CompositionRunner():
                     call_before_minibatch()
 
                 # Cycle over trials (stimui) within a minibatch
-                trials_in_batch = all_trials[i:i + minibatch_size]
-                for trial in trials_in_batch:
+                indices_of_trials_in_batch = indices_of_all_trials[i:i + minibatch_size]
+
+                # FIX: IMPLEMENT PARALLELIZATION FOR minibatch_size > 1
+                # # assert IF MINIBATCH > 1 THEN OPTIMIZATIONS_PER_STIMULUS == 1
+                # if minibatch_size > 1 and optimizations_per_minibatch == 1:
+                #     yield DICT WITH STIMULI FOR BATCH RUN THROUGH copy_parameter_value(stim)
+                #  FIX: _gen_pytorch_fct's need to be refactored to handle batch dimension
+
+                for trial_idx in indices_of_trials_in_batch:
                     inputs_for_minibatch = {}
                     # Get inputs for the current minibatch
                     for k, v in inputs.items():
-                        inputs_for_minibatch[k] = v[trial % len(v)]
+                        inputs_for_minibatch[k] = v[trial_idx % len(v)]
 
                     # Cycle over optimizations per trial (stimulus
                     for optimization_num in range(optimizations_per_minibatch):
