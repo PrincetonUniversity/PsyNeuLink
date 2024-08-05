@@ -16,8 +16,8 @@ from psyneulink.core.llvm import ExecutionMode
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.compositions.report import Report, ReportProgress, ReportDevices, LEARN_REPORT, PROGRESS_REPORT
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
-from psyneulink.core.globals.keywords import (EPOCH, LEARNING_SCALE_LITERALS, MINIBATCH, OBJECTIVE_MECHANISM,
-                                              OPTIMIZATION_STEP, RESULTS, RUN, TRAINING_SET, MATRIX_WEIGHTS)
+from psyneulink.core.globals.keywords import (EPOCH, MATRIX_WEIGHTS, MINIBATCH, OBJECTIVE_MECHANISM,
+                                              OPTIMIZATION_STEP, RESULTS, RUN, TRAINING_SET, TRIAL)
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.parameters import copy_parameter_value
 from inspect import isgeneratorfunction
@@ -105,6 +105,10 @@ class CompositionRunner():
                             pytorch_rep.synch_with_psyneulink(synch_with_pnl, OPTIMIZATION_STEP, context,
                                                               optimizations_per_minibatch, optimization_num)
                             # MODIFIED 7/10/24 END
+
+                    # Synchronize after every stimulus (i.e., trial) if specified
+                    pytorch_rep.synch_with_psyneulink(synch_with_pnl, TRIAL, context,
+                                                      optimizations_per_minibatch, optimization_num)
 
                 # # MODIFIED 7/10/24 NEW:
                 if execution_mode is ExecutionMode.PyTorch:

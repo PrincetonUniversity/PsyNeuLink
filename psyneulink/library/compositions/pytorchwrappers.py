@@ -665,6 +665,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             """ Update autodiff's output_values by executing its output_CIM's with pytorch_rep's output values"""
             if self.output_values:
                 self._composition.output_CIM.execute(self.output_values, context=context)
+                assert True # 7/102/24 - FIX: NOT BEING CALLED
 
         # Allow selective updating of autodiff.output_values if specified
         if nodes == OUTPUTS:
@@ -711,6 +712,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def copy_results_to_psyneulink(self, context=None):
         """Copy outputs of Pytorch forward() to AutodiffComposition.results attribute."""
+        # 7/10/24 - FIX: THIS NEEDS TO HAPPEN *AFTER* THE COMOPSITION HAS WRITTEN THE RESULTS,
+        #                 IN ORDER TO REPLACE THAT
+        # self._composition.results[-1] = self.output_values
         pass
 
     def detach_all(self):

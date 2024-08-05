@@ -11409,6 +11409,10 @@ _
                 except StopIteration:
                     break
 
+                # MODIFIED 7/10/24 NEW: - FIX FOR DEBUGGING ONLY
+                self.trial_num = trial_num
+                # MODIFIED 7/10/24 END
+
                 # execute processing, passing stimuli for this trial
                 # IMPLEMENTATION NOTE: for autodiff, the following executes the forward pass for a single input
                 trial_output = self.execute(inputs=execution_stimuli,
@@ -11433,9 +11437,7 @@ _
                 # ---------------------------------------------------------------------------------
                 # store the result of this execution in case it will be the final result
 
-                # object.results.append(result)
                 trial_output = copy_parameter_value(trial_output)
-
                 results.append(trial_output)
                 self.parameters.results._set(convert_to_np_array(results), context)
 

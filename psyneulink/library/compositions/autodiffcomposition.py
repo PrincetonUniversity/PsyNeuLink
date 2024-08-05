@@ -1074,7 +1074,7 @@ class AutodiffComposition(Composition):
             port, component, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
             idx = component.output_ports.index(port)
             all_outputs += [curr_tensor_outputs[component][idx].detach().cpu().numpy().copy().tolist()]
-            pytorch_rep.output_nodes = all_outputs
+            pytorch_rep.output_values = all_outputs
 
         return trained_outputs, all_outputs
 
@@ -1352,6 +1352,7 @@ class AutodiffComposition(Composition):
                 autodiff_inputs = self._get_autodiff_inputs_values(inputs)
                 autodiff_targets = self._get_autodiff_targets_values(inputs)
 
+                # Begin reporting of learning TRIAL:
                 report(self,
                        LEARN_REPORT,
                        # EXECUTE_REPORT,
@@ -1371,6 +1372,7 @@ class AutodiffComposition(Composition):
                 context.execution_phase = ContextFlags.PROCESSING
                 context.execution_phase = execution_phase
 
+                # Complete TRIAL Panel for output report, and report progress
                 report(self,
                        # [LEARN_REPORT],
                        [EXECUTE_REPORT, PROGRESS_REPORT],
