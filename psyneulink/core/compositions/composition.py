@@ -11383,9 +11383,6 @@ _
             # Loop over the length of the list of inputs - each input represents a TRIAL
             for trial_num in range(num_trials):
 
-                # 7/10/24 - FIX: FOR DEBUGGING ONLY - REMOVE WHEN DONE
-                self.TRIAL_NUM = trial_num
-
                 # Execute call before trial "hook" (user defined function)
                 if call_before_trial:
                     call_with_pruned_args(call_before_trial, context=context)
@@ -11408,10 +11405,6 @@ _
                     execution_stimuli = self._parse_trial_inputs(inputs, trial_num, context)
                 except StopIteration:
                     break
-
-                # MODIFIED 7/10/24 NEW: - FIX FOR DEBUGGING ONLY
-                self.trial_num = trial_num
-                # MODIFIED 7/10/24 END
 
                 # execute processing, passing stimuli for this trial
                 # IMPLEMENTATION NOTE: for autodiff, the following executes the forward pass for a single input
@@ -11663,8 +11656,8 @@ _
                           f"it will be run but no learning will occur.")
 
         # Get any synchronization and/or tracking specifications from sublcasses (e.g.,AutdoiffComposition)
-        synch_with_pnl = kwargs.pop('synch_in_pnl', None)
-        track_in_pnl = kwargs.pop('track_with_pnl', None)
+        synch_with_pnl_options = kwargs.pop('synch_with_pnl_options', None)
+        retain_in_pnl_options = kwargs.pop('retain_in_pnl_options', None)
 
         # Prepare graph and context for learning
         context.add_flag(ContextFlags.LEARNING_MODE)

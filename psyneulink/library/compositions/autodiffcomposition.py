@@ -353,7 +353,7 @@ from psyneulink.core.compositions.composition import Composition, NodeRole, Comp
 from psyneulink.core.compositions.report import (ReportOutput, ReportParams, ReportProgress, ReportSimulations,
                                                  ReportDevices, EXECUTE_REPORT, LEARN_REPORT, PROGRESS_REPORT)
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context, CONTEXT
-from psyneulink.core.globals.keywords import (AUTODIFF_COMPOSITION, AUTODIFF_RESULTS, CPU, CUDA, EPOCH, LearningScale,
+from psyneulink.core.globals.keywords import (ADD, AUTODIFF_COMPOSITION, AUTODIFF_RESULTS, CPU, CUDA,
                                               LEARNING_SCALE_LITERALS, LEARNING_SCALE_NAMES, LEARNING_SCALE_VALUES,
                                               Loss, LOSSES, MATRIX_WEIGHTS, MINIBATCH, MPS, NODE_VALUES,
                                               OPTIMIZATION_STEP, OUTPUTS, RUN, SOFT_CLAMP, TARGETS, TRIAL)
@@ -370,6 +370,17 @@ logger = logging.getLogger(__name__)
 __all__ = [
     'AutodiffComposition'
 ]
+
+
+def _get_torch_targets(owning_component=None, context=None):
+    return owning_component.parameters.pytorch_representation._get(context).tracked_outputs
+
+def _get_torch_outputs(owning_component=None, context=None):
+    return owning_component.parameters.pytorch_representation._get(context).tracked_outputs
+
+def _get_torch_losses(owning_component, context):
+    return owning_component.parameters.pytorch_representation._get(context).tracked_losses
+
 
 class AutodiffCompositionError(CompositionError):
 
@@ -391,9 +402,9 @@ class AutodiffComposition(Composition):
         synch_projection_matrices_with_torch=RUN,
         synch_node_values_with_torch=RUN,
         synch_autodiff_results_with_torch=RUN,
-        track_torch_outputs=MINIBATCH,
-        track_torch_targets=MINIBATCH,
-        track_losses=MINIBATCH,
+        retain_torch_outputs=MINIBATCH,
+        retain_torch_targets=MINIBATCH,
+        retain_torch_losses=MINIBATCH,
         device=CPU
         )
 
@@ -440,30 +451,31 @@ class AutodiffComposition(Composition):
         specifies the default for the AutodiffComposition for when to copy the outputs of the Pytorch model to the
         AutodiffComposition's `results <Composition.results>` attribute, which can be overridden by specifying the
         **synch_autodiff_results_with_torch** argument in the `learn <Composition.learn>` method  Note that this
-        differs from **track_torch_outputs**, which specifies the scale at which torch results are tracked,
-        all of which are stored in the AutodiffComposition's `results <Composition.results>` attribute at the end of
-        the run; see `synch_autodiff_results_with_torch <AutodiffComposition.synch_autodiff_results_with_torch>` for
-        additional details.
+        differs from **retain_torch_outputs**, which specifies the frequency at which the outputs of the PyTorch model
+        are tracked, all of which are stored in the AutodiffComposition's `torch_outputs
+        <AutodiffComposition.torch_outputs>` attribute at the end of the run; see `synch_autodiff_results_with_torch
+        <AutodiffComposition.synch_autodiff_results_with_torch>` for additional details.
 
-    track_torch_outputs : `LearningScale` : default MINIBATCH
+    retain_torch_outputs : `LearningScale` : default MINIBATCH
         specifies the default for the AutodiffComposition for scale at which the outputs of the Pytorch model are
-        tracked, all of which are stored in the AutodiffComposition's `results <Composition.results>` attribute at the
-        end of the run; this can be overridden by specifying the **synch_autodiff_results_with_torch** argument in the
-        `learn <Composition.learn>` method. Note that this differs from **synch_autodiff_results_with_torch**, which
-        specifies the frequency with which values are copied to the AutodiffComposition's `results` attribute; see
-        `track_torch_outputs <AutodiffComposition.track_torch_outputs>` for additional
-        details.
+        tracked, all of which are stored in the AutodiffComposition's `torch_outputs
+        <AutodiffComposition.torch_outputs>` attribute at the end of the run; this can be overridden by specifying
+        the **retain_torch_outputs** argument in the `learn <Composition.learn>` method. Note that this differs from
+        **synch_autodiff_results_with_torch**, which specifies the frequency with which values are copied to the
+        AutodiffComposition's `results` attribute; see `retain_torch_outputs
+        <AutodiffComposition.retain_torch_outputs>` for additional details.
 
-    track_torch_targets : `LearningScale` : default MINIBATCH
-        specifies the default for the AutodiffComposition for when to copy the targets used for training the Pytorch
-        model to the AutodiffComposition's `targets <Composition.targets>` attribute, which can be overridden by
-        specifying the **track_torch_targets** argument in the `learn <Composition.learn>` method;
-        see `track_torch_targets <AutodiffComposition.track_torch_targets>` for additional details.
+    retain_torch_targets : `LearningScale` : default MINIBATCH
+        specifies the default for the AutodiffComposition for when to copy the targets used for training the
+        Pytorch model to the AutodiffComposition's `torch_targets <Composition.torch_targets>` attribute, which can be
+        overridden by specifying the **retain_torch_targets** argument in the `learn <Composition.learn>` method;
+        see `retain_torch_targets <AutodiffComposition.retain_torch_targets>` for additional details.
 
-    track_losses : `LearningScale` : default MINIBATCH
-        specifies the default for the AutodiffComposition for the scale at which the losses of the Pytorch model are
-        tracked, all of which are stored in the AutodiffComposition's `tracked_loss <Composition.tracked_loss>`
-        attribute at the end of the run; see `track_losses <AutodiffComposition.track_losses>` for additional details.
+    retain_torch_losses : `LearningScale` : default MINIBATCH
+        specifies the default for the AutodiffComposition for the scale at which the losses of the Pytorch model
+        are tracked, all of which are stored in the AutodiffComposition's `torch_losses <Composition.torch_losses>`
+        attribute at the end of the run; see `retain_torch_losses <AutodiffComposition.retain_torch_losses>` for
+        additional details.
 
     device : torch.device : default device-dependent
         specifies the device on which the model is run. If None, the device is set to 'cuda' if available,
@@ -518,32 +530,42 @@ class AutodiffComposition(Composition):
         representation more closely synchronized with parameter updates in Pytorch, but slows performance
         (see `AutodiffComposition_PyTorch_LearningScale` for information about settings).
 
-    track_torch_outputs : OPTIMIZATION_STEP, MINIBATCH, EPOCH or RUN
+    retain_torch_outputs : OPTIMIZATION_STEP, MINIBATCH, EPOCH, RUN or None
         determines the scale at which the outputs of the Pytorch model are tracked, all of which are stored in the
         AutodiffComposition's `results <Composition.results>` attribute at the end of the run if this is not specified
         in the call to `learn <AutodiffComposition.learn>`(see `AutodiffComposition_PyTorch_LearningScale` for
         information about settings)
 
-    track_torch_targets : OPTIMIZATION_STEP, MINIBATCH, EPOCH or RUN
+    retain_torch_targets : OPTIMIZATION_STEP, MINIBATCH, EPOCH, RUN or None
         determines the scale at which the targets used for training the Pytorch model are tracked, all of which
         are stored in the AutodiffComposition's `targets <Composition.targets>` attribute at the end of the run
         if this is not specified in the call to `learn <AutodiffComposition.learn>`
         (see `AutodiffComposition_PyTorch_LearningScale` for information about settings).
 
-    track_losses : OPTIMIZATION_STEP, MINIBATCH, EPOCH or RUN
+    retain_torch_losses : OPTIMIZATION_STEP, MINIBATCH, EPOCH, RUN or None
         determines the scale at which the losses of the Pytorch model are tracked, all of which are stored in
-        the AutodiffComposition's `tracked_loss <Composition.tracked_loss>` attribute at the end of the run
+        the AutodiffComposition's `torch_losses <Composition.torch_losses>` attribute at the end of the run
         if this is nota specified in the call to `learn <AutodiffComposition.learn>`
         (see `AutodiffComposition_PyTorch_LearningScale` for information about settings).
 
-    losses : list of floats
-        tracks the average loss after each weight update (i.e. each minibatch) during learning.
+    torch_outputs : List[ndarray]
+        stores the outputs (converted to np arrays) of the Pytorch model during learning at the frequency specified by
+        `retain_torch_outputs <AutodiffComposition.retain_torch_outputs>` if it is set to *MINIBATCH*, *EPOCH*, or *RUN*;
+        see `retain_torch_outputs <AutodiffComposition.retain_torch_outputs>` for additional details.
 
+    torch_targets : List[ndarray]
+        stores the targets used for training the Pytorch model during learning at the frequency specified by
+        `retain_torch_targets <AutodiffComposition.retain_torch_targets>` if it is set to *MINIBATCH*, *EPOCH*, or *RUN*;
+        see `retain_torch_targets <AutodiffComposition.retain_torch_targets>` for additional details.
+
+    torch_losses : list of floats
+        stores the average loss after each weight update (i.e. each minibatch) during learning at the frequency
+        specified by `retain_torch_outputs <AutodiffComposition.retain_torch_outputs>` if it is set to *MINIBATCH*,
+        *EPOCH*, or *RUN*; see `retain_torch_losses <AutodiffComposition.retain_torch_losses>` for additonal details.
+
+    COMMENT:  FIX: NOT CURRENTLY BEING POPULTED, BUT SEEMS TO BE USED BY _get_total_loss() and early_stopper
     trial_losses = Parameter([])
-
-    tracked_loss = Parameter(None, pnl_internal=True)
-
-    tracked_loss_count = Parameter(0, pnl_internal=True)
+    COMMENT
 
     last_saved_weights : path
         path for file to which weights were last saved.
@@ -567,13 +589,13 @@ class AutodiffComposition(Composition):
         synch_projection_matrices_with_torch = Parameter(RUN, fallback_default=True)
         synch_node_values_with_torch = Parameter(RUN, fallback_default=True)
         synch_autodiff_results_with_torch = Parameter(RUN, fallback_default=True)
-        track_torch_outputs = Parameter(MINIBATCH, fallback_default=True)
-        track_torch_targets = Parameter(MINIBATCH, fallback_default=True)
-        track_losses = Parameter(MINIBATCH, fallback_default=True)
-        losses = Parameter([])
-        trial_losses = Parameter([])
-        tracked_loss = Parameter(None, pnl_internal=True)
-        tracked_loss_count = Parameter(0, pnl_internal=True)
+        retain_torch_outputs = Parameter(MINIBATCH, fallback_default=True)
+        retain_torch_targets = Parameter(MINIBATCH, fallback_default=True)
+        retain_torch_losses = Parameter(MINIBATCH, fallback_default=True)
+        torch_losses = Parameter([], getter=_get_torch_losses)
+        torch_outputs = Parameter([], getter=_get_torch_outputs)
+        torch_targets = Parameter([], getter=_get_torch_targets)
+        trial_losses = Parameter([]) # FIX <- related to early_stopper, but not getting assigned anywhere
         device = None
 
         # MODIFIED 7/10/24 OLD: FIX: IS THIS NEEDED HERE (SINCE IT IS ON EMCOMPOSITION)
@@ -599,21 +621,21 @@ class AutodiffComposition(Composition):
                                                f"must be one of the following keywords: "
                                                f"{', '.join(LEARNING_SCALE_NAMES)}")
 
-        def _validate_track_torch_outputs(self, spec):
+        def _validate_retain_torch_outputs(self, spec):
             if not spec in LEARNING_SCALE_VALUES:
-                raise AutodiffCompositionError(f"Value of `track_torch_outputs` arg "
+                raise AutodiffCompositionError(f"Value of `retain_torch_outputs` arg "
                                                f"must be one of the following keywords: "
                                                f"{', '.join(LEARNING_SCALE_NAMES)}")
 
-        def _validate_track_torch_targets(self, spec):
+        def _validate_retain_torch_targets(self, spec):
             if not spec in LEARNING_SCALE_VALUES:
-                raise AutodiffCompositionError(f"Value of `track_torch_targets` arg "
+                raise AutodiffCompositionError(f"Value of `retain_torch_targets` arg "
                                                f"must be one of the following keywords: "
                                                f"{', '.join(LEARNING_SCALE_NAMES)}")
 
-        def _validate_track_losses(self, spec):
+        def _validate_retain_torch_losses(self, spec):
             if not spec in LEARNING_SCALE_VALUES:
-                raise AutodiffCompositionError(f"Value of `track_losses` arg "
+                raise AutodiffCompositionError(f"Value of `retain_torch_losses` arg "
                                                f"must be one of the following keywords: "
                                                f"{', '.join(LEARNING_SCALE_NAMES)}")
 
@@ -632,9 +654,9 @@ class AutodiffComposition(Composition):
                  synch_projection_matrices_with_torch:Optional[str]=RUN,
                  synch_node_values_with_torch:Optional[str]=RUN,
                  synch_autodiff_results_with_torch:Optional[str]=RUN,
-                 track_torch_outputs:Optional[str]=MINIBATCH,
-                 track_torch_targets:Optional[str]=MINIBATCH,
-                 track_losses:Optional[str]=MINIBATCH,
+                 retain_torch_outputs:Optional[str]=MINIBATCH,
+                 retain_torch_targets:Optional[str]=MINIBATCH,
+                 retain_torch_losses:Optional[str]=MINIBATCH,
                  device=None,
                  disable_cuda=True,
                  cuda_index=None,
@@ -657,9 +679,9 @@ class AutodiffComposition(Composition):
             synch_projection_matrices_with_torch = synch_projection_matrices_with_torch,
             synch_node_values_with_torch = synch_node_values_with_torch,
             synch_autodiff_results_with_torch = synch_autodiff_results_with_torch,
-            track_torch_outputs = track_torch_outputs,
-            track_torch_targets = track_torch_targets,
-            track_losses = track_losses,
+            retain_torch_outputs = retain_torch_outputs,
+            retain_torch_targets = retain_torch_targets,
+            retain_torch_losses = retain_torch_losses,
             **kwargs)
 
         self._built_pathways = False
@@ -671,7 +693,7 @@ class AutodiffComposition(Composition):
         self.refresh_losses = refresh_losses
         self.weight_decay = weight_decay
         self.disable_learning = disable_learning
-        self.loss = None
+        self.loss_function = None
         self.last_saved_weights = None
         self.last_loaded_weights = None
 
@@ -930,7 +952,6 @@ class AutodiffComposition(Composition):
             model = self.pytorch_composition_wrapper_type(composition=self,
                                                           device=self.device,
                                                           context=context)
-
             self.parameters.pytorch_representation._set(model, context, skip_history=True, skip_log=True)
 
         # Set up optimizer function
@@ -939,15 +960,16 @@ class AutodiffComposition(Composition):
         if old_opt is None or refresh:
             opt = self._make_optimizer(self.optimizer_type, learning_rate, self.weight_decay, context)
             self.parameters.optimizer._set(opt, context, skip_history=True, skip_log=True)
+            self.parameters.pytorch_representation._get(context).optimizer = opt
 
         # Set up loss function
-        if self.loss is not None:
-            logger.warning("Overwriting loss function for AutodiffComposition {}! Old loss function: {}".format(
-                self, self.loss))
+        if self.loss_function is not None:
+            logger.warning("Overwriting 'loss_function' for AutodiffComposition {}! Old loss function: {}".format(
+                self, self.loss_function))
         if callable(self.loss_spec):
-            self.loss = self.loss_spec
+            self.loss_function = self.loss_spec
         else:
-            self.loss = self._get_loss(self.loss_spec)
+            self.loss_function = self._get_loss(self.loss_spec)
 
         return self.parameters.pytorch_representation._get(context)
 
@@ -992,13 +1014,15 @@ class AutodiffComposition(Composition):
         elif loss_spec == Loss.KL_DIV:
             return nn.KLDivLoss(reduction='sum')
         else:
-            raise AutodiffCompositionError(f"Loss type {loss_spec} not recognized. Loss argument must be a "
+            raise AutodiffCompositionError(f"Loss type {loss_spec} not recognized. 'loss_function' argument must be a "
                                            f"Loss enum or function. Currently, the recognized loss types are: "
                                            f"L1 (Mean), SSE (sum squared error), CROSS_ENTROPY, NLL (negative log "
                                            f"likelihood), POISSONNLL (Poisson negative log likelihood, "
                                            f"and KL_DIV (KL divergence.")
 
-    def autodiff_forward(self, inputs, targets, synch_with_pnl, track_in_pnl, execution_mode, scheduler, context):
+    def autodiff_forward(self, inputs, targets,
+                         synch_with_pnl_options, retain_in_pnl_options,
+                         execution_mode, scheduler, context):
         """Perform forward pass of model and compute loss for a single trial (i.e., a single input) in Pytorch mode.
         Losses are accumulated in pytorch_rep.track_losses, over calls to this method within a minibatch;
           at the end of a minibatch, they are averaged and backpropagated by compositionrunner.run_learning()
@@ -1046,8 +1070,8 @@ class AutodiffComposition(Composition):
         #     # (outputs, targets, weights, and more) and returns a scalar
         #     new_loss = 0
         #     for i in range(len(outputs_for_targets[component])):
-        #         new_loss += self.loss(outputs_for_targets[component][i],
-        #                               curr_tensor_targets[component][i])
+        #         new_loss += self.loss_function(outputs_for_targets[component][i],
+        #                                        curr_tensor_targets[component][i])
         #     tracked_loss += new_loss
         #
         # # Update tracked loss and loss count
@@ -1061,10 +1085,11 @@ class AutodiffComposition(Composition):
         for component in outputs_for_targets.keys():
             new_loss = 0
             for i in range(len(outputs_for_targets[component])):
-                new_loss += self.loss(outputs_for_targets[component][i],
-                                      curr_tensor_targets[component][i])
+                new_loss += self.loss_function(outputs_for_targets[component][i],
+                                               curr_tensor_targets[component][i])
             pytorch_rep.tracked_loss += new_loss
-        self.tracked_loss_count += 1
+        pytorch_rep.tracked_loss_count += 1
+        assert True
 
         # FIX: ADD HERE: Save loss if tracked_losses is set to TRIAL
         # MODIFIED 8/4/24 END
@@ -1093,8 +1118,9 @@ class AutodiffComposition(Composition):
             pytorch_rep.output_values = all_outputs
 
         # MODIFIED 8/4/24 NEW:
-        # Synchronize specified params after every trial
+        # Synchronize specified outcomes after every trial
         pytorch_rep.copy_values_to_psyneulink(OUTPUTS, context)
+        pytorch_rep.track_outputs(all_outputs, TRIAL, context)
         # MODIFIED 8/4/24 END
 
         return trained_outputs, all_outputs
@@ -1143,15 +1169,16 @@ class AutodiffComposition(Composition):
         tracked_loss = pytorch_rep.tracked_loss / pytorch_rep.tracked_loss_count
         # Compute gradients and weight changes based on loss
         tracked_loss.backward(retain_graph=not self.force_no_retain_graph)
-        # Update PyTorch parameters
 
-        # Apply changes to parameters
+        # Update PyTorch parameters
         optimizer.step()
 
         # Save loss for current round of optimization
-        pytorch_rep.track_losses(tracked_loss.detach().cpu().numpy()[0])
+        pytorch_rep.retain_for_psyneulink(retain_in_pnl_options, LOSSES, tracked_loss)
         # Reset tracked_loss for next round of optimization
-        pytorch_rep.initialize_tracked_loss()
+        pytorch_rep.tracked_loss = torch.zeros(1, device=self.device).double() # Accumulated losses within a batch
+        pytorch_rep.tracked_loss_count = 0  # Count of losses within batch
+        assert True
         # MODIFIED 8/4/24 END
 
         # MODIFIED 7/10/24 OLD:
@@ -1254,21 +1281,21 @@ class AutodiffComposition(Composition):
               synch_projection_matrices_with_torch:Optional[LEARNING_SCALE_LITERALS]=None,
               synch_node_values_with_torch:Optional[LEARNING_SCALE_LITERALS]=None,
               synch_autodiff_results_with_torch:Optional[LEARNING_SCALE_LITERALS]=None,
-              track_torch_outputs:Optional[LEARNING_SCALE_LITERALS]=None,
-              track_torch_targets:Optional[LEARNING_SCALE_LITERALS]=None,
-              track_losses:Optional[LEARNING_SCALE_LITERALS]=None,
+              retain_torch_outputs:Optional[LEARNING_SCALE_LITERALS]=None,
+              retain_torch_targets:Optional[LEARNING_SCALE_LITERALS]=None,
+              retain_torch_losses:Optional[LEARNING_SCALE_LITERALS]=None,
               **kwargs)->list:
 
         context = kwargs[CONTEXT]
 
         if self.minibatch_size > 1:
             args_str = []
-            if track_torch_outputs in {OPTIMIZATION_STEP, TRIAL}:
-                args_str.append('track_torch_outputs')
-            if track_losses in {OPTIMIZATION_STEP,TRIAL}:
-                args_str.append('track_losses')
-            if track_torch_targets in {OPTIMIZATION_STEP,TRIAL}:
-                args_str.append('track_torch_targets')
+            if retain_torch_outputs in {OPTIMIZATION_STEP, TRIAL}:
+                args_str.append('retain_torch_outputs')
+            if retain_torch_losses in {OPTIMIZATION_STEP,TRIAL}:
+                args_str.append('retain_torch_losses')
+            if retain_torch_targets in {OPTIMIZATION_STEP,TRIAL}:
+                args_str.append('retain_torch_targets')
             if args_str:
                 arg_args = 'args' if len(args_str) == 1 else 'arg'
                 is_are = 'is' if len(args_str) == 1 else 'are'
@@ -1306,20 +1333,20 @@ class AutodiffComposition(Composition):
             self._built_pathways = True
 
         # Consolidate the options for synching and tracking into dictionaries as arguments to learning and exec methods
-        synch_with_pnl = {MATRIX_WEIGHTS: synch_projection_matrices_with_torch
+        synch_with_pnl_options = {MATRIX_WEIGHTS: synch_projection_matrices_with_torch
                                    or self.parameters.synch_projection_matrices_with_torch._get(context),
                           NODE_VALUES: synch_node_values_with_torch
                                   or self.parameters.synch_node_values_with_torch._get(context),
                           AUTODIFF_RESULTS: synch_autodiff_results_with_torch
                                    or self.parameters.synch_autodiff_results_with_torch._get(context)}
 
-        track_in_pnl = {OUTPUTS: track_torch_outputs or self.parameters.track_torch_outputs._get(context),
-                        TARGETS: track_torch_targets or self.parameters.track_torch_targets._get(context),
-                        LOSSES: track_losses or self.parameters.track_losses._get(context)}
+        retain_in_pnl_options = {OUTPUTS: retain_torch_outputs or self.parameters.retain_torch_outputs._get(context),
+                                 TARGETS: retain_torch_targets or self.parameters.retain_torch_targets._get(context),
+                                 LOSSES: retain_torch_losses or self.parameters.retain_torch_losses._get(context)}
 
         return super().learn(*args,
-                             synch_with_pnl=synch_with_pnl,
-                             track_in_pnl=track_in_pnl,
+                             synch_with_pnl_options=synch_with_pnl_options,
+                             retain_in_pnl_options=retain_in_pnl_options,
                              execution_mode=execution_mode,
                              **kwargs)
 
@@ -1359,8 +1386,8 @@ class AutodiffComposition(Composition):
                 runtime_params=None,
                 execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.PyTorch,
                 skip_initialization=False,
-                synch_with_pnl:Optional[dict]=None,
-                track_in_pnl:Optional[dict]=None,
+                synch_with_pnl_options:Optional[dict]=None,
+                retain_in_pnl_options:Optional[dict]=None,
                 report_output:ReportOutput=ReportOutput.OFF,
                 report_params:ReportOutput=ReportParams.OFF,
                 report_progress:ReportProgress=ReportProgress.OFF,
@@ -1411,8 +1438,8 @@ class AutodiffComposition(Composition):
                 self._build_pytorch_representation(context)
                 trained_outputs, all_outputs = self.autodiff_forward(inputs=autodiff_inputs,
                                                                      targets=autodiff_targets,
-                                                                     synch_with_pnl=synch_with_pnl,
-                                                                     track_in_pnl=track_in_pnl,
+                                                                     synch_with_pnl_options=synch_with_pnl_options,
+                                                                     retain_in_pnl_options=retain_in_pnl_options,
                                                                      execution_mode=execution_mode,
                                                                      scheduler=scheduler,
                                                                      context=context)

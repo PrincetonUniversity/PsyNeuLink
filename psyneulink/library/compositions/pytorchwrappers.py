@@ -23,10 +23,9 @@ from psyneulink.core.compositions.composition import NodeRole, CompositionInterf
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
 from psyneulink.library.compositions.compiledloss import MSELoss, CROSS_ENTROPYLoss
-from psyneulink.core.globals.keywords import (AFTER, ALL, AUTODIFF_RESULTS, BEFORE, DEFAULT_VARIABLE,
+from psyneulink.core.globals.keywords import (ADD, AFTER, ALL, AUTODIFF_RESULTS, BEFORE, DEFAULT_VARIABLE,
                                               LEARNING_SCALE_LITERALS, Loss, LOSSES, MATRIX_WEIGHTS,
-                                              MINIBATCH, NODE, NODE_VALUES, OUTPUTS, RUN, TARGET_MECHANISM, TARGETS,
-                                              OPTIMIZATION_STEP)
+                                              NODE, NODE_VALUES, OUTPUTS, TARGETS, TARGET_MECHANISM)
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared
 from psyneulink.core.globals.log import LogCondition
@@ -77,7 +76,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.name = f"PytorchCompositionWrapper[{composition.name}]"
         self._composition = composition
         self.device = device
-        self.optimizer = composition.optimizer
+        self.optimizer = None # This gets assigned by self._composition after the wrapper is created,
+                                # as the latter is needed to pass the parameters to the optimizer
 
         self.wrapped_nodes = []  # can be PytorchMechanismWrapper or PytorchCompositionWrapper
         self.nodes_map = {}    # maps Node (Mech or nested Comp) -> PytorchMechanismWrapper or PytorchCompositionWrapper
@@ -88,9 +88,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         self.params = nn.ParameterList()
 
-        self.tracked_losses = []        # Losses per trial or batch (depends on track_in_pnl[LOSSES] setting)
-        self.tracked_targets = []       # Targets for all batches
-        self.initialize_tracked_loss()  # Set initial values for tracked_losses and count at start of each minibatch
+        self.tracked_loss = torch.zeros(1, device=self.device).double() # Accumulated losses within a batch
+        self.tracked_loss_count = 0  # Count of losses within batch
+
+        self.retained_outputs = []  # Outputs for all trials
+        self.retained_targets = []  # Targets for all trials
+        self.retained_losses = []   # Losses per trial or batch accumulated over run
 
         # Instantiate pytorch Mechanisms
         nodes = list(set(composition.nodes) - set(composition.get_nodes_by_role(NodeRole.LEARNING)))
@@ -588,16 +591,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
         value = node.execute(variable, context)
         assert 'DEBUGGING BREAK POINT'
 
-    def initialize_tracked_loss(self):
-        """Initialize tracked_loss and tracked_loss_count at start of each minibatch
-        IMPLEMENTATION NOTE:  use method to allow for future extension to other implementations"""
-        # Loss accumulated over a single batch:
-        self.tracked_loss = torch.zeros(1, device=self.device).double()
-        # Count of losses within batch (for averaging before weight update):
-        self.tracked_loss_count = 0
-
     def synch_with_psyneulink(self,
-                              synch_with_pnl:dict,
+                              synch_with_pnl_options:dict,
                               current_condition:LEARNING_SCALE_LITERALS,
                               context:Context,
                               params:Optional[list]=None):
@@ -610,32 +605,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
         assert not illegal_params, \
             f"PROGRAM ERROR: Illegal attributes ({' ,'.join(illegal_params)}) specified in call to synch_with_psyneulink"
 
-        if MATRIX_WEIGHTS in params and synch_with_pnl[MATRIX_WEIGHTS] == current_condition:
+        if MATRIX_WEIGHTS in params and synch_with_pnl_options[MATRIX_WEIGHTS] == current_condition:
             self.copy_weights_to_psyneulink(context)
 
-        if NODE_VALUES in params and synch_with_pnl[NODE_VALUES] == current_condition:
+        if NODE_VALUES in params and synch_with_pnl_options[NODE_VALUES] == current_condition:
             self.copy_values_to_psyneulink(ALL, context)
 
-        if AUTODIFF_RESULTS in params and synch_with_pnl[AUTODIFF_RESULTS] == current_condition:
+        if AUTODIFF_RESULTS in params and synch_with_pnl_options[AUTODIFF_RESULTS] == current_condition:
             self.copy_results_to_psyneulink(context)
-
-    # MODIFIED 8/4/24 OLD:
-    # def track_in_psyneulink(self,
-    #                         track_in_pnl:dict,
-    #                         attr:Literal[LOSSES, TARGETS],
-    #                         current_condition:LEARNING_SCALE_LITERALS,
-    #                         context:Context):
-    #     """Keep track of losses, outputs and results and copy to PsyNeuLink at end of learning run."""
-    #
-    #     condition_specification = track_in_pnl[attr]
-    #
-    #     if attr == LOSSES and condition_specification == current_condition:
-    #         self.track_losses(context)
-    #     if attr == OUTPUTS and condition_specification == current_condition:
-    #         self.copy_outputs_to_psyneulink(context)
-    #     if attr == AUTODIFF_RESULTS and condition_specification == current_condition:
-    #         self.copy_results_to_psyneulink(context)
-    # MODIFIED 8/4/24 END
 
     def copy_weights_to_psyneulink(self, context=None):
         for projection, pytorch_rep in self.projections_map.items():
@@ -712,35 +689,45 @@ class PytorchCompositionWrapper(torch.nn.Module):
         assert 'FOR DEBUGGING'
         pass
 
-    def track_outputs(self, output:Optional[torch.Tensor], current_condition:LEARNING_SCALE_LITERALS, context=Context):
-        """Track targets and copy AutodiffComposition.pytorch_targets at end of learn()."""
-        if current_condition == MINIBATCH:
-            self.tracked_targets.append(output)
-        elif current_condition == RUN:
-            self._composition.pytorch_targets = self.losses.append(output.detach().cpu().numpy())
-        else:
-            assert False, \
-                (f"PROGRAM ERROR: Unrecognized current_condition ({current_condition}) in call to track_outputs.")
+    # MODIFIED 8/4/24 OLD:
+    # def retain_in_psyneulink(self,
+    #                         retain_in_pnl_options:dict,
+    #                         attr:Literal[LOSSES, TARGETS],
+    #                         current_condition:LEARNING_SCALE_LITERALS,
+    #                         context:Context):
+    #     """Keep track of losses, outputs and results and copy to PsyNeuLink at end of learning run."""
+    #
+    #     condition_specification = retain_in_pnl_options[attr]
+    #
+    #     if attr == LOSSES and condition_specification == current_condition:
+    #         self.retain_torch_losses(context)
+    #     if attr == OUTPUTS and condition_specification == current_condition:
+    #         self.copy_outputs_to_psyneulink(context)
+    #     if attr == AUTODIFF_RESULTS and condition_specification == current_condition:
+    #         self.copy_results_to_psyneulink(context)
+    # MODIFIED 8/4/24 END
+    def retain_for_psyneulink(self, retain_in_pnl_options, attr:Literal[Union[OUTPUTS, TARGETS, LOSSES]], val):
+        """Store outputs, targets, and losses from Pytorch execution for copying to PsyNeuLink at end of learn().
+        Note:  no need to copy to pnl; this is done by the getter methods for the corresponding Parameters on autodiff.
+        """
+        if attr == OUTPUTS and retain_in_pnl_options[OUTPUTS]:
+            self.retain_outputs(val)
+        elif attr == TARGETS and retain_in_pnl_options[TARGETS]:
+            self.retain_targets(val)
+        elif attr == LOSSES and retain_in_pnl_options[LOSSES]:
+            self.retain_losses(val)
 
-    def track_targets(self, target:Optional[torch.Tensor], current_condition:LEARNING_SCALE_LITERALS, context=Context):
-        """Track targets and copy AutodiffComposition.pytorch_targets at end of learn()."""
-        if current_condition == MINIBATCH:
-            self.tracked_targets.append(target)
-        elif current_condition == RUN:
-            self._composition.pytorch_targets = self.losses.append(target.detach().cpu().numpy())
-        else:
-            assert False,\
-                (f"PROGRAM ERROR: Unrecognized current_condition ({current_condition}) in call to track_targets.")
+    def retain_outputs(self, output:torch.Tensor):
+        """Track outputs and copy to AutodiffComposition.pytorch_outputs at end of learn()."""
+        self.retained_outputs.append(output.detach().cpu().numpy()[0])
 
-    def track_losses(self, loss:Optional[torch.Tensor], current_condition:LEARNING_SCALE_LITERALS, context=Context):
-        """Track losses and copy AutodiffComposition.pytorch_losses at end of learn()."""
-        if current_condition in {OPTIMIZATION_STEP, MINIBATCH}:
-            self.tracked_losses.append(loss)
-        elif current_condition == RUN:
-            self._composition.pytorch_losses = self.losses.append(loss.detach().cpu().numpy())
-        else:
-            assert False, \
-                (f"PROGRAM ERROR: Unrecognized current_condition ({current_condition}) in call to track_losses.")
+    def retain_targets(self, target:torch.Tensor):
+        """Track targets and copy to AutodiffComposition.pytorch_targets at end of learn()."""
+        self.retained_targets.append(target.detach().cpu().numpy()[0])
+
+    def retain_losses(self, loss:torch.Tensor):
+        """Track targets and copy to AutodiffComposition.pytorch_targets at end of learn()."""
+        self.retained_losses.append(loss.detach().cpu().numpy()[0])
 
     def detach_all(self):
         for projection in self.projections_map.values():

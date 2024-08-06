@@ -172,7 +172,7 @@ class TestTrainingCorrectness:
                       "targets": {xor_out: np.array([[0], [1], [1], [0]])}}
 
         if calls == 'single':
-            input_dict["epochs"] = eps
+            input_dict["epochs"] = 1
             results = benchmark(_single_learn_results, xor, inputs=input_dict, execution_mode=autodiff_mode)
         else:
             input_dict["epochs"] = 1
@@ -3935,8 +3935,8 @@ class TestBatching:
         # classes = torch.Tensor([2, 1])
         # target = torch.Tensor([1])
         # # Equation for loss taken from https://pytorch.org/docs/stable/nn.html#torch.nn.CrossEntropyLoss
-        # assert np.allclose(adc.loss(classes, target).detach().numpy(), -1 + np.log(np.exp(2) + np.exp(1)))
-        # assert np.allclose(adc.loss(output, target).detach().numpy(), -1 + np.log(np.exp(2) + np.exp(1)))
+        # assert np.allclose(adc.loss_function(classes, target).detach().numpy(), -1 + np.log(np.exp(2) + np.exp(1)))
+        # assert np.allclose(adc.loss_function(output, target).detach().numpy(), -1 + np.log(np.exp(2) + np.exp(1)))
 
         # Current implementation uses one-hot target specification:
         output = [2,1]
@@ -3958,6 +3958,6 @@ class TestBatching:
 
         output = torch.Tensor(output)
         target = torch.Tensor(target)
-        ce_torch = adc.loss(output, target).detach().numpy()
+        ce_torch = adc.loss_function(output, target).detach().numpy()
 
         np.testing.assert_allclose(ce_numpy, ce_torch)
