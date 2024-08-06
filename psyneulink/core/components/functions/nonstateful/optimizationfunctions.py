@@ -831,7 +831,7 @@ class OptimizationFunction(Function_Base):
         num_evals = np.prod([d._num for d in self.search_space])
 
         # Map allocations to values
-        comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, context.execution_id)
+        comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, context)
         execution_mode = ocm.parameters.comp_execution_mode._get(context)
         if execution_mode == "PTX":
             outcomes = comp_exec.cuda_evaluate(inputs, num_inputs_sets, num_evals, get_results)

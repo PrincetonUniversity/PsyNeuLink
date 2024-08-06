@@ -305,10 +305,10 @@ class CompExecution(CUDAExecution):
 
     active_executions = weakref.WeakSet()
 
-    def __init__(self, composition, execution_id, *, additional_tags=frozenset()):
+    def __init__(self, composition, context:Context, *, additional_tags=frozenset()):
         super().__init__(buffers=['state_struct', 'param_struct', 'data_struct', 'conditions'])
         self._composition = composition
-        self._execution_context = Context(execution_id=execution_id)
+        self._execution_context = context
         self.__bin_exec_func = None
         self.__bin_func = None
         self.__bin_run_func = None
@@ -324,7 +324,7 @@ class CompExecution(CUDAExecution):
         self.active_executions.discard(self)
 
     @staticmethod
-    def get(composition, context, additional_tags=frozenset()):
+    def get(composition, context:Context, additional_tags=frozenset()):
         executions = composition._compilation_data.execution._get(context)
         if executions is None:
             executions = dict()
@@ -332,7 +332,7 @@ class CompExecution(CUDAExecution):
 
         execution = executions.get(additional_tags, None)
         if execution is None:
-            execution = pnlvm.CompExecution(composition, context.execution_id, additional_tags=additional_tags)
+            execution = pnlvm.CompExecution(composition, context, additional_tags=additional_tags)
             executions[additional_tags] = execution
 
         return execution
