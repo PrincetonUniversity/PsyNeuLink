@@ -831,7 +831,7 @@ class OptimizationFunction(Function_Base):
         num_evals = np.prod([d._num for d in self.search_space])
 
         # Map allocations to values
-        comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, [context.execution_id])
+        comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, context)
         execution_mode = ocm.parameters.comp_execution_mode._get(context)
         if execution_mode == "PTX":
             outcomes = comp_exec.cuda_evaluate(inputs, num_inputs_sets, num_evals, get_results)
@@ -2103,7 +2103,7 @@ class GridSearch(OptimizationFunction):
                 # select_min params are:
                 # params, state, min_sample_ptr, sample_ptr, min_value_ptr, value_ptr, opt_count_ptr, count
                 min_tags = frozenset({"select_min", "evaluate_type_objective"})
-                bin_func = pnlvm.LLVMBinaryFunction.from_obj(self, tags=min_tags, numpy_args=(2, 4, 6))
+                bin_func = pnlvm.LLVMBinaryFunction.from_obj(self, tags=min_tags, ctype_ptr_args=(0, 1, 3, 5))
 
                 ct_param = bin_func.byref_arg_types[0](*self._get_param_initializer(context))
                 ct_state = bin_func.byref_arg_types[1](*self._get_state_initializer(context))
