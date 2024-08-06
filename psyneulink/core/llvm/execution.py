@@ -252,20 +252,6 @@ class CUDAExecution(Execution):
     def _cuda_conditions(self):
         return self.__get_cuda_arg("_conditions", jit_engine.pycuda.driver.InOut)
 
-    def cuda_execute(self, variable):
-        # Create input argument, PyCUDA doesn't care about shape
-        new_var = np.asfarray(variable, dtype=self._bin_func.np_params[2].base)
-        data_in = jit_engine.pycuda.driver.In(new_var)
-
-        data_out = self._bin_func.np_buffer_for_arg(3)
-
-        self._bin_func.cuda_call(self._cuda_param_struct,
-                                 self._cuda_state_struct,
-                                 data_in,
-                                 jit_engine.pycuda.driver.Out(data_out))
-
-        return self._get_indexable(data_out)
-
 
 class FuncExecution(CUDAExecution):
 
@@ -290,11 +276,23 @@ class FuncExecution(CUDAExecution):
 
     def execute(self, variable):
         new_variable = np.asfarray(variable, dtype=self._bin_func.np_params[2].base)
-
         data_in = new_variable.reshape(self._bin_func.np_params[2].shape)
+
         data_out = self._bin_func.np_buffer_for_arg(3)
 
         self._bin_func(self._param_struct, self._state_struct, data_in, data_out)
+
+        return self._get_indexable(data_out)
+
+    def cuda_execute(self, variable):
+        # Create input argument, PyCUDA doesn't care about shape
+        data_in = np.asfarray(variable, dtype=self._bin_func.np_params[2].base)
+        data_out = self._bin_func.np_buffer_for_arg(3)
+
+        self._bin_func.cuda_call(self._cuda_param_struct,
+                                 self._cuda_state_struct,
+                                 jit_engine.pycuda.driver.In(data_in),
+                                 jit_engine.pycuda.driver.Out(data_out))
 
         return self._get_indexable(data_out)
 
