@@ -15,35 +15,46 @@ def test_random_int(benchmark, mode):
     res = []
     if mode == 'Python':
         state = random.Random(SEED)
+
         def f():
             return state.randrange(0xffffffff)
+
     elif mode == 'numpy':
         # Numpy promotes elements to int64
         state = np.random.RandomState([SEED])
+
         def f():
             return state.randint(0xffffffff, dtype=np.int64)
+
     elif mode == 'LLVM':
-        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
-        state = init_fun.byref_arg_types[0]()
+        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init', numpy_args=(0,))
+        state = init_fun.np_buffer_for_arg(0)
+
         init_fun(state, SEED)
 
-        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_int32')
-        out = ctypes.c_ulonglong()
+        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_int32', numpy_args=(0, 1))
+
         def f():
+            out = gen_fun.np_buffer_for_arg(1)
             gen_fun(state, out)
-            return out.value
+            return out
+
     elif mode == 'PTX':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
-        state_size = ctypes.sizeof(init_fun.byref_arg_types[0])
+
+        state_size = init_fun.np_buffer_for_arg(0).nbytes
         gpu_state = pnlvm.jit_engine.pycuda.driver.mem_alloc(state_size)
+
         init_fun.cuda_call(gpu_state, np.int32(SEED))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_int32')
-        out = np.asarray([0], dtype=np.uint64)
+        out = gen_fun.np_buffer_for_arg(1)
         gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
+
         def f():
             gen_fun.cuda_call(gpu_state, gpu_out)
-            return out[0]
+            return out.copy()
+
     else:
         assert False, "Unknown mode: {}".format(mode)
 
@@ -61,35 +72,45 @@ def test_random_float(benchmark, mode):
     if mode == 'Python':
         # Python treats every seed as array
         state = random.Random(SEED)
+
         def f():
             return state.random()
+
     elif mode == 'numpy':
         # numpy promotes elements to int64
         state = np.random.RandomState([SEED])
+
         def f():
             return state.random_sample()
+
     elif mode == 'LLVM':
-        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
-        state = init_fun.byref_arg_types[0]()
+        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init', numpy_args=(0,))
+        state = init_fun.np_buffer_for_arg(0)
         init_fun(state, SEED)
 
-        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_double')
-        out = gen_fun.byref_arg_types[1]()
+        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_double', numpy_args=(0, 1))
+
         def f():
+            out = gen_fun.np_buffer_for_arg(1)
             gen_fun(state, out)
-            return out.value
+            return out
+
     elif mode == 'PTX':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
-        state_size = ctypes.sizeof(init_fun.byref_arg_types[0])
+
+        state_size = init_fun.np_buffer_for_arg(0).nbytes
         gpu_state = pnlvm.jit_engine.pycuda.driver.mem_alloc(state_size)
+
         init_fun.cuda_call(gpu_state, np.int32(SEED))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_double')
-        out = np.asfarray([0.0], dtype=np.dtype(gen_fun.byref_arg_types[1]))
+        out = gen_fun.np_buffer_for_arg(1)
         gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
+
         def f():
             gen_fun.cuda_call(gpu_state, gpu_out)
-            return out[0]
+            return out.copy()
+
     else:
         assert False, "Unknown mode: {}".format(mode)
 
@@ -107,30 +128,38 @@ def test_random_normal(benchmark, mode):
     if mode == 'numpy':
         # numpy promotes elements to int64
         state = np.random.RandomState([SEED])
+
         def f():
             return state.normal()
+
     elif mode == 'LLVM':
-        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
-        state = init_fun.byref_arg_types[0]()
+        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init', numpy_args=(0,))
+        state = init_fun.np_buffer_for_arg(0)
         init_fun(state, SEED)
 
-        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_normal')
-        out = gen_fun.byref_arg_types[1]()
+        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_normal', numpy_args=(0, 1))
+
         def f():
+            out = gen_fun.np_buffer_for_arg(1)
             gen_fun(state, out)
-            return out.value
+            return out
+
     elif mode == 'PTX':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
-        state_size = ctypes.sizeof(init_fun.byref_arg_types[0])
+
+        state_size = init_fun.np_buffer_for_arg(0).nbytes
         gpu_state = pnlvm.jit_engine.pycuda.driver.mem_alloc(state_size)
+
         init_fun.cuda_call(gpu_state, np.int32(SEED))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_normal')
-        out = np.asfarray([0.0], dtype=np.dtype(gen_fun.byref_arg_types[1]))
+        out = gen_fun.np_buffer_for_arg(1)
         gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
+
         def f():
             gen_fun.cuda_call(gpu_state, gpu_out)
-            return out[0]
+            return out.copy()
+
     else:
         assert False, "Unknown mode: {}".format(mode)
 
@@ -157,35 +186,44 @@ def test_random_binomial(benchmark, mode, n, p, exp):
     if mode == 'numpy':
         # numpy promotes elements to int64
         state = np.random.RandomState([SEED])
+
         def f():
             return state.binomial(n, p)
+
     elif mode == 'LLVM':
-        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
-        state = init_fun.byref_arg_types[0]()
+        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init', numpy_args=(0,))
+        state = init_fun.np_buffer_for_arg(0)
         init_fun(state, SEED)
 
-        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_binomial')
-        c_n = gen_fun.byref_arg_types[1](n)
-        c_p = gen_fun.byref_arg_types[2](p)
-        c_out = gen_fun.byref_arg_types[-1]()
+        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_binomial', numpy_args=(0, 1, 2, 3))
+        n = np.asarray(n, dtype=gen_fun.np_params[1])
+        p = np.asarray(p, dtype=gen_fun.np_params[2])
+
         def f():
-            gen_fun(state, c_n, c_p, c_out)
-            return c_out.value
+            out = gen_fun.np_buffer_for_arg(1)
+            gen_fun(state, n, p, out)
+            return out
+
     elif mode == 'PTX':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
-        state_size = ctypes.sizeof(init_fun.byref_arg_types[0])
+
+        state_size = init_fun.np_buffer_for_arg(0).nbytes
         gpu_state = pnlvm.jit_engine.pycuda.driver.mem_alloc(state_size)
+
         init_fun.cuda_call(gpu_state, np.int32(SEED))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_binomial')
-        gpu_n = pnlvm.jit_engine.pycuda.driver.In(np.array([n], dtype=np.dtype(gen_fun.byref_arg_types[1])))
-        gpu_p = pnlvm.jit_engine.pycuda.driver.In(np.array([p], dtype=np.dtype(gen_fun.byref_arg_types[2])))
-        out = np.array([0.0], dtype=np.dtype(gen_fun.byref_arg_types[3]))
+
+        gpu_n = pnlvm.jit_engine.pycuda.driver.In(np.asarray(n, dtype=gen_fun.np_params[1]))
+        gpu_p = pnlvm.jit_engine.pycuda.driver.In(np.asarray(p, dtype=gen_fun.np_params[2]))
+
+        out = gen_fun.np_buffer_for_arg(1)
         gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
 
         def f():
             gen_fun.cuda_call(gpu_state, gpu_n, gpu_p, gpu_out)
-            return out[0]
+            return out.copy()
+
     else:
         assert False, "Unknown mode: {}".format(mode)
 

@@ -32,8 +32,10 @@ y = np.random.rand()
 def test_builtin_op(benchmark, op, args, builtin, result, func_mode):
     if func_mode == 'Python':
         f = op
+
     elif func_mode == 'LLVM':
         f = pnlvm.LLVMBinaryFunction.get(builtin)
+
     elif func_mode == 'PTX':
         wrap_name = builtin + "_test_wrapper"
         with pnlvm.LLVMBuilderContext.get_current() as ctx:
@@ -47,12 +49,18 @@ def test_builtin_op(benchmark, op, args, builtin, result, func_mode):
             builder.ret_void()
 
         bin_f = pnlvm.LLVMBinaryFunction.get(wrap_name)
-        dty = np.dtype(bin_f.byref_arg_types[0])
+
+        # The result argument is a pointer, use it to derive
+        # the right argument type
+        dty = bin_f.np_params[1].base
+
         ptx_res = np.empty_like(result, dtype=dty)
         ptx_res_arg = pnlvm.jit_engine.pycuda.driver.Out(ptx_res)
+
         def f(*a):
             bin_f.cuda_call(*(dty.type(p) for p in a), ptx_res_arg)
             return ptx_res
+
     res = benchmark(f, *args)
 
     if pytest.helpers.llvm_current_fp_precision() == 'fp32':

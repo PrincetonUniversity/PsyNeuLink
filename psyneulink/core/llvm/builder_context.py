@@ -52,7 +52,7 @@ _builtin_intrinsics = frozenset(('pow', 'log', 'exp', 'tanh', 'coth', 'csch',
                                  'mt_rand_init', 'philox_rand_init'))
 
 
-class _node_wrapper():
+class _node_assembly():
     def __init__(self, composition, node):
         self._comp = weakref.proxy(composition)
         self._node = node
@@ -61,7 +61,7 @@ class _node_wrapper():
         return "Node wrapper for node '{}' in composition '{}'".format(self._node, self._comp)
 
     def _gen_llvm_function(self, *, ctx, tags:frozenset):
-        return codegen.gen_node_wrapper(ctx, self._comp, self._node, tags=tags)
+        return codegen.gen_node_assembly(ctx, self._comp, self._node, tags=tags)
 
 def _comp_cached(func):
     @functools.wraps(func)
@@ -349,6 +349,13 @@ class LLVMBuilderContext:
         return helpers.get_state_space(builder, component, state_ptr, param_name)
 
     def check_used_params(self, component, *, tags:frozenset):
+        """
+        This function checks that parameters included in the compiled structures are used in compiled code.
+
+        If the assertion in this function triggers the parameter name should be added to the parameter
+        block list in the Component class.
+        """
+
         # Skip the check if the parameter use is not tracked. Some components (like node wrappers)
         # don't even have parameters.
         if component not in self._component_state_use and component not in self._component_param_use:
@@ -377,12 +384,6 @@ class LLVMBuilderContext:
         # 'num_trials_per_estimate' is only used in "evaluate" variants
         if hasattr(component, 'evaluate_agent_rep'):
             used_param_ids.add('num_trials_per_estimate')
-
-        if hasattr(component, 'adapt_scale'):
-            used_param_ids.add('threshold')
-            used_param_ids.add('adapt_scale')
-            used_param_ids.add('adapt_base')
-            used_param_ids.add('adapt_entropy_weighting')
 
         unused_param_ids = component_param_ids - used_param_ids - initializers
         unused_state_ids = component_state_ids - used_state_ids
@@ -504,38 +505,37 @@ class LLVMBuilderContext:
 
         return ir.LiteralStructType([])
 
-    def get_node_wrapper(self, composition, node):
-        cache = getattr(composition, '_wrapped_nodes', None)
+    def get_node_assembly(self, composition, node):
+        cache = getattr(composition, '_node_assemblies', None)
         if cache is None:
             cache = weakref.WeakKeyDictionary()
-            setattr(composition, '_wrapped_nodes', cache)
-        return cache.setdefault(node, _node_wrapper(composition, node))
+            setattr(composition, '_node_assemblies', cache)
+        return cache.setdefault(node, _node_assembly(composition, node))
 
     def convert_python_struct_to_llvm_ir(self, t):
         self._stats["types_converted"] += 1
         if t is None:
             return ir.LiteralStructType([])
-        elif type(t) is list:
-            if len(t) == 0:
-                return ir.LiteralStructType([])
-            elems_t = [self.convert_python_struct_to_llvm_ir(x) for x in t]
-            if all(x == elems_t[0] for x in elems_t):
-                return ir.ArrayType(elems_t[0], len(elems_t))
-            return ir.LiteralStructType(elems_t)
-        elif type(t) is tuple:
+
+        elif isinstance(t, (list, tuple)):
             elems_t = [self.convert_python_struct_to_llvm_ir(x) for x in t]
             if len(elems_t) > 0 and all(x == elems_t[0] for x in elems_t):
                 return ir.ArrayType(elems_t[0], len(elems_t))
+
             return ir.LiteralStructType(elems_t)
+
         elif isinstance(t, enum.Enum):
             # FIXME: Consider enums of non-int type
             assert all(round(x.value) == x.value for x in type(t))
             return self.int32_ty
+
         elif isinstance(t, (int, float, np.floating)):
             return self.float_ty
+
         elif isinstance(t, np.integer):
             # Python 'int' is handled above as it is the default type for '0'
             return ir.IntType(t.nbytes * 8)
+
         elif isinstance(t, np.ndarray):
             # 0d uint32 values were likely created from enums (above) and are
             # observed here after compilation sync.
@@ -543,18 +543,24 @@ class LLVMBuilderContext:
             if t.ndim == 0 and t.dtype == np.uint32:
                 return self.convert_python_struct_to_llvm_ir(t.reshape(1)[0])
             return self.convert_python_struct_to_llvm_ir(t.tolist())
+
         elif isinstance(t, np.random.RandomState):
             return pnlvm.builtins.get_mersenne_twister_state_struct(self)
+
         elif isinstance(t, np.random.Generator):
             assert isinstance(t.bit_generator, np.random.Philox)
             return pnlvm.builtins.get_philox_state_struct(self)
+
         elif isinstance(t, Time):
             return ir.ArrayType(self.int32_ty, len(TimeScale))
+
         elif isinstance(t, SampleIterator):
             if isinstance(t.generator, list):
                 return ir.ArrayType(self.float_ty, len(t.generator))
+
             # Generic iterator is {start, increment, count}
             return ir.LiteralStructType((self.float_ty, self.float_ty, self.int32_ty))
+
         assert False, "Don't know how to convert {}".format(type(t))
 
 
@@ -763,5 +769,55 @@ def _convert_llvm_ir_to_ctype(t: ir.Type):
         assert len(ret_t._fields_) == len(t.elements)
     else:
         assert False, "Don't know how to convert LLVM type: {}".format(t)
+
+    return ret_t
+
+@functools.lru_cache(maxsize=16)
+def _convert_llvm_ir_to_dtype(t: ir.Type):
+
+    if isinstance(t, ir.IntType):
+        if t.width == 8:
+            return np.uint8().dtype
+
+        elif t.width == 16:
+            return np.uint16().dtype
+
+        elif t.width == 32:
+            return np.uint32().dtype
+
+        elif t.width == 64:
+            return np.uint64().dtype
+
+        else:
+            assert False, "Unsupported integer type: {}".format(type(t))
+
+    elif isinstance(t, ir.DoubleType):
+        return np.float64().dtype
+
+    elif isinstance(t, ir.FloatType):
+        return np.float32().dtype
+
+    elif isinstance(t, ir.HalfType):
+        return np.float16().dtype
+
+    elif isinstance(t, ir.ArrayType):
+        element_type = _convert_llvm_ir_to_dtype(t.element)
+
+        # Create multidimensional array instead of nesting
+        if element_type.subdtype is not None:
+            element_type, shape = element_type.subdtype
+        else:
+            shape = ()
+
+        ret_t = np.dtype((element_type, (len(t),) + shape))
+
+    elif isinstance(t, ir.LiteralStructType):
+        field_list = []
+        for i, e in enumerate(t.elements):
+            field_list.append(("field_" + str(i), _convert_llvm_ir_to_dtype(e)))
+
+        ret_t = np.dtype(field_list, align=True)
+    else:
+        assert False, "Don't know how to convert LLVM type to dtype: {}".format(t)
 
     return ret_t
