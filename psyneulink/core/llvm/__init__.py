@@ -176,11 +176,6 @@ class LLVMBinaryFunction:
     def __call__(self, *args, **kwargs):
         return self.c_func(*args, **kwargs)
 
-    def wrap_call(self, *pargs):
-        cpargs = (ctypes.byref(p) if p is not None else None for p in pargs)
-        args = zip(cpargs, self.c_func.argtypes)
-        self(*(ctypes.cast(p, t) for p, t in args))
-
     @property
     def _cuda_kernel(self):
         if self.__cuda_kernel is None:
