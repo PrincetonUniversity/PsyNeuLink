@@ -77,7 +77,7 @@ class Execution:
             struct_end = time.time()
 
             # numpy "frombuffer" creates a shared memory view of the provided buffer
-            numpy_struct = np.frombuffer(struct, dtype=self._bin_func.np_params[arg], count=1)
+            numpy_struct = np.frombuffer(struct, dtype=self._bin_func.np_arg_dtypes[arg], count=1)
 
             assert numpy_struct.nbytes == ctypes.sizeof(struct), \
                 "Size mismatch ({}), numpy: {} vs. ctypes:{}".format(name, numpy_struct.nbytes, ctypes.sizeof(struct))
@@ -275,8 +275,8 @@ class FuncExecution(CUDAExecution):
         return self._get_compilation_param('_state', '_get_state_initializer', 1)
 
     def execute(self, variable):
-        new_variable = np.asfarray(variable, dtype=self._bin_func.np_params[2].base)
-        data_in = new_variable.reshape(self._bin_func.np_params[2].shape)
+        new_variable = np.asfarray(variable, dtype=self._bin_func.np_arg_dtypes[2].base)
+        data_in = new_variable.reshape(self._bin_func.np_arg_dtypes[2].shape)
 
         data_out = self._bin_func.np_buffer_for_arg(3)
 
@@ -286,7 +286,7 @@ class FuncExecution(CUDAExecution):
 
     def cuda_execute(self, variable):
         # Create input argument, PyCUDA doesn't care about shape
-        data_in = np.asfarray(variable, dtype=self._bin_func.np_params[2].base)
+        data_in = np.asfarray(variable, dtype=self._bin_func.np_arg_dtypes[2].base)
         data_out = self._bin_func.np_buffer_for_arg(3)
 
         self._bin_func.cuda_call(self._cuda_param_struct,
@@ -368,7 +368,7 @@ class CompExecution(CUDAExecution):
             conditions_initializer = gen.get_condition_initializer()
 
             ct_conditions = conditions_ctype(*conditions_initializer)
-            np_conditions = np.frombuffer(ct_conditions, dtype=self._bin_func.np_params[4], count=1)
+            np_conditions = np.frombuffer(ct_conditions, dtype=self._bin_func.np_arg_dtypes[4], count=1)
 
             np_conditions.shape = ()
 
@@ -444,8 +444,8 @@ class CompExecution(CUDAExecution):
         # Read provided input data and parse into an array (generator)
         data = self._composition._build_variable_for_input_CIM(inputs)
 
-        np_input = np.asarray(_tupleize(data), dtype=self._bin_func.np_params[2].base)
-        np_input = np_input.reshape(self._bin_func.np_params[2].shape)
+        np_input = np.asarray(_tupleize(data), dtype=self._bin_func.np_arg_dtypes[2].base)
+        np_input = np_input.reshape(self._bin_func.np_arg_dtypes[2].shape)
 
         if "stat" in self._debug_env:
             print("Input struct size:", _pretty_size(np_input.nbytes), "for", self._composition.name)

@@ -12,9 +12,9 @@ def test_recompile():
     # The original builtin mxv function
     bin_f = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_vxm')
 
-    vector = np.random.rand(DIM_X).astype(bin_f.np_params[0].base)
-    matrix = np.random.rand(DIM_X, DIM_Y).astype(bin_f.np_params[1].base)
-    llvm_res = np.empty(DIM_Y, dtype=bin_f.np_params[4].base)
+    vector = np.random.rand(DIM_X).astype(bin_f.np_arg_dtypes[0].base)
+    matrix = np.random.rand(DIM_X, DIM_Y).astype(bin_f.np_arg_dtypes[1].base)
+    llvm_res = np.empty(DIM_Y, dtype=bin_f.np_arg_dtypes[4].base)
 
     x, y = matrix.shape
 

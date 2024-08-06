@@ -148,11 +148,11 @@ class LLVMBinaryFunction:
         # '_type_' special attribute stores pointee type for pointers
         # https://docs.python.org/3/library/ctypes.html#ctypes._Pointer._type_
         self.byref_arg_types = [a._type_ if hasattr(a, "contents") else None for a in args]
-        self.np_params = [_convert_llvm_ir_to_dtype(getattr(a.type, "pointee", a.type)) for a in f.args]
+        self.np_arg_dtypes = [_convert_llvm_ir_to_dtype(getattr(a.type, "pointee", a.type)) for a in f.args]
 
         for a in numpy_args:
             assert self.byref_arg_types[a] is not None
-            args[a] = np.ctypeslib.ndpointer(dtype=self.np_params[a].base, shape=self.np_params[a].shape)
+            args[a] = np.ctypeslib.ndpointer(dtype=self.np_arg_dtypes[a].base, shape=self.np_arg_dtypes[a].shape)
 
         middle = time.perf_counter()
         self.__c_func_type = ctypes.CFUNCTYPE(return_type, *args)
@@ -223,8 +223,8 @@ class LLVMBinaryFunction:
 
     def np_buffer_for_arg(self, arg_num, *, extra_dimensions=(), fill_value=np.nan):
 
-        out_base = self.np_params[arg_num].base
-        out_shape = extra_dimensions + self.np_params[arg_num].shape
+        out_base = self.np_arg_dtypes[arg_num].base
+        out_shape = extra_dimensions + self.np_arg_dtypes[arg_num].shape
 
         # fill the buffer with NaN poison
         return np.full(out_shape, fill_value, dtype=out_base)

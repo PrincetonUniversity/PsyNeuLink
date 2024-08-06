@@ -144,8 +144,8 @@ def test_helper_is_close(mode, var1, var2, rtol, atol, fp_type):
 
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
 
-    vec1 = np.atleast_1d(np.asfarray(var1, dtype=bin_f.np_params[0].base))
-    vec2 = np.atleast_1d(np.asfarray(var2, dtype=bin_f.np_params[1].base))
+    vec1 = np.atleast_1d(np.asfarray(var1, dtype=bin_f.np_arg_dtypes[0].base))
+    vec2 = np.atleast_1d(np.asfarray(var2, dtype=bin_f.np_arg_dtypes[1].base))
     assert len(vec1) == len(vec2)
     res = np.empty_like(vec2)
 
@@ -442,7 +442,7 @@ def test_helper_numerical(mode, op, var, expected, fp_type):
 
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name, numpy_args=(0,))
 
-    res = np.asfarray(var, dtype=bin_f.np_params[0])
+    res = np.asfarray(var, dtype=bin_f.np_arg_dtypes[0])
 
     if mode == 'CPU':
         bin_f(res)
@@ -475,7 +475,7 @@ def test_helper_elementwise_op(mode, var, expected):
 
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name, numpy_args=(0, 1))
 
-    vec = np.asfarray(var, dtype=bin_f.np_params[0].base)
+    vec = np.asfarray(var, dtype=bin_f.np_arg_dtypes[0].base)
     res = bin_f.np_buffer_for_arg(1)
 
     if mode == 'CPU':
@@ -521,8 +521,8 @@ def test_helper_recursive_iterate_arrays(mode, var1, var2, expected):
 
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name, numpy_args=(0, 1, 2))
 
-    vec1 = np.asfarray(var1, dtype=bin_f.np_params[0].base)
-    vec2 = np.asfarray(var2, dtype=bin_f.np_params[0].base)
+    vec1 = np.asfarray(var1, dtype=bin_f.np_arg_dtypes[0].base)
+    vec2 = np.asfarray(var2, dtype=bin_f.np_arg_dtypes[0].base)
     res = bin_f.np_buffer_for_arg(1)
 
     if mode == 'CPU':
@@ -558,7 +558,7 @@ def test_helper_convert_fp_type(t1, t2, mode, val):
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name, numpy_args=(0, 1))
 
     # Get the argument numpy dtype
-    np_dt1, np_dt2 = (np.dtype(bin_f.np_params[i]) for i in (0, 1))
+    np_dt1, np_dt2 = (np.dtype(bin_f.np_arg_dtypes[i]) for i in (0, 1))
 
     # instantiate value, result and reference
     x = np.asfarray(val, dtype=np_dt1)

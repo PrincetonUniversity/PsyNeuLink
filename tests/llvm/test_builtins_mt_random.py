@@ -196,8 +196,8 @@ def test_random_binomial(benchmark, mode, n, p, exp):
         init_fun(state, SEED)
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_binomial', numpy_args=(0, 1, 2, 3))
-        n = np.asarray(n, dtype=gen_fun.np_params[1])
-        p = np.asarray(p, dtype=gen_fun.np_params[2])
+        n = np.asarray(n, dtype=gen_fun.np_arg_dtypes[1])
+        p = np.asarray(p, dtype=gen_fun.np_arg_dtypes[2])
 
         def f():
             out = gen_fun.np_buffer_for_arg(1)
@@ -214,8 +214,8 @@ def test_random_binomial(benchmark, mode, n, p, exp):
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_binomial')
 
-        gpu_n = pnlvm.jit_engine.pycuda.driver.In(np.asarray(n, dtype=gen_fun.np_params[1]))
-        gpu_p = pnlvm.jit_engine.pycuda.driver.In(np.asarray(p, dtype=gen_fun.np_params[2]))
+        gpu_n = pnlvm.jit_engine.pycuda.driver.In(np.asarray(n, dtype=gen_fun.np_arg_dtypes[1]))
+        gpu_p = pnlvm.jit_engine.pycuda.driver.In(np.asarray(p, dtype=gen_fun.np_arg_dtypes[2]))
 
         out = gen_fun.np_buffer_for_arg(1)
         gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)

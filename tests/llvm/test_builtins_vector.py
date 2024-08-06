@@ -29,8 +29,8 @@ smul_res = np.multiply(u, scalar)
 def test_vector_op(benchmark, op, v, builtin, result, func_mode):
 
     def _numpy_args(bin_f):
-        np_u = u.astype(bin_f.np_params[0])
-        np_v = bin_f.np_params[1].type(v) if np.isscalar(v) else v.astype(bin_f.np_params[1])
+        np_u = u.astype(bin_f.np_arg_dtypes[0])
+        np_v = bin_f.np_arg_dtypes[1].type(v) if np.isscalar(v) else v.astype(bin_f.np_arg_dtypes[1])
         np_res = np.empty_like(np_u)
 
         return np_u, np_v, np_res
@@ -77,7 +77,7 @@ def test_vector_sum(benchmark, func_mode):
     elif func_mode == 'LLVM':
         bin_f = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vec_sum", numpy_args=(2,))
 
-        np_u = u.astype(bin_f.np_params[0])
+        np_u = u.astype(bin_f.np_arg_dtypes[0])
         np_res = bin_f.np_buffer_for_arg(2)
 
         ct_u = np_u.ctypes.data_as(bin_f.c_func.argtypes[0])
@@ -89,7 +89,7 @@ def test_vector_sum(benchmark, func_mode):
     elif func_mode == 'PTX':
         bin_f = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vec_sum", numpy_args=(2,))
 
-        np_u = u.astype(bin_f.np_params[0])
+        np_u = u.astype(bin_f.np_arg_dtypes[0])
         np_res = bin_f.np_buffer_for_arg(2)
 
         cuda_u = pnlvm.jit_engine.pycuda.driver.In(np_u)
