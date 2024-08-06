@@ -11655,10 +11655,6 @@ _
             warnings.warn(f"learn() method called on '{self.name}', but it has no learning components; "
                           f"it will be run but no learning will occur.")
 
-        # Get any synchronization and/or tracking specifications from sublcasses (e.g.,AutdoiffComposition)
-        synch_with_pnl_options = kwargs.pop('synch_with_pnl_options', None)
-        retain_in_pnl_options = kwargs.pop('retain_in_pnl_options', None)
-
         # Prepare graph and context for learning
         context.add_flag(ContextFlags.LEARNING_MODE)
         execution_phase_at_entry = context.execution_phase
@@ -12863,7 +12859,7 @@ _
         else:
             return {k:np.array(v).tolist() for k,v in result_set}
 
-    def _update_learning_parameters(self, context, optimization_num=None):
+    def do_gradient_optimization(self, retain_in_pnl_options, context, optimization_num=None):
         pass
 
     @handle_external_context(fallback_most_recent=True)

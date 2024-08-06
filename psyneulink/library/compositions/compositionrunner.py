@@ -107,11 +107,13 @@ class CompositionRunner():
                         # Update weights if in PyTorch execution_mode;
                         #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
                         if execution_mode is ExecutionMode.PyTorch:
-                            self._composition._update_learning_parameters(context, optimization_num)
-
-                            # do forward computation on nodes that should be executed after gradient calculation
-                            pytorch_rep = self._composition.parameters.pytorch_representation._get(context=context)
+                            # # MODIFIED 8/4/24 OLD:
+                            # self._composition._update_learning_parameters(context, optimization_num)
+                            # MODIFIED 8/4/24 NEW:
+                            self._composition.do_gradient_optimization(retain_in_pnl_options, context, optimization_num)
+                        # MODIFIED 8/4/24 END                            
                             from torch import no_grad
+                            pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
                             with no_grad():
                                 for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
                                     node.composition_wrapper_owner.execute_node(node, variable,
@@ -203,7 +205,7 @@ class CompositionRunner():
                     # Update weights if in PyTorch execution_mode;
                     #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
                     if execution_mode is ExecutionMode.PyTorch:
-                        self._composition._update_learning_parameters(context)
+                        self._composition.do_gradient_optimization(retain_in_pnl_options, context)
                 else:
                     break
 
@@ -359,7 +361,8 @@ class CompositionRunner():
             skip_initialization = True
 
             if execution_mode == ExecutionMode.PyTorch and synch_with_pnl_options[MATRIX_WEIGHTS] == MINIBATCH:
-                self._composition.pytorch_representation.copy_weights_to_psyneulink(context)
+                pytorch_rep = self._composition.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)
+                pytorch_rep.copy_weights_to_psyneulink(context)
 
         num_epoch_results = num_trials // minibatch_size # number of results expected from final epoch
         # return self._composition.parameters.results.get(context)[-1 * num_epoch_results:]
@@ -370,7 +373,7 @@ class CompositionRunner():
 
         if execution_mode == ExecutionMode.PyTorch and synch_with_pnl_options[MATRIX_WEIGHTS] == EPOCH:
             # Copy weights at end of learning run
-            self._composition.pytorch_representation.copy_weights_to_psyneulink(context)
+            pytorch_rep.copy_weights_to_psyneulink(context)
 
         return self._composition.parameters.results.get(context)[-1]
 

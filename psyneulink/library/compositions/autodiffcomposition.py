@@ -373,13 +373,19 @@ __all__ = [
 
 
 def _get_torch_targets(owning_component=None, context=None):
-    return owning_component.parameters.pytorch_representation._get(context).tracked_outputs
+    if not context.execution_id:
+        return None
+    return owning_component.parameters.pytorch_representation._get(context).retained_outputs
 
 def _get_torch_outputs(owning_component=None, context=None):
-    return owning_component.parameters.pytorch_representation._get(context).tracked_outputs
+    if not context.execution_id:
+        return None
+    return owning_component.parameters.pytorch_representation._get(context).retained_outputs
 
 def _get_torch_losses(owning_component, context):
-    return owning_component.parameters.pytorch_representation._get(context).tracked_losses
+    if not context.execution_id:
+        return None
+    return owning_component.parameters.pytorch_representation._get(context).retained_losses
 
 
 class AutodiffCompositionError(CompositionError):
@@ -592,9 +598,9 @@ class AutodiffComposition(Composition):
         retain_torch_outputs = Parameter(MINIBATCH, fallback_default=True)
         retain_torch_targets = Parameter(MINIBATCH, fallback_default=True)
         retain_torch_losses = Parameter(MINIBATCH, fallback_default=True)
-        torch_losses = Parameter([], getter=_get_torch_losses)
-        torch_outputs = Parameter([], getter=_get_torch_outputs)
-        torch_targets = Parameter([], getter=_get_torch_targets)
+        torch_losses = Parameter([], getter=_get_torch_losses, dependencies='pytorch_representation')
+        torch_outputs = Parameter([], getter=_get_torch_outputs, dependencies='pytorch_representation')
+        torch_targets = Parameter([], getter=_get_torch_targets, dependencies='pytorch_representation')
         trial_losses = Parameter([]) # FIX <- related to early_stopper, but not getting assigned anywhere
         device = None
 
@@ -1026,7 +1032,7 @@ class AutodiffComposition(Composition):
         """Perform forward pass of model and compute loss for a single trial (i.e., a single input) in Pytorch mode.
         Losses are accumulated in pytorch_rep.track_losses, over calls to this method within a minibatch;
           at the end of a minibatch, they are averaged and backpropagated by compositionrunner.run_learning()
-          before the next time it calls run(), in a call to backward() by _update_learning_parameters()
+          before the next time it calls run(), in a call to backward() by do_gradient_optimization()
           in _batch_inputs() or _batch_function_inputs(),
         """
         assert execution_mode == pnlvm.ExecutionMode.PyTorch
@@ -1082,6 +1088,10 @@ class AutodiffComposition(Composition):
 
         # MODIFIED 8/4/24 NEW:
         # Calculate and track the loss over the trained OUTPUT nodes
+        # IMPLEMENTATION NOTE:
+        #  the following treats the loss associated with each output node as a separate loss (i.e., as if each output
+        #  node were a separate output mechanism) each of which is weighted equally in the average, irrespective of
+        #  the possibility that some mechanisms may have more OutputPorts than others.
         for component in outputs_for_targets.keys():
             new_loss = 0
             for i in range(len(outputs_for_targets[component])):
@@ -1089,7 +1099,6 @@ class AutodiffComposition(Composition):
                                                curr_tensor_targets[component][i])
             pytorch_rep.tracked_loss += new_loss
         pytorch_rep.tracked_loss_count += 1
-        assert True
 
         # FIX: ADD HERE: Save loss if tracked_losses is set to TRIAL
         # MODIFIED 8/4/24 END
@@ -1120,7 +1129,7 @@ class AutodiffComposition(Composition):
         # MODIFIED 8/4/24 NEW:
         # Synchronize specified outcomes after every trial
         pytorch_rep.copy_values_to_psyneulink(OUTPUTS, context)
-        pytorch_rep.track_outputs(all_outputs, TRIAL, context)
+        pytorch_rep.retain_for_psyneulink(retain_in_pnl_options, OUTPUTS, all_outputs)
         # MODIFIED 8/4/24 END
 
         return trained_outputs, all_outputs
@@ -1129,10 +1138,9 @@ class AutodiffComposition(Composition):
         self.losses = []
         self.parameters.losses.set([], context=context)
 
-    def _update_learning_parameters(self, context, optimization_num=None):
-        """Carry out backpropagation learning (backward computation) for (set of) trial(s).
+    def do_gradient_optimization(self, retain_in_pnl_options, context, optimization_num=None):
+        """Compute loss and use in call to autodiff_backward() to compute gradients and update PyTorch parameters.
         Update parameters (weights) based on trial(s) executed since last optimization,
-            using Pytorch backward method to compute gradients
         Reinitizalize tracked_loss and tracked_loss_count
         """
 
@@ -1158,25 +1166,38 @@ class AutodiffComposition(Composition):
         #
         # # Update pytorch parameters
         # optimizer.step()
-
-        # MODIFIED 8/4/24 NEW:
+        
+        # # MODIFIED 8/4/24 NEW:
+        # pytorch_rep = self.parameters.pytorch_representation._get(context=context)
+        # optimizer = pytorch_rep.optimizer
+        # 
+        # optimizer.zero_grad()
+        # # Compute average loss for this round of optimization
+        # tracked_loss = pytorch_rep.tracked_loss / pytorch_rep.tracked_loss_count
+        # # Compute gradients and weight changes based on loss
+        # tracked_loss.backward(retain_graph=not self.force_no_retain_graph)
+        # # Update PyTorch parameters
+        # optimizer.step()
+        # 
+        # # Save loss for current round of optimization
+        # pytorch_rep.retain_for_psyneulink(retain_in_pnl_options, LOSSES, tracked_loss)
+        # # Reset tracked_loss for next round of optimization
+        # pytorch_rep.tracked_loss = torch.zeros(1, device=self.device).double() # Accumulated losses within a batch
+        # pytorch_rep.tracked_loss_count = 0  # Count of losses within batch
+        
+        # MODIFIED 8/4/24 NEWER:
         pytorch_rep = self.parameters.pytorch_representation._get(context=context)
-        optimizer = pytorch_rep.optimizer
+        tracked_loss = pytorch_rep.tracked_loss / int(pytorch_rep.tracked_loss_count)
 
-        optimizer.zero_grad()
-        # Compute average loss for this round of optimization
-        tracked_loss = pytorch_rep.tracked_loss / pytorch_rep.tracked_loss_count
-        # Compute gradients and weight changes based on loss
-        tracked_loss.backward(retain_graph=not self.force_no_retain_graph)
-        # Update PyTorch parameters
-        optimizer.step()
+        self.autodiff_backward(tracked_loss, context)
 
-        # Save loss for current round of optimization
+        # # Save loss for current round of optimization
         pytorch_rep.retain_for_psyneulink(retain_in_pnl_options, LOSSES, tracked_loss)
+
         # Reset tracked_loss for next round of optimization
-        pytorch_rep.tracked_loss = torch.zeros(1, device=self.device).double() # Accumulated losses within a batch
-        pytorch_rep.tracked_loss_count = 0  # Count of losses within batch
-        # MODIFIED 8/4/24 END
+        pytorch_rep.tracked_loss = torch.zeros(1, device=self.device).double()
+        pytorch_rep.tracked_loss_count = 0
+        # # MODIFIED 8/4/24 END
 
         # MODIFIED 7/10/24 OLD:
         #  FIX: ??MOVED THE FOLLOWING TO composition_runner._batch_inputs()
@@ -1185,6 +1206,18 @@ class AutodiffComposition(Composition):
         #     for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
         #         node.composition_wrapper_owner.execute_node(node, variable, optimization_num, context)
         # MODIFIED 7/10/24 END
+
+    def autodiff_backward(self, tracked_loss, context):
+        """Calculate gradients and apply to PyTorch model parameters (weights)"""
+        pytorch_rep = self.parameters.pytorch_representation._get(context=context)
+        optimizer = pytorch_rep.optimizer
+
+        # Gradient updates
+        optimizer.zero_grad()
+        # Compute and log average loss over all trials since last update
+        tracked_loss.backward(retain_graph=not self.force_no_retain_graph)
+        # Update weights and copy to PNL
+        optimizer.step()
 
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         if "run" in tags:

@@ -224,7 +224,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.execution_sets = [x for x in self.execution_sets if len(x) > 0]
 
 
-        # Flattening for forward() and AutodiffComposition._update_learning_parameters
+        # Flattening for forward() and AutodiffComposition.do_gradient_optimization
 
         # Flatten nested execution sets:
         nested_execution_sets = {}
@@ -242,7 +242,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # Flatten maps
         for node_wrapper in self.wrapped_nodes:
             if isinstance(node_wrapper, PytorchCompositionWrapper):
-                # For copying weights back to PNL in AutodiffComposition._update_learning_parameters
+                # For copying weights back to PNL in AutodiffComposition.do_gradient_optimization
                 self.projections_map.update(node_wrapper.projections_map)
                 # Not sure if this is needed, but just to be safe
                 self.nodes_map.update(node_wrapper.nodes_map)
@@ -250,7 +250,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.nodes_map = {k: v for k, v in self.nodes_map.items() if not isinstance(v, PytorchCompositionWrapper)}
 
         # Flatten projections so that they are all in the outer Composition and visible by _regenerate_paramlist
-        #     needed for call to backward() in AutodiffComposition._update_learning_parameters
+        #     needed for call to backward() in AutodiffComposition.do_gradient_optimization
         # FIX: MAYBE SHOULD DO THIS AS LIST IS CREATED ABOVE?
         self.projection_wrappers = list(self.projections_map.values())
 
@@ -710,24 +710,25 @@ class PytorchCompositionWrapper(torch.nn.Module):
         """Store outputs, targets, and losses from Pytorch execution for copying to PsyNeuLink at end of learn().
         Note:  no need to copy to pnl; this is done by the getter methods for the corresponding Parameters on autodiff.
         """
-        if attr == OUTPUTS and retain_in_pnl_options[OUTPUTS]:
+        if attr == OUTPUTS and OUTPUTS in retain_in_pnl_options and retain_in_pnl_options[OUTPUTS]:
             self.retain_outputs(val)
-        elif attr == TARGETS and retain_in_pnl_options[TARGETS]:
+        elif attr == TARGETS and TARGETS in retain_in_pnl_options  and retain_in_pnl_options[TARGETS]:
             self.retain_targets(val)
-        elif attr == LOSSES and retain_in_pnl_options[LOSSES]:
+        elif attr == LOSSES and LOSSES in retain_in_pnl_options  and retain_in_pnl_options[LOSSES]:
             self.retain_losses(val)
 
-    def retain_outputs(self, output:torch.Tensor):
+    def retain_outputs(self, outputs:list):
         """Track outputs and copy to AutodiffComposition.pytorch_outputs at end of learn()."""
-        self.retained_outputs.append(output.detach().cpu().numpy()[0])
+        self.retained_outputs.append(outputs)
 
-    def retain_targets(self, target:torch.Tensor):
+    def retain_targets(self, targets:list):
         """Track targets and copy to AutodiffComposition.pytorch_targets at end of learn()."""
-        self.retained_targets.append(target.detach().cpu().numpy()[0])
+        self.retained_targets.append(targets)
 
     def retain_losses(self, loss:torch.Tensor):
         """Track targets and copy to AutodiffComposition.pytorch_targets at end of learn()."""
-        self.retained_losses.append(loss.detach().cpu().numpy()[0])
+        self.retained_losses.append(loss.detach().cpu().numpy().copy().tolist())
+        assert self.retained_losses
 
     def detach_all(self):
         for projection in self.projections_map.values():

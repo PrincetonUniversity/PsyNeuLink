@@ -185,6 +185,7 @@ class TestTrainingCorrectness:
         else:
             accuracy_args = {}
 
+        x = xor.torch_losses
         np.testing.assert_allclose(results, expected, **accuracy_args)
 
 
