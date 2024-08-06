@@ -40,7 +40,7 @@ def test_vector_op(benchmark, op, v, builtin, result, func_mode):
             return op(u, v)
 
     elif func_mode == 'LLVM':
-        bin_f = pnlvm.LLVMBinaryFunction.get(builtin)
+        bin_f = pnlvm.LLVMBinaryFunction.get(builtin, ctype_ptr_args=(0, 1, 3))
         lu, lv, lres = _numpy_args(bin_f)
 
         ct_u = lu.ctypes.data_as(bin_f.c_func.argtypes[0])
@@ -75,7 +75,7 @@ def test_vector_sum(benchmark, func_mode):
             return np.sum(u)
 
     elif func_mode == 'LLVM':
-        bin_f = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vec_sum", numpy_args=(2,))
+        bin_f = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vec_sum", ctype_ptr_args=(0,))
 
         np_u = u.astype(bin_f.np_arg_dtypes[0])
         np_res = bin_f.np_buffer_for_arg(2)
@@ -87,7 +87,7 @@ def test_vector_sum(benchmark, func_mode):
             return np_res
 
     elif func_mode == 'PTX':
-        bin_f = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vec_sum", numpy_args=(2,))
+        bin_f = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vec_sum")
 
         np_u = u.astype(bin_f.np_arg_dtypes[0])
         np_res = bin_f.np_buffer_for_arg(2)

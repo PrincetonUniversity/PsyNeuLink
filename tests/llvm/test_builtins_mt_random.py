@@ -27,12 +27,12 @@ def test_random_int(benchmark, mode):
             return state.randint(0xffffffff, dtype=np.int64)
 
     elif mode == 'LLVM':
-        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init', numpy_args=(0,))
+        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
         state = init_fun.np_buffer_for_arg(0)
 
         init_fun(state, SEED)
 
-        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_int32', numpy_args=(0, 1))
+        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_int32')
 
         def f():
             out = gen_fun.np_buffer_for_arg(1)
@@ -84,11 +84,11 @@ def test_random_float(benchmark, mode):
             return state.random_sample()
 
     elif mode == 'LLVM':
-        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init', numpy_args=(0,))
+        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
         state = init_fun.np_buffer_for_arg(0)
         init_fun(state, SEED)
 
-        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_double', numpy_args=(0, 1))
+        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_double')
 
         def f():
             out = gen_fun.np_buffer_for_arg(1)
@@ -133,11 +133,11 @@ def test_random_normal(benchmark, mode):
             return state.normal()
 
     elif mode == 'LLVM':
-        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init', numpy_args=(0,))
+        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
         state = init_fun.np_buffer_for_arg(0)
         init_fun(state, SEED)
 
-        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_normal', numpy_args=(0, 1))
+        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_normal')
 
         def f():
             out = gen_fun.np_buffer_for_arg(1)
@@ -191,11 +191,11 @@ def test_random_binomial(benchmark, mode, n, p, exp):
             return state.binomial(n, p)
 
     elif mode == 'LLVM':
-        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init', numpy_args=(0,))
+        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
         state = init_fun.np_buffer_for_arg(0)
         init_fun(state, SEED)
 
-        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_binomial', numpy_args=(0, 1, 2, 3))
+        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_binomial')
         n = np.asarray(n, dtype=gen_fun.np_arg_dtypes[1])
         p = np.asarray(p, dtype=gen_fun.np_arg_dtypes[2])
 

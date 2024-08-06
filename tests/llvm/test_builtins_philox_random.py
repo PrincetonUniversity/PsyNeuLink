@@ -26,11 +26,11 @@ def test_random_int64(benchmark, mode, seed, expected):
             return prng.integers(0xffffffffffffffff, dtype=np.uint64, endpoint=True)
 
     elif mode == 'LLVM':
-        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init', numpy_args=(0,))
+        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
         state = init_fun.np_buffer_for_arg(0)
         init_fun(state, seed)
 
-        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_int64', numpy_args=(0, 1))
+        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_int64')
 
         def f():
             out = gen_fun.np_buffer_for_arg(1)
@@ -76,11 +76,11 @@ def test_random_int32(benchmark, mode):
             return prng.integers(0xffffffff, dtype=np.uint32, endpoint=True)
 
     elif mode == 'LLVM':
-        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init', numpy_args=(0,))
+        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
         state = init_fun.np_buffer_for_arg(0)
         init_fun(state, SEED)
 
-        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_int32', numpy_args=(0, 1))
+        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_int32')
 
         def f():
             out = gen_fun.np_buffer_for_arg(1)
@@ -124,11 +124,11 @@ def test_random_double(benchmark, mode):
             return prng.random(dtype=np.float64)
 
     elif mode == 'LLVM':
-        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init', numpy_args=(0,))
+        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
         state = init_fun.np_buffer_for_arg(0)
         init_fun(state, SEED)
 
-        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_double', numpy_args=(0, 1))
+        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_double')
 
         def f():
             out = gen_fun.np_buffer_for_arg(1)
@@ -171,11 +171,11 @@ def test_random_float(benchmark, mode):
             return prng.random(dtype=np.float32)
 
     elif mode == 'LLVM':
-        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init', numpy_args=(0,))
+        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
         state = init_fun.np_buffer_for_arg(0)
         init_fun(state, SEED)
 
-        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_float', numpy_args=(0, 1))
+        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_float')
 
         def f():
             out = gen_fun.np_buffer_for_arg(1)
@@ -224,11 +224,11 @@ def test_random_normal(benchmark, mode, fp_type):
             return prng.standard_normal(dtype=dtype)
 
     elif mode == 'LLVM':
-        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init', numpy_args=(0,))
+        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
         state = init_fun.np_buffer_for_arg(0)
         init_fun(state, SEED)
 
-        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_normal', numpy_args=(0, 1))
+        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_normal')
 
         def f():
             out = gen_fun.np_buffer_for_arg(1)
@@ -322,11 +322,11 @@ def test_random_binomial(benchmark, mode, fp_type, n, p, exp_64, exp_32):
             return prng.binomial(n, p)
 
     elif mode == 'LLVM':
-        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init', numpy_args=(0,))
+        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
         state = init_fun.np_buffer_for_arg(0)
         init_fun(state, SEED)
 
-        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_binomial', numpy_args=(0, 1, 2, 3))
+        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_binomial')
         n = np.asarray(n, dtype=gen_fun.np_arg_dtypes[1])
         p = np.asarray(p, dtype=gen_fun.np_arg_dtypes[2])
 

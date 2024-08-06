@@ -80,7 +80,7 @@ def test_matrix_op(benchmark, op, x, y, builtin, result, func_mode, dims):
         else:
             func_name = builtin
 
-        bin_f = pnlvm.LLVMBinaryFunction.get(func_name)
+        bin_f = pnlvm.LLVMBinaryFunction.get(func_name, ctype_ptr_args=(0, 1, 2, 3, 4))
         lx, ly, lres = _numpy_args(bin_f)
 
         ct_x = lx.ctypes.data_as(bin_f.c_func.argtypes[0])

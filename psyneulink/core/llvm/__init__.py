@@ -123,7 +123,7 @@ def _llvm_build(target_generation=_binary_generation + 1):
 
 
 class LLVMBinaryFunction:
-    def __init__(self, name: str, *, numpy_args=()):
+    def __init__(self, name: str, *, ctype_ptr_args=()):
         self.name = name
 
         self.__c_func = None
@@ -143,16 +143,18 @@ class LLVMBinaryFunction:
         # Create ctype function instance
         start = time.perf_counter()
         return_type = _convert_llvm_ir_to_ctype(f.return_value.type)
+
+        self.np_arg_dtypes = [_convert_llvm_ir_to_dtype(getattr(a.type, "pointee", a.type)) for a in f.args]
+
         args = [_convert_llvm_ir_to_ctype(a.type) for a in f.args]
 
         # '_type_' special attribute stores pointee type for pointers
         # https://docs.python.org/3/library/ctypes.html#ctypes._Pointer._type_
         self.byref_arg_types = [a._type_ if hasattr(a, "contents") else None for a in args]
-        self.np_arg_dtypes = [_convert_llvm_ir_to_dtype(getattr(a.type, "pointee", a.type)) for a in f.args]
 
-        for a in numpy_args:
-            assert self.byref_arg_types[a] is not None
-            args[a] = np.ctypeslib.ndpointer(dtype=self.np_arg_dtypes[a].base, shape=self.np_arg_dtypes[a].shape)
+        for i, arg in enumerate(self.np_arg_dtypes):
+            if i not in ctype_ptr_args and self.byref_arg_types[i] is not None:
+                args[i] = np.ctypeslib.ndpointer(dtype=arg.base, shape=arg.shape)
 
         middle = time.perf_counter()
         self.__c_func_type = ctypes.CFUNCTYPE(return_type, *args)
@@ -231,14 +233,14 @@ class LLVMBinaryFunction:
 
     @staticmethod
     @functools.lru_cache(maxsize=32)
-    def from_obj(obj, *, tags:frozenset=frozenset(), numpy_args:tuple=()):
+    def from_obj(obj, *, tags:frozenset=frozenset(), ctype_ptr_args:tuple=()):
         name = LLVMBuilderContext.get_current().gen_llvm_function(obj, tags=tags).name
-        return LLVMBinaryFunction.get(name, numpy_args=numpy_args)
+        return LLVMBinaryFunction.get(name, ctype_ptr_args=ctype_ptr_args)
 
     @staticmethod
     @functools.lru_cache(maxsize=32)
-    def get(name: str, *, numpy_args:tuple=()):
-        return LLVMBinaryFunction(name, numpy_args=numpy_args)
+    def get(name: str, *, ctype_ptr_args:tuple=()):
+        return LLVMBinaryFunction(name, ctype_ptr_args=ctype_ptr_args)
 
 
 _cpu_engine = None

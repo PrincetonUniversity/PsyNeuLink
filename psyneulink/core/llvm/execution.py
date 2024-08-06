@@ -258,7 +258,7 @@ class FuncExecution(CUDAExecution):
     def __init__(self, component, execution_id=None, *, tags=frozenset()):
         super().__init__()
 
-        self._bin_func = pnlvm.LLVMBinaryFunction.from_obj(component, tags=tags, numpy_args=(0, 1, 2, 3))
+        self._bin_func = pnlvm.LLVMBinaryFunction.from_obj(component, tags=tags)
         self._execution_context = Context(execution_id=execution_id)
         self._component = component
 
@@ -355,9 +355,7 @@ class CompExecution(CUDAExecution):
     def _set_bin_node(self, node):
         assert node in self._composition._all_nodes
         node_assembly = builder_context.LLVMBuilderContext.get_current().get_node_assembly(self._composition, node)
-        self.__bin_func = pnlvm.LLVMBinaryFunction.from_obj(node_assembly,
-                                                            tags=self.__tags.union({"node_assembly"}),
-                                                            numpy_args=(0, 1, 2, 3, 4))
+        self.__bin_func = pnlvm.LLVMBinaryFunction.from_obj(node_assembly, tags=self.__tags.union({"node_assembly"}))
 
     @property
     def _conditions(self):
@@ -503,8 +501,7 @@ class CompExecution(CUDAExecution):
     @property
     def _bin_exec_func(self):
         if self.__bin_exec_func is None:
-            self.__bin_exec_func = pnlvm.LLVMBinaryFunction.from_obj(
-                self._composition, tags=self.__tags, numpy_args=(0, 1, 2, 3, 4))
+            self.__bin_exec_func = pnlvm.LLVMBinaryFunction.from_obj(self._composition, tags=self.__tags)
 
         return self.__bin_exec_func
 
@@ -558,8 +555,9 @@ class CompExecution(CUDAExecution):
     @property
     def _bin_run_func(self):
         if self.__bin_run_func is None:
-            self.__bin_run_func = pnlvm.LLVMBinaryFunction.from_obj(
-                self._composition, tags=self.__tags.union({"run"}), numpy_args=(0, 1, 2, 5, 6))
+            self.__bin_run_func = pnlvm.LLVMBinaryFunction.from_obj(self._composition,
+                                                                    tags=self.__tags.union({"run"}),
+                                                                    ctype_ptr_args=(3, 4))
 
         return self.__bin_run_func
 
@@ -620,7 +618,7 @@ class CompExecution(CUDAExecution):
 
         eval_type = "evaluate_type_all_results" if all_results else "evaluate_type_objective"
         tags = {"evaluate", "alloc_range", eval_type}
-        bin_func = pnlvm.LLVMBinaryFunction.from_obj(ocm, tags=frozenset(tags), numpy_args=(0, 1, 6, 7))
+        bin_func = pnlvm.LLVMBinaryFunction.from_obj(ocm, tags=frozenset(tags), ctype_ptr_args=(4, 5))
         self.__bin_func = bin_func
 
         # There are 8 arguments to evaluate_alloc_range:
