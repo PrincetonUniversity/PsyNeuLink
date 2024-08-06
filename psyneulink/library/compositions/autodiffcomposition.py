@@ -1164,12 +1164,10 @@ class AutodiffComposition(Composition):
         optimizer = pytorch_rep.optimizer
 
         optimizer.zero_grad()
-
-        # Compute and log average loss over all trials in this round of optimization
+        # Compute average loss for this round of optimization
         tracked_loss = pytorch_rep.tracked_loss / pytorch_rep.tracked_loss_count
         # Compute gradients and weight changes based on loss
         tracked_loss.backward(retain_graph=not self.force_no_retain_graph)
-
         # Update PyTorch parameters
         optimizer.step()
 
@@ -1178,7 +1176,6 @@ class AutodiffComposition(Composition):
         # Reset tracked_loss for next round of optimization
         pytorch_rep.tracked_loss = torch.zeros(1, device=self.device).double() # Accumulated losses within a batch
         pytorch_rep.tracked_loss_count = 0  # Count of losses within batch
-        assert True
         # MODIFIED 8/4/24 END
 
         # MODIFIED 7/10/24 OLD:
