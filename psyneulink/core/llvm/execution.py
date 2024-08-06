@@ -561,7 +561,7 @@ class CompExecution(CUDAExecution):
     def _bin_run_func(self):
         if self.__bin_run_func is None:
             self.__bin_run_func = pnlvm.LLVMBinaryFunction.from_obj(
-                self._composition, tags=self.__tags.union({"run"}), numpy_args=(0, 1, 2))
+                self._composition, tags=self.__tags.union({"run"}), numpy_args=(0, 1, 2, 5, 6))
 
         return self.__bin_run_func
 
@@ -583,8 +583,8 @@ class CompExecution(CUDAExecution):
             print("Output struct size:", _pretty_size(ctypes.sizeof(outputs)),
                   "for", self._composition.name)
 
-        runs_count = ctypes.c_uint(runs)
-        input_count = ctypes.c_uint(num_input_sets)
+        runs_count = np.asarray(runs, dtype=np.uint32).copy()
+        input_count = np.asarray(num_input_sets, dtype=np.uint32)
 
         self._bin_run_func(self._state_struct,
                            self._param_struct,
@@ -595,8 +595,8 @@ class CompExecution(CUDAExecution):
                            input_count)
 
         # Extract only #trials elements in case the run exited early
-        assert runs_count.value <= runs, "Composition ran more times than allowed!"
-        return _convert_ctype_to_python(outputs)[0:runs_count.value]
+        assert runs_count <= runs, "Composition ran more times than allowed!"
+        return _convert_ctype_to_python(outputs)[0:runs_count]
 
     def cuda_run(self, inputs, runs, num_input_sets):
         # Create input buffer
