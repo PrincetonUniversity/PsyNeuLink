@@ -172,7 +172,7 @@ class TestTrainingCorrectness:
                       "targets": {xor_out: np.array([[0], [1], [1], [0]])}}
 
         if calls == 'single':
-            input_dict["epochs"] = 1
+            input_dict["epochs"] = eps
             results = benchmark(_single_learn_results, xor, inputs=input_dict, execution_mode=autodiff_mode)
         else:
             input_dict["epochs"] = 1
