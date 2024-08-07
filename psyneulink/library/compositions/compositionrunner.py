@@ -157,7 +157,6 @@ class CompositionRunner():
             # Synchronize specified outcomes at end of learning run
             pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, RUN, context)
 
-
     def _batch_function_inputs(self,
                                inputs: dict,
                                epochs: int,
