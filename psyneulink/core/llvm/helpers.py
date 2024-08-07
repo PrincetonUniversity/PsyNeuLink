@@ -319,8 +319,7 @@ def convert_type(builder, val, t):
                 val = builder.fptrunc(val, ir.FloatType())
             return builder.fptrunc(val, t)
         else:
-            assert val.type == t
-            return val
+            assert False, "Unknown float conversion: {} -> {}".format(val.type, t)
 
     assert False, "Unknown type conversion: {} -> {}".format(val.type, t)
 
