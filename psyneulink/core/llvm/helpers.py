@@ -408,16 +408,12 @@ def printf(builder, fmt, *args, override_debug=False):
     #FIXME: Fix builtin printf and use that instead of this
     libc_name = "msvcrt" if sys.platform == "win32" else "c"
     libc = util.find_library(libc_name)
-    if libc is None:
-        warnings.warn("Standard libc library not found, 'printf' not available!")
-        return
+    assert libc is not None, "Standard libc library not found"
 
     llvm.load_library_permanently(libc)
     # Address will be none if the symbol is not found
     printf_address = llvm.address_of_symbol("printf")
-    if printf_address is None:
-        warnings.warn("'printf' symbol not found in libc, 'printf' not available!")
-        return
+    assert printf_address is not None, "'printf' symbol not found in {}".format(libc)
 
     # Direct pointer constants don't work
     printf_ty = ir.FunctionType(ir.IntType(32), [ir.IntType(8).as_pointer()], var_arg=True)
