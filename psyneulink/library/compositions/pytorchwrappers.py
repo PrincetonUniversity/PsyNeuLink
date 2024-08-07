@@ -27,7 +27,7 @@ from psyneulink.core.globals.keywords import (ADD, AFTER, ALL, AUTODIFF_RESULTS,
                                               LEARNING_SCALE_LITERALS, Loss, LOSSES, MATRIX_WEIGHTS,
                                               NODE, NODE_VALUES, OUTPUTS, TARGETS, TARGET_MECHANISM)
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.utilities import get_deepcopy_with_shared
+from psyneulink.core.globals.utilities import convert_to_np_array, get_deepcopy_with_shared
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core import llvm as pnlvm
 
@@ -685,8 +685,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # 8/4/24 - FIX: THIS NEEDS TO HAPPEN *AFTER* THE COMPOSITION HAS WRITTEN THE RESULTS,
         #           IN ORDER TO REPLACE results[-1] FOR TRIAL OR CORRECT # OF MOST RECENT VALUES FOR MINIBATCH OR RUN
         # self._composition.results[-1] = self.output_values
-        assert 'FOR DEBUGGING'
-        pass
+        results = list(self._composition.parameters.results._get(context)) + [self.output_values]
+        self._composition.parameters.results._set(convert_to_np_array(results), context)
+        assert True
 
     # MODIFIED 8/4/24 OLD:
     # def retain_in_psyneulink(self,

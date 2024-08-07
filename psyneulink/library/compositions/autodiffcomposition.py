@@ -593,7 +593,7 @@ class AutodiffComposition(Composition):
         learning_rate = Parameter(.001, fallback_default=True)
         synch_projection_matrices_with_torch = Parameter(RUN, fallback_default=True)
         synch_node_values_with_torch = Parameter(RUN, fallback_default=True)
-        synch_autodiff_results_with_torch = Parameter(RUN, fallback_default=True)
+        synch_autodiff_results_with_torch = Parameter(MINIBATCH, fallback_default=True)
         retain_torch_outputs = Parameter(MINIBATCH, fallback_default=True)
         retain_torch_targets = Parameter(MINIBATCH, fallback_default=True)
         retain_torch_losses = Parameter(MINIBATCH, fallback_default=True)
@@ -658,7 +658,7 @@ class AutodiffComposition(Composition):
                  refresh_losses=False,
                  synch_projection_matrices_with_torch:Optional[str]=RUN,
                  synch_node_values_with_torch:Optional[str]=RUN,
-                 synch_autodiff_results_with_torch:Optional[str]=RUN,
+                 synch_autodiff_results_with_torch:Optional[str]=MINIBATCH,
                  retain_torch_outputs:Optional[str]=MINIBATCH,
                  retain_torch_targets:Optional[str]=MINIBATCH,
                  retain_torch_losses:Optional[str]=MINIBATCH,
@@ -1371,11 +1371,11 @@ class AutodiffComposition(Composition):
 
         # Consolidate the options for synching and tracking into dictionaries as arguments to learning and exec methods
         synch_with_pnl_options = {MATRIX_WEIGHTS: synch_projection_matrices_with_torch
-                                   or self.parameters.synch_projection_matrices_with_torch._get(context),
-                          NODE_VALUES: synch_node_values_with_torch
-                                  or self.parameters.synch_node_values_with_torch._get(context),
-                          AUTODIFF_RESULTS: synch_autodiff_results_with_torch
-                                   or self.parameters.synch_autodiff_results_with_torch._get(context)}
+                                                  or self.parameters.synch_projection_matrices_with_torch._get(context),
+                                  NODE_VALUES: synch_node_values_with_torch
+                                               or self.parameters.synch_node_values_with_torch._get(context),
+                                  AUTODIFF_RESULTS: synch_autodiff_results_with_torch
+                                                    or self.parameters.synch_autodiff_results_with_torch._get(context)}
 
         retain_in_pnl_options = {OUTPUTS: retain_torch_outputs or self.parameters.retain_torch_outputs._get(context),
                                  TARGETS: retain_torch_targets or self.parameters.retain_torch_targets._get(context),
