@@ -1097,7 +1097,9 @@ class AutodiffComposition(Composition):
                 new_loss += self.loss_function(outputs_for_targets[component][i],
                                                curr_tensor_targets[component][i])
             pytorch_rep.tracked_loss += new_loss
+        # MODIFIED 8/7/24 OLD:
         pytorch_rep.tracked_loss_count += 1
+        # MODIFIED 8/7/24 END
 
         # FIX: ADD HERE: Save loss if tracked_losses is set to TRIAL
         # MODIFIED 8/4/24 END
@@ -1115,7 +1117,7 @@ class AutodiffComposition(Composition):
             idx = source.output_ports.index(port)
             trained_output_values += [outputs_for_targets[source][idx].detach().cpu().numpy().copy().tolist()]
 
-        # Get values of all OUTPUT nodes
+        # Get values of all OUTPUT and TARGET nodes
         all_output_values = []
         all_target_values = []
         for input_port in self.output_CIM.input_ports:
