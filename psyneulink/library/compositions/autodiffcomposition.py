@@ -1194,7 +1194,7 @@ class AutodiffComposition(Composition):
         
         # MODIFIED 8/4/24 NEWER:
         pytorch_rep = self.parameters.pytorch_representation._get(context=context)
-        tracked_loss = pytorch_rep.tracked_loss / int(pytorch_rep.tracked_loss_count)
+        tracked_loss = pytorch_rep.tracked_loss / pytorch_rep.tracked_loss_count
 
         self.autodiff_backward(tracked_loss, context)
 
