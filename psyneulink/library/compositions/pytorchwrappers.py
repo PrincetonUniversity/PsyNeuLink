@@ -685,8 +685,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # 8/4/24 - FIX: THIS NEEDS TO HAPPEN *AFTER* THE COMPOSITION HAS WRITTEN THE RESULTS,
         #           IN ORDER TO REPLACE results[-1] FOR TRIAL OR CORRECT # OF MOST RECENT VALUES FOR MINIBATCH OR RUN
         # self._composition.results[-1] = self.output_values
-        results = list(self._composition.parameters.results._get(context)) + [self.output_values]
-        self._composition.parameters.results._set(convert_to_np_array(results), context)
+        # results = list(self._composition.parameters.results._get(context)) + [self.output_values]
+        # self._composition.parameters.results._set(convert_to_np_array(results), context)
         assert True
 
     # MODIFIED 8/4/24 OLD:
