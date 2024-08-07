@@ -372,20 +372,20 @@ __all__ = [
 ]
 
 
-def _get_torch_targets(owning_component=None, context=None):
-    if not context.execution_id:
-        return None
-    return owning_component.parameters.pytorch_representation._get(context).retained_outputs
-
 def _get_torch_outputs(owning_component=None, context=None):
     if not context.execution_id:
         return None
-    return owning_component.parameters.pytorch_representation._get(context).retained_outputs
+    return np.array(owning_component.parameters.pytorch_representation._get(context).retained_outputs)
+
+def _get_torch_targets(owning_component=None, context=None):
+    if not context.execution_id:
+        return None
+    return np.array(owning_component.parameters.pytorch_representation._get(context).retained_targets)
 
 def _get_torch_losses(owning_component, context):
     if not context.execution_id:
         return None
-    return owning_component.parameters.pytorch_representation._get(context).retained_losses
+    return np.array(owning_component.parameters.pytorch_representation._get(context).retained_losses)
 
 
 class AutodiffCompositionError(CompositionError):
@@ -598,9 +598,9 @@ class AutodiffComposition(Composition):
         retain_torch_outputs = Parameter(MINIBATCH, fallback_default=True)
         retain_torch_targets = Parameter(MINIBATCH, fallback_default=True)
         retain_torch_losses = Parameter(MINIBATCH, fallback_default=True)
-        torch_losses = Parameter([], getter=_get_torch_losses, dependencies='pytorch_representation')
-        torch_outputs = Parameter([], getter=_get_torch_outputs, dependencies='pytorch_representation')
-        torch_targets = Parameter([], getter=_get_torch_targets, dependencies='pytorch_representation')
+        torch_outputs = Parameter([], getter=_get_torch_outputs)
+        torch_targets = Parameter([], getter=_get_torch_targets)
+        torch_losses = Parameter([], getter=_get_torch_losses)
         trial_losses = Parameter([]) # FIX <- related to early_stopper, but not getting assigned anywhere
         device = None
 
@@ -1106,7 +1106,7 @@ class AutodiffComposition(Composition):
         # --------- Return the values of OUTPUT trained and all nodes  ---------------------------------------
 
         # Get values of trained OUTPUT nodes
-        trained_outputs = []
+        trained_output_values = []
         trained_outputs_CIM_input_ports = [port for port in self.output_CIM.input_ports
                                          if port.path_afferents[0].sender.owner in self.target_output_map.values()]
         for input_port in trained_outputs_CIM_input_ports:
@@ -1114,25 +1114,31 @@ class AutodiffComposition(Composition):
                 f"PROGRAM ERROR: {input_port.name} of ouput_CIM for '{self.name}' has more than one afferent."
             port, source, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
             idx = source.output_ports.index(port)
-            trained_outputs += [outputs_for_targets[source][idx].detach().cpu().numpy().copy().tolist()]
+            trained_output_values += [outputs_for_targets[source][idx].detach().cpu().numpy().copy().tolist()]
 
         # Get values of all OUTPUT nodes
-        all_outputs = []
+        all_output_values = []
+        all_target_values = []
         for input_port in self.output_CIM.input_ports:
             assert (len(input_port.all_afferents) == 1), \
                 f"PROGRAM ERROR: {input_port.name} of ouput_CIM for '{self.name}' has more than one afferent."
             port, component, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
             idx = component.output_ports.index(port)
-            all_outputs += [curr_tensor_outputs[component][idx].detach().cpu().numpy().copy().tolist()]
-            pytorch_rep.output_values = all_outputs
+            all_output_values += [curr_tensor_outputs[component][idx].detach().cpu().numpy().copy().tolist()]
+            all_target_values += [curr_tensor_targets[component][idx].detach().cpu().numpy().copy().tolist()]
+            pytorch_rep.output_values = all_output_values
+            pytorch_rep.target_values = all_target_values
 
         # MODIFIED 8/4/24 NEW:
         # Synchronize specified outcomes after every trial
         pytorch_rep.copy_values_to_psyneulink(OUTPUTS, context)
-        pytorch_rep.retain_for_psyneulink(retain_in_pnl_options, OUTPUTS, all_outputs)
+        pytorch_rep.retain_for_psyneulink({OUTPUTS: all_output_values,
+                                          TARGETS: all_target_values},
+                                          retain_in_pnl_options,
+                                          context)
         # MODIFIED 8/4/24 END
 
-        return trained_outputs, all_outputs
+        return trained_output_values, all_output_values
 
     def clear_losses(self, context=None):
         self.losses = []
@@ -1192,7 +1198,7 @@ class AutodiffComposition(Composition):
         self.autodiff_backward(tracked_loss, context)
 
         # # Save loss for current round of optimization
-        pytorch_rep.retain_for_psyneulink(retain_in_pnl_options, LOSSES, tracked_loss)
+        pytorch_rep.retain_for_psyneulink({LOSSES: tracked_loss}, retain_in_pnl_options, context)
 
         # Reset tracked_loss for next round of optimization
         pytorch_rep.tracked_loss = torch.zeros(1, device=self.device).double()
@@ -1466,13 +1472,14 @@ class AutodiffComposition(Composition):
                        context=context)
 
                 self._build_pytorch_representation(context)
-                trained_outputs, all_outputs = self.autodiff_forward(inputs=autodiff_inputs,
-                                                                     targets=autodiff_targets,
-                                                                     synch_with_pnl_options=synch_with_pnl_options,
-                                                                     retain_in_pnl_options=retain_in_pnl_options,
-                                                                     execution_mode=execution_mode,
-                                                                     scheduler=scheduler,
-                                                                     context=context)
+                trained_output_values, all_output_values = \
+                                                self.autodiff_forward(inputs=autodiff_inputs,
+                                                                      targets=autodiff_targets,
+                                                                      synch_with_pnl_options=synch_with_pnl_options,
+                                                                      retain_in_pnl_options=retain_in_pnl_options,
+                                                                      execution_mode=execution_mode,
+                                                                      scheduler=scheduler,
+                                                                      context=context)
                 execution_phase = context.execution_phase
                 context.execution_phase = ContextFlags.PROCESSING
                 context.execution_phase = execution_phase
@@ -1488,7 +1495,7 @@ class AutodiffComposition(Composition):
 
                 scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
-                return all_outputs
+                return all_output_values
 
         # Call Composition execute in Python mode
         return super(AutodiffComposition, self).execute(inputs=inputs,

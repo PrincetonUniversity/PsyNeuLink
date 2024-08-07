@@ -93,7 +93,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         self.retained_outputs = []  # Outputs for all trials
         self.retained_targets = []  # Targets for all trials
-        self.retained_losses = []   # Losses per trial or batch accumulated over run
+        self.retained_losses = []   # Losses per trial or batch accumulated over a run
 
         # Instantiate pytorch Mechanisms
         nodes = list(set(composition.nodes) - set(composition.get_nodes_by_role(NodeRole.LEARNING)))
@@ -641,7 +641,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
             """ Update autodiff's output_values by executing its output_CIM's with pytorch_rep's output values"""
             if self.output_values:
                 self._composition.output_CIM.execute(self.output_values, context=context)
-                assert True # 7/102/24 - FIX: NOT BEING CALLED
 
         # Allow selective updating of autodiff.output_values if specified
         if nodes == OUTPUTS:
@@ -706,16 +705,53 @@ class PytorchCompositionWrapper(torch.nn.Module):
     #     if attr == AUTODIFF_RESULTS and condition_specification == current_condition:
     #         self.copy_results_to_psyneulink(context)
     # MODIFIED 8/4/24 END
-    def retain_for_psyneulink(self, retain_in_pnl_options, attr:Literal[Union[OUTPUTS, TARGETS, LOSSES]], val):
+
+    def retain_for_psyneulink(self,
+                              data:dict,
+                              retain_in_pnl_options:dict,
+                              context):
         """Store outputs, targets, and losses from Pytorch execution for copying to PsyNeuLink at end of learn().
-        Note:  no need to copy to pnl; this is done by the getter methods for the corresponding Parameters on autodiff.
+        Arguments
+        ---------
+        data : dict
+            specifies local data available to retain (for copying to pnl at end of run;
+            keys must be OUTPUTS, TARGETS, or LOSSES; value must be a torch.Tensor
+        retain_in_pnl_options : dict
+            specifies which data the user has requested be retained (and copied to pnl at end of run)
+            keys must be OUTPUTS, TARGETS, or LOSSES; value must be a LearningScale.name or None (suppress copy)
+        Note:  does not actually copy data to pnl; that is done by _getter methods for the relevant autodiff Parameters
         """
-        if attr == OUTPUTS and OUTPUTS in retain_in_pnl_options and retain_in_pnl_options[OUTPUTS]:
-            self.retain_outputs(val)
-        elif attr == TARGETS and TARGETS in retain_in_pnl_options  and retain_in_pnl_options[TARGETS]:
-            self.retain_targets(val)
-        elif attr == LOSSES and LOSSES in retain_in_pnl_options  and retain_in_pnl_options[LOSSES]:
-            self.retain_losses(val)
+        # IMPLEMENTATION NOTE: use enum, hash list, and try and except for efficiency since this may be called alot
+        from enum import Enum, auto
+        class DataTypeEnum(Enum):
+            OUTPUTS = 0
+            TARGETS = auto()
+            LOSSES = auto()
+        retain_method = [None]*len(DataTypeEnum)
+        retain_method[DataTypeEnum.OUTPUTS.value] = self.retain_outputs
+        retain_method[DataTypeEnum.TARGETS.value] = self.retain_targets
+        retain_method[DataTypeEnum.LOSSES.value] = self.retain_losses
+        try:
+            for data_type,data_val in data.items():
+                retain_method[DataTypeEnum._member_map_[data_type.upper()].value](data_val)
+        except KeyError:
+            raise KeyError(
+                f"PROGRAM ERROR: Invalid key(s) specified in call to retain_for_psyneulink: {list(data.keys())}")
+
+        # if key in retain_in_pnl_options and retain_in_pnl_options[key]:
+        # for key, val in items.keys():
+        #     if key not in {OUTPUTS, TARGETS, LOSSES}:
+        #         raise KeyError(f"PROGRAM ERROR: Invalid key(s) specified in call to retain_for_psyneulink: {items}")
+        #     if key in retain_in_pnl_options and retain_in_pnl_options[key]:
+        #         if key is OUTPUTS:
+        #             self.retain_outputs(val)
+        #         elif key in TARGETS:
+        #             self.retain_targets(val)
+        #         elif key is LOSSES:
+        #             self.retain_losses(val)
+        #     except ValueError:
+        #         raise KeyError>(f"PROGRAM ERROR: Invalid key(s) specified in call to retain_for_psyneulink: {items}")
+
 
     def retain_outputs(self, outputs:list):
         """Track outputs and copy to AutodiffComposition.pytorch_outputs at end of learn()."""
@@ -728,7 +764,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
     def retain_losses(self, loss:torch.Tensor):
         """Track targets and copy to AutodiffComposition.pytorch_targets at end of learn()."""
         self.retained_losses.append(loss.detach().cpu().numpy().copy().tolist())
-        assert self.retained_losses
 
     def detach_all(self):
         for projection in self.projections_map.values():
