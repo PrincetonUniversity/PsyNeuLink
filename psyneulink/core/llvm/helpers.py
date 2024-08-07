@@ -292,7 +292,7 @@ def convert_type(builder, val, t):
             return builder.trunc(val, t)
         elif val.type.width < t.width:
             # Python integers are signed
-            return builder.sext(val, t)
+            return builder.zext(val, t)
         else:
             assert False, "Unknown integer conversion: {} -> {}".format(val.type, t)
 
