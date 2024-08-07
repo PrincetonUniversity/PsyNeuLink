@@ -3579,6 +3579,7 @@ class TestACLogging:
                           "targets": {xor_out: xor_targets},
                           "epochs": num_epochs},
                   synch_projection_matrices_with_torch='MINIBATCH',
+                  synch_autodiff_results_with_torch='MINIBATCH',
                   execution_mode=pnl.ExecutionMode.PyTorch)
 
         exec_id = xor.default_execution_id
