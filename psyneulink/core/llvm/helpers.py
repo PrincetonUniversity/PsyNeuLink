@@ -757,14 +757,16 @@ class ConditionGenerator:
             node_state = builder.gep(nodes_states, [self.ctx.int32_ty(0), self.ctx.int32_ty(node_idx)])
             param_ptr = get_state_ptr(builder, target, node_state, param)
 
-            if isinstance(param_ptr.type.pointee, ir.ArrayType):
-                if indices is None:
-                    indices = [0, 0]
-                elif isinstance(indices, TimeScale):
-                    indices = [indices.value]
+            # parameters in state include history of at least one element
+            # so they are always arrays.
+            assert isinstance(param_ptr.type.pointee, ir.ArrayType)
 
-                indices = [self.ctx.int32_ty(x) for x in [0] + list(indices)]
-                param_ptr = builder.gep(param_ptr, indices)
+            if indices is None:
+                indices = [0, 0]
+            elif isinstance(indices, TimeScale):
+                indices = [indices.value]
+
+            param_ptr = builder.gep(param_ptr, [self.ctx.int32_ty(x) for x in [0] + list(indices)])
 
             val = builder.load(param_ptr)
             val = convert_type(builder, val, ir.DoubleType())
