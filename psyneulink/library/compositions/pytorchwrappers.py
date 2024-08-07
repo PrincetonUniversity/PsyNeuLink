@@ -15,6 +15,8 @@ import torch
 import torch.nn as nn
 import numpy as np
 
+from enum import Enum, auto
+
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, PRODUCT, SUM
 from psyneulink.core.components.functions.stateful.integratorfunctions import IntegratorFunction
 from psyneulink.core.components.functions.stateful import StatefulFunction
@@ -32,6 +34,11 @@ from psyneulink.core.globals.log import LogCondition
 from psyneulink.core import llvm as pnlvm
 
 __all__ = ['PytorchCompositionWrapper', 'PytorchMechanismWrapper', 'PytorchProjectionWrapper']
+
+class DataTypeEnum(Enum):
+    OUTPUTS = 0
+    TARGETS = auto()
+    LOSSES = auto()
 
 # # MODIFIED 7/29/24 OLD:
 class PytorchCompositionWrapper(torch.nn.Module):
@@ -73,6 +80,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
 
+        # Assign attributes
         self.name = f"PytorchCompositionWrapper[{composition.name}]"
         self._composition = composition
         self.device = device
@@ -94,6 +102,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.retained_outputs = []  # Outputs for all trials
         self.retained_targets = []  # Targets for all trials
         self.retained_losses = []   # Losses per trial or batch accumulated over a run
+
+        # The following is a list of methods called in retain_for_psyneulink, indexed by keywords using DataTypeEnum
+        # (this is constructed as a form of hash table for efficiency since that method can be called alot;
+        #  it is constructed here to avoid doing so in the retain_for_psyneulink method itself)
+        self.retain_method = [None]*len(DataTypeEnum)
+        self.retain_method[DataTypeEnum.OUTPUTS.value] = self.retain_outputs
+        self.retain_method[DataTypeEnum.TARGETS.value] = self.retain_targets
+        self.retain_method[DataTypeEnum.LOSSES.value] = self.retain_losses
 
         # Instantiate pytorch Mechanisms
         nodes = list(set(composition.nodes) - set(composition.get_nodes_by_role(NodeRole.LEARNING)))
@@ -716,28 +732,18 @@ class PytorchCompositionWrapper(torch.nn.Module):
         ---------
         data : dict
             specifies local data available to retain (for copying to pnl at end of run;
-            keys must be OUTPUTS, TARGETS, or LOSSES; value must be a torch.Tensor
+            keys must be one or more of the keywords OUTPUTS, TARGETS, or LOSSES; value must be a torch.Tensor
         retain_in_pnl_options : dict
             specifies which data the user has requested be retained (and copied to pnl at end of run)
-            keys must be OUTPUTS, TARGETS, or LOSSES; value must be a LearningScale.name or None (suppress copy)
+            keys must be OUTPUTS, TARGETS, or LOSSES; value must be a LearningScale.name or None (which suppresses copy)
         Note:  does not actually copy data to pnl; that is done by _getter methods for the relevant autodiff Parameters
         """
-        # IMPLEMENTATION NOTE: use enum, hash list, and try and except for efficiency since this may be called alot
-        from enum import Enum, auto
-        class DataTypeEnum(Enum):
-            OUTPUTS = 0
-            TARGETS = auto()
-            LOSSES = auto()
-        retain_method = [None]*len(DataTypeEnum)
-        retain_method[DataTypeEnum.OUTPUTS.value] = self.retain_outputs
-        retain_method[DataTypeEnum.TARGETS.value] = self.retain_targets
-        retain_method[DataTypeEnum.LOSSES.value] = self.retain_losses
         try:
             for data_type, data_val in data.items():
                 try:
                     if retain_in_pnl_options[data_type]:
                         retain_method_idx = DataTypeEnum._member_map_[data_type.upper()].value
-                        retain_method[retain_method_idx](data_val)
+                        self.retain_method[retain_method_idx](data_val)
                 except KeyError:
                     assert False, \
                         (f"PROGRAM ERROR: No entry for {data_type} found in retain_in_pnl_options "
@@ -745,21 +751,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
         except KeyError:
             assert False, \
                 (f"PROGRAM ERROR: Invalid key(s) specified in call to retain_for_psyneulink: {list(data.keys())}")
-
-        # if key in retain_in_pnl_options and retain_in_pnl_options[key]:
-        # for key, val in items.keys():
-        #     if key not in {OUTPUTS, TARGETS, LOSSES}:
-        #         raise KeyError(f"PROGRAM ERROR: Invalid key(s) specified in call to retain_for_psyneulink: {items}")
-        #     if key in retain_in_pnl_options and retain_in_pnl_options[key]:
-        #         if key is OUTPUTS:
-        #             self.retain_outputs(val)
-        #         elif key in TARGETS:
-        #             self.retain_targets(val)
-        #         elif key is LOSSES:
-        #             self.retain_losses(val)
-        #     except ValueError:
-        #         raise KeyError>(f"PROGRAM ERROR: Invalid key(s) specified in call to retain_for_psyneulink: {items}")
-
 
     def retain_outputs(self, outputs:list):
         """Track outputs and copy to AutodiffComposition.pytorch_outputs at end of learn()."""
