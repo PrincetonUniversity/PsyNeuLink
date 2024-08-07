@@ -193,11 +193,10 @@ def test_helper_all_close(mode, var1, var2, atol, rtol):
         builder.store(res, out)
         builder.ret_void()
 
+    bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
+    res = bin_f.np_buffer_for_arg(2)
 
     ref = np.allclose(vec1, vec2, **tolerance)
-    res = np.array(5, dtype=np.uint32)
-
-    bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
 
     if mode == 'CPU':
         bin_f(vec1, vec2, res)
@@ -558,7 +557,7 @@ def test_helper_convert_fp_type(t1, t2, mode, val):
     np_dt1, np_dt2 = (np.dtype(bin_f.np_arg_dtypes[i]) for i in (0, 1))
 
     # instantiate value, result and reference
-    x = np.asfarray(val, dtype=bin_f.np_arg_dtypes[0])
+    x = np.asfarray(val, dtype=np_dt1)
     y = bin_f.np_buffer_for_arg(1)
     ref = x.astype(np_dt2)
 
@@ -568,3 +567,43 @@ def test_helper_convert_fp_type(t1, t2, mode, val):
         bin_f.cuda_wrap_call(x, y)
 
     np.testing.assert_allclose(y, ref, equal_nan=True)
+
+
+_int_types = [ir.IntType(64), ir.IntType(32), ir.IntType(16), ir.IntType(8)]
+
+
+@pytest.mark.llvm
+@pytest.mark.parametrize('mode', ['CPU', pytest.helpers.cuda_param('PTX')])
+@pytest.mark.parametrize('t1', _int_types, ids=str)
+@pytest.mark.parametrize('t2', _int_types, ids=str)
+@pytest.mark.parametrize('val', [0, 1, -1, 127, -128, 255, -32768, 32767, 65535, np.iinfo(np.int32).min, np.iinfo(np.int32).max])
+def test_helper_convert_int_type(t1, t2, mode, val):
+    with pnlvm.LLVMBuilderContext.get_current() as ctx:
+        func_ty = ir.FunctionType(ir.VoidType(), [t1.as_pointer(), t2.as_pointer()])
+        custom_name = ctx.get_unique_name("int_convert")
+        function = ir.Function(ctx.module, func_ty, name=custom_name)
+        x, y = function.args
+        block = function.append_basic_block(name="entry")
+        builder = ir.IRBuilder(block)
+
+        x_val = builder.load(x)
+        conv_x = pnlvm.helpers.convert_type(builder, x_val, y.type.pointee)
+        builder.store(conv_x, y)
+        builder.ret_void()
+
+    bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
+
+    # Get the argument numpy dtype
+    np_dt1, np_dt2 = (np.dtype(bin_f.np_arg_dtypes[i]) for i in (0, 1))
+
+    # instantiate value, result and reference
+    x = np.asarray(val).astype(np_dt1)
+    y = bin_f.np_buffer_for_arg(1)
+    ref = x.astype(np_dt2)
+
+    if mode == 'CPU':
+        bin_f(x, y)
+    else:
+        bin_f.cuda_wrap_call(x, y)
+
+    np.testing.assert_array_equal(y, ref)
