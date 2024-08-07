@@ -732,11 +732,18 @@ class PytorchCompositionWrapper(torch.nn.Module):
         retain_method[DataTypeEnum.TARGETS.value] = self.retain_targets
         retain_method[DataTypeEnum.LOSSES.value] = self.retain_losses
         try:
-            for data_type,data_val in data.items():
-                retain_method[DataTypeEnum._member_map_[data_type.upper()].value](data_val)
+            for data_type, data_val in data.items():
+                try:
+                    if retain_in_pnl_options[data_type]:
+                        retain_method_idx = DataTypeEnum._member_map_[data_type.upper()].value
+                        retain_method[retain_method_idx](data_val)
+                except KeyError:
+                    assert False, \
+                        (f"PROGRAM ERROR: No entry for {data_type} found in retain_in_pnl_options "
+                         f"in call to retain_for_psyneulink()")
         except KeyError:
-            raise KeyError(
-                f"PROGRAM ERROR: Invalid key(s) specified in call to retain_for_psyneulink: {list(data.keys())}")
+            assert False, \
+                (f"PROGRAM ERROR: Invalid key(s) specified in call to retain_for_psyneulink: {list(data.keys())}")
 
         # if key in retain_in_pnl_options and retain_in_pnl_options[key]:
         # for key, val in items.keys():

@@ -371,7 +371,6 @@ __all__ = [
     'AutodiffComposition'
 ]
 
-
 def _get_torch_outputs(owning_component=None, context=None):
     if not context.execution_id:
         return None
