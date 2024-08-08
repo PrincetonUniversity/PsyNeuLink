@@ -25,18 +25,18 @@ from psyneulink.core.compositions.composition import NodeRole, CompositionInterf
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
 from psyneulink.library.compositions.compiledloss import MSELoss, CROSS_ENTROPYLoss
-from psyneulink.core.globals.keywords import (ADD, AFTER, ALL, AUTODIFF_RESULTS, BEFORE, DEFAULT_VARIABLE,
+from psyneulink.core.globals.keywords import (ADD, AFTER, ALL, RESULTS, BEFORE, DEFAULT_VARIABLE,
                                               LEARNING_SCALE_LITERALS, Loss, LOSSES, MATRIX_WEIGHTS,
-                                              NODE, NODE_VALUES, OUTPUTS, TARGETS, TARGET_MECHANISM)
+                                              NODE, NODE_VALUES, OUTPUTS, TARGETS, TARGET_MECHANISM, EPOCH, RUN)
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.utilities import convert_to_np_array, get_deepcopy_with_shared
+from psyneulink.core.globals.utilities import convert_to_np_array, get_deepcopy_with_shared, convert_to_list
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core import llvm as pnlvm
 
 __all__ = ['PytorchCompositionWrapper', 'PytorchMechanismWrapper', 'PytorchProjectionWrapper']
 
 class DataTypeEnum(Enum):
-    OUTPUTS = 0
+    TRAINED_OUTPUTS = 0
     TARGETS = auto()
     LOSSES = auto()
 
@@ -99,15 +99,17 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.tracked_loss = torch.zeros(1, device=self.device).double() # Accumulated losses within a batch
         self.tracked_loss_count = 0  # Count of losses within batch
 
-        self.retained_outputs = []  # Outputs for all trials
-        self.retained_targets = []  # Targets for all trials
-        self.retained_losses = []   # Losses per trial or batch accumulated over a run
+        # These data are retained in pytorch_rep during learning and copied to pnl as specified by retain_for_psyneulink
+        self.retained_results = []          # Values of all output NODES
+        self.retained_trained_outputs = []  # Values of trained output NODES (i.e. associated with TARGETS)
+        self.retained_targets = []  #       # Values of targets for all trials
+        self.retained_losses = []           # Losses per trial or batch accumulated over a run
 
         # The following is a list of methods called in retain_for_psyneulink, indexed by keywords using DataTypeEnum
         # (this is constructed as a form of hash table for efficiency since that method can be called alot;
         #  it is constructed here to avoid doing so in the retain_for_psyneulink method itself)
         self.retain_method = [None]*len(DataTypeEnum)
-        self.retain_method[DataTypeEnum.OUTPUTS.value] = self.retain_outputs
+        self.retain_method[DataTypeEnum.TRAINED_OUTPUTS.value] = self.retain_trained_outputs
         self.retain_method[DataTypeEnum.TARGETS.value] = self.retain_targets
         self.retain_method[DataTypeEnum.LOSSES.value] = self.retain_losses
 
@@ -613,10 +615,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
                               context:Context,
                               params:Optional[list]=None):
         """Copy weights, values, and/or results from Pytorch to PsyNeuLink at specified junctures
-        If params is not specified, all are copied;
+        params can be used to restrict copy to a specific (set of) param(s). If params is not specified, all are copied;
         """
-        all = [MATRIX_WEIGHTS, NODE_VALUES, AUTODIFF_RESULTS]
-        params = params or all
+        # 8/7/24: FIX - THIS COULD BE MADE TO BE MORE EFFICIENT ALONG THE LINES OF retain_for_psyneulink()
+        #               AND REFACTOR TO USE DICT WITH DATATYPES AS KESY AND PARAMS AS VALUES;
+        #             - ALSO, MOVE AUTODIFF_REULTS TO retain_for_psyneuklink, TO AVOID CALLS TO ._set EVERY TRIAL
+        all = [MATRIX_WEIGHTS, NODE_VALUES, RESULTS]
+        params = convert_to_list(params) or all
         illegal_params = [param for param in params if param not in all]
         assert not illegal_params, \
             f"PROGRAM ERROR: Illegal attributes ({' ,'.join(illegal_params)}) specified in call to synch_with_psyneulink"
@@ -625,42 +630,46 @@ class PytorchCompositionWrapper(torch.nn.Module):
             self.copy_weights_to_psyneulink(context)
 
         if NODE_VALUES in params and synch_with_pnl_options[NODE_VALUES] == current_condition:
-            self.copy_values_to_psyneulink(ALL, context)
+            self.copy_node_values_to_psyneulink(ALL, context)
 
-        if AUTODIFF_RESULTS in params and synch_with_pnl_options[AUTODIFF_RESULTS] == current_condition:
-            self.copy_results_to_psyneulink(context)
+        if RESULTS in params and synch_with_pnl_options[RESULTS] == current_condition:
+            self.copy_results_to_psyneulink(current_condition, context)
 
     def copy_weights_to_psyneulink(self, context=None):
         for projection, pytorch_rep in self.projections_map.items():
-            projection.parameters.matrix._set(
-                pytorch_rep.matrix.detach().cpu().numpy(), context)
-            projection.parameters.matrix._set(
-                pytorch_rep.matrix.detach().cpu().numpy(), context)
+            # MODIFIED 8/7/24 OLD:
+            projection.parameters.matrix._set(pytorch_rep.matrix.detach().cpu().numpy(), context)
+            projection.parameters.matrix._set(pytorch_rep.matrix.detach().cpu().numpy(), context)
             projection.parameter_ports['matrix'].parameters.value._set(
                 pytorch_rep.matrix.detach().cpu().numpy(), context)
+            # # MODIFIED 8/7/24 NEW:
+            # matrix = pytorch_rep.matrix.detach().cpu().numpy()
+            # projection.parameters.matrix._set(matrix, context)
+            # projection.parameters.matrix._set(matrix, context)
+            # projection.parameter_ports['matrix'].parameters.value._set(matrix, context)
+            # MODIFIED 8/7/24 END
 
     def log_weights(self):
         for proj_wrapper in self.projection_wrappers:
             proj_wrapper.log_matrix()
 
-    def copy_values_to_psyneulink(self, nodes:Optional[Union[list,Literal[ALL, OUTPUTS]]]=ALL, context=None):
+    def copy_node_values_to_psyneulink(self, nodes:Optional[Union[list,Literal[ALL, OUTPUTS]]]=ALL, context=None):
         """ Copy value of Pytorch nodes to AutodiffComposition nodes.
         IMPLEMENTATION NOTE:  list included in nodes arg to allow for future specification of specific nodes to copy
         """
-
         if nodes == ALL:
             nodes = self.nodes_map.items()
         # elif nodes == OUTPUTS:
         #     nodes = [(node, self.nodes_map[node]) for node in self._composition.get_output_nodes()]
 
-        def update_autodiff_output_values():
-            """ Update autodiff's output_values by executing its output_CIM's with pytorch_rep's output values"""
-            if self.output_values:
-                self._composition.output_CIM.execute(self.output_values, context=context)
+        def update_autodiff_all_output_values():
+            """ Update autodiff's output_values by executing its output_CIM's with pytorch_rep all_output_values"""
+            if self.all_output_values:
+                self._composition.output_CIM.execute(self.all_output_values, context=context)
 
         # Allow selective updating of autodiff.output_values if specified
         if nodes == OUTPUTS:
-            update_autodiff_output_values()
+            update_autodiff_all_output_values()
             return
 
         for pnl_node, pytorch_node in nodes:
@@ -686,7 +695,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             if isinstance(pnl_node, TransferMechanism) and pnl_node.integrator_mode:
                 pnl_node.integrator_function.parameters.previous_value._set(pytorch_node.integrator_previous_value,
                                                                             context)
-        update_autodiff_output_values()
+        update_autodiff_all_output_values()
 
     def log_values(self):
         for node_wrapper in [n for n in self.wrapped_nodes if not isinstance(n, PytorchCompositionWrapper)]:
@@ -694,34 +703,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def copy_outputs_to_psyneulink(self, context=None):
         """Copy outputs of Pytorch nodes to AutodiffComposition.pytorch_outputs attribute."""
-        self.copy_values_to_psyneulink(nodes=OUTPUTS, context=context)
+        self.copy_node_values_to_psyneulink(nodes=OUTPUTS, context=context)
 
-    def copy_results_to_psyneulink(self, context=None):
+    def copy_results_to_psyneulink(self, current_condition, context=None):
         """Copy outputs of Pytorch forward() to AutodiffComposition.results attribute."""
-        # 8/4/24 - FIX: THIS NEEDS TO HAPPEN *AFTER* THE COMPOSITION HAS WRITTEN THE RESULTS,
-        #           IN ORDER TO REPLACE results[-1] FOR TRIAL OR CORRECT # OF MOST RECENT VALUES FOR MINIBATCH OR RUN
-        # self._composition.results[-1] = self.output_values
-        # results = list(self._composition.parameters.results._get(context)) + [self.output_values]
-        # self._composition.parameters.results._set(convert_to_np_array(results), context)
-        assert True
-
-    # MODIFIED 8/4/24 OLD:
-    # def retain_in_psyneulink(self,
-    #                         retain_in_pnl_options:dict,
-    #                         attr:Literal[LOSSES, TARGETS],
-    #                         current_condition:LEARNING_SCALE_LITERALS,
-    #                         context:Context):
-    #     """Keep track of losses, outputs and results and copy to PsyNeuLink at end of learning run."""
-    #
-    #     condition_specification = retain_in_pnl_options[attr]
-    #
-    #     if attr == LOSSES and condition_specification == current_condition:
-    #         self.retain_torch_losses(context)
-    #     if attr == OUTPUTS and condition_specification == current_condition:
-    #         self.copy_outputs_to_psyneulink(context)
-    #     if attr == AUTODIFF_RESULTS and condition_specification == current_condition:
-    #         self.copy_results_to_psyneulink(context)
-    # MODIFIED 8/4/24 END
+        # IMPLEMENTATION NOTE: no need to do amything for TRIAL or MINIBATCH,
+        #  as Composition's _update_results() method is getting called to do that locally
+        if current_condition in {EPOCH, RUN}:
+            self._composition.parameters.results._set(convert_to_np_array(self.retained_results), context)
 
     def retain_for_psyneulink(self,
                               data:dict,
@@ -752,9 +741,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
             assert False, \
                 (f"PROGRAM ERROR: Invalid key(s) specified in call to retain_for_psyneulink: {list(data.keys())}")
 
-    def retain_outputs(self, outputs:list):
+    def retain_results(self, results:list):
         """Track outputs and copy to AutodiffComposition.pytorch_outputs at end of learn()."""
-        self.retained_outputs.append(outputs)
+        if results:
+            self.retained_results.append(results)
+
+    def retain_trained_outputs(self, trained_outputs:list):
+        """Track outputs and copy to AutodiffComposition.pytorch_outputs at end of learn()."""
+        self.retained_trained_outputs.append(trained_outputs)
 
     def retain_targets(self, targets:list):
         """Track targets and copy to AutodiffComposition.pytorch_targets at end of learn()."""

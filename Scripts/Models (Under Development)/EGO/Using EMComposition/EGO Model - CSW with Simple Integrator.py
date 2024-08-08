@@ -400,7 +400,7 @@ if __name__ == '__main__':
                   #   optimizations_per_minibatch=model_params['num_optimization_steps'],
                     synch_projection_matrices_with_torch=model_params['synch_weights'],
                     synch_node_values_with_torch=model_params['synch_values'],
-                    synch_autodiff_results_with_torch=model_params['synch_results'],
+                    synch_results_with_torch=model_params['synch_results'],
                     # synch_node=TRIAL,
                     # synch_projection_matrices_with_torch=EPOCH,
                     # synch_projection_matrices_with_torch=MINIBATCH,

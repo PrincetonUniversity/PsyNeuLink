@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 # or override functions in Composition
 
 def _single_learn_results(composition, *args, **kwargs):
+    kwargs['synch_results_with_torch'] = 'run'
     composition.learn(*args, **kwargs)
     return composition.learning_results
 
@@ -3579,7 +3580,8 @@ class TestACLogging:
                           "targets": {xor_out: xor_targets},
                           "epochs": num_epochs},
                   synch_projection_matrices_with_torch='MINIBATCH',
-                  synch_autodiff_results_with_torch='MINIBATCH',
+                  synch_results_with_torch='MINIBATCH',
+                  # synch_results_with_torch='RUN',
                   execution_mode=pnl.ExecutionMode.PyTorch)
 
         exec_id = xor.default_execution_id

@@ -17,7 +17,7 @@ from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.compositions.report import Report, ReportProgress, ReportDevices, LEARN_REPORT, PROGRESS_REPORT
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
 from psyneulink.core.globals.keywords import (EPOCH, MATRIX_WEIGHTS, MINIBATCH, OBJECTIVE_MECHANISM,
-                                              OPTIMIZATION_STEP, RESULTS, RUN, TRAINING_SET, TRIAL)
+                                              OPTIMIZATION_STEP, RESULTS, RUN, TRAINING_SET, TRIAL, NODE_VALUES)
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.parameters import copy_parameter_value
 from inspect import isgeneratorfunction
@@ -120,15 +120,18 @@ class CompositionRunner():
                                                                                 optimization_num, context)
 
                             # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
-                            pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, OPTIMIZATION_STEP, context)
+                            pytorch_rep.synch_with_psyneulink(synch_with_pnl_options,
+                                                              OPTIMIZATION_STEP, context, [MATRIX_WEIGHTS, NODE_VALUES])
 
                     if execution_mode is ExecutionMode.PyTorch:
                         # Synchronize specified outcomes after every stimulus (i.e., trial)
-                        pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, TRIAL, context)
+                        pytorch_rep.synch_with_psyneulink(synch_with_pnl_options,
+                                                          TRIAL, context)
 
                 if execution_mode is ExecutionMode.PyTorch:
                     # Synchronize specified outcomes after every minibatch
-                    pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, MINIBATCH, context)
+                    pytorch_rep.synch_with_psyneulink(synch_with_pnl_options,
+                                                      MINIBATCH, context)
 
                 if call_after_minibatch:
                     try:
