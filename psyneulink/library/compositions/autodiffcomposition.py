@@ -707,7 +707,8 @@ class AutodiffComposition(Composition):
             **kwargs)
 
         self._built_pathways = False
-        self.target_output_map = {}
+        self.targets_from_outputs_map = {} # Map from TARGETS nodes to any OUTPUT nodes from which they receive input
+        self.outputs_to_targets_map = {}   # Map from trained OUTPUT nodes to their TARGETS
         self.optimizer_type = optimizer_type
         self.loss_spec = loss_spec
         self._runtime_learning_rate = None
@@ -945,7 +946,7 @@ class AutodiffComposition(Composition):
                                                                              for value in mech.value],
                                                                             dtype=object),
                                                 name= 'TARGET for ' + mech.name)
-                            for mech in output_mechs_for_learning if mech not in self.target_output_map.values()]
+                            for mech in output_mechs_for_learning if mech not in self.targets_from_outputs_map.values()]
             # Suppress warnings about role assignments
             context = Context(source=ContextFlags.METHOD)
             self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.LEARNING], context=context)
@@ -953,7 +954,7 @@ class AutodiffComposition(Composition):
                 self.exclude_node_roles(target_mech, NodeRole.OUTPUT, context)
                 for output_port in target_mech.output_ports:
                     output_port.parameters.require_projection_in_composition.set(False, override=True)
-            self.target_output_map.update({target: output for target, output
+            self.targets_from_outputs_map.update({target: output for target, output
                                            in zip(target_mechs, output_mechs_for_learning)})
         else:
             # Construct entire PNL backpropagation learning pathways for each INPUT Node
@@ -961,6 +962,7 @@ class AutodiffComposition(Composition):
                 self.add_backpropagation_learning_pathway(pathway=pathway,
                                                           loss_spec=self.loss_spec)
 
+        self.outputs_to_targets_map = {output: target for target, output in self.targets_from_outputs_map.items()}
         self._analyze_graph()
         return self.learning_components
 
@@ -1058,104 +1060,79 @@ class AutodiffComposition(Composition):
         #   should return 2d values for each component
 
         # Get value of INPUT nodes for current trial
-        curr_tensor_inputs = {}
+        curr_tensors_for_inputs = {}
         for component in inputs.keys():
-            curr_tensor_inputs[component] = torch.tensor(inputs[component], device=self.device).double()
+            curr_tensors_for_inputs[component] = torch.tensor(inputs[component], device=self.device).double()
 
-        # Get value of OUTPUT nodes for current trial
-        curr_tensor_outputs = pytorch_rep.forward(curr_tensor_inputs, None, context)
+        # Get value of all OUTPUT nodes for current trial
+        curr_tensors_for_outputs = pytorch_rep.forward(curr_tensors_for_inputs, None, context)
 
         # --------- Compute the loss (TARGET-OUTPUT) for each trained OUTPUT node  ---------------------------
 
-        # Get value of OUTPUT nodes that are being trained
-        outputs_for_targets = {k:v for k,v in curr_tensor_outputs.items() if k in self.target_output_map.values()}
+        # Get value of OUTPUT nodes that are being trained (i.e., for which there are TARGET nodes)
+        curr_tensors_for_trained_outputs = {k:v for k,v in curr_tensors_for_outputs.items()
+                                            if k in self.outputs_to_targets_map}
 
         # Get value of TARGET nodes for current trial
-        curr_tensor_targets = {}
+        curr_tensors_for_targets = {}
         for component in targets.keys():
-            curr_tensor_targets[self.target_output_map[component]] = [torch.tensor(np.atleast_1d(target),
-                                                                                   device=self.device).double()
-                                                                      for target in targets[component]]
-        # # MODIFIED 8/4/24 OLD:
-        # Calculate and track the loss over the trained OUTPUT nodes
-        #
-        # tracked_loss = self.parameters.tracked_loss._get(context)
-        # if tracked_loss is None:
-        #     self.parameters.tracked_loss._set(torch.zeros(1, device=self.device).double(),
-        #                                       context=context,
-        #                                       skip_history=True,
-        #                                       skip_log=True)
-        #     tracked_loss = self.parameters.tracked_loss._get(context)
-        #
-        # for component in outputs_for_targets.keys():
-        #     # possibly add custom loss option, which is a loss function that takes many args
-        #     # (outputs, targets, weights, and more) and returns a scalar
-        #     new_loss = 0
-        #     for i in range(len(outputs_for_targets[component])):
-        #         new_loss += self.loss_function(outputs_for_targets[component][i],
-        #                                        curr_tensor_targets[component][i])
-        #     tracked_loss += new_loss
-        #
-        # # Update tracked loss and loss count
-        # self.parameters.tracked_loss_count._set(np.array(self.parameters.tracked_loss_count._get(context=context) + 1),
-        #                                         context=context,
-        #                                         skip_history=True,
-        #                                         skip_log=True)
+            curr_tensors_for_targets[component] = [torch.tensor(np.atleast_1d(target),
+                                                           device=self.device).double()
+                                              for target in targets[component]]
 
-        # MODIFIED 8/4/24 NEW:
+        # Get value of TARGET nodes for trained OUTPUT nodes
+        curr_target_tensors_for_trained_outputs = {}
+        for trained_output, target in self.outputs_to_targets_map.items():
+            curr_target_tensors_for_trained_outputs[trained_output] = curr_tensors_for_targets[target]
+
         # Calculate and track the loss over the trained OUTPUT nodes
         # IMPLEMENTATION NOTE:
         #  the following treats the loss associated with each output node as a separate loss (i.e., as if each output
         #  node were a separate output mechanism) each of which is weighted equally in the average, irrespective of
-        #  the possibility that some mechanisms may have more OutputPorts than others.
-        for component in outputs_for_targets.keys():
+        #  the possibility that some mechanisms may have more OutputPorts than others; accordingly, this will not
+        #  yield the same result as averaging the loss within nodes before across them.  Should make that an option.
+        for component in curr_tensors_for_trained_outputs.keys():
             new_loss = 0
-            for i in range(len(outputs_for_targets[component])):
-                new_loss += self.loss_function(outputs_for_targets[component][i],
-                                               curr_tensor_targets[component][i])
+            for i in range(len(curr_tensors_for_trained_outputs[component])):
+                new_loss += self.loss_function(curr_tensors_for_trained_outputs[component][i],
+                                               curr_target_tensors_for_trained_outputs[component][i])
             pytorch_rep.tracked_loss += new_loss
-        # MODIFIED 8/7/24 OLD:
         pytorch_rep.tracked_loss_count += 1
-        # MODIFIED 8/7/24 END
 
-        # FIX: ADD HERE: Save loss if tracked_losses is set to TRIAL
-        # MODIFIED 8/4/24 END
-
-        # --------- Return the values of OUTPUT trained and all nodes  ---------------------------------------
+        # --------- Return the values of OUTPUT of trained nodes and all nodes  ---------------------------------------
 
         # Get values of trained OUTPUT nodes
         trained_output_values = []
         trained_outputs_CIM_input_ports = [port for port in self.output_CIM.input_ports
-                                         if port.path_afferents[0].sender.owner in self.target_output_map.values()]
+                                         if port.path_afferents[0].sender.owner in self.targets_from_outputs_map.values()]
         for input_port in trained_outputs_CIM_input_ports:
             assert (len(input_port.all_afferents) == 1), \
                 f"PROGRAM ERROR: {input_port.name} of ouput_CIM for '{self.name}' has more than one afferent."
             port, source, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
             idx = source.output_ports.index(port)
-            trained_output_values += [outputs_for_targets[source][idx].detach().cpu().numpy().copy().tolist()]
+            trained_output_values += [curr_tensors_for_trained_outputs[source][idx].detach().cpu().numpy().copy().tolist()]
 
-        # Get values of all OUTPUT and TARGET nodes
+        # Get values of all OUTPUT nodes
         all_output_values = []
-        target_values = []
         for input_port in self.output_CIM.input_ports:
             assert (len(input_port.all_afferents) == 1), \
                 f"PROGRAM ERROR: {input_port.name} of ouput_CIM for '{self.name}' has more than one afferent."
             port, component, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
             idx = component.output_ports.index(port)
-            all_output_values += [curr_tensor_outputs[component][idx].detach().cpu().numpy().copy().tolist()]
-            if curr_tensor_targets:
-                target_values += [curr_tensor_targets[component][idx].detach().cpu().numpy().copy().tolist()]
-            pytorch_rep.all_output_values = all_output_values
-            pytorch_rep.target_values = target_values
+            all_output_values += [curr_tensors_for_outputs[component][idx].detach().cpu().numpy().copy().tolist()]
+        pytorch_rep.all_output_values = all_output_values
 
-        # MODIFIED 8/4/24 NEW:
+        # Get values of TARGET nodes
+        target_values = [value[0].detach().cpu().numpy().copy().tolist()
+                         for value in list(curr_tensors_for_targets.values())]
+        pytorch_rep.target_values = target_values
+
         # Synchronize specified outcomes after every trial
         pytorch_rep.copy_node_values_to_psyneulink(OUTPUTS, context)
         pytorch_rep.retain_for_psyneulink({TRAINED_OUTPUTS: trained_output_values,
                                            TARGETS: target_values},
                                           retain_in_pnl_options,
                                           context)
-        # MODIFIED 8/4/24 END
 
         return trained_output_values, all_output_values
 
@@ -1294,7 +1271,7 @@ class AutodiffComposition(Composition):
             target = target.path_afferents[0].sender.owner
             return get_target_value(target)
 
-        for target in self.target_output_map:
+        for target in self.targets_from_outputs_map:
             target_values[target] = get_target_value(target)
         return target_values
 
