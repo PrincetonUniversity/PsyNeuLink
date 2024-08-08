@@ -1334,24 +1334,6 @@ class AutodiffComposition(Composition):
 
         context = kwargs[CONTEXT]
 
-        if self.minibatch_size > 1:
-            args_str = []
-            if retain_torch_trained_outputs in {OPTIMIZATION_STEP, TRIAL}:
-                args_str.append('retain_torch_trained_outputs')
-            if retain_torch_losses in {OPTIMIZATION_STEP,TRIAL}:
-                args_str.append('retain_torch_losses')
-            if retain_torch_targets in {OPTIMIZATION_STEP,TRIAL}:
-                args_str.append('retain_torch_targets')
-            if args_str:
-                arg_args = 'args' if len(args_str) == 1 else 'arg'
-                is_are = 'is' if len(args_str) == 1 else 'are'
-                raise AutodiffCompositionError(f"The {' ,'.join(args_str)} {arg_args} in the learn() method for "
-                                               f"'{self.name}' {is_are} specifed as 'OPTIMIZATION' or 'TRIAL', but "
-                                               f"'minibatch_size` ({self.minibatch_size}) != 1, so "
-                                               f"{', '.join([arg.split('_')[-1] for arg in args_str])} "
-                                               f"will be updated only at the end of a minibatch; "
-                                               f"use 'MINIBATCH' for the {arg_args} to avoid this warning.")
-
         execution_phase_at_entry = context.execution_phase
         context.execution_phase = ContextFlags.PREPARING
 
@@ -1378,6 +1360,47 @@ class AutodiffComposition(Composition):
             self.infer_backpropagation_learning_pathways(execution_mode, context=context)
             self._built_pathways = True
 
+        synch_with_pnl_options, retain_in_pnl_options = (
+            self._manage_synch_and_retain_args(synch_projection_matrices_with_torch,
+                                               synch_node_values_with_torch,
+                                               synch_results_with_torch,
+                                               retain_torch_trained_outputs,
+                                               retain_torch_targets,
+                                               retain_torch_losses,
+                                               context))
+
+        return super().learn(*args,
+                             synch_with_pnl_options=synch_with_pnl_options,
+                             retain_in_pnl_options=retain_in_pnl_options,
+                             execution_mode=execution_mode,
+                             **kwargs)
+
+    def _manage_synch_and_retain_args(self,
+                                         synch_projection_matrices_with_torch:Optional[LEARNING_SCALE_LITERALS]=None,
+                                         synch_node_values_with_torch:Optional[LEARNING_SCALE_LITERALS]=None,
+                                         synch_results_with_torch:Optional[LEARNING_SCALE_LITERALS]=None,
+                                         retain_torch_trained_outputs:Optional[LEARNING_SCALE_LITERALS]=None,
+                                         retain_torch_targets:Optional[LEARNING_SCALE_LITERALS]=None,
+                                         retain_torch_losses:Optional[LEARNING_SCALE_LITERALS]=None,
+                                         context=None):
+        if self.minibatch_size > 1:
+            args_str = []
+            if retain_torch_trained_outputs in {OPTIMIZATION_STEP, TRIAL}:
+                args_str.append('retain_torch_trained_outputs')
+            if retain_torch_losses in {OPTIMIZATION_STEP,TRIAL}:
+                args_str.append('retain_torch_losses')
+            if retain_torch_targets in {OPTIMIZATION_STEP,TRIAL}:
+                args_str.append('retain_torch_targets')
+            if args_str:
+                arg_args = 'args' if len(args_str) == 1 else 'arg'
+                is_are = 'is' if len(args_str) == 1 else 'are'
+                raise AutodiffCompositionError(f"The {' ,'.join(args_str)} {arg_args} in the learn() method for "
+                                               f"'{self.name}' {is_are} specifed as 'OPTIMIZATION' or 'TRIAL', but "
+                                               f"'minibatch_size` ({self.minibatch_size}) != 1, so "
+                                               f"{', '.join([arg.split('_')[-1] for arg in args_str])} "
+                                               f"will be updated only at the end of a minibatch; "
+                                               f"use 'MINIBATCH' for the {arg_args} to avoid this warning.")
+
         # Package options for synching and tracking into dictionaries as arguments to learning and exec methods
         synch_with_pnl_options = {MATRIX_WEIGHTS: synch_projection_matrices_with_torch
                                                   or self.parameters.synch_projection_matrices_with_torch._get(context),
@@ -1391,11 +1414,7 @@ class AutodiffComposition(Composition):
                                  TARGETS: retain_torch_targets or self.parameters.retain_torch_targets._get(context),
                                  LOSSES: retain_torch_losses or self.parameters.retain_torch_losses._get(context)}
 
-        return super().learn(*args,
-                             synch_with_pnl_options=synch_with_pnl_options,
-                             retain_in_pnl_options=retain_in_pnl_options,
-                             execution_mode=execution_mode,
-                             **kwargs)
+        return synch_with_pnl_options, retain_in_pnl_options
 
     def _get_execution_mode(self, execution_mode):
         """Parse execution_mode argument and return a valid execution mode for the learn() method
@@ -1525,6 +1544,39 @@ class AutodiffComposition(Composition):
                                                         report=report,
                                                         report_num=report_num
                                                         )
+
+    @handle_external_context()
+    def run(self, *args,
+            synch_projection_matrices_with_torch:Optional[LEARNING_SCALE_LITERALS]=None,
+            synch_node_values_with_torch:Optional[LEARNING_SCALE_LITERALS]=None,
+            synch_results_with_torch:Optional[LEARNING_SCALE_LITERALS]=None,
+            retain_torch_trained_outputs:Optional[LEARNING_SCALE_LITERALS]=None,
+            retain_torch_targets:Optional[LEARNING_SCALE_LITERALS]=None,
+            retain_torch_losses:Optional[LEARNING_SCALE_LITERALS]=None,
+            **kwargs):
+        """Override to handle synch and retain args if run called directly (rather than under autodiff learn()"""
+
+        # Remove args in case called from run() (won't be there if called from learn()
+        synch_projection_matrices_with_torch = kwargs.pop('synch_projection_matrices_with_torch', None),
+        synch_node_values_with_torch = kwargs.pop('synch_node_values_with_torch', None),
+        synch_results_with_torch = kwargs.pop('synch_results_with_torch', None),
+        retain_torch_trained_outputs = kwargs.pop('retain_torch_trained_outputs', None),
+        retain_torch_targets = kwargs.pop('retain_torch_targets', None),
+        retain_torch_losses = kwargs.pop('retain_torch_losses', None),
+
+        if not ('synch_with_pnl_options' in kwargs and 'retain_in_pnl_options' in kwargs):
+            # Called from run(), so Validate and package into synch_with_pnl_options and retain_in_pnl_options dicts
+            synch_with_pnl_options, retain_in_pnl_options = (
+                self._manage_synch_and_retain_args(synch_projection_matrices_with_torch,
+                                                   synch_node_values_with_torch,
+                                                   synch_results_with_torch,
+                                                   retain_torch_trained_outputs,
+                                                   retain_torch_targets,
+                                                   retain_torch_losses,
+                                                   kwargs[CONTEXT]))
+            kwargs['synch_with_pnl_options'] = synch_with_pnl_options
+            kwargs['retain_in_pnl_options'] = retain_in_pnl_options
+        return super(AutodiffComposition, self).run(*args, **kwargs)
 
     def _update_results(self, results, trial_output, execution_mode, synch_with_pnl_options, context):
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
