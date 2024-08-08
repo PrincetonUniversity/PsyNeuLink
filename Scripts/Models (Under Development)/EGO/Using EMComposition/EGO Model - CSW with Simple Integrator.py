@@ -442,23 +442,17 @@ if __name__ == '__main__':
 
         if PLOT_RESULTS:
             fig, axes = plt.subplots(3, 1, figsize=(5, 12))
+            # Weight matrix
             axes[0].imshow(model.projections[7].parameters.matrix.get(model.name), interpolation=None)
-            # print(f"RESULTS: {model.results[2:TOTAL_NUM_STIMS,2].shape}")
-            # print(f"TARGETS: {TARGETS[:TOTAL_NUM_STIMS-2].shape}")
-            # axes[1].plot((1 - np.abs(model.results[:,2]-TARGETS)).sum(-1))
-            # axes[2].plot( (model.results[:,2]*TARGETS).sum(-1) )
+            # L1 of loss
             axes[1].plot((1 - np.abs(model.results[1:TOTAL_NUM_STIMS,2]-TARGETS[:TOTAL_NUM_STIMS-1])).sum(-1))
-            axes[2].plot( (model.results[1:TOTAL_NUM_STIMS,2]*TARGETS[:TOTAL_NUM_STIMS-1]).sum(-1) )
-            # axes[1].plot((1 - np.abs(model.results[2:TOTAL_NUM_STIMS,2]-TARGETS[:TOTAL_NUM_STIMS-2])).sum(-1))
-            # axes[2].plot( (model.results[2:TOTAL_NUM_STIMS,2]*TARGETS[:TOTAL_NUM_STIMS-2]).sum(-1) )
-            # axes[1].plot((1 - np.abs(model.results[3:TOTAL_NUM_STIMS,2]-TARGETS[:TOTAL_NUM_STIMS-3])).sum(-1))
-            # axes[2].plot( (model.results[3:TOTAL_NUM_STIMS,2]*TARGETS[:TOTAL_NUM_STIMS-3]).sum(-1) )
-            plt.suptitle(f"{model_params['curriculum_type']} Training")
             axes[1].set_xlabel('Stimuli')
             axes[1].set_ylabel(model_params['loss_spec'])
+            # Logit of loss
+            axes[2].plot( (model.results[1:TOTAL_NUM_STIMS,2]*TARGETS[:TOTAL_NUM_STIMS-1]).sum(-1) )
             axes[2].set_xlabel('Stimuli')
             axes[2].set_ylabel('Correct Logit')
+            plt.suptitle(f"{model_params['curriculum_type']} Training")
             plt.show()
-            plt.savefig('../show_graph OUTPUT/EGO PLOT.png')
-
+            # plt.savefig('../show_graph OUTPUT/EGO PLOT.png')
     #endregion
