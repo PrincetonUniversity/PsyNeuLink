@@ -107,11 +107,7 @@ class CompositionRunner():
                         # Update weights if in PyTorch execution_mode;
                         #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
                         if execution_mode is ExecutionMode.PyTorch:
-                            # # MODIFIED 8/4/24 OLD:
-                            # self._composition._update_learning_parameters(context, optimization_num)
-                            # MODIFIED 8/4/24 NEW:
                             self._composition.do_gradient_optimization(retain_in_pnl_options, context, optimization_num)
-                        # MODIFIED 8/4/24 END                            
                             from torch import no_grad
                             pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
                             with no_grad():

@@ -11431,16 +11431,11 @@ _
                 # store the result of this execution in case it will be the final result
 
                 trial_output = copy_parameter_value(trial_output)
-                # # MODIFIED 8/7/24 OLD:
-                # results.append(trial_output)
-                # self.parameters.results._set(convert_to_np_array(results), context)
-                # MODIFIED 8/7/24 NEW:
                 self._update_results(results,
                                      trial_output,
                                      execution_mode,
                                      kwargs['synch_with_pnl_options'] if 'synch_with_pnl_options' in kwargs else None,
                                      context)
-                # MODIFIED 8/7/24 END
 
                 if not self.parameters.retain_old_simulation_data._get():
                     if self.controller is not None:

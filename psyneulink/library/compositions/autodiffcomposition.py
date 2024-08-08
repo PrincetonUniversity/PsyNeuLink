@@ -614,11 +614,10 @@ class AutodiffComposition(Composition):
         trial_losses = Parameter([]) # FIX <- related to early_stopper, but not getting assigned anywhere
         device = None
 
-        # MODIFIED 7/10/24 OLD: FIX: IS THIS NEEDED HERE (SINCE IT IS ON EMCOMPOSITION)
-        def _validate_memory_template(self, device):
-            if isinstance(device, str) and device not in [CPU, CUDA, MPS]:
-                raise AutodiffCompositionError(f"Device must be one of {CPU}, {CUDA}, or {MPS}")
-
+        # def _validate_memory_template(self, device):
+        #     if isinstance(device, str) and device not in [CPU, CUDA, MPS]:
+        #         raise AutodiffCompositionError(f"Device must be one of {CPU}, {CUDA}, or {MPS}")
+        #
         def _validate_synch_projection_matrices_with_torch(self, spec):
             if not spec in LEARNING_SCALE_VALUES:
                 raise AutodiffCompositionError(f"Value of 'synch_projection_matrices_with_torch' arg "
@@ -1146,49 +1145,6 @@ class AutodiffComposition(Composition):
         Update parameters (weights) based on trial(s) executed since last optimization,
         Reinitizalize tracked_loss and tracked_loss_count
         """
-
-        # # MODIFIED 8/4/24 OLD:
-        # optimizer = self.parameters.optimizer._get(context=context)
-        # pytorch_rep = self.parameters.pytorch_representation._get(context=context)
-        #
-        # optimizer.zero_grad()
-        #
-        # # Compute and log average loss over all trials since last update
-        # tracked_loss = (self.parameters.tracked_loss._get(context=context) /
-        #                 int(self.parameters.tracked_loss_count._get(context=context)))
-        # tracked_loss.backward(retain_graph=not self.force_no_retain_graph)
-        # self.parameters.losses._get(context=context).append(tracked_loss.detach().cpu().numpy()[0])
-        #
-        # # # 8/4/24 - FIX: MOVED THIS TO composition_runner._batch_inputs (LINE 115)??
-        # # self.parameters.tracked_loss._set(torch.zeros(1, device=self.device).double(),
-        # #                                   context=context,
-        # #                                   skip_history=True, skip_log=True)
-        # # self.parameters.tracked_loss_count._set(np.array(0),
-        # #                                         context=context,
-        # #                                         skip_history=True, skip_log=True)
-        #
-        # # Update pytorch parameters
-        # optimizer.step()
-        
-        # # MODIFIED 8/4/24 NEW:
-        # pytorch_rep = self.parameters.pytorch_representation._get(context=context)
-        # optimizer = pytorch_rep.optimizer
-        # 
-        # optimizer.zero_grad()
-        # # Compute average loss for this round of optimization
-        # tracked_loss = pytorch_rep.tracked_loss / pytorch_rep.tracked_loss_count
-        # # Compute gradients and weight changes based on loss
-        # tracked_loss.backward(retain_graph=not self.force_no_retain_graph)
-        # # Update PyTorch parameters
-        # optimizer.step()
-        # 
-        # # Save loss for current round of optimization
-        # pytorch_rep.retain_for_psyneulink(retain_in_pnl_options, LOSSES, tracked_loss)
-        # # Reset tracked_loss for next round of optimization
-        # pytorch_rep.tracked_loss = torch.zeros(1, device=self.device).double() # Accumulated losses within a batch
-        # pytorch_rep.tracked_loss_count = 0  # Count of losses within batch
-        
-        # MODIFIED 8/4/24 NEWER:
         pytorch_rep = self.parameters.pytorch_representation._get(context=context)
         tracked_loss = pytorch_rep.tracked_loss / pytorch_rep.tracked_loss_count
 
@@ -1200,15 +1156,6 @@ class AutodiffComposition(Composition):
         # Reset tracked_loss for next round of optimization
         pytorch_rep.tracked_loss = torch.zeros(1, device=self.device).double()
         pytorch_rep.tracked_loss_count = 0
-        # # MODIFIED 8/4/24 END
-
-        # MODIFIED 7/10/24 OLD:
-        #  FIX: ??MOVED THE FOLLOWING TO composition_runner._batch_inputs()
-        # # do forward computation on nodes that should be executed after gradient calculation
-        # with torch.no_grad():
-        #     for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
-        #         node.composition_wrapper_owner.execute_node(node, variable, optimization_num, context)
-        # MODIFIED 7/10/24 END
 
     def autodiff_backward(self, tracked_loss, context):
         """Calculate gradients and apply to PyTorch model parameters (weights)"""

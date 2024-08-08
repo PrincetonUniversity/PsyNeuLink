@@ -637,17 +637,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def copy_weights_to_psyneulink(self, context=None):
         for projection, pytorch_rep in self.projections_map.items():
-            # MODIFIED 8/7/24 OLD:
-            projection.parameters.matrix._set(pytorch_rep.matrix.detach().cpu().numpy(), context)
-            projection.parameters.matrix._set(pytorch_rep.matrix.detach().cpu().numpy(), context)
-            projection.parameter_ports['matrix'].parameters.value._set(
-                pytorch_rep.matrix.detach().cpu().numpy(), context)
-            # # MODIFIED 8/7/24 NEW:
-            # matrix = pytorch_rep.matrix.detach().cpu().numpy()
-            # projection.parameters.matrix._set(matrix, context)
-            # projection.parameters.matrix._set(matrix, context)
-            # projection.parameter_ports['matrix'].parameters.value._set(matrix, context)
-            # MODIFIED 8/7/24 END
+            matrix = pytorch_rep.matrix.detach().cpu().numpy()
+            projection.parameters.matrix._set(matrix, context)
+            projection.parameters.matrix._set(matrix, context)
+            projection.parameter_ports['matrix'].parameters.value._set(matrix, context)
 
     def log_weights(self):
         for proj_wrapper in self.projection_wrappers:
@@ -824,13 +817,7 @@ class PytorchMechanismWrapper():
         except:
             raise AutodiffCompositionError(f"Function {pnl_fct} is not currently supported by AutodiffComposition")
 
-        # 7/10/24 FIX: ASSIGN TO mechanism's current value so that Pytorch Starts where PNL left off
-        # MODIFIED 7/10/24 OLD:
         self.value = None
-        # # MODIFIED 7/10/24 NEW:
-        # FIX: DO SAME FOR integrator_previous_value:
-        # self.value = self._mechanism.parameters.value.get(context)
-        # MODIFIED 7/10/24 END
         self._target_mechanism = None
 
     def add_efferent(self, efferent):
@@ -924,12 +911,6 @@ class PytorchMechanismWrapper():
         from psyneulink.core.components.functions.nonstateful.combinationfunctions import CombinationFunction
         self.value = execute_function(self.function, variable,
                                       is_combination_fct=isinstance(self._mechanism.function, CombinationFunction))
-        # MODIFIED 7/10/24 OLD:
-        # # Assign previous_value back to integrator_function of pnl node
-        # #   so that if Python implementation is run it picks up where PyTorch execution left off
-        # if isinstance(self._mechanism.function, IntegratorFunction):
-        #     self._mechanism.integrator_function.parameters.previous_value._set(self.value, context)
-        # MODIFIED 7/10/24 END
 
         return self.value
 
