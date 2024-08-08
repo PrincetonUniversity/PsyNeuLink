@@ -412,19 +412,21 @@ if __name__ == '__main__':
             model.show_graph(**DISPLAY_MODEL)
         if PRINT_RESULTS:
             print("MEMORY:")
-            print(model.nodes['EM'].parameters.memory.get(model.name))
-            model.run(inputs={model_params["state_input_layer_name"]:INPUTS[TOTAL_NUM_STIMS-1]},
-                      # report_output=REPORT_OUTPUT,
-                      # report_progress=REPORT_PROGRESS
-                      )
+            print(np.round(model.nodes['EM'].parameters.memory.get(model.name),3))
+            # model.run(inputs={model_params["state_input_layer_name"]:INPUTS[TOTAL_NUM_STIMS-1]},
+            #           # report_output=REPORT_OUTPUT,
+            #           # report_progress=REPORT_PROGRESS
+            #           )
             print("CONTEXT INPUT:")
-            print(model.nodes['CONTEXT'].parameters.variable.get(model.name))
+            print(np.round(model.nodes['CONTEXT'].parameters.variable.get(model.name),3))
             print("CONTEXT OUTPUT:")
-            print(model.nodes['CONTEXT'].parameters.value.get(model.name))
-            print("PREDICTION OUTPUT:")
-            print(model.nodes['PREDICTION'].parameters.value.get(model.name))
-            print("CONTEXT WEIGHTS:")
-            print(model.projections[7].parameters.matrix.get(model.name))
+            print(np.round(model.nodes['CONTEXT'].parameters.value.get(model.name),3))
+            print("STATE:")
+            print(np.round(model.nodes['STATE'].parameters.value.get(model.name),3))
+            print("PREDICTION:")
+            print(np.round(model.nodes['PREDICTION'].parameters.value.get(model.name),3))
+            # print("CONTEXT WEIGHTS:")
+            # print(model.projections[7].parameters.matrix.get(model.name))
 
 
             def eval_weights(weight_mat):

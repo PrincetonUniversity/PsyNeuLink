@@ -138,7 +138,7 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
                 # For match projections, get entry to store from value of sender of Projection matrix
                 #   (this is to accomodate concatenation_node)
                 axis = 0
-                entry_to_store = field_projection.sender.value
+                entry_to_store = field_projection.sender.output
                 if concatenation_node is None:
                     assert (entry_to_store  == memory_to_store[i]).all(), \
                         f"PROGRAM ERROR: misalignment between inputs and fields for storing them"

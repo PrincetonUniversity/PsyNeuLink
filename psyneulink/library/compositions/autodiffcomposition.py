@@ -1126,8 +1126,12 @@ class AutodiffComposition(Composition):
                          for value in list(curr_tensors_for_targets.values())]
         pytorch_rep.target_values = target_values
 
-        # Synchronize specified outcomes after every trial
-        pytorch_rep.copy_node_values_to_psyneulink(OUTPUTS, context)
+        # Synchronize outcomes after every trial if specified
+        # MODIFIED 8/8/24 OLD:
+        # pytorch_rep.copy_node_values_to_psyneulink(OUTPUTS, context)
+        # MODIFIED 8/8/24 NEW:
+        pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, TRIAL, context, NODE_VALUES)
+        # MODIFIED 8/8/24 END
         pytorch_rep.retain_for_psyneulink({TRAINED_OUTPUTS: trained_output_values,
                                            TARGETS: target_values},
                                           retain_in_pnl_options,
