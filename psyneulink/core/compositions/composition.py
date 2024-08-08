@@ -12874,7 +12874,6 @@ _
         """
         results.append(trial_output)
         self.parameters.results._set(convert_to_np_array(results), context)
-        assert True
 
     def do_gradient_optimization(self, retain_in_pnl_options, context, optimization_num=None):
         pass

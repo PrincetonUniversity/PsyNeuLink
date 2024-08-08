@@ -375,18 +375,26 @@ __all__ = [
 def _get_torch_trained_outputs(owning_component=None, context=None):
     if not context.execution_id:
         return None
-    return np.array(owning_component.parameters.pytorch_representation._get(context).retained_trained_outputs)
+    pytorch_rep = owning_component.parameters.pytorch_representation._get(context)
+    if not pytorch_rep:
+        return None
+    return np.array(pytorch_rep.retained_trained_outputs)
 
 def _get_torch_targets(owning_component=None, context=None):
     if not context.execution_id:
         return None
-    return np.array(owning_component.parameters.pytorch_representation._get(context).retained_targets)
+    pytorch_rep = owning_component.parameters.pytorch_representation._get(context)
+    if not pytorch_rep:
+        return None
+    return np.array(pytorch_rep.retained_targets)
 
 def _get_torch_losses(owning_component, context):
     if not context.execution_id:
         return None
-    return np.array(owning_component.parameters.pytorch_representation._get(context).retained_losses)
-
+    pytorch_rep = owning_component.parameters.pytorch_representation._get(context)
+    if not pytorch_rep:
+        return None
+    return np.array(pytorch_rep.retained_losses)
 
 class AutodiffCompositionError(CompositionError):
 
@@ -1135,7 +1143,8 @@ class AutodiffComposition(Composition):
             port, component, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
             idx = component.output_ports.index(port)
             all_output_values += [curr_tensor_outputs[component][idx].detach().cpu().numpy().copy().tolist()]
-            target_values += [curr_tensor_targets[component][idx].detach().cpu().numpy().copy().tolist()]
+            if curr_tensor_targets:
+                target_values += [curr_tensor_targets[component][idx].detach().cpu().numpy().copy().tolist()]
             pytorch_rep.all_output_values = all_output_values
             pytorch_rep.target_values = target_values
 
@@ -1152,7 +1161,8 @@ class AutodiffComposition(Composition):
 
     def clear_losses(self, context=None):
         self.losses = []
-        self.parameters.losses.set([], context=context)
+        if self.pytorch_representation:
+            self.pytorch_representation.retained_losses = []
 
     def do_gradient_optimization(self, retain_in_pnl_options, context, optimization_num=None):
         """Compute loss and use in call to autodiff_backward() to compute gradients and update PyTorch parameters.

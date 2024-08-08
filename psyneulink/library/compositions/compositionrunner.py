@@ -362,9 +362,11 @@ class CompositionRunner():
                                   **kwargs)
             skip_initialization = True
 
-            if execution_mode == ExecutionMode.PyTorch and synch_with_pnl_options[MATRIX_WEIGHTS] == MINIBATCH:
-                pytorch_rep = self._composition.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)
-                pytorch_rep.copy_weights_to_psyneulink(context)
+            if execution_mode == ExecutionMode.PyTorch:
+                pytorch_rep = (self._composition.parameters.pytorch_representation._get(context).
+                               copy_weights_to_psyneulink(context))
+                if pytorch_rep and synch_with_pnl_options[MATRIX_WEIGHTS] == MINIBATCH:
+                    pytorch_rep.copy_weights_to_psyneulink(context)
 
         num_epoch_results = num_trials // minibatch_size # number of results expected from final epoch
         # return self._composition.parameters.results.get(context)[-1 * num_epoch_results:]

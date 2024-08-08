@@ -608,6 +608,8 @@ class TestTrainingCorrectness:
         D_h = nh
         D_o = nf * nd
 
+        np.random.seed(0)
+
         wih = np.random.rand(D_i, D_h) * 0.02 - 0.01
         wch = np.random.rand(D_c, D_h) * 0.02 - 0.01
         wco = np.random.rand(D_c, D_o) * 0.02 - 0.01
@@ -618,7 +620,7 @@ class TestTrainingCorrectness:
         learning_rate = 100
 
         il = TransferMechanism(size=D_i, name='input')
-        cl = TransferMechanism(size=D_c, name='control')
+        cl = TransferMechanism(size=D_c, name='task')
         hl = TransferMechanism(size=D_h, name='hidden',
                                function=Logistic(bias=-2))
         ol = TransferMechanism(size=D_o, name='output',
@@ -832,7 +834,7 @@ class TestTrainingCorrectness:
         learning_rate = 100
 
         il = TransferMechanism(size=D_i, name='input')
-        cl = TransferMechanism(size=D_c, name='control')
+        cl = TransferMechanism(size=D_c, name='task')
         hl = TransferMechanism(size=D_h, name='hidden',
                                function=Logistic(bias=-2))
         ol = TransferMechanism(size=D_o, name='output',
@@ -872,10 +874,8 @@ class TestTrainingCorrectness:
             min_delta=min_delt,
             execution_mode=pnl.ExecutionMode.PyTorch,
         )
-
-        print(mnet.parameters.results.get(mnet))
         mnet.run(
-                inputs=input_set['inputs'],
+            inputs=input_set['inputs']
         )
 
         output = np.array(mnet.parameters.results.get(mnet)[-15:]).reshape(225)
@@ -3579,9 +3579,9 @@ class TestACLogging:
         xor.learn(inputs={"inputs": {xor_in: xor_inputs},
                           "targets": {xor_out: xor_targets},
                           "epochs": num_epochs},
-                  synch_projection_matrices_with_torch='MINIBATCH',
-                  synch_results_with_torch='MINIBATCH',
-                  # synch_results_with_torch='RUN',
+                  synch_projection_matrices_with_torch=pnl.MINIBATCH,
+                  synch_results_with_torch=pnl.MINIBATCH,
+                  # synch_results_with_torch=pnl.RUN,
                   execution_mode=pnl.ExecutionMode.PyTorch)
 
         exec_id = xor.default_execution_id
@@ -3665,7 +3665,7 @@ class TestACLogging:
         # and minibatch_size is 1, then there should be num_epochs * num_minibatches = num_epochs * 4
         # total entries
         expected_loss_length = num_epochs * len(xor_inputs)
-        assert len(losses) == expected_loss_length
+        assert len(xor.torch_losses) == expected_loss_length
 
         # test clearing ad losses
         xor.clear_losses(context=xor)
