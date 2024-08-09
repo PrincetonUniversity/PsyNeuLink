@@ -95,6 +95,17 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.retained_targets = []  # Targets for all trials
         self.retained_losses = []   # Losses per trial or batch accumulated over a run
 
+        # For use by copy_results_to_psyneulink
+        from enum import Enum, auto
+        class DataTypeEnum(Enum):
+            OUTPUTS = 0
+            TARGETS = auto()
+            LOSSES = auto()
+        retain_method = [None]*len(DataTypeEnum)
+        retain_method[DataTypeEnum.OUTPUTS.value] = self.retain_outputs
+        retain_method[DataTypeEnum.TARGETS.value] = self.retain_targets
+        retain_method[DataTypeEnum.LOSSES.value] = self.retain_losses
+
         # Instantiate pytorch Mechanisms
         nodes = list(set(composition.nodes) - set(composition.get_nodes_by_role(NodeRole.LEARNING)))
         # Remove nested nodes from nodes list (put there in flattening by infer_backpropagation_learning_pathways)
@@ -723,15 +734,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
         Note:  does not actually copy data to pnl; that is done by _getter methods for the relevant autodiff Parameters
         """
         # IMPLEMENTATION NOTE: use enum, hash list, and try and except for efficiency since this may be called alot
-        from enum import Enum, auto
-        class DataTypeEnum(Enum):
-            OUTPUTS = 0
-            TARGETS = auto()
-            LOSSES = auto()
-        retain_method = [None]*len(DataTypeEnum)
-        retain_method[DataTypeEnum.OUTPUTS.value] = self.retain_outputs
-        retain_method[DataTypeEnum.TARGETS.value] = self.retain_targets
-        retain_method[DataTypeEnum.LOSSES.value] = self.retain_losses
         try:
             for data_type, data_val in data.items():
                 try:
