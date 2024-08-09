@@ -47,6 +47,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 # class PytorchCompositionWrapper(torch.jit.ScriptModule):
 # MODIFIED 7/29/24 END
     """Wrapper for a Composition as a Pytorch Module
+    Class that wraps a `Composition <Composition>` as a PyTorch module.
 
     Two main responsibilities:
 
@@ -94,13 +95,62 @@ class PytorchCompositionWrapper(torch.nn.Module):
     Attributes
     ----------
 
-    nodes : List[PytorchMechanismWrapper]
+    composition: Composition
+        `AutodiffComposition` being wrapped.
 
-    projections_map : Dict[Projection, PytorchProjectionWrapper]
-        keys are Projections in the Composition being wrapped, and keys are the ProjectionWrappers to which they
-        are mapped (see above).
+    wrapped_nodes : List[PytorchMechanismWrapper]
+        list of nodes in the PytorchCompositionWrapper corresponding to PyTorch modules. Generally these are
+        `Mechanisms <Mechanism>` wrapped in a `PytorchMechanismWrapper`, however, if the `AutodiffComposition`
+        being wrapped is itself a nested Composition, then the wrapped nodes are `PytorchCompositionWrapper` objects.
+        When the PyTorch model is executed these are "flattened" into a single PyTorch module, which can be visualized
+        using the AutodiffComposition's `show_graph <ShowGraph.show_graph>` method and setting its *show_pytorch*
+        argument to True (see `PytorchShowGraph` for additional information).
 
+    nodes_map : Dict[Node: PytorchMechanismWrapper or PytorchCompositionWrapper]
+        maps psyneulink `Nodes <Composition_Nodes>` to PytorchCompositionWrapper nodes.
+
+    projection_wrappers = List[PytorchProjectionWrapper]
+        list of PytorchCompositionWrappers in the PytorchCompositionWrapper, each of which wraps a `Projection`
+        in the AutodiffComposition being wrapped.
+
+    projections_map : Dict[Projection: PytorchProjectionWrapper]
+        maps `Projections <Projection>` in the AutodiffComposition being wrapped to `PytorchProjectionWrappers` in
+        the PytorchCompositionWrapper.
+
+    _nodes_to_execute_after_gradient_calc :  Dict[node : torch.Tensor]
+        contains nodes specified as `exclude_from_gradient_calc` as keys, and their current variable as values
+
+    optimizer : torch
+        assigned by AutodffComposition after the wrapper is created, which passes the parameters to the optimizer
+
+    device : torch.device
+        device used to process torch Tensors in PyTorch modules
+
+    params : nn.ParameterList()
+        list of PyTorch parameters (connection weight matrices) in the PyTorch model.
+
+    minibatch_loss : torch.Tensor
+        accumulated loss over all trials (stimuli) within a batch.
+
+    minibatch_loss_count : int
+        count of losses (trials) within batch, used to calculate average loss per batch.
+
+    retained_results : List[ndarray]
+        list of the `output_values <Composition.output_values>` of the AutodiffComposition for ever trial executed
+        in a call to `run <AutoDiffComposition.run>` or `learn <AutoDiffComposition.learn>`.
+
+    retained_trained_outputs : List[ndarray]
+        values of the trained `OUTPUT <NodeRole.OUTPUT>` Node (i.e., ones associated with `TARGET <NodeRole.TARGET`
+        Node) for each trial executed in a call to `learn <AutoDiffComposition.learn>`.
+
+    retained_targets : List[ndarray]
+        values of the `TARGET <NodeRole.TARGET` Nodes for each trial executed in a call to `learn
+        <AutoDiffComposition.learn>`.
+
+    retained_losses : List[ndarray]
+        losses per batch, epoch or run accumulated over a call to learn()
     """
+
     def __init__(self,
                  composition,
                  device,
@@ -130,7 +180,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.minibatch_loss = torch.zeros(1, device=self.device).double() # Accumulated losses within a batch
         self.minibatch_loss_count = 0  # Count of losses within batch
 
-        # These data are retained in pytorch_rep during learning and copied to pnl as specified by retain_for_psyneulink
+        # Data retained by the wrapper during execution and copied to pnl as specified by retain_for_psyneulink
         self.retained_results = []          # Values of all output NODES
         self.retained_trained_outputs = []  # Values of trained output NODES (i.e. associated with TARGETS)
         self.retained_targets = []  #       # Values of targets for all trials
@@ -614,9 +664,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
                 # Execute the node using composition_wrapper_owner for Composition wrapper to which it belongs
                 # Note: this is to support overrides of execute_node method by subclasses (such as in EMComposition)
-                node.composition_wrapper_owner.execute_node(node, variable, optimization_rep, context)
+                node._composition_wrapper_owner.execute_node(node, variable, optimization_rep, context)
 
-                # 7/20/24 FIX: CACHE get_nested_output_nodes_at_all_levels() IN _composition
+                # 7/20/24 FIX: CACHE get_nested_output_nodes_at_all_levels() IN composition
                 # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
                 #  note: these may be different than for actual Composition, as they are flattened
                 if (node._mechanism in self._composition.get_nested_output_nodes_at_all_levels()):
@@ -838,7 +888,7 @@ class PytorchMechanismWrapper():
         self._is_bias = False
         self._curr_sender_value = None # Used to assign initializer or default if value == None (i.e., not yet executed)
         self.exclude_from_gradient_calc = False # Used to execute node before or after forward/backward pass methods
-        self.composition_wrapper_owner = composition_wrapper
+        self._composition_wrapper_owner = composition_wrapper
 
         self.input = None
         self.output = None
