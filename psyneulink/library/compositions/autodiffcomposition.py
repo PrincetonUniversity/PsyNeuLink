@@ -1116,11 +1116,6 @@ class AutodiffComposition(Composition):
             curr_target_tensors_for_trained_outputs[trained_output] = curr_tensors_for_targets[target]
 
         # Calculate and track the loss over the trained OUTPUT nodes
-        # IMPLEMENTATION NOTE:
-        #  the following treats the loss associated with each output node as a separate loss (i.e., as if each output
-        #  node were a separate output mechanism) each of which is weighted equally in the average, irrespective of
-        #  the possibility that some mechanisms may have more OutputPorts than others; accordingly, this will not
-        #  yield the same result as averaging the loss within nodes before across them.  Should make that an option.
         for component in curr_tensors_for_trained_outputs.keys():
             new_loss = 0
             for i in range(len(curr_tensors_for_trained_outputs[component])):
