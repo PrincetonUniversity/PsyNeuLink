@@ -76,20 +76,20 @@ class PytorchCompositionWrapper(torch.nn.Module):
             and consolidated in the synch_with_pnl_options dict used by synch_with_psyneulink
 
        - retain_for_psyneulink()
-            Retains data used and outcomes generated during execution of PyTorch model
-            (TRAINED_OUTPUT_VALUES, corresponding TARGETS and LOSSES) that are available from PsyNeuLink
-            at the end of a call to learn(), in autodiff's; CH, EPOCH, RUN); these are specified by the user
-            in the following arguments to run() or learn():
+            Retains learning-specific data used and outcomes generated during execution of PyTorch model
+            (TRAINED_OUTPUT_VALUES, corresponding TARGETS and LOSSES), that are copied to PsyNeuLink
+            at the end of a call to learn(); these are specified by the user in the following arguments
+            to learn():
                 retain_torch_trained_outputs=MINIBATCH,
                 retain_torch_targets=MINIBATCH,
                 retain_torch_losses=MINIBATCH,
-            and consolidated in the synch_with_pnl_options dict used by retain_for_psyneulink
+            and consolidated in the retain_in_pnl_options dict used by retain_for_psyneulink
 
-        - Note: RESULTS is handled in an idiosyncratic way:  it is specified along with the synchronization
+        - Note: RESULTS is handled in an idiosyncratic way: it is specified along with the synchronization
                 parameters, since it is a value ordinarily generated in the execution of a Composition;
-                however it's helper paralles the retain_for_psyneulink helper methods, and it is called
-                called from _update_results if TRIAL is specified, in order to integrate with the standard
-                execution of a Composition.
+                however it's helper parallels the retain_for_psyneulink helper methods, and it is called
+                from _update_results if TRIAL is specified, in order to integrate with the standard execution
+                of a Composition.
 
     Attributes
     ----------
