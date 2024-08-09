@@ -92,6 +92,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 from _update_results if TRIAL is specified, in order to integrate with the standard execution
                 of a Composition.
 
+    Arguments
+    ---------
+
+
     Attributes
     ----------
 

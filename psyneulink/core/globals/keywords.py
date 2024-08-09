@@ -331,14 +331,14 @@ class LearningScale:
         <LearningScale.minibatch>`, based on a Composition's `mini_batch_size <Composition.mini_batch_size>`
         Parameter.
 
+    TRIAL
+        identical to MINIBACH when `minibatch_size <Composition.minibatch_size>`= 1; otherwise a warning is raised,
+        and unanticipated results can occur.
+
     MINIBATCH
         a subset of the training set used to calculate an `error_signal <Composition.error_signal>`
         (i.e. one step along the gradient) used to  and update the weights of a MappingProjection's
         `matrix <MappingProjection.matrix>` Parameter.
-
-    TRIAL
-        identical to MINIBACH when `minibatch_size <Composition.minibatch_size>`= 1; otherwise a warning is raised,
-        and unanticipated results can occur.
 
     EPOCH
         a complete pass through the training set;  the number of gradient calculations and weight updates that occur
@@ -352,8 +352,8 @@ class LearningScale:
     """
     def __init__(self):
         self.OPTIMIZATION_STEP = OPTIMIZATION_STEP
-        self.MINIBATCH = MINIBATCH
         self.TRIAL = MINIBATCH
+        self.MINIBATCH = MINIBATCH
         self.EPOCH = EPOCH
         self.RUN = RUN
 
@@ -367,8 +367,8 @@ class LearningScale:
         return list(self.__dict__)
 
 OPTIMIZATION_STEP = 'optimization_step'
-MINIBATCH = 'minibatch'
 TRIAL = 'trial'
+MINIBATCH = 'minibatch'
 EPOCH = 'epoch'
 RUN = 'run'
 

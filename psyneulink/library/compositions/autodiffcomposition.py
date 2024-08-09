@@ -539,7 +539,7 @@ class AutodiffComposition(Composition):
         frequently keeps the PsyNeuLink representation more closely synchronized with parameter updates in Pytorch,
         but slows performance (see `AutodiffComposition_PyTorch_LearningScale` for information about settings).
 
-    synch_node_variables_with_torch : OPTIMIZATION_STEP, MINIBATCH, EPOCH, RUN or None
+    synch_node_variables_with_torch : OPTIMIZATION_STEP, TRIAL, MINIBATCH, EPOCH, RUN or None
         determines when to copy the current input to Pytorch nodes (modules) to the PsyNeuLink `variable
         <Mechanism_Base.value>` attribute of the corresponding PsyNeuLink `nodes <Composition_Node>`, if this is not
         specified in the call to `learn <AutodiffComposition.learn>`.
@@ -560,7 +560,7 @@ class AutodiffComposition(Composition):
         representation more closely copying more frequently keeps them synchronized with parameter updates in Pytorch,
         but slows performance (see `AutodiffComposition_PyTorch_LearningScale` for information about settings).
 
-    synch_results_with_torch : OPTIMIZATION_STEP, MINIBATCH, EPOCH or RUN
+    synch_results_with_torch : OPTIMIZATION_STEP, TRIAL, MINIBATCH, EPOCH or RUN
         determines when to copy the current outputs of Pytorch nodes to the PsyNeuLink `results
         <Composition.results>` attribute of the AutodiffComposition if this is not specified in
         the call to `learn <AutodiffComposition.learn>`. Copying more frequently keeps the PsyNeuLink
@@ -573,7 +573,7 @@ class AutodiffComposition(Composition):
         in the call to `learn <AutodiffComposition.learn>`(see `AutodiffComposition_PyTorch_LearningScale` for
         information about settings)
 
-    retain_torch_targets : OPTIMIZATION_STEP, MINIBATCH, EPOCH, RUN or None
+    retain_torch_targets : OPTIMIZATION_STEP, TRIAL, MINIBATCH, EPOCH, RUN or None
         determines the scale at which the targets used for training the Pytorch model are tracked, all of which
         are stored in the AutodiffComposition's `targets <Composition.targets>` attribute at the end of the run
         if this is not specified in the call to `learn <AutodiffComposition.learn>`

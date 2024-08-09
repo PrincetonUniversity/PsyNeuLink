@@ -16,9 +16,8 @@ from psyneulink.core.llvm import ExecutionMode
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.compositions.report import Report, ReportProgress, ReportDevices, LEARN_REPORT, PROGRESS_REPORT
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
-from psyneulink.core.globals.keywords import (EPOCH, MATRIX_WEIGHTS, MINIBATCH, OBJECTIVE_MECHANISM,
-                                              OPTIMIZATION_STEP, RESULTS, RUN, TRAINING_SET, TRIAL, NODE_VALUES,
-                                              NODE_VARIABLES)
+from psyneulink.core.globals.keywords import (EPOCH, MATRIX_WEIGHTS, MINIBATCH, OBJECTIVE_MECHANISM, OPTIMIZATION_STEP,
+                                              RUN, TRAINING_SET, TRIAL, NODE_VALUES, NODE_VARIABLES)
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.parameters import copy_parameter_value
 from inspect import isgeneratorfunction
