@@ -95,7 +95,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
     Attributes
     ----------
 
-    composition: Composition
+    _composition: Composition
         `AutodiffComposition` being wrapped.
 
     wrapped_nodes : List[PytorchMechanismWrapper]
@@ -853,18 +853,34 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
 class PytorchMechanismWrapper():
     """Wrapper for a Mechanism in a PytorchCompositionWrapper
+    These comprise nodes of the PytorchCompositionWrapper, and generally correspond to modules of a Pytorch model.
 
     Attributes
     ----------
 
+    _mechanism : Mechanism
+        the PsyNeuLink `Mechanism` being wrapped.
+
+    afferents : List[PytorchProjectionWrapper]
+        list of `PytorchProjectionWrapper` objects that project to the PytorchMechanismWrapper.
+
+    input : torch.Tensor
+        most recent input to the PytorchMechanismWrapper.
+
     function : _gen_pytorch_fct
-        Pytorch version of the Mechanism's function assigned in __init__
+        Pytorch version of the Mechanism's function assigned in __init__.
 
     integrator_function : _gen_pytorch_fct
         Pytorch version of the Mechanism's integrator_function assigned in __init__ if mechanism
         has an integrator_function;  this assumes the mechanism also has an integrator_mode attribute
         that is used to determine whether to execute the integrator_function first, and use its result
         as the input to its function.
+
+    output : torch.Tensor
+        most recent output of the PytorchMechanismWrapper.
+
+    efferents : List[PytorchProjectionWrapper]
+        list of `PytorchProjectionWrapper` objects that project from the PytorchMechanismWrapper.
 
     exclude_from_gradient_calc : bool or str[BEFORE | AFTER]: False
         used to prevent a node from being included in the Pytorch gradient calculation by excluding it in calls to
@@ -1099,6 +1115,19 @@ class PytorchProjectionWrapper():
        actually being learned, and that projection will be referenced in the `PytorchCompositionWrapper.projections_map`
        (see `PytorchCompositionWrapper` for descriptive figure and additional details);  the actual projection is stored
        in pnl_proj.
+
+    Attributes
+    ----------
+
+    _projection : Projection
+        PsyNeuLink `Projection` being wrapped.
+
+    sender : PytorchMechanismWrapper
+        the PytorchMechanismWrapper node from which the PytorchProjectionWrapper receives its variable.
+
+    receiver : PytorchMechanismWrapper
+        the PytorchMechanismWrapper node from which the PytorchProjectionWrapper sends it value.
+
     """
 
     def __init__(self, projection,

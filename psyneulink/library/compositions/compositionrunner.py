@@ -113,7 +113,7 @@ class CompositionRunner():
                             pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
                             with no_grad():
                                 for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
-                                    node.composition_wrapper_owner.execute_node(node, variable,
+                                    node._composition_wrapper_owner.execute_node(node, variable,
                                                                                 optimization_num, context)
 
                             # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
