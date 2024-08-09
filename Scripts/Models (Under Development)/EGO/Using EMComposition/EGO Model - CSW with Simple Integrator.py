@@ -373,7 +373,7 @@ if __name__ == '__main__':
             print('\nPrediction: \n',
                   model.nodes['PREDICTION'].parameters.value.get(kwargs['context']))
             # print('\nLoss: \n',
-            #       model.parameters.tracked_loss._get(kwargs['context']))
+            #       model.parameters.minibatch_loss._get(kwargs['context']))
             print('\nProjections from context to EM: \n', model.projections[7].parameters.matrix.get(kwargs['context']))
             print('\nEM Memory: \n', model.nodes['EM'].parameters.memory.get(model.name))
 

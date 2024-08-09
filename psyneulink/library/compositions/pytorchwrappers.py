@@ -127,8 +127,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         self.params = nn.ParameterList()
 
-        self.tracked_loss = torch.zeros(1, device=self.device).double() # Accumulated losses within a batch
-        self.tracked_loss_count = 0  # Count of losses within batch
+        self.minibatch_loss = torch.zeros(1, device=self.device).double() # Accumulated losses within a batch
+        self.minibatch_loss_count = 0  # Count of losses within batch
 
         # These data are retained in pytorch_rep during learning and copied to pnl as specified by retain_for_psyneulink
         self.retained_results = []          # Values of all output NODES

@@ -1117,12 +1117,12 @@ class AutodiffComposition(Composition):
 
         # Calculate and track the loss over the trained OUTPUT nodes
         for component in curr_tensors_for_trained_outputs.keys():
-            new_loss = 0
+            trial_loss = 0
             for i in range(len(curr_tensors_for_trained_outputs[component])):
-                new_loss += self.loss_function(curr_tensors_for_trained_outputs[component][i],
+                trial_loss += self.loss_function(curr_tensors_for_trained_outputs[component][i],
                                                curr_target_tensors_for_trained_outputs[component][i])
-            pytorch_rep.tracked_loss += new_loss
-        pytorch_rep.tracked_loss_count += 1
+            pytorch_rep.minibatch_loss += trial_loss
+        pytorch_rep.minibatch_loss_count += 1
 
         # --------- Return the values of OUTPUT of trained nodes and all nodes  ---------------------------------------
 
@@ -1173,21 +1173,21 @@ class AutodiffComposition(Composition):
     def do_gradient_optimization(self, retain_in_pnl_options, context, optimization_num=None):
         """Compute loss and use in call to autodiff_backward() to compute gradients and update PyTorch parameters.
         Update parameters (weights) based on trial(s) executed since last optimization,
-        Reinitizalize tracked_loss and tracked_loss_count
+        Reinitizalize minibatch_loss and minibatch_loss_count
         """
         pytorch_rep = self.parameters.pytorch_representation._get(context=context)
-        tracked_loss = pytorch_rep.tracked_loss / pytorch_rep.tracked_loss_count
+        minibatch_loss = pytorch_rep.minibatch_loss / pytorch_rep.minibatch_loss_count
 
-        self.autodiff_backward(tracked_loss, context)
+        self.autodiff_backward(minibatch_loss, context)
 
         # # Save loss for current round of optimization
-        pytorch_rep.retain_for_psyneulink({LOSSES: tracked_loss}, retain_in_pnl_options, context)
+        pytorch_rep.retain_for_psyneulink({LOSSES: minibatch_loss}, retain_in_pnl_options, context)
 
-        # Reset tracked_loss for next round of optimization
-        pytorch_rep.tracked_loss = torch.zeros(1, device=self.device).double()
-        pytorch_rep.tracked_loss_count = 0
+        # Reset minibatch_loss for next round of optimization
+        pytorch_rep.minibatch_loss = torch.zeros(1, device=self.device).double()
+        pytorch_rep.minibatch_loss_count = 0
 
-    def autodiff_backward(self, tracked_loss, context):
+    def autodiff_backward(self, minibatch_loss, context):
         """Calculate gradients and apply to PyTorch model parameters (weights)"""
         pytorch_rep = self.parameters.pytorch_representation._get(context=context)
         optimizer = pytorch_rep.optimizer
@@ -1195,7 +1195,7 @@ class AutodiffComposition(Composition):
         # Gradient updates
         optimizer.zero_grad()
         # Compute and log average loss over all trials since last update
-        tracked_loss.backward(retain_graph=not self.force_no_retain_graph)
+        minibatch_loss.backward(retain_graph=not self.force_no_retain_graph)
         # Update weights and copy to PNL
         optimizer.step()
 
