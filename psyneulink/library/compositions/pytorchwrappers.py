@@ -25,9 +25,10 @@ from psyneulink.core.compositions.composition import NodeRole, CompositionInterf
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
 from psyneulink.library.compositions.compiledloss import MSELoss, CROSS_ENTROPYLoss
-from psyneulink.core.globals.keywords import (ADD, AFTER, ALL, RESULTS, BEFORE, DEFAULT_VARIABLE,
+from psyneulink.core.globals.keywords import (ADD, AFTER, ALL, BEFORE, DEFAULT_VARIABLE, EPOCH, INPUTS,
                                               LEARNING_SCALE_LITERALS, Loss, LOSSES, MATRIX_WEIGHTS,
-                                              NODE, NODE_VALUES, OUTPUTS, TARGETS, TARGET_MECHANISM, EPOCH, RUN, INPUTS)
+                                              NODE, NODE_VALUES, NODE_VARIABLES, OUTPUTS, RESULTS, RUN,
+                                              TARGETS, TARGET_MECHANISM, )
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import convert_to_np_array, get_deepcopy_with_shared, convert_to_list
 from psyneulink.core.globals.log import LogCondition
@@ -46,19 +47,49 @@ class PytorchCompositionWrapper(torch.nn.Module):
 # class PytorchCompositionWrapper(torch.jit.ScriptModule):
 # MODIFIED 7/29/24 END
     """Wrapper for a Composition as a Pytorch Module
-    Set up parameters of PyTorch model & information required for forward computation
 
-    Handle nested compositions (flattened in infer_backpropagation_learning_pathways):
-    Deal with Projections into and/or out of a nested Composition as shown in figure below:
-        (note: Projections in outer Composition to/from a nested Composition's CIMs are learnable,
-               and ones in a nested Composition from/to its CIMs are not)
-     [      OUTER     ][                            NESTED                               ][     OUTER      ]
-            \\learnable//   \\not learnable//                     \\not learnable//    \\learnable//
-     ---> [Node] ----> [input_CIM] ~~~> [INPUT Node] ----> [OUTPUT Node] ~~~> [output_CIM] ----> [Node] --->
-           sndr            rcvr          nested_rcvr         nested_sndr         sndr             rcvr
-            ^--projection-->^                                                     ^---projection-->^
-            ^----PytorchProjectionWrapper---->^                  ^----PytorchProjectionWrapper---->^
-                     ENTRY                                                       EXIT
+    Two main responsibilities:
+
+    1) Set up parameters of PyTorch model & information required for forward computation:
+        Handle nested compositions (flattened in infer_backpropagation_learning_pathways):
+        Deal with Projections into and/or out of a nested Composition as shown in figure below:
+            (note: Projections in outer Composition to/from a nested Composition's CIMs are learnable,
+                   and ones in a nested Composition from/to its CIMs are not)
+         [      OUTER     ][                            NESTED                               ][     OUTER      ]
+                \\learnable//   \\not learnable//                     \\not learnable//    \\learnable//
+         ---> [Node] ----> [input_CIM] ~~~> [INPUT Node] ----> [OUTPUT Node] ~~~> [output_CIM] ----> [Node] --->
+               sndr            rcvr          nested_rcvr         nested_sndr         sndr             rcvr
+                ^--projection-->^                                                     ^---projection-->^
+                ^----PytorchProjectionWrapper---->^                  ^----PytorchProjectionWrapper---->^
+                         ENTRY                                                       EXIT
+
+    2) Handle coordination of passing data and outcomes back to PsyNeuLink objects, handled by two main methods:
+
+       - synch_with_psyneulink()
+            Copies matrix weights, node variables, node values, and/or autoutdiff results
+            at user-specified intervals (LearningScale:  OPTIMIZATION_STEP, TRIAL, MINIBATCH, EPOCH, RUN);
+            these are specified by the user in the following arguments to run() or learn():
+                synch_projection_matrices_with_torch=RUN,
+                synch_node_variables_with_torch=None,
+                synch_node_values_with_torch=RUN,
+                synch_results_with_torch=RUN,
+            and consolidated in the synch_with_pnl_options dict used by synch_with_psyneulink
+
+       - retain_for_psyneulink()
+            Retains data used and outcomes generated during execution of PyTorch model
+            (TRAINED_OUTPUT_VALUES, corresponding TARGETS and LOSSES) that are available from PsyNeuLink
+            at the end of a call to learn(), in autodiff's; CH, EPOCH, RUN); these are specified by the user
+            in the following arguments to run() or learn():
+                retain_torch_trained_outputs=MINIBATCH,
+                retain_torch_targets=MINIBATCH,
+                retain_torch_losses=MINIBATCH,
+            and consolidated in the synch_with_pnl_options dict used by retain_for_psyneulink
+
+        - Note: RESULTS is handled in an idiosyncratic way:  it is specified along with the synchronization
+                parameters, since it is a value ordinarily generated in the execution of a Composition;
+                however it's helper paralles the retain_for_psyneulink helper methods, and it is called
+                called from _update_results if TRIAL is specified, in order to integrate with the standard
+                execution of a Composition.
 
     Attributes
     ----------
@@ -617,9 +648,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
         params can be used to restrict copy to a specific (set of) param(s). If params is not specified, all are copied;
         """
         # 8/7/24: FIX - THIS COULD BE MADE TO BE MORE EFFICIENT ALONG THE LINES OF retain_for_psyneulink()
-        #               AND REFACTOR TO USE DICT WITH DATATYPES AS KESY AND PARAMS AS VALUES;
-        #             - ALSO, MOVE AUTODIFF_REULTS TO retain_for_psyneuklink, TO AVOID CALLS TO ._set EVERY TRIAL
-        all = [MATRIX_WEIGHTS, NODE_VALUES, RESULTS]
+        #               AND REFACTORED TO USE DICT WITH DATATYPES AS KEYS AND PARAMS AS VALUES;
+        all = [MATRIX_WEIGHTS, NODE_VARIABLES, NODE_VALUES, RESULTS]
         params = convert_to_list(params) or all
         illegal_params = [param for param in params if param not in all]
         assert not illegal_params, \
@@ -627,6 +657,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         if MATRIX_WEIGHTS in params and synch_with_pnl_options[MATRIX_WEIGHTS] == current_condition:
             self.copy_weights_to_psyneulink(context)
+
+        if NODE_VARIABLES in params and synch_with_pnl_options[NODE_VARIABLES] == current_condition:
+            self.copy_node_variables_to_psyneulink(ALL, context)
 
         if NODE_VALUES in params and synch_with_pnl_options[NODE_VALUES] == current_condition:
             self.copy_node_values_to_psyneulink(ALL, context)
@@ -658,7 +691,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             else:
                 variable = pytorch_node.input.detach().cpu().numpy()
             # Set pnl_node's value to value
-            pnl_node.parameters.varuable._set(variable, context)
+            pnl_node.parameters.variable._set(variable, context)
 
     def copy_node_values_to_psyneulink(self, nodes:Optional[Union[list,Literal[ALL, OUTPUTS]]]=ALL, context=None):
         """ Copy output of Pytorch nodes to value of AutodiffComposition nodes.
