@@ -17,7 +17,8 @@ from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.compositions.report import Report, ReportProgress, ReportDevices, LEARN_REPORT, PROGRESS_REPORT
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
 from psyneulink.core.globals.keywords import (EPOCH, MATRIX_WEIGHTS, MINIBATCH, OBJECTIVE_MECHANISM,
-                                              OPTIMIZATION_STEP, RESULTS, RUN, TRAINING_SET, TRIAL)
+                                              OPTIMIZATION_STEP, RESULTS, RUN, TRAINING_SET, TRIAL, NODE_VALUES,
+                                              NODE_VARIABLES)
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.parameters import copy_parameter_value
 from inspect import isgeneratorfunction
@@ -107,20 +108,17 @@ class CompositionRunner():
                         # Update weights if in PyTorch execution_mode;
                         #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
                         if execution_mode is ExecutionMode.PyTorch:
-                            # # MODIFIED 8/4/24 OLD:
-                            # self._composition._update_learning_parameters(context, optimization_num)
-                            # MODIFIED 8/4/24 NEW:
                             self._composition.do_gradient_optimization(retain_in_pnl_options, context, optimization_num)
-                        # MODIFIED 8/4/24 END                            
                             from torch import no_grad
                             pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
                             with no_grad():
                                 for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
-                                    node.composition_wrapper_owner.execute_node(node, variable,
+                                    node._composition_wrapper_owner.execute_node(node, variable,
                                                                                 optimization_num, context)
 
                             # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
-                            pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, OPTIMIZATION_STEP, context)
+                            pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, OPTIMIZATION_STEP, context,
+                                                              [MATRIX_WEIGHTS, NODE_VARIABLES, NODE_VALUES])
 
                     if execution_mode is ExecutionMode.PyTorch:
                         # Synchronize specified outcomes after every stimulus (i.e., trial)
@@ -157,6 +155,7 @@ class CompositionRunner():
             # Synchronize specified outcomes at end of learning run
             pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, RUN, context)
 
+    # 8/8/24 - FIX: THIS NEEDS TO BE BROUGHT INTO ALINGMENT WITH REFACTORING OF _batch_inputs ABOVE
     def _batch_function_inputs(self,
                                inputs: dict,
                                epochs: int,
@@ -359,9 +358,11 @@ class CompositionRunner():
                                   **kwargs)
             skip_initialization = True
 
-            if execution_mode == ExecutionMode.PyTorch and synch_with_pnl_options[MATRIX_WEIGHTS] == MINIBATCH:
-                pytorch_rep = self._composition.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)
-                pytorch_rep.copy_weights_to_psyneulink(context)
+            if execution_mode == ExecutionMode.PyTorch:
+                pytorch_rep = (self._composition.parameters.pytorch_representation._get(context).
+                               copy_weights_to_psyneulink(context))
+                if pytorch_rep and synch_with_pnl_options[MATRIX_WEIGHTS] == MINIBATCH:
+                    pytorch_rep.copy_weights_to_psyneulink(context)
 
         num_epoch_results = num_trials // minibatch_size # number of results expected from final epoch
         # return self._composition.parameters.results.get(context)[-1 * num_epoch_results:]

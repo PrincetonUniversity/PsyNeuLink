@@ -116,7 +116,7 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         concatenation_node = mech.concatenation_node
         # MODIFIED 7/29/24 OLD:
         num_match_fields = 1 if concatenation_node else len([i for i in mech.field_types if i==1])
-        # # MODIFIED 7/29/24 NEW:
+        # # MODIFIED 7/29/24 NEW: [FOR torch MPS support]
         # if concatenation_node:
         #     num_match_fields = 1
         # else:
@@ -126,13 +126,7 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         #             num_match_fields += 1
         # Find weakest memory (i.e., with lowest norm)
         field_norms = torch.empty((len(memory),len(memory[0])))
-        # # # MODIFIED 7/29/24 OLD:
-        # for row in range(len(memory)):
-        #     for col in range(len(memory[0])):
-        #         field_norms[row][col] = torch.linalg.norm(memory[row][col])
-        # MODIFIED 7/29/24 NEW:
         field_norms = torch.linalg.norm(memory, dim=2)
-        # MODIFIED 7/29/24 END
         if field_weights is not None:
             field_norms *= field_weights
         row_norms = torch.sum(field_norms, axis=1)
@@ -144,7 +138,7 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
                 # For match projections, get entry to store from value of sender of Projection matrix
                 #   (this is to accomodate concatenation_node)
                 axis = 0
-                entry_to_store = field_projection.sender.value
+                entry_to_store = field_projection.sender.output
                 if concatenation_node is None:
                     assert (entry_to_store  == memory_to_store[i]).all(), \
                         f"PROGRAM ERROR: misalignment between inputs and fields for storing them"

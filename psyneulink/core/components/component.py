@@ -1491,6 +1491,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "activation_output", "error_sources", "covariates_sources",
                      "target", "sample", "learning_function",
                      "minibatch_size", "optimizations_per_minibatch", "device",
+                     "retain_torch_trained_outputs", "retain_torch_targets", "retain_torch_losses"
+                     "torch_trained_outputs", "torch_targets", "torch_losses",
                      # should be added to relevant _gen_llvm_function... when aug:
                      # SoftMax:
                      'mask_threshold', 'adapt_scale', 'adapt_base', 'adapt_entropy_weighting',

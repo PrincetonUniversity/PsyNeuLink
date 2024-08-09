@@ -9969,7 +9969,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
             # Reassign target inputs from output Nodes to target mechanisms constructed for PyTorch execution
-            return {target: value for target, value in zip(self.target_output_map.keys(), targets.values())}
+            return {target: value for target, value in zip(self.targets_from_outputs_map.keys(), targets.values())}
 
         ret = {}
         for node, values in targets.items():
@@ -11431,8 +11431,11 @@ _
                 # store the result of this execution in case it will be the final result
 
                 trial_output = copy_parameter_value(trial_output)
-                results.append(trial_output)
-                self.parameters.results._set(convert_to_np_array(results), context)
+                self._update_results(results,
+                                     trial_output,
+                                     execution_mode,
+                                     kwargs['synch_with_pnl_options'] if 'synch_with_pnl_options' in kwargs else None,
+                                     context)
 
                 if not self.parameters.retain_old_simulation_data._get():
                     if self.controller is not None:
@@ -12858,6 +12861,14 @@ _
             return {k.name:np.array(v).tolist() for k,v in result_set}
         else:
             return {k:np.array(v).tolist() for k,v in result_set}
+
+    def _update_results(self, results, trial_output, execution_mode, synch_with_pnl_options, context):
+        """Update results by appending most recent trial_output
+        This is included as a helper so it can be overriden by subclasses (such as AutodiffComposition)
+        that may need to do this less frequently for scallable exeuction
+        """
+        results.append(trial_output)
+        self.parameters.results._set(convert_to_np_array(results), context)
 
     def do_gradient_optimization(self, retain_in_pnl_options, context, optimization_num=None):
         pass

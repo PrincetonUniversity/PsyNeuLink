@@ -373,7 +373,7 @@ if __name__ == '__main__':
             print('\nPrediction: \n',
                   model.nodes['PREDICTION'].parameters.value.get(kwargs['context']))
             # print('\nLoss: \n',
-            #       model.parameters.tracked_loss._get(kwargs['context']))
+            #       model.parameters.minibatch_loss._get(kwargs['context']))
             print('\nProjections from context to EM: \n', model.projections[7].parameters.matrix.get(kwargs['context']))
             print('\nEM Memory: \n', model.nodes['EM'].parameters.memory.get(model.name))
 
@@ -400,11 +400,7 @@ if __name__ == '__main__':
                   #   optimizations_per_minibatch=model_params['num_optimization_steps'],
                     synch_projection_matrices_with_torch=model_params['synch_weights'],
                     synch_node_values_with_torch=model_params['synch_values'],
-                    synch_autodiff_results_with_torch=model_params['synch_results'],
-                    # synch_node=TRIAL,
-                    # synch_projection_matrices_with_torch=EPOCH,
-                    # synch_projection_matrices_with_torch=MINIBATCH,
-                    # synch_projection_matrices_with_torch=OPTIMIZATION_STEP,
+                    synch_results_with_torch=model_params['synch_results'],
                     learning_rate=model_params['learning_rate'],
                     execution_mode= model_params['execution_mode'],
                     # minibatch_size=1,
@@ -416,19 +412,21 @@ if __name__ == '__main__':
             model.show_graph(**DISPLAY_MODEL)
         if PRINT_RESULTS:
             print("MEMORY:")
-            print(model.nodes['EM'].parameters.memory.get(model.name))
-            model.run(inputs={model_params["state_input_layer_name"]:INPUTS[TOTAL_NUM_STIMS-1]},
-                      # report_output=REPORT_OUTPUT,
-                      # report_progress=REPORT_PROGRESS
-                      )
+            print(np.round(model.nodes['EM'].parameters.memory.get(model.name),3))
+            # model.run(inputs={model_params["state_input_layer_name"]:INPUTS[TOTAL_NUM_STIMS-1]},
+            #           # report_output=REPORT_OUTPUT,
+            #           # report_progress=REPORT_PROGRESS
+            #           )
             print("CONTEXT INPUT:")
-            print(model.nodes['CONTEXT'].parameters.variable.get(model.name))
+            print(np.round(model.nodes['CONTEXT'].parameters.variable.get(model.name),3))
             print("CONTEXT OUTPUT:")
-            print(model.nodes['CONTEXT'].parameters.value.get(model.name))
-            print("PREDICTION OUTPUT:")
-            print(model.nodes['PREDICTION'].parameters.value.get(model.name))
-            print("CONTEXT WEIGHTS:")
-            print(model.projections[7].parameters.matrix.get(model.name))
+            print(np.round(model.nodes['CONTEXT'].parameters.value.get(model.name),3))
+            print("STATE:")
+            print(np.round(model.nodes['STATE'].parameters.value.get(model.name),3))
+            print("PREDICTION:")
+            print(np.round(model.nodes['PREDICTION'].parameters.value.get(model.name),3))
+            # print("CONTEXT WEIGHTS:")
+            # print(model.projections[7].parameters.matrix.get(model.name))
 
 
             def eval_weights(weight_mat):
@@ -446,23 +444,17 @@ if __name__ == '__main__':
 
         if PLOT_RESULTS:
             fig, axes = plt.subplots(3, 1, figsize=(5, 12))
+            # Weight matrix
             axes[0].imshow(model.projections[7].parameters.matrix.get(model.name), interpolation=None)
-            # print(f"RESULTS: {model.results[2:TOTAL_NUM_STIMS,2].shape}")
-            # print(f"TARGETS: {TARGETS[:TOTAL_NUM_STIMS-2].shape}")
-            # axes[1].plot((1 - np.abs(model.results[:,2]-TARGETS)).sum(-1))
-            # axes[2].plot( (model.results[:,2]*TARGETS).sum(-1) )
+            # L1 of loss
             axes[1].plot((1 - np.abs(model.results[1:TOTAL_NUM_STIMS,2]-TARGETS[:TOTAL_NUM_STIMS-1])).sum(-1))
-            axes[2].plot( (model.results[1:TOTAL_NUM_STIMS,2]*TARGETS[:TOTAL_NUM_STIMS-1]).sum(-1) )
-            # axes[1].plot((1 - np.abs(model.results[2:TOTAL_NUM_STIMS,2]-TARGETS[:TOTAL_NUM_STIMS-2])).sum(-1))
-            # axes[2].plot( (model.results[2:TOTAL_NUM_STIMS,2]*TARGETS[:TOTAL_NUM_STIMS-2]).sum(-1) )
-            # axes[1].plot((1 - np.abs(model.results[3:TOTAL_NUM_STIMS,2]-TARGETS[:TOTAL_NUM_STIMS-3])).sum(-1))
-            # axes[2].plot( (model.results[3:TOTAL_NUM_STIMS,2]*TARGETS[:TOTAL_NUM_STIMS-3]).sum(-1) )
-            plt.suptitle(f"{model_params['curriculum_type']} Training")
             axes[1].set_xlabel('Stimuli')
             axes[1].set_ylabel(model_params['loss_spec'])
+            # Logit of loss
+            axes[2].plot( (model.results[1:TOTAL_NUM_STIMS,2]*TARGETS[:TOTAL_NUM_STIMS-1]).sum(-1) )
             axes[2].set_xlabel('Stimuli')
             axes[2].set_ylabel('Correct Logit')
+            plt.suptitle(f"{model_params['curriculum_type']} Training")
             plt.show()
-            plt.savefig('../show_graph OUTPUT/EGO PLOT.png')
-
+            # plt.savefig('../show_graph OUTPUT/EGO PLOT.png')
     #endregion
