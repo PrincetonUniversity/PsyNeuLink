@@ -657,9 +657,6 @@ class TestTrainingCorrectness:
             minibatch_size=1,
             patience=patience,
             min_delta=min_delt,
-            synch_projection_matrices_with_torch=pnl.MINIBATCH,
-            # synch_node_values_with_torch=pnl.RUN,
-            # synch_results_with_torch=pnl.RUN,
             execution_mode=autodiff_mode
         )
         mnet.run(

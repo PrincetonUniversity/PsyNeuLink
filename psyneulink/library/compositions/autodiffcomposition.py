@@ -1153,7 +1153,7 @@ class AutodiffComposition(Composition):
         pytorch_rep.target_values = target_values
 
         # Synchronize outcomes after every trial if specified
-        # IMPLEMENTATION NOTE: RESULTS is not included here as it is handled in calls to autodiff._update_results()
+        # IMPLEMENTATION NOTE: RESULTS is not included here as it is handled in call to autodiff._update_results()
         pytorch_rep.synch_with_psyneulink(synch_with_pnl_options,
                                           [OPTIMIZATION_STEP, TRIAL],
                                           context,
@@ -1341,6 +1341,7 @@ class AutodiffComposition(Composition):
                              execution_mode=execution_mode,
                              **kwargs)
 
+    # MODIFIED 8/10/24 OLD:
     def _manage_synch_and_retain_args(self,
                                          synch_projection_matrices_with_torch:Optional[LEARNING_SCALE_LITERALS]=None,
                                          synch_node_variables_with_torch:Optional[LEARNING_SCALE_LITERALS]=None,
@@ -1384,6 +1385,8 @@ class AutodiffComposition(Composition):
                                  LOSSES: retain_torch_losses or self.parameters.retain_torch_losses._get(context)}
 
         return synch_with_pnl_options, retain_in_pnl_options
+    # MODIFIED 8/10/24 NEW:
+    # MODIFIED 8/10/24 END
 
     def _get_execution_mode(self, execution_mode):
         """Parse execution_mode argument and return a valid execution mode for the learn() method
@@ -1516,27 +1519,54 @@ class AutodiffComposition(Composition):
 
     @handle_external_context()
     def run(self, *args,
-            synch_projection_matrices_with_torch:Optional[LEARNING_SCALE_LITERALS]=None,
-            synch_node_variables_with_torch:Optional[LEARNING_SCALE_LITERALS]=None,
-            synch_node_values_with_torch:Optional[LEARNING_SCALE_LITERALS]=None,
-            synch_results_with_torch:Optional[LEARNING_SCALE_LITERALS]=None,
-            retain_torch_trained_outputs:Optional[LEARNING_SCALE_LITERALS]=None,
-            retain_torch_targets:Optional[LEARNING_SCALE_LITERALS]=None,
-            retain_torch_losses:Optional[LEARNING_SCALE_LITERALS]=None,
+            synch_projection_matrices_with_torch:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
+            synch_node_variables_with_torch:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
+            synch_node_values_with_torch:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
+            synch_results_with_torch:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
+            retain_torch_trained_outputs:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
+            retain_torch_targets:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
+            retain_torch_losses:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
             **kwargs):
-        """Override to handle synch and retain args if run called directly (rather than under autodiff learn()"""
+        """Override to handle synch and retain args if run called directly from run() rather than learn()
+        Note: defaults for synch and retain args are NotImplemented, so that the user can specify None if they want to
+              override the default values for the Composition (see _manage_synch_and_retain_args() for details)
+        """
 
+        # MODIFIED 8/10/24 OLD:
         # Remove args in case called from run() (won't be there if called from learn()
-        synch_projection_matrices_with_torch = kwargs.pop('synch_projection_matrices_with_torch', None),
-        synch_node_variables_with_torch = kwargs.pop('synch_node_variables_with_torch', None),
-        synch_node_values_with_torch = kwargs.pop('synch_node_values_with_torch', None),
-        synch_results_with_torch = kwargs.pop('synch_results_with_torch', None),
-        retain_torch_trained_outputs = kwargs.pop('retain_torch_trained_outputs', None),
-        retain_torch_targets = kwargs.pop('retain_torch_targets', None),
-        retain_torch_losses = kwargs.pop('retain_torch_losses', None),
+        if synch_projection_matrices_with_torch == NotImplemented:
+            synch_projection_matrices_with_torch = kwargs.pop('synch_projection_matrices_with_torch', NotImplemented)
+            if synch_projection_matrices_with_torch == NotImplemented:
+                synch_projection_matrices_with_torch = self.parameters.synch_projection_matrices_with_torch.default_value
+        if synch_node_variables_with_torch == NotImplemented:
+            synch_node_variables_with_torch = kwargs.pop('synch_node_variables_with_torch', NotImplemented)
+            if synch_node_variables_with_torch == NotImplemented:
+                synch_node_variables_with_torch = self.parameters.synch_node_variables_with_torch.default_value
+        if synch_node_values_with_torch == NotImplemented:
+            synch_node_values_with_torch = kwargs.pop('synch_node_values_with_torch', NotImplemented)
+            if synch_node_values_with_torch == NotImplemented:
+                synch_node_values_with_torch = self.parameters.synch_node_values_with_torch.default_value
+        if synch_results_with_torch == NotImplemented:
+            synch_results_with_torch = kwargs.pop('synch_results_with_torch', NotImplemented)
+            if synch_results_with_torch == NotImplemented:
+                synch_results_with_torch = self.parameters.synch_results_with_torch.default_value
+        if retain_torch_trained_outputs == NotImplemented:
+            retain_torch_trained_outputs = kwargs.pop('retain_torch_trained_outputs', NotImplemented)
+            if retain_torch_trained_outputs == NotImplemented:
+                retain_torch_trained_outputs = self.parameters.retain_torch_trained_outputs.default_value
+        if retain_torch_targets == NotImplemented:
+            retain_torch_targets = kwargs.pop('retain_torch_targets', NotImplemented)
+            if retain_torch_targets == NotImplemented:
+                retain_torch_targets = self.parameters.retain_torch_targets.default_value
+        if retain_torch_losses == NotImplemented:
+            retain_torch_losses = kwargs.pop('retain_torch_losses', NotImplemented)
+            if retain_torch_losses == NotImplemented:
+                retain_torch_losses = self.parameters.retain_torch_losses.default_value
 
         if not ('synch_with_pnl_options' in kwargs and 'retain_in_pnl_options' in kwargs):
-            # Called from run(), so Validate and package into synch_with_pnl_options and retain_in_pnl_options dicts
+            # No synch_with_pnl_options and retain_in_pnl_options dicts:
+            # - so must have been called from run directly rather than learn
+            # - therefore, must validate, parse and package options into those dicts
             synch_with_pnl_options, retain_in_pnl_options = (
                 self._manage_synch_and_retain_args(synch_projection_matrices_with_torch,
                                                    synch_node_variables_with_torch,
@@ -1548,6 +1578,24 @@ class AutodiffComposition(Composition):
                                                    kwargs[CONTEXT]))
             kwargs['synch_with_pnl_options'] = synch_with_pnl_options
             kwargs['retain_in_pnl_options'] = retain_in_pnl_options
+        # # MODIFIED 8/10/24 NEW:
+        # if not ('synch_with_pnl_options' in kwargs and 'retain_in_pnl_options' in kwargs):
+        #     # No synch_with_pnl_options or retain_in_pnl_options dict(s):
+        #     # - so must have been called from run() directly rather than learn();
+        #     # - therefore, must validate, parse and package synch and retain options into those dicts
+        #     synch_with_pnl_options, retain_in_pnl_options = (
+        #         self._manage_synch_and_retain_args(synch_projection_matrices_with_torch,
+        #                                            synch_node_variables_with_torch,
+        #                                            synch_node_values_with_torch,
+        #                                            synch_results_with_torch,
+        #                                            retain_torch_trained_outputs,
+        #                                            retain_torch_targets,
+        #                                            retain_torch_losses,
+        #                                            **kwargs))
+        #     kwargs['synch_with_pnl_options'] = synch_with_pnl_options
+        #     kwargs['retain_in_pnl_options'] = retain_in_pnl_options
+        # MODIFIED 8/10/24 END
+
         return super(AutodiffComposition, self).run(*args, **kwargs)
 
     def _update_results(self, results, trial_output, execution_mode, synch_with_pnl_options, context):
