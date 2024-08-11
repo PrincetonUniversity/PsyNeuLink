@@ -330,7 +330,7 @@ import numpy as np
 import collections
 from packaging import version
 from pathlib import Path, PosixPath
-from typing import Optional, Literal, Union
+from typing import Optional
 
 try:
     import torch
