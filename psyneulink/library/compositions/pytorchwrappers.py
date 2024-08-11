@@ -194,7 +194,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # The following is a list of methods called in retain_for_psyneulink, indexed by keywords using DataTypeEnum
         # (this is constructed as a form of hash table for efficiency since that method can be called alot;
         #  it is constructed here to avoid doing so in the retain_for_psyneulink method itself)
-        self.retain_method = [None]*len(DataTypeEnum)
+        self.retain_method = [None] * len(DataTypeEnum)
         self.retain_method[DataTypeEnum.TRAINED_OUTPUTS.value] = self.retain_trained_outputs
         self.retain_method[DataTypeEnum.TARGETS.value] = self.retain_targets
         self.retain_method[DataTypeEnum.LOSSES.value] = self.retain_losses
