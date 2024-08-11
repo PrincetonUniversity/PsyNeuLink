@@ -292,7 +292,7 @@ def convert_type(builder, val, t):
             return builder.trunc(val, t)
         elif val.type.width < t.width:
             # Python integers are signed
-            return builder.sext(val, t)
+            return builder.zext(val, t)
         else:
             assert False, "Unknown integer conversion: {} -> {}".format(val.type, t)
 
@@ -319,8 +319,7 @@ def convert_type(builder, val, t):
                 val = builder.fptrunc(val, ir.FloatType())
             return builder.fptrunc(val, t)
         else:
-            assert val.type == t
-            return val
+            assert False, "Unknown float conversion: {} -> {}".format(val.type, t)
 
     assert False, "Unknown type conversion: {} -> {}".format(val.type, t)
 
@@ -409,16 +408,12 @@ def printf(builder, fmt, *args, override_debug=False):
     #FIXME: Fix builtin printf and use that instead of this
     libc_name = "msvcrt" if sys.platform == "win32" else "c"
     libc = util.find_library(libc_name)
-    if libc is None:
-        warnings.warn("Standard libc library not found, 'printf' not available!")
-        return
+    assert libc is not None, "Standard libc library not found"
 
     llvm.load_library_permanently(libc)
     # Address will be none if the symbol is not found
     printf_address = llvm.address_of_symbol("printf")
-    if printf_address is None:
-        warnings.warn("'printf' symbol not found in libc, 'printf' not available!")
-        return
+    assert printf_address is not None, "'printf' symbol not found in {}".format(libc)
 
     # Direct pointer constants don't work
     printf_ty = ir.FunctionType(ir.IntType(32), [ir.IntType(8).as_pointer()], var_arg=True)
@@ -706,7 +701,7 @@ class ConditionGenerator:
             # The first argument is the target node
             assert len(condition.args) == 1
             target = is_finished_callbacks[condition.args[0]]
-            is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_wrapper"}))
+            is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_assembly"}))
             return builder.call(is_finished_f, target[1])
 
         elif isinstance(condition, WhenFinishedAny):
@@ -715,7 +710,7 @@ class ConditionGenerator:
             run_cond = self.ctx.bool_ty(0)
             for node in condition.args:
                 target = is_finished_callbacks[node]
-                is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_wrapper"}))
+                is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_assembly"}))
                 node_is_finished = builder.call(is_finished_f, target[1])
 
                 run_cond = builder.or_(run_cond, node_is_finished)
@@ -728,7 +723,7 @@ class ConditionGenerator:
             run_cond = self.ctx.bool_ty(1)
             for node in condition.args:
                 target = is_finished_callbacks[node]
-                is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_wrapper"}))
+                is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_assembly"}))
                 node_is_finished = builder.call(is_finished_f, target[1])
 
                 run_cond = builder.and_(run_cond, node_is_finished)
@@ -758,14 +753,16 @@ class ConditionGenerator:
             node_state = builder.gep(nodes_states, [self.ctx.int32_ty(0), self.ctx.int32_ty(node_idx)])
             param_ptr = get_state_ptr(builder, target, node_state, param)
 
-            if isinstance(param_ptr.type.pointee, ir.ArrayType):
-                if indices is None:
-                    indices = [0, 0]
-                elif isinstance(indices, TimeScale):
-                    indices = [indices.value]
+            # parameters in state include history of at least one element
+            # so they are always arrays.
+            assert isinstance(param_ptr.type.pointee, ir.ArrayType)
 
-                indices = [self.ctx.int32_ty(x) for x in [0] + list(indices)]
-                param_ptr = builder.gep(param_ptr, indices)
+            if indices is None:
+                indices = [0, 0]
+            elif isinstance(indices, TimeScale):
+                indices = [indices.value]
+
+            param_ptr = builder.gep(param_ptr, [self.ctx.int32_ty(x) for x in [0] + list(indices)])
 
             val = builder.load(param_ptr)
             val = convert_type(builder, val, ir.DoubleType())

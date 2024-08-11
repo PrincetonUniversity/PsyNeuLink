@@ -27,26 +27,31 @@ def test_random_int64(benchmark, mode, seed, expected):
 
     elif mode == 'LLVM':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
-        state = init_fun.byref_arg_types[0]()
+        state = init_fun.np_buffer_for_arg(0)
         init_fun(state, seed)
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_int64')
-        out = ctypes.c_ulonglong()
+
         def f():
+            out = gen_fun.np_buffer_for_arg(1)
             gen_fun(state, out)
-            return np.uint64(out.value)
+            return out
+
     elif mode == 'PTX':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
-        state_size = ctypes.sizeof(init_fun.byref_arg_types[0])
+        state_size = init_fun.np_buffer_for_arg(0).nbytes
         gpu_state = pnlvm.jit_engine.pycuda.driver.mem_alloc(state_size)
+
         init_fun.cuda_call(gpu_state, np.int64(seed))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_int64')
-        out = np.asarray([0], dtype=np.uint64)
+        out = gen_fun.np_buffer_for_arg(1)
         gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
+
         def f():
             gen_fun.cuda_call(gpu_state, gpu_out)
-            return out[0]
+            return out.copy()
+
     else:
         assert False, "Unknown mode: {}".format(mode)
 
@@ -64,33 +69,38 @@ def test_random_int32(benchmark, mode):
     res = []
     if mode == 'numpy':
         state = np.random.Philox([SEED])
-        prng = np.random.Generator(state)
+        prng = np.random.Generator(state)\
+
         def f():
             # Get uint range [0, MAX] to avoid any intermediate caching of random bits
             return prng.integers(0xffffffff, dtype=np.uint32, endpoint=True)
 
     elif mode == 'LLVM':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
-        state = init_fun.byref_arg_types[0]()
+        state = init_fun.np_buffer_for_arg(0)
         init_fun(state, SEED)
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_int32')
-        out = ctypes.c_uint()
+
         def f():
+            out = gen_fun.np_buffer_for_arg(1)
             gen_fun(state, out)
-            return out.value
+            return out
+
     elif mode == 'PTX':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
-        state_size = ctypes.sizeof(init_fun.byref_arg_types[0])
+        state_size = init_fun.np_buffer_for_arg(0).nbytes
         gpu_state = pnlvm.jit_engine.pycuda.driver.mem_alloc(state_size)
         init_fun.cuda_call(gpu_state, np.int64(SEED))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_int32')
-        out = np.asarray([0], dtype=np.uint32)
+        out = gen_fun.np_buffer_for_arg(1)
         gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
+
         def f():
             gen_fun.cuda_call(gpu_state, gpu_out)
-            return out[0]
+            return out.copy()
+
     else:
         assert False, "Unknown mode: {}".format(mode)
 
@@ -109,30 +119,36 @@ def test_random_double(benchmark, mode):
     if mode == 'numpy':
         state = np.random.Philox([SEED])
         prng = np.random.Generator(state)
+
         def f():
             return prng.random(dtype=np.float64)
+
     elif mode == 'LLVM':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
-        state = init_fun.byref_arg_types[0]()
+        state = init_fun.np_buffer_for_arg(0)
         init_fun(state, SEED)
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_double')
-        out = ctypes.c_double()
+
         def f():
+            out = gen_fun.np_buffer_for_arg(1)
             gen_fun(state, out)
-            return out.value
+            return out
+
     elif mode == 'PTX':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
-        state_size = ctypes.sizeof(init_fun.byref_arg_types[0])
+        state_size = init_fun.np_buffer_for_arg(0).nbytes
         gpu_state = pnlvm.jit_engine.pycuda.driver.mem_alloc(state_size)
         init_fun.cuda_call(gpu_state, np.int64(SEED))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_double')
-        out = np.asfarray([0.0], dtype=np.float64)
+        out = gen_fun.np_buffer_for_arg(1)
         gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
+
         def f():
             gen_fun.cuda_call(gpu_state, gpu_out)
-            return out[0]
+            return out.copy()
+
     else:
         assert False, "Unknown mode: {}".format(mode)
 
@@ -150,30 +166,36 @@ def test_random_float(benchmark, mode):
     if mode == 'numpy':
         state = np.random.Philox([SEED])
         prng = np.random.Generator(state)
+
         def f():
             return prng.random(dtype=np.float32)
+
     elif mode == 'LLVM':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
-        state = init_fun.byref_arg_types[0]()
+        state = init_fun.np_buffer_for_arg(0)
         init_fun(state, SEED)
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_float')
-        out = ctypes.c_float()
+
         def f():
+            out = gen_fun.np_buffer_for_arg(1)
             gen_fun(state, out)
-            return out.value
+            return out
+
     elif mode == 'PTX':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
-        state_size = ctypes.sizeof(init_fun.byref_arg_types[0])
+        state_size = init_fun.np_buffer_for_arg(0).nbytes
         gpu_state = pnlvm.jit_engine.pycuda.driver.mem_alloc(state_size)
         init_fun.cuda_call(gpu_state, np.int64(SEED))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_float')
-        out = np.asfarray([0.0], dtype=np.float32)
+        out = gen_fun.np_buffer_for_arg(1)
         gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
+
         def f():
             gen_fun.cuda_call(gpu_state, gpu_out)
-            return out[0]
+            return out.copy()
+
     else:
         assert False, "Unknown mode: {}".format(mode)
 
@@ -197,30 +219,36 @@ def test_random_normal(benchmark, mode, fp_type):
     if mode == 'numpy':
         state = np.random.Philox([SEED])
         prng = np.random.Generator(state)
+
         def f():
             return prng.standard_normal(dtype=dtype)
+
     elif mode == 'LLVM':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
-        state = init_fun.byref_arg_types[0]()
+        state = init_fun.np_buffer_for_arg(0)
         init_fun(state, SEED)
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_normal')
-        out = gen_fun.byref_arg_types[1]()
+
         def f():
+            out = gen_fun.np_buffer_for_arg(1)
             gen_fun(state, out)
-            return out.value
+            return out
+
     elif mode == 'PTX':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
-        state_size = ctypes.sizeof(init_fun.byref_arg_types[0])
+        state_size = init_fun.np_buffer_for_arg(0).nbytes
         gpu_state = pnlvm.jit_engine.pycuda.driver.mem_alloc(state_size)
         init_fun.cuda_call(gpu_state, np.int64(SEED))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_normal')
-        out = np.array([0.0], dtype=np.dtype(gen_fun.byref_arg_types[1]))
+        out = gen_fun.np_buffer_for_arg(1)
         gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
+
         def f():
             gen_fun.cuda_call(gpu_state, gpu_out)
-            return out[0]
+            return out.copy()
+
     else:
         assert False, "Unknown mode: {}".format(mode)
 
@@ -228,36 +256,38 @@ def test_random_normal(benchmark, mode, fp_type):
     if fp_type is pnlvm.ir.DoubleType():
         np.testing.assert_allclose(res[0:2], [-0.2059740286292238, -0.12884495093462758])
         # 208 doesn't take the fast path but wraps around the main loop
-        np.testing.assert_allclose(res[207:211], [-0.768690647997579, 0.4301874289485477,
-                                          -0.7803640491708955, -1.146089287628737])
+        np.testing.assert_allclose(res[207:211],
+                                   [-0.768690647997579, 0.4301874289485477, -0.7803640491708955, -1.146089287628737])
         # 450 doesn't take the fast path or wrap around the main loop,
         # but takes the special condition at the end of the loop
-        np.testing.assert_allclose(res[449:453], [-0.7713655663874537, -0.5638348710823825,
-                                          -0.9415838853097869, 0.6212784278881248])
+        np.testing.assert_allclose(res[449:453],
+                                   [-0.7713655663874537, -0.5638348710823825, -0.9415838853097869, 0.6212784278881248])
         # 2013 takes the rare secondary loop and exists in the first iteration
         # taking the positive value
-        np.testing.assert_allclose(res[2011:2015], [0.4201922976982861, 2.7021541445373916,
-                                            3.7809967764329375, 0.19919094793393655])
+        np.testing.assert_allclose(res[2011:2015],
+                                   [0.4201922976982861, 2.7021541445373916, 3.7809967764329375, 0.19919094793393655])
         # 5136 takes the rare secondary loop and exists in the first iteration
         # taking the negative value
-        np.testing.assert_allclose(res[5134:5138], [0.12317411414687844, -0.17846827974421134,
-                                            -3.6579887696059714, 0.2501530374224693])
+        np.testing.assert_allclose(res[5134:5138],
+                                   [0.12317411414687844, -0.17846827974421134, -3.6579887696059714, 0.2501530374224693])
         # 190855 takes the rare secondary loop and needs more than one iteration
-        np.testing.assert_allclose(res[190853:190857], [-0.26418319904491194, 0.35889007879353746,
-                                                -3.843811523424439, -1.5256469840469997])
+        np.testing.assert_allclose(res[190853:190857],
+                                   [-0.26418319904491194, 0.35889007879353746, -3.843811523424439, -1.5256469840469997])
+
     elif fp_type is pnlvm.ir.FloatType():
         # The indices are taken from above and don't have special meaning.
         np.testing.assert_allclose(res[0:2], [-0.24822916090488434, -0.02676701545715332])
-        np.testing.assert_allclose(res[207:211], [-0.33086925745010376, -1.024695873260498,
-                                          -0.5162619352340698, -0.15033885836601257])
-        np.testing.assert_allclose(res[449:453], [-0.2223609834909439, 0.16769859194755554,
-                                          -0.7806711196899414, 0.5867824554443359])
-        np.testing.assert_allclose(res[2011:2015], [0.1979091316461563, -0.23467595875263214,
-                                            1.1458240747451782, -1.0285860300064087])
-        np.testing.assert_allclose(res[5134:5138], [-1.0523858070373535, -3.007537603378296,
-                                            -0.4331461489200592, -0.8841480612754822])
-        np.testing.assert_allclose(res[190853:190857], [-0.8958197236061096, 0.10532315075397491,
-                                                 2.000257730484009, -1.129721999168396])
+        np.testing.assert_allclose(res[207:211],
+                                   [-0.33086925745010376, -1.024695873260498, -0.5162619352340698, -0.15033885836601257])
+        np.testing.assert_allclose(res[449:453],
+                                   [-0.2223609834909439, 0.16769859194755554, -0.7806711196899414, 0.5867824554443359])
+        np.testing.assert_allclose(res[2011:2015],
+                                   [0.1979091316461563, -0.23467595875263214, 1.1458240747451782, -1.0285860300064087])
+        np.testing.assert_allclose(res[5134:5138],
+                                   [-1.0523858070373535, -3.007537603378296, -0.4331461489200592, -0.8841480612754822])
+        np.testing.assert_allclose(res[190853:190857],
+                                   [-0.8958197236061096, 0.10532315075397491, 2.000257730484009, -1.129721999168396])
+
     assert not any(np.isnan(res)), list(np.isnan(res)).index(True)
     benchmark(f)
 
@@ -287,35 +317,40 @@ def test_random_binomial(benchmark, mode, fp_type, n, p, exp_64, exp_32):
     if mode == 'numpy':
         state = np.random.Philox([SEED])
         prng = np.random.Generator(state)
+
         def f():
             return prng.binomial(n, p)
+
     elif mode == 'LLVM':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
-        c_state = init_fun.byref_arg_types[0]()
-        init_fun(c_state, SEED)
+        state = init_fun.np_buffer_for_arg(0)
+        init_fun(state, SEED)
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_binomial')
-        c_n = gen_fun.byref_arg_types[1](n)
-        c_p = gen_fun.byref_arg_types[2](p)
-        c_out = gen_fun.byref_arg_types[-1]()
+        n = np.asarray(n, dtype=gen_fun.np_arg_dtypes[1])
+        p = np.asarray(p, dtype=gen_fun.np_arg_dtypes[2])
+
         def f():
-            gen_fun(c_state, c_n, c_p, c_out)
-            return c_out.value
+            out = gen_fun.np_buffer_for_arg(1)
+            gen_fun(state, n, p, out)
+            return out
+
     elif mode == 'PTX':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
-        state_size = ctypes.sizeof(init_fun.byref_arg_types[0])
+        state_size = init_fun.np_buffer_for_arg(0).nbytes
         gpu_state = pnlvm.jit_engine.pycuda.driver.mem_alloc(state_size)
         init_fun.cuda_call(gpu_state, np.int64(SEED))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_binomial')
-        gpu_n = pnlvm.jit_engine.pycuda.driver.In(np.array([n], dtype=np.dtype(gen_fun.byref_arg_types[1])))
-        gpu_p = pnlvm.jit_engine.pycuda.driver.In(np.array([p], dtype=np.dtype(gen_fun.byref_arg_types[2])))
-        out = np.array([0.0], dtype=np.dtype(gen_fun.byref_arg_types[3]))
+        gpu_n = pnlvm.jit_engine.pycuda.driver.In(np.asarray(n, dtype=gen_fun.np_arg_dtypes[1]))
+        gpu_p = pnlvm.jit_engine.pycuda.driver.In(np.asarray(p, dtype=gen_fun.np_arg_dtypes[2]))
+        out = gen_fun.np_buffer_for_arg(1)
         gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
 
         def f():
             gen_fun.cuda_call(gpu_state, gpu_n, gpu_p, gpu_out)
-            return out[0]
+            return out.copy()
+
     else:
         assert False, "Unknown mode: {}".format(mode)
 
