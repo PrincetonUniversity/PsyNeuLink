@@ -367,6 +367,7 @@ class LearningScale:
     def _names(self):
         return list(self.__dict__)
 
+
 OPTIMIZATION_STEP = 'optimization_step'
 TRIAL = 'trial'
 MINIBATCH = 'minibatch'
@@ -434,6 +435,7 @@ class Loss(Enum):
     NLL = auto()
     POISSON_NLL = auto()
     SUM = L0
+
 
 LOSSES = 'losses'
 

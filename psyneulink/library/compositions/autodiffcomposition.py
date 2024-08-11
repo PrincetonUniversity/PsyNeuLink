@@ -352,12 +352,12 @@ from psyneulink.core.compositions.composition import Composition, NodeRole, Comp
 from psyneulink.core.compositions.report import (ReportOutput, ReportParams, ReportProgress, ReportSimulations,
                                                  ReportDevices, EXECUTE_REPORT, LEARN_REPORT, PROGRESS_REPORT)
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context, CONTEXT
-from psyneulink.core.globals.keywords import (ADD, AUTODIFF_COMPOSITION, CPU, CUDA, EXECUTION_MODE,
+from psyneulink.core.globals.keywords import (AUTODIFF_COMPOSITION, CPU, CUDA, EXECUTION_MODE,
                                               LEARNING_SCALE_LITERALS, LEARNING_SCALE_NAMES, LEARNING_SCALE_VALUES,
                                               Loss, LOSSES, MATRIX_WEIGHTS, MINIBATCH, MPS, NODE_VALUES, NODE_VARIABLES,
                                               OPTIMIZATION_STEP, RESULTS, RUN, SOFT_CLAMP,
                                               TARGETS, TRAINED_OUTPUTS, TRIAL)
-from psyneulink.core.globals.utilities import is_numeric_scalar, get_torch_tensor
+from psyneulink.core.globals.utilities import is_numeric_scalar
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.scheduling.time import TimeScale
@@ -1466,7 +1466,6 @@ class AutodiffComposition(Composition):
                 report=None,
                 report_num=None,
                 )->np.ndarray:
-
         """Override to execute autodiff_forward() in learning mode if execute_mode is not Python"""
 
         if (self._is_learning(context) and execution_mode is not pnlvm.ExecutionMode.PyTorch and

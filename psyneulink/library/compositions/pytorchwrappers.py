@@ -734,7 +734,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             proj_wrapper.log_matrix()
 
     def copy_node_variables_to_psyneulink(self, nodes:Optional[Union[list,Literal[ALL, INPUTS]]]=ALL, context=None):
-        """ Copy input to Pytorch nodes to variable of AutodiffComposition nodes.
+        """Copy input to Pytorch nodes to variable of AutodiffComposition nodes.
         IMPLEMENTATION NOTE:  list included in nodes arg to allow for future specification of specific nodes to copy
         """
         if nodes == ALL:
@@ -749,7 +749,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             pnl_node.parameters.variable._set(variable, context)
 
     def copy_node_values_to_psyneulink(self, nodes:Optional[Union[list,Literal[ALL, OUTPUTS]]]=ALL, context=None):
-        """ Copy output of Pytorch nodes to value of AutodiffComposition nodes.
+        """Copy output of Pytorch nodes to value of AutodiffComposition nodes.
         IMPLEMENTATION NOTE:  list included in nodes arg to allow for future specification of specific nodes to copy
         """
         if nodes == ALL:
@@ -758,7 +758,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         #     nodes = [(node, self.nodes_map[node]) for node in self._composition.get_output_nodes()]
 
         def update_autodiff_all_output_values():
-            """ Update autodiff's output_values by executing its output_CIM's with pytorch_rep all_output_values"""
+            """Update autodiff's output_values by executing its output_CIM's with pytorch_rep all_output_values"""
             if self.all_output_values:
                 self._composition.output_CIM.execute(self.all_output_values, context=context)
 
