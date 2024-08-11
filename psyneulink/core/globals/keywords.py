@@ -369,7 +369,7 @@ class LearningScale:
 
 
 OPTIMIZATION_STEP = 'optimization_step'
-TRIAL = 'trial'
+# TRIAL = 'trial'  # defined below in section on Composition
 MINIBATCH = 'minibatch'
 EPOCH = 'epoch'
 RUN = 'run'

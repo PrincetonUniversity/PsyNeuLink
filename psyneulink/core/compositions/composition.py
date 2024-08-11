@@ -11509,7 +11509,6 @@ _
                     pass
 
             return trial_output
-        XXX
 
     @handle_external_context()
     def learn(

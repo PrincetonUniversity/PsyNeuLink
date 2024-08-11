@@ -127,7 +127,6 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         # MODIFIED 7/29/24 END
 
         # Find weakest memory (i.e., with lowest norm)
-        field_norms = torch.empty((len(memory),len(memory[0])))
         field_norms = torch.linalg.norm(memory, dim=2)
         if field_weights is not None:
             field_norms *= field_weights
