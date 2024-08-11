@@ -37,6 +37,7 @@ from psyneulink.core import llvm as pnlvm
 __all__ = ['PytorchCompositionWrapper', 'PytorchMechanismWrapper', 'PytorchProjectionWrapper']
 
 class DataTypeEnum(Enum):
+
     TRAINED_OUTPUTS = 0
     TARGETS = auto()
     LOSSES = auto()
