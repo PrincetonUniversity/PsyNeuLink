@@ -43,7 +43,7 @@ class DataTypeEnum(Enum):
 
 # # MODIFIED 7/29/24 OLD:
 class PytorchCompositionWrapper(torch.nn.Module):
-# # MODIFIED 7/29/24 NEW:
+# # MODIFIED 7/29/24 NEW: NEEDED FOR torch MPS SUPPORT
 # class PytorchCompositionWrapper(torch.jit.ScriptModule):
 # MODIFIED 7/29/24 END
     """Wrapper for a Composition as a Pytorch Module
@@ -835,7 +835,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def retain_results(self, results:list):
         """Track outputs and copy to AutodiffComposition.pytorch_outputs at end of learn()."""
-        if results:
+        if len(results):
             self.retained_results.append(results)
 
     def retain_trained_outputs(self, trained_outputs:list):
@@ -897,7 +897,7 @@ class PytorchMechanismWrapper():
                  component_idx,        # index of the Mechanism in the Composition
                  device,               # needed for Pytorch
                  context=None):
-        # # MODIFIED 7/10/24 NEW: NEEDED FOR MPS
+        # # MODIFIED 7/10/24 NEW: NEEDED FOR torch MPS SUPPORT
         # super().__init__()
         # MODIFIED 7/10/24 END
         self.name = f"PytorchMechanismWrapper[{mechanism.name}]"

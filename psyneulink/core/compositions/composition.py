@@ -11431,6 +11431,7 @@ _
                 # store the result of this execution in case it will be the final result
 
                 trial_output = copy_parameter_value(trial_output)
+
                 self._update_results(results,
                                      trial_output,
                                      execution_mode,
@@ -11508,6 +11509,7 @@ _
                     pass
 
             return trial_output
+        XXX
 
     @handle_external_context()
     def learn(
