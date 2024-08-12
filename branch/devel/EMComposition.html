@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EMComposition &mdash; PsyNeuLink 0.15.1.0+325.g310afb115 documentation</title>
+  <title>EMComposition &mdash; PsyNeuLink 0.15.1.0+326.g7047302cc documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+325
+                  0.15.1.0+326
                 </div>
               
             
@@ -769,9 +769,9 @@ while the last two should be used as values:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">em</span><span class="o">.</span><span class="n">show_graph</span><span class="p">()</span>
 </pre></div>
 </div>
-<figure class="align-default" id="id5">
+<figure class="align-default" id="id3">
 <span id="emcomposition-example-field-weights-equal-fig"></span><img alt="_images/EMComposition_field_weights_equal_fig.svg" src="_images/EMComposition_field_weights_equal_fig.svg" /><figcaption>
-<p><span class="caption-text"><strong>Use of field_weights to specify keys and values.</strong></span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text"><strong>Use of field_weights to specify keys and values.</strong></span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>Note that the figure now shows <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.field_weight_nodes" title="psyneulink.library.compositions.emcomposition.EMComposition.field_weight_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RETRIEVAL</span> <span class="pre">WEIGHTING</span></code></a> <code class="xref any docutils literal notranslate"><span class="pre">nodes</span></code>,
@@ -1241,7 +1241,7 @@ any subequent processing is done (i.e., in a composition in which the EMComposit
 <dd><p>Wrapper for EMComposition as a Pytorch Module</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition.PytorchEMCompositionWrapper.execute_node">
-<span class="sig-name descname"><span class="pre">execute_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition.PytorchEMCompositionWrapper.execute_node" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">execute_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition.PytorchEMCompositionWrapper.execute_node" title="Permalink to this definition">¶</a></dt>
 <dd><p>Override to handle storage of entry to memory_matrix by EMStorage Function</p>
 </dd></dl>
 
@@ -1506,79 +1506,15 @@ assign its value to afferent weights of corresponding retrieved_node.
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition.learn">
 <span class="sig-name descname"><span class="pre">learn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition.learn" title="Permalink to this definition">¶</a></dt>
-<dd><p>Runs the composition in learning mode - that is, any components with disable_learning False will be
-executed in learning mode. See <a class="reference internal" href="Composition.html#composition-learning"><span class="std std-ref">Learning in a Composition</span></a> for details.</p>
+<dd><p>Override to handle synch and retain args
+Note: defaults for synch and retain args are set to NotImplemented, so that the user can specify None if</p>
+<blockquote>
+<div><p>they want to locally override the default values for the AutodiffComposition (see docstrings for run()
+and _parse_synch_and_retain_args() for additonal details).</p>
+</div></blockquote>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> ({<a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a>:list }) – <p>a dictionary containing a key-value pair for each <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> (Mechanism or Composition)
-in the composition that receives inputs from the user. There are several equally valid ways that this
-dict can be structured:</p>
-<ol class="arabic simple">
-<li><p>For each pair, the key is the  and the value is an input, the shape of which must match the Node’s
-default variable. This is identical to the input dict in the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method
-(see <a class="reference internal" href="Composition.html#composition-input-dictionary"><span class="std std-ref">Input Dictionary</span></a> for additional details).</p></li>
-<li><p>A dict with keys ‘inputs’, ‘targets’, and ‘epochs’. The <code class="xref any docutils literal notranslate"><span class="pre">inputs</span></code> key stores a dict that is the same
-same structure as input specification (1) of learn. The <code class="xref any docutils literal notranslate"><span class="pre">targets</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">epochs</span></code> keys should contain
-values of the same shape as <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">targets</span></code></a> and <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">epochs</span></code></a>.</p></li>
-</ol>
-</p></li>
-<li><p><strong>targets</strong> ({<a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a>:list }) – a dictionary containing a key-value pair for each <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> in the Composition that
-receives target values as input to the Composition for training <a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning pathways</span></a>. The key of each entry can be either the <a class="reference internal" href="Composition.html#composition-learning-components"><span class="std std-ref">TARGET_MECHANISM</span></a> for a learning pathway or the final Node in that Pathway, and
-the value is the target value used for that Node on each trial (see <a class="reference internal" href="Composition.html#composition-target-inputs"><span class="std std-ref">target inputs</span></a> for additional details concerning the formatting of targets).</p></li>
-<li><p><strong>num_trials</strong> (<em>int</em><em> (</em><em>default=None</em><em>)</em>) – typically, the Composition infers the number of trials to execute from the length of its input
-specification.  However, <strong>num_trials</strong> can be used to enforce an exact number of trials to execute;
-if it is greater than there are inputs then inputs will be repeated (see <a class="reference internal" href="Composition.html#composition-execution-inputs"><span class="std std-ref">Composition Inputs</span></a>
-for additional information).</p></li>
-<li><p><strong>epochs</strong> (<em>int</em><em> (</em><em>default=1</em><em>)</em>) – specifies the number of training epochs (that is, repetitions of the batched input set) to run with</p></li>
-<li><p><strong>learning_rate</strong> (<em>float : default None</em>) – specifies the learning_rate used by all <a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning pathways</span></a>
-when the Composition’s learn method is called.  This overrides the <code class="xref any docutils literal notranslate"><span class="pre">learning_rate</span> <span class="pre">specified</span>
-<span class="pre">for</span> <span class="pre">any</span> <span class="pre">individual</span> <span class="pre">Pathways</span> <span class="pre">at</span> <span class="pre">construction,</span> <span class="pre">but</span> <span class="pre">only</span> <span class="pre">applies</span> <span class="pre">for</span> <span class="pre">the</span> <span class="pre">current</span> <span class="pre">execution</span> <span class="pre">of</span>
-<span class="pre">the</span> <span class="pre">learn</span> <span class="pre">method</span> <span class="pre">(see</span> <span class="pre">`Composition_Learning_Rate</span></code> for additional details).</p></li>
-<li><p><strong>minibatch_size</strong> (<em>int</em><em> (</em><em>default=1</em><em>)</em>) – specifies the size of the minibatches to use. The input trials will be batched and run, after which
-learning mechanisms with learning mode TRIAL will update weights</p></li>
-<li><p><strong>optimizations_per_minibatch</strong> (<em>int</em><em> (</em><em>default=1</em><em>)</em>) – <p>specified the number of executions and weight updates of learnable pathways are carried out for
-each set of stimuli in a minibatch.</p>
-<div class="admonition hint">
-<p class="admonition-title">Hint</p>
-<p>This can be used to implement the <a class="reference external" href="https://web.stanford.edu/~jlmcc/papers/RogersMcCBook_7_03.pdf">backprop-to-activation proceedure</a> in which the <code class="xref any docutils literal notranslate"><span class="pre">backpropagation</span>
-<span class="pre">learning</span> <span class="pre">algorithm</span></code> is used, with a high learning rate, to quickly search
-for a pattern of activation in response to a given input (or set of inputs) that is useful for some
-downstream purpose.</p>
-</div>
-</p></li>
-<li><p><strong>randomize_minibatch</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – specifies whether the order of the input trials should be randomized on each epoch</p></li>
-<li><p><strong>patience</strong> (<em>int</em><em> or </em><em>None</em><em> (</em><em>default=None</em><em>)</em>) – used for early stopping of training; If a model has more than <code class="xref any docutils literal notranslate"><span class="pre">patience</span></code> bad consecutive epochs,
-then <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.learn" title="psyneulink.library.compositions.emcomposition.EMComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> will prematurely return. A bad epoch is determined by the <code class="xref any docutils literal notranslate"><span class="pre">min_delta</span></code> value</p></li>
-<li><p><strong>min_delta</strong> (<em>float</em><em> (</em><em>default=0</em><em>)</em>) – the minimum reduction in average loss that an epoch must provide in order to qualify as a ‘good’ epoch;
-Any reduction less than this value is considered to be a bad epoch.
-Used for early stopping of training, in combination with <code class="xref any docutils literal notranslate"><span class="pre">patience</span></code>.</p></li>
-<li><p><strong>synchronize_pnl_values</strong> (<em>bool : default True</em>) – specifies whether to synchronize the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">values</span></code></a> of the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>
-in the PsyNeuLink Composition with the corresponding modules of the PyTorch implementation after each
-forward pass when an <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a> is used is executed in <a href="#id3"><span class="problematic" id="id4">``</span></a>PyTorch mode
-&lt;AutodiffComposition_PyTorch&gt;`.</p></li>
-<li><p><strong>scheduler</strong> (<a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler" title="psyneulink.core.scheduling.scheduler.Scheduler"><em>Scheduler</em></a>) – the scheduler object that owns the conditions that will instruct the execution of the Composition
-If not specified, the Composition will use its automatically generated scheduler.</p></li>
-<li><p><strong>context</strong> – context will be set to self.default_execution_id if unspecified</p></li>
-<li><p><strong>call_before_minibatch</strong> (<em>callable</em>) – called before each minibatch is executed</p></li>
-<li><p><strong>call_after_minibatch</strong> (<em>callable</em>) – called after each minibatch is executed</p></li>
-<li><p><strong>report_output</strong> (<em>ReportOutput : default ReportOutput.OFF</em>) – specifies whether to show output of the Composition and its <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> trial-by-trial
-as it is generated; see <a class="reference internal" href="Report.html#report-output"><span class="std std-ref">Output Reporting</span></a> for additional details and <a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput" title="psyneulink.core.compositions.report.ReportOutput"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ReportOutput</span></code></a> for options.</p></li>
-<li><p><strong>report_params</strong> (<em>ReportParams : default ReportParams.OFF</em>) – specifies whether to show values the <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a> of the Composition and its <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a>
-as part of the output report; see <a class="reference internal" href="Report.html#report-output"><span class="std std-ref">Output Reporting</span></a> for additional details and <a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportParams" title="psyneulink.core.compositions.report.ReportParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ReportParams</span></code></a> for options.</p></li>
-<li><p><strong>report_progress</strong> (<em>ReportProgress : default ReportProgress.OFF</em>) – specifies whether to report progress of execution in real time; see <a class="reference internal" href="Report.html#report-progress"><span class="std std-ref">Progress Reporting</span></a> for additional
-details.</p></li>
-<li><p><strong>report_simulations</strong> (<em>ReportSimulatons : default ReportSimulations.OFF</em>) – specifies whether to show output and/or progress for <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-execution"><span class="std std-ref">simulations</span></a> executed by the Composition’s <a class="reference internal" href="Composition.html#composition-controller"><span class="std std-ref">controller</span></a>; see <a class="reference internal" href="Report.html#report-simulations"><span class="std std-ref">Simulations</span></a> for additional details.</p></li>
-<li><p><strong>report_to_devices</strong> (<em>list</em><em>(</em><a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportDevices" title="psyneulink.core.compositions.report.ReportDevices"><em>ReportDevices</em></a><em>) </em><em>: default ReportDevices.CONSOLE</em>) – specifies where output and progress should be reported; see <code class="xref any docutils literal notranslate"><span class="pre">Report_To_Device</span></code> for additional
-details and <a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportDevices" title="psyneulink.core.compositions.report.ReportDevices"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ReportDevices</span></code></a> for options.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p><strong>the results of the last trial of training</strong> (<em>list</em>)</p></li>
-<li><p><em>.. note::</em> – the results of the final epoch of training are stored in the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learning_results" title="psyneulink.core.compositions.composition.Composition.learning_results"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_results</span></code></a> attribute.</p></li>
-</ul>
-</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1618,14 +1554,11 @@ Flattens nested compositions:</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition._update_learning_parameters">
-<span class="sig-name descname"><span class="pre">_update_learning_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._update_learning_parameters" title="Permalink to this definition">¶</a></dt>
-<dd><p>Carry out backpropagation learning (backward computation) for one or more trials.
-Update parameters (weights) based on trials run since last update,</p>
-<blockquote>
-<div><p>using Pytorch backward method to compute gradients and update weights</p>
-</div></blockquote>
-<p>Then execute (i.e., do forward computation for) nodes in pytorch_rep._nodes_to_execute_after_gradient_calc</p>
+<dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition.do_gradient_optimization">
+<span class="sig-name descname"><span class="pre">do_gradient_optimization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">retain_in_pnl_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_num</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition.do_gradient_optimization" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute loss and use in call to autodiff_backward() to compute gradients and update PyTorch parameters.
+Update parameters (weights) based on trial(s) executed since last optimization,
+Reinitizalize minibatch_loss and minibatch_loss_count</p>
 </dd></dl>
 
 </dd></dl>
