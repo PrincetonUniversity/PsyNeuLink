@@ -1508,9 +1508,9 @@ class AutodiffComposition(Composition):
 
                 # MODIFIED 8/12/24: CUSTOMIZED FOR EGO TO SKIP LEARNING OF SOME STATES
                 #                   8/12/24 FIX: SHOULD ADD LEARNING_MASK TO HANDLE THIS
-                t = self._trial_num % 5
-                if t:                   # <- LEARN ON ALL BUT FIRST
-                # if t and not t == 4:  # <- LEARN ON ALL BUT FIRST and LAST
+                first_trial = not (self._trial_num % 5)
+                if not first_trial:                                   # <- SKIP LEARNING ON FIRST TRIAL
+                # if not first_trial and (self._trial_num % 5 != 4):  # <- SKIP LEARNING ON FIRST AND LAST TRIAL
                     trained_output_values, all_output_values = \
                                                     self.autodiff_forward(inputs=autodiff_inputs,
                                                                           targets=autodiff_targets,

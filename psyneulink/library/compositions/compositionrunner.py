@@ -112,11 +112,12 @@ class CompositionRunner():
                             # MODIFIED 8/12/24: CUSTOMIZED FOR EGO TO SKIP LEARNING OF SOME STATES
                             #                   8/12/24 FIX: NEED TO DO SAME IN FORWARD MODEL TO EXECUTE with no_grad
                             #                   8/12/24 FIX: SHOULD ADD LEARNING_MASK TO HANDLE THIS
-                            t = i % 5
-                            # if not t and optimization_num != 0: # SKIP EXTRA OPTIMIZATION STEPS IF NOT LEARNING
-                            #     continue
-                            if t:                   # <- LEARN ON ALL BUT FIRST
-                            # if t and not t == 4:  # <- LEARN ON ALL BUT FIRST and LAST
+                            # FIX: i==0 WHEN self._trial_num==1
+                            first_trial = not (i % 5)
+                            if first_trial and optimization_num != 0: # SKIP EXTRA OPTIMIZATION STEPS IF NOT LEARNING
+                                continue
+                            if not first_trial:                     # <- SKIP LEARNING ON FIRST TRIAL
+                            # if first_trial and not (i % 5) == 4:  # <- SKIP LEARNINNG ON FIRST and LAST TRIALS
                                 self._composition.do_gradient_optimization(retain_in_pnl_options, context, optimization_num)
                             # FIX: SHOULD ONLY DO THIS ONCE IF EXTRA OPTIMIZATION STEPS ARE BEING SKIPPED
                             # MODIFIED 8/12/24: END
