@@ -1505,14 +1505,32 @@ class AutodiffComposition(Composition):
                        context=context)
 
                 self._build_pytorch_representation(context)
-                trained_output_values, all_output_values = \
-                                                self.autodiff_forward(inputs=autodiff_inputs,
-                                                                      targets=autodiff_targets,
-                                                                      synch_with_pnl_options=synch_with_pnl_options,
-                                                                      retain_in_pnl_options=retain_in_pnl_options,
-                                                                      execution_mode=execution_mode,
-                                                                      scheduler=scheduler,
-                                                                      context=context)
+
+                # MODIFIED 8/12/24: CUSTOMIZED FOR EGO TO SKIP LEARNING OF SOME STATES
+                #                   8/12/24 FIX: SHOULD ADD LEARNING_MASK TO HANDLE THIS
+                t = self._trial_num % 5
+                if t:                   # <- LEARN ON ALL BUT FIRST
+                # if t and not t == 4:  # <- LEARN ON ALL BUT FIRST and LAST
+                    trained_output_values, all_output_values = \
+                                                    self.autodiff_forward(inputs=autodiff_inputs,
+                                                                          targets=autodiff_targets,
+                                                                          synch_with_pnl_options=synch_with_pnl_options,
+                                                                          retain_in_pnl_options=retain_in_pnl_options,
+                                                                          execution_mode=execution_mode,
+                                                                          scheduler=scheduler,
+                                                                          context=context)
+                else:
+                    from torch import no_grad
+                    with no_grad():
+                        trained_output_values, all_output_values = \
+                                                        self.autodiff_forward(inputs=autodiff_inputs,
+                                                                              targets=autodiff_targets,
+                                                                              synch_with_pnl_options=synch_with_pnl_options,
+                                                                              retain_in_pnl_options=retain_in_pnl_options,
+                                                                              execution_mode=execution_mode,
+                                                                              scheduler=scheduler,
+                                                                              context=context)
+                # MODIFIED 8/12/24 END
                 execution_phase = context.execution_phase
                 context.execution_phase = ContextFlags.PROCESSING
                 context.execution_phase = execution_phase
@@ -1589,14 +1607,16 @@ class AutodiffComposition(Composition):
             kwargs['synch_with_pnl_options'] = synch_with_pnl_options
             kwargs['retain_in_pnl_options'] = retain_in_pnl_options
 
-        # If called from AutodiffComposition in Pytorch mode, provide chance to update results after run()
         results = super(AutodiffComposition, self).run(*args, **kwargs)
+
+        # If called from AutodiffComposition in Pytorch mode, provide chance to update results after run()
         if EXECUTION_MODE in kwargs and kwargs[EXECUTION_MODE] is pnlvm.ExecutionMode.PyTorch:
             # Synchronize specified outcomes at end of learning run
             context = kwargs[CONTEXT]
             pytorch_rep = self.parameters.pytorch_representation.get(context)
             if pytorch_rep:
                 pytorch_rep.synch_with_psyneulink(kwargs['synch_with_pnl_options'], RUN,context)
+
         return results
 
     def _update_results(self, results, trial_output, execution_mode, synch_with_pnl_options, context):

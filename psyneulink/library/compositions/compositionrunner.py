@@ -101,6 +101,7 @@ class CompositionRunner():
 
                     # Cycle over optimizations per trial (stimulus
                     for optimization_num in range(optimizations_per_minibatch):
+                        # 8/12/24 FIX: CAN THIS BE OPTIMIZED BY AVODING COPY?
                         # Return current set of stimuli for minibatch
                         yield copy_parameter_value(inputs_for_minibatch)
 
@@ -108,21 +109,27 @@ class CompositionRunner():
                         #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
                         if execution_mode is ExecutionMode.PyTorch:
                             pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
-                            # MODIFIED 8/11/24: CUSTOMIZED FOR EGO
+                            # MODIFIED 8/12/24: CUSTOMIZED FOR EGO TO SKIP LEARNING OF SOME STATES
+                            #                   8/12/24 FIX: NEED TO DO SAME IN FORWARD MODEL TO EXECUTE with no_grad
+                            #                   8/12/24 FIX: SHOULD ADD LEARNING_MASK TO HANDLE THIS
                             t = i % 5
-                            # if t and not t == 4:
-                            if t:
-                            # NOTE: THIS DOES NOT STORE TO EM ON THESE TRIALS EITHER
+                            # if not t and optimization_num != 0: # SKIP EXTRA OPTIMIZATION STEPS IF NOT LEARNING
+                            #     continue
+                            if t:                   # <- LEARN ON ALL BUT FIRST
+                            # if t and not t == 4:  # <- LEARN ON ALL BUT FIRST and LAST
                                 self._composition.do_gradient_optimization(retain_in_pnl_options, context, optimization_num)
-                                from torch import no_grad
-                                with no_grad():
-                                    for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
-                                        node._composition_wrapper_owner.execute_node(node, variable,
-                                                                                    optimization_num, context)
+                            # FIX: SHOULD ONLY DO THIS ONCE IF EXTRA OPTIMIZATION STEPS ARE BEING SKIPPED
+                            # MODIFIED 8/12/24: END
+                            from torch import no_grad
+                            with no_grad():
+                                # Execute nodes that are not being learned
+                                for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
+                                    node._composition_wrapper_owner.execute_node(node, variable,
+                                                                                optimization_num, context)
 
-                                # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
-                                pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, OPTIMIZATION_STEP, context,
-                                                                  [MATRIX_WEIGHTS, NODE_VARIABLES, NODE_VALUES])
+                            # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
+                            pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, OPTIMIZATION_STEP, context,
+                                                              [MATRIX_WEIGHTS, NODE_VARIABLES, NODE_VALUES])
                             # MODIFIED 8/11/24: END
 
                     if execution_mode is ExecutionMode.PyTorch:

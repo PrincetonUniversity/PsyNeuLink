@@ -11378,10 +11378,12 @@ _
                    content='run_start',
                    context=context)
 
-            self.TRIAL_NUM = -1
-
             # Loop over the length of the list of inputs - each input represents a TRIAL
             for trial_num in range(num_trials):
+
+                # 8/12/24 - FIX: SHOULD MAKE THIS A PARAMETER FOR CONTEXT PRESERVATION,
+                #                BUT NEED IT TO BE EFFICIENCT FOR AUTODIFF USE
+                self._trial_num = trial_num
 
                 # Execute call before trial "hook" (user defined function)
                 if call_before_trial:
