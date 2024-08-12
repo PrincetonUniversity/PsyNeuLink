@@ -107,17 +107,22 @@ class CompositionRunner():
                         # Update weights if in PyTorch execution_mode;
                         #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
                         if execution_mode is ExecutionMode.PyTorch:
-                            self._composition.do_gradient_optimization(retain_in_pnl_options, context, optimization_num)
-                            from torch import no_grad
                             pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
-                            with no_grad():
-                                for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
-                                    node._composition_wrapper_owner.execute_node(node, variable,
-                                                                                optimization_num, context)
+                            # MODIFIED 8/11/24: CUSTOMIZED FOR EGO
+                            t = i % 5
+                            if t and not t == 4:
+                            # NOTE: THIS DOES NOT STORE TO EM ON THESE TRIALS EITHER
+                                self._composition.do_gradient_optimization(retain_in_pnl_options, context, optimization_num)
+                                from torch import no_grad
+                                with no_grad():
+                                    for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
+                                        node._composition_wrapper_owner.execute_node(node, variable,
+                                                                                    optimization_num, context)
 
-                            # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
-                            pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, OPTIMIZATION_STEP, context,
-                                                              [MATRIX_WEIGHTS, NODE_VARIABLES, NODE_VALUES])
+                                # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
+                                pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, OPTIMIZATION_STEP, context,
+                                                                  [MATRIX_WEIGHTS, NODE_VARIABLES, NODE_VALUES])
+                            # MODIFIED 8/11/24: END
 
                     if execution_mode is ExecutionMode.PyTorch:
                         # Synchronize specified outcomes after every stimulus (i.e., trial)

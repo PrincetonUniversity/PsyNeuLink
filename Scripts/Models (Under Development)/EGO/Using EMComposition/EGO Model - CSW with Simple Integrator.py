@@ -137,7 +137,7 @@ from importlib import import_module
 from enum import IntEnum
 import matplotlib.pyplot as plt
 import torch
-torch.manual_seed(0)
+# torch.manual_seed(0)
 from psyneulink import *
 from psyneulink._typing import Union, Literal
 

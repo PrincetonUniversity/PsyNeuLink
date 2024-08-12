@@ -52,8 +52,8 @@ model_params = dict(
     memory_capacity = ALL, # number of entries in EM memory; ALL=> match to number of stims
     memory_init = (0,.0001),  # Initialize memory with random values in interval
     # memory_init = None,  # Initialize with zeros
-    concatenate_keys = False,
-    # concatenate_keys = True,
+    # concatenate_keys = False,
+    concatenate_keys = True,
 
     # environment
     # curriculum_type = 'Interleaved',
@@ -80,7 +80,6 @@ model_params = dict(
     loss_spec = Loss.BINARY_CROSS_ENTROPY,
     # loss_spec = Loss.MSE,
     learning_rate = .5,
-    # num_optimization_steps = 1,
     num_optimization_steps = 10,
     synch_weights = RUN,
     synch_values = RUN,
