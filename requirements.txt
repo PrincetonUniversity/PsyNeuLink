@@ -9,7 +9,7 @@ llvmlite<0.44
 matplotlib<3.7.6
 modeci_mdf<0.5, >=0.4.3; (platform_machine == 'AMD64' or platform_machine == 'x86_64' or platform_machine == 'arm64' or platform_machine == 'aarch64') and platform_python_implementation == 'CPython' and implementation_name == 'cpython'
 networkx<3.4
-numpy>=1.21.0, <1.26.5
+numpy>=1.21.0, <2.0.2
 optuna<3.4.0
 packaging<25.0
 pandas<2.2.3
