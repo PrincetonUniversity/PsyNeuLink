@@ -147,8 +147,8 @@ from psyneulink.core.scheduling.condition import Any, And, AllHaveRun, AtRunStar
 MEMORY_CAPACITY = 5
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL = (                      # Only one of the following can be uncommented:
-    None                             # suppress display of model
-    # {}                               # show simple visual display of model
+    # None                             # suppress display of model
+    {}                               # show simple visual display of model
     # {'show_node_structure': True}    # show detailed view of node structures and projections
 )
 RUN_MODEL = True                       # True => run the model
@@ -404,7 +404,7 @@ if __name__ == '__main__':
         model = construct_model()
         assert 'DEBUGGING BREAK POINT'
         # print(model.scheduler.consideration_queue)
-        # gs.output_graph_image(model.scheduler.graph, 'EGO_comp-scheduler.png')
+        # gs.output_graph_image(model.scheduler.graph, 'show_graph OUTPUT/EGO_comp-scheduler.png')
 
     if DISPLAY_MODEL is not None:
         if model:

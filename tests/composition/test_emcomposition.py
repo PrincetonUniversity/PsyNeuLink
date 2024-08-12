@@ -480,11 +480,11 @@ class TestExecution:
                 assert "EMComposition does not support learning with 'concatenate_keys'=True." in str(error.value)
 
             else:
-                if exec_mode == pnl.ExecutionMode.Python:
-                    # FIX: Not sure why Python mode reverses last two rows/entries (dict issue?)
-                    expected_memory = [[[0.15625, 0.3125,  0.46875], [0.171875, 0.328125, 0.484375]],
-                                       [[400., 500., 600.], [444., 555., 666.]],
-                                       [[25., 50., 75.], [27.75, 55.5,  83.25]],
-                                       [[2.5, 3.125, 3.75 ], [2.5625, 3.1875, 3.8125]]]
+                # if exec_mode == pnl.ExecutionMode.Python:
+                #     # FIX: Not sure why Python mode reverses last two rows/entries (dict issue?)
+                expected_memory = [[[0.15625, 0.3125,  0.46875], [0.171875, 0.328125, 0.484375]],
+                                   [[400., 500., 600.], [444., 555., 666.]],
+                                   [[25., 50., 75.], [27.75, 55.5,  83.25]],
+                                   [[2.5, 3.125, 3.75 ], [2.5625, 3.1875, 3.8125]]]
                 em.learn(inputs=inputs, execution_mode=exec_mode)
                 np.testing.assert_equal(em.memory, expected_memory)
