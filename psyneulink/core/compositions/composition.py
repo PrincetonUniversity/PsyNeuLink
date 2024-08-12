@@ -11378,6 +11378,8 @@ _
                    content='run_start',
                    context=context)
 
+            self.TRIAL_NUM = -1
+
             # Loop over the length of the list of inputs - each input represents a TRIAL
             for trial_num in range(num_trials):
 

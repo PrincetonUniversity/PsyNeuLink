@@ -8,7 +8,7 @@
 # ********************************************* PytorchComponent *************************************************
 
 """PyTorch wrappers for Composition, Mechanism, Projection, and Functions for use in AutodiffComposition"""
-from typing import Optional, Literal, Union
+from psyneulink._typing import Optional, Literal, Union
 
 import graph_scheduler
 import torch
