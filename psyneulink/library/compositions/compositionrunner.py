@@ -110,7 +110,8 @@ class CompositionRunner():
                             pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
                             # MODIFIED 8/11/24: CUSTOMIZED FOR EGO
                             t = i % 5
-                            if t and not t == 4:
+                            # if t and not t == 4:
+                            if t:
                             # NOTE: THIS DOES NOT STORE TO EM ON THESE TRIALS EITHER
                                 self._composition.do_gradient_optimization(retain_in_pnl_options, context, optimization_num)
                                 from torch import no_grad
