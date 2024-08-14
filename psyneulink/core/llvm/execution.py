@@ -29,19 +29,6 @@ from .debug import debug_env
 __all__ = ['CompExecution', 'FuncExecution', 'MechExecution']
 
 
-def _convert_ctype_to_python(x):
-    if isinstance(x, ctypes.Structure):
-        return [_convert_ctype_to_python(getattr(x, field_name)) for field_name, _ in x._fields_]
-    if isinstance(x, ctypes.Array):
-        return [_convert_ctype_to_python(el) for el in x]
-    if isinstance(x, (ctypes.c_double, ctypes.c_float)):
-        return x.value
-    if isinstance(x, (float, int)):
-        return x
-
-    assert False, "Don't know how to convert: {}".format(x)
-
-
 def _tupleize(x):
     try:
         return tuple(_tupleize(y) for y in x)
@@ -557,7 +544,8 @@ class CompExecution(CUDAExecution):
         if self.__bin_run_func is None:
             self.__bin_run_func = pnlvm.LLVMBinaryFunction.from_obj(self._composition,
                                                                     tags=self.__tags.union({"run"}),
-                                                                    ctype_ptr_args=(3, 4))
+                                                                    ctype_ptr_args=(3,),
+                                                                    dynamic_size_args=(4,))
 
         return self.__bin_run_func
 
@@ -572,11 +560,11 @@ class CompExecution(CUDAExecution):
             inputs = self._get_run_input_struct(inputs, num_input_sets)
 
         # Create output buffer
-        outputs = (self._bin_run_func.byref_arg_types[4] * runs)()
+        outputs = self._bin_func.np_buffer_for_arg(4, extra_dimensions=(runs,))
+        assert ctypes.sizeof(self._bin_run_func.byref_arg_types[4]) * runs == outputs.nbytes
 
         if "stat" in self._debug_env:
-            print("Output struct size:", _pretty_size(ctypes.sizeof(outputs)),
-                  "for", self._composition.name)
+            print("Output struct size:", _pretty_size(outputs.nbytes), "for", self._composition.name)
 
         runs_count = np.asarray(runs, dtype=np.uint32).copy()
         input_count = np.asarray(num_input_sets, dtype=np.uint32)
@@ -584,34 +572,34 @@ class CompExecution(CUDAExecution):
         return inputs, outputs, runs_count, input_count
 
     def run(self, inputs, runs, num_input_sets):
-        ct_inputs, ct_outputs, runs_count, input_count = self._prepare_run(inputs, runs, num_input_sets)
+        ct_inputs, outputs, runs_count, input_count = self._prepare_run(inputs, runs, num_input_sets)
 
         self._bin_run_func(self._state_struct,
                            self._param_struct,
                            self._data_struct,
                            ct_inputs,
-                           ct_outputs,
+                           outputs,
                            runs_count,
                            input_count)
 
         # Extract only #trials elements in case the run exited early
         assert runs_count <= runs, "Composition ran more times than allowed!"
-        return _convert_ctype_to_python(ct_outputs)[0:runs_count]
+        return self._get_indexable(outputs[0:runs_count])
 
     def cuda_run(self, inputs, runs, num_input_sets):
-        ct_inputs, ct_outputs, runs_count, input_count = self._prepare_run(inputs, runs, num_input_sets)
+        ct_inputs, outputs, runs_count, input_count = self._prepare_run(inputs, runs, num_input_sets)
 
         self._bin_run_func.cuda_call(self._cuda_state_struct,
                                      self._cuda_param_struct,
                                      self._cuda_data_struct,
                                      jit_engine.pycuda.driver.In(np.ctypeslib.as_array(ct_inputs)),
-                                     jit_engine.pycuda.driver.Out(np.ctypeslib.as_array(ct_outputs)),
+                                     jit_engine.pycuda.driver.Out(outputs),
                                      jit_engine.pycuda.driver.InOut(runs_count),
                                      jit_engine.pycuda.driver.In(input_count))
 
         # Extract only #trials elements in case the run exited early
         assert runs_count <= runs, "Composition ran more times than allowed: {}".format(runs)
-        return _convert_ctype_to_python(ct_outputs)[0:runs_count]
+        return self._get_indexable(outputs[0:runs_count])
 
     def _prepare_evaluate(self, inputs, num_input_sets, num_evaluations, all_results:bool):
         ocm = self._composition.controller
