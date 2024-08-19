@@ -154,7 +154,7 @@ class LLVMBinaryFunction:
 
         for i, arg in enumerate(self.np_arg_dtypes):
             if i not in ctype_ptr_args and self.byref_arg_types[i] is not None:
-                args[i] = np.ctypeslib.ndpointer(dtype=arg.base, shape=arg.shape)
+                args[i] = np.ctypeslib.ndpointer(dtype=arg.base, shape=arg.shape, flags='C_CONTIGUOUS')
 
         middle = time.perf_counter()
         self.__c_func_type = ctypes.CFUNCTYPE(return_type, *args)
