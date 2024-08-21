@@ -123,7 +123,7 @@ def _llvm_build(target_generation=_binary_generation + 1):
 
 
 class LLVMBinaryFunction:
-    def __init__(self, name: str, *, ctype_ptr_args=()):
+    def __init__(self, name: str, *, ctype_ptr_args:tuple=(), dynamic_size_args:tuple=()):
         self.name = name
 
         self.__c_func = None
@@ -154,7 +154,10 @@ class LLVMBinaryFunction:
 
         for i, arg in enumerate(self.np_arg_dtypes):
             if i not in ctype_ptr_args and self.byref_arg_types[i] is not None:
-                args[i] = np.ctypeslib.ndpointer(dtype=arg.base, shape=arg.shape)
+                if i in dynamic_size_args:
+                    args[i] = np.ctypeslib.ndpointer(dtype=arg.base, ndim=len(arg.shape) + 1, flags='C_CONTIGUOUS')
+                else:
+                    args[i] = np.ctypeslib.ndpointer(dtype=arg.base, shape=arg.shape, flags='C_CONTIGUOUS')
 
         middle = time.perf_counter()
         self.__c_func_type = ctypes.CFUNCTYPE(return_type, *args)
@@ -233,14 +236,14 @@ class LLVMBinaryFunction:
 
     @staticmethod
     @functools.lru_cache(maxsize=32)
-    def from_obj(obj, *, tags:frozenset=frozenset(), ctype_ptr_args:tuple=()):
+    def from_obj(obj, *, tags:frozenset=frozenset(), ctype_ptr_args:tuple=(), dynamic_size_args:tuple=()):
         name = LLVMBuilderContext.get_current().gen_llvm_function(obj, tags=tags).name
-        return LLVMBinaryFunction.get(name, ctype_ptr_args=ctype_ptr_args)
+        return LLVMBinaryFunction.get(name, ctype_ptr_args=ctype_ptr_args, dynamic_size_args=dynamic_size_args)
 
     @staticmethod
     @functools.lru_cache(maxsize=32)
-    def get(name: str, *, ctype_ptr_args:tuple=()):
-        return LLVMBinaryFunction(name, ctype_ptr_args=ctype_ptr_args)
+    def get(name: str, *, ctype_ptr_args:tuple=(), dynamic_size_args:tuple=()):
+        return LLVMBinaryFunction(name, ctype_ptr_args=ctype_ptr_args, dynamic_size_args=dynamic_size_args)
 
 
 _cpu_engine = None
