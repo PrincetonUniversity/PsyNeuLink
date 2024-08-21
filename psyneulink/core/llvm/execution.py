@@ -606,7 +606,7 @@ class CompExecution(CUDAExecution):
 
         eval_type = "evaluate_type_all_results" if all_results else "evaluate_type_objective"
         tags = {"evaluate", "alloc_range", eval_type}
-        bin_func = pnlvm.LLVMBinaryFunction.from_obj(ocm, tags=frozenset(tags), ctype_ptr_args=(4, 5))
+        bin_func = pnlvm.LLVMBinaryFunction.from_obj(ocm, tags=frozenset(tags), ctype_ptr_args=(5,), dynamic_size_args=(4,))
         self.__bin_func = bin_func
 
         # There are 8 arguments to evaluate_alloc_range:
@@ -623,31 +623,31 @@ class CompExecution(CUDAExecution):
         # Construct input variable, the 5th parameter of the evaluate function
         ct_inputs = self._get_run_input_struct(inputs, num_input_sets, 5)
 
-        # Output ctype
-        out_el_ty = bin_func.byref_arg_types[4]
+        # Output buffer
+        extra_dims = (num_evaluations,)
         if all_results:
             num_trials = ocm.parameters.num_trials_per_estimate.get(self._execution_context)
-            if num_trials is None:
-                num_trials = num_input_sets
-            out_el_ty *= num_trials
-        out_ty = out_el_ty * num_evaluations
+            assert num_trials is not None
+            extra_dims = extra_dims + (num_trials,)
+
+        outputs = self._bin_func.np_buffer_for_arg(4, extra_dimensions=extra_dims)
 
         num_inputs = np.asarray(num_input_sets, dtype=np.uint32)
         if "stat" in self._debug_env:
             print("Evaluate result struct type size:",
-                  _pretty_size(ctypes.sizeof(out_ty)),
+                  _pretty_size(ctypes.sizeof(outputs.nbytes)),
                   "( evaluations:", num_evaluations, "element size:", ctypes.sizeof(out_el_ty), ")",
                   "for", self._obj.name)
 
-        return comp_params, comp_state, comp_data, ct_inputs, out_ty(), num_inputs
+        return comp_params, comp_state, comp_data, ct_inputs, outputs, num_inputs
 
     def cuda_evaluate(self, inputs, num_input_sets, num_evaluations, all_results:bool=False):
-        comp_params, comp_state, comp_data, ct_inputs, ct_results, num_inputs = \
+        comp_params, comp_state, comp_data, ct_inputs, results, num_inputs = \
             self._prepare_evaluate(inputs, num_input_sets, num_evaluations, all_results)
 
         cuda_args = (jit_engine.pycuda.driver.In(comp_params),
                      jit_engine.pycuda.driver.In(comp_state),
-                     jit_engine.pycuda.driver.Out(np.ctypeslib.as_array(ct_results)),   # results
+                     jit_engine.pycuda.driver.Out(results),                             # results
                      jit_engine.pycuda.driver.In(np.ctypeslib.as_array(ct_inputs)),     # inputs
                      jit_engine.pycuda.driver.In(comp_data),                            # composition data
                      jit_engine.pycuda.driver.In(num_inputs),                           # number of inputs
@@ -655,10 +655,10 @@ class CompExecution(CUDAExecution):
 
         self.__bin_func.cuda_call(*cuda_args, threads=int(num_evaluations))
 
-        return ct_results
+        return results
 
     def thread_evaluate(self, inputs, num_input_sets, num_evaluations, all_results:bool=False):
-        comp_params, comp_state, comp_data, ct_inputs, ct_results, num_inputs = \
+        comp_params, comp_state, comp_data, ct_inputs, outputs, num_inputs = \
             self._prepare_evaluate(inputs, num_input_sets, num_evaluations, all_results)
 
         jobs = min(os.cpu_count(), num_evaluations)
@@ -667,10 +667,12 @@ class CompExecution(CUDAExecution):
         parallel_start = time.time()
         with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as ex:
 
-            # Create input and result typed casts once, they are the same
-            # for every submitted job.
-            results_arg = ctypes.cast(ct_results, self.__bin_func.c_func.argtypes[4])
+            # Create input typed cast once, it is the same for every submitted job.
             input_arg = ctypes.cast(ct_inputs, self.__bin_func.c_func.argtypes[5])
+
+            # numpy dynamic args expect only one extra dimension
+            output_arg = outputs.reshape(-1, *self.__bin_func.np_arg_dtypes[4].shape)
+            assert output_arg.base is outputs
 
             # There are 8 arguments to evaluate_alloc_range:
             # comp_param, comp_state, from, to, results, input, comp_data, input length
@@ -679,7 +681,7 @@ class CompExecution(CUDAExecution):
                                  comp_state,
                                  int(i * evals_per_job),
                                  min((i + 1) * evals_per_job, num_evaluations),
-                                 results_arg,
+                                 output_arg,
                                  input_arg,
                                  comp_data,
                                  num_inputs)
@@ -695,4 +697,4 @@ class CompExecution(CUDAExecution):
         exceptions = [r.exception() for r in results]
         assert all(e is None for e in exceptions), "Not all jobs finished sucessfully: {}".format(exceptions)
 
-        return ct_results
+        return outputs
