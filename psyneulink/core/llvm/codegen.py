@@ -585,9 +585,9 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         return res
 
 
-def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
-    assert "node_wrapper" in tags
-    func_tags = tags.difference({"node_wrapper"})
+def gen_node_assembly(ctx, composition, node, *, tags:frozenset):
+    assert "node_assembly" in tags
+    func_tags = tags.difference({"node_assembly"})
 
     node_function = ctx.import_llvm_function(node, tags=func_tags)
     # FIXME: This is a hack
@@ -782,14 +782,14 @@ def _gen_composition_exec_context(ctx, composition, *, tags:frozenset, suffix=""
         params = builder.alloca(const_params.type, name="const_params_loc")
         builder.store(const_params, params)
 
-    node_tags = tags.union({"node_wrapper"})
+    node_tags = tags.union({"node_assembly"})
     # Call input CIM
-    input_cim_w = ctx.get_node_wrapper(composition, composition.input_CIM)
+    input_cim_w = ctx.get_node_assembly(composition, composition.input_CIM)
     input_cim_f = ctx.import_llvm_function(input_cim_w, tags=node_tags)
     builder.call(input_cim_f, [state, params, comp_in, data, data])
 
     # Call parameter CIM
-    param_cim_w = ctx.get_node_wrapper(composition, composition.parameter_CIM)
+    param_cim_w = ctx.get_node_assembly(composition, composition.parameter_CIM)
     param_cim_f = ctx.import_llvm_function(param_cim_w, tags=node_tags)
     builder.call(param_cim_f, [state, params, comp_in, data, data])
 
@@ -803,7 +803,7 @@ def _gen_composition_exec_context(ctx, composition, *, tags:frozenset, suffix=""
 
 def gen_composition_exec(ctx, composition, *, tags:frozenset):
     simulation = "simulation" in tags
-    node_tags = tags.union({"node_wrapper"})
+    node_tags = tags.union({"node_assembly"})
 
     with _gen_composition_exec_context(ctx, composition, tags=tags) as (builder, data, params, cond_gen):
         state, _, comp_in, _, cond = builder.function.args
@@ -823,7 +823,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
         is_finished_callbacks = {}
         for node in composition.nodes:
             args = [state, params, comp_in, data, output_storage]
-            wrapper = ctx.get_node_wrapper(composition, node)
+            wrapper = ctx.get_node_assembly(composition, node)
             is_finished_callbacks[node] = (wrapper, args)
 
 
@@ -851,14 +851,14 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
                                                             num_exec_locs,
                                                             nodes_states)
             with builder.if_then(reinit_cond):
-                node_w = ctx.get_node_wrapper(composition, node)
+                node_w = ctx.get_node_assembly(composition, node)
                 node_reinit_f = ctx.import_llvm_function(node_w, tags=node_tags.union({"reset"}))
                 builder.call(node_reinit_f, [state, params, comp_in, data, data])
 
         # Run controller if it's enabled in 'BEFORE' mode
         if simulation is False and composition.enable_controller and composition.controller_mode == BEFORE:
             assert composition.controller is not None
-            controller_w = ctx.get_node_wrapper(composition, composition.controller)
+            controller_w = ctx.get_node_assembly(composition, composition.controller)
             controller_f = ctx.import_llvm_function(controller_w, tags=node_tags)
             builder.call(controller_f, [state, params, comp_in, data, data])
 
@@ -929,7 +929,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
             run_set_node_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
             node_cond = builder.load(run_set_node_ptr, name="node_" + node.name + "_should_run")
             with builder.if_then(node_cond):
-                node_w = ctx.get_node_wrapper(composition, node)
+                node_w = ctx.get_node_assembly(composition, node)
                 node_f = ctx.import_llvm_function(node_w, tags=node_tags)
                 builder.block.name = "invoke_" + node_f.name
                 # Wrappers do proper indexing of all structures
@@ -984,12 +984,12 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
         if simulation is False and composition.enable_controller and \
            composition.controller_mode == AFTER:
             assert composition.controller is not None
-            controller_w = ctx.get_node_wrapper(composition, composition.controller)
+            controller_w = ctx.get_node_assembly(composition, composition.controller)
             controller_f = ctx.import_llvm_function(controller_w, tags=node_tags)
             builder.call(controller_f, [state, params, comp_in, data, data])
 
         # Call output CIM
-        output_cim_w = ctx.get_node_wrapper(composition, composition.output_CIM)
+        output_cim_w = ctx.get_node_assembly(composition, composition.output_CIM)
         output_cim_f = ctx.import_llvm_function(output_cim_w, tags=node_tags)
         builder.block.name = "invoke_" + output_cim_f.name
         builder.call(output_cim_f, [state, params, comp_in, data, data])
@@ -1119,56 +1119,6 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
     return llvm_func
 
 
-def gen_multirun_wrapper(ctx, function: ir.Function) -> ir.Function:
-    if function.module is not ctx.module:
-        function = ir.Function(ctx.module, function.type.pointee, function.name)
-        assert function.is_declaration
-
-    args = [a.type for a in function.args]
-    args.append(ctx.int32_ty.as_pointer())
-    multirun_ty = ir.FunctionType(function.type.pointee.return_type, args)
-    multirun_f = ir.Function(ctx.module, multirun_ty, function.name + "_multirun")
-    block = multirun_f.append_basic_block(name="entry")
-    builder = ir.IRBuilder(block)
-
-    multi_runs = builder.load(multirun_f.args[-1])
-    # Runs need special handling. data_in and data_out are one dimensional,
-    # but hold entries for all parallel invocations.
-    is_comp_run = len(function.args) == 7
-    if is_comp_run:
-        trials_count = builder.load(multirun_f.args[5])
-        input_count = builder.load(multirun_f.args[6])
-
-    with helpers.for_loop_zero_inc(builder, multi_runs, "multi_run_loop") as (b, index):
-        # Index all pointer arguments
-        indexed_args = []
-        for i, arg in enumerate(multirun_f.args[:-1]):
-            # Don't adjust #inputs and #trials
-            if isinstance(arg.type, ir.PointerType):
-                offset = index
-                # #runs and #trials needs to be the same for every invocation
-                if is_comp_run and i >= 5:
-                    offset = ctx.int32_ty(0)
-                    # Reset trial count for every invocation.
-                    # Previous runs might have finished earlier
-                    if i == 5:
-                        builder.store(trials_count, arg)
-                # data arrays need special handling
-                elif is_comp_run and i == 4:  # data_out
-                    offset = b.mul(index, trials_count)
-                elif is_comp_run and i == 3:  # data_in
-                    offset = b.mul(index, input_count)
-
-                arg = b.gep(arg, [offset])
-
-            indexed_args.append(arg)
-
-        b.call(function, indexed_args)
-
-    builder.ret_void()
-    return multirun_f
-
-
 def gen_autodiffcomp_exec(ctx, composition, *, tags:frozenset):
     """Creates llvm bin execute for autodiffcomp"""
     assert composition.controller is None
@@ -1180,9 +1130,9 @@ def gen_autodiffcomp_exec(ctx, composition, *, tags:frozenset):
         pytorch_func = ctx.import_llvm_function(pytorch_model, tags=tags)
         builder.call(pytorch_func, [state, params, data])
 
-        node_tags = tags.union({"node_wrapper"})
+        node_tags = tags.union({"node_assembly"})
         # Call output CIM
-        output_cim_w = ctx.get_node_wrapper(composition, composition.output_CIM)
+        output_cim_w = ctx.get_node_assembly(composition, composition.output_CIM)
         output_cim_f = ctx.import_llvm_function(output_cim_w, tags=node_tags)
         builder.call(output_cim_f, [state, params, comp_in, data, data])
 

@@ -1,6 +1,5 @@
 import ctypes
 import ctypes.util
-import copy
 import numpy as np
 import pytest
 import sys
@@ -16,8 +15,7 @@ TST_MAX = 3.0
 VECTOR = np.random.rand(DIM_X)
 
 @pytest.mark.llvm
-@pytest.mark.parametrize('mode', ['CPU',
-                                  pytest.param('PTX', marks=pytest.mark.cuda)])
+@pytest.mark.parametrize('mode', ['CPU', pytest.helpers.cuda_param('PTX')])
 def test_helper_fclamp(mode):
 
     with pnlvm.LLVMBuilderContext.get_current() as ctx:
@@ -46,12 +44,13 @@ def test_helper_fclamp(mode):
 
     ref = np.clip(VECTOR, TST_MIN, TST_MAX)
     bounds = np.asfarray([TST_MIN, TST_MAX])
-    bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
-    local_vec = copy.deepcopy(VECTOR)
+
+    bin_f = pnlvm.LLVMBinaryFunction.get(custom_name, ctype_ptr_args=(0, 2))
+    local_vec = VECTOR.copy()
+
     if mode == 'CPU':
-        ct_ty = ctypes.POINTER(bin_f.byref_arg_types[0])
-        ct_vec = local_vec.ctypes.data_as(ct_ty)
-        ct_bounds = bounds.ctypes.data_as(ct_ty)
+        ct_vec = local_vec.ctypes.data_as(bin_f.c_func.argtypes[0])
+        ct_bounds = bounds.ctypes.data_as(bin_f.c_func.argtypes[2])
 
         bin_f(ct_vec, DIM_X, ct_bounds)
     else:
@@ -61,8 +60,7 @@ def test_helper_fclamp(mode):
 
 
 @pytest.mark.llvm
-@pytest.mark.parametrize('mode', ['CPU',
-                                  pytest.param('PTX', marks=pytest.mark.cuda)])
+@pytest.mark.parametrize('mode', ['CPU', pytest.helpers.cuda_param('PTX')])
 def test_helper_fclamp_const(mode):
 
     with pnlvm.LLVMBuilderContext.get_current() as ctx:
@@ -85,12 +83,12 @@ def test_helper_fclamp_const(mode):
 
         builder.ret_void()
 
-    local_vec = copy.deepcopy(VECTOR)
+    local_vec = VECTOR.copy()
     ref = np.clip(VECTOR, TST_MIN, TST_MAX)
-    bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
+
+    bin_f = pnlvm.LLVMBinaryFunction.get(custom_name, ctype_ptr_args=(0,))
     if mode == 'CPU':
-        ct_ty = ctypes.POINTER(bin_f.byref_arg_types[0])
-        ct_vec = local_vec.ctypes.data_as(ct_ty)
+        ct_vec = local_vec.ctypes.data_as(bin_f.c_func.argtypes[0])
 
         bin_f(ct_vec, DIM_X)
     else:
@@ -100,10 +98,8 @@ def test_helper_fclamp_const(mode):
 
 
 @pytest.mark.llvm
-@pytest.mark.parametrize('mode', ['CPU',
-                                  pytest.param('PTX', marks=pytest.mark.cuda)])
-@pytest.mark.parametrize('rtol,atol',
-                         [[0, 0], [None, None], [None, 100], [2, None]])
+@pytest.mark.parametrize('mode', ['CPU', pytest.helpers.cuda_param('PTX')])
+@pytest.mark.parametrize('rtol,atol', [[0, 0], [None, None], [None, 100], [2, None]])
 @pytest.mark.parametrize('var1,var2',
                          [[1, 1], [1, 100], [1,2], [-4,5], [0, -100], [-1,-2],
                           [[1,1,1,-4,0,-1], [1,100,2,5,-100,-2]]
@@ -122,8 +118,7 @@ def test_helper_is_close(mode, var1, var2, rtol, atol, fp_type):
 
     with pnlvm.LLVMBuilderContext.get_current() as ctx:
         float_ptr_ty = ctx.float_ty.as_pointer()
-        func_ty = ir.FunctionType(ir.VoidType(), [float_ptr_ty, float_ptr_ty,
-                                                  float_ptr_ty, ctx.int32_ty])
+        func_ty = ir.FunctionType(ir.VoidType(), [float_ptr_ty, float_ptr_ty, float_ptr_ty, ctx.int32_ty])
 
         custom_name = ctx.get_unique_name("is_close")
         function = ir.Function(ctx.module, func_ty, name=custom_name)
@@ -139,27 +134,23 @@ def test_helper_is_close(mode, var1, var2, rtol, atol, fp_type):
             val2 = b1.load(val2_ptr)
             close = pnlvm.helpers.is_close(ctx, b1, val1, val2, **tolerance)
             out_ptr = b1.gep(out, [index])
-            out_val = b1.select(close, val1.type(1), val1.type(0))
-            res = b1.select(close, out_ptr.type.pointee(1),
-                                   out_ptr.type.pointee(0))
+            out_val = b1.select(close, out_ptr.type.pointee(1), out_ptr.type.pointee(0))
             b1.store(out_val, out_ptr)
 
         builder.ret_void()
 
-    bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
+    bin_f = pnlvm.LLVMBinaryFunction.get(custom_name, ctype_ptr_args=(0, 1, 2))
 
-    dty = np.dtype(bin_f.byref_arg_types[0])
-    vec1 = np.atleast_1d(np.asfarray(var1, dtype=dty))
-    vec2 = np.atleast_1d(np.asfarray(var2, dtype=dty))
+    vec1 = np.atleast_1d(np.asfarray(var1, dtype=bin_f.np_arg_dtypes[0].base))
+    vec2 = np.atleast_1d(np.asfarray(var2, dtype=bin_f.np_arg_dtypes[1].base))
     assert len(vec1) == len(vec2)
     res = np.empty_like(vec2)
 
     ref = np.isclose(vec1, vec2, **tolerance)
     if mode == 'CPU':
-        ct_ty = ctypes.POINTER(bin_f.byref_arg_types[0])
-        ct_vec1 = vec1.ctypes.data_as(ct_ty)
-        ct_vec2 = vec2.ctypes.data_as(ct_ty)
-        ct_res = res.ctypes.data_as(ct_ty)
+        ct_vec1 = vec1.ctypes.data_as(bin_f.c_func.argtypes[0])
+        ct_vec2 = vec2.ctypes.data_as(bin_f.c_func.argtypes[1])
+        ct_res = res.ctypes.data_as(bin_f.c_func.argtypes[2])
 
         bin_f(ct_vec1, ct_vec2, ct_res, len(res))
     else:
@@ -169,10 +160,8 @@ def test_helper_is_close(mode, var1, var2, rtol, atol, fp_type):
 
 
 @pytest.mark.llvm
-@pytest.mark.parametrize('mode', ['CPU',
-                                  pytest.param('PTX', marks=pytest.mark.cuda)])
-@pytest.mark.parametrize('rtol,atol',
-                         [[0, 0], [None, None], [None, 100], [2, None]])
+@pytest.mark.parametrize('mode', ['CPU', pytest.helpers.cuda_param('PTX')])
+@pytest.mark.parametrize('rtol,atol', [[0, 0], [None, None], [None, 100], [2, None]])
 @pytest.mark.parametrize('var1,var2',
                          [[1, 1], [1, 100], [1,2], [-4,5], [0, -100], [-1,-2],
                           [[1,1,1,-4,0,-1], [1,100,2,5,-100,-2]]
@@ -191,8 +180,7 @@ def test_helper_all_close(mode, var1, var2, atol, rtol):
 
     with pnlvm.LLVMBuilderContext.get_current() as ctx:
         arr_ptr_ty = ir.ArrayType(ir.DoubleType(), len(vec1)).as_pointer()
-        func_ty = ir.FunctionType(ir.VoidType(), [arr_ptr_ty, arr_ptr_ty,
-                                                  ir.IntType(32).as_pointer()])
+        func_ty = ir.FunctionType(ir.VoidType(), [arr_ptr_ty, arr_ptr_ty, ir.IntType(32).as_pointer()])
 
         custom_name = ctx.get_unique_name("all_close")
         function = ir.Function(ctx.module, func_ty, name=custom_name)
@@ -205,20 +193,15 @@ def test_helper_all_close(mode, var1, var2, atol, rtol):
         builder.store(res, out)
         builder.ret_void()
 
+    bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
+    res = bin_f.np_buffer_for_arg(2)
 
     ref = np.allclose(vec1, vec2, **tolerance)
-    bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
-    if mode == 'CPU':
-        ct_ty = ctypes.POINTER(bin_f.byref_arg_types[0])
-        ct_vec1 = vec1.ctypes.data_as(ct_ty)
-        ct_vec2 = vec2.ctypes.data_as(ct_ty)
-        res = ctypes.c_uint32()
 
-        bin_f(ct_vec1, ct_vec2, ctypes.byref(res))
+    if mode == 'CPU':
+        bin_f(vec1, vec2, res)
     else:
-        res = np.array([5], dtype=np.uint32)
         bin_f.cuda_wrap_call(vec1, vec2, res)
-        res = res[0]
 
     assert np.array_equal(res, ref)
 
@@ -425,9 +408,9 @@ class TestHelperTypegetters:
     def test_helper_array_from_shape(self, ir_type, shape):
         assert ir_type == pnlvm.helpers.array_from_shape(shape, self.DOUBLE_TYPE)
 
+
 @pytest.mark.llvm
-@pytest.mark.parametrize('mode', ['CPU',
-                                  pytest.param('PTX', marks=pytest.mark.cuda)])
+@pytest.mark.parametrize('mode', ['CPU', pytest.helpers.cuda_param('PTX')])
 @pytest.mark.parametrize('op,var,expected', [
     (pnlvm.helpers.tanh, 1.0, 0.7615941559557649),
     (pnlvm.helpers.exp, 1.0, 2.718281828459045),
@@ -436,8 +419,7 @@ class TestHelperTypegetters:
     (pnlvm.helpers.log, 1.0, 0.0),
     (pnlvm.helpers.log1p, 1.0, 0.6931471805599453),
 ])
-@pytest.mark.parametrize('fp_type', [pnlvm.ir.DoubleType(), pnlvm.ir.FloatType()],
-                         ids=lambda x: str(x))
+@pytest.mark.parametrize('fp_type', [pnlvm.ir.DoubleType(), pnlvm.ir.FloatType()], ids=str)
 def test_helper_numerical(mode, op, var, expected, fp_type):
     with pnlvm.LLVMBuilderContext(fp_type) as ctx:
         func_ty = ir.FunctionType(ir.VoidType(), [ctx.float_ty.as_pointer()])
@@ -455,19 +437,18 @@ def test_helper_numerical(mode, op, var, expected, fp_type):
         builder.ret_void()
 
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
+
+    res = np.asfarray(var, dtype=bin_f.np_arg_dtypes[0])
+
     if mode == 'CPU':
-        res = bin_f.byref_arg_types[0](var)
-        bin_f(ctypes.byref(res))
-        res = res.value
+        bin_f(res)
     else:
-        res = np.ctypeslib.as_array(bin_f.byref_arg_types[0](var))
         bin_f.cuda_wrap_call(res)
 
     np.testing.assert_allclose(res, expected)
 
 @pytest.mark.llvm
-@pytest.mark.parametrize('mode', ['CPU',
-                                  pytest.param('PTX', marks=pytest.mark.cuda)])
+@pytest.mark.parametrize('mode', ['CPU', pytest.helpers.cuda_param('PTX')])
 @pytest.mark.parametrize('var,expected', [
     (np.asfarray([1,2,3]), np.asfarray([2,3,4])),
     (np.asfarray([[1,2],[3,4]]), np.asfarray([[2,3],[4,5]])),
@@ -490,24 +471,18 @@ def test_helper_elementwise_op(mode, var, expected):
 
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
 
-    # convert input to the right type
-    dt = np.dtype(bin_f.byref_arg_types[0])
-    dt = np.empty(1, dtype=dt).flatten().dtype
-    var = var.astype(dt)
+    vec = np.asfarray(var, dtype=bin_f.np_arg_dtypes[0].base)
+    res = bin_f.np_buffer_for_arg(1)
 
     if mode == 'CPU':
-        ct_vec = np.ctypeslib.as_ctypes(var)
-        res = bin_f.byref_arg_types[1]()
-        bin_f(ct_vec, ctypes.byref(res))
+        bin_f(vec, res)
     else:
-        res = np.empty_like(var)
-        bin_f.cuda_wrap_call(var, res)
+        bin_f.cuda_wrap_call(vec, res)
 
     assert np.array_equal(res, expected)
 
 @pytest.mark.llvm
-@pytest.mark.parametrize('mode', ['CPU',
-                                  pytest.param('PTX', marks=pytest.mark.cuda)])
+@pytest.mark.parametrize('mode', ['CPU', pytest.helpers.cuda_param('PTX')])
 @pytest.mark.parametrize('var1,var2,expected', [
     (np.array([1.,2.,3.]), np.array([1.,2.,3.]), np.array([2.,4.,6.])),
     (np.array([1.,2.,3.]), np.array([0.,1.,2.]), np.array([1.,3.,5.])),
@@ -537,24 +512,19 @@ def test_helper_recursive_iterate_arrays(mode, var1, var2, expected):
             a = builder.load(a_ptr)
             b = builder.load(b_ptr)
             builder.store(builder.fadd(a,b), o_ptr)
+
         builder.ret_void()
 
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
 
-    # convert input to the right type
-    dt = np.dtype(bin_f.byref_arg_types[0])
-    dt = np.empty(1, dtype=dt).flatten().dtype
-    var1 = var1.astype(dt)
-    var2 = var2.astype(dt)
+    vec1 = np.asfarray(var1, dtype=bin_f.np_arg_dtypes[0].base)
+    vec2 = np.asfarray(var2, dtype=bin_f.np_arg_dtypes[1].base)
+    res = bin_f.np_buffer_for_arg(2)
 
     if mode == 'CPU':
-        ct_vec = np.ctypeslib.as_ctypes(var1)
-        ct_vec_2 = np.ctypeslib.as_ctypes(var2)
-        res = bin_f.byref_arg_types[2]()
-        bin_f(ct_vec, ct_vec_2, ctypes.byref(res))
+        bin_f(vec1, vec2, res)
     else:
-        res = np.empty_like(var1)
-        bin_f.cuda_wrap_call(var1, var2, res)
+        bin_f.cuda_wrap_call(vec1, vec2, res)
 
     assert np.array_equal(res, expected)
 
@@ -563,8 +533,7 @@ _fp_types = [ir.DoubleType, ir.FloatType, ir.HalfType]
 
 
 @pytest.mark.llvm
-@pytest.mark.parametrize('mode', ['CPU',
-                                  pytest.param('PTX', marks=pytest.mark.cuda)])
+@pytest.mark.parametrize('mode', ['CPU', pytest.helpers.cuda_param('PTX')])
 @pytest.mark.parametrize('t1', _fp_types)
 @pytest.mark.parametrize('t2', _fp_types)
 @pytest.mark.parametrize('val', [1.0, '-Inf', 'Inf', 'NaN', 16777216, 16777217, -1.0])
@@ -584,20 +553,57 @@ def test_helper_convert_fp_type(t1, t2, mode, val):
 
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
 
-    # Convert type to numpy dtype
-    npt1, npt2 = (np.dtype(bin_f.byref_arg_types[x]) for x in (0, 1))
-    npt1, npt2 = (np.float16().dtype if x == np.uint16 else x for x in (npt1, npt2))
+    # Get the argument numpy dtype
+    np_dt1, np_dt2 = (np.dtype(bin_f.np_arg_dtypes[i]) for i in (0, 1))
 
     # instantiate value, result and reference
-    x = np.asfarray(val, dtype=npt1)
-    y = np.asfarray(np.random.rand(), dtype=npt2)
-    ref = x.astype(npt2)
+    x = np.asfarray(val, dtype=np_dt1)
+    y = bin_f.np_buffer_for_arg(1)
+    ref = x.astype(np_dt2)
 
     if mode == 'CPU':
-        ct_x = x.ctypes.data_as(bin_f.c_func.argtypes[0])
-        ct_y = y.ctypes.data_as(bin_f.c_func.argtypes[1])
-        bin_f(ct_x, ct_y)
+        bin_f(x, y)
     else:
         bin_f.cuda_wrap_call(x, y)
 
     np.testing.assert_allclose(y, ref, equal_nan=True)
+
+
+_int_types = [ir.IntType(64), ir.IntType(32), ir.IntType(16), ir.IntType(8)]
+
+
+@pytest.mark.llvm
+@pytest.mark.parametrize('mode', ['CPU', pytest.helpers.cuda_param('PTX')])
+@pytest.mark.parametrize('t1', _int_types, ids=str)
+@pytest.mark.parametrize('t2', _int_types, ids=str)
+@pytest.mark.parametrize('val', [0, 1, -1, 127, -128, 255, -32768, 32767, 65535, np.iinfo(np.int32).min, np.iinfo(np.int32).max])
+def test_helper_convert_int_type(t1, t2, mode, val):
+    with pnlvm.LLVMBuilderContext.get_current() as ctx:
+        func_ty = ir.FunctionType(ir.VoidType(), [t1.as_pointer(), t2.as_pointer()])
+        custom_name = ctx.get_unique_name("int_convert")
+        function = ir.Function(ctx.module, func_ty, name=custom_name)
+        x, y = function.args
+        block = function.append_basic_block(name="entry")
+        builder = ir.IRBuilder(block)
+
+        x_val = builder.load(x)
+        conv_x = pnlvm.helpers.convert_type(builder, x_val, y.type.pointee)
+        builder.store(conv_x, y)
+        builder.ret_void()
+
+    bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
+
+    # Get the argument numpy dtype
+    np_dt1, np_dt2 = (np.dtype(bin_f.np_arg_dtypes[i]) for i in (0, 1))
+
+    # instantiate value, result and reference
+    x = np.asarray(val).astype(np_dt1)
+    y = bin_f.np_buffer_for_arg(1)
+    ref = x.astype(np_dt2)
+
+    if mode == 'CPU':
+        bin_f(x, y)
+    else:
+        bin_f.cuda_wrap_call(x, y)
+
+    np.testing.assert_array_equal(y, ref)

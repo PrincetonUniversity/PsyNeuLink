@@ -826,13 +826,6 @@ class ShowGraph():
         rcvrs = list(processing_graph.keys())
         for rcvr in rcvrs:
 
-            # # MODIFIED 7/10 NEW:
-            # # FIX: NOT SURE WHAT THE PURPOSE OF THIS WAS, AND DOESN'T EVER SEEM TO GET CALLED:
-            # if any(n is rcvr for nested_comp in self._get_nodes(composition, context)
-            #        if isinstance(nested_comp, Composition) for n in self._get_nodes(nested_comp, context)):
-            #     continue
-            # # MODIFIED 7/10 END
-
             # If show_controller is true, objective mechanism is handled in _assign_controller_components
             if (show_controller
                 and composition.controller
