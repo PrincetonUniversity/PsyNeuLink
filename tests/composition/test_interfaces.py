@@ -500,8 +500,8 @@ class TestConnectCompositionsViaCIMS:
         mech = ProcessingMechanism()
         comp.add_node(mech)
         # instantiate custom input and output ports
-        inp = InputPort(size=2)
-        out = OutputPort(size=2)
+        inp = InputPort()
+        out = OutputPort()
 
         # NOTE: Adding ports to CIM from command line is currenlty disallowed
         # # add custom input and output ports to CIM

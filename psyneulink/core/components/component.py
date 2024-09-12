@@ -94,8 +94,8 @@ with the one exception of `prefs <Component_Prefs>`.
 * **variable** - used as the input to its `function <Component_Function>`.  Specification of the **default_variable**
   argument in the constructor for a Component determines both its format (e.g., whether its value is numeric, its
   dimensionality and shape if it is an array, etc.) as well as its `default_value <Component.defaults>` (the value
-  used when the Component is executed and no input is provided), and takes precedence over the specification of `size
-  <Component_Size>`.
+  used when the Component is executed and no input is provided).
+  It may alternatively be specified by `size <Component_Size>`.
 
   .. technical_note::
     Internally, the attribute **variable** is not directly used as input to functions, to allow for parallelization.
@@ -105,10 +105,17 @@ with the one exception of `prefs <Component_Prefs>`.
 
 .. _Component_Size:
 
-* **size** - the dimension of the `variable <Component.variable>` attribute.  The **size** argument of the
+* **size** - the numpy shape or iterable of shapes matching the
+  `variable <Component.variable>` attribute. The **size** argument of
+  the
   constructor for a Component can be used as a convenient method for specifying the `variable <Component_Variable>`,
-  attribute in which case it will be assigned as an array of zeros of the specified size.  For example,
-  setting  **size** = 3 is equivalent to setting **variable** = [0, 0, 0] and setting **size** = [4, 3] is equivalent
+  attribute in which case it will be assigned as an array of zeros of
+  the specified shape. When **size** is an iterable, each item in the
+  iterable is treated as a single shape, and the entire iterable is then
+  assigned as an array. When **size** is an integer, it is treated the
+  same as a one-item iterable containing that integer. For example,
+  setting  **size** = 3 is equivalent to setting
+  **variable** = [[0, 0, 0]] and setting **size** = [4, 3] is equivalent
   to setting **variable** = [[0, 0, 0, 0], [0, 0, 0]].
 
   .. note::
@@ -324,10 +331,9 @@ COMMENT:
       _instantiate_function method checks that the input of the Component's `function <Comonent.function>` is compatible
       with its `variable <Component.variable>`).
 
-      * `_handle_size <Component._handle_size>` converts the `variable <Component.variable>` and `size <Component.size>`
-        arguments to the correct dimensions (for `Mechanism <Mechanism>`, this is a 2D array and 1D
-        array, respectively). If **variable** is not passed as an argument, this method attempts to infer `variable
-        <Component.variable>` from the **size** argument, and vice versa if the **size** argument is missing.
+      * `_handle_size <Component._handle_size>` attempts to infer
+        `variable <Component.variable>` from the **size** argument if
+        **variable** is not passed as an argument.
         The _handle_size method then checks that the **size** and **variable** arguments are compatible.
 
       * `_instantiate_defaults <Component._instantiate_defaults>` first calls the validation methods, and then
@@ -516,6 +522,7 @@ import dill
 import graph_scheduler
 import numpy as np
 
+from psyneulink._typing import Iterable, Union
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import \
     Context, ContextError, ContextFlags, INITIALIZATION_STATUS_FLAGS, _get_time, handle_external_context
@@ -540,7 +547,7 @@ from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared, \
     is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, \
-    get_all_explicit_arguments, is_numeric, call_with_pruned_args, safe_equals, safe_len, parse_valid_identifier, try_extract_0d_array_item, contains_type
+    get_all_explicit_arguments, is_numeric, call_with_pruned_args, safe_equals, safe_len, parse_valid_identifier, try_extract_0d_array_item, contains_type, is_iterable
 from psyneulink.core.scheduling.condition import Never
 from psyneulink.core.scheduling.time import Time, TimeScale
 
@@ -808,9 +815,10 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         specifies template for the input to the Component's `function <Component.function>`, and the value used as the
         input to the Component if none is provided on execution (see `Component_Variable` for additional information).
 
-    size : int, list or np.ndarray of ints : default None
+    size : int, or Iterable of tuple or int : default None
         specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
-        if **default_variable** is specified, it takes precedence over the specification of **size** (see
+        if **default_variable** is specified, it is checked for
+        compatibility against **size** (see
         `size <Component_Size>` for additonal details).
 
     COMMENT:
@@ -839,7 +847,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     variable : 2d np.array
         see `variable <Component_Variable>`
 
-    size : int or array of ints
+    size : Union[int, Iterable[Union[int, tuple]]]
         see `size <Component_Size>`
 
     function : Function, function or method
@@ -1105,7 +1113,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     def __init__(self,
                  default_variable,
                  param_defaults,
-                 size=NotImplemented,  # 7/5/17 CW: this is a hack to check whether the user has passed in a size arg
+                 size=None,
                  function=None,
                  name=None,
                  reset_stateful_function_when=None,
@@ -1649,18 +1657,55 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 None otherwise
         """
         default_variable = self._parse_arg_variable(default_variable)
+        default_variable = self._handle_size(size, default_variable)
 
-        if default_variable is None:
-            default_variable = self._handle_size(size, default_variable)
-
-            if default_variable is None or default_variable is NotImplemented:
-                return None
-            else:
-                self._variable_shape_flexibility = self._specified_variable_shape_flexibility
+        if default_variable is None or default_variable is NotImplemented:
+            return None
         else:
             self._variable_shape_flexibility = self._specified_variable_shape_flexibility
 
         return convert_to_np_array(default_variable, dimension=1)
+
+    def _parse_size(
+        self, size: Union[int, Iterable[Union[int, tuple]]]
+    ) -> np.ndarray:
+        """
+        Returns the equivalent 'variable' array specified by **size**
+
+        Args:
+            size (Union[int, Iterable[Union[int, tuple]]])
+
+        Returns:
+            np.ndarray
+        """
+        def get_size_elem(s, idx=None):
+            try:
+                return np.zeros(s)
+            except (TypeError, ValueError) as e:
+                if idx is not None:
+                    idx_str = f' at index {idx}'
+                else:
+                    idx_str = ''
+
+                raise ComponentError(
+                    f'Invalid size argument of {self}{idx_str}. size must be a'
+                    ' valid numpy shape or a list of shapes for use with'
+                    f' numpy.zeros: {e}'
+                ) from e
+
+        if not is_iterable(size, exclude_str=True):
+            variable_from_size = np.asarray([get_size_elem(size)])
+        else:
+            if len(size) == 0:
+                raise ComponentError(
+                    f'Invalid size argument of {self}. size must not be an empty list'
+                )
+            variable_from_size = []
+            for i, s in enumerate(size):
+                variable_from_size.append(get_size_elem(s, i))
+            variable_from_size = convert_all_elements_to_np_array(variable_from_size)
+
+        return variable_from_size
 
     # ELIMINATE SYSTEM
     # IMPLEMENTATION NOTE: (7/7/17 CW) Due to System and Process being initialized with size at the moment (which will
@@ -1668,14 +1713,12 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     # through an override, when Composition is done. For now, only Port.py overwrites _handle_size().
     def _handle_size(self, size, variable):
         """If variable is None, _handle_size tries to infer variable based on the **size** argument to the
-            __init__() function. This method is overwritten in subclasses like Mechanism and Port.
-            If self is a Mechanism, it converts variable to a 2D array, (for a Mechanism, variable[i] represents
-            the input from the i-th InputPort). If self is a Port, variable is a 1D array and size is a length-1 1D
-            array. It performs some validations on size and variable as well. This function is overridden in Port.py.
-            If size is NotImplemented (usually in the case of Projections/Functions), then this function passes without
-            doing anything. Be aware that if size is NotImplemented, then variable is never cast to a particular shape.
+            __init__() function. If size is None (usually in the case of
+            Projections/Functions), then this function passes without
+            doing anything. If both size and variable are not None, a
+            ComponentError is thrown if they are not compatible.
         """
-        if size is not NotImplemented:
+        if size is not None:
             self._variable_shape_flexibility = self._specified_variable_shape_flexibility
             # region Fill in and infer variable and size if they aren't specified in args
             # if variable is None and size is None:
@@ -1683,109 +1726,52 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             # 6/30/17 now handled in the individual subclasses' __init__() methods because each subclass has different
             # expected behavior when variable is None and size is None.
 
-            def checkAndCastInt(x):
-                if not isinstance(x, numbers.Number):
-                    raise ComponentError("An element ({}) in size is not a number.".format(x))
-                if x < 1:
-                    raise ComponentError("An element ({}) in size is not a positive number.".format(x))
-                try:
-                    int_x = int(x)
-                except:
-                    raise ComponentError(
-                        "Failed to convert an element ({}) in size argument for {} {} to an integer. size "
-                        "should be a number, or iterable of numbers, which are integers or "
-                        "can be converted to integers.".format(x, type(self), self.name))
-                if int_x != x:
-                    if hasattr(self, 'prefs') and hasattr(self.prefs, VERBOSE_PREF) and self.prefs.verbosePref:
-                        warnings.warn("When an element ({}) in the size argument was cast to "
-                                      "integer, its value changed to {}.".format(x, int_x))
-                return int_x
-
-            if variable is not None:
-                variable = np.array(variable)
-                if variable.dtype == object:
-                    # CAVEAT: assuming here that object dtype implies there are list objects (i.e. array with
-                    # different sized arrays/lists inside like [[0, 1], [2, 3, 4]]), even though putting a None
-                    # value in the array will give object dtype. This case doesn't really make sense in our
-                    # context though, so ignoring this case in the interest of quickly fixing 3d variable behavior
-                    variable = np.atleast_1d(variable)
-                else:
-                    variable = np.atleast_2d(variable)
-
-                variable = convert_all_elements_to_np_array(variable)
-
-            try:
-                if size is not None:
-                    size = np.atleast_1d(size)
-                    if len(np.shape(size)) > 1:  # number of dimensions of size > 1
-                        if hasattr(self, 'prefs') and hasattr(self.prefs, VERBOSE_PREF) and self.prefs.verbosePref:
-                            warnings.warn(
-                                "size had more than one dimension (size had {} dimensions), so only the first "
-                                "element of its highest-numbered axis will be used".format(len(np.shape(size))))
-                        while len(np.shape(size)) > 1:  # reduce the dimensions of size
-                            size = size[0]
-            except:
-                raise ComponentError("Failed to convert size (of type {}) to a 1D array.".format(type(size)))
-
-            if size is not None:
-                size = np.array(list(map(checkAndCastInt, size)))  # convert all elements of size to int
-
             # implementation note: for good coding practices, perhaps add setting to enable easy change of the default
             # value of variable (though it's an unlikely use case), which is an array of zeros at the moment
-            if variable is None and size is not None:
-                try:
-                    variable = []
-                    for s in size:
-                        variable.append(np.zeros(s))
-                    variable = convert_to_np_array(variable)
-                # TODO: fix bare except
-                except:
-                    raise ComponentError("variable (possibly default_variable) was not specified, but PsyNeuLink "
-                                         "was unable to infer variable from the size argument, {}. size should be"
-                                         " an integer or an array or list of integers. Either size or "
-                                         "variable must be specified.".format(size))
 
-            # the two regions below (creating size if it's None and/or expanding it) are probably obsolete (7/7/17 CW)
+            def conflict_error(reason=None):
+                if reason is not None:
+                    reason_str = f': {reason}'
+                else:
+                    reason_str = ''
 
-            if size is None and variable is not None:
-                size = []
-                try:
-                    for input_vector in variable:
-                        size.append(len(input_vector))
-                    size = np.array(size)
-                except:
-                    raise ComponentError(
-                            "{}: size was not specified, and unable to infer it from the variable argument ({}) "
-                            "-- it can be an array, list, a 2D array, a list of arrays, array of lists, etc. ".
-                                format(self.name, variable))
-            # endregion
+                return ComponentError(
+                    f'size and default_variable arguments of {self} conflict{reason_str}'
+                )
 
-            if size is not None and variable is not None:
-                if len(size) == 1 and len(variable) > 1:
-                    new_size = np.empty(len(variable))
-                    new_size.fill(size[0])
-                    size = new_size
+            variable_from_size = self._parse_size(size)
 
-            # the two lines below were used when size was a param and are likely obsolete (7/7/17 CW)
-            # param_defaults['size'] = size  # 7/5/17 potentially buggy? Not sure (CW)
-            # self.user_params_for_instantiation['size'] = None  # 7/5/17 VERY HACKY: See Changyan's Notes on this.
+            if variable is None:
+                return variable_from_size
 
-            # Both variable and size are specified
-            if variable is not None and size is not None:
-                # If they conflict, give warning
-                if len(size) != len(variable):
-                    if hasattr(self, 'prefs') and hasattr(self.prefs, VERBOSE_PREF) and self.prefs.verbosePref:
-                        warnings.warn("The size arg of {} conflicts with the length "
-                                      "of its variable arg ({}) at element {}: variable takes precedence".
-                                      format(self.name, size, variable))
+            if is_iterable(size, exclude_str=True):
+                assert len(size) == len(variable_from_size)
+
+                if variable.ndim == 0:
+                    raise conflict_error(
+                        'size gives a list of items but default_variable is 0d'
+                    )
+                elif len(size) != len(variable):
+                    raise conflict_error(
+                        f'len(size) is {len(size)};'
+                        f' len(default_variable) is {len(variable)}'
+                    )
                 else:
                     for i in range(len(size)):
-                        if size[i] != len(variable[i]):
-                            if hasattr(self, 'prefs') and hasattr(self.prefs, VERBOSE_PREF) and self.prefs.verbosePref:
-                                warnings.warn("The size arg of {} ({}) conflicts with the length "
-                                              "of its variable arg ({}) at element {}: variable takes precedence".
-                                              format(self.name, size[i], variable[i], i))
+                        if variable_from_size[i].shape != variable[i].shape:
+                            raise conflict_error(
+                                f'size[{i}].shape: {variable_from_size[i].shape};'
+                                f' default_variable[{i}].shape: {variable[i].shape}'
+                            )
+            else:
+                if variable_from_size.shape != variable.shape:
+                    raise conflict_error(
+                        f'size.shape: {variable_from_size.shape};'
+                        f' default_variable.shape: {variable.shape}'
+                    )
 
+        # if variable_from_size is created an error has not been thrown
+        # so far, variable is equal
         return variable
 
     def _get_allowed_arguments(self) -> set:

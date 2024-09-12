@@ -999,48 +999,6 @@ class TestTransferMechanismSize:
     #     np.testing.assert_allclose(val, [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
 
     # ------------------------------------------------------------------------------------------------
-    # TEST 5
-    # size = float, check if variable is an array of zeros
-
-    @pytest.mark.mechanism
-    @pytest.mark.transfer_mechanism
-    def test_transfer_mech_size_float_inputs_check_var(self):
-        T = TransferMechanism(
-            name='T',
-            size=4.0,
-        )
-        np.testing.assert_array_equal(T.defaults.variable, [[0, 0, 0, 0]])
-        assert len(T.size == 1) and T.size[0] == 4.0 and isinstance(T.size[0], np.integer)
-
-    # ------------------------------------------------------------------------------------------------
-    # TEST 6
-    # size = float, variable = list of ints
-
-    @pytest.mark.mechanism
-    @pytest.mark.transfer_mechanism
-    def test_transfer_mech_size_float_inputs_ints(self):
-        T = TransferMechanism(
-            name='T',
-            size=4.0
-        )
-        val = T.execute([10, 10, 10, 10])
-        np.testing.assert_array_equal(val, [[10.0, 10.0, 10.0, 10.0]])
-
-    # ------------------------------------------------------------------------------------------------
-    # TEST 7
-    # size = float, variable = list of floats
-
-    @pytest.mark.mechanism
-    @pytest.mark.transfer_mechanism
-    def test_transfer_mech_size_float_inputs_floats(self):
-        T = TransferMechanism(
-            name='T',
-            size=4.0
-        )
-        val = T.execute([10.0, 10.0, 10.0, 10.0])
-        np.testing.assert_array_equal(val, [[10.0, 10.0, 10.0, 10.0]])
-
-    # ------------------------------------------------------------------------------------------------
     # TEST 8
     # size = float, variable = list of functions
 
@@ -1069,18 +1027,6 @@ class TestTransferMechanismSize:
         assert len(T.defaults.variable) == 3 and len(T.defaults.variable[0]) == 2 and len(T.defaults.variable[1]) == 3 and len(T.defaults.variable[2]) == 4
 
     # ------------------------------------------------------------------------------------------------
-    # TEST 10
-    # size = list of floats, check that variable is correct
-
-    @pytest.mark.mechanism
-    @pytest.mark.transfer_mechanism
-    def test_transfer_mech_size_list_of_floats(self):
-        T = TransferMechanism(
-            name='T',
-            size=[2., 3., 4.]
-        )
-        assert len(T.defaults.variable) == 3 and len(T.defaults.variable[0]) == 2 and len(T.defaults.variable[1]) == 3 and len(T.defaults.variable[2]) == 4
-
     # note that this output under the Linear function is useless/odd, but the purpose of allowing this configuration
     # is for possible user-defined functions that do use unusual shapes.
 
@@ -1089,7 +1035,7 @@ class TestTransferMechanismSize:
     def test_transfer_mech_size_var_both_lists(self):
         T = TransferMechanism(
             name='T',
-            size=[2., 3.],
+            size=[2, 3],
             default_variable=[[1, 2], [3, 4, 5]]
         )
         assert len(T.defaults.variable) == 2
@@ -1103,13 +1049,14 @@ class TestTransferMechanismSize:
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_size_scalar_var_2d(self):
-        T = TransferMechanism(
-            name='T',
-            size=2,
-            default_variable=[[1, 2], [3, 4]]
-        )
-        np.testing.assert_array_equal(T.defaults.variable, [[1, 2], [3, 4]])
-        assert len(T.size) == 2 and T.size[0] == 2 and T.size[1] == 2
+        with pytest.raises(
+            ComponentError, match=r'size and default_variable arguments.*conflict.*'
+        ):
+            TransferMechanism(
+                name='T',
+                size=2,
+                default_variable=[[1, 2], [3, 4]]
+            )
 
     # ------------------------------------------------------------------------------------------------
     # TEST 13
@@ -1131,14 +1078,14 @@ class TestTransferMechanismSize:
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_var_1D_size_wrong(self):
-        T = TransferMechanism(
-            name='T',
-            default_variable=[1, 2, 3, 4],
-            size=2
-        )
-        np.testing.assert_array_equal(T.defaults.variable, [[1, 2, 3, 4]])
-        val = T.execute([10.0, 10.0, 10.0, 10.0])
-        np.testing.assert_array_equal(val, [[10.0, 10.0, 10.0, 10.0]])
+        with pytest.raises(
+            ComponentError, match=r'size and default_variable arguments.*conflict.*'
+        ):
+            TransferMechanism(
+                name='T',
+                default_variable=[1, 2, 3, 4],
+                size=2
+            )
 
     # ------------------------------------------------------------------------------------------------
     # TEST 15
@@ -1147,14 +1094,14 @@ class TestTransferMechanismSize:
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_var_1D_size_wrong_2(self):
-        T = TransferMechanism(
-            name='T',
-            default_variable=[1, 2, 3, 4],
-            size=[2, 3, 4]
-        )
-        np.testing.assert_array_equal(T.defaults.variable, [[1, 2, 3, 4]])
-        val = T.execute([10.0, 10.0, 10.0, 10.0])
-        np.testing.assert_array_equal(val, [[10.0, 10.0, 10.0, 10.0]])
+        with pytest.raises(
+            ComponentError, match=r'size and default_variable arguments.*conflict.*'
+        ):
+            TransferMechanism(
+                name='T',
+                default_variable=[1, 2, 3, 4],
+                size=[2, 3, 4]
+            )
 
     # ------------------------------------------------------------------------------------------------
     # TEST 16
@@ -1163,14 +1110,14 @@ class TestTransferMechanismSize:
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_size_var_incompatible1(self):
-        T = TransferMechanism(
-            name='T',
-            size=2,
-            default_variable=[[1, 2], [3, 4, 5]]
-        )
-        assert len(T.defaults.variable) == 2
-        np.testing.assert_array_equal(T.defaults.variable[0], [1, 2])
-        np.testing.assert_array_equal(T.defaults.variable[1], [3, 4, 5])
+        with pytest.raises(
+            ComponentError, match=r'size and default_variable arguments.*conflict.*'
+        ):
+            TransferMechanism(
+                name='T',
+                size=2,
+                default_variable=[[1, 2], [3, 4, 5]]
+            )
 
     # ------------------------------------------------------------------------------------------------
     # TEST 17
@@ -1179,32 +1126,18 @@ class TestTransferMechanismSize:
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_size_var_incompatible2(self):
-        T = TransferMechanism(
-            name='T',
-            size=[2, 2],
-            default_variable=[[1, 2], [3, 4, 5]]
-        )
-        assert len(T.defaults.variable) == 2
-        np.testing.assert_array_equal(T.defaults.variable[0], [1, 2])
-        np.testing.assert_array_equal(T.defaults.variable[1], [3, 4, 5])
+        with pytest.raises(
+            ComponentError, match=r'size and default_variable arguments.*conflict.*'
+        ):
+            TransferMechanism(
+                name='T',
+                size=[2, 2],
+                default_variable=[[1, 2], [3, 4, 5]]
+            )
 
     # ------------------------------------------------------------------------------------------------
 
     # INVALID INPUTS
-
-    # ------------------------------------------------------------------------------------------------
-    # TEST 1
-    # size = 0, check less-than-one error
-
-    @pytest.mark.mechanism
-    @pytest.mark.transfer_mechanism
-    def test_transfer_mech_size_zero(self):
-        with pytest.raises(ComponentError) as error_text:
-            T = TransferMechanism(
-                name='T',
-                size=0,
-            )
-        assert "is not a positive number" in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 2
@@ -1216,9 +1149,9 @@ class TestTransferMechanismSize:
         with pytest.raises(ComponentError) as error_text:
             T = TransferMechanism(
                 name='T',
-                size=-1.0,
+                size=-1,
             )
-        assert "is not a positive number" in str(error_text.value)
+        assert "negative dimensions" in str(error_text.value)
 
     # this test below and the (currently commented) test immediately after it _may_ be deprecated if we ever fix
     # warnings to be no longer fatal. At the time of writing (6/30/17, CW), warnings are always fatal.

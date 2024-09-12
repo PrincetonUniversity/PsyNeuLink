@@ -1222,12 +1222,15 @@ class Mechanism_Base(Mechanism):
         of its `function <Mechanism_Base.function>` if those are not specified.  If it is not specified, then a
         subclass-specific default is assigned (usually [[0]]).
 
-    size : int, list or np.ndarray of ints : default None
+    size : int, or Iterable of tuples or ints : default None
         specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
-        if **default_variable** is specified, it takes precedence over the specification of **size**.
+        if **default_variable** is specified, it must be equivalent to
+        **size**.
         For example, the following Mechanisms are equivalent::
             my_mech = ProcessingMechanism(size = [3, 2])
             my_mech = ProcessingMechanism(default_variable = [[0, 0, 0], [0, 0]])
+        When specified as an iterable, each element of **size** is used
+        as the size of the corresponding InputPort.
 
     input_ports : str, list, dict, or np.ndarray : default None
         specifies the InputPorts for the Mechanism; if it is not specified, a single InputPort is created

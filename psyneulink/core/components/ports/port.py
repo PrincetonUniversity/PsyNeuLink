@@ -1124,58 +1124,6 @@ class Port_Base(Port):
         if context.source == ContextFlags.COMMAND_LINE:
             owner.add_ports([self])
 
-    def _handle_size(self, size, variable):
-        """Overwrites the parent method in Component.py, because the variable of a Port
-            is generally 1D, rather than 2D as in the case of Mechanisms
-        """
-        if size is not NotImplemented:
-
-            def checkAndCastInt(x):
-                if not isinstance(x, numbers.Number):
-                    raise PortError("Size ({}) is not a number.".format(x))
-                if x < 1:
-                    raise PortError("Size ({}) is not a positive number.".format(x))
-                try:
-                    int_x = int(x)
-                except:
-                    raise PortError(
-                        "Failed to convert size argument ({}) for {} {} to an integer. For Ports, size "
-                        "should be a number, which is an integer or can be converted to integer.".
-                        format(x, type(self), self.name))
-                if int_x != x:
-                    if hasattr(self, 'prefs') and hasattr(self.prefs, VERBOSE_PREF) and self.prefs.verbosePref:
-                        warnings.warn("When size ({}) was cast to integer, its value changed to {}.".format(x, int_x))
-                return int_x
-
-            # region Convert variable to a 1D array, cast size to an integer
-            if size is not None:
-                size = checkAndCastInt(size)
-            try:
-                if variable is not None:
-                    variable = np.atleast_1d(variable)
-            except:
-                raise PortError("Failed to convert variable (of type {}) to a 1D array.".format(type(variable)))
-            # endregion
-
-            # region if variable is None and size is not None, make variable a 1D array of zeros of length = size
-            if variable is None and size is not None:
-                try:
-                    variable = np.zeros(size)
-                except:
-                    raise ComponentError("variable (perhaps default_variable) was not specified, but PsyNeuLink "
-                                         "was unable to infer variable from the size argument, {}. size should be"
-                                         " an integer or able to be converted to an integer. Either size or "
-                                         "variable must be specified.".format(size))
-            #endregion
-
-            if variable is not None and size is not None:  # try tossing this "if" check
-                # If they conflict, raise exception
-                if size != len(variable):
-                    raise PortError("The size arg of {} ({}) conflicts with the length of its variable arg ({})".
-                                     format(self.name, size, variable))
-
-        return variable
-
     def _validate_variable(self, variable, context=None):
         """Validate variable and return validated variable
 

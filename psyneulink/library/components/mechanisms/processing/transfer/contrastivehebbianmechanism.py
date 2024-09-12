@@ -1032,7 +1032,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             self.target_start = 0
             self._target_included = False
         self.target_end = self.target_start + target_size
-        size = self.recurrent_size
 
         default_variable = [np.zeros(input_size), np.zeros(self.recurrent_size)]
         # Set InputPort sizes in _instantiate_input_ports,
@@ -1059,7 +1058,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         super().__init__(
             default_variable=default_variable,
-            size=size,
             input_ports=input_ports,
             combination_function=combination_function,
             function=function,

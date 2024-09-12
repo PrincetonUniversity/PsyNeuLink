@@ -529,25 +529,6 @@ def test_DDM_size_int_inputs():
 # INVALID INPUTS
 
 # ------------------------------------------------------------------------------------------------
-# TEST 1
-# size = 0, check less-than-one error
-
-
-def test_DDM_mech_size_zero():
-    with pytest.raises(ComponentError) as error_text:
-        T = DDM(
-            name='DDM',
-            size=0,
-            function=DriftDiffusionIntegrator(
-                noise=0.0,
-                rate=-5.0,
-                time_step_size=1.0
-            ),
-            execute_until_finished=False,
-        )
-    assert "is not a positive number" in str(error_text.value)
-
-# ------------------------------------------------------------------------------------------------
 # TEST 2
 # size = -1.0, check less-than-one error
 
@@ -556,7 +537,7 @@ def test_DDM_mech_size_negative_one():
     with pytest.raises(ComponentError) as error_text:
         T = DDM(
             name='DDM',
-            size=-1.0,
+            size=-1,
             function=DriftDiffusionIntegrator(
                 noise=0.0,
                 rate=-5.0,
@@ -564,7 +545,7 @@ def test_DDM_mech_size_negative_one():
             ),
             execute_until_finished=False,
         )
-    assert "is not a positive number" in str(error_text.value)
+    assert "negative dimensions" in str(error_text.value)
 
 # ------------------------------------------------------------------------------------------------
 # TEST 3
@@ -575,7 +556,7 @@ def test_DDM_size_too_large():
     with pytest.raises(DDMError) as error_text:
         T = DDM(
             name='DDM',
-            size=3.0,
+            size=3,
             function=DriftDiffusionIntegrator(
                 noise=0.0,
                 rate=-5.0,
