@@ -238,7 +238,7 @@ class TestRecurrentTransferMechanismMatrix:
         np.testing.assert_allclose(val, [[10., 10., 10., 10.]])
         np.testing.assert_allclose(R.recurrent_projection.matrix.base, get_matrix(matrix, R.size[0], R.size[0]))
 
-    @pytest.mark.parametrize("matrix", [np.matrix('1 2; 3 4'), np.array([[1, 2], [3, 4]]), [[1, 2], [3, 4]], '1 2; 3 4'])
+    @pytest.mark.parametrize("matrix", [pnl.array_from_matrix_string('1 2; 3 4'), np.array([[1, 2], [3, 4]]), [[1, 2], [3, 4]], '1 2; 3 4'])
     def test_recurrent_mech_matrix_other_spec(self, matrix):
 
         R = RecurrentTransferMechanism(
@@ -820,7 +820,7 @@ class TestRecurrentTransferMechanismInComposition:
                                        )
         # Test that all of these are the same:
         np.testing.assert_allclose(
-            R.recurrent_projection.mod_matrix,
+            R.recurrent_projection.matrix.modulated,
             [
                 [0.1,  0.1, 0.1, 0.1],
                 [0.1, 0.1, 0.1, 0.1],
@@ -880,8 +880,8 @@ class TestRecurrentTransferMechanismInComposition:
                     [1.1, 0., 1.1, 1.1],
                     [1.1, 1.1, 0., 1.1],
                     [1.1, 1.1, 1.1, 0.]]
-        np.testing.assert_allclose(R.recurrent_projection.mod_matrix, matrix_1)
-        print(R.recurrent_projection.mod_matrix)
+        np.testing.assert_allclose(R.recurrent_projection.get_mod_matrix(c), matrix_1)
+        print(R.recurrent_projection.get_mod_matrix(c))
         R.learning_rate.base = 0.9
 
         assert R.learning_rate.base == 0.9
@@ -892,8 +892,8 @@ class TestRecurrentTransferMechanismInComposition:
                     [1.911125, 0., 1.911125, 1.911125],
                     [1.911125, 1.911125, 0., 1.911125],
                     [1.911125, 1.911125, 1.911125, 0.]]
-        # np.testing.assert_allclose(R.recurrent_projection.mod_matrix, matrix_2)
-        print(R.recurrent_projection.mod_matrix)
+        # np.testing.assert_allclose(R.recurrent_projection.get_mod_matrix(c), matrix_2)
+        print(R.recurrent_projection.get_mod_matrix(c))
 
     def test_learning_of_orthognal_inputs(self):
         size=4
@@ -1135,6 +1135,8 @@ class TestCustomCombinationFunction:
         C.run(inputs={I1: [[1.0]], I2: [[1.0]]}, num_trials=7, execution_mode=comp_mode)
 
         np.testing.assert_allclose(exp, C.results)
+        assert I1.has_initializers == has_initializers1
+        assert I2.has_initializers == has_initializers2
 
     @pytest.mark.composition
     @pytest.mark.integrator_mechanism

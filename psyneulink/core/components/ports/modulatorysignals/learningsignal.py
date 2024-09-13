@@ -44,7 +44,7 @@ the MappingProjection(s) being learned.
 .. _LearningSignal_Creation:
 
 Creating a LearningSignal
-------------------------
+-------------------------
 
 A LearningSignal is created automatically whenever a `MappingProjection` is `specified for learning
 <LearningMechanism_Creation>` and the Projection belongs to the same `Composition <Composition>` as the
@@ -167,7 +167,7 @@ The `function <LearningSignal.function>` of a LearningSignal converts the `learn
 this is an identity function (`Linear` with **slope**\\ =1 and **intercept**\\ =0), that simply uses the
 LearningMechanism's `learning_signal <LearningMechanism.learning_signal>` as its own.  However, the LearningSignal's
 `function <LearningSignal.function>` can be assigned another `TransferFunction`, or any other function that takes a
-scalar, ndarray or matrix and returns a similar value.
+scalar or ndarray and returns a similar value.
 
 .. note:: The `index <OutputPort.OutputPort.index>` and `assign <OutputPort.OutputPort.assign>`
         attributes of a LearningSignal are automatically assigned and should not be modified.
@@ -292,7 +292,7 @@ class LearningSignal(ModulatorySignal):
         result of the LearningSignal's `function <LearningSignal.function>`; same as its
         `learning_signal <LearningSignal.learning_signal>`.
 
-    learning_signal : number, ndarray or matrix
+    learning_signal : number or ndarray
         result of the LearningSignal's `function <LearningSignal.function>`; same as its `value <LearningSignal.value>`.
 
     efferents : [List[LearningProjection]]

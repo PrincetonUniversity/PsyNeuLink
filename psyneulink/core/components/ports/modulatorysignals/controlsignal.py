@@ -21,7 +21,7 @@ Contents:
       - `ControlSignal_Modulation`
       - `ControlSignal_Allocation_and_Intensity`
       - `ControlSignal_Costs`
-  * `ControlSignal_Execution`d
+  * `ControlSignal_Execution`
   * `ControlSignal_Examples`
   * `ControlSignal_Class_Reference`
 
@@ -382,7 +382,7 @@ the `intensity <ControlSignal.intensity>` of which is also ``3``, the value of t
 as shown below::
 
     >>> comp.run(inputs={mech:[3]}, num_trials=2)
-    [array([3.])]
+    array([[3.]])
     >>> ctl_mech_A.control_signals[0].intensity_cost
     array([8103.08392758])
 
@@ -1090,7 +1090,7 @@ class ControlSignal(ModulatorySignal):
 
         # COMPUTE COST(S)
         # Initialize as backups for cost function that are not enabled
-        intensity_cost = adjustment_cost = duration_cost = 0
+        intensity_cost = adjustment_cost = duration_cost = np.zeros_like(self.defaults.value)
 
         if CostFunctions.INTENSITY & cost_options:
             intensity_cost = self.intensity_cost_function(intensity, context)
@@ -1108,9 +1108,10 @@ class ControlSignal(ModulatorySignal):
             duration_cost = self.duration_cost_function(self.parameters.cost._get(context), context=context)
             self.parameters.duration_cost._set(duration_cost, context)
 
-        all_costs = [intensity_cost, adjustment_cost, duration_cost]
+        # add second dimension because Reduce function uses axis=1
+        all_costs = [[intensity_cost, adjustment_cost, duration_cost]]
 
         # Combine the costs. Convert to a float because reRedcu
-        combined_cost = self.combine_costs_function(all_costs, context=context).astype(float)
+        combined_cost = float(self.combine_costs_function(all_costs, context=context))
 
         return max(0.0, combined_cost)

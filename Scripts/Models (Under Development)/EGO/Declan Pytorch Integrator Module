@@ -1,0 +1,55 @@
+""" Model preparation functions """
+def prep_recurrent_network(rnet, state_d, persistence=-0.6):
+    with torch.no_grad():
+        rnet.state_to_hidden.weight.copy_(torch.eye(state_d, dtype=torch.float))
+        rnet.state_to_hidden.bias.zero_()
+        rnet.hidden_to_hidden.weight.zero_()
+        rnet.hidden_to_hidden.bias.zero_()
+        rnet.state_to_hidden_wt.weight.zero_()
+        rnet.state_to_hidden_wt.bias.copy_(torch.ones((len(rnet.state_to_hidden_wt.bias),), dtype=torch.float) * persistence)
+        rnet.hidden_to_hidden_wt.weight.zero_()
+        rnet.hidden_to_hidden_wt.bias.zero_()
+        # Set hidden to context weights as an identity matrix.
+        rnet.hidden_to_context.weight.copy_(torch.eye(state_d, dtype=torch.float))
+        rnet.hidden_to_context.bias.zero_()
+
+    # Set requires_grad to True for hidden_to_context.weight before freezing other parameters
+    rnet.hidden_to_context.weight.requires_grad = True
+    rnet.hidden_to_context.bias.requires_grad = True
+
+    # Freeze recurrent weights to stabilize training
+    for name, p in rnet.named_parameters():
+        if 'hidden_to_context' not in name:
+            p.requires_grad = False
+        else:
+            p.requires_grad = True
+    return rnet
+
+class RecurrentContextModule(nn.Module):
+    """
+    An Recurrent Neural Network module based on an architecture similar to the minimally gated recurrent unit.
+    """
+
+    def __init__(self, n_inputs, n_hidden, n_outputs) -> None:
+        super().__init__()
+        self.state_to_hidden = nn.Linear(n_inputs,n_hidden)
+        self.hidden_to_hidden = nn.Linear(n_hidden,n_hidden)
+        self.state_to_hidden_wt = nn.Linear(n_inputs,n_hidden)
+        self.hidden_to_hidden_wt = nn.Linear(n_hidden,n_hidden)
+        self.hidden_to_context = nn.Linear(n_hidden,n_outputs)
+
+        self.n_hidden_units = n_hidden
+        self.hidden_state = torch.zeros((self.n_hidden_units,),dtype=torch.float)
+        self.update_hidden_state = True
+
+        self.hidden_to_hidden_wt.weight.requires_grad = True
+        self.hidden_to_hidden_wt.bias.requires_grad = True
+
+    def forward(self, x: torch.tensor) -> torch.tensor:
+        h_prev = self.hidden_state
+        h_update = torch.tanh(self.state_to_hidden(x)+self.hidden_to_hidden(h_prev))
+        h_weight = torch.sigmoid(self.state_to_hidden_wt(x)+self.hidden_to_hidden_wt(h_prev))
+        h_new = h_weight*h_prev + (1-h_weight)*h_update
+        if self.update_hidden_state:
+            self.hidden_state = h_new.detach().clone()
+        return self.hidden_to_context(h_new)

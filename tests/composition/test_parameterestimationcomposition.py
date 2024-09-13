@@ -1,7 +1,10 @@
 import numpy as np
+import optuna
 import pandas as pd
 import pytest
-import optuna
+import scipy
+
+from packaging import version as pversion
 
 import psyneulink as pnl
 
@@ -114,6 +117,7 @@ run_input_test_args = [
 ]
 
 
+@pytest.mark.composition
 @pytest.mark.parametrize("inputs_dict, error_msg", run_input_test_args)
 def test_pec_run_input_formats(inputs_dict, error_msg):
     if error_msg:
@@ -124,16 +128,32 @@ def test_pec_run_input_formats(inputs_dict, error_msg):
         pec.run(inputs=inputs_dict)
 
 
+# SciPy changed their implementation of differential evolution and the way it selects
+# samples to evaluate in 1.12 [0,1], and then again in 1.14 [2,3], leading to slightly
+# different results
+#
+# [0] https://docs.scipy.org/doc/scipy/release/1.12.0-notes.html#scipy-optimize-improvements
+# [1] https://github.com/scipy/scipy/pull/18496
+# [2] https://docs.scipy.org/doc/scipy/release/1.14.0-notes.html#scipy-optimize-improvements
+# [3] https://github.com/scipy/scipy/pull/20677
+if pversion.parse(scipy.version.version) >= pversion.parse('1.14.0'):
+    expected_differential_evolution = [0.010113000942356953]
+elif pversion.parse(scipy.version.version) >= pversion.parse('1.12.0'):
+    expected_differential_evolution = [0.010074123395259815]
+else:
+    expected_differential_evolution = [0.010363518438648106]
+
+@pytest.mark.composition
 @pytest.mark.parametrize(
-    "opt_method, result",
+    "opt_method, expected_result",
     [
-        ("differential_evolution", [0.010363518438648106]),
+        ("differential_evolution", expected_differential_evolution),
         (optuna.samplers.RandomSampler(seed=0), [0.01]),
         (optuna.samplers.CmaEsSampler(seed=0), [0.01]),
     ],
-    ids=["differential_evolultion", "optuna_random_sampler", "optuna_cmaes_sampler"],
+    ids=["differential_evolution", "optuna_random_sampler", "optuna_cmaes_sampler"],
 )
-def test_parameter_optimization_ddm(func_mode, opt_method, result):
+def test_parameter_optimization_ddm(func_mode, opt_method, expected_result):
     """Test parameter optimization of a DDM in integrator mode"""
 
     if func_mode == "Python":
@@ -208,14 +228,13 @@ def test_parameter_optimization_ddm(func_mode, opt_method, result):
     trial_inputs[0] = np.abs(trial_inputs[0])
     trial_inputs[-1] = np.abs(trial_inputs[-1])
 
-    inputs_dict = {decision: trial_inputs}
+    pec.run(inputs={comp: trial_inputs})
 
-    ret = pec.run(inputs={comp: trial_inputs})
-
-    np.testing.assert_allclose(pec.optimized_parameter_values, result)
+    np.testing.assert_allclose(pec.optimized_parameter_values, expected_result)
 
 
 # func_mode is a hacky wa to get properly marked; Python, LLVM, and CUDA
+@pytest.mark.composition
 def test_parameter_estimation_ddm_mle(func_mode):
     """Test parameter estimation of a DDM in integrator mode with MLE."""
 
@@ -318,6 +337,7 @@ def test_parameter_estimation_ddm_mle(func_mode):
     )
 
 
+@pytest.mark.composition
 def test_pec_bad_outcome_var_spec():
     """
     Tests that exception is raised when outcome variables specifies and output port that doesn't exist on the
@@ -359,7 +379,7 @@ def test_pec_bad_outcome_var_spec():
         ("threshold", decision): np.linspace(0.5, 1.0, 1000),
     }
 
-    with pytest.raises(ValueError) as ex:
+    with pytest.raises(KeyError) as ex:
         pnl.ParameterEstimationComposition(
             name="pec",
             nodes=[comp],
@@ -389,6 +409,7 @@ def test_pec_bad_outcome_var_spec():
     assert "The number of columns in the data to fit must match" in str(ex)
 
 
+@pytest.mark.composition
 def test_pec_controller_specified():
     """Test that an exception is raised if a controller is specified for the PEC."""
     with pytest.raises(ValueError):

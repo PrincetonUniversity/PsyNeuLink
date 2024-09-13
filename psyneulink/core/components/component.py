@@ -113,7 +113,7 @@ with the one exception of `prefs <Component_Prefs>`.
 
   .. note::
      The size attribute serves a role similar to
-     `shape <https://numpy.org/doc/stable/reference/generated/numpy.shape.html> in Numpy`_, with the difference that
+     `shape in Numpy <https://numpy.org/doc/stable/reference/generated/numpy.shape.html>`_, with the difference that
      size permits the specification of `ragged arrays <https://en.wikipedia.org/wiki/Jagged_array>`_ -- that is, ones
      that have elements of varying lengths, such as [[1,2],[3,4,5]].
 
@@ -507,6 +507,7 @@ import re
 import types
 import typing
 import warnings
+import weakref
 from abc import ABCMeta
 from collections.abc import Iterable
 from enum import Enum, IntEnum
@@ -527,10 +528,10 @@ from psyneulink.core.globals.keywords import \
     MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
     MODEL_SPEC_ID_MDF_VARIABLE, \
     MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, OWNER, PARAMS, PREFS_ARG, \
-    RESET_STATEFUL_FUNCTION_WHEN, SIZE, VALUE, VARIABLE
+    RESET_STATEFUL_FUNCTION_WHEN, SIZE, VALUE, VARIABLE, SHARED_COMPONENT_TYPES
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.parameters import \
-    Defaults, SharedParameter, Parameter, ParameterAlias, ParameterError, ParametersBase, check_user_specified, copy_parameter_value
+    Defaults, SharedParameter, Parameter, ParameterAlias, ParameterError, ParametersBase, check_user_specified, copy_parameter_value, is_array_like
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import \
     PreferenceLevel, PreferenceSet, _assign_prefs
@@ -539,7 +540,7 @@ from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared, \
     is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, \
-    get_all_explicit_arguments, call_with_pruned_args, safe_equals, safe_len, parse_valid_identifier
+    get_all_explicit_arguments, is_numeric, call_with_pruned_args, safe_equals, safe_len, parse_valid_identifier, try_extract_0d_array_item, contains_type
 from psyneulink.core.scheduling.condition import Never
 from psyneulink.core.scheduling.time import Time, TimeScale
 
@@ -660,7 +661,16 @@ def make_parameter_property(param):
             assert p.modulable
             return getattr(self, _get_parametervalue_attr(p))
         else:
-            return p._get(self.most_recent_context)
+            # _get does handle stateful case, but checking here avoids
+            # extra overhead for most_recent_context and external get.
+            # external get is being used so that dot-notation returns a
+            # copy of stored numpy arrays. dot-notation is also often
+            # used internally for non-stateful parameters, like
+            # function, input_ports, output_ports, etc.
+            if not p.stateful:
+                return p._get()
+            else:
+                return p.get(self.most_recent_context)
 
     def setter(self, value):
         p = getattr(self.parameters, param.name)
@@ -684,11 +694,11 @@ def make_parameter_property(param):
     return property(getter).setter(setter)
 
 
-def _has_initializers_setter(value, owning_component=None, context=None):
+def _has_initializers_setter(value, owning_component=None, context=None, *, compilation_sync=False):
     """
     Assign has_initializers status to Component and any of its owners up the hierarchy.
     """
-    if value:
+    if value and not compilation_sync:
         # only update owner's attribute if setting to True, because there may be
         # other children that have initializers
         try:
@@ -1089,7 +1099,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     #                      insuring that assignment by one instance will not affect the value of others.
     name = None
 
-    _deepcopy_shared_keys = frozenset([])
+    _deepcopy_shared_keys = frozenset(['owner'])
 
     @check_user_specified
     def __init__(self,
@@ -1139,8 +1149,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             default_variable = self.defaults.variable
         else:
             default_variable = var
-            self.defaults.variable = copy.deepcopy(default_variable)
             self.parameters.variable._user_specified = True
+
+        self.defaults.variable = copy.deepcopy(default_variable)
 
         self.parameters.variable._set(
             copy_parameter_value(default_variable),
@@ -1161,7 +1172,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         # Validate the set passed in
         self._instantiate_defaults(variable=default_variable,
-               request_set=parameter_values,  # requested set
+                                   request_set={k: v for (k, v) in self.defaults.values().items() if k in parameter_values},  # requested set
                assign_missing=True,                   # assign missing params from classPreferences to instanceDefaults
                target_set=self.defaults.values(), # destination set to which params are being assigned
                default_set=self.class_defaults.values(),   # source set from which missing params are assigned
@@ -1256,6 +1267,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         self._update_parameter_components(context)
 
+        self.compositions = weakref.WeakSet()
+
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
         #return '{1}'.format(type(self).__name__, self.name)
@@ -1264,16 +1277,18 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         return self.name < other.name
 
     def __deepcopy__(self, memo):
-        if 'no_shared' in memo and memo['no_shared']:
-            shared_types = tuple()
+        if SHARED_COMPONENT_TYPES in memo:
+            if (
+                memo[SHARED_COMPONENT_TYPES]
+                and isinstance(self, memo[SHARED_COMPONENT_TYPES])
+            ):
+                return self
         else:
-            shared_types = (Component, ComponentsMeta)
+            memo[SHARED_COMPONENT_TYPES] = (Component,)
 
-        fun = get_deepcopy_with_shared(
-            self._deepcopy_shared_keys,
-            shared_types
-        )
+        fun = get_deepcopy_with_shared(self._deepcopy_shared_keys)
         newone = fun(self, memo)
+        memo[id(self)] = newone
 
         if newone.parameters is not newone.class_parameters:
             # may be in DEFERRED INIT, so parameters/defaults belongs to class
@@ -1292,6 +1307,27 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     # ------------------------------------------------------------------------------------------------------------------
     # Compilation support
     # ------------------------------------------------------------------------------------------------------------------
+    def _is_compilable_param(self, p):
+
+        # User only parameters are not compiled.
+        if p.read_only and p.getter is not None:
+            return False
+
+        # Shared and aliased parameters are for user conveniecne and not compiled.
+        if isinstance(p, (ParameterAlias, SharedParameter)):
+            return False
+
+        # TODO this should use default value
+        val = p.get()
+
+        # Strings, builtins, functions, and methods are not compilable
+        return not isinstance(val, (str,
+                                    type(max),
+                                    type(np.sum),
+                                    type(make_parameter_property),
+                                    type(self._get_compilation_params)))
+
+
     def _get_compilation_state(self):
         # FIXME: MAGIC LIST, Use stateful tag for this
         whitelist = {"previous_time", "previous_value", "previous_v",
@@ -1299,23 +1335,27 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "input_ports", "output_ports",
                      "adjustment_cost", "intensity_cost", "duration_cost",
                      "intensity"}
+
         # Prune subcomponents (which are enabled by type rather than a list)
         # that should be omitted
         blacklist = { "objective_mechanism", "agent_rep", "projections", "shadow_inputs"}
 
-        # Only mechanisms use "value" state, can execute 'until finished',
-        # and need to track executions
+        # Mechanisms;
+        # * use "value" state
+        # * can execute 'until finished'
+        # * need to track number of executions
         if hasattr(self, 'ports'):
             whitelist.update({"value", "num_executions_before_finished",
                               "num_executions", "is_finished_flag"})
 
-            # If both the mechanism and its functoin use random_state it's DDM
-            # with integrator function. The mechanism's random_state is not used.
+            # If both the mechanism and its function use random_state.
+            # it's DDM with integrator function.
+            # The mechanism's random_state is not used.
             if hasattr(self.parameters, 'random_state') and hasattr(self.function.parameters, 'random_state'):
                 whitelist.remove('random_state')
 
 
-        # Only mechanisms and compositions need 'num_executions'
+        # Compositions need to track number of executions
         if hasattr(self, 'nodes'):
             whitelist.add("num_executions")
 
@@ -1341,11 +1381,15 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         if hasattr(self.parameters, 'duplicate_keys'):
             blacklist.add("previous_value")
 
+        # Matrices of learnable projections are stateful
+        if getattr(self, 'owner', None) and getattr(self.owner, 'learnable', False):
+            whitelist.add('matrix')
+
         def _is_compilation_state(p):
             # FIXME: This should use defaults instead of 'p.get'
             return p.name not in blacklist and \
-                   not isinstance(p, (ParameterAlias, SharedParameter)) and \
-                   (p.name in whitelist or isinstance(p.get(), Component))
+                   (p.name in whitelist or isinstance(p.get(), Component)) and \
+                   self._is_compilable_param(p)
 
         return filter(_is_compilation_state, self.parameters)
 
@@ -1362,16 +1406,29 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
     def _get_state_initializer(self, context):
         def _convert(p):
-            # FIXME: This should use defaults instead of 'p.get'
             x = p.get(context)
-            if isinstance(x, np.random.RandomState):
-                # Skip first element of random state (id string)
-                val = pnlvm._tupleize((*x.get_state()[1:], x.used_seed[0]))
+            if p.name == 'matrix': # Flatten matrix
+                val = tuple(np.asfarray(x).flatten())
+            elif isinstance(x, np.random.RandomState):
+                state = x.get_state(legacy=False)
+
+                # Keep the indices in sync with bultins.py:get_mersenne_twister_state_struct
+                val = pnlvm._tupleize((state['state']['key'],
+                                       state['gauss'],
+                                       state['state']['pos'],
+                                       state['has_gauss'],
+                                       x.used_seed[0]))
             elif isinstance(x, np.random.Generator):
                 state = x.bit_generator.state
-                val = pnlvm._tupleize((state['state']['counter'], state['state']['key'],
-                                       state['buffer'], state['uinteger'], state['buffer_pos'],
-                                       state['has_uint32'], x.used_seed[0]))
+
+                # Keep the indices in sync with bultins.py:get_philox_state_struct
+                val = pnlvm._tupleize((state['state']['counter'],
+                                       state['state']['key'],
+                                       state['buffer'],
+                                       state['uinteger'],
+                                       state['buffer_pos'],
+                                       state['has_uint32'],
+                                       x.used_seed[0]))
             elif isinstance(x, Time):
                 val = tuple(x._get_by_time_scale(t) for t in TimeScale)
             elif isinstance(x, Component):
@@ -1406,7 +1463,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "objective_mechanism", "agent_rep", "projections",
                      "outcome_input_ports", "state_input_ports",
                      # autodiff specific types
-                     "pytorch_representation", "optimizer",
+                     "pytorch_representation", "optimizer", "synch_projection_matrices_with_torch",
                      # duplicate
                      "allocation_samples", "control_allocation_search_space",
                      # not used in computation
@@ -1432,11 +1489,19 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "learning_results", "learning_signal", "learning_signals",
                      "error_matrix", "error_signal", "activation_input",
                      "activation_output", "error_sources", "covariates_sources",
-                     "target", "sample",
+                     "target", "sample", "learning_function",
+                     "minibatch_size", "optimizations_per_minibatch", "device",
+                     "retain_torch_trained_outputs", "retain_torch_targets", "retain_torch_losses"
+                     "torch_trained_outputs", "torch_targets", "torch_losses",
+                     # should be added to relevant _gen_llvm_function... when aug:
+                     # SoftMax:
+                     'mask_threshold', 'adapt_scale', 'adapt_base', 'adapt_entropy_weighting',
+                     # LCAMechanism
+                     "mask"
                      }
         # Mechanism's need few extra entries:
         # * matrix -- is never used directly, and is flatened below
-        # * integration rate -- shape mismatch with param port input
+        # * integration_rate -- shape mismatch with param port input
         # * initializer -- only present on DDM and never used
         # * search_space -- duplicated between OCM and its function
         if hasattr(self, 'ports'):
@@ -1466,25 +1531,12 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             if cost_functions.DURATION not in cost_functions:
                 blacklist.add('duration_cost_fct')
 
+        # Matrices of learnable projections are stateful
+        if getattr(self, 'owner', None) and getattr(self.owner, 'learnable', False):
+            blacklist.add('matrix')
+
         def _is_compilation_param(p):
-            def _is_user_only_param(p):
-                if p.read_only and p.getter is not None:
-                    return True
-                if isinstance(p, (ParameterAlias, SharedParameter)):
-                    return True
-
-                return False
-
-
-            if p.name not in blacklist and not _is_user_only_param(p):
-                # FIXME: this should use defaults
-                val = p.get()
-                # Check if the value type is valid for compilation
-                return not isinstance(val, (str, ComponentsMeta,
-                                            type(max),
-                                            type(_is_compilation_param),
-                                            type(self._get_compilation_params)))
-            return False
+            return p.name not in blacklist and self._is_compilable_param(p)
 
         return filter(_is_compilation_param, self.parameters)
 
@@ -1889,11 +1941,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         # If function is called without any arguments, get default for variable
         if variable is None:
-            try:
-                # assigned by the Function class init when initializing
-                variable = self.defaults.variable
-            except AttributeError:
-                variable = self.class_defaults.variable
+            variable = self.defaults.variable
+
+            variable = copy_parameter_value(variable)
 
         # If the variable is a function, call it
         if callable(variable):
@@ -1940,6 +1990,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 raise ComponentError(err_msg)
 
         if isinstance(runtime_params, dict):
+            runtime_params = copy_parameter_value(runtime_params)
             for param_name in runtime_params:
                 if not isinstance(param_name, str):
                     generate_error(param_name)
@@ -1948,9 +1999,15 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                         generate_error(param_name)
                     if context.execution_id not in self._runtime_params_reset:
                         self._runtime_params_reset[context.execution_id] = {}
-                    self._runtime_params_reset[context.execution_id][param_name] = getattr(self.parameters,
-                                                                                           param_name)._get(context)
-                    self._set_parameter_value(param_name, runtime_params[param_name], context)
+                    self._runtime_params_reset[context.execution_id][param_name] = copy_parameter_value(
+                        getattr(self.parameters, param_name)._get(context)
+                    )
+                    if is_numeric(runtime_params[param_name]):
+                        runtime_value = convert_all_elements_to_np_array(runtime_params[param_name])
+                    else:
+                        runtime_value = runtime_params[param_name]
+
+                    self._set_parameter_value(param_name, runtime_value, context)
                 # Any remaining params should either belong to the Component's function
                 #    or, if the Component is a Function, to it or its owner
                 elif ( # If Component is not a function, and its function doesn't have the parameter or
@@ -2200,6 +2257,12 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         return parameter_values, function_params
 
     def _initialize_parameters(self, context=None, **param_defaults):
+        """
+        Args:
+            **param_defaults: maps Parameter names to their default
+            values. Sets instance-level Parameters dynamically for any
+            name that maps to a Parameter object.
+        """
         from psyneulink.core.components.shellclasses import (
             Composition_Base, Function, Mechanism, Port, Process_Base,
             Projection, System_Base
@@ -2233,9 +2296,17 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 if name in alias_names:
                     continue
 
-                try:
+                if isinstance(value, Parameter):
+                    setattr(self.parameters, name, value)
+                    try:
+                        value = copy.copy(value.default_value)
+                    except TypeError:
+                        value = value.default_value
+                    param_defaults[name] = value
+
+                if name in self.parameters._params:
                     parameter_obj = getattr(self.parameters, name)
-                except AttributeError:
+                else:
                     # name in param_defaults does not correspond to a Parameter
                     continue
 
@@ -2265,15 +2336,15 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 if value is not None or parameter_obj.specify_none:
                     defaults[name] = value
 
-        for k in defaults:
-            if defaults[k] is None:
-                continue
-            defaults[k] = copy_parameter_value(
-                defaults[k],
-                shared_types=shared_types
-            )
-
-        self.defaults = Defaults(owner=self, **defaults)
+        self.defaults = Defaults(owner=self)
+        for k in sorted(defaults, key=self.parameters._dependency_order_key(names=True)):
+            if defaults[k] is not None:
+                defaults[k] = copy_parameter_value(
+                    defaults[k],
+                    shared_types=shared_types
+                )
+            parameter_obj = getattr(self.parameters, k)
+            parameter_obj._set_default_value(defaults[k], check_scalar=parameter_obj._user_specified)
 
         for p in filter(lambda x: not isinstance(x, (ParameterAlias, SharedParameter)), self.parameters._in_dependency_order):
             # copy spec so it is not overwritten later
@@ -2288,9 +2359,21 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 if p._user_specified:
                     val = param_defaults[p.name]
 
+                    # ideally, this would include deepcopying any
+                    # Function objects with a non-None owner in val.
+                    # Avoiding universal deep copy for iterables
+                    # containing Functions here ensures that a list (ex.
+                    # noise) containing other objects and a Function
+                    # will use the actual Function passed in and not a
+                    # copy. Not copying - as was done prior to this
+                    # comment - should only be a problem if internal
+                    # code passes such an object that is also used
+                    # elsewhere
                     if isinstance(val, Function):
                         if val.owner is not None:
                             val = copy.deepcopy(val)
+                    elif not contains_type(val, Function):
+                        val = copy_parameter_value(val, shared_types=shared_types)
                 else:
                     val = copy_parameter_value(
                         p.default_value,
@@ -2689,9 +2772,10 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         #    - return
         if variable is None:
             try:
-                return self.defaults.variable
+                variable = self.defaults.variable
             except AttributeError:
-                return self.class_defaults.variable
+                variable = self.class_defaults.variable
+            return copy_parameter_value(variable)
 
         # Otherwise, do some checking on variable before converting to np.ndarray
 
@@ -3142,7 +3226,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 # update it here if needed
                 if MATRIX in kwargs_to_instantiate:
                     try:
-                        kwargs_to_instantiate[MATRIX] = self.parameter_ports[MATRIX].defaults.value
+                        kwargs_to_instantiate[MATRIX] = copy_parameter_value(self.parameter_ports[MATRIX].defaults.value)
                     except (AttributeError, KeyError, TypeError):
                         pass
 
@@ -3216,6 +3300,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     def _update_default_variable(self, new_default_variable, context=None):
         from psyneulink.core.components.shellclasses import Function
 
+        new_default_variable = convert_all_elements_to_np_array(new_default_variable)
         self.defaults.variable = copy.deepcopy(new_default_variable)
 
         # exclude value from validation because it isn't updated until
@@ -3289,6 +3374,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         if context.source is ContextFlags.COMMAND_LINE:
             self._initialize_from_context(context, override=False)
+            if is_numeric(variable):
+                variable = convert_all_elements_to_np_array(variable)
 
         value = self._execute(variable=variable, context=context, runtime_params=runtime_params)
         self.parameters.value._set(value, context=context)
@@ -3402,7 +3489,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 if 'Multiple ParameterPorts' in str(e):
                     raise
 
-        return parameter._get(context)
+        return parameter._get(context, modulated=True)
 
     def _reset_runtime_parameters(self, context):
         if context.execution_id in self._runtime_params_reset:
@@ -3415,16 +3502,23 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             self._runtime_params_reset[context.execution_id] = {}
 
     def _try_execute_param(self, param, var, context=None):
-        def fill_recursively(arr, value, indices=()):
-            if arr.ndim == 0:
+        def execute_if_callable(value, context=None):
+            try:
+                return value(context=context)
+            except TypeError:
                 try:
-                    value = value(context=context)
+                    return value()
                 except TypeError:
-                    try:
-                        value = value()
-                    except TypeError:
-                        pass
-                return value
+                    return value
+
+        def fill_recursively(arr, value, indices=()):
+            try:
+                is_scalar = arr.ndim == 0
+            except AttributeError:
+                is_scalar = True
+
+            if is_scalar:
+                return execute_if_callable(value, context)
 
             try:
                 len_value = len(value)
@@ -3465,7 +3559,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             (isinstance(param, list) and len(param) == 1)
             or (isinstance(param, np.ndarray) and param.shape == (1,))
         ):
-            if isinstance(param[0], Component):
+            if isinstance(param[0], Component) or len(var) > 1:
                 param = param[0]
 
         # Currently most noise functions do not return noise in the same
@@ -3495,6 +3589,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             # param not directly compatible with variable, continue elementwise
             pass
 
+        param = try_extract_0d_array_item(param)
         fill_recursively(var, param)
         return var
 
@@ -4010,7 +4105,12 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                     value = None
                 else:
                     value = value.__qualname__
-            elif isinstance(value, types.FunctionType):
+
+            # numpy functions are no longer "FunctionType" since numpy
+            # moved dispatch implementation from Python to C in
+            # https://github.com/numpy/numpy/commit/60a858a372b14b73547baacf4a472eccfade1073
+            # Use np.sum as a representative of these functions
+            elif isinstance(value, (types.FunctionType, type(np.sum))):
                 if functions_as_dill:
                     value = base64.encodebytes(dill.dumps(value)).decode('utf-8')
                 elif '.' in value.__qualname__:
@@ -4178,6 +4278,18 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             pass
 
         model.args[arg] = value
+
+    def _add_to_composition(self, composition):
+        self.compositions.add(composition)
+
+        for obj in self._parameter_components:
+            obj._add_to_composition(composition)
+
+    def _remove_from_composition(self, composition):
+        self.compositions.discard(composition)
+
+        for obj in self._parameter_components:
+            obj._remove_from_composition(composition)
 
     @property
     def logged_items(self):
@@ -4358,15 +4470,17 @@ class ParameterValue:
 
     @property
     def modulated(self):
-        # TODO: consider making this
-        # self._parameter.port.is_modulated(self._owner.most_recent_context)
+        # TODO: consider using self._parameter.port.has_modulation
         # because the port existing doesn't necessarily mean modulation
         # is actually happening
         if self._parameter.port is not None:
-            return self._parameter.port.owner._get_current_parameter_value(
+            res = self._parameter.port.owner._get_current_parameter_value(
                 self._parameter,
                 self._owner.most_recent_context
             )
+            if is_array_like(res):
+                res = copy_parameter_value(res)
+            return res
         else:
             warnings.warn(
                 f'{self._parameter.name} is not currently modulated in most'

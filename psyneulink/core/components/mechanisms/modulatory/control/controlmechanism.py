@@ -713,13 +713,11 @@ def validate_monitored_port_spec(owner, spec_list):
 def _control_mechanism_costs_getter(owning_component=None, context=None):
     # NOTE: In cases where there is a reconfiguration_cost, that cost is not returned by this method
     try:
-        costs = [
-            convert_to_np_array(
-                c.compute_costs(c.parameters.value._get(context), context=context)
-            )
+        costs = convert_all_elements_to_np_array([
+            c.compute_costs(c.parameters.value._get(context), context=context)
             for c in owning_component.control_signals
             if hasattr(c, 'compute_costs')
-        ] # GatingSignals don't have cost fcts
+        ])  # GatingSignals don't have cost fcts
         return costs
 
     except TypeError:
@@ -742,11 +740,13 @@ def _net_outcome_getter(owning_component=None, context=None):
             c.combine_costs()
         )
     except TypeError:
-        return [0]
+        return np.array([0])
 
 def _control_allocation_getter(owning_component=None, context=None):
     try:
-        return [v.parameters.variable._get(context) for v in owning_component.control_signals]
+        return convert_to_np_array([
+            v.parameters.variable._get(context) for v in owning_component.control_signals
+        ])
     except (TypeError, AttributeError):
         return owning_component.defaults.control_allocation
 
@@ -1603,7 +1603,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             other_input_port_value_sizes  = self._handle_arg_input_ports(other_input_ports)[0]
             # Construct full list of InputPort specifications and sizes
             input_ports = self.input_ports + other_input_ports
-            input_port_value_sizes = [[0]] + other_input_port_value_sizes
+            input_port_value_sizes = convert_all_elements_to_np_array([[0]] + other_input_port_value_sizes)
             super()._instantiate_input_ports(context=context,
                                              input_ports=input_ports,
                                              reference_value=input_port_value_sizes)

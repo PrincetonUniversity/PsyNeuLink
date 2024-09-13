@@ -49,7 +49,7 @@ from psyneulink.core.globals.keywords import \
     CROSS_ENTROPY, DEFAULT_VARIABLE, EXPONENTS, LINEAR_COMBINATION_FUNCTION, MULTIPLICATIVE_PARAM, OFFSET, OPERATION, \
     PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT, REARRANGE_FUNCTION, REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, \
     PREFERENCE_SET_NAME
-from psyneulink.core.globals.utilities import convert_to_np_array, is_numeric, np_array_less_than_2d, ValidParamSpecType
+from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, convert_to_np_array, is_numeric, is_numeric_scalar, np_array_less_than_2d, ValidParamSpecType
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import \
@@ -254,12 +254,12 @@ class Concatenate(CombinationFunction):  # -------------------------------------
 
         if SCALE in target_set and target_set[SCALE] is not None:
             scale = target_set[SCALE]
-            if not isinstance(scale, numbers.Number):
+            if not is_numeric_scalar(scale):
                 raise FunctionError("{} param of {} ({}) must be a scalar".format(SCALE, self.name, scale))
 
         if OFFSET in target_set and target_set[OFFSET] is not None:
             offset = target_set[OFFSET]
-            if not isinstance(offset, numbers.Number):
+            if not is_numeric_scalar(offset):
                 raise FunctionError("{} param of {} ({}) must be a scalar".format(OFFSET, self.name, offset))
 
     def _function(self,
@@ -320,6 +320,13 @@ class Concatenate(CombinationFunction):  # -------------------------------------
         """
 
         return self._get_current_parameter_value(SCALE, context)
+
+    def _gen_pytorch_fct(self, device, context=None):
+        scale = self._get_pytorch_fct_param_value('scale', device, context)
+        offset = self._get_pytorch_fct_param_value('offset', device, context)
+        # return lambda x: torch.concatenate(tuple(x)) * scale + offset
+        return lambda x: torch.hstack(tuple(x)) * scale + offset
+
 
 class Rearrange(CombinationFunction):  # ------------------------------------------------------------------------
     """
@@ -512,17 +519,17 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
                     except IndexError:
                         raise FunctionError(f"Index ({i}) specified in {repr(ARRANGEMENT)} arg for "
                                             f"{self.name}{owner_str} is out of bounds for its {repr(DEFAULT_VARIABLE)} "
-                                            f"arg (max index = {len(self.parameters.variable.default_value)-1}).")
+                                            f"arg (max index = {len(self.parameters.variable.default_value) - 1}).")
 
         # Check that SCALE and OFFSET are scalars.
         if SCALE in target_set and target_set[SCALE] is not None:
             scale = target_set[SCALE]
-            if not isinstance(scale, numbers.Number):
+            if not is_numeric_scalar(scale):
                 raise FunctionError("{} param of {} ({}) must be a scalar".format(SCALE, self.name, scale))
 
         if OFFSET in target_set and target_set[OFFSET] is not None:
             offset = target_set[OFFSET]
-            if not isinstance(offset, numbers.Number):
+            if not is_numeric_scalar(offset):
                 raise FunctionError("{} param of {} ({}) must be a scalar".format(OFFSET, self.name, offset))
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
@@ -760,11 +767,11 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         changes_shape = Parameter(True, stateful=False, loggable=False, pnl_internal=True)
 
         def _validate_scale(self, scale):
-            if scale is not None and not np.isscalar(scale):
+            if not is_numeric_scalar(scale):
                 return "scale must be a scalar"
 
         def _validate_offset(self, offset):
-            if offset is not None and not np.isscalar(offset):
+            if not is_numeric_scalar(offset):
                 return "vector offset is not supported"
 
 
@@ -845,12 +852,12 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
         if SCALE in target_set and target_set[SCALE] is not None:
             scale = target_set[SCALE]
-            if not isinstance(scale, numbers.Number):
+            if not is_numeric_scalar(scale):
                 raise FunctionError("{} param of {} ({}) must be a scalar".format(SCALE, self.name, scale))
 
         if OFFSET in target_set and target_set[OFFSET] is not None:
             offset = target_set[OFFSET]
-            if not isinstance(offset, numbers.Number):
+            if not is_numeric_scalar(offset):
                 raise FunctionError("{} param of {} ({}) must be a scalar".format(OFFSET, self.name, offset))
 
     def _function(self,
@@ -911,7 +918,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             # result = np.sum(np.atleast_2d(variable), axis=0) * scale + offset
             result = np.sum(np.atleast_2d(variable), axis=1) * scale + offset
         elif operation == PRODUCT:
-            result = np.product(np.atleast_2d(variable), axis=1) * scale + offset
+            result = np.prod(np.atleast_2d(variable), axis=1) * scale + offset
         else:
             raise FunctionError("Unrecognized operator ({0}) for Reduce function".
                                 format(self._get_current_parameter_value(OPERATION, context)))
@@ -1311,10 +1318,8 @@ class LinearCombination(
                 pass
             elif isinstance(scale, np.ndarray):
                 target_set[SCALE] = np.array(scale)
-            scale_is_a_scalar = isinstance(scale, numbers.Number) or (len(scale) == 1) and isinstance(scale[0],
-                                                                                                      numbers.Number)
             if context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
-                if not scale_is_a_scalar:
+                if not is_numeric_scalar(scale):
                     err_msg = "Scale is using Hadamard modulation but its shape and/or size (scale shape: {}, size:{})" \
                               " do not match the variable being modulated (variable shape: {}, size: {})". \
                         format(scale.shape, scale.size, self.defaults.variable.shape,
@@ -1332,10 +1337,8 @@ class LinearCombination(
             elif isinstance(offset, np.ndarray):
                 target_set[OFFSET] = np.array(offset)
 
-            offset_is_a_scalar = isinstance(offset, numbers.Number) or (len(offset) == 1) and isinstance(offset[0],
-                                                                                                         numbers.Number)
             if context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
-                if not offset_is_a_scalar:
+                if not is_numeric_scalar(offset):
                     err_msg = "Offset is using Hadamard modulation but its shape and/or size (offset shape: {}, size:{})" \
                               " do not match the variable being modulated (variable shape: {}, size: {})". \
                         format(offset.shape, offset.size, self.defaults.variable.shape,
@@ -1427,22 +1430,27 @@ class LinearCombination(
 
         # CW 3/19/18: a total hack, e.g. to make scale=[4.] turn into scale=4. Used b/c the `scale` ParameterPort
         # changes scale's format: e.g. if you write c = pnl.LinearCombination(scale = 4), print(c.scale) returns [4.]
-        if isinstance(scale, (list, np.ndarray)):
-            if len(scale) == 1 and isinstance(scale[0], numbers.Number):
-                scale = scale[0]
-        if isinstance(offset, (list, np.ndarray)):
-            if len(offset) == 1 and isinstance(offset[0], numbers.Number):
-                offset = offset[0]
+        # Don't use try_extract_0d_array_item because that will only
+        # handle 0d arrays, not 1d.
+        try:
+            scale = scale.item()
+        except (AttributeError, ValueError):
+            pass
+        try:
+            offset = offset.item()
+        except (AttributeError, ValueError):
+            pass
 
         # CALCULATE RESULT USING RELEVANT COMBINATION OPERATION AND MODULATION
         if operation == SUM:
             combination = np.sum(variable, axis=0)
         elif operation == PRODUCT:
-            combination = np.product(variable, axis=0)
+            combination = np.prod(variable, axis=0)
         elif operation == CROSS_ENTROPY:
             v1 = variable[0]
             v2 = variable[1]
-            combination = np.where(np.logical_and(v1 == 0, v2 == 0), 0.0, v1 * np.log(v2))
+            both_zero = np.logical_and(v1 == 0, v2 == 0)
+            combination = v1 * np.where(both_zero, 0.0, np.log(v2, where=np.logical_not(both_zero)))
         else:
             raise FunctionError("Unrecognized operator ({0}) for LinearCombination function".
                                 format(operation.self.Operation.SUM))
@@ -1451,7 +1459,7 @@ class LinearCombination(
             product = combination * scale
         else:
             # Hadamard scale
-            product = np.product([combination, scale], axis=0)
+            product = np.prod([combination, scale], axis=0)
 
         if isinstance(offset, numbers.Number):
             # scalar offset
@@ -1971,9 +1979,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         # if np_array_less_than_2d(variable):
         #     return (variable * scale) + offset
 
-        means = np.array([[None]] * len(variable))
-        for i, item in enumerate(variable):
-            means[i] = np.mean(item)
+        means = convert_all_elements_to_np_array([np.mean(item) for item in variable])
 
         # FIX FOR EFFICIENCY: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
         # Apply exponents if they were specified
@@ -1996,7 +2002,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
             result = np.sum(means, axis=0) * scale + offset
 
         elif operation == PRODUCT:
-            result = np.product(means, axis=0) * scale + offset
+            result = np.prod(means, axis=0) * scale + offset
 
         else:
             raise FunctionError("Unrecognized operator ({0}) for CombineMeans function".

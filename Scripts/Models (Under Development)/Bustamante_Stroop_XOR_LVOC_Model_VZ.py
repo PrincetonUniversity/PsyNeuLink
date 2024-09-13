@@ -18,7 +18,7 @@ using a version of the `Learned Value of Control Model
 <https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006043&rev=2>`_
 """
 
-import autograd.numpy as np
+import numpy as np
 import psyneulink as pnl
 
 # from build_stimuli_VZ import xor_dict

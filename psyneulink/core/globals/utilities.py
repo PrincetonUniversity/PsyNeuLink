@@ -100,6 +100,7 @@ CONTENTS
 
 import collections
 import copy
+import functools
 import inspect
 import itertools
 import logging
@@ -114,7 +115,7 @@ import typing
 from beartype import beartype
 
 from numbers import Number
-from psyneulink._typing import Optional, Union, Literal, Type, List, Tuple
+from psyneulink._typing import Any, Callable, Optional, Union, Literal, Type, List, Tuple
 
 from enum import Enum, EnumMeta, IntEnum
 from collections.abc import Mapping
@@ -122,6 +123,7 @@ from collections import UserDict, UserList
 from itertools import chain, combinations
 
 import numpy as np
+from numpy.typing import DTypeLike
 
 # Conditionally import torch
 try:
@@ -129,14 +131,14 @@ try:
 except ImportError:
     torch = None
 
-from psyneulink.core.globals.keywords import \
-    comparison_operators, DISTANCE_METRICS, EXPONENTIAL, GAUSSIAN, LINEAR, MATRIX_KEYWORD_VALUES, NAME, SINUSOID, VALUE
+from psyneulink.core.globals.keywords import (comparison_operators, DISTANCE_METRICS, EXPONENTIAL, GAUSSIAN, LINEAR,
+                                              MATRIX_KEYWORD_VALUES, MPS, NAME, SINUSOID, VALUE)
 
 
 
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_list', 'convert_to_np_array',
-    'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'get_class_attributes', 'flatten_list',
+    'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'get_class_attributes', 'extended_array_equal', 'flatten_list',
     'get_all_explicit_arguments', 'get_modulationOperation_name', 'get_value_from_array',
     'insert_list', 'is_matrix_keyword', 'all_within_range',
     'is_comparison_operator',  'iscompatible', 'is_component', 'is_distance_metric', 'is_iterable', 'is_matrix',
@@ -152,7 +154,7 @@ __all__ = [
     'scalar_distance', 'sinusoid',
     'tensor_power', 'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy', 'create_union_set', 'merge_dictionaries',
-    'contains_type'
+    'contains_type', 'is_numeric_scalar', 'try_extract_0d_array_item', 'fill_array', 'update_array_in_place', 'array_from_matrix_string',
 ]
 
 logger = logging.getLogger(__name__)
@@ -258,7 +260,7 @@ class AutoNumber(IntEnum):
         return obj
 
 
-# ******************************** GLOBAL STRUCTURES, CONSTANTS AND METHODS  *******************************************
+#region ******************************** GLOBAL STRUCTURES, CONSTANTS AND METHODS  *************************************
 TEST_CONDTION = False
 
 
@@ -355,7 +357,8 @@ ValidParamSpecType = Union[
     Type['psyneulink.core.components.projections.MappingProjection'],
     'psyneulink.library.components.projections.MaskedMappingProjection',
     Type['psyneulink.library.components.projections.MaskedMappingProjection'],
-    Literal['LEARNING', 'bias', 'control', 'gain', 'gate', 'leak', 'offset', 'ControlSignal', 'ControlProjection'],
+    Literal['LEARNING', 'adaptive','bias', 'control', 'gain', 'gate', 'leak', 'offset',
+    'ControlSignal', 'ControlProjection'],
 ]
 
 
@@ -442,17 +445,24 @@ DistanceMetricLiteral = Literal[
 ]
 
 
-def is_iterable(x):
+def is_iterable(x: Any, exclude_str: bool = False) -> bool:
     """
+    Args:
+        x (Any)
+        exclude_str (bool, optional): if True, **x** of type str will
+            return False. Defaults to False.
+
     Returns
     -------
         True - if **x** can be iterated on
         False - otherwise
     """
-    if isinstance(x, np.ndarray) and x.ndim == 0:
+    try:
+        iter(x)
+    except TypeError:
         return False
     else:
-        return isinstance(x, collections.abc.Iterable)
+        return not exclude_str or not isinstance(x, str)
 
 
 kwCompatibilityType = "type"
@@ -620,24 +630,20 @@ def iscompatible(candidate, reference=None, **kargs):
                 # Matrices can't be checked recursively, so convert to array
                 if isinstance(value, np.matrix):
                     value = value.A
-                if isinstance(value, (list, np.ndarray)):
+                if isinstance(value, (list, np.ndarray)) and not is_numeric_scalar(value):
+                    try:
+                        if value.ndim == 0:
+                            return recursively_check_elements_for_numeric(value.item())
+                    except AttributeError:
+                        pass
+
                     for item in value:
                         if not recursively_check_elements_for_numeric(item):
                             return False
                         else:
                             return True
                 else:
-                    if not is_number(value):
-                        try:
-                            # True for autograd ArrayBox (and maybe other types?)
-                            # if isinstance(value._value, Number):
-                            from autograd.numpy.numpy_boxes import ArrayBox
-                            if isinstance(value, ArrayBox):
-                                return True
-                        except:
-                            return False
-                    else:
-                        return True
+                    return is_number(value)
             # Test copy since may need to convert matrix to array (see above)
             if not recursively_check_elements_for_numeric(candidate.copy()):
                 return False
@@ -673,8 +679,9 @@ def iscompatible(candidate, reference=None, **kargs):
     else:
         return False
 
+#endregion
 
-# MATHEMATICAL  ********************************************************************************************************
+#region MATHEMATICAL ***************************************************************************************************
 
 def normpdf(x, mu=0, sigma=1):
     u = float((x - mu) / abs(sigma))
@@ -693,7 +700,6 @@ def scalar_distance(measure, value, scale=1, offset=0):
         return np.exp(scale * value + offset)
     if measure == SINUSOID:
         return sinusoid(value, frequency=scale, phase=offset)
-
 
 def powerset(iterable):
     """powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"""
@@ -740,9 +746,9 @@ def tensor_power(items, levels: Optional[range] = None, flat=False):
             else:
                 pp.append(tp.reshape(-1))
     return pp
+#endregion
 
-
-# LIST MANAGEMENT ******************************************************************************************************
+#region LIST MANAGEMENT ************************************************************************************************
 
 def insert_list(list1, position, list2):
     """Insert list2 into list1 at position"""
@@ -757,6 +763,8 @@ def convert_to_list(l):
         return list(l)
     elif isinstance(l, set):
         return list(l)
+    elif isinstance(l, np.ndarray) and l.ndim > 0:
+        return list(l)
     else:
         return [l]
 
@@ -767,10 +775,9 @@ def nesting_depth(l):
     if isinstance(l, np.ndarray):
         l = l.tolist()
     return isinstance(l, list) and max(map(nesting_depth, l)) + 1
+#endregion
 
-
-# OTHER ****************************************************************************************************************
-
+#region OTHER **********************************************************************************************************
 def get_args(frame):
     """Gets dictionary of arguments and their values for a function
     Frame should be assigned as follows in the function itself:  frame = inspect.currentframe()
@@ -827,22 +834,17 @@ def multi_getattr(obj, attr, default = None):
 
 
 # based off the answer here https://stackoverflow.com/a/15774013/3131666
-def get_deepcopy_with_shared(shared_keys=frozenset(), shared_types=()):
+def get_deepcopy_with_shared(shared_keys=frozenset()):
     """
         Arguments
         ---------
             shared_keys
                 an Iterable containing strings that should be shallow copied
 
-            shared_types
-                an Iterable containing types that when objects of that type are encountered
-                will be shallow copied
-
         Returns
         -------
             a __deepcopy__ function
     """
-    shared_types = tuple(shared_types)
     shared_keys = frozenset(shared_keys)
 
     def __deepcopy__(self, memo):
@@ -856,31 +858,54 @@ def get_deepcopy_with_shared(shared_keys=frozenset(), shared_types=()):
         except AttributeError:
             ordered_dict_keys = self.__dict__
 
-        for k in ordered_dict_keys:
+        for k in copy.copy(ordered_dict_keys):
             v = self.__dict__[k]
-            if k in shared_keys or isinstance(v, shared_types):
+            if k in shared_keys:
                 res_val = v
             else:
-                try:
-                    res_val = copy_iterable_with_shared(v, shared_types, memo)
-                except TypeError:
-                    res_val = copy.deepcopy(v, memo)
+                res_val = copy.deepcopy(v, memo)
             setattr(result, k, res_val)
         return result
 
     return __deepcopy__
 
 
-def copy_iterable_with_shared(obj, shared_types=None, memo=None):
+def _copy_shared_iterable_elementwise_as_list(obj, shared_types, memo, result_obj=None):
+    result = result_obj or list()
+
+    for item in obj:
+        try:
+            new_item = copy_iterable_with_shared(item, shared_types, memo)
+        except TypeError:
+            if isinstance(item, shared_types):
+                new_item = item
+            else:
+                new_item = copy.deepcopy(item, memo)
+        result.append(new_item)
+
+    return result
+
+
+def copy_iterable_with_shared(obj, shared_types=type(None), memo=None):
     try:
         shared_types = tuple(shared_types)
     except TypeError:
         shared_types = (shared_types, )
 
-    dict_types = (dict, collections.UserDict)
+    dict_types = (
+        dict,
+        collections.UserDict,
+        weakref.WeakKeyDictionary,
+        weakref.WeakValueDictionary
+    )
     list_types = (list, collections.UserList, collections.deque)
-    tuple_types = (tuple, set)
+    tuple_types = (tuple, set, weakref.WeakSet)
     all_types_using_recursion = dict_types + list_types + tuple_types
+
+    # ContentAddressableList
+    cal_component_type = getattr(obj, 'component_type', None)
+    if cal_component_type and issubclass(cal_component_type, shared_types):
+        return copy.copy(obj)
 
     if isinstance(obj, dict_types):
         result = copy.copy(obj)
@@ -921,14 +946,7 @@ def copy_iterable_with_shared(obj, shared_types=None, memo=None):
         else:
             result = obj.__class__()
 
-        for item in obj:
-            if isinstance(item, all_types_using_recursion):
-                new_item = copy_iterable_with_shared(item, shared_types, memo)
-            elif isinstance(item, shared_types):
-                new_item = item
-            else:
-                new_item = copy.deepcopy(item, memo)
-            result.append(new_item)
+        result = _copy_shared_iterable_elementwise_as_list(obj, shared_types, memo, result)
 
         if is_tuple:
             try:
@@ -936,6 +954,14 @@ def copy_iterable_with_shared(obj, shared_types=None, memo=None):
             except TypeError:
                 # handle namedtuple
                 result = obj.__class__(*result)
+    elif isinstance(obj, np.ndarray) and obj.dtype == object:
+        if obj.ndim > 0:
+            result = _copy_shared_iterable_elementwise_as_list(obj, shared_types, memo)
+            result = safe_create_np_array(result)
+        elif isinstance(obj, shared_types):
+            result = np.array(obj)
+        else:
+            result = copy.deepcopy(obj)
     else:
         raise TypeError
 
@@ -994,7 +1020,7 @@ def get_alias_property_setter(name, attr=None):
             setattr(obj, name, value)
 
     return setter
-
+#endregion
 
 #region NUMPY ARRAY METHODS ******************************************************************************************
 
@@ -1027,46 +1053,14 @@ def convert_to_np_array(value, dimension=None):
         Returns:
             value : np.ndarray
     """
-    def safe_create_np_array(value):
-        with warnings.catch_warnings():
-            warnings.filterwarnings('error', category=np.VisibleDeprecationWarning)
-            # NOTE: this will raise a ValueError in the future.
-            # See https://numpy.org/neps/nep-0034-infer-dtype-is-object.html
-            try:
-                try:
-                    return np.asarray(value)
-                except np.VisibleDeprecationWarning:
-                    return np.asarray(value, dtype=object)
-                except ValueError as e:
-                    # numpy 1.24 removed the above deprecation and raises
-                    # ValueError instead. Note that the below call can still
-                    # raise other ValueErrors
-                    if 'The requested array has an inhomogeneous shape' in str(e):
-                        return np.asarray(value, dtype=object)
-                    raise
-
-            except ValueError as e:
-                msg = str(e)
-                if 'cannot guess the desired dtype from the input' in msg:
-                    return np.asarray(value, dtype=object)
-                # KDM 6/29/20: this case handles a previously noted case
-                # by KAM 6/28/18, #877:
-                # [[0.0], [0.0], np.array([[0.0, 0.0]])]
-                # but was only handled for dimension=1
-                elif 'could not broadcast' in msg:
-                    return convert_all_elements_to_np_array(value)
-                else:
-                    raise
-
-    # If we get a RuntimeError, this is probably a BatchedTensorImpl from torch\vmap
-    # We can't convert to a numpy array, just let it pass through
-    try:
-        value = safe_create_np_array(value)
-    except RuntimeError as ex:
-        pass
+    value = safe_create_np_array(value)
 
     if dimension == 1:
-        value = np.atleast_1d(value)
+        if torch and torch.is_tensor(value):
+            value = torch.atleast_1d(value)
+        else:
+            value = np.atleast_1d(value)
+
     elif dimension == 2:
         # Array is made up of non-uniform elements, so treat as 2d array and pass
         if (
@@ -1076,14 +1070,11 @@ def convert_to_np_array(value, dimension=None):
         ):
             pass
         else:
-            try:
+            if torch and torch.is_tensor(value):
+                value = torch.atleast_2d(value)
+            else:
                 value = np.atleast_2d(value)
-            except RuntimeError:
-                # If we get a RuntimeError, this is probably a BatchedTensorImpl from torch\vmap
-                # We can't convert to a numpy array and use np.atleast_2d, so we need to use
-                # torch's atleast_2d function instead
-                if torch:
-                    value = torch.atleast_2d(value)
+
     elif dimension is not None:
         raise UtilitiesError("dimension param ({0}) must be None, 1, or 2".format(dimension))
 
@@ -1183,8 +1174,6 @@ def append_type_to_name(object, type=None):
         string = "\'" + name + "\'" + ' ' + type.lower()
         # string = name + ' ' + type.lower()
     return string
-#endregion
-
 
 class ReadOnlyOrderedDict(UserDict):
     def __init__(self, dict=None, name=None, **kwargs):
@@ -1632,30 +1621,41 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
         -------
         a numpy array containing the converted **arr**
     """
-    if isinstance(arr, np.ndarray) and arr.dtype != object:
-        if cast_from is not None and arr.dtype == cast_from:
-            return np.asarray(arr, dtype=cast_to)
-        else:
+    def recurse(arr):
+        if isinstance(arr, np.ndarray):
+            if cast_from is not None and arr.dtype == cast_from:
+                return np.asarray(arr, dtype=cast_to)
+            elif arr.ndim == 0 or arr.dtype != object:
+                return arr
+
+        if isinstance(arr, np.number):
+            return np.asarray(arr)
+
+        if cast_from is not None and isinstance(arr, cast_from):
+            return cast_to(arr)
+
+        if not isinstance(arr, collections.abc.Iterable) or isinstance(arr, str):
             return arr
 
-    if cast_from is not None and isinstance(arr, cast_from):
-        return np.asarray(arr, dtype=cast_to)
+        if isinstance(arr, np.matrix):
+            if arr.dtype == object:
+                return np.asarray([recurse(arr.item(i)) for i in range(arr.size)])
+            else:
+                return arr
 
-    if not isinstance(arr, collections.abc.Iterable) or isinstance(arr, str):
-        return np.array(arr)
+        subarr = [recurse(x) for x in arr]
 
-    if isinstance(arr, np.matrix):
-        if arr.dtype == object:
-            return np.asarray([convert_all_elements_to_np_array(arr.item(i), cast_from, cast_to) for i in range(arr.size)])
-        else:
-            return arr
+        with warnings.catch_warnings():
+            warnings.filterwarnings('error', message='.*ragged.*', category=np.VisibleDeprecationWarning)
+            try:
+                # the elements are all uniform in shape, so we can use numpy's standard behavior
+                return np.asarray(subarr)
+            except np.VisibleDeprecationWarning:
+                pass
+            except ValueError as e:
+                if 'The requested array has an inhomogeneous shape' not in str(e):
+                    raise
 
-    subarr = [convert_all_elements_to_np_array(x, cast_from, cast_to) for x in arr]
-
-    if all([subarr[i].shape == subarr[0].shape for i in range(1, len(subarr))]):
-        # the elements are all uniform in shape, so we can use numpy's standard behavior
-        return np.asarray(subarr)
-    else:
         # the elements are nonuniform, so create an array that just wraps them individually
         # numpy cannot easily create arrays with subarrays of certain dimensions, workaround here
         # https://stackoverflow.com/q/26885508/3131666
@@ -1665,6 +1665,12 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
             elementwise_subarr[i] = subarr[i]
 
         return elementwise_subarr
+
+    if not isinstance(arr, collections.abc.Iterable) or isinstance(arr, str):
+        # only wrap a noniterable if it's the outermost value
+        return np.asarray(arr)
+    else:
+        return recurse(arr)
 
 # Seeds and randomness
 
@@ -2040,11 +2046,14 @@ def contains_type(
         **arr** itself if needed
     """
     try:
-        for a in arr:
-            if isinstance(a, typ) or (a is not arr and contains_type(a, typ)):
-                return True
+        arr_items = iter(arr)
     except TypeError:
-        pass
+        return False
+
+    recurse = not isinstance(arr, np.matrix)
+    for a in arr_items:
+        if isinstance(a, typ) or (a is not arr and recurse and contains_type(a, typ)):
+            return True
 
     return False
 
@@ -2109,3 +2118,302 @@ def toposort_key(
             return -1
 
     return _generated_toposort_key
+
+
+def fill_array(arr: np.ndarray, value: Any):
+    """
+    Fills all elements of **arr** with **value**, maintaining embedded
+    shapes of object-dtype arrays
+
+    Args:
+        arr (np.ndarray)
+        value (Any)
+    """
+    if arr.ndim != 0 and arr.dtype == object:
+        for item in arr:
+            fill_array(item, value)
+    else:
+        arr.fill(value)
+
+
+# np.isscalar returns true on non-numeric items
+def is_numeric_scalar(obj) -> bool:
+    """
+        Returns:
+            True if **obj** is a numbers.Number or a numpy ndarray
+                containing a single numeric value
+            False otherwise
+    """
+
+    try:
+        # getting .item() and checking type is significantly slower
+        return obj.ndim == 0 and obj.dtype.kind in {'i', 'f'}
+    except (AttributeError, ValueError):
+        return isinstance(obj, Number)
+
+
+def try_extract_0d_array_item(arr: np.ndarray):
+    """
+        Returns:
+            the single item in **arr** if **arr** is a 0-dimensional
+            numpy ndarray, otherwise **arr**
+    """
+    try:
+        if arr.ndim == 0:
+            return arr.item()
+    except AttributeError:
+        pass
+    return arr
+
+
+def _extended_array_compare(a, b, comparison_fct: Callable[[Any, Any], bool]) -> bool:
+    """
+    Recursively determine equality of **a** and **b** using
+    **comparison_fct** as an equality function. Shape and size of nested
+    arrays must be the same for equality.
+
+    Args:
+        a (np.ndarray-like)
+        b (np.ndarray-like)
+        comparison_fct (Callable[[Any, Any], bool]): a comparison
+        function to be called on **a** and **b**. For example,
+        numpy.array_equal
+
+    Returns:
+        bool: result of comparison_fct(**a**, **b**)
+    """
+    try:
+        a_ndim = a.ndim
+    except AttributeError:
+        a_ndim = None
+
+    try:
+        b_ndim = b.ndim
+    except AttributeError:
+        b_ndim = None
+
+    # a or b is not a numpy array
+    if a_ndim is None or b_ndim is None:
+        return comparison_fct(a, b)
+
+    if a_ndim != b_ndim:
+        return False
+
+    # b_ndim is also 0
+    if a_ndim == 0:
+        return comparison_fct(a, b)
+
+    if len(a) != len(b):
+        return False
+
+    if a.dtype != b.dtype:
+        return False
+
+    # safe to use standard numpy comparison here because not ragged
+    if a.dtype != object:
+        return comparison_fct(a, b)
+
+    for i in range(len(a)):
+        if not _extended_array_compare(a[i], b[i], comparison_fct):
+            return False
+
+    return True
+
+
+def extended_array_equal(a, b, equal_nan: bool = False) -> bool:
+    """
+    Tests equality like numpy.array_equal, while recursively checking
+    object-dtype arrays.
+
+    Args:
+        a (np.ndarray-like)
+        b (np.ndarray-like)
+        equal_nan (bool, optional): Whether to consider NaN as equal.
+            See numpy.array_equal. Defaults to False.
+
+    Returns:
+        bool: **a** and **b** are equal.
+
+    Example:
+        `X = np.array([np.array([0]), np.array([0, 0])], dtype=object)`
+
+        | a | b | np.array_equal | extended_array_equal |
+        |---|---|----------------|----------------------|
+        | X | X | False          | True                 |
+    """
+    a = convert_all_elements_to_np_array(a)
+    b = convert_all_elements_to_np_array(b)
+
+    return _extended_array_compare(
+        a, b, functools.partial(np.array_equal, equal_nan=equal_nan)
+    )
+
+
+def _check_array_attr_equiv(a, b, attr):
+    err_msg = '{0} is not a numpy.ndarray'
+
+    try:
+        a_val = getattr(a, attr)
+    except AttributeError:
+        raise ValueError(err_msg.format(a))
+
+    try:
+        b_val = getattr(b, attr)
+    except AttributeError:
+        raise ValueError(err_msg.format(b))
+
+    if a_val != b_val:
+        raise ValueError(f'{attr}s {a_val} and {b_val} differ')
+
+
+def _update_array_in_place(
+    target: np.ndarray,
+    source: np.ndarray,
+    casting: Literal['no', 'equiv', 'safe', 'same_kind', 'unsafe'],
+    _dry_run: bool,
+    _in_object_dtype: bool,
+):
+    # enforce dtype equivalence when recursing in an object-dtype target
+    # array, because we won't know if np.copyto will succeed on every
+    # element until we try
+    if _in_object_dtype:
+        _check_array_attr_equiv(target, source, 'dtype')
+
+    # enforce shape equivalence so that we know when the python-side
+    # values become incompatible with compiled structs
+    _check_array_attr_equiv(target, source, 'shape')
+
+    if target.dtype == object:
+        len_target = len(target)
+        len_source = len(source)
+
+        if len_source != len_target:
+            raise ValueError(f'lengths {len_target} and {len_source} differ')
+
+        # check all elements before update to avoid partial update
+        if not _dry_run:
+            for i in range(len_target):
+                _update_array_in_place(
+                    target[i],
+                    source[i],
+                    casting=casting,
+                    _dry_run=True,
+                    _in_object_dtype=True,
+                )
+
+        for i in range(len_target):
+            _update_array_in_place(
+                target[i],
+                source[i],
+                casting=casting,
+                _dry_run=_dry_run,
+                _in_object_dtype=True,
+            )
+    else:
+        np.broadcast(source, target)  # only here to throw error if broadcast fails
+        if not _dry_run:
+            np.copyto(target, source, casting=casting)
+
+
+def update_array_in_place(
+    target: np.ndarray,
+    source: np.ndarray,
+    casting: Literal['no', 'equiv', 'safe', 'same_kind', 'unsafe'] = 'same_kind',
+):
+    """
+    Copies the values in **source** to **target**, supporting ragged
+    object-dtype arrays.
+
+    Args:
+        target (numpy.ndarray): array receiving values
+        source (numpy.ndarray): array providing values
+        casting (Literal["no", "equiv", "safe", "same_kind", "unsafe"],
+            optional): See `numpy.copyto`. Defaults to 'same_kind'.
+    """
+    _update_array_in_place(
+        target=target,
+        source=source,
+        casting=casting,
+        _dry_run=False,
+        _in_object_dtype=False
+    )
+
+
+def array_from_matrix_string(
+    s: str, row_sep: str = ';', col_sep: str = ' ', dtype: DTypeLike = float
+) -> np.ndarray:
+    """
+    Constructs a numpy array from a string in forms like '1 2; 3 4'
+    replicating the function of the numpy.matrix constructor.
+
+    Args:
+        s (str): matrix descriptor
+        row_sep (str, optional): separator for matrix rows. Defaults to ';'.
+        col_sep (str, optional): separator for matrix columns. Defaults to ' '.
+        dtype (DTypeLike, optional): dtype of result array. Defaults to float.
+
+    Returns:
+        np.ndarray: array representation of **s**
+    """
+    rows = s.split(row_sep)
+    arr = []
+    for r in rows:
+        # filter empty columns, commonly in form like '1 2; 3 4'
+        arr.append([c for c in r.split(col_sep) if len(c)])
+
+    return np.asarray(arr, dtype=dtype)
+
+#endregion
+
+#region PYTORCH TENSOR METHODS *****************************************************************************************
+
+def get_torch_tensor(value, dtype, device):
+    if device == MPS or device == torch.device(MPS):
+        if isinstance(value, torch.Tensor):
+            return torch.tensor(value, dtype=torch.float32, device=device)
+        return torch.tensor(np.array(value, dtype=np.float32), device=device)
+    else:
+        if dtype in {np.float32, torch.float32}:
+            return torch.tensor(value, device=device).float()
+        elif dtype in {np.float64, torch.float64}:
+            return torch.tensor(value, device=device).double()
+        else:
+            return torch.tensor(value, device=device)
+
+def safe_create_np_array(value):
+    with warnings.catch_warnings():
+
+        # If we have a torch tensor, allow it to pass through unchanged
+        if torch and torch.is_tensor(value):
+            return value
+
+        warnings.filterwarnings('error', category=np.VisibleDeprecationWarning)
+        # NOTE: this will raise a ValueError in the future.
+        # See https://numpy.org/neps/nep-0034-infer-dtype-is-object.html
+        try:
+            try:
+                return np.asarray(value)
+            except np.VisibleDeprecationWarning:
+                return np.asarray(value, dtype=object)
+            except ValueError as e:
+                # numpy 1.24 removed the above deprecation and raises
+                # ValueError instead. Note that the below call can still
+                # raise other ValueErrors
+                if 'The requested array has an inhomogeneous shape' in str(e):
+                    return np.asarray(value, dtype=object)
+                raise
+
+        except ValueError as e:
+            msg = str(e)
+            if 'cannot guess the desired dtype from the input' in msg:
+                return np.asarray(value, dtype=object)
+            # KDM 6/29/20: this case handles a previously noted case
+            # by KAM 6/28/18, #877:
+            # [[0.0], [0.0], np.array([[0.0, 0.0]])]
+            # but was only handled for dimension=1
+            elif 'could not broadcast' in msg:
+                return convert_all_elements_to_np_array(value)
+            else:
+                raise
+
+#endregion

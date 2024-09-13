@@ -1185,19 +1185,22 @@ class TestDuplicatePathwayWarnings:
         C = TransferMechanism()
         comp = Composition()
 
-        comp.add_linear_processing_pathway(pathway=[A,B,C])
+        comp.add_linear_processing_pathway(pathway=[A, B, C])
+        comp.verbosePref = PreferenceEntry(verbosity, PreferenceLevel.INSTANCE)
 
-        # Test for warning if verbosePref is set to True
+        with warnings.catch_warnings(record=True) as msgs:
+            comp.add_linear_processing_pathway(pathway=[A, B])
+
         if verbosity:
-            regexp = f"Pathway specified in 'pathway' arg for add_linear_processing_pathway method of '{comp.name}' " \
-                     f"has a subset of nodes in a Pathway already in '{comp.name}': Pathway-0; the latter will be used."
-            with pytest.warns(UserWarning, match=regexp):
-                comp.verbosePref = PreferenceEntry(True, PreferenceLevel.INSTANCE)
-                comp.add_linear_processing_pathway(pathway=[A,B])
+            # Test for warning if verbosePref is set to True
+            warning = f"Pathway specified in 'pathway' arg for add_linear_processing_pathway method of '{comp.name}' " \
+                      f"has a subset of nodes in a Pathway already in '{comp.name}': Pathway-0; the latter will be used."
+
+            # The above issues 2 warnings, but we only test for one of them here
+            assert any(str(m.message) == warning for m in msgs), list(str(m.message) for m in msgs)
         else:
-            # Test for suppression of warning if verbosePref not set
-            with pytest.warns(None):
-                comp.add_linear_processing_pathway(pathway=[A,B])
+            # Test for suppression of warning if verbosePref is not set
+            assert len(msgs) == 0
 
     def test_add_backpropagation_pathway_exact_duplicate_warning(self):
         A = TransferMechanism()
@@ -1230,19 +1233,24 @@ class TestDuplicatePathwayWarnings:
         B = TransferMechanism()
         C = TransferMechanism()
         comp = Composition()
-        comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
+        comp.add_backpropagation_learning_pathway(pathway=[A, B, C])
 
-        # Test for warning if verbosePref is set to True
+        comp.verbosePref = PreferenceEntry(verbosity, PreferenceLevel.INSTANCE)
+
+        with warnings.catch_warnings(record=True) as msgs:
+            comp.add_backpropagation_learning_pathway(pathway=[A, B])
+
         if verbosity:
-            regexp = f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method of '{comp.name}'" \
-                     f" has a subset of nodes in a Pathway already in '{comp.name}':.*; the latter will be used."
-            with pytest.warns(UserWarning, match=regexp):
-                comp.verbosePref = PreferenceEntry(True, PreferenceLevel.INSTANCE)
-                comp.add_backpropagation_learning_pathway(pathway=[A,B])
+            # Test for warning if verbosePref is set to True
+            warning = f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method of '{comp.name}'" \
+                      f" has a subset of nodes in a Pathway already in '{comp.name}': Pathway-0; the latter will be used."
+
+            # The above issues 2 warnings, but we only test for one of them here
+            assert any(str(m.message) == warning for m in msgs), list(str(m.message) for m in msgs)
         else:
             # Test for suppression of warning if verbosePref is not set
-            with pytest.warns(None):
-                comp.add_backpropagation_learning_pathway(pathway=[A,B])
+            assert len(msgs) == 0
+
 
     def test_add_processing_pathway_non_contiguous_subset_is_OK(self):
         A = TransferMechanism()
@@ -3410,9 +3418,14 @@ class TestRunInputSpecifications:
 
         c.run(inputs=test_function,
               num_trials=10)
-        assert c.parameters.results.get(c) == [[np.array([0.])], [np.array([1.])], [np.array([2.])], [np.array([3.])],
-                                               [np.array([4.])], [np.array([5.])], [np.array([6.])], [np.array([7.])],
-                                               [np.array([8.])], [np.array([9.])]]
+        np.testing.assert_array_equal(
+            c.parameters.results.get(c),
+            [
+                [np.array([0.])], [np.array([1.])], [np.array([2.])], [np.array([3.])],
+                [np.array([4.])], [np.array([5.])], [np.array([6.])], [np.array([7.])],
+                [np.array([8.])], [np.array([9.])]
+            ]
+        )
 
     @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python,
                                       pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
@@ -3436,9 +3449,14 @@ class TestRunInputSpecifications:
         t_g = test_generator()
 
         c.run(inputs=t_g, execution_mode=mode)
-        assert c.parameters.results.get(c) == [[np.array([0.])], [np.array([1.])], [np.array([2.])], [np.array([3.])],
-                                               [np.array([4.])], [np.array([5.])], [np.array([6.])], [np.array([7.])],
-                                               [np.array([8.])], [np.array([9.])]]
+        np.testing.assert_array_equal(
+            c.parameters.results.get(c),
+            [
+                [np.array([0.])], [np.array([1.])], [np.array([2.])], [np.array([3.])],
+                [np.array([4.])], [np.array([5.])], [np.array([6.])], [np.array([7.])],
+                [np.array([8.])], [np.array([9.])]
+            ]
+        )
 
     @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python,
                                       pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
@@ -3833,7 +3851,10 @@ class TestRun:
         inner_comp = Composition(pathways=[m_inner])
         m_outer = ProcessingMechanism(size=2)
         outer_comp = Composition(pathways=[m_outer, inner_comp])
-        result = outer_comp.run(execution_mode=mode)
+
+        with pytest.warns(UserWarning, match="No inputs provided in call"):
+            result = outer_comp.run(execution_mode=mode)
+
         np.testing.assert_allclose(result, [[0.0, 0.0]])
 
     @pytest.mark.composition
@@ -3842,7 +3863,10 @@ class TestRun:
         inner_comp = Composition(pathways=[m_inner])
         m_outer = ProcessingMechanism(size=2)
         outer_comp = Composition(pathways=[m_outer, inner_comp])
-        result = outer_comp.run(execution_mode=comp_mode)
+
+        with pytest.warns(UserWarning, match="No inputs provided in call"):
+            result = outer_comp.run(execution_mode=comp_mode)
+
         np.testing.assert_allclose(result, [[0.0, 0.0]])
 
     def test_lpp_invalid_matrix_keyword(self):
@@ -4190,7 +4214,7 @@ class TestRun:
         assert comp.results == [[[1]]]
 
         context = pnl.Context()
-        t.function.parameters.slope._set(2, context)
+        t.function.parameters.slope._set(np.array(2), context)
 
         comp.run({t: [1]}, context=context)
         assert comp.results == [[[2]]]
@@ -4239,6 +4263,193 @@ class TestRun:
         with warnings.catch_warnings():
             warnings.simplefilter("error")
             comp.run()
+
+    def _check_comp_ex(self, comp, comparison, comp_mode, struct_name, context=None, is_not=False):
+        if comp_mode == pnl.ExecutionMode.Python:
+            return
+
+        if context is None:
+            context = comp
+
+        execution_dict = comp._compilation_data.execution.get(context)
+        for tag, execution in execution_dict.items():
+            if comparison is None:
+                comparison_val = None
+            else:
+                comparison_val = comparison[tag]
+
+            if is_not:
+                assert getattr(execution, struct_name) is not comparison_val
+            else:
+                assert getattr(execution, struct_name) is comparison_val
+
+    @pytest.mark.composition
+    def test_multiple_runs_with_parameter_change(self, comp_mode):
+        struct_name = '_param'
+
+        A = TransferMechanism(size=2)
+        comp = Composition([A])
+
+        inputs_dict = {A: [1, 1]}
+        output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
+        np.testing.assert_allclose([[1, 1]], output)
+        orig_comp_ex = comp._compilation_data.execution.get(comp)
+        if orig_comp_ex is not None:
+            orig_comp_ex = {
+                tag: getattr(ex, struct_name)
+                for tag, ex in orig_comp_ex.items()
+            }
+
+        # assign int to float, can reuse compilation
+        A.function.slope.base = 2
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name)
+
+        output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
+        np.testing.assert_allclose([[2, 2]], output)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name)
+
+        # assign float to float, can reuse compilation
+        A.function.slope.base = 2.1
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name)
+
+        output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
+        np.testing.assert_allclose([[2.1, 2.1]], output)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name)
+
+        # assign array with len 2 to float, must recompile
+        A.function.intercept.base = [3, 3]
+        self._check_comp_ex(comp, None, comp_mode, struct_name)
+
+        # vectorized intercept not supported in LLVM modes
+        A.function.intercept.base = 3
+
+        output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
+        np.testing.assert_allclose([[5.1, 5.1]], output)
+        self._check_comp_ex(comp, None, comp_mode, struct_name, is_not=True)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name, is_not=True)
+
+    @pytest.mark.composition
+    def test_multiple_runs_with_parameter_change_arr(self, comp_mode):
+        struct_name = '_state'
+
+        A = TransferMechanism(size=2, integrator_mode=True)
+        comp = Composition([A])
+
+        inputs_dict = {A: [1, 1]}
+        output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
+        np.testing.assert_allclose([[0.5, 0.5]], output)
+        orig_comp_ex = comp._compilation_data.execution.get(comp)
+        if orig_comp_ex is not None:
+            orig_comp_ex = {
+                tag: getattr(ex, struct_name)
+                for tag, ex in orig_comp_ex.items()
+            }
+
+        # assign int to float, can reuse compilation
+        A.integrator_function.previous_value = [[1, 1]]
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name)
+
+        output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
+        np.testing.assert_allclose([[1.0, 1.0]], output)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name)
+
+        # assign float to float, can reuse compilation
+        A.integrator_function.previous_value = [[1.1, 1.1]]
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name)
+
+        output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
+        np.testing.assert_allclose([[1.05, 1.05]], output)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name)
+
+        # assign array with extra dim, must recompile
+        A.integrator_function.previous_value = [[[1.1, 1.1]]]
+        self._check_comp_ex(comp, None, comp_mode, struct_name)
+        A.integrator_function.previous_value = [[1.1, 1.1]]
+
+        output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
+        np.testing.assert_allclose([[1.05, 1.05]], output)
+        self._check_comp_ex(comp, None, comp_mode, struct_name, is_not=True)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name, is_not=True)
+
+    @pytest.mark.composition
+    def test_multiple_runs_with_parameter_change_from_data_struct(self, comp_mode):
+        # NOTE: values in value.set calls below do not affect results,
+        # they are arbitrary and used just to check existence or
+        # non-existence of compiled structures after set
+        struct_name = '_data'
+
+        A = TransferMechanism(size=2, integrator_mode=True)
+        comp = Composition([A])
+
+        inputs_dict = {A: [1, 1]}
+        output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
+        np.testing.assert_allclose([[0.5, 0.5]], output)
+        orig_comp_ex = comp._compilation_data.execution.get(comp)
+        if orig_comp_ex is not None:
+            orig_comp_ex = {
+                tag: getattr(ex, struct_name)
+                for tag, ex in orig_comp_ex.items()
+            }
+
+        # assign int to float, can reuse compilation
+        A.integrator_function.parameters.value.set([[1, 1]], comp, override=True)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name)
+
+        output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
+        np.testing.assert_allclose([[0.75, 0.75]], output)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name)
+
+        # assign float to float, can reuse compilation
+        A.integrator_function.parameters.value.set([[1.0, 1.0]], comp, override=True)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name)
+
+        output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
+        np.testing.assert_allclose([[0.875, 0.875]], output)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name)
+
+        # assign array with extra dim, must recompile
+        A.integrator_function.parameters.value.set([[[1.0, 1.0]]], comp, override=True)
+        self._check_comp_ex(comp, None, comp_mode, struct_name)
+        A.integrator_function.parameters.value.set([[1.0, 1.0]], comp, override=True)
+
+        output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
+        np.testing.assert_allclose([[0.9375, 0.9375]], output)
+        self._check_comp_ex(comp, None, comp_mode, struct_name, is_not=True)
+        self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name, is_not=True)
+
+    @pytest.mark.composition
+    @pytest.mark.usefixtures("comp_mode_no_llvm")
+    @pytest.mark.parametrize("comp_mode2", [m for m in pytest.helpers.get_comp_execution_modes() if m.values[0] is not pnl.ExecutionMode.LLVM])
+    def test_execution_after_cleanup_enum_param(self, comp_mode, comp_mode2):
+        """
+        This test checks that compiled sync works for Parameters with Enum values.
+        Enums are converted to 0-d numpy arrays of tyep integer and the synced value
+        should be correctly consumed by the following execution, both Python and compiled
+        """
+
+        T = pnl.TransferMechanism(integrator_mode=True,
+                                  termination_measure=pnl.TimeScale.TRIAL,
+                                  termination_threshold=5,
+                                  execute_until_finished=True)
+        P = pnl.ProcessingMechanism()
+
+        C = pnl.Composition()
+        C.add_linear_processing_pathway([T, P])
+
+        C.scheduler.add_condition(P, pnl.WhenFinished(T))
+
+        ctx = pnl.Context()
+
+        res = C.run([5], execution_mode=comp_mode, context=ctx)
+        np.testing.assert_allclose(res, [[4.84375]])
+
+        # Cleanup is really only necessary if the first execution is compiled,
+        # but it's really cheap if it there's no compilation context
+        pnl.core.llvm.cleanup()
+
+        res2 = C.run([5], execution_mode=comp_mode2, context=ctx)
+        np.testing.assert_allclose(res2, [[4.995117]])
+
 
 class TestCallBeforeAfterTimescale:
 
@@ -4922,7 +5133,7 @@ class TestNestedCompositions:
                                                    allocation_samples=pnl.SampleSpec(start=1.0, stop=5.0, num=5))])
         )
         assert not ocomp._check_for_existing_projections(sender=ib, receiver=ocomp_objective_mechanism)
-        return ocomp
+
     # # Does not work yet due to initialize_cycle_values bug that causes first recurrent projection to pass different values
     # # to TranfserMechanism version vs Logistic fn + AdaptiveIntegrator fn version
     # def test_recurrent_transfer_mechanism_composition(self):
@@ -5163,7 +5374,7 @@ class TestNestedCompositions:
         c1.add_projection(MappingProjection(), sender=p1, receiver=p3b)
 
         result = c1.run([5])
-        assert result == [5, 5]
+        np.testing.assert_array_equal(result, [[5], [5]])
 
     @pytest.mark.pathways
     def test_three_level_deep_modulation_routing_single_mech(self):
@@ -5193,7 +5404,7 @@ class TestNestedCompositions:
         c1 = Composition(name='c1', pathways=[[(c2, NodeRole.INPUT)], [ctrl1]])
 
         result = c1.run({c2: [[2], [2]], ctrl1: [5]})
-        assert result == [10, 10]
+        np.testing.assert_array_equal(result, [[10], [10]])
 
     @pytest.mark.pathways
     @pytest.mark.state_features
@@ -6120,9 +6331,15 @@ class TestInputSpecifications:
 
         c.run(inputs=test_function,
               num_trials=10)
-        assert c.parameters.results.get(c) == [[np.array([0.])], [np.array([1.])], [np.array([2.])], [np.array([3.])],
-                                               [np.array([4.])], [np.array([5.])], [np.array([6.])], [np.array([7.])],
-                                               [np.array([8.])], [np.array([9.])]]
+
+        np.testing.assert_array_equal(
+            c.parameters.results.get(c),
+            [
+                [np.array([0.])], [np.array([1.])], [np.array([2.])], [np.array([3.])],
+                [np.array([4.])], [np.array([5.])], [np.array([6.])], [np.array([7.])],
+                [np.array([8.])], [np.array([9.])]
+            ]
+        )
 
     def test_function_as_learning_input(self):
         num_epochs=2
@@ -6182,10 +6399,10 @@ class TestInputSpecifications:
     @pytest.mark.control
     @pytest.mark.parametrize(
         "controllers, results",[
-            ('none', [[-2], [1]]),
-            ('inner',  [[-2], [10]]),
-            ('outer',  [[-2], [10]]),
-            ('inner_and_outer', [[-2], [100]]),
+            ('none', [[[-2]], [[1]]]),
+            ('inner',  [[[-2]], [[10]]]),
+            ('outer',  [[[-2]], [[10]]]),
+            ('inner_and_outer', [[[-2]], [[100]]]),
         ]
     )
     @pytest.mark.parametrize(
@@ -6293,7 +6510,7 @@ class TestInputSpecifications:
 
         # run Composition with all three input types and assert that results are as expected.
         ocomp.run(inputs=inputs_source)
-        assert ocomp.results == results
+        np.testing.assert_array_equal(ocomp.results, results)
 
     expected_format_strings = \
         [
@@ -6379,26 +6596,31 @@ class TestInputSpecifications:
 
 
 class TestProperties:
+
+    _fallback_xfail = pytest.mark.xfail(raises=AssertionError, match="Runtime parameters are not supported in compiled mode")
+
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python, pnl.ExecutionMode.Auto,
-                                      pytest.param(pnl.ExecutionMode.LLVM, marks=[pytest.mark.xfail, pytest.mark.llvm]),
-                                      pytest.param(pnl.ExecutionMode.LLVMExec, marks=[pytest.mark.xfail, pytest.mark.llvm]),
-                                      pytest.param(pnl.ExecutionMode.LLVMRun, marks=[pytest.mark.xfail, pytest.mark.llvm]),
-                                      pytest.param(pnl.ExecutionMode.PTXExec, marks=[pytest.mark.xfail, pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param(pnl.ExecutionMode.PTXRun, marks=[pytest.mark.xfail, pytest.mark.llvm, pytest.mark.cuda]),
+    @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Auto, pnl.ExecutionMode.Python,
+                                      pytest.param(pnl.ExecutionMode.LLVM, marks=[_fallback_xfail, pytest.mark.llvm]),
+                                      pytest.param(pnl.ExecutionMode.LLVMExec, marks=[_fallback_xfail, pytest.mark.llvm]),
+                                      pytest.param(pnl.ExecutionMode.LLVMRun, marks=[_fallback_xfail, pytest.mark.llvm]),
+                                      pytest.param(pnl.ExecutionMode.PTXExec, marks=[_fallback_xfail, pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param(pnl.ExecutionMode.PTXRun, marks=[_fallback_xfail, pytest.mark.llvm, pytest.mark.cuda]),
                                      ])
     def test_llvm_fallback(self, mode):
-        comp = Composition()
+
         # FIXME: using num_executions is a hack. The name collides with
         #        a stateful param of every component and thus it's not supported
         def myFunc(variable, params, context, num_executions):
             return variable * 2
+
         U = UserDefinedFunction(custom_function=myFunc, default_variable=[[0, 0], [0, 0]], num_executions=0)
         A = TransferMechanism(name="composition-pytests-A",
                               default_variable=[[1.0, 2.0], [3.0, 4.0]],
                               function=U)
+
+        comp = Composition(nodes=[A])
         inputs = {A: [[10., 20.], [30., 40.]]}
-        comp.add_node(A)
 
         res = comp.run(inputs=inputs, execution_mode=mode)
         np.testing.assert_allclose(res, [[20.0, 40.0], [60.0, 80.0]])
@@ -6715,7 +6937,10 @@ class TestInitialize:
 
         # Run 1 --> Execution 1: 1 + 2 = 3    |    Execution 2: 3 + 2 = 5    |    Execution 3: 5 + 3 = 8
         # Run 2 --> Execution 1: 8 + 1 = 9    |    Execution 2: 9 + 2 = 11    |    Execution 3: 11 + 3 = 14
-        assert abc_Composition.results == [[[3]], [[5]], [[8]], [[9]], [[11]], [[14]]]
+        np.testing.assert_array_equal(
+            abc_Composition.results,
+            [[[3]], [[5]], [[8]], [[9]], [[11]], [[14]]]
+        )
 
     def test_initialize_cycle_values_warning(self):
         A = ProcessingMechanism(name='A')
@@ -6750,7 +6975,10 @@ class TestInitialize:
 
         # Run 1 --> Execution 1: 1 + 2 = 3    |    Execution 2: 3 + 2 = 5    |    Execution 3: 5 + 3 = 8
         # Run 2 --> Execution 1: 8 + 1 = 9    |    Execution 2: 9 + 2 = 11    |    Execution 3: 11 + 3 = 14
-        assert abc_Composition.results == [[[3]], [[5]], [[8]], [[9]], [[11]], [[14]]]
+        np.testing.assert_array_equal(
+            abc_Composition.results,
+            [[[3]], [[5]], [[8]], [[9]], [[11]], [[14]]]
+        )
 
     def test_initialize_cycles_excluding_unspecified_nodes(self):
         A = ProcessingMechanism(name='A')
@@ -7127,7 +7355,7 @@ class TestNodeRoles:
         assert input_format == "\nInputs to (nested) INPUT Nodes of OUTER COMP for 2 trials:\n\tMIDDLE COMP: \n\t\tX: [ [[0.0]], [[0.0]] ]\n\t\tINNER COMP: \n\t\t\tA: [ ['red'], ['green'] ]\n\tQ: [ ['red'], ['green'] \n\nFormat as follows for inputs to run():\n{\n\tMIDDLE COMP: [ [[0.0],[0.0]], [[0.0],[0.0]] ],\n\tQ: [ [[0.0]], [[0.0]] ]\n}"
 
         result = ocomp.run(inputs={mcomp:[[.2],['green']], Q:[4.6]})
-        assert result == [[0.2], [1.],[4.6]]
+        np.testing.assert_array_equal(result, [[0.2], [1.], [4.6]])
         results_by_node = ocomp.get_results_by_nodes()
         assert results_by_node[O] == [0.2]
         assert results_by_node[C] == [1.0]

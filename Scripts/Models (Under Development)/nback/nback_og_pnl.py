@@ -882,7 +882,7 @@ def network_test(network:AutodiffComposition,
         coded_responses, stats = analyze_results([network.results,conditions], test=True)
         import torch
         cross_entropy_loss = \
-            [network.loss(torch.Tensor(output[0]),torch.Tensor(np.array(target))).detach().numpy().tolist()
+            [network.loss_function(torch.Tensor(output[0]),torch.Tensor(np.array(target))).detach().numpy().tolist()
              for output, target in zip(network.results, targets)]
     coded_responses_flat = []
     for nback_level in nback_levels:

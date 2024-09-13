@@ -194,13 +194,13 @@ class TestConstruction:
         assert isinstance(em.concatenate_keys_node, Mechanism) == concatenate_node
         if em.concatenate_keys:
             assert em.field_weight_nodes == []
-            assert bool(softmax_gain in {None, CONTROL}) == bool(len(em.softmax_gain_control_nodes))
+            assert bool(softmax_gain == CONTROL) == bool(len(em.softmax_gain_control_nodes))
         else:
             if num_keys > 1:
                 assert len(em.field_weight_nodes) == num_keys
             else:
                 assert em.field_weight_nodes == []
-            if softmax_gain in {None, CONTROL}:
+            if softmax_gain == CONTROL:
                 assert len(em.softmax_gain_control_nodes) == num_keys
             else:
                 assert em.softmax_gain_control_nodes == []
@@ -339,7 +339,7 @@ class TestExecution:
     @pytest.mark.parametrize('enable_learning', [False, True], ids=['no_learning','learning'])
     @pytest.mark.composition
     @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch])
-    def test_simple_execution_without_learning(self,
+    def test_simple_execution_witemhout_learning(self,
                                                exec_mode,
                                                enable_learning,
                                                test_num,
@@ -384,6 +384,8 @@ class TestExecution:
             params.update({'softmax_gain': softmax_gain})
         if storage_prob is not None:
             params.update({'storage_prob': storage_prob})
+        params.update({'softmax_threshold': None})
+        # FIX: ADD TESTS FOR VALIDATION USING SOFTMAX_THRESHOLD
 
         em = EMComposition(**params)
 
@@ -478,11 +480,11 @@ class TestExecution:
                 assert "EMComposition does not support learning with 'concatenate_keys'=True." in str(error.value)
 
             else:
-                if exec_mode == pnl.ExecutionMode.Python:
-                    # FIX: Not sure why Pyton mode reverses last two rows/entries (dict issue?)
-                    expected_memory = [[[0.15625, 0.3125,  0.46875], [0.171875, 0.328125, 0.484375]],
-                                       [[400., 500., 600.], [444., 555., 666.]],
-                                       [[25., 50., 75.], [27.75, 55.5,  83.25]],
-                                       [[2.5, 3.125, 3.75 ], [2.5625, 3.1875, 3.8125]]]
+                # if exec_mode == pnl.ExecutionMode.Python:
+                #     # FIX: Not sure why Python mode reverses last two rows/entries (dict issue?)
+                expected_memory = [[[0.15625, 0.3125,  0.46875], [0.171875, 0.328125, 0.484375]],
+                                   [[400., 500., 600.], [444., 555., 666.]],
+                                   [[25., 50., 75.], [27.75, 55.5,  83.25]],
+                                   [[2.5, 3.125, 3.75 ], [2.5625, 3.1875, 3.8125]]]
                 em.learn(inputs=inputs, execution_mode=exec_mode)
                 np.testing.assert_equal(em.memory, expected_memory)
