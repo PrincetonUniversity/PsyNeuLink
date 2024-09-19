@@ -3482,6 +3482,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             raise ComponentError(f"Resetting {self.name} is not allowed because this Component is not stateful. "
                                  "(It does not have an accumulator to reset).")
 
+    def _parse_execute_output(self, variable, value):
+        return value
+
     @handle_external_context()
     def execute(self, variable=None, context=None, runtime_params=None):
         """Executes Component's `function <Component_Function>`.  See Component-specific execute method for details.
@@ -3499,6 +3502,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 variable = convert_all_elements_to_np_array(variable)
 
         value = self._execute(variable=variable, context=context, runtime_params=runtime_params)
+        value = self._parse_execute_output(variable, value)
         self.parameters.value._set(value, context=context)
 
         return value
