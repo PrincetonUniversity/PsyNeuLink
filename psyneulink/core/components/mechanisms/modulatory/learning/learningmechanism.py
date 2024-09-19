@@ -1463,7 +1463,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
                                                      error_signal_input])
             # Get covariates_values and pass in covariates arg
             if self.covariates_sources:
-                covariates_values = [source.value for source in self.covariates_sources]
+                covariates_values = [source.parameters.value._get(context) for source in self.covariates_sources]
             else:
                 covariates_values = None
             learning_signal, error_signal = super()._execute(variable=function_variable,
