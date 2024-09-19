@@ -1119,9 +1119,19 @@ from psyneulink.core.globals.parameters import (
 )
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
-from psyneulink.core.globals.utilities import \
-    ContentAddressableList, append_type_to_name, convert_all_elements_to_np_array, convert_to_np_array, \
-    iscompatible, kwCompatibilityNumeric, convert_to_list, is_numeric, parse_valid_identifier, safe_len
+from psyneulink.core.globals.utilities import (
+    ContentAddressableList,
+    append_type_to_name,
+    convert_all_elements_to_np_array,
+    convert_to_list,
+    convert_to_np_array,
+    is_numeric,
+    iscompatible,
+    kwCompatibilityNumeric,
+    parse_valid_identifier,
+    safe_len,
+    shape,
+)
 from psyneulink.core.scheduling.condition import Condition
 from psyneulink.core.scheduling.time import TimeScale
 
@@ -2388,6 +2398,27 @@ class Mechanism_Base(Mechanism):
             raise MechanismError(f"Resetting '{self.name}' is not allowed because this Mechanism is not stateful; "
                                  f"it does not have an accumulator to reset.")
 
+    def _parse_execute_output(self, variable, value):
+        value = convert_all_elements_to_np_array(value)
+
+        # comparisons below of .shape and shape are to avoid
+        # dimension increases for ragged arrays. We treat 1d ragged
+        # arrays as 2d, because we assume subarrays are ndim >= 1
+
+        # Intended specifically to handle case of matching a combination
+        # function's output dimension to input dimension. Consider
+        # adding an option to allow user to bypass this step.
+        if variable.ndim == value.ndim + 1 and value.shape == shape(value):
+            value = np.expand_dims(value, 0)
+
+        if (
+            value.ndim == 0
+            or (value.ndim == 1 and value.shape == shape(value))
+        ):
+            value = convert_to_np_array(value, dimension=2)
+
+        return value
+
     # when called externally, ContextFlags.PROCESSING is not set. Maintain this behavior here
     # even though it will not update input ports for example
     @handle_external_context(execution_phase=ContextFlags.IDLE)
@@ -2475,39 +2506,22 @@ class Mechanism_Base(Mechanism):
                 pass
             # Only call subclass' _execute method and then return (do not complete the rest of this method)
             elif self.initMethod == INIT_EXECUTE_METHOD_ONLY:
-                return_value = self._execute(variable=copy_parameter_value(self.defaults.variable),
+                variable = copy_parameter_value(self.defaults.variable)
+                return_value = self._execute(variable=variable,
                                              context=context,
                                              runtime_params=runtime_params)
                 if context.source is ContextFlags.COMMAND_LINE:
                     return_value = copy_parameter_value(return_value)
 
-                # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
-                #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
-                #                       ARRAY OF LENGTH 2), np.array (AS WELL AS np.atleast_2d) GENERATES A ValueError
-                if (isinstance(return_value, list) and
-                    (all(isinstance(item, np.ndarray) for item in return_value) and
-                        all(
-                                all(item.shape[i]==return_value[0].shape[0]
-                                    for i in range(len(item.shape)))
-                                for item in return_value))):
-
-                    return return_value
-                else:
-                    converted_to_2d = convert_to_np_array(return_value, dimension=2)
-                # If return_value is a list of heterogenous elements, return as is
-                #     (satisfies requirement that return_value be an array of possibly multidimensional values)
-                if converted_to_2d.dtype == object:
-                    return return_value
-                # Otherwise, return value converted to 2d np.array
-                else:
-                    return converted_to_2d
+                return self._parse_execute_output(variable, return_value)
 
             # Call only subclass' function during initialization (not its full _execute method nor rest of this method)
             elif self.initMethod == INIT_FUNCTION_METHOD_ONLY:
-                return_value = super()._execute(variable=copy_parameter_value(self.defaults.variable),
+                variable = copy_parameter_value(self.defaults.variable)
+                return_value = super()._execute(variable=variable,
                                                 context=context,
                                                 runtime_params=runtime_params)
-                return convert_to_np_array(return_value, dimension=2)
+                return self._parse_execute_output(variable, return_value)
 
         # SET UP RUNTIME PARAMS if any
 
@@ -2583,26 +2597,7 @@ class Mechanism_Base(Mechanism):
                                       runtime_params=runtime_params,
                                       context=context)
 
-                # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
-                #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
-                #                       ARRAY OF LENGTH 2), np.array (AS WELL AS np.atleast_2d) GENERATES A ValueError
-                if (isinstance(value, list) and
-                    (all(isinstance(item, np.ndarray) for item in value) and
-                        all(
-                                all(item.shape[i]==value[0].shape[0]
-                                    for i in range(len(item.shape)))
-                                for item in value))):
-                    pass
-                else:
-                    converted_to_2d = convert_to_np_array(value, dimension=2)
-                    # If return_value is a list of heterogenous elements, return as is
-                    #     (satisfies requirement that return_value be an array of possibly multidimensional values)
-                    if converted_to_2d.dtype == object:
-                        pass
-                    # Otherwise, return value converted to 2d np.array
-                    else:
-                        # return converted_to_2d
-                        value = converted_to_2d
+                value = self._parse_execute_output(variable, value)
 
                 self.parameters.value._set(value, context=context)
 
