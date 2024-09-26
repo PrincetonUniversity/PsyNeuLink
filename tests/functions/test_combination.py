@@ -279,7 +279,7 @@ def test_linear_combination_function(variable, operation, exponents, weights, sc
 @pytest.mark.parametrize("offset", [None, 1.5, [1,2.5,0,0]], ids=["O_NONE", "O_SCALAR", "O_VECTOR"])
 def test_linear_combination_function_in_mechanism(operation, input, input_ports, scale, offset, benchmark, mech_mode):
     f = pnl.LinearCombination(default_variable=input, operation=operation, scale=scale, offset=offset)
-    p = pnl.ProcessingMechanism(size=[len(input[0])] * len(input), function=f, input_ports=input_ports)
+    p = pnl.ProcessingMechanism(input_shapes=[len(input[0])] * len(input), function=f, input_ports=input_ports)
 
     EX = pytest.helpers.get_mech_execution(p, mech_mode)
 

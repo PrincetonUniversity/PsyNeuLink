@@ -52,10 +52,10 @@ def _run_ddm_with_params(
     return comp, data_to_fit
 
 
-input_node_1 = pnl.ProcessingMechanism(size=1)
-input_node_2 = pnl.ProcessingMechanism(size=3)
-input_node_3 = pnl.ProcessingMechanism(size=2)
-output_node = pnl.ProcessingMechanism(size=2)
+input_node_1 = pnl.ProcessingMechanism(input_shapes=1)
+input_node_2 = pnl.ProcessingMechanism(input_shapes=3)
+input_node_3 = pnl.ProcessingMechanism(input_shapes=2)
+output_node = pnl.ProcessingMechanism(input_shapes=2)
 model = pnl.Composition(
     [{input_node_1, input_node_2, input_node_3}, output_node], name="model"
 )

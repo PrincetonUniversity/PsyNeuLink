@@ -443,7 +443,7 @@ class LCAMechanism(RecurrentTransferMechanism):
     @beartype
     def __init__(self,
                  default_variable=None,
-                 size: Optional[Union[int, list, np.ndarray]] = None,
+                 input_shapes: Optional[Union[int, list, np.ndarray]] = None,
                  input_ports: Optional[Union[list, dict]] = None,
                  function=None,
                  initial_value=None,
@@ -515,7 +515,7 @@ class LCAMechanism(RecurrentTransferMechanism):
 
         super().__init__(
             default_variable=default_variable,
-            size=size,
+            input_shapes=input_shapes,
             input_ports=input_ports,
             # matrix=matrix,
             auto=self_excitation,

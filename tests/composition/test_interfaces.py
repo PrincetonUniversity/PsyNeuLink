@@ -446,7 +446,7 @@ class TestConnectCompositionsViaCIMS:
         level_2 = Composition(name="level_2")
 
         A2 = TransferMechanism(name="A2",
-                               size=2,
+                               input_shapes=2,
                                function=Linear(slope=1.))
         B2 = TransferMechanism(name="B2",
                                function=Linear(slope=2.))

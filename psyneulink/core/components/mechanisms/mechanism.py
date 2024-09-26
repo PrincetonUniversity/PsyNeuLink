@@ -419,7 +419,7 @@ convenient way of accessing the value of its individual items.  Because there is
 a Mechanism's InputPorts and the items of its `variable <Mechanism_Base.variable>`, their size along their outermost
 dimension (axis 0) must be equal; that is, the number of items in the Mechanism's `variable <Mechanism_Base.variable>`
 attribute must equal the number of InputPorts in its `input_ports <Mechanism_Base.input_ports>` attribute. A
-Mechanism's constructor does its best to insure this:  if its **default_variable** and/or its **size** argument is
+Mechanism's constructor does its best to insure this:  if its **default_variable** and/or its **input_shapes** argument is
 specified, it constructs a number of InputPorts (and each with a `value <InputPort.value>`) corresponding to the
 items specified for the Mechanism's `variable <Mechanism_Base.variable>`, as in the examples below::
 
@@ -444,7 +444,7 @@ the Mechanism's variable::
     print(my_mech_C.variable)
     > [array([0, 0]) array([0])]
 
-If both the **default_variable** (or **size**) and **input_ports** arguments are specified, then the number and format
+If both the **default_variable** (or **input_shapes**) and **input_ports** arguments are specified, then the number and format
 of their respective items must be the same (see `Port <Port_Examples>` for additional examples of specifying Ports).
 
 If InputPorts are added using the Mechanism's `add_ports <Mechanism_Base.add_ports>` method, then its
@@ -478,9 +478,9 @@ attribute, as well as the number of InputPorts it has and their `variable <Input
   <InputPort.value>` of the corresponding InputPorts for any that are not explicitly specified in the
   **input_ports** argument or *INPUT_PORTS* entry (see below).
 ..
-* **size** (int, list or ndarray) -- specifies the number and length of items in the Mechanism's variable,
+* **input_shapes** (int, list or ndarray) -- specifies the number and length of items in the Mechanism's variable,
   if **default_variable** is not specified. For example, the following mechanisms are equivalent::
-    T1 = TransferMechanism(size = [3, 2])
+    T1 = TransferMechanism(input_shapes = [3, 2])
     T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
   The relationship to any specifications in the **input_ports** argument or
   *INPUT_PORTS* entry of a **params** dictionary is the same as for the **default_variable** argument,
@@ -488,7 +488,7 @@ attribute, as well as the number of InputPorts it has and their `variable <Input
 ..
 * **input_ports** (list) -- this can be used to explicitly `specify the InputPorts <InputPort_Specification>`
   created for the Mechanism. Each item must be an `InputPort specification <InputPort_Specification>`, and the number
-  of items must match the number of items in the **default_variable** argument or **size** argument
+  of items must match the number of items in the **default_variable** argument or **input_shapes** argument
   if either of those is specified.  If the `variable <InputPort.variable>` and/or `value <InputPort.value>`
   is `explicitly specified for an InputPort <InputPort_Variable_and_Value>` in the **input_ports** argument or
   *INPUT_PORTS* entry of a **params** dictionary, it must be compatible with the value of the corresponding
@@ -1148,7 +1148,7 @@ class Mechanism_Base(Mechanism):
     """
     Mechanism_Base(             \
         default_variable=None,  \
-        size=None,              \
+        input_shapes=None,              \
         input_ports,            \
         function,               \
         output_ports,           \
@@ -1222,21 +1222,21 @@ class Mechanism_Base(Mechanism):
         of its `function <Mechanism_Base.function>` if those are not specified.  If it is not specified, then a
         subclass-specific default is assigned (usually [[0]]).
 
-    size : int, or Iterable of tuples or ints : default None
+    input_shapes : int, or Iterable of tuples or ints : default None
         specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
         if **default_variable** is specified, it must be equivalent to
-        **size**.
+        **input_shapes**.
         For example, the following Mechanisms are equivalent::
-            my_mech = ProcessingMechanism(size = [3, 2])
+            my_mech = ProcessingMechanism(input_shapes = [3, 2])
             my_mech = ProcessingMechanism(default_variable = [[0, 0, 0], [0, 0]])
-        When specified as an iterable, each element of **size** is used
+        When specified as an iterable, each element of **input_shapes** is used
         as the size of the corresponding InputPort.
 
     input_ports : str, list, dict, or np.ndarray : default None
         specifies the InputPorts for the Mechanism; if it is not specified, a single InputPort is created
         using the value of default_variable as its `variable <InputPort.variable>`;  if more than one is specified,
         the number and, if specified, their values must be compatible with any specifications made for
-        **default_variable** or **size** (see `Mechanism_InputPorts` for additional details).
+        **default_variable** or **input_shapes** (see `Mechanism_InputPorts` for additional details).
 
     input_labels : dict
         specifies labels (strings) that can be used to specify numeric values as input to the Mechanism;
@@ -1698,7 +1698,7 @@ class Mechanism_Base(Mechanism):
     @abc.abstractmethod
     def __init__(self,
                  default_variable=None,
-                 size=None,
+                 input_shapes=None,
                  input_ports=None,
                  input_labels=None,
                  function=None,
@@ -1717,7 +1717,7 @@ class Mechanism_Base(Mechanism):
 
         NOTES:
         * Since Mechanism is a subclass of Component, it calls super.__init__
-            to validate size and default_variable and param_defaults;
+            to validate input_shapes and default_variable and param_defaults;
             it uses INPUT_PORT as the default_variable
         * registers Mechanism with MechanismRegistry
 
@@ -1761,7 +1761,7 @@ class Mechanism_Base(Mechanism):
 
         super(Mechanism_Base, self).__init__(
             default_variable=default_variable,
-            size=size,
+            input_shapes=input_shapes,
             function=function,
             param_defaults=params,
             prefs=prefs,
@@ -1794,9 +1794,9 @@ class Mechanism_Base(Mechanism):
     # Handlers
     # ------------------------------------------------------------------------------------------------------------------
 
-    def _handle_default_variable(self, default_variable=None, size=None, input_ports=None, function=None, params=None):
+    def _handle_default_variable(self, default_variable=None, input_shapes=None, input_ports=None, function=None, params=None):
         """
-            Finds whether default_variable can be determined using **default_variable** and **size**
+            Finds whether default_variable can be determined using **default_variable** and **input_shapes**
             arguments.
 
             Returns
@@ -1827,20 +1827,20 @@ class Mechanism_Base(Mechanism):
 
         if default_variable_from_input_ports is not None:
             if default_variable is None:
-                if size is None:
+                if input_shapes is None:
                     default_variable = default_variable_from_input_ports
                 else:
                     if input_ports_variable_was_specified:
-                        size_variable = self._handle_size(size, None)
-                        if iscompatible(size_variable, default_variable_from_input_ports):
+                        input_shapes_variable = self._handle_input_shapes(input_shapes, None)
+                        if iscompatible(input_shapes_variable, default_variable_from_input_ports):
                             default_variable = default_variable_from_input_ports
                         else:
                             raise MechanismError(
                                 f'Default variable for {self.name} determined from the specified input_ports spec '
                                 f'({default_variable_from_input_ports}) is not compatible with the default variable '
-                                f'determined from size parameter ({size_variable}).')
+                                f'determined from input_shapes parameter ({input_shapes_variable}).')
                     else:
-                        # do not pass input_ports variable as default_variable, fall back to size specification
+                        # do not pass input_ports variable as default_variable, fall back to input_shapes specification
                         pass
             else:
                 if input_ports_variable_was_specified:
@@ -1853,7 +1853,7 @@ class Mechanism_Base(Mechanism):
                     # do not pass input_ports variable as default_variable, fall back to default_variable specification
                     pass
 
-        return super()._handle_default_variable(default_variable=default_variable, size=size)
+        return super()._handle_default_variable(default_variable=default_variable, input_shapes=input_shapes)
 
     def _handle_arg_input_ports(self, input_ports):
         """

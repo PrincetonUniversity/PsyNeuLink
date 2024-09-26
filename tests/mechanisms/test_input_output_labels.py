@@ -187,9 +187,9 @@
 #                                 "green": [0, 0]}
 #         output_labels_dict_M2 = {"red": [0, 0],
 #                                 "green": [1, 1]}
-#         M1 = ProcessingMechanism(size=2,
+#         M1 = ProcessingMechanism(input_shapes=2,
 #                                  params={INPUT_LABELS_DICT: input_labels_dict_M1})
-#         M2 = ProcessingMechanism(size=2,
+#         M2 = ProcessingMechanism(input_shapes=2,
 #                                  params={OUTPUT_LABELS_DICT: output_labels_dict_M2})
 #         C = Composition()
 #         learning_pathway = C.add_backpropagation_learning_pathway(pathway=[M1, M2], learning_rate=0.25)
@@ -216,9 +216,9 @@
 #         output_labels_dict_M2 = {0: {"red": [0, 0],
 #                                        "green": [1, 1]}
 #                                  }
-#         M1 = ProcessingMechanism(size=2,
+#         M1 = ProcessingMechanism(input_shapes=2,
 #                                  params={INPUT_LABELS_DICT: input_labels_dict_M1})
-#         M2 = ProcessingMechanism(size=2,
+#         M2 = ProcessingMechanism(input_shapes=2,
 #                                  params={OUTPUT_LABELS_DICT: output_labels_dict_M2})
 #         C = Composition()
 #
@@ -273,7 +273,7 @@
 #                              "green": [0.0, 1.0]}
 #         output_labels_dict = {"red": [1.0, 0.0],
 #                               "green": [0.0, 1.0]}
-#         M = ProcessingMechanism(size=2,
+#         M = ProcessingMechanism(input_shapes=2,
 #                                 params={INPUT_LABELS_DICT: input_labels_dict,
 #                                         OUTPUT_LABELS_DICT: output_labels_dict})
 #         C = Composition(pathways=[M])
@@ -301,7 +301,7 @@
 #                              "blue": [2.0, 2.0]}
 #         output_labels_dict = {"red": [1.0, 0.0],
 #                               "green": [0.0, 1.0]}
-#         M = ProcessingMechanism(size=2,
+#         M = ProcessingMechanism(input_shapes=2,
 #                                 params={INPUT_LABELS_DICT: input_labels_dict,
 #                                         OUTPUT_LABELS_DICT: output_labels_dict})
 #         C = Composition(pathways=[M])

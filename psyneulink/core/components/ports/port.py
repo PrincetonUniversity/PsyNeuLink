@@ -1019,7 +1019,7 @@ class Port_Base(Port):
     def __init__(self,
                  owner: Union[Mechanism, Projection],
                  variable=None,
-                 size=None,
+                 input_shapes=None,
                  projections=None,
                  function=None,
                  params=None,
@@ -1039,9 +1039,9 @@ class Port_Base(Port):
             - variable (value): value of the Port:
                 must be list or tuple of numbers, or a number (in which case it will be converted to a single-item list)
                 must match input and output of Port's _update method, and any sending or receiving projections
-            - size (int or array/list of ints):
+            - input_shapes (int or array/list of ints):
                 Sets variable to be array(s) of zeros, if **variable** is not specified as an argument;
-                if **variable** is specified, it takes precedence over the specification of **size**.
+                if **variable** is specified, it takes precedence over the specification of **input_shapes**.
             - params (dict):
                 + if absent, implements default Port determined by PROJECTION_TYPE param
                 + if dict, can have the following entries:
@@ -1100,7 +1100,7 @@ class Port_Base(Port):
         # VALIDATE VARIABLE, PARAM_SPECS, AND INSTANTIATE self.function
         super(Port_Base, self).__init__(
             default_variable=variable,
-            size=size,
+            input_shapes=input_shapes,
             function=function,
             projections=projections,
             param_defaults=params,

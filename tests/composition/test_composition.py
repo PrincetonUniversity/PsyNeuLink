@@ -469,10 +469,10 @@ class TestAddProjection:
     def test_add_linear_processing_pathway_containing_nodes_with_existing_projections(self):
         """ Test that add_linear_processing_pathway uses MappingProjections already specified for
                 Hidden_layer_2 and Output_Layer in the pathway it creates within the Composition"""
-        Input_Layer = TransferMechanism(name='Input Layer', size=2)
-        Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1', size=5)
-        Hidden_Layer_2 = TransferMechanism(name='Hidden Layer_2', size=4)
-        Output_Layer = TransferMechanism(name='Output Layer', size=3)
+        Input_Layer = TransferMechanism(name='Input Layer', input_shapes=2)
+        Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1', input_shapes=5)
+        Hidden_Layer_2 = TransferMechanism(name='Hidden Layer_2', input_shapes=4)
+        Output_Layer = TransferMechanism(name='Output Layer', input_shapes=3)
         Input_Weights_matrix = (np.arange(2 * 5).reshape((2, 5)) + 1) / (2 * 5)
         Middle_Weights_matrix = (np.arange(5 * 4).reshape((5, 4)) + 1) / (5 * 4)
         Output_Weights_matrix = (np.arange(4 * 3).reshape((4, 3)) + 1) / (4 * 3)
@@ -490,10 +490,10 @@ class TestAddProjection:
     def test_add_backpropagation_learning_pathway_containing_nodes_with_existing_projections(self):
         """ Test that add_backpropagation_learning_pathway uses MappingProjections already specified for
                 Hidden_layer_2 and Output_Layer in the pathway it creates within the Composition"""
-        Input_Layer = TransferMechanism(name='Input Layer', size=2)
-        Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1', size=5)
-        Hidden_Layer_2 = TransferMechanism(name='Hidden Layer_2', size=4)
-        Output_Layer = TransferMechanism(name='Output Layer', size=3)
+        Input_Layer = TransferMechanism(name='Input Layer', input_shapes=2)
+        Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1', input_shapes=5)
+        Hidden_Layer_2 = TransferMechanism(name='Hidden Layer_2', input_shapes=4)
+        Output_Layer = TransferMechanism(name='Output Layer', input_shapes=3)
         Input_Weights_matrix = (np.arange(2 * 5).reshape((2, 5)) + 1) / (2 * 5)
         Middle_Weights_matrix = (np.arange(5 * 4).reshape((5, 4)) + 1) / (5 * 4)
         Output_Weights_matrix = (np.arange(4 * 3).reshape((4, 3)) + 1) / (4 * 3)
@@ -3208,7 +3208,7 @@ class TestRunInputSpecifications:
 
     def test_input_shape_errors(self):
         # Mechanism with single InputPort
-        mech = pnl.TransferMechanism(name='input', size=2)
+        mech = pnl.TransferMechanism(name='input', input_shapes=2)
         comp = pnl.Composition(mech, name='comp')
 
         with pytest.raises(CompositionError) as error_text:
@@ -3228,7 +3228,7 @@ class TestRunInputSpecifications:
         assert "is incorrect for Mechanism with a single InputPort" in str(error_text.value)
 
         # Mechanism with two InputPorts
-        mech2 = pnl.TransferMechanism(name='input', size=(2,2))
+        mech2 = pnl.TransferMechanism(name='input', input_shapes=(2, 2))
         comp = pnl.Composition(mech2, name='comp')
 
         with pytest.raises(CompositionError) as error_text:
@@ -3844,9 +3844,9 @@ class TestRun:
                                       pytest.param(pnl.ExecutionMode.PTXExec, marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                      ])
     def test_execute_no_inputs(self, mode):
-        m_inner = ProcessingMechanism(size=2)
+        m_inner = ProcessingMechanism(input_shapes=2)
         inner_comp = Composition(pathways=[m_inner])
-        m_outer = ProcessingMechanism(size=2)
+        m_outer = ProcessingMechanism(input_shapes=2)
         outer_comp = Composition(pathways=[m_outer, inner_comp])
 
         with pytest.warns(UserWarning, match="No inputs provided in call"):
@@ -3856,9 +3856,9 @@ class TestRun:
 
     @pytest.mark.composition
     def test_run_no_inputs(self, comp_mode):
-        m_inner = ProcessingMechanism(size=2)
+        m_inner = ProcessingMechanism(input_shapes=2)
         inner_comp = Composition(pathways=[m_inner])
-        m_outer = ProcessingMechanism(size=2)
+        m_outer = ProcessingMechanism(input_shapes=2)
         outer_comp = Composition(pathways=[m_outer, inner_comp])
 
         with pytest.warns(UserWarning, match="No inputs provided in call"):
@@ -4080,7 +4080,7 @@ class TestRun:
     @pytest.mark.benchmark(group="Recurrent")
     def test_run_recurrent_transfer_mechanism(self, benchmark, comp_mode):
         comp = Composition()
-        A = RecurrentTransferMechanism(size=3, function=Linear(slope=5.0), name="A")
+        A = RecurrentTransferMechanism(input_shapes=3, function=Linear(slope=5.0), name="A")
         comp.add_node(A)
         sched = Scheduler(composition=comp)
         output1 = comp.run(inputs={A: [[1.0, 2.0, 3.0]]}, scheduler=sched, execution_mode=comp_mode)
@@ -4095,7 +4095,8 @@ class TestRun:
     @pytest.mark.benchmark(group="Recurrent")
     def test_run_recurrent_transfer_mechanism_hetero(self, benchmark, comp_mode):
         comp = Composition()
-        R = RecurrentTransferMechanism(size=1,
+        R = RecurrentTransferMechanism(
+            input_shapes=1,
                                        function=Logistic(),
                                        hetero=-2.0,
                                        output_ports = [RESULT])
@@ -4114,7 +4115,8 @@ class TestRun:
     @pytest.mark.benchmark(group="Recurrent")
     def test_run_recurrent_transfer_mechanism_integrator(self, benchmark, comp_mode):
         comp = Composition()
-        R = RecurrentTransferMechanism(size=1,
+        R = RecurrentTransferMechanism(
+            input_shapes=1,
                                        function=Logistic(),
                                        hetero=-2.0,
                                        integrator_mode=True,
@@ -4135,7 +4137,7 @@ class TestRun:
     @pytest.mark.benchmark(group="Recurrent")
     def test_run_recurrent_transfer_mechanism_vector_2(self, benchmark, comp_mode):
         comp = Composition()
-        R = RecurrentTransferMechanism(size=2, function=Logistic())
+        R = RecurrentTransferMechanism(input_shapes=2, function=Logistic())
         comp.add_node(R)
         comp._analyze_graph()
         val = comp.run(inputs={R: [[1.0, 2.0]]}, num_trials=1, execution_mode=comp_mode)
@@ -4152,7 +4154,8 @@ class TestRun:
     @pytest.mark.benchmark(group="Recurrent")
     def test_run_recurrent_transfer_mechanism_hetero_2(self, benchmark, comp_mode):
         comp = Composition()
-        R = RecurrentTransferMechanism(size=2,
+        R = RecurrentTransferMechanism(
+            input_shapes=2,
                                        function=Logistic(),
                                        hetero=-2.0,
                                        output_ports = [RESULT])
@@ -4171,7 +4174,8 @@ class TestRun:
     @pytest.mark.benchmark(group="Recurrent")
     def test_run_recurrent_transfer_mechanism_integrator_2(self, benchmark, comp_mode):
         comp = Composition()
-        R = RecurrentTransferMechanism(size=2,
+        R = RecurrentTransferMechanism(
+            input_shapes=2,
                                        function=Logistic(),
                                        hetero=-2.0,
                                        integrator_mode=True,
@@ -4284,7 +4288,7 @@ class TestRun:
     def test_multiple_runs_with_parameter_change(self, comp_mode):
         struct_name = '_param'
 
-        A = TransferMechanism(size=2)
+        A = TransferMechanism(input_shapes=2)
         comp = Composition([A])
 
         inputs_dict = {A: [1, 1]}
@@ -4329,7 +4333,7 @@ class TestRun:
     def test_multiple_runs_with_parameter_change_arr(self, comp_mode):
         struct_name = '_state'
 
-        A = TransferMechanism(size=2, integrator_mode=True)
+        A = TransferMechanism(input_shapes=2, integrator_mode=True)
         comp = Composition([A])
 
         inputs_dict = {A: [1, 1]}
@@ -4375,7 +4379,7 @@ class TestRun:
         # non-existence of compiled structures after set
         struct_name = '_data'
 
-        A = TransferMechanism(size=2, integrator_mode=True)
+        A = TransferMechanism(input_shapes=2, integrator_mode=True)
         comp = Composition([A])
 
         inputs_dict = {A: [1, 1]}
@@ -6548,25 +6552,28 @@ class TestInputSpecifications:
     def test_get_input_format(self, form, use_labels, show_nested, num_trials, expected_format_string):
         """Also tests input_labels_dict"""
 
-        A = pnl.ProcessingMechanism(size=1, name='A',
+        A = pnl.ProcessingMechanism(
+            input_shapes=1, name='A',
                                 input_labels={0:{'red':0, 'green':1},
                                               1:{'blue':2, 'yellow':3}})
-        B = pnl.ProcessingMechanism(size=2, name='B')
-        C = pnl.ProcessingMechanism(size=[3,3],
+        B = pnl.ProcessingMechanism(input_shapes=2, name='B')
+        C = pnl.ProcessingMechanism(
+            input_shapes=[3, 3],
                                 input_ports=['C INPUT 1', 'C INPUT 2'],
                                 input_labels={'C INPUT 1':{'red':[0,0,0], 'green':[1,1,1], 'orange':[2,2,2]},
                                               'C INPUT 2':{'blue':[3,3,3], 'yellow':[4,4,4], 'purple':[5,5,5]}},
                                 name='C')
         assert C.variable.shape == (2,3)
-        X = ProcessingMechanism(size=[3,3],
+        X = ProcessingMechanism(
+            input_shapes=[3, 3],
                                 input_ports=['X INPUT 1', 'X INPUT 2'],
                                 name='X',
                                 # input_labels={0:{'red':[0,0,0], 'green':[1,1,1]}}  # Specify dict for only one port
                                 )
         # Use TransferMechanism so that 2nd OutputPort uses 2nd item of Mechanism's value
         #    (i.e. ,without having to specify that explicitly, as would be the case for ProcessingMechanism)
-        Y = pnl.TransferMechanism(input_ports=[{NAME:'Y INPUT 1', pnl.SIZE: 3, pnl.FUNCTION: pnl.Reduce},
-                                                 {NAME:'Y INPUT 2', pnl.SIZE: 3}],
+        Y = pnl.TransferMechanism(input_ports=[{NAME:'Y INPUT 1', pnl.INPUT_SHAPES: 3, pnl.FUNCTION: pnl.Reduce},
+                                               {NAME:'Y INPUT 2', pnl.INPUT_SHAPES: 3}],
                                     # Test specification of labels for all InputPorts of Mechanism:
                                     input_labels={'red':[0,0,0], 'green':[1,1,1]},
                                     name='Y')
@@ -7787,7 +7794,7 @@ class TestNodeRoles:
         assert {ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.TERMINAL))
 
     def test_LEARNING_hebbian(self):
-        A = RecurrentTransferMechanism(name='A', size=2, enable_learning=True)
+        A = RecurrentTransferMechanism(name='A', input_shapes=2, enable_learning=True)
         comp = Composition(pathways=A)
         pathway = comp.pathways[0]
         assert pathway.target is None

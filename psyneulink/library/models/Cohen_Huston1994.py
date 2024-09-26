@@ -24,26 +24,26 @@ settle_trials = args.settle_trials  # cycles until model settles
 # Create mechanisms ---------------------------------------------------------------------------------------------------
 #   Linear input units, colors: ('red', 'green'), words: ('RED','GREEN')
 colors_input_layer = pnl.TransferMechanism(
-    size=3,
+    input_shapes=3,
     function=pnl.Linear,
     name='COLORS_INPUT'
 )
 
 words_input_layer = pnl.TransferMechanism(
-    size=3,
+    input_shapes=3,
     function=pnl.Linear,
     name='WORDS_INPUT'
 )
 
 task_input_layer = pnl.TransferMechanism(
-    size=2,
+    input_shapes=2,
     function=pnl.Linear,
     name='TASK_INPUT'
 )
 
 #   Task layer, tasks: ('name the color', 'read the word')
 task_layer = pnl.RecurrentTransferMechanism(
-    size=2,
+    input_shapes=2,
     function=pnl.Logistic(),
     hetero=inhibition,
     integrator_mode=True,
@@ -53,7 +53,7 @@ task_layer = pnl.RecurrentTransferMechanism(
 
 #   Hidden layer units, colors: ('red','green') words: ('RED','GREEN')
 colors_hidden_layer = pnl.RecurrentTransferMechanism(
-    size=3,
+    input_shapes=3,
     function=pnl.Logistic(x_0=bias),
     integrator_mode=True,
     hetero=inhibition,
@@ -63,7 +63,7 @@ colors_hidden_layer = pnl.RecurrentTransferMechanism(
 )
 
 words_hidden_layer = pnl.RecurrentTransferMechanism(
-    size=3,
+    input_shapes=3,
     function=pnl.Logistic(x_0=bias),
     hetero=inhibition,
     integrator_mode=True,
@@ -73,7 +73,7 @@ words_hidden_layer = pnl.RecurrentTransferMechanism(
 )
 #   Response layer, responses: ('red', 'green'): RecurrentTransferMechanism for self inhibition matrix
 response_layer = pnl.RecurrentTransferMechanism(
-    size=2,
+    input_shapes=2,
     function=pnl.Logistic(),
     hetero=inhibition,
     integrator_mode=True,

@@ -1493,21 +1493,21 @@ class TestFeedback:
     def test_inline_control_mechanism_example(self):
         cueInterval = pnl.TransferMechanism(
             default_variable=[[0.0]],
-            size=1,
+            input_shapes=1,
             function=pnl.Linear(slope=1, intercept=0),
             output_ports=[pnl.RESULT],
             name='Cue-Stimulus Interval'
         )
         taskLayer = pnl.TransferMechanism(
             default_variable=[[0.0, 0.0]],
-            size=2,
+            input_shapes=2,
             function=pnl.Linear(slope=1, intercept=0),
             output_ports=[pnl.RESULT],
             name='Task Input [I1, I2]'
         )
         activation = pnl.LCAMechanism(
             default_variable=[[0.0, 0.0]],
-            size=2,
+            input_shapes=2,
             function=pnl.Logistic(gain=1),
             leak=.5,
             competition=2,
@@ -1606,7 +1606,7 @@ class TestFeedback:
                                 output_ports=[pnl.DECISION_VARIABLE],
                                 name='DDM')
 
-        response = pnl.ProcessingMechanism(size=2, name="GATE")
+        response = pnl.ProcessingMechanism(input_shapes=2, name="GATE")
 
         comp = pnl.Composition()
         comp.add_linear_processing_pathway([decisionMaker, response])

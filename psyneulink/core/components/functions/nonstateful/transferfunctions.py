@@ -4338,7 +4338,7 @@ class TransferWithCosts(TransferFunction):
     """
     TransferWithCosts(                      \
         default_variable=None,              \
-        size=None,                          \
+        input_shapes=None,                          \
         transfer_fct=Line                   \
         enabled_cost_functions=None,        \
         intensity_fct=Exponential           \
@@ -4412,11 +4412,11 @@ class TransferWithCosts(TransferFunction):
         <TransferWithCosts.transfer_fct>`
         on which costs are calculated.
 
-    size : int : None
+    input_shapes : int : None
         specifies length of the array for `variable <TransferWithCosts.variable>` used by `function
         <TransferWithCosts._function>` and on which costs are calculated;  can be used in place of
         default_value, in which case zeros are assigned as the value(s). An error is generated if both are
-        specified but size != len(default_value).
+        specified but input_shapes != len(default_value).
 
     transfer_fct : TransferFunction : Linear
         specifies the primary function, used to generate the value it returns.
@@ -4459,7 +4459,7 @@ class TransferWithCosts(TransferFunction):
         value used by `function <TransferWithCosts._function>`, and on which `intensity <TransferWithCosts.intensity>`
         and associated costs are calculated.
 
-    size : int
+    input_shapes : int
         length of array for `variable <TransferWithCosts.variable>`.
 
     intensity : 1 array
@@ -4814,7 +4814,7 @@ class TransferWithCosts(TransferFunction):
     @beartype
     def __init__(self,
                  default_variable=None,
-                 size=None,
+                 input_shapes=None,
                  transfer_fct: Optional[Callable] = None,
                  enabled_cost_functions: Optional[Union[CostFunctions, list]] = None,
                  intensity_cost_fct: Optional[Callable] = None,
@@ -4825,11 +4825,11 @@ class TransferWithCosts(TransferFunction):
                  owner=None,
                  prefs: Optional[ValidPrefSet] = None):
 
-        # if size:
+        # if input_shapes:
         #     if default_variable is None:
-        #         default_variable = np.zeros(size)
-        #     elif size != len(default_variable):
-        #         raise FunctionError(f"Both {repr(DEFAULT_VARIABLE)} ({default_variable}) and {repr(SIZE)} ({size}) "
+        #         default_variable = np.zeros(input_shapes)
+        #     elif input_shapes != len(default_variable):
+        #         raise FunctionError(f"Both {repr(DEFAULT_VARIABLE)} ({default_variable}) and {repr(SIZE)} ({input_shapes}) "
         #                             f"are specified for {self.name} but are {SIZE}!=len({DEFAULT_VARIABLE}).")
 
         super().__init__(

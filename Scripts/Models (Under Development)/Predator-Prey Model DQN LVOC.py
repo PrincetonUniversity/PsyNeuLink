@@ -104,9 +104,9 @@ def get_optimal_action(observation):
 # **************************************  PROCESSING MECHANISMS ********************************************************
 
 # Perceptual Mechanisms
-player_percept = ProcessingMechanism(size=prey_len, function=GaussianDistort(), name="PLAYER PERCEPT")
-predator_percept = ProcessingMechanism(size=predator_len, function=GaussianDistort(), name="PREDATOR PERCEPT")
-prey_percept = ProcessingMechanism(size=prey_len, function=GaussianDistort(), name="PREY PERCEPT")
+player_percept = ProcessingMechanism(input_shapes=prey_len, function=GaussianDistort(), name="PLAYER PERCEPT")
+predator_percept = ProcessingMechanism(input_shapes=predator_len, function=GaussianDistort(), name="PREDATOR PERCEPT")
+prey_percept = ProcessingMechanism(input_shapes=prey_len, function=GaussianDistort(), name="PREY PERCEPT")
 
 # Mechanism used to encode trialtype from environment
 trial_type_input_mech = ProcessingMechanism(name="TRIAL TYPE INPUT")

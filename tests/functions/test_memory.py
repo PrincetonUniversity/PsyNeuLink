@@ -305,10 +305,10 @@ class TestDictionaryMemory:
 
     # def test_DictionaryMemory_without_initializer_in_composition():
     #
-    #     content = TransferMechanism(size=5)
-    #     assoc = TransferMechanism(size=3)
-    #     content_out = TransferMechanism(size=5)
-    #     assoc_out = TransferMechanism(size=3)
+    #     content = TransferMechanism(input_shapes=5)
+    #     assoc = TransferMechanism(input_shapes=3)
+    #     content_out = TransferMechanism(input_shapes=5)
+    #     assoc_out = TransferMechanism(input_shapes=3)
     #
     #     # Episodic Memory, Decision and Control
     #     em = EpisodicMemoryMechanism(name='EM',
@@ -1495,7 +1495,7 @@ class TestContentAddressableMemory:
         # with pytest.raises(FunctionError) as error_text:
         #     f = ContentAddressableMemory(initializer=[[[[1,0],[1,0],[1,0]], [[1,0],[1,0],[1,0]], [[1,0],[1,0],[1,0]]],
         #                                               [[[0,1],[0,1],[0,1]], [[0,1],[0,0],[1,0]], [[0,1],[0,1],[0,1]]]])
-        #     em = EpisodicMemoryMechanism(size = [1,1,1], function=f)
+        #     em = EpisodicMemoryMechanism(input_shapes = [1,1,1], function=f)
         #     em.execute([[[0,1],[0,1],[0,1]], [[0,1],[0,0],[1,0]], [[0,1],[0,1],[0,1]]])
         # assert 'Attempt to store and/or retrieve an entry in ContentAddressableMemory that has more than 2 dimensions (' \
         #        '3);  try flattening innermost ones.' in str(error_text.value)
@@ -1503,7 +1503,7 @@ class TestContentAddressableMemory:
         # # Initializer with >2d ragged array
         # with pytest.raises(FunctionError) as error_text:
         #     f = ContentAddressableMemory(initializer=[ [[1,2,3], [4]], [[1,2,3], [[1],[4]]] ])
-        #     em = EpisodicMemoryMechanism(size = [1,1,1], function=f)
+        #     em = EpisodicMemoryMechanism(input_shapes = [1,1,1], function=f)
         #     em.execute([[[0,1],[0,1],[0,1]], [[0,1],[0,0],[1,0]], [[0,1],[0,1],[0,1]]])
         # assert 'Attempt to store and/or retrieve an entry in ContentAddressableMemory that has more than 2 dimensions (' \
         #        '3);  try flattening innermost ones.' in str(error_text.value)
