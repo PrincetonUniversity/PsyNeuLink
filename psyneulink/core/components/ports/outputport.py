@@ -621,7 +621,7 @@ import warnings
 import numpy as np
 from beartype import beartype
 
-from psyneulink._typing import Optional, Union
+from psyneulink._typing import Optional, Tuple, Union
 
 from psyneulink.core.components.component import Component, ComponentError
 from psyneulink.core.components.functions.function import Function
@@ -1242,16 +1242,23 @@ class OutputPort(Port_Base):
                                        format(OutputPort.__name__, owner.name, e.args[0]))
 
     @property
-    def socket_width(self):
-        return self.defaults.value.shape[-1]
+    def socket_shape(self) -> Tuple[int]:
+        """
+        The expected shape of the input to an outgoing Projection
 
-    @property
-    def socket_shape(self):
+        Returns:
+            Tuple[int]:
+        """
         return self.defaults.value.shape
 
-    # TODO: replace socket_template with this
     @property
-    def socket_shape_template(self):
+    def socket_template(self) -> np.ndarray:
+        """
+        An array of zeros in the shape of the input to an outgoing Projection (`socket_shape`)
+
+        Returns:
+            np.ndarray:
+        """
         return np.zeros(self.socket_shape)
 
     @property

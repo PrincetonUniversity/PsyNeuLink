@@ -1445,21 +1445,25 @@ class InputPort(Port_Base):
             return self._path_afferents
 
     @property
-    def socket_width(self):
-        return self.defaults.variable.shape[-1]
+    def socket_template(self) -> np.ndarray:
+        """
+        An array of zeros in the shape of a single input from an incoming
+        Projection (`socket_shape`)
 
-    @property
-    def socket_template(self):
-        return np.zeros(self.socket_width)
-
-    # TODO: replace socket_template with this
-    @property
-    def socket_shape_template(self):
+        Returns:
+            np.ndarray:
+        """
         return np.zeros(self.socket_shape)
 
     # must be at least 1d. list of incoming projections
     @property
-    def socket_shape(self):
+    def socket_shape(self) -> Tuple[int]:
+        """
+        The expected shape of a single input from an incoming Projection
+
+        Returns:
+            Tuple[int]:
+        """
         if self.defaults.variable.ndim > 1:
             return self.defaults.variable[0].shape
         else:
