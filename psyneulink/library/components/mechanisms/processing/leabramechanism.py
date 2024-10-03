@@ -73,8 +73,8 @@ target for the LeabraMechanism. The input to the *MAIN_INPUT* InputPort should h
     LeabraMechanism. Here is an example of how to do this. In the example, T2 passes the training_data to the
     *LEARNING_TARGET* InputPort of L (L.input_ports[1])::
         L = LeabraMechanism(input_size=input_size, output_size=output_size)
-        T1 = TransferMechanism(name='T1', size=input_size, function=Linear)
-        T2 = TransferMechanism(name='T2', size=output_size, function=Linear)
+        T1 = TransferMechanism(name='T1', input_shapes=input_size, function=Linear)
+        T2 = TransferMechanism(name='T2', input_shapes=output_size, function=Linear)
         p1 = Process(pathway=[T1, L])
         proj = MappingProjection(sender=T2, receiver=L.input_ports[1])
         p2 = Process(pathway=[T2, proj, L])
@@ -512,7 +512,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
         ]
 
         super().__init__(
-            size=size,
+            input_shapes=size,
             network=network,
             input_size=input_size,
             output_size=output_size,

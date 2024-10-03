@@ -71,13 +71,13 @@ def adj_cost_fct(v):
     from math import e
     return e**(.25 * np.abs(v) - 1)
 
-color_stim = pnl.TransferMechanism(name='Color Stimulus', size=8)
-word_stim = pnl.TransferMechanism(name='Word Stimulus', size=8)
+color_stim = pnl.TransferMechanism(name='Color Stimulus', input_shapes=8)
+word_stim = pnl.TransferMechanism(name='Word Stimulus', input_shapes=8)
 
 color_task = pnl.TransferMechanism(name='Color Task')
 word_task = pnl.ProcessingMechanism(name='Word Task', function=w_fct_UDF)
 
-reward = pnl.TransferMechanism(name='Reward', size=2)
+reward = pnl.TransferMechanism(name='Reward', input_shapes=2)
 
 task_decision = pnl.DDM(
         name='Task Decision',

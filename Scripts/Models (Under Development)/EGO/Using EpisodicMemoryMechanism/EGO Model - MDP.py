@@ -485,15 +485,15 @@ def construct_model(model_name:str=MODEL_NAME,
     # -------------------------------------------------  Mechanisms  -------------------------------------------------
     # ----------------------------------------------------------------------------------------------------------------
 
-    task_input_layer = ProcessingMechanism(name=task_input_name, size=task_size)
-    state_input_layer = ProcessingMechanism(name=state_input_name, size=state_size)
-    time_input_layer = ProcessingMechanism(name=time_input_name, size=time_size)
-    reward_input_layer = ProcessingMechanism(name=reward_input_name, size=reward_size)
-    attend_external_layer = ProcessingMechanism(name=attend_external_layer_name, size=state_size)
-    attend_memory_layer = ProcessingMechanism(name=attend_memory_layer_name, size=state_size)
-    retrieved_reward_layer = TransferMechanism(name=retrieved_reward_name, size=reward_size)
+    task_input_layer = ProcessingMechanism(name=task_input_name, input_shapes=task_size)
+    state_input_layer = ProcessingMechanism(name=state_input_name, input_shapes=state_size)
+    time_input_layer = ProcessingMechanism(name=time_input_name, input_shapes=time_size)
+    reward_input_layer = ProcessingMechanism(name=reward_input_name, input_shapes=reward_size)
+    attend_external_layer = ProcessingMechanism(name=attend_external_layer_name, input_shapes=state_size)
+    attend_memory_layer = ProcessingMechanism(name=attend_memory_layer_name, input_shapes=state_size)
+    retrieved_reward_layer = TransferMechanism(name=retrieved_reward_name, input_shapes=reward_size)
     context_layer = RecurrentTransferMechanism(name=context_name,
-                                               size=state_size,
+                                               input_shapes=state_size,
                                                auto=1-context_integration_rate,
                                                hetero=0.0)
     em = EpisodicMemoryMechanism(name=em_name,
@@ -501,10 +501,10 @@ def construct_model(model_name:str=MODEL_NAME,
                                                    [0] * time_size,    # time
                                                    [0] * state_size,   # context
                                                    [0] * reward_size], # reward
-                                 input_ports=[{NAME:state_input_name, SIZE:state_size},
-                                              {NAME:time_input_name, SIZE:time_size},
-                                              {NAME:context_name, SIZE:state_size},
-                                              {NAME:reward_input_name, SIZE:reward_size}],
+                                 input_ports=[{NAME:state_input_name, INPUT_SHAPES:state_size},
+                                              {NAME:time_input_name, INPUT_SHAPES:time_size},
+                                              {NAME:context_name, INPUT_SHAPES:state_size},
+                                              {NAME:reward_input_name, INPUT_SHAPES:reward_size}],
                                  function=ContentAddressableMemory(
                                      # selection_function=SoftMax(gain=retrieval_softmax_gain),
                                      distance_field_weights=[state_retrieval_weight,

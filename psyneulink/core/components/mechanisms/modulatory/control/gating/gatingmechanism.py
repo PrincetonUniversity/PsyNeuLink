@@ -257,11 +257,11 @@ class GatingMechanism(ControlMechanism):
         the default value for each of the GatingMechanism's GatingSignals;
         its length must equal the number of items specified in the **gate** argument.
 
-    size : int, list or 1d np.array of ints
+    input_shapes : int, list or 1d np.array of ints
         specifies default_gating_allocation as an array of zeros if **default_gating_allocation** is not passed as an
-        argument;  if **default_gating_allocation** is specified, it takes precedence over the specification of **size**.
+        argument;  if **default_gating_allocation** is specified, it takes precedence over the specification of **input_shapes**.
         As an example, the following mechanisms are equivalent::
-            T1 = TransferMechanism(size = [3, 2])
+            T1 = TransferMechanism(input_shapes = [3, 2])
             T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
 
     monitor_for_gating : List[OutputPort or Mechanism] : default None
@@ -308,7 +308,7 @@ class GatingMechanism(ControlMechanism):
 
     variable : value, list or ndarray
         used as the input to the GatingMechanism's `function <GatingMechanism.function>`.  Its format is determined
-        by the **default_gating_allocation** or **size** argument of the GatingMechanism's constructor (see above),
+        by the **default_gating_allocation** or **input_shapes** argument of the GatingMechanism's constructor (see above),
         and is the same format as its `gating_allocation <GatingMechanis.gating_allocation>` (unless a custom
         `function <GatingMechanism.function>` has been assigned).
 
@@ -442,7 +442,7 @@ class GatingMechanism(ControlMechanism):
     @beartype
     def __init__(self,
                  default_gating_allocation=None,
-                 size=None,
+                 input_shapes=None,
                  monitor_for_gating=None,
                  function=None,
                  default_allocation: Optional[Union[int, float, list, np.ndarray]] = None,
@@ -470,7 +470,7 @@ class GatingMechanism(ControlMechanism):
                                            f"'default_gating_allocation'.")
 
         super().__init__(default_variable=default_gating_allocation,
-                         size=size,
+                         input_shapes=input_shapes,
                          monitor_for_control=monitor_for_gating,
                          function=function,
                          default_allocation=default_allocation,

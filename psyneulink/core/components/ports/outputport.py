@@ -916,7 +916,7 @@ class OutputPort(Port_Base):
                  owner=None,
                  reference_value=None,
                  variable=None,
-                 size=None,
+                 input_shapes=None,
                  function=None,
                  projections=None,
                  params=None,
@@ -971,7 +971,7 @@ class OutputPort(Port_Base):
         super().__init__(
             owner,
             variable=variable,
-            size=size,
+            input_shapes=input_shapes,
             projections=projections,
             params=params,
             name=name,

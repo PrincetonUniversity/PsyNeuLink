@@ -5,15 +5,18 @@ import psyneulink as pnl
 
 
 ### LAYERS
-WORD_INPUT_LAYER = pnl.TransferMechanism(size = 3,
+WORD_INPUT_LAYER = pnl.TransferMechanism(
+    input_shapes= 3,
                                          function=pnl.Linear,
                                          name='WORD INPUT LAYER')
 
-COLOR_INPUT_LAYER = pnl.TransferMechanism(size = 3,
+COLOR_INPUT_LAYER = pnl.TransferMechanism(
+    input_shapes= 3,
                                          function=pnl.Linear,
                                          name='COLOR INPUT LAYER')
 
-WORD_OUTPUT_LAYER = pnl.IntegratorMechanism(size = 3,
+WORD_OUTPUT_LAYER = pnl.IntegratorMechanism(
+    input_shapes= 3,
                                                    # auto= 0.0,
                                                    # hetero= -2.0,
                                                    function= pnl.InteractiveActivationIntegrator(decay= 0.0015, rest=-6),
@@ -21,7 +24,8 @@ WORD_OUTPUT_LAYER = pnl.IntegratorMechanism(size = 3,
 WORD_OUTPUT_LAYER.set_log_conditions('value')
 
 
-COLOR_OUTPUT_LAYER = pnl.IntegratorMechanism(size = 3,
+COLOR_OUTPUT_LAYER = pnl.IntegratorMechanism(
+    input_shapes= 3,
                                                    # auto= 0.0,
                                                    # hetero= -2.0,
                                                    function= pnl.InteractiveActivationIntegrator(decay= 0.0015, rest=-6, ),
@@ -31,18 +35,21 @@ COLOR_OUTPUT_LAYER = pnl.IntegratorMechanism(size = 3,
 COLOR_OUTPUT_LAYER.set_log_conditions('value')
 
 
-TASK_DEMAND_LAYER = pnl.IntegratorMechanism(size = 2,
+TASK_DEMAND_LAYER = pnl.IntegratorMechanism(
+    input_shapes= 2,
                                                    # auto= 0.0,
                                                    # hetero= -2.0,
                                                    function= pnl.InteractiveActivationIntegrator(decay= 0.0015, max_val=1,
                                                                                        min_val= 1, rest= -4),
                                                    name='TASK DEMAND LAYER')
 
-WORD_RECURRENT_LAYER = pnl.TransferMechanism(size = 3,
+WORD_RECURRENT_LAYER = pnl.TransferMechanism(
+    input_shapes= 3,
                                              function=pnl.Linear,
                                              name = 'WORD RECURRENT LAYER')
 
-COLOR_RECURRENT_LAYER = pnl.TransferMechanism(size = 3,
+COLOR_RECURRENT_LAYER = pnl.TransferMechanism(
+    input_shapes= 3,
                                              function=pnl.Linear,
                                              name = 'COLOR RECURRENT LAYER')
 

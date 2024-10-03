@@ -74,13 +74,13 @@ class TestNested:
     def test_multiple_projections_to_node_of_nested_composition(self):
         '''This is based on the nback script'''
 
-        stim = TransferMechanism(name='STIM', size=5)
-        context = TransferMechanism(name='CONTEXT', size=5)
+        stim = TransferMechanism(name='STIM', input_shapes=5)
+        context = TransferMechanism(name='CONTEXT', input_shapes=5)
 
         # Nested comp (ffn)
-        stim_input_layer = TransferMechanism(name='STIM INPUT LAYER', size=5)
-        context_input_layer = TransferMechanism(name='CONTEXT INPUT LAYER', size=5)
-        match_output_layer = TransferMechanism(name='MATCH LAYER', size=1)
+        stim_input_layer = TransferMechanism(name='STIM INPUT LAYER', input_shapes=5)
+        context_input_layer = TransferMechanism(name='CONTEXT INPUT LAYER', input_shapes=5)
+        match_output_layer = TransferMechanism(name='MATCH LAYER', input_shapes=1)
         ffn = Composition(name='FFN', pathways=[[stim_input_layer, match_output_layer],
                                                 [context_input_layer, match_output_layer]])
 

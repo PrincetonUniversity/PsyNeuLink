@@ -134,8 +134,8 @@ class TestProcessingMechanismFunctions:
 
     def test_processing_mechanism_multiple_input_ports(self):
 
-        PM1 = ProcessingMechanism(size=[4, 4], function=LinearCombination, input_ports=['input_1', 'input_2'])
-        PM2 = ProcessingMechanism(size=[2, 2, 2], function=LinearCombination, input_ports=['1', '2', '3'])
+        PM1 = ProcessingMechanism(input_shapes=[4, 4], function=LinearCombination, input_ports=['input_1', 'input_2'])
+        PM2 = ProcessingMechanism(input_shapes=[2, 2, 2], function=LinearCombination, input_ports=['1', '2', '3'])
         PM1.execute([[1, 2, 3, 4], [5, 4, 2, 2]])
         PM2.execute([[2, 0], [1, 3], [1, 0]])
         np.testing.assert_allclose(PM1.value, [[6, 6, 5, 6]])

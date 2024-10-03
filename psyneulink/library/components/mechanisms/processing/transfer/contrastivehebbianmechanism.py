@@ -64,7 +64,7 @@ Creating a ContrastiveHebbianMechanism
 ~~~~~~
 
 The **input_size** argument of the constructor must always be specified (this is comparable to specifying the
-**size** or *default_variable** arguments of other types of `Mechanism`).  If it is specified on its own,
+**input_shapes** or *default_variable** arguments of other types of `Mechanism`).  If it is specified on its own,
 it determines the total number of processing units.  If either the **hidden_size** and/or **target_size** arguments
 are specified, then those units are treated as distinct from the input units (see `ContrastiveHebbian_Execution` for
 details).
@@ -345,7 +345,7 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     CONTRASTIVE_HEBBIAN_MECHANISM, COUNT, FUNCTION, HARD_CLAMP, HOLLOW_MATRIX, MAX_ABS_DIFF, NAME, \
-    SIZE, SOFT_CLAMP, TARGET, VARIABLE
+    INPUT_SHAPES, SOFT_CLAMP, TARGET, VARIABLE
 from psyneulink.core.globals.parameters import Parameter, SharedParameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import ValidParamSpecType, NumericCollections
@@ -1032,7 +1032,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             self.target_start = 0
             self._target_included = False
         self.target_end = self.target_start + target_size
-        size = self.recurrent_size
 
         default_variable = [np.zeros(input_size), np.zeros(self.recurrent_size)]
         # Set InputPort sizes in _instantiate_input_ports,
@@ -1059,7 +1058,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         super().__init__(
             default_variable=default_variable,
-            size=size,
             input_ports=input_ports,
             combination_function=combination_function,
             function=function,
@@ -1114,7 +1112,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         # Assign InputPort specification dictionaries for required InputPorts
         sizes = dict(INPUT=self.input_size, RECURRENT=self.recurrent_size, TARGET=self.target_size)
         for i, input_port in enumerate((s for s in self.input_ports if s in {INPUT, TARGET, RECURRENT})):
-            self.input_ports[i] = {NAME:input_port, SIZE: sizes[input_port]}
+            self.input_ports[i] = {NAME:input_port, INPUT_SHAPES: sizes[input_port]}
 
         super()._instantiate_input_ports(input_ports, reference_value, context)
 

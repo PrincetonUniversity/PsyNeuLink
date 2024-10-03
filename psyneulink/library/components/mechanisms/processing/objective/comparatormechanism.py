@@ -113,7 +113,7 @@ value of which is a single scalar.  This can be dealt with by explicitly specify
 TARGET InputPorts in the **default_variable** argument of the ComparatorMechanism's constructor, as follows::
 
     >>> import psyneulink as pnl
-    >>> my_action_selection_mech = pnl.TransferMechanism(size=5,
+    >>> my_action_selection_mech = pnl.TransferMechanism(input_shapes=5,
     ...                                                  function=pnl.SoftMax(output=pnl.PROB))
 
     >>> my_reward_mech = pnl.TransferMechanism()

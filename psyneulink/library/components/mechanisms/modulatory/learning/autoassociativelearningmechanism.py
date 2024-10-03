@@ -320,7 +320,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
     @beartype
     def __init__(self,
                  default_variable: Union[list, np.ndarray],
-                 size=None,
+                 input_shapes=None,
                  function: Optional[Callable] = None,
                  learning_signals: Optional[list] = None,
                  modulation: Optional[str] = None,
@@ -344,7 +344,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         # self._learning_rate = learning_rate
 
         super().__init__(default_variable=default_variable,
-                         size=size,
+                         input_shapes=input_shapes,
                          function=function,
                          modulation=modulation,
                          learning_rate=learning_rate,

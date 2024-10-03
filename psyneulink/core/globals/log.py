@@ -167,8 +167,8 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULT* `OutputPort
 `MappingProjection` from the first to the second::
 
     # Create a Process with two TransferMechanisms, and get a reference for the Projection created between them:
-    >>> my_mech_A = pnl.TransferMechanism(name='mech_A', size=2)
-    >>> my_mech_B = pnl.TransferMechanism(name='mech_B', size=3)
+    >>> my_mech_A = pnl.TransferMechanism(name='mech_A', input_shapes=2)
+    >>> my_mech_B = pnl.TransferMechanism(name='mech_B', input_shapes=3)
     >>> my_composition = pnl.Composition(pathways=[my_mech_A, my_mech_B])
     >>> proj_A_to_B = my_mech_B.path_afferents[0]
 

@@ -77,7 +77,7 @@ T0 = 0.2 # T0
 
 # first element is color task attendance, second element is motion task attendance
 inputLayer = pnl.TransferMechanism(#default_variable=[[0.0, 0.0]],
-                                   size=2,
+                                   input_shapes=2,
                                    function=pnl.Linear(slope=1, intercept=0),
                                    output_ports = [pnl.RESULT],
                                    name='Input')
@@ -100,7 +100,7 @@ activation.set_log_conditions([pnl.RESULT, "mod_gain"])
 
 
 stimulusInfo = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
-                                     size = 2,
+                                     input_shapes= 2,
                                      function = pnl.Linear(slope=1, intercept=0),
                                      output_ports = [pnl.RESULT],
                                      name = "Stimulus Info")
@@ -108,7 +108,7 @@ stimulusInfo = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
 stimulusInfo.set_log_conditions([pnl.RESULT])
 
 controlledElement = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
-                                          size = 2,
+                                          input_shapes= 2,
                                           function=pnl.Linear(slope=1, intercept= 0),
                                           input_ports=pnl.InputPort(combine=pnl.PRODUCT),
                                           output_ports = [pnl.RESULT],
@@ -116,7 +116,8 @@ controlledElement = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
 
 controlledElement.set_log_conditions([pnl.RESULT])
 
-ddmCombination = pnl.TransferMechanism(size = 1,
+ddmCombination = pnl.TransferMechanism(
+    input_shapes= 1,
                                        function = pnl.Linear(slope=1, intercept=0),
                                        output_ports = [pnl.RESULT],
                                        name = "DDM Integrator")

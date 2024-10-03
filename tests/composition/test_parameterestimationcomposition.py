@@ -13,10 +13,10 @@ from psyneulink.core.components.functions.nonstateful.fitfunctions import (
 )
 
 
-input_node_1 = pnl.ProcessingMechanism(size=1)
-input_node_2 = pnl.ProcessingMechanism(size=2)
-input_node_3 = pnl.ProcessingMechanism(size=3)
-output_node = pnl.ProcessingMechanism(size=2)
+input_node_1 = pnl.ProcessingMechanism(input_shapes=1)
+input_node_2 = pnl.ProcessingMechanism(input_shapes=2)
+input_node_3 = pnl.ProcessingMechanism(input_shapes=3)
+output_node = pnl.ProcessingMechanism(input_shapes=2)
 model = pnl.Composition(
     [{input_node_1, input_node_2, input_node_3}, output_node], name="model"
 )

@@ -27,20 +27,24 @@ def test_botvinick_model(benchmark, comp_mode, reps):
     # SET UP MECHANISMS ----------------------------------------------------------------------------------------------------
     # Linear input layer
     # colors: ('red', 'green'), words: ('RED','GREEN')
-    colors_input_layer = pnl.TransferMechanism(size=3,
+    colors_input_layer = pnl.TransferMechanism(
+        input_shapes=3,
                                                function=pnl.Linear,
                                                name='COLORS_INPUT')
 
-    words_input_layer = pnl.TransferMechanism(size=3,
+    words_input_layer = pnl.TransferMechanism(
+        input_shapes=3,
                                               function=pnl.Linear,
                                               name='WORDS_INPUT')
 
-    task_input_layer = pnl.TransferMechanism(size=2,
+    task_input_layer = pnl.TransferMechanism(
+        input_shapes=2,
                                              function=pnl.Linear,
                                              name='TASK_INPUT')
 
     #   Task layer, tasks: ('name the color', 'read the word')
-    task_layer = pnl.RecurrentTransferMechanism(size=2,
+    task_layer = pnl.RecurrentTransferMechanism(
+        input_shapes=2,
                                                 function=pnl.Logistic,
                                                 hetero=-2,
                                                 integrator_mode=True,
@@ -49,14 +53,16 @@ def test_botvinick_model(benchmark, comp_mode, reps):
 
     # Hidden layer
     # colors: ('red','green', 'neutral') words: ('RED','GREEN', 'NEUTRAL')
-    colors_hidden_layer = pnl.RecurrentTransferMechanism(size=3,
+    colors_hidden_layer = pnl.RecurrentTransferMechanism(
+        input_shapes=3,
                                                          function=pnl.Logistic(x_0=4.0),  # bias 4.0 is -4.0 in the paper see Docs for description
                                                          integrator_mode=True,
                                                          hetero=-2,
                                                          integration_rate=0.01,  # cohen-huston text says 0.01
                                                          name='COLORS_HIDDEN')
 
-    words_hidden_layer = pnl.RecurrentTransferMechanism(size=3,
+    words_hidden_layer = pnl.RecurrentTransferMechanism(
+        input_shapes=3,
                                                         function=pnl.Logistic(x_0=4.0),
                                                         integrator_mode=True,
                                                         hetero=-2,
@@ -64,7 +70,8 @@ def test_botvinick_model(benchmark, comp_mode, reps):
                                                         name='WORDS_HIDDEN')
 
     #   Response layer, responses: ('red', 'green')
-    response_layer = pnl.RecurrentTransferMechanism(size=2,
+    response_layer = pnl.RecurrentTransferMechanism(
+        input_shapes=2,
                                                     function=pnl.Logistic,
                                                     hetero=-2.0,
                                                     integrator_mode=True,

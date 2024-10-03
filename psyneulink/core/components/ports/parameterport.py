@@ -187,7 +187,7 @@ In the following example, a Mechanism is created by specifying two of its parame
 
     >>> import psyneulink as pnl
     >>> my_mechanism = pnl.RecurrentTransferMechanism(
-    ...                         size=5,
+    ...                         input_shapes=5,
     ...                         noise=pnl.ControlSignal(),
     ...                         function=pnl.Logistic(
     ...                                         gain=(0.5, pnl.ControlSignal),
@@ -198,7 +198,7 @@ COMMENT:
     default noise value, why are we using a ControlSignal here??
 COMMENT
 
-The first argument of the constructor for the Mechanism specifies its `size <Component.size>` parameter by
+The first argument of the constructor for the Mechanism specifies its `input_shapes <Component.input_shapes>` parameter by
 directly assigning a value to it.  The second specifies the `noise <RecurrentTransferMechanism.noise>` parameter
 by assigning a default `ControlSignal`;  this will use the default value of the
 `noise <RecurrentTransferMechanism.noise>` attribute.  The **function** argument is specified using the constructor for
@@ -700,7 +700,7 @@ class ParameterPort(Port_Base):
                  owner,
                  reference_value=None,
                  variable=None,
-                 size=None,
+                 input_shapes=None,
                  function=None,
                  projections=None,
                  params=None,
@@ -726,7 +726,7 @@ class ParameterPort(Port_Base):
         # Note: pass name of Mechanism (to override assignment of componentName in super.__init__)
         super(ParameterPort, self).__init__(owner,
                                             variable=variable,
-                                            size=size,
+                                            input_shapes=input_shapes,
                                             projections=projections,
                                             function=function,
                                             params=params,

@@ -8,16 +8,16 @@
 #     #  INPUT UNITS
 #
 #     #  colors: ('red', 'green'), words: ('RED','GREEN')
-#     colors_input_layer = pnl.TransferMechanism(size=2,
+#     colors_input_layer = pnl.TransferMechanism(input_shapes=2,
 #                                                function=pnl.Linear,
 #                                                name='COLORS_INPUT')
 #
-#     words_input_layer = pnl.TransferMechanism(size=2,
+#     words_input_layer = pnl.TransferMechanism(input_shapes=2,
 #                                               function=pnl.Linear,
 #                                               name='WORDS_INPUT')
 #
 #     #   Task layer, tasks: ('name the color', 'read the word')
-#     task_layer = pnl.TransferMechanism(size=2,
+#     task_layer = pnl.TransferMechanism(input_shapes=2,
 #                                        function=pnl.Linear,
 #                                        name='TASK')
 #
@@ -28,7 +28,7 @@
 #     #   randomly distributed noise to the net input
 #     #   time averaging = integration_rate = 0.1
 #     unit_noise = 0.005
-#     # colors_hidden_layer = pnl.TransferMechanism(size=2,
+#     # colors_hidden_layer = pnl.TransferMechanism(input_shapes=2,
 #     #                                             function=pnl.Logistic(gain=1.0, bias=4.0),
 #     #                                             # should be able to get same result with offset = -4.0
 #     #                                             integrator_mode=True,
@@ -36,7 +36,7 @@
 #     #                                             integration_rate=0.1,
 #     #                                             name='COLORS HIDDEN')
 #
-#     colors_hidden_layer = pnl.TransferMechanism(size=2,
+#     colors_hidden_layer = pnl.TransferMechanism(input_shapes=2,
 #                                                 function=pnl.Logistic(gain=1.0, x_0=4.0),
 #                                                 # should be able to get same result with offset = -4.0
 #                                                 integrator_mode=True,
@@ -44,13 +44,13 @@
 #                                                 integration_rate=0.1,
 #                                                 name='COLORS HIDDEN')
 #     #    words_hidden: ('RED','GREEN')
-#     # words_hidden_layer = pnl.TransferMechanism(size=2,
+#     # words_hidden_layer = pnl.TransferMechanism(input_shapes=2,
 #     #                                            function=pnl.Logistic(gain=1.0, bias=4.0),
 #     #                                            integrator_mode=True,
 #     #                                            noise=pnl.NormalDist(mean=0, standard_deviation=unit_noise).function,
 #     #                                            integration_rate=0.1,
 #     #                                            name='WORDS HIDDEN')
-#     words_hidden_layer = pnl.TransferMechanism(size=2,
+#     words_hidden_layer = pnl.TransferMechanism(input_shapes=2,
 #                                                function=pnl.Logistic(gain=1.0, x_0=4.0),
 #                                                integrator_mode=True,
 #                                                noise=0.0,
@@ -62,13 +62,13 @@
 #     #   Response layer, provide input to accumulator, responses: ('red', 'green')
 #     #   time averaging = tau = 0.1
 #     #   randomly distributed noise to the net input
-#     # response_layer = pnl.TransferMechanism(size=2,
+#     # response_layer = pnl.TransferMechanism(input_shapes=2,
 #     #                                        function=pnl.Logistic,
 #     #                                        name='RESPONSE',
 #     #                                        integrator_mode=True,
 #     #                                        noise=pnl.NormalDist(mean=0, standard_deviation=unit_noise).function,
 #     #                                        integration_rate=0.1)
-#     response_layer = pnl.TransferMechanism(size=2,
+#     response_layer = pnl.TransferMechanism(input_shapes=2,
 #                                            function=pnl.Logistic,
 #                                            name='RESPONSE',
 #                                            integrator_mode=True,
@@ -295,7 +295,7 @@
 #         dataframes = []
 #         first = True
 #         for log_layer in mechanism_list:
-#             layer_size = log_layer.size[0]
+#             layer_size = log_layer.input_shapes[0]
 #             log_dict = log_layer.log.nparray_dictionary()
 #
 #             # Extract out all keys, treating value specially since it's already an np array

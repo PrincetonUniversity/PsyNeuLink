@@ -105,24 +105,24 @@ def make_stab_flex(
 
     # Task Input: [Parity, Magnitude] {0, 1} Mutually Exclusive
     # Origin Node
-    taskInput = pnl.TransferMechanism(name="Task Input", size=2)    # Note default function is linear
+    taskInput = pnl.TransferMechanism(name="Task Input", input_shapes=2)    # Note default function is linear
 
     # Stimulus Input: [Odd, Even, Small, Large] {0, 1}
     # Origin Node
-    stimulusInput = pnl.TransferMechanism(name="Stimulus Input", size=4)
+    stimulusInput = pnl.TransferMechanism(name="Stimulus Input", input_shapes=4)
 
     # Cue-To-Stimulus Interval Input
     # Origin Node
-    cueInterval = pnl.TransferMechanism(name="Cue-Stimulus Interval", size=1)
+    cueInterval = pnl.TransferMechanism(name="Cue-Stimulus Interval", input_shapes=1)
 
     # Correct Response Info {1, -1}
     # Origin Node
-    correctResponseInfo = pnl.TransferMechanism(name="Correct Response Info", size=1)
+    correctResponseInfo = pnl.TransferMechanism(name="Correct Response Info", input_shapes=1)
 
     # Control Units: [Parity Activation, Magnitude Activation]
     controlModule = pnl.LCAMechanism(
         name="Task Activations [C1, C2]",
-        size=2,
+        input_shapes=2,
         function=pnl.Logistic(gain=GAIN),
         leak=LEAK,
         competition=COMP,
@@ -143,14 +143,14 @@ def make_stab_flex(
     # Stimulus Input to Hidden Weighting
     stimulusWeighting = pnl.TransferMechanism(
         name="Stimulus Input to Hidden Weighting",
-        size=4,
+        input_shapes=4,
         function=pnl.Linear(slope=STIM_HIDDEN_WT, intercept=0),
     )
 
     # Hidden Units [Odd, Even, Small, Large]
     hiddenLayer = pnl.TransferMechanism(
         name="Hidden Units",
-        size=4,
+        input_shapes=4,
         function=pnl.Logistic(gain=1, bias=-4),
         input_ports=pnl.InputPort(combine=pnl.SUM)
     )
@@ -158,14 +158,14 @@ def make_stab_flex(
     # Hidden to Response Weighting
     hiddenWeighting = pnl.TransferMechanism(
         name="Hidden Unit to Response Weighting",
-        size=4,
+        input_shapes=4,
         function=pnl.Linear(slope=HIDDEN_RESP_WT, intercept=0)
     )
 
     # Response Units [Left, Right]
     responseLayer = pnl.TransferMechanism(
         name="Response Units",
-        size=2,
+        input_shapes=2,
         function=pnl.Logistic(gain=1),
         input_ports=pnl.InputPort(combine=pnl.SUM)
     )
@@ -173,14 +173,14 @@ def make_stab_flex(
     # Difference in activation of response units
     ddmCombination = pnl.TransferMechanism(
         name="Drift",
-        size=1,
+        input_shapes=1,
         input_ports=pnl.InputPort(combine=pnl.SUM)
     )
 
     # Ensure upper boundary of DDM is always correct response by multiplying DDM input by correctResponseInfo
     ddmRecodeDrift = pnl.TransferMechanism(
         name="Recoded Drift = Drift * correctResponseInfo",
-        size=1,
+        input_shapes=1,
         input_ports=pnl.InputPort(combine=pnl.PRODUCT)
     )
 
@@ -270,10 +270,10 @@ def make_stab_flex(
 
     # Hot-fix currently necessary to allow control module and DDM to execute in parallel in compiled mode
     # We need two gates in order to output both values (decision and response) from the ddm
-    decisionGate = pnl.ProcessingMechanism(size=1, name="DECISION_GATE")
+    decisionGate = pnl.ProcessingMechanism(input_shapes=1, name="DECISION_GATE")
     stabilityFlexibility.add_node(decisionGate)
 
-    responseGate = pnl.ProcessingMechanism(size=1, name="RESPONSE_GATE")
+    responseGate = pnl.ProcessingMechanism(input_shapes=1, name="RESPONSE_GATE")
     stabilityFlexibility.add_node(responseGate)
 
     stabilityFlexibility.add_projection(

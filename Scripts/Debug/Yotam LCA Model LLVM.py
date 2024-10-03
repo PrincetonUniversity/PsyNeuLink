@@ -132,13 +132,15 @@ def get_trained_network(bipartite_graph, num_features=3, num_hidden=200, epochs=
     lr = learning_rate
 
     # Instantiate layers and projections
-    il = pnl.TransferMechanism(size=D_i, name='input')
-    cl = pnl.TransferMechanism(size=D_c, name='control')
+    il = pnl.TransferMechanism(input_shapes=D_i, name='input')
+    cl = pnl.TransferMechanism(input_shapes=D_c, name='control')
 
-    hl = pnl.TransferMechanism(size=D_h, name='hidden',
+    hl = pnl.TransferMechanism(
+        input_shapes=D_h, name='hidden',
                                                function=pnl.Logistic(bias=-2))
 
-    ol = pnl.TransferMechanism(size=D_o, name='output',
+    ol = pnl.TransferMechanism(
+        input_shapes=D_o, name='output',
                                                function=pnl.Logistic(bias=-2))
 
     pih = pnl.MappingProjection(matrix=wih)
@@ -190,7 +192,8 @@ def get_trained_network(bipartite_graph, num_features=3, num_hidden=200, epochs=
 
     # Apply LCA transform (values from Sebastian's code -- supposedly taken from the original LCA paper from Marius & Jay)
     if attach_LCA:
-        lca = pnl.LCAMechanism(size=D_o,
+        lca = pnl.LCAMechanism(
+            input_shapes=D_o,
                                leak=leak,
                                competition=competition,
                                self_excitation=self_excitation,
@@ -251,14 +254,16 @@ def get_trained_network_multLCA(bipartite_graph, num_features=3, num_hidden=200,
     lr = learning_rate
 
     # Instantiate layers and projections
-    il = pnl.TransferMechanism(size=D_i, name='input')
-    cl = pnl.TransferMechanism(size=D_c, name='control')
+    il = pnl.TransferMechanism(input_shapes=D_i, name='input')
+    cl = pnl.TransferMechanism(input_shapes=D_c, name='control')
 
-    hl = pnl.TransferMechanism(size=D_h,
+    hl = pnl.TransferMechanism(
+        input_shapes=D_h,
                                name='hidden',
                                function=pnl.Logistic(bias=-2))
 
-    ol = pnl.TransferMechanism(size=D_o,
+    ol = pnl.TransferMechanism(
+        input_shapes=D_o,
                                name='output',
                                function=pnl.Logistic(bias=-2))
 
@@ -323,7 +328,8 @@ def get_trained_network_multLCA(bipartite_graph, num_features=3, num_hidden=200,
 
         lca_matrix = get_LCA_matrix(output_dims, num_features, self_excitation, competition)
 
-        lca = pnl.RecurrentTransferMechanism(size=D_o,
+        lca = pnl.RecurrentTransferMechanism(
+            input_shapes=D_o,
                                              matrix=lca_matrix,
                                              integrator_mode=True,
                                              integrator_function=lci,
@@ -339,7 +345,8 @@ def get_trained_network_multLCA(bipartite_graph, num_features=3, num_hidden=200,
 
         # Dummy to save mnet results
         if str(LCA_BIN_EXECUTE).startswith("LLVM"):
-            dummy = pnl.TransferMechanism(size=D_o,
+            dummy = pnl.TransferMechanism(
+                input_shapes=D_o,
                                           name="MNET_OUT")
             wrapper_composition.add_linear_processing_pathway([mnet, dummy])
 

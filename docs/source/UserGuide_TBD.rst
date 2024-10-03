@@ -45,7 +45,7 @@ Components
 , as well as two other fundamental types of Components
 (`Ports <Port>` and `Functions <Function>`), that are described in the section below on
 `Components <User_Guide_Components>`.  The other primary type of object, `Composition`, has two primary types:
-`Processes <Process>` and `Systems <System>` that allow Compositions of different degrees of size and complexity to
+`Processes <Process>` and `Systems <System>` that allow Compositions of different degrees of input_shapes and complexity to
 be created.  These are described in the section below on `Compositions <User_Guide_Components>`.  In each case,
 examples are provided that illustrate how these objects are implemented, and that parallel those used in the
 interactive `Tutorial <LINK>`.

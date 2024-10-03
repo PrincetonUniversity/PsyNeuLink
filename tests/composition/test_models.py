@@ -64,16 +64,19 @@ class TestModels:
         #  INPUT UNITS
 
         #  colors: ('red', 'green'), words: ('RED','GREEN')
-        colors_input_layer = pnl.TransferMechanism(size=2,
+        colors_input_layer = pnl.TransferMechanism(
+            input_shapes=2,
                                                    function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear,
                                                    name='COLORS_INPUT')
 
-        words_input_layer = pnl.TransferMechanism(size=2,
+        words_input_layer = pnl.TransferMechanism(
+            input_shapes=2,
                                                   function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear,
                                                   name='WORDS_INPUT')
 
         #   Task layer, tasks: ('name the color', 'read the word')
-        task_layer = pnl.TransferMechanism(size=2,
+        task_layer = pnl.TransferMechanism(
+            input_shapes=2,
                                            function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear,
                                            name='TASK')
 
@@ -84,7 +87,8 @@ class TestModels:
         #   randomly distributed noise to the net input
         #   time averaging = integration_rate = 0.1
         unit_noise = 0.005
-        colors_hidden_layer = pnl.TransferMechanism(size=2,
+        colors_hidden_layer = pnl.TransferMechanism(
+            input_shapes=2,
                                                     function=psyneulink.core.components.functions.nonstateful.transferfunctions
                                                     .Logistic(gain=1.0, x_0=4.0),
                                                     # should be able to get same result with offset = -4.0
@@ -94,7 +98,8 @@ class TestModels:
                                                     integration_rate=0.1,
                                                     name='COLORS HIDDEN')
         #    words_hidden: ('RED','GREEN')
-        words_hidden_layer = pnl.TransferMechanism(size=2,
+        words_hidden_layer = pnl.TransferMechanism(
+            input_shapes=2,
                                                    function=pnl.Logistic(gain=1.0, x_0=4.0),
                                                    integrator_mode=True,
                                                    noise=pnl.NormalDist(mean=0,
@@ -107,7 +112,8 @@ class TestModels:
         #   Response layer, provide input to accumulator, responses: ('red', 'green')
         #   time averaging = tau = 0.1
         #   randomly distributed noise to the net input
-        response_layer = pnl.TransferMechanism(size=2,
+        response_layer = pnl.TransferMechanism(
+            input_shapes=2,
                                                function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic,
                                                name='RESPONSE',
                                                integrator_mode=True,
@@ -305,26 +311,26 @@ class TestModels:
 
     # def test_botvinick_model(self):
     #
-    #     colors_input_layer = pnl.TransferMechanism(size=3,
+    #     colors_input_layer = pnl.TransferMechanism(input_shapes=3,
     #                                                function=pnl.Linear,
     #                                                name='COLORS_INPUT')
     #
-    #     words_input_layer = pnl.TransferMechanism(size=3,
+    #     words_input_layer = pnl.TransferMechanism(input_shapes=3,
     #                                               function=pnl.Linear,
     #                                               name='WORDS_INPUT')
     #
-    #     task_input_layer = pnl.TransferMechanism(size=2,
+    #     task_input_layer = pnl.TransferMechanism(input_shapes=2,
     #                                              function=pnl.Linear,
     #                                              name='TASK_INPUT')
     #
-    #     task_layer = pnl.RecurrentTransferMechanism(size=2,
+    #     task_layer = pnl.RecurrentTransferMechanism(input_shapes=2,
     #                                                 function=pnl.Logistic(),
     #                                                 hetero=-2,
     #                                                 integrator_mode=True,
     #                                                 integration_rate=0.01,
     #                                                 name='TASK_LAYER')
     #
-    #     colors_hidden_layer = pnl.RecurrentTransferMechanism(size=3,
+    #     colors_hidden_layer = pnl.RecurrentTransferMechanism(input_shapes=3,
     #                                                          function=pnl.Logistic(bias=4.0),
     #                                                          # bias 4.0 is -4.0 in the paper see Docs for description
     #                                                          integrator_mode=True,
@@ -332,7 +338,7 @@ class TestModels:
     #                                                          integration_rate=0.01,  # cohen-huston text says 0.01
     #                                                          name='COLORS_HIDDEN')
     #
-    #     words_hidden_layer = pnl.RecurrentTransferMechanism(size=3,
+    #     words_hidden_layer = pnl.RecurrentTransferMechanism(input_shapes=3,
     #                                                         function=pnl.Logistic(bias=4.0),
     #                                                         integrator_mode=True,
     #                                                         hetero=-2,
@@ -340,7 +346,7 @@ class TestModels:
     #                                                         name='WORDS_HIDDEN')
     #
     #     #   Response layer, responses: ('red', 'green')
-    #     response_layer = pnl.RecurrentTransferMechanism(size=2,
+    #     response_layer = pnl.RecurrentTransferMechanism(input_shapes=2,
     #                                                     function=pnl.Logistic(),
     #                                                     hetero=-2.0,
     #                                                     integrator_mode=True,

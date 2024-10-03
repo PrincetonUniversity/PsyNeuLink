@@ -148,7 +148,7 @@ To create new Parameters, reference this example of a new class *B*
 
             def _recurrent_transfer_mechanism_matrix_setter(value, owning_component=None, context=None):
                 try:
-                    value = get_matrix(value, owning_component.size[0], owning_component.size[0])
+                    value = get_matrix(value, owning_component.input_shapes[0], owning_component.input_shapes[0])
                 except AttributeError:
                     pass
 

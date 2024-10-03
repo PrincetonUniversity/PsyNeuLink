@@ -105,10 +105,10 @@ class TestLeabraMechPrecision:
         L_net = LeabraMechanism(leabra_net2)
         # leabra_net should be identical to the network inside L_net
 
-        T1_spec = TransferMechanism(name='T1_spec', size=in_size, function=Linear)
-        T2_spec = TransferMechanism(name='T2_spec', size=out_size, function=Linear)
-        T1_net = TransferMechanism(name='T1_net', size=in_size, function=Linear)
-        T2_net = TransferMechanism(name='T2_net', size=out_size, function=Linear)
+        T1_spec = TransferMechanism(name='T1_spec', input_shapes=in_size, function=Linear)
+        T2_spec = TransferMechanism(name='T2_spec', input_shapes=out_size, function=Linear)
+        T1_net = TransferMechanism(name='T1_net', input_shapes=in_size, function=Linear)
+        T2_net = TransferMechanism(name='T2_net', input_shapes=out_size, function=Linear)
 
         proj_spec = MappingProjection(sender=T2_spec, receiver=L_spec.input_ports[1])
         c_spec = Composition(pathways=[[T1_spec, L_spec],[T2_spec, proj_spec, L_spec]])
@@ -154,10 +154,10 @@ class TestLeabraMechPrecision:
         L_net = LeabraMechanism(leabra_net2)
         # leabra_net should be identical to the network inside L_net
 
-        T1_spec = TransferMechanism(name='T1_spec', size=in_size, function=Linear)
-        T2_spec = TransferMechanism(name='T2_spec', size=out_size, function=Linear)
-        T1_net = TransferMechanism(name='T1_net', size=in_size, function=Linear)
-        T2_net = TransferMechanism(name='T2_net', size=out_size, function=Linear)
+        T1_spec = TransferMechanism(name='T1_spec', input_shapes=in_size, function=Linear)
+        T2_spec = TransferMechanism(name='T2_spec', input_shapes=out_size, function=Linear)
+        T1_net = TransferMechanism(name='T1_net', input_shapes=in_size, function=Linear)
+        T2_net = TransferMechanism(name='T2_net', input_shapes=out_size, function=Linear)
 
         proj_spec = MappingProjection(sender=T2_spec, receiver=L_spec.input_ports[1])
         c_spec = Composition(pathways=[[T1_spec, L_spec],[T2_spec, proj_spec, L_spec]])
@@ -205,10 +205,10 @@ class TestLeabraMechPrecision:
         L_net = LeabraMechanism(leabra_net2)
         # leabra_net should be identical to the network inside L_net
 
-        T1_spec = TransferMechanism(name='T1', size=in_size, function=Linear)
-        T2_spec = TransferMechanism(name='T2', size=out_size, function=Linear)
-        T1_net = TransferMechanism(name='T1', size=in_size, function=Linear)
-        T2_net = TransferMechanism(name='T2', size=out_size, function=Linear)
+        T1_spec = TransferMechanism(name='T1', input_shapes=in_size, function=Linear)
+        T2_spec = TransferMechanism(name='T2', input_shapes=out_size, function=Linear)
+        T1_net = TransferMechanism(name='T1', input_shapes=in_size, function=Linear)
+        T2_net = TransferMechanism(name='T2', input_shapes=out_size, function=Linear)
 
         proj_spec = MappingProjection(sender=T2_spec, receiver=L_spec.input_ports[1])
         c_spec = Composition(pathways=[[T1_spec, L_spec], [T2_spec, proj_spec, L_spec]])
@@ -249,11 +249,11 @@ class TestLeabraMechPrecision:
 # class TestLeabraMechInSystem:
 #
 #     def test_leabra_mech_learning(self):
-#         T1 = TransferMechanism(size=5, function=Linear)
-#         T2 = TransferMechanism(size=3, function=Linear)
+#         T1 = TransferMechanism(input_shapes=5, function=Linear)
+#         T2 = TransferMechanism(input_shapes=3, function=Linear)
 #         L = LeabraMechanism(input_size=5, output_size=3, hidden_layers=2, hidden_sizes=[4, 4])
 #         train_data_proj = MappingProjection(sender=T2, receiver=L.input_ports[1])
-#         out = TransferMechanism(size=3, function=Logistic(bias=2))
+#         out = TransferMechanism(input_shapes=3, function=Logistic(bias=2))
 #         p1 = Process(pathway=[T1, L, out], learning=LEARNING, learning_rate=1.0, target=[0, .1, .8])
 #         p2 = Process(pathway=[T2, train_data_proj, L, out])
 #         s = System(processes=[p1, p2])

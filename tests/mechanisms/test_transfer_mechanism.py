@@ -43,7 +43,7 @@ class TestTransferMechanismInputs:
         T.reset_stateful_function_when = Never()
         val = benchmark(T.execute, [10 for i in range(VECTOR_SIZE)])
         np.testing.assert_allclose(val, [[10.0 for i in range(VECTOR_SIZE)]])
-        assert len(T.size) == 1 and T.size[0] == VECTOR_SIZE and isinstance(T.size[0], np.integer)
+        assert len(T.input_shapes) == 1 and T.input_shapes[0] == VECTOR_SIZE and isinstance(T.input_shapes[0], np.integer)
         # this test assumes size is returned as a 1D array: if it's not, then several tests in this file must be changed
 
     @pytest.mark.mechanism
@@ -953,10 +953,10 @@ class TestTransferMechanismSize:
     def test_transfer_mech_size_int_check_var(self):
         T = TransferMechanism(
             name='T',
-            size=4
+            input_shapes=4
         )
         np.testing.assert_array_equal(T.defaults.variable, [[0, 0, 0, 0]])
-        assert len(T.size) == 1 and T.size[0] == 4 and isinstance(T.size[0], np.integer)
+        assert len(T.input_shapes) == 1 and T.input_shapes[0] == 4 and isinstance(T.input_shapes[0], np.integer)
 
 
     @pytest.mark.mechanism
@@ -964,92 +964,50 @@ class TestTransferMechanismSize:
     def test_transfer_mech_size_int_inputs_ints(self):
         T = TransferMechanism(
             name='T',
-            size=4
+            input_shapes=4
         )
         val = T.execute([10, 10, 10, 10])
         np.testing.assert_array_equal(val, [[10.0, 10.0, 10.0, 10.0]])
 
     # ------------------------------------------------------------------------------------------------
     # TEST 3
-    # size = int, variable = list of floats
+    # input_shapes = int, variable = list of floats
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_size_int_inputs_floats(self):
         T = TransferMechanism(
             name='T',
-            size=VECTOR_SIZE
+            input_shapes=VECTOR_SIZE
         )
         val = T.execute([10.0 for i in range(VECTOR_SIZE)])
         np.testing.assert_array_equal(val, [[10.0 for i in range(VECTOR_SIZE)]])
 
     # ------------------------------------------------------------------------------------------------
     # TEST 4
-    # size = int, variable = list of functions
+    # input_shapes = int, variable = list of functions
 
     #@pytest.mark.mechanism
     #@pytest.mark.transfer_mechanism
     # def test_transfer_mech_size_int_inputs_fns(self):
     #     T = TransferMechanism(
     #         name='T',
-    #         size=4,
+    #         input_shapes=4,
     #         integrator_mode=True
     #     )
     #     val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()])
     #     np.testing.assert_allclose(val, [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
 
     # ------------------------------------------------------------------------------------------------
-    # TEST 5
-    # size = float, check if variable is an array of zeros
-
-    @pytest.mark.mechanism
-    @pytest.mark.transfer_mechanism
-    def test_transfer_mech_size_float_inputs_check_var(self):
-        T = TransferMechanism(
-            name='T',
-            size=4.0,
-        )
-        np.testing.assert_array_equal(T.defaults.variable, [[0, 0, 0, 0]])
-        assert len(T.size == 1) and T.size[0] == 4.0 and isinstance(T.size[0], np.integer)
-
-    # ------------------------------------------------------------------------------------------------
-    # TEST 6
-    # size = float, variable = list of ints
-
-    @pytest.mark.mechanism
-    @pytest.mark.transfer_mechanism
-    def test_transfer_mech_size_float_inputs_ints(self):
-        T = TransferMechanism(
-            name='T',
-            size=4.0
-        )
-        val = T.execute([10, 10, 10, 10])
-        np.testing.assert_array_equal(val, [[10.0, 10.0, 10.0, 10.0]])
-
-    # ------------------------------------------------------------------------------------------------
-    # TEST 7
-    # size = float, variable = list of floats
-
-    @pytest.mark.mechanism
-    @pytest.mark.transfer_mechanism
-    def test_transfer_mech_size_float_inputs_floats(self):
-        T = TransferMechanism(
-            name='T',
-            size=4.0
-        )
-        val = T.execute([10.0, 10.0, 10.0, 10.0])
-        np.testing.assert_array_equal(val, [[10.0, 10.0, 10.0, 10.0]])
-
-    # ------------------------------------------------------------------------------------------------
     # TEST 8
-    # size = float, variable = list of functions
+    # input_shapes = float, variable = list of functions
 
     #@pytest.mark.mechanism
     #@pytest.mark.transfer_mechanism
     # def test_transfer_mech_size_float_inputs_fns(self):
     #     T = TransferMechanism(
     #         name='T',
-    #         size=4.0,
+    #         input_shapes=4.0,
     #         integrator_mode=True
     #     )
     #     val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()])
@@ -1057,30 +1015,18 @@ class TestTransferMechanismSize:
 
     # ------------------------------------------------------------------------------------------------
     # TEST 9
-    # size = list of ints, check that variable is correct
+    # input_shapes = list of ints, check that variable is correct
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_size_list_of_ints(self):
         T = TransferMechanism(
             name='T',
-            size=[2, 3, 4]
+            input_shapes=[2, 3, 4]
         )
         assert len(T.defaults.variable) == 3 and len(T.defaults.variable[0]) == 2 and len(T.defaults.variable[1]) == 3 and len(T.defaults.variable[2]) == 4
 
     # ------------------------------------------------------------------------------------------------
-    # TEST 10
-    # size = list of floats, check that variable is correct
-
-    @pytest.mark.mechanism
-    @pytest.mark.transfer_mechanism
-    def test_transfer_mech_size_list_of_floats(self):
-        T = TransferMechanism(
-            name='T',
-            size=[2., 3., 4.]
-        )
-        assert len(T.defaults.variable) == 3 and len(T.defaults.variable[0]) == 2 and len(T.defaults.variable[1]) == 3 and len(T.defaults.variable[2]) == 4
-
     # note that this output under the Linear function is useless/odd, but the purpose of allowing this configuration
     # is for possible user-defined functions that do use unusual shapes.
 
@@ -1089,7 +1035,7 @@ class TestTransferMechanismSize:
     def test_transfer_mech_size_var_both_lists(self):
         T = TransferMechanism(
             name='T',
-            size=[2., 3.],
+            input_shapes=[2, 3],
             default_variable=[[1, 2], [3, 4, 5]]
         )
         assert len(T.defaults.variable) == 2
@@ -1098,18 +1044,19 @@ class TestTransferMechanismSize:
 
     # ------------------------------------------------------------------------------------------------
     # TEST 12
-    # size = int, variable = a compatible 2D array: check that variable is correct
+    # input_shapes = int, variable = a compatible 2D array: check that variable is correct
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_size_scalar_var_2d(self):
-        T = TransferMechanism(
-            name='T',
-            size=2,
-            default_variable=[[1, 2], [3, 4]]
-        )
-        np.testing.assert_array_equal(T.defaults.variable, [[1, 2], [3, 4]])
-        assert len(T.size) == 2 and T.size[0] == 2 and T.size[1] == 2
+        with pytest.raises(
+            ComponentError, match=r'input_shapes and default_variable arguments.*conflict.*'
+        ):
+            TransferMechanism(
+                name='T',
+                input_shapes=2,
+                default_variable=[[1, 2], [3, 4]]
+            )
 
     # ------------------------------------------------------------------------------------------------
     # TEST 13
@@ -1126,89 +1073,75 @@ class TestTransferMechanismSize:
 
     # ------------------------------------------------------------------------------------------------
     # TEST 14
-    # variable = a 1D array, size does not match: check that variable and output are correct
+    # variable = a 1D array, input_shapes does not match: check that variable and output are correct
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_var_1D_size_wrong(self):
-        T = TransferMechanism(
-            name='T',
-            default_variable=[1, 2, 3, 4],
-            size=2
-        )
-        np.testing.assert_array_equal(T.defaults.variable, [[1, 2, 3, 4]])
-        val = T.execute([10.0, 10.0, 10.0, 10.0])
-        np.testing.assert_array_equal(val, [[10.0, 10.0, 10.0, 10.0]])
+        with pytest.raises(
+            ComponentError, match=r'input_shapes and default_variable arguments.*conflict.*'
+        ):
+            TransferMechanism(
+                name='T',
+                default_variable=[1, 2, 3, 4],
+                input_shapes=2
+            )
 
     # ------------------------------------------------------------------------------------------------
     # TEST 15
-    # variable = a 1D array, size does not match again: check that variable and output are correct
+    # variable = a 1D array, input_shapes does not match again: check that variable and output are correct
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_var_1D_size_wrong_2(self):
-        T = TransferMechanism(
-            name='T',
-            default_variable=[1, 2, 3, 4],
-            size=[2, 3, 4]
-        )
-        np.testing.assert_array_equal(T.defaults.variable, [[1, 2, 3, 4]])
-        val = T.execute([10.0, 10.0, 10.0, 10.0])
-        np.testing.assert_array_equal(val, [[10.0, 10.0, 10.0, 10.0]])
+        with pytest.raises(
+            ComponentError, match=r'input_shapes and default_variable arguments.*conflict.*'
+        ):
+            TransferMechanism(
+                name='T',
+                default_variable=[1, 2, 3, 4],
+                input_shapes=[2, 3, 4]
+            )
 
     # ------------------------------------------------------------------------------------------------
     # TEST 16
-    # size = int, variable = incompatible array, check variable
+    # input_shapes = int, variable = incompatible array, check variable
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_size_var_incompatible1(self):
-        T = TransferMechanism(
-            name='T',
-            size=2,
-            default_variable=[[1, 2], [3, 4, 5]]
-        )
-        assert len(T.defaults.variable) == 2
-        np.testing.assert_array_equal(T.defaults.variable[0], [1, 2])
-        np.testing.assert_array_equal(T.defaults.variable[1], [3, 4, 5])
+        with pytest.raises(
+            ComponentError, match=r'input_shapes and default_variable arguments.*conflict.*'
+        ):
+            TransferMechanism(
+                name='T',
+                input_shapes=2,
+                default_variable=[[1, 2], [3, 4, 5]]
+            )
 
     # ------------------------------------------------------------------------------------------------
     # TEST 17
-    # size = array, variable = incompatible array, check variable
+    # input_shapes = array, variable = incompatible array, check variable
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_size_var_incompatible2(self):
-        T = TransferMechanism(
-            name='T',
-            size=[2, 2],
-            default_variable=[[1, 2], [3, 4, 5]]
-        )
-        assert len(T.defaults.variable) == 2
-        np.testing.assert_array_equal(T.defaults.variable[0], [1, 2])
-        np.testing.assert_array_equal(T.defaults.variable[1], [3, 4, 5])
+        with pytest.raises(
+            ComponentError, match=r'input_shapes and default_variable arguments.*conflict.*'
+        ):
+            TransferMechanism(
+                name='T',
+                input_shapes=[2, 2],
+                default_variable=[[1, 2], [3, 4, 5]]
+            )
 
     # ------------------------------------------------------------------------------------------------
 
     # INVALID INPUTS
 
     # ------------------------------------------------------------------------------------------------
-    # TEST 1
-    # size = 0, check less-than-one error
-
-    @pytest.mark.mechanism
-    @pytest.mark.transfer_mechanism
-    def test_transfer_mech_size_zero(self):
-        with pytest.raises(ComponentError) as error_text:
-            T = TransferMechanism(
-                name='T',
-                size=0,
-            )
-        assert "is not a positive number" in str(error_text.value)
-
-    # ------------------------------------------------------------------------------------------------
     # TEST 2
-    # size = -1.0, check less-than-one error
+    # input_shapes = -1.0, check less-than-one error
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -1216,9 +1149,9 @@ class TestTransferMechanismSize:
         with pytest.raises(ComponentError) as error_text:
             T = TransferMechanism(
                 name='T',
-                size=-1.0,
+                input_shapes=-1,
             )
-        assert "is not a positive number" in str(error_text.value)
+        assert "negative dimensions" in str(error_text.value)
 
     # this test below and the (currently commented) test immediately after it _may_ be deprecated if we ever fix
     # warnings to be no longer fatal. At the time of writing (6/30/17, CW), warnings are always fatal.
@@ -1230,25 +1163,25 @@ class TestTransferMechanismSize:
     #     with pytest.raises(UserWarning) as error_text:
     #         T = TransferMechanism(
     #             name='T',
-    #             size=3.5,
+    #             input_shapes=3.5,
     #         )
     #     assert "cast to integer, its value changed" in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 4
-    # size = 2D array, check too-many-dimensions warning
+    # input_shapes = 2D array, check too-many-dimensions warning
 
     # def test_transfer_mech_size_2d(self):
     #     with pytest.raises(UserWarning) as error_text:
     #         T = TransferMechanism(
     #             name='T',
-    #             size=[[2]],
+    #             input_shapes=[[2]],
     #         )
     #     assert "had more than one dimension" in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 5
-    # size = 2D array, check variable is correctly instantiated
+    # input_shapes = 2D array, check variable is correctly instantiated
 
     # for now, since the test above doesn't work, we use this tesT.6/30/17 (CW)
     @pytest.mark.mechanism
@@ -1256,10 +1189,10 @@ class TestTransferMechanismSize:
     def test_transfer_mech_size_2d(self):
         T = TransferMechanism(
             name='T',
-            size=[[2]],
+            input_shapes=[[2]],
         )
         assert len(T.defaults.variable) == 1 and len(T.defaults.variable[0]) == 2
-        assert len(T.size) == 1 and T.size[0] == 2
+        assert len(T.input_shapes) == 1 and T.input_shapes[0] == 2
 
 
 class TestTransferMechanismMultipleInputPorts:
@@ -1334,7 +1267,7 @@ class TestTransferMechanismMultipleInputPorts:
 
 class TestIntegratorMode:
     def test_integrator_mode_simple_on_and_off(self):
-        T = TransferMechanism(size=2)
+        T = TransferMechanism(input_shapes=2)
         np.testing.assert_allclose(T.execute([0.5, 1]), [[0.5, 1]])
         T.integrator_mode=True
         np.testing.assert_allclose(T.execute([0.5, 1]), [[0.25, 0.5 ]])
@@ -1721,21 +1654,21 @@ class TestOnResumeIntegratorMode:
     # python values during execution is not implemented.
     @pytest.mark.usefixtures("comp_mode_no_llvm")
     def test_termination_measures(self, comp_mode):
-        stim_input = ProcessingMechanism(size=2, name='Stim Input')
-        stim_percept = TransferMechanism(name='Stimulus', size=2, function=Logistic)
-        instruction_input = ProcessingMechanism(size=2, function=Linear(slope=10))
-        attention = LCAMechanism(name='Attention', size=2, function=Logistic,
+        stim_input = ProcessingMechanism(input_shapes=2, name='Stim Input')
+        stim_percept = TransferMechanism(name='Stimulus', input_shapes=2, function=Logistic)
+        instruction_input = ProcessingMechanism(input_shapes=2, function=Linear(slope=10))
+        attention = LCAMechanism(name='Attention', input_shapes=2, function=Logistic,
                                  leak=8, competition=8, self_excitation=0,
                                  noise=0, time_step_size=.1,
                                  termination_threshold=3,
                                  termination_measure=TimeScale.TRIAL)
-        decision = TransferMechanism(name='Decision', size=2,
+        decision = TransferMechanism(name='Decision', input_shapes=2,
                                      integrator_mode=True,
                                      execute_until_finished=False,
                                      termination_threshold=0.65,
                                      termination_measure=max,
                                      termination_comparison_op=GREATER_THAN)
-        response = ProcessingMechanism(size=2, name='Response')
+        response = ProcessingMechanism(input_shapes=2, name='Response')
 
         comp = Composition()
         comp.add_linear_processing_pathway([stim_input, [[1,-1],[-1,1]], stim_percept, decision, response])

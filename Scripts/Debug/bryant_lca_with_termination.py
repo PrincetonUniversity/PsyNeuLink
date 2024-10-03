@@ -1,19 +1,19 @@
 import psyneulink as pnl
 
 cueInterval = pnl.TransferMechanism(default_variable=[[0.0]],
-                                    size=1,
+                                    input_shapes=1,
                                     function=pnl.Linear(slope=1, intercept=0),
                                     output_ports=[pnl.RESULT],
                                     name='Cue-Stimulus Interval')
 
 taskLayer = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
-                                  size=2,
+                                  input_shapes=2,
                                   function=pnl.Linear(slope=1, intercept=0),
                                   output_ports=[pnl.RESULT],
                                   name='Task Input [I1, I2]')
 
 activation = pnl.LCAMechanism(default_variable=[[0.0, 0.0]],
-                              size=2,
+                              input_shapes=2,
                               function=pnl.Logistic(gain=1),
                               leak=.5,
                               competition=2,

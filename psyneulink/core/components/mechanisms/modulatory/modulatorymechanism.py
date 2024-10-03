@@ -194,7 +194,7 @@ class ModulatoryMechanism_Base(Mechanism_Base):
     @check_user_specified
     def __init__(self,
                  default_variable,
-                 size,
+                 input_shapes,
                  modulation,
                  params,
                  name,
@@ -208,7 +208,7 @@ class ModulatoryMechanism_Base(Mechanism_Base):
 
         super().__init__(
             default_variable=default_variable,
-            size=size,
+            input_shapes=input_shapes,
             modulation=modulation,
             params=params,
             name=name,

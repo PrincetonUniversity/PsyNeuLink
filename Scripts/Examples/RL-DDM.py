@@ -11,7 +11,7 @@ import psyneulink as pnl
 import psyneulink.core.components.functions.nonstateful.learningfunctions
 
 input_layer = pnl.TransferMechanism(
-    size=2,
+    input_shapes=2,
     name='Input Layer'
 )
 

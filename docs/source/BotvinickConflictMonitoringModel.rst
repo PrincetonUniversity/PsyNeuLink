@@ -43,30 +43,30 @@ bidirectional way. The response layer receives inputs from both hidden layers. A
 
 Network System
 ~~~~~~~~~~~~~~
-**COLOR INPUT LAYER**:  a `TransferMechanism` with **size** = 3 (one unit for the input of one color, respectively
+**COLOR INPUT LAYER**:  a `TransferMechanism` with **input_shapes** = 3 (one unit for the input of one color, respectively
 here blue & green), and assigned a `Linear` function with **slope** = 1.0 and **intercept** = 0.0.
 
-**WORD INPUT LAYER**:  a `TransferMechanism` with **size** = 3 (one unit for the input of one word, respectively,
+**WORD INPUT LAYER**:  a `TransferMechanism` with **input_shapes** = 3 (one unit for the input of one word, respectively,
 here blue & green), and assigned a `Linear` function with **slope** = 1.0 and **intercept** = 0.0.
 
-**TASK INPUT LAYER**:  a `TransferMechanism` with **size** = 2 (one unit specified with a task
+**TASK INPUT LAYER**:  a `TransferMechanism` with **input_shapes** = 2 (one unit specified with a task
 value of one, the other element set to zero), and assigned a `Linear` function with **slope** = 1.0 and **intercept** = 0.0.
 
-**COLOR HIDDEN LAYER**: a `RecurrentTransferMechanism` with **size** = 3 (one element for each of the two colors, one
+**COLOR HIDDEN LAYER**: a `RecurrentTransferMechanism` with **input_shapes** = 3 (one element for each of the two colors, one
 element for the neutral color and assigned a `Logistic` function with **gain** = 4.0 and **bias** = 1.0.
 The **integrator_mode** = `True` and **smoothing_factor** = 0.01. Both units receive mutually inhibitory weights
 (**hetero** = -2).
 
-**WORD HIDDEN LAYER**: a `RecurrentTransferMechanism` with **size** = 3 (one element for each of the two colors, one
+**WORD HIDDEN LAYER**: a `RecurrentTransferMechanism` with **input_shapes** = 3 (one element for each of the two colors, one
 element for the neutral color and assigned a `Logistic` function with **gain** = 4.0 and **bias** = 1.0.
 The **integrator_mode** = `True` and **smoothing_factor** = 0.01. Both units receive mutually inhibitory weights
 (**hetero** = -2).
 
-**TASK DEMAND LAYER**: a `RecurrentTransferMechanism` with **size** = 2 (one element for each of the two tasks, and
+**TASK DEMAND LAYER**: a `RecurrentTransferMechanism` with **input_shapes** = 2 (one element for each of the two tasks, and
 assigned a `Logistic` function with **gain** = 1.0 and **bias** = 0.0. The **integrator_mode** = `True`
 and **smoothing_factor** = 0.01. Both units receive mutually inhibitory weights (**hetero** = -2).
 
-**RESPONSE LAYER**: a `RecurrentTransferMechanism` with **size** = 2 (one element for each of the two responses, and
+**RESPONSE LAYER**: a `RecurrentTransferMechanism` with **input_shapes** = 2 (one element for each of the two responses, and
 assigned a `Logistic` function with **gain** = 1.0 and **bias** = 0.0. The **integrator_mode** = `True`
 and **smoothing_factor** = 0.01. Both units receive mutually inhibitory weights (**hetero** = -2).
 

@@ -1383,11 +1383,11 @@ COMMENT:
     >>> B = ProcessingMechanism(name='B', default_variable=[0,0,0])
     >>> inner_nested_comp = Composition(nodes=[A, B])
 
-    >>> C = ComparatorMechanism(name='C', size=3)
+    >>> C = ComparatorMechanism(name='C', input_shapes=3)
     >>> nested_comp_1 = Composition(nodes=[C, inner_nested_comp])
 
-    >>> D = ComparatorMechanism(name='D', size=3)
-    >>> E = ComparatorMechanism(name='E', size=3)
+    >>> D = ComparatorMechanism(name='D', input_shapes=3)
+    >>> E = ComparatorMechanism(name='E', input_shapes=3)
     >>> nested_comp_2 = Composition([D, E])
 
     >>> F = ComparatorMechanism(name='F')

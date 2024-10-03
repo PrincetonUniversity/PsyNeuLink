@@ -72,18 +72,18 @@ def get_stroop_model(unit_noise_std=.01, dec_noise_std=.1):
     punish = pnl.TransferMechanism(name='punish')
 
     inp_clr = pnl.TransferMechanism(
-        size=N_UNITS, function=pnl.Linear, name='COLOR INPUT'
+        input_shapes=N_UNITS, function=pnl.Linear, name='COLOR INPUT'
     )
     inp_wrd = pnl.TransferMechanism(
-        size=N_UNITS, function=pnl.Linear, name='WORD INPUT'
+        input_shapes=N_UNITS, function=pnl.Linear, name='WORD INPUT'
     )
     # task layer, represent the task instruction; color naming / word reading
     inp_task = pnl.TransferMechanism(
-        size=N_UNITS, function=pnl.Linear, name='TASK'
+        input_shapes=N_UNITS, function=pnl.Linear, name='TASK'
     )
     # hidden layer for color and word
     hid_clr = pnl.TransferMechanism(
-        size=N_UNITS,
+        input_shapes=N_UNITS,
         function=hidden_func,
         integrator_mode=True,
         integration_rate=integration_rate,
@@ -92,7 +92,7 @@ def get_stroop_model(unit_noise_std=.01, dec_noise_std=.1):
         name='COLORS HIDDEN'
     )
     hid_wrd = pnl.TransferMechanism(
-        size=N_UNITS,
+        input_shapes=N_UNITS,
         function=hidden_func,
         integrator_mode=True,
         integration_rate=integration_rate,
@@ -102,7 +102,7 @@ def get_stroop_model(unit_noise_std=.01, dec_noise_std=.1):
     )
     # output layer
     output = pnl.TransferMechanism(
-        size=N_UNITS,
+        input_shapes=N_UNITS,
         function=pnl.Logistic,
         integrator_mode=True,
         integration_rate=integration_rate,

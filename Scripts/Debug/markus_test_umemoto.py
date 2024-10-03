@@ -99,7 +99,8 @@ Decision.set_log_conditions('InputPort-0')
 # Decision.loggable_items
 
 # Outcome Mechanisms:
-Reward = pnl.TransferMechanism(size = 1,
+Reward = pnl.TransferMechanism(
+    input_shapes= 1,
                                name='Reward')
 
 # Processes:

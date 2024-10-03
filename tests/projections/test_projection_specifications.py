@@ -18,10 +18,10 @@ class TestProjectionSpecificationFormats:
           (currently it should be ignored; in the future, if/when Projections between the same sender and receiver
            in different Compositions are allowed, then it should be used)
         """
-        M1 = pnl.ProcessingMechanism(size=2)
-        M2 = pnl.ProcessingMechanism(size=5)
-        M3 = pnl.ProcessingMechanism(size=4)
-        M4 = pnl.ProcessingMechanism(size=3)
+        M1 = pnl.ProcessingMechanism(input_shapes=2)
+        M2 = pnl.ProcessingMechanism(input_shapes=5)
+        M3 = pnl.ProcessingMechanism(input_shapes=4)
+        M4 = pnl.ProcessingMechanism(input_shapes=3)
 
         M1_M2_matrix = (np.arange(2 * 5).reshape((2, 5)) + 1) / (2 * 5)
         M2_M3_matrix = (np.arange(5 * 4).reshape((5, 4)) + 1) / (5 * 4)
@@ -483,8 +483,8 @@ class TestProjectionSpecificationFormats:
     # KDM: this is a good candidate for pytest.parametrize
     def test_masked_mapping_projection(self):
 
-        t1 = pnl.TransferMechanism(size=2)
-        t2 = pnl.TransferMechanism(size=2)
+        t1 = pnl.TransferMechanism(input_shapes=2)
+        t2 = pnl.TransferMechanism(input_shapes=2)
         proj = pnl.MaskedMappingProjection(sender=t1,
                                     receiver=t2,
                                     matrix=[[1,2],[3,4]],
@@ -495,8 +495,8 @@ class TestProjectionSpecificationFormats:
         val = c.execute(inputs={t1:[1,2]})
         np.testing.assert_allclose(val, [[8, 12]])
 
-        t1 = pnl.TransferMechanism(size=2)
-        t2 = pnl.TransferMechanism(size=2)
+        t1 = pnl.TransferMechanism(input_shapes=2)
+        t2 = pnl.TransferMechanism(input_shapes=2)
         proj = pnl.MaskedMappingProjection(sender=t1,
                                     receiver=t2,
                                     matrix=[[1,2],[3,4]],
@@ -507,8 +507,8 @@ class TestProjectionSpecificationFormats:
         val = c.execute(inputs={t1:[1,2]})
         np.testing.assert_allclose(val, [[1, 8]])
 
-        t1 = pnl.TransferMechanism(size=2)
-        t2 = pnl.TransferMechanism(size=2)
+        t1 = pnl.TransferMechanism(input_shapes=2)
+        t2 = pnl.TransferMechanism(input_shapes=2)
         proj = pnl.MaskedMappingProjection(sender=t1,
                                     receiver=t2,
                                     mask=[[1,2],[3,4]],
@@ -522,8 +522,8 @@ class TestProjectionSpecificationFormats:
 
         with pytest.raises(pnl.MaskedMappingProjectionError) as error_text:
 
-            t1 = pnl.TransferMechanism(size=2)
-            t2 = pnl.TransferMechanism(size=2)
+            t1 = pnl.TransferMechanism(input_shapes=2)
+            t2 = pnl.TransferMechanism(input_shapes=2)
             pnl.MaskedMappingProjection(sender=t1,
                                         receiver=t2,
                                         mask=[[1,2,3],[4,5,6]],

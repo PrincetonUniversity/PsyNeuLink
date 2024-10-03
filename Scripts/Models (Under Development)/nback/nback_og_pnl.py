@@ -317,24 +317,24 @@ def construct_model(stim_size:int = STIM_SIZE,
     #     output: match [1,0] or non-match [0,1]
     # Must be trained to detect match for specified task (1-back, 2-back, etc.)
     stim_context_input = TransferMechanism(name=FFN_INPUT,
-                                           size=ffn_input_size)
+                                           input_shapes=ffn_input_size)
     task_input = ProcessingMechanism(name=FFN_TASK,
-                                     size=task_size)
+                                     input_shapes=task_size)
     task_embedding = ProcessingMechanism(name=FFN_TASK,
-                                         size=h1_size)
+                                         input_shapes=h1_size)
     h1 = ProcessingMechanism(name=FFN_H1,
-                             size=h1_size,
+                             input_shapes=h1_size,
                              function=FFN_TRANSFER_FUNCTION)
     add_layer = ProcessingMechanism(name=FFN_ADD_LAYER,
-                                    size=h1_size)
+                                    input_shapes=h1_size)
     dropout = ProcessingMechanism(name=FFN_DROPOUT,
-                                  size=h1_size,
+                                  input_shapes=h1_size,
                                   function=Dropout(p=DROPOUT_PROB))
     h2 = ProcessingMechanism(name=FFN_H2,
-                             size=h2_size,
+                             input_shapes=h2_size,
                              function=FFN_TRANSFER_FUNCTION)
     output = ProcessingMechanism(name=FFN_OUTPUT,
-                                 size=2,
+                                 input_shapes=2,
                                  function = Linear
                                  # function=ReLU
                                  )
@@ -358,7 +358,7 @@ def construct_model(stim_size:int = STIM_SIZE,
     print(f"constructing '{NBACK_MODEL}'...")
 
     # Stimulus Encoding: takes stim_size vector as input
-    stim = TransferMechanism(name=MODEL_STIMULUS_INPUT, size=stim_size)
+    stim = TransferMechanism(name=MODEL_STIMULUS_INPUT, input_shapes=stim_size)
 
     # Context Encoding: takes scalar as drift step for current trial
     context = ProcessingMechanism(name=MODEL_CONTEXT_INPUT,
@@ -369,16 +369,16 @@ def construct_model(stim_size:int = STIM_SIZE,
 
     # Task: task one-hot indicating n-back (1, 2, 3 etc.) - must correspond to what ffn has been trained to do
     task = ProcessingMechanism(name=MODEL_TASK_INPUT,
-                               size=task_size)
+                               input_shapes=task_size)
 
     # Episodic Memory:
     #    - entries: stimulus (field[0]) and context (field[1]); randomly initialized
     #    - uses Softmax to retrieve best matching input, subject to weighting of stimulus and context by STIM_WEIGHT
     em = EpisodicMemoryMechanism(name=EM,
                                  input_ports=[{NAME:"STIMULUS_FIELD",
-                                               SIZE:stim_size},
+                                               INPUT_SHAPES:stim_size},
                                               {NAME:"CONTEXT_FIELD",
-                                               SIZE:context_size}],
+                                               INPUT_SHAPES:context_size}],
                                  function=ContentAddressableMemory(
                                      initializer=[[[0] * stim_size, [0] * context_size]],
                                      distance_field_weights=[retrieval_stimulus_weight,
@@ -395,7 +395,7 @@ def construct_model(stim_size:int = STIM_SIZE,
                                        function=Concatenate)
 
     decision = TransferMechanism(name=DECISION,
-                                 size=2,
+                                 input_shapes=2,
                                  function=SoftMax(output=MAX_INDICATOR))
 
     # Control Mechanism

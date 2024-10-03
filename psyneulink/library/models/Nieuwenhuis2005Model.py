@@ -52,14 +52,14 @@ trials = 1100   # number of trials to reproduce Figure 3 from Nieuwenhuis et al.
 
 # First, we create the 3 layers of the behavioral network, i.e. INPUT LAYER, DECISION LAYER, and RESPONSE LAYER.
 input_layer = pnl.TransferMechanism(
-    size=3,                      # Number of units in input layer
+    input_shapes=3,                      # Number of units in input layer
     initial_value=[[0.0, 0.0, 0.0]],     # Initial input values
     name='INPUT LAYER'                  # Define the name of the layer; this is optional,
 )                 # but will help you to overview your model later on
 
 # Create Decision Layer  --- [ Target 1, Target 2, Distractor ]
 decision_layer = pnl.LCAMechanism(
-    size=3,                            # Number of units in input layer
+    input_shapes=3,                            # Number of units in input layer
     initial_value=[[0.0, 0.0, 0.0]],    # Initial input values
     time_step_size=dt,                 # Integration step size
     leak=1.0,                         # Sets off diagonals to negative values
@@ -79,7 +79,7 @@ for output_port in decision_layer.output_ports:
 
 # Create Response Layer  --- [ Target1, Target2 ]
 response_layer = pnl.LCAMechanism(
-    size=2,                                        # Number of units in input layer
+    input_shapes=2,                                        # Number of units in input layer
     initial_value=[[0.0, 0.0]],                    # Initial input values
     time_step_size=dt,                             # Integration step size
     leak=1.0,                                     # Sets off diagonals to negative values

@@ -563,7 +563,7 @@ class ModulatorySignal(OutputPort):
     @check_user_specified
     def __init__(self,
                  owner=None,
-                 size=None,
+                 input_shapes=None,
                  reference_value=None,
                  default_allocation=defaultModulatoryAllocation,
                  function=None,
@@ -601,7 +601,7 @@ class ModulatorySignal(OutputPort):
         super().__init__(owner=owner,
                          reference_value=reference_value,
                          variable=default_allocation,
-                         size=size,
+                         input_shapes=input_shapes,
                          projections=modulates,
                          index=index,
                          assign=assign,

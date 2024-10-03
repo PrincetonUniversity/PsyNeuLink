@@ -962,7 +962,7 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import \
     (ADAPTIVE, AUTO, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, EM_COMPOSITION, FULL_CONNECTIVITY_MATRIX,
-     GAIN, IDENTITY_MATRIX, MULTIPLICATIVE_PARAM, NAME, PARAMS, PRODUCT, PROJECTIONS, RANDOM, SIZE, VARIABLE)
+     GAIN, IDENTITY_MATRIX, MULTIPLICATIVE_PARAM, NAME, PARAMS, PRODUCT, PROJECTIONS, RANDOM, INPUT_SHAPES, VARIABLE)
 from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric_scalar
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.llvm import ExecutionMode
@@ -2040,10 +2040,11 @@ class EMComposition(AutodiffComposition):
             f"PROGRAM ERROR: number of keys ({self.num_keys}) does not match number of " \
             f"non-zero values in field_weights ({len(self.key_indices)})."
 
-        # query_input_nodes = [TransferMechanism(size=len(self.entry_template[self.key_indices[i]]),
+        # query_input_nodes = [TransferMechanism(input_shapes=len(self.entry_template[self.key_indices[i]]),
         #                                      name=f'{self.key_names[self.key_indices[i]]} [QUERY]')
         #                for i in range(self.num_keys)]
-        query_input_nodes = [TransferMechanism(size=len(self.entry_template[self.key_indices[i]]),
+        query_input_nodes = [TransferMechanism(
+            input_shapes=len(self.entry_template[self.key_indices[i]]),
                                              name=f'{self.key_names[i]} [QUERY]')
                        for i in range(self.num_keys)]
 
@@ -2062,7 +2063,8 @@ class EMComposition(AutodiffComposition):
             f"PROGRAM ERROR: number of values ({self.num_values}) does not match number of " \
             f"non-zero values in field_weights ({len(value_indices)})."
 
-        value_input_nodes = [TransferMechanism(size=len(self.entry_template[value_indices[i]]),
+        value_input_nodes = [TransferMechanism(
+            input_shapes=len(self.entry_template[value_indices[i]]),
                                                name= f'{self.value_names[i]} [VALUE]')
                            for i in range(self.num_values)]
 
@@ -2078,7 +2080,7 @@ class EMComposition(AutodiffComposition):
         else:
             return ProcessingMechanism(function=Concatenate,
                                        input_ports=[{NAME: 'CONCATENATE_KEYS',
-                                                     SIZE: len(self.query_input_nodes[i].output_port.value),
+                                                     INPUT_SHAPES: len(self.query_input_nodes[i].output_port.value),
                                                      PROJECTIONS: MappingProjection(
                                                          name=f'{self.key_names[i]} to CONCATENATE',
                                                          sender=self.query_input_nodes[i].output_port,
@@ -2106,7 +2108,7 @@ class EMComposition(AutodiffComposition):
             match_nodes = [
                 TransferMechanism(
                     input_ports={NAME: 'CONCATENATED_INPUTS',
-                                 SIZE: memory_capacity,
+                                 INPUT_SHAPES: memory_capacity,
                                  PROJECTIONS: MappingProjection(sender=self.concatenate_keys_node,
                                                                 matrix=matrix,
                                                                 function=LinearMatrix(
@@ -2119,7 +2121,7 @@ class EMComposition(AutodiffComposition):
             match_nodes = [
                 TransferMechanism(
                     input_ports= {
-                        SIZE:memory_capacity,
+                        INPUT_SHAPES:memory_capacity,
                         PROJECTIONS: MappingProjection(sender=self.query_input_nodes[i].output_port,
                                                        matrix = np.array(
                                                            memory_template[:,i].tolist()).transpose().astype(float),
@@ -2144,7 +2146,7 @@ class EMComposition(AutodiffComposition):
             f"PROGRAM ERROR: number of keys ({self.num_keys}) does not match number of " \
             f"non-zero values in field_weights ({len(key_indices)})."
 
-        softmax_nodes = [TransferMechanism(input_ports={SIZE:memory_capacity,
+        softmax_nodes = [TransferMechanism(input_ports={INPUT_SHAPES:memory_capacity,
                                                         PROJECTIONS: MappingProjection(
                                                             sender=match_node.output_port,
                                                             matrix=IDENTITY_MATRIX,
@@ -2233,7 +2235,7 @@ class EMComposition(AutodiffComposition):
             input_source = self.weighted_softmax_nodes
 
         combined_softmax_node = (
-            ProcessingMechanism(input_ports=[{SIZE:memory_capacity,
+            ProcessingMechanism(input_ports=[{INPUT_SHAPES:memory_capacity,
                                               # PROJECTIONS:[s for s in input_source]}],
                                               PROJECTIONS:[MappingProjection(sender=s,
                                                                              matrix=IDENTITY_MATRIX,
@@ -2252,7 +2254,7 @@ class EMComposition(AutodiffComposition):
         """Create nodes that report the value field(s) for the item(s) matched in memory.
         """
         self.retrieved_key_nodes = \
-            [TransferMechanism(input_ports={SIZE: len(self.query_input_nodes[i].variable[0]),
+            [TransferMechanism(input_ports={INPUT_SHAPES: len(self.query_input_nodes[i].variable[0]),
                                             PROJECTIONS:
                                                 MappingProjection(
                                                     sender=self.combined_softmax_node,
@@ -2263,7 +2265,7 @@ class EMComposition(AutodiffComposition):
              for i in range(self.num_keys)]
 
         self.retrieved_value_nodes = \
-            [TransferMechanism(input_ports={SIZE: len(self.value_input_nodes[i].variable[0]),
+            [TransferMechanism(input_ports={INPUT_SHAPES: len(self.value_input_nodes[i].variable[0]),
                                             PROJECTIONS:
                                                 MappingProjection(
                                                     sender=self.combined_softmax_node,

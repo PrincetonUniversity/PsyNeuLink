@@ -346,7 +346,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
     @beartype
     def __init__(self,
                  default_variable=None,
-                 size=None,
+                 input_shapes=None,
                  function=None,
                  matrix=None,
                  auto: Optional[NumericCollections] = None,
@@ -378,7 +378,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
 
         super().__init__(
             default_variable=default_variable,
-            size=size,
+            input_shapes=input_shapes,
             input_ports=input_ports,
             function=function,
             matrix=matrix,
@@ -439,7 +439,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
             int_k_value = int(k_value)
         # ^ this is hacky but necessary for now, since something is
         # incorrectly turning k_value into an array of floats
-        n = self.size[0]
+        n = self.input_shapes[0]
         if (k_value[0] > 0) and (k_value[0] < 1):
             k = int(round(k_value[0] * n))
         elif (int_k_value < 0):
@@ -513,7 +513,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
                                         format(k_param, self))
                 except AttributeError:
                     raise KWTAError("k-value parameter ({}) for {} was an unexpected type.".format(k_param, self))
-            if abs(k_num) > self.size[0]:
+            if abs(k_num) > self.input_shapes[0]:
                 raise KWTAError("k-value parameter ({}) for {} was larger than the total number of elements.".
                                 format(k_param, self))
 

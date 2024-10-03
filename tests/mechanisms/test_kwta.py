@@ -17,17 +17,17 @@ class TestKWTAInputs:
         K = KWTAMechanism()
         np.testing.assert_allclose(K.value, K.defaults.value)
         assert K.defaults.variable == [[0]]
-        assert K.size == [1]
+        assert K.input_shapes == [1]
         assert K.matrix.base == [[5]]
 
     def test_kwta_check_attrs(self):
         K = KWTAMechanism(
             name='K',
-            size=3
+            input_shapes=3
         )
         np.testing.assert_allclose(K.value, K.defaults.value)
         np.testing.assert_allclose(K.defaults.variable, [[0., 0., 0.]])
-        assert K.size == [3]
+        assert K.input_shapes == [3]
         np.testing.assert_allclose(K.matrix.base, [[5, 0, 0], [0, 5, 0], [0, 0, 5]])
         assert K.recurrent_projection.sender is K.output_port
         assert K.recurrent_projection.receiver is K.input_port
@@ -54,7 +54,7 @@ class TestKWTAInputs:
         with pytest.raises(MechanismError) as error_text:
             K = KWTAMechanism(
                 name='K',
-                size = 4,
+                input_shapes= 4,
             )
             K.execute(["one", "two", "three", "four"])
         assert ('Input to \'K\' ([\'one\' \'two\' \'three\' \'four\']) is incompatible with its corresponding '
@@ -73,7 +73,7 @@ class TestKWTAInputs:
         with pytest.raises(MechanismError) as error_text:
             K = KWTAMechanism(
                 name='K',
-                size=4
+                input_shapes=4
             )
             K.execute([1, 2, 3, 4, 5])
         assert ("Shape ((5,)) of input ([1 2 3 4 5]) does not match required shape ((4,)) "
@@ -83,7 +83,7 @@ class TestKWTAInputs:
         with pytest.raises(MechanismError) as error_text:
             K = KWTAMechanism(
                 name='K',
-                size=6
+                input_shapes=6
             )
             K.execute([1, 2, 3, 4, 5])
         assert ("Shape ((5,)) of input ([1 2 3 4 5]) does not match required shape ((6,)) "
@@ -97,7 +97,7 @@ class TestKWTAFunction:
         for s in specs:
             K = KWTAMechanism(
                 name='K',
-                size=5,
+                input_shapes=5,
                 function=s,
                 k_value=4
             )
@@ -106,7 +106,7 @@ class TestKWTAFunction:
     def test_kwta_log_gain(self):
         K = KWTAMechanism(
             name='K',
-            size=3,
+            input_shapes=3,
             function=Logistic(gain=2),
             k_value=2
         )
@@ -116,7 +116,7 @@ class TestKWTAFunction:
     def test_kwta_log_offset(self):
         K = KWTAMechanism(
             name='K',
-            size=3,
+            input_shapes=3,
             function=Logistic(offset=-.2),
             k_value=2
         )
@@ -127,7 +127,7 @@ class TestKWTAFunction:
     def test_kwta_log_gain_offset(self):
         K = KWTAMechanism(
             name='K',
-            size=2,
+            input_shapes=2,
             function=Logistic(gain=-.2, offset=4),
             k_value=1
         )
@@ -138,7 +138,7 @@ class TestKWTAFunction:
         K = KWTAMechanism(
             name='K',
             threshold=3,
-            size=3,
+            input_shapes=3,
             k_value=2,
             function=Linear
         )
@@ -149,7 +149,7 @@ class TestKWTAFunction:
         K = KWTAMechanism(
             name='K',
             threshold=.5,
-            size=5,
+            input_shapes=5,
             k_value=2,
             function=Linear(slope=2)
         )
@@ -159,7 +159,7 @@ class TestKWTAFunction:
     def test_kwta_linear_system(self):
         K=KWTAMechanism(
             name='K',
-            size=4,
+            input_shapes=4,
             k_value=3,
             function=Linear
         )
@@ -172,7 +172,7 @@ class TestKWTAMatrix:
             if m != RANDOM_CONNECTIVITY_MATRIX:
                 K = KWTAMechanism(
                     name='K',
-                    size=4,
+                    input_shapes=4,
                     matrix=m
                 )
                 val = K.execute([10, 10, 10, 10])
@@ -181,7 +181,7 @@ class TestKWTAMatrix:
     def test_kwta_matrix_auto_hetero_spec(self):
         K = KWTAMechanism(
             name='K',
-            size=4,
+            input_shapes=4,
             auto=3,
             hetero=2
         )
@@ -190,7 +190,7 @@ class TestKWTAMatrix:
     def test_kwta_matrix_hetero_spec(self):
         K = KWTAMechanism(
             name='K',
-            size=3,
+            input_shapes=3,
             hetero=-.5,
         )
         np.testing.assert_allclose(K.recurrent_projection.matrix.base, [[5, -.5, -.5], [-.5, 5, -.5], [-.5, -.5, 5]])
@@ -198,7 +198,7 @@ class TestKWTAMatrix:
     def test_kwta_matrix_auto_spec(self):
         K = KWTAMechanism(
             name='K',
-            size=3,
+            input_shapes=3,
             auto=-.5,
         )
         np.testing.assert_allclose(K.recurrent_projection.matrix.base, [[-.5, 0, 0], [0, -.5, 0], [0, 0, -.5]])
@@ -210,7 +210,7 @@ class TestKWTARatio:
     def test_kwta_ratio_empty(self):
         K = KWTAMechanism(
             name='K',
-            size=4
+            input_shapes=4
         )
         c = Composition(pathways=[K],
                         prefs=TestKWTARatio.simple_prefs)
@@ -226,7 +226,7 @@ class TestKWTARatio:
     def test_kwta_ratio_1(self):
         K = KWTAMechanism(
             name='K',
-            size=4,
+            input_shapes=4,
             ratio=1
         )
         c = Composition(pathways=[K],
@@ -243,7 +243,7 @@ class TestKWTARatio:
     def test_kwta_ratio_0(self):
         K = KWTAMechanism(
             name='K',
-            size=4,
+            input_shapes=4,
             ratio=0
         )
         c = Composition(pathways=[K],
@@ -261,7 +261,7 @@ class TestKWTARatio:
     def test_kwta_ratio_0_3(self):
         K = KWTAMechanism(
             name='K',
-            size=4,
+            input_shapes=4,
             ratio=0.3
         )
         c = Composition(pathways=[K],
@@ -279,7 +279,7 @@ class TestKWTARatio:
         with pytest.raises(KWTAError) as error_text:
             K = KWTAMechanism(
                 name='K',
-                size=4,
+                input_shapes=4,
                 ratio=2
             )
         assert "must be between 0 and 1" in str(error_text.value)
@@ -288,7 +288,7 @@ class TestKWTARatio:
         with pytest.raises(KWTAError) as error_text:
             K = KWTAMechanism(
                 name='K',
-                size=4,
+                input_shapes=4,
                 ratio=-1
             )
         assert "must be between 0 and 1" in str(error_text.value)
@@ -298,7 +298,7 @@ class TestKWTAKValue:
     def test_kwta_k_value_empty_size_4(self):
         K = KWTAMechanism(
             name='K',
-            size=4
+            input_shapes=4
         )
         assert K.k_value.base == 0.5
         c = Composition(pathways=[K],
@@ -312,7 +312,7 @@ class TestKWTAKValue:
     def test_kwta_k_value_empty_size_6(self):
         K = KWTAMechanism(
             name='K',
-            size=6
+            input_shapes=6
         )
         assert K.k_value.base == 0.5
         c = Composition(pathways=[K],
@@ -327,7 +327,7 @@ class TestKWTAKValue:
     def test_kwta_k_value_int_size_5(self):
         K = KWTAMechanism(
             name='K',
-            size=5,
+            input_shapes=5,
             k_value=3
         )
         assert K.k_value.base == 3
@@ -339,7 +339,7 @@ class TestKWTAKValue:
     #     for size_val, expected_int_k in size_and_int_k_pairs:
     #         K = KWTA(
     #             name='K',
-    #             size=size_val,
+    #             input_shapes=size_val,
     #             k_value=0.4
     #         )
     #         assert K.k_value.base == 0.4
@@ -353,7 +353,7 @@ class TestKWTAKValue:
         with pytest.raises(KWTAError) as error_text:
             K = KWTAMechanism(
                 name='K',
-                size=4,
+                input_shapes=4,
                 k_value=2.5
             )
         assert "must be an integer, or between 0 and 1." in str(error_text.value)
@@ -362,7 +362,7 @@ class TestKWTAKValue:
         with pytest.raises(KWTAError) as error_text:
             K = KWTAMechanism(
                 name='K',
-                size=4,
+                input_shapes=4,
                 k_value=[1, 2]
             )
         assert "must be a single number" in str(error_text.value)
@@ -371,7 +371,7 @@ class TestKWTAKValue:
         with pytest.raises(KWTAError) as error_text:
             K = KWTAMechanism(
                 name='K',
-                size=4,
+                input_shapes=4,
                 k_value=5
             )
         assert "was larger than the total number of elements" in str(error_text.value)
@@ -380,7 +380,7 @@ class TestKWTAKValue:
         with pytest.raises(KWTAError) as error_text:
             K = KWTAMechanism(
                 name='K',
-                size=4,
+                input_shapes=4,
                 k_value=-5
             )
         assert "was larger than the total number of elements" in str(error_text.value)
@@ -392,14 +392,14 @@ class TestKWTAThreshold:
     def test_kwta_threshold_empty(self):
         K = KWTAMechanism(
             name='K',
-            size=4
+            input_shapes=4
         )
         assert K.threshold.base == 0
 
     def test_kwta_threshold_int(self):
         K = KWTAMechanism(
             name='K',
-            size=4,
+            input_shapes=4,
             threshold=-1
         )
         c = Composition(pathways=[K],
@@ -412,7 +412,7 @@ class TestKWTAThreshold:
     def test_kwta_threshold_float(self):
         K = KWTAMechanism(
             name='K',
-            size=4,
+            input_shapes=4,
             threshold=0.5
         )
         c = Composition(pathways=[K],
@@ -434,7 +434,7 @@ class TestKWTALongTerm:
     def test_kwta_size_10_k_3_threshold_1(self):
         K = KWTAMechanism(
             name='K',
-            size=10,
+            input_shapes=10,
             k_value=3,
             threshold=1,
         )
@@ -471,7 +471,7 @@ class TestKWTAAverageBased:
     def test_kwta_average_k_2(self):
         K = KWTAMechanism(
             name='K',
-            size=4,
+            input_shapes=4,
             k_value=2,
             threshold=0,
             function=Linear,
@@ -486,7 +486,7 @@ class TestKWTAAverageBased:
     def test_kwta_average_k_1(self):
         K = KWTAMechanism(
             name='K',
-            size=4,
+            input_shapes=4,
             k_value=1,
             threshold=0,
             function=Linear,
@@ -501,7 +501,7 @@ class TestKWTAAverageBased:
     def test_kwta_average_k_1_ratio_0_2(self):
         K = KWTAMechanism(
             name='K',
-            size=4,
+            input_shapes=4,
             k_value=1,
             threshold=0,
             ratio=0.2,
@@ -517,7 +517,7 @@ class TestKWTAAverageBased:
     def test_kwta_average_k_1_ratio_0_8(self):
         K = KWTAMechanism(
             name='K',
-            size=4,
+            input_shapes=4,
             k_value=1,
             threshold=0,
             ratio=0.8,

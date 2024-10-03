@@ -40,23 +40,23 @@ player_len = prey_len = predator_len = obs_coords
 # *********************************************************************************************************************
 
 # Input Mechanisms
-player_input = ProcessingMechanism(size=prey_len, name="PLAYER INPUT")
-prey_input = ProcessingMechanism(size=prey_len, name="PREY INPUT")
-predator_input = TransferMechanism(size=predator_len, name="PREDATOR INPUT")
+player_input = ProcessingMechanism(input_shapes=prey_len, name="PLAYER INPUT")
+prey_input = ProcessingMechanism(input_shapes=prey_len, name="PREY INPUT")
+predator_input = TransferMechanism(input_shapes=predator_len, name="PREDATOR INPUT")
 
 # Perceptual Mechanisms
 if PERCEPTUAL_DISTORT:
-    player_obs = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PLAYER OBS")
-    prey_obs = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PREY OBS")
-    predator_obs = TransferMechanism(size=predator_len, function=GaussianDistort, name="PREDATOR OBS")
+    player_obs = ProcessingMechanism(input_shapes=prey_len, function=GaussianDistort, name="PLAYER OBS")
+    prey_obs = ProcessingMechanism(input_shapes=prey_len, function=GaussianDistort, name="PREY OBS")
+    predator_obs = TransferMechanism(input_shapes=predator_len, function=GaussianDistort, name="PREDATOR OBS")
 else:
-    player_obs = ProcessingMechanism(size=prey_len, name="PLAYER OBS")
-    prey_obs = ProcessingMechanism(size=prey_len, name="PREY OBS")
-    predator_obs = TransferMechanism(size=predator_len, name="PREDATOR OBS")
+    player_obs = ProcessingMechanism(input_shapes=prey_len, name="PLAYER OBS")
+    prey_obs = ProcessingMechanism(input_shapes=prey_len, name="PREY OBS")
+    predator_obs = TransferMechanism(input_shapes=predator_len, name="PREDATOR OBS")
 
 
 # Value and Reward Mechanisms (not yet used;  for future use)
-values = TransferMechanism(size=3, name="AGENT VALUES")
+values = TransferMechanism(input_shapes=3, name="AGENT VALUES")
 reward = TransferMechanism(name="REWARD")
 
 # Action Mechanism
