@@ -2692,7 +2692,7 @@ class Mechanism_Base(Mechanism):
                 raise MechanismError(f"Number of inputs ({num_inputs}) to {self.name} does not match "
                                      f"its number of input_ports ({num_input_ports}).")
         for input_item, input_port in zip(input, self.input_ports):
-            port_single_input_template = np.asarray([input_port.socket_shape_template])
+            port_single_input_template = np.asarray([input_port.socket_template])
             input_item_arr = convert_all_elements_to_np_array(input_item)
             if (
                 input_port.socket_shape == input_item_arr.shape
