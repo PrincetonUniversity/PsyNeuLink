@@ -311,7 +311,7 @@ class TestInputPortSpec:
         np.testing.assert_array_equal(T.defaults.variable, np.array([[0, 0]]))
         assert len(T.input_ports) == 1
         assert len(T.input_port.path_afferents[0].sender.defaults.variable) == 3
-        assert T.input_port.socket_width == 2
+        assert T.input_port.socket_shape == (2,)
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
@@ -323,8 +323,8 @@ class TestInputPortSpec:
         T = TransferMechanism(input_ports=[([0,0], R2)])
         np.testing.assert_array_equal(T.defaults.variable, np.array([[0, 0]]))
         assert len(T.input_ports) == 1
-        assert T.input_port.path_afferents[0].sender.socket_width == 3
-        assert T.input_port.socket_width == 2
+        assert T.input_port.path_afferents[0].sender.socket_shape == (3,)
+        assert T.input_port.socket_shape == (2,)
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
@@ -337,7 +337,7 @@ class TestInputPortSpec:
         np.testing.assert_array_equal(T.defaults.variable, np.array([[0, 0]]))
         assert len(T.input_ports) == 1
         assert T.input_port.path_afferents[0].sender.defaults.variable.shape[-1] == 3
-        assert T.input_port.socket_width == 2
+        assert T.input_port.socket_shape == (2,)
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
@@ -859,7 +859,7 @@ class TestInputPortSpec:
             input_shapes=input_shapes,
             input_ports=input_ports
         )
-        assert T.input_ports[0].socket_width == variable_len_state
+        assert T.input_ports[0].socket_shape == (variable_len_state,)
         assert T.defaults.variable.shape[-1] == variable_len_mech
 
     def test_input_ports_arg_no_list(self):
