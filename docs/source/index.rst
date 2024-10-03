@@ -211,13 +211,13 @@ To run the tutorial locally, you must run python 3.6 and install additional pack
 
 ::
 
-    pip install psyneulink[tutorial]
+    pip install "psyneulink[tutorial]"
 
 or if you downloaded the source:
 
 ::
 
-    pip install .[tutorial]
+    pip install ".[tutorial]"
 
 
 To access the tutorial, make sure you fulfill the requirements
