@@ -300,6 +300,7 @@ class ProcessingMechanism_Base(Mechanism_Base):
                          context=context,
                          **kwargs
                          )
+        assert True
 
     def _validate_inputs(self, inputs=None):
         # Let mechanism itself do validation of the input
