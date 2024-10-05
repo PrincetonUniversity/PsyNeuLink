@@ -1478,6 +1478,7 @@ class EMComposition(AutodiffComposition):
         normalize_memories = Parameter(True)
         softmax_gain = Parameter(1.0, modulable=True)
         softmax_threshold = Parameter(.001, modulable=True, specify_none=True)
+        softmax_output_format = Parameter(ALL, modulable=False, specify_none=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         memory_decay_rate = Parameter(AUTO, modulable=True)
         enable_learning = Parameter(True, structural=True)
