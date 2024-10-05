@@ -64,9 +64,9 @@ def _get_const_dim_func(builtin, *dims):
 def test_matrix_op(benchmark, op, x, y, builtin, result, func_mode, dims):
 
     def _numpy_args(bin_f):
-        np_x = x.astype(bin_f.np_params[0])
-        np_y = bin_f.np_params[1].type(y) if np.isscalar(y) else y.astype(bin_f.np_params[1])
-        np_res = np.empty_like(result, dtype=bin_f.np_params[-1])
+        np_x = x.astype(bin_f.np_arg_dtypes[0])
+        np_y = bin_f.np_arg_dtypes[1].type(y) if np.isscalar(y) else y.astype(bin_f.np_arg_dtypes[1])
+        np_res = np.empty_like(result, dtype=bin_f.np_arg_dtypes[-1])
 
         return np_x, np_y, np_res
 
@@ -80,7 +80,7 @@ def test_matrix_op(benchmark, op, x, y, builtin, result, func_mode, dims):
         else:
             func_name = builtin
 
-        bin_f = pnlvm.LLVMBinaryFunction.get(func_name)
+        bin_f = pnlvm.LLVMBinaryFunction.get(func_name, ctype_ptr_args=(0, 1, 2, 3, 4))
         lx, ly, lres = _numpy_args(bin_f)
 
         ct_x = lx.ctypes.data_as(bin_f.c_func.argtypes[0])

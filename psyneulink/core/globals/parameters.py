@@ -1672,7 +1672,7 @@ class Parameter(ParameterBase):
             context_str = ContextFlags._get_context_string(ContextFlags.COMMAND_LINE)
             log_condition_satisfied = True
 
-        # standard loggingd
+        # standard logging
         else:
             if self.log_condition is None or self.log_condition is LogCondition.OFF:
                 return

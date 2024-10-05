@@ -1463,7 +1463,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "objective_mechanism", "agent_rep", "projections",
                      "outcome_input_ports", "state_input_ports",
                      # autodiff specific types
-                     "pytorch_representation", "optimizer",
+                     "pytorch_representation", "optimizer", "synch_projection_matrices_with_torch",
                      # duplicate
                      "allocation_samples", "control_allocation_search_space",
                      # not used in computation
@@ -1490,10 +1490,14 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "error_matrix", "error_signal", "activation_input",
                      "activation_output", "error_sources", "covariates_sources",
                      "target", "sample", "learning_function",
-                     "device",
+                     "minibatch_size", "optimizations_per_minibatch", "device",
+                     "retain_torch_trained_outputs", "retain_torch_targets", "retain_torch_losses"
+                     "torch_trained_outputs", "torch_targets", "torch_losses",
                      # should be added to relevant _gen_llvm_function... when aug:
                      # SoftMax:
-                     'mask_threshold', 'adapt_scale', 'adapt_base', 'adapt_entropy_weighting'
+                     'mask_threshold', 'adapt_scale', 'adapt_base', 'adapt_entropy_weighting',
+                     # LCAMechanism
+                     "mask"
                      }
         # Mechanism's need few extra entries:
         # * matrix -- is never used directly, and is flatened below

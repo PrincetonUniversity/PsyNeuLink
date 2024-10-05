@@ -52,7 +52,7 @@ def test_builtin_op(benchmark, op, args, builtin, result, func_mode):
 
         # The result argument is a pointer, use it to derive
         # the right argument type
-        dty = bin_f.np_params[1].base
+        dty = bin_f.np_arg_dtypes[1].base
 
         ptx_res = np.empty_like(result, dtype=dty)
         ptx_res_arg = pnlvm.jit_engine.pycuda.driver.Out(ptx_res)
