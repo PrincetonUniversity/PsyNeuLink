@@ -7,7 +7,7 @@ import pytest
 
 import psyneulink as pnl
 
-from psyneulink.core.globals.keywords import AUTO, CONTROL
+from psyneulink.core.globals.keywords import AUTO, CONTROL, ALL, MAX_VAL, MAX_INDICATOR, PROB
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.library.compositions.emcomposition import EMComposition, EMCompositionError
 
@@ -232,6 +232,31 @@ class TestConstruction:
         elif repeat and repeat < memory_capacity:  # Multi-entry specification and repeat = number entries; remainder
             test_memory_fill(start=repeat, memory_fill=memory_fill)
 
+    def test_multiple_em_constructions(self):
+        for i in range(3):
+            # em = EMComposition(memory_template=[[[1,.1,.1]], [[.1,1,.1]], [[.1,.1,1]]])
+            em = EMComposition(memory_template=(1,3))
+            result = em.run(inputs={em.query_input_nodes[0]:[[0,1,0]]})
+            # np.testing.assert_allclose(result, [[0.21330295, 0.77339411, 0.21330295]])
+
+    def test_softmax_output_format(self):
+        for output_format in [ALL,
+                              MAX_VAL,
+                              MAX_INDICATOR,
+                              PROB]:
+            em = EMComposition(memory_template=[[[1,.1,.1]], [[.1,1,.1]], [[.1,.1,1]]],
+                               softmax_output_format=output_format
+                               )
+            result = em.run(inputs={em.query_input_nodes[0]:[[0,1,0]]})
+            if output_format == ALL:
+                np.testing.assert_allclose(result, [[0.21330295, 0.77339411, 0.21330295]])
+            if output_format == MAX_VAL:
+                # The following result takes account of decayed values in memory of non-retrieved values
+                np.testing.assert_allclose(result, [[0.07482157, 0.74821567, 0.07482157]])
+            if output_format == MAX_INDICATOR:
+                np.testing.assert_allclose(result, [[0., 1, 0.]])
+            if output_format == PROB:
+                assert result == [[0., 1, 0.]]
 
 @pytest.mark.pytorch
 class TestExecution:

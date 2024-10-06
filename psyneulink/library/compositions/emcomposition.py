@@ -273,10 +273,10 @@ Overview
 The EMComposition implements a configurable, content-addressable form of episodic, or eternal memory, that emulates
 an `EpisodicMemoryMechanism` -- reproducing all of the functionality of its `ContentAddressableMemory` `Function` --
 in the form of an `AutodiffComposition` that is capable of learning how to differentially weight different cues used
-for retrieval,, and that adds the capability for `memory_decay <EMComposition.memory_decay>`. Its `memory
-<EMComposition.memory>` is configured using the ``memory_template`` argument of its constructor, which defines how
+for retrieval,, and that adds the capability for `memory_decay <EMComposition.memory_decay_rate>`. Its `memory
+<EMComposition.memory>` is configured using the **memory_template** argument of its constructor, which defines how
 each entry in `memory <EMComposition.memory>` is structured (the number of fields in each entry and the length of
-each field), and its ``field_weights`` argument that defines which fields are used as cues for retrieval -- "keys" --
+each field), and its **field_weights** argument that defines which fields are used as cues for retrieval -- "keys" --
 and whether and how they are differentially weighted in the match process used for retrieval, and which are treated
 as "values" that are retrieved but not used by the match process.  The inputs corresponding to each key (i.e., used
 as "queries") and value are represented as `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of the EMComposition
@@ -294,14 +294,14 @@ accessed using its `memory <EMComposition.memory>` attribute.
 *Entries and Fields*. Each entry in memory can have an arbitrary number of fields, and each field can have an arbitrary
 length.  However, all entries must have the same number of fields, and the corresponding fields must all have the same
 length across entries. Each field is treated as a separate "channel" for storage and retrieval, and is associated with
-its own corresponding input (key or value) and output (retrieved value) `Node <Composition_Node_Types>` some or all of
+its own corresponding input (key or value) and output (retrieved value) `Node <Composition_Nodes>` some or all of
 which can be used to compute the similarity of the input (key) to entries in memory, that is used for retreieval.
 Fields can be differentially weighted to determine the influence they have on retrieval, using the
 `field_weights <ContentAddressableMemory.memory>` parameter (see `retrieval <EMComposition_Retrieval_Storage>` below).
-The number and shape of the fields in each entry is specified in the ``memory_template`` argument of the EMComposition's
+The number and shape of the fields in each entry is specified in the **memory_template* argument of the EMComposition's
 constructor (see `memory_template <EMComposition_Fields>`). Which fields treated as keys (i.e., matched against
 queries during retrieval) and which are treated as values (i.e., retrieved but not used for matching retrieval) is
-specified in the ``field_weights`` argument of the EMComposition's constructor (see `field_weights
+specified in the **field_weights** argument of the EMComposition's constructor (see `field_weights
 <EMComposition_Field_Weights>`).
 
 .. _EMComposition_Operation:
@@ -324,7 +324,7 @@ EMComposition's `execution <Composition_Execution>`.
 
 *Storage.*  The `inputs <Composition_Input_External_InputPorts>` to the EMComposition's fields are stored in `memory
 <EMComposition.memory>` after each execution, with a probability determined by `storage_prob
-<EMComposition.storage_prob>`.  If `memory_decay <EMComposition.memory_decay>` is specified, then the `memory
+<EMComposition.storage_prob>`.  If `memory_decay_rate <EMComposition.memory_decay_rate>` is specified, then the `memory
 <EMComposition.memory>` is decayed by that amount after each execution.  If `memory_capacity
 <EMComposition.memory_capacity>` has been reached, then each new memory replaces the weakest entry (i.e., the one
 with the smallest norm across all of its fields) in `memory <EMComposition.memory>`.
@@ -344,7 +344,7 @@ An EMComposition is created by calling its constructor, that takes the following
 
 * **memory_template**: This specifies the shape of the entries to be stored in the EMComposition's `memory
   <EMComposition.memory>`, and can be used to initialize `memory <EMComposition.memory>` with pre-specified entries.
-  The ``memory_template`` argument can be specified in one of three ways (see `EMComposition_Examples` for
+  The **memory_template** argument can be specified in one of three ways (see `EMComposition_Examples` for
   representative use cases):
 
   * **tuple**: interpreted as an np.array shape specification, that must be of length 2 or 3.  If it is a 3-item tuple,
@@ -354,8 +354,8 @@ An EMComposition is created by calling its constructor, that takes the following
     filled with zeros or the value specified by `memory_fill <EMComposition_Memory_Fill>`.
 
     .. warning::
-       If the ``memory_template`` is specified with a 3-item tuple and `memory_capacity <EMComposition_Memory_Capacity>`
-       is also specified with a value that does not match the first item of ``memory_template``, and error is
+       If **memory_template** is specified with a 3-item tuple and `memory_capacity <EMComposition_Memory_Capacity>`
+       is also specified with a value that does not match the first item of **memory_template**, and error is
        generated indicating the conflict in the number of entries specified.
 
     .. hint::
@@ -363,7 +363,7 @@ An EMComposition is created by calling its constructor, that takes the following
        specifying the shape of an entry, and so it can't be used to specify the number of entries each of which
        has a single field.
 
-  * **2d list or array**:  interpreted as a template for memory entries.  This can be used to specify fields of
+  * **2d list or array**: interpreted as a template for memory entries. This can be used to specify fields of
     different lengths (i.e., entries that are ragged arrays), with each item in the list (axis 0 of the array) used
     to specify the length of the corresponding field.  The template is then used to initialze all entries in `memory
     <EMComposition.memory>`.  If the template includes any non-zero elements, then the array is replicated for all
@@ -372,15 +372,15 @@ An EMComposition is created by calling its constructor, that takes the following
 
     .. hint::
        To specify a single entry, with all other entries filled with zeros
-       or the value specified in ``memory_fill``, use a 3d array as described below.
+       or the value specified in **memory_fill**, use a 3d array as described below.
 
-  * **3d list or array**:  used to initialize `memory <EMComposition.memory>` directly with the entries specified in
+  * **3d list or array**: used to initialize `memory <EMComposition.memory>` directly with the entries specified in
     the outer dimension (axis 0) of the list or array.  If `memory_capacity <EMComposition_Memory_Capacity>` is not
-    specified, then it is set to the number of entries in the list or array. If ``memory_capacity`` *is* specified,
-    then the number of entries specified in ``memory_template`` must be less than or equal to ``memory_capacity``.  If
-    is less than ``memory_capacity``, then the remaining entries in `memory <EMComposition.memory>` are filled with
-    zeros or the value specified in ``memory_fill`` (see below):  if all of the entries specified contain only
-    zeros, and ``memory_fill`` is specified, then the matrix is filled with the value specified in ``memory_fill``;
+    specified, then it is set to the number of entries in the list or array. If **memory_capacity** *is* specified,
+    then the number of entries specified in **memory_template** must be less than or equal to **memory_capacity**.  If
+    is less than **memory_capacity**, then the remaining entries in `memory <EMComposition.memory>` are filled with
+    zeros or the value specified in **memory_fill** (see below):  if all of the entries specified contain only
+    zeros, and **memory_fill** is specified, then the matrix is filled with the value specified in **memory_fill**;
     otherwise, zeros are used to fill all entries.
 
 .. _EMComposition_Memory_Capacity:
@@ -390,7 +390,7 @@ An EMComposition is created by calling its constructor, that takes the following
 * **memory_capacity**: specifies the number of items that can be stored in the EMComposition's memory; when
   `memory_capacity <EMComposition.memory_capacity>` is reached, each new entry overwrites the weakest entry (i.e., the
   one with the smallest norm across all of its fields) in `memory <EMComposition.memory>`.  If `memory_template
-  EMComposition_Memory_Template>` is specified as a 3-item tuple or 3d list or array (see above), then that is used
+  <EMComposition_Memory_Template>` is specified as a 3-item tuple or 3d list or array (see above), then that is used
   to determine `memory_capacity <EMComposition.memory_capacity>` (if it is specified and conflicts with either of those
   an error is generated).  Otherwise, it can be specified using a numerical value, with a default of 1000.  The
   `memory_capacity <EMComposition.memory_capacity>` cannot be modified once the EMComposition has been constructed.
@@ -398,13 +398,13 @@ An EMComposition is created by calling its constructor, that takes the following
 .. _EMComposition_Memory_Fill:
 
 * **memory_fill**: specifies the value used to fill the `memory <EMComposition.memory>`, based on the shape specified
-  in the ``memory_template`` (see above).  The value can be a scalar, or a tuple to specify an interval over which
+  in the **memory_template** (see above).  The value can be a scalar, or a tuple to specify an interval over which
   to draw random values to fill `memory <EMComposition.memory>` --- both should be scalars, with the first specifying
-  the lower bound and the second the upper bound.  If ``memory_fill`` is not specified, and no entries are specified
-  in ``memory_template``, then `memory <EMComposition.memory>` is filled with zeros.
+  the lower bound and the second the upper bound.  If **memory_fill** is not specified, and no entries are specified
+  in **memory_template**, then `memory <EMComposition.memory>` is filled with zeros.
 
   .. hint::
-     If memory is initialized with all zeros and ``normalize_memories`` set to ``True`` (see `below
+     If memory is initialized with all zeros and **normalize_memories** set to ``True`` (see `below
      <EMComposition_Retrieval_Storage>`) then a numpy.linalg warning is issued about divide by zero.
      This can be ignored, as it does not affect the results of execution, but it can be averted by specifying
      `memory_fill <EMComposition_Memory_Fill>` to use small random values (e.g., ``memory_fill=(0,.001)``).
@@ -412,7 +412,7 @@ An EMComposition is created by calling its constructor, that takes the following
 .. _EMComposition_Field_Weights:
 
 * **field_weights**: specifies which fields are used as keys, and how they are weighted during retrieval. The
-  number of entries specified must match the number of fields specified in ``memory_template`` (i.e., the size of
+  number of entries specified must match the number of fields specified in **memory_template** (i.e., the size of
   of its first dimension (axis 0)). All non-zero entries must be positive; these designate *keys* -- fields
   that are used to match queries against entries in memory for retrieval (see `Match memories by field
   <EMComposition_Processing>`). Entries of 0 designate *values* -- fields that are ignored during the matching
@@ -420,11 +420,11 @@ An EMComposition is created by calling its constructor, that takes the following
   corresponding `retrieved_node <EMComposition.retrieved_nodes>`. This distinction between keys and value corresponds
   to the format of a standard "dictionary," though in that case only a single key and value are allowed, whereas
   here there can be one or more keys and any number of values;  if all fields are keys, this implements a full
-  form of content-addressable memory. If ``learn_field_weight`` is True (and `enable_learning
+  form of content-addressable memory. If **learn_field_weight** is True (and `enable_learning
   <EMComposition.enable_learning>` is either True or a list), then the field_weights can be modified
   during training (this functions similarly to the attention head of a Transformer model, although at present the
-  field can only be scalar values rather than vecdtors); if ``learn_field_weight`` is False, then the field_weights are
-  fixed. The following options can be used to specify ``field_weights``:
+  field can only be scalar values rather than vecdtors); if **learn_field_weight** is False, then the field_weights are
+  fixed. The following options can be used to specify **field_weights**:
 
     * *None* (the default): all fields except the last are treated as keys, and are weighted equally for retrieval,
       while the last field is treated as a value field;
@@ -462,8 +462,8 @@ An EMComposition is created by calling its constructor, that takes the following
   not all equal (i.e., all non-zero weights are not equal -- see `field_weights <EMComposition_Field_Weights>`) and/or
   `normalize_memories <EMComposition.normalize_memories>` is set to False. Setting concatenate_keys to True in either
   of those cases issues a warning, and the setting is ignored. If the key `field_weights <EMComposition.field_weights>`
-  (i.e., all non-zero values) are all equal *and* ``normalize_memories`` is set to True, then setting
-  ``concatenate_keys`` causes a concatenate_keys_node <EMComposition.concatenate_keys_node>` to be created that
+  (i.e., all non-zero values) are all equal *and* **normalize_memories** is set to True, then setting
+  **concatenate_keys** causes a `concatenate_keys_node <EMComposition.concatenate_keys_node>` to be created that
   receives input from all of the `query_input_nodes <EMComposition.query_input_nodes>` and passes them as a single
   vector to the `mactch_node <EMComposition.match_nodes>`.
 
@@ -483,7 +483,7 @@ An EMComposition is created by calling its constructor, that takes the following
 * **memory_decay_rate**: specifies the rate at which items in the EMComposition's memory decay;  the default rate
   is *AUTO*, which sets it to  1 / `memory_capacity <EMComposition.memory_capacity>`, such that the oldest memories
   are the most likely to be replaced when `memory_capacity <EMComposition.memory_capacity>` is reached.  If
-  ``memory_decay_rate`` is set to 0 None or False, then memories do not decay and, when `memory_capacity
+  **memory_decay_rate** is set to 0 None or False, then memories do not decay and, when `memory_capacity
   <EMComposition.memory_capacity>` is reached, the weakest memories are replaced, irrespective of order of entry.
 
 .. _EMComposition_Retrieval_Storage:
@@ -545,7 +545,7 @@ EMComposition supports two forms of learning -- error backpropagation and the le
 
 * **enable_learning** : specifies whether learning is enabled for the EMComposition and, if so, which `retrieved_nodes
     <EMComposition.retrieved_nodes>` are used to compute errors, and propagate these back through the network. If
-    ``enable_learning`` is False, then no learning occurs, including of `field_weights <EMComposition.field_weights>`).
+    **enable_learning** is False, then no learning occurs, including of `field_weights <EMComposition.field_weights>`).
     If it is True, then all of the `retrieved_nodes <EMComposition.retrieved_nodes>` participate in learning:  For
     those that do not project to an outer Composition (i.e., one in which the EMComposition is `nested
     <Composition_Nested>`), a `TARGET <NodeRole.TARGET>` node is constructed for each, and used to compute errors that
@@ -553,7 +553,7 @@ EMComposition supports two forms of learning -- error backpropagation and the le
     `value_input_nodes <EMComposition.value_input_nodes>`, and on to any nodes that project to it from a composition
     in which the EMComposition is `nested <Composition_Nested>`; retrieved_nodes that *do* project to an outer
     Composition receive their errors from those nodes, which are also backpropagated through the EMComposition.
-    If ``enable_learning`` is a list, then only the `retrieved_nodes <EMComposition.retrieved_nodes>` specified in the
+    If **enable_learning** is a list, then only the `retrieved_nodes <EMComposition.retrieved_nodes>` specified in the
     list participate in learning, and errors are computed only for those nodes.  The list must contain the same
     number of entries as there are `fields <EMComposition_Fields>` and corresponding `retreived_nodes
     <EMComposition.retrieved_nodes>`, and each entry must be a boolean that specifies whether the corresponding
@@ -561,11 +561,11 @@ EMComposition supports two forms of learning -- error backpropagation and the le
 
 * **learn_field_weight** : specifies whether `field_weights <EMComposition.field_weights>` are modifiable during
     learning (see `field_weights <EMComposition.field_weights>` and `EMComposition_Learning` for additional
-    information.  For learning of `field_weights <EMComposition.field_weights>` to occur, ``enable_learning`` must
+    information.  For learning of `field_weights <EMComposition.field_weights>` to occur, **enable_learning** must
     also be True, or it must be a list with at least one True entry.
 
 * **learning_rate** : specifies the rate at which  `field_weights <EMComposition.field_weights>` are learned if
-  ``learn_field_weight`` is True; see `EMComposition_Learning` for additional information.
+  **learn_field_weight** is True; see `EMComposition_Learning` for additional information.
 
 .. _EMComposition_Structure:
 
@@ -688,7 +688,7 @@ When the EMComposition is executed, the following sequence of operations occur
   <EMComposition.retrieved_nodes>` to compute the retrieved value for each field.
 
 * **Decay memories**.  If `memory_decay <EMComposition.memory_decay>` is True, then each of the memories is decayed
-  by the amount specified in `memory_decay <EMComposition.memory_decay>`.
+  by the amount specified in `memory_decay_rate <EMComposition.memory_decay_rate>`.
 
     .. technical_note::
        This is done by multiplying the `matrix <MappingProjection.matrix>` parameter of the `MappingProjection` from
@@ -730,15 +730,16 @@ COMMENT
 *Training*
 ~~~~~~~~~~
 
-If `learn <Composition.learn>` is called, ``enable_learning`` is True or a list with at least one True entry,
-then errors will be computed for each of the `retrieved_nodes <EMComposition.retrieved_nodes>` that is specified for
-learning (see `EMComposition_Learning` for details about specification). These errors are derived either from
-any errors backprpated to the EMComposition from an outer Composition in which it is `nested <Composition_Nested>`, or
-locally by the difference between the `retrieved_nodes <EMComposition.retrieved_nodes>` and the `target_nodes
-<EMComposition.target_nodes>` that are created for each of the `retrieved_nodes <EMComposition.retrieved_nodes>` that
-do not project to an outer Composition.  These errors are then backpropagated through the EMComposition to the
-`query_input_nodes <EMComposition.query_input_nodes>` and `value_input_nodes <EMComposition.value_input_nodes>`, and
-on to any nodes that project to it from a composition in which the EMComposition is `nested <Composition_Nested>`.
+If `learn <Composition.learn>` is called, `enable_learning <EMComposition.enable_learning>` is True or a list with at
+least one True entry, then errors will be computed for each of the `retrieved_nodes <EMComposition.retrieved_nodes>`
+that is specified for learning (see `EMComposition_Learning` for details about specification). These errors are
+derived either from any errors backprpated to the EMComposition from an outer Composition in which it is `nested
+<Composition_Nested>`, or locally by the difference between the `retrieved_nodes <EMComposition.retrieved_nodes>`
+and the `target_nodes <EMComposition.target_nodes>` that are created for each of the `retrieved_nodes
+<EMComposition.retrieved_nodes>` that do not project to an outer Composition.  These errors are then backpropagated
+through the EMComposition to the `query_input_nodes <EMComposition.query_input_nodes>` and `value_input_nodes
+<EMComposition.value_input_nodes>`, and on to any nodes that project to it from a composition in which the
+EMComposition is `nested <Composition_Nested>`.
 
 If `learn_field_weights <EMComposition.learn_field_weights>` is also True, then the `field_weights
 <EMComposition.field_weights>` are modified to minimize the error passed to the EMComposition retrieved nodes, using the
@@ -843,7 +844,7 @@ specified.
 **List or array specification**
 
 Note that in the example above the two fields have the same length (5). This is always the case when a tuple is used,
-as it generates a regular array.  A list or numpy array can also be used to specify the ``memory_template`` argument.
+as it generates a regular array.  A list or numpy array can also be used to specify the **memory_template** argument.
 For example, the following is equivalent to the examples above::
 
     >>> em = EMComposition(memory_template=[[0,0,0],[0,0,0]], memory_capacity=4)
@@ -863,10 +864,10 @@ the following specifies one field of length 3 and another of length 1::
 **Memory fill**
 
 Note that the examples above generate a warning about the use of zeros to initialize the memory. This is
-because the default value for ``memory_fill`` is ``0``, and the default value for `normalize_memories
+because the default value for **memory_fill** is ``0``, and the default value for `normalize_memories
 <EMComposition.normalize_memories>` is True, which will cause a divide by zero warning when memories are
 normalized. While this doesn't crash, it will result in nan's that are likely to cauase problems elsewhere.
-This can be avoided by specifying a non-zero  value for ``memory_fill``, such as small number::
+This can be avoided by specifying a non-zero  value for **memory_fill**, such as small number::
 
     >>> em = EMComposition(memory_template=[[0,0,0],[0]], memory_capacity=4, memory_fill=.001)
     >>> em.memory
@@ -875,7 +876,7 @@ This can be avoided by specifying a non-zero  value for ``memory_fill``, such as
      [[array([0.001, 0.001, 0.001]), array([0.001])]],
      [[array([0.001, 0.001, 0.001]), array([0.001])]]]
 
-Here, a single value was specified for ``memory_fill`` (which can be a float or int), that is used to fill all values.
+Here, a single value was specified for **memory_fill** (which can be a float or int), that is used to fill all values.
 Random values can be assigned using a tuple to specify and internval between the first and second elements.  For
 example, the following uses random values between 0 and 0.01 to fill all entries::
 
@@ -902,8 +903,8 @@ following initializes memory with two specific entries::
      [[array([0., 0., 0.]), array([0.])]]]
 
 Note that the two entries must have exactly the same shapes. If they do not, an error is generated.
-Also note that the remaining entries are filled with zeros (the default value for ``memory_fill``).
-Here again, ``memory_fill`` can be used to specify a different value::
+Also note that the remaining entries are filled with zeros (the default value for **memory_fill**).
+Here again, **memory_fill** can be used to specify a different value::
 
     >>> em = EMComposition(memory_template=[[[7],[24,5]],[[100],[3,106]]], memory_capacity=4, memory_fill=(0,.01))
     >>> em.memory
@@ -920,9 +921,9 @@ Here again, ``memory_fill`` can be used to specify a different value::
 By default, all of the fields specified are treated as keys except the last, which is treated as a "value" field --
 that is, one that is not included in the matching process, but for which a value is retrieved along with the key fields.
 For example, in the `figure <EMComposition_Example_fig>` above, the first field specified was used as a key field,
-and the last as a value field. However, the ``field_weights`` argument can be used to modify this, specifying which
+and the last as a value field. However, the **field_weights** argument can be used to modify this, specifying which
 fields should be used as keys fields -- including the relative contribution that each makes to the matching process
--- and which should be used as value fields.  Non-zero elements in the ``field_weights`` argument designate key fields,
+-- and which should be used as value fields.  Non-zero elements in the **field_weights** argument designate key fields,
 and zeros specify value fields. For example, the following specifies that the first two fields should be used as keys
 while the last two should be used as values::
 
@@ -1084,7 +1085,7 @@ class EMComposition(AutodiffComposition):
     ---------
 
     memory_template : tuple, list, 2d or 3d array : default [[0],[0]]
-        specifies the shape of an items to be stored in the EMComposition's memory;
+        specifies the shape of an item to be stored in the EMComposition's memory;
         see `memory_template <EMComposition_Memory_Template>` for details.
 
     memory_fill : scalar or tuple : default 0
@@ -1151,7 +1152,7 @@ class EMComposition(AutodiffComposition):
 
     learning_rate : float : default .01
         specifies rate at which `field_weights <EMComposition.field_weights>` are learned
-        if ``learn_field_weights`` is True.
+        if `learn_field_weights <EMComposition.learn_field_weights>` is True.
 
     # 7/10/24 FIX: STILL TRUE?  DOES IT PRECLUDE USE OF EMComposition as a nested Composition??
     .. technical_note::
@@ -1283,7 +1284,7 @@ class EMComposition(AutodiffComposition):
     concatenate_keys_node : TransferMechanism
         `TransferMechanism` that concatenates the inputs to `query_input_nodes <EMComposition.query_input_nodes>` into a
         single vector used for the matching processing if `concatenate keys <EMComposition.concatenate_keys>` is True.
-        This is not created if the ``concatenate_keys`` argument to the EMComposition's constructor is False or is
+        This is not created if the **concatenate_keys** argument to the EMComposition's constructor is False or is
         overridden (see `concatenate_keys <EMComposition_Concatenate_Keys>`), or there is only one query_input_node.
 
     match_nodes : list[TransferMechanism]
