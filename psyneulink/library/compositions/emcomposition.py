@@ -577,12 +577,12 @@ EMComposition supports two forms of learning -- error backpropagation and the le
     `retrieved_node <EMComposition.retrieved_nodes>` is used for learning.
 
 * **learn_field_weight** : specifies whether `field_weights <EMComposition.field_weights>` are modifiable during
-    learning (see `field_weights <EMComposition.field_weights>` and `EMComposition_Learning` for additional
+    learning (see `field_weights <EMComposition.field_weights>` and `Learning <EMComposition_Learning>` for additional
     information.  For learning of `field_weights <EMComposition.field_weights>` to occur, **enable_learning** must
     also be True, or it must be a list with at least one True entry.
 
 * **learning_rate** : specifies the rate at which  `field_weights <EMComposition.field_weights>` are learned if
-  **learn_field_weight** is True; see `EMComposition_Learning` for additional information.
+  **learn_field_weight** is True; see `Learning <EMComposition_Learning>` for additional information.
 
 .. _EMComposition_Structure:
 
@@ -605,7 +605,7 @@ and `value_input_nodes <EMComposition.value_input_nodes>` attributes, respective
 
 The `memory <EMComposition.memory>` attribute contains a record of the entries in the EMComposition's memory. This
 is in the form of a 3d array, in which rows (axis 0) are entries, columns (axis 1) are fields, and items (axis 2) are
-the values of the item in a given field.  The number of fields is determined by the `memory_template
+the values of an entry in a given field.  The number of fields is determined by the `memory_template
 <EMComposition_Memory_Template>` argument of the EMComposition's constructor, and the number of entries is determined
 by the `memory_capacity <EMComposition_Memory_Capacity>` argument.
 
@@ -621,10 +621,11 @@ by the `memory_capacity <EMComposition_Memory_Capacity>` argument.
      computes the dot product of the input with the Projection's `matrix <MappingProjection.matrix>` parameter) to
      the corresponding match_node; and, similarly, retrieivals can be computed by passing the softmax distributions
      and weighting for each field computed in the `combined_softmax_node <EMComposition.combined_softmax_node>`
-     through its Projection to each `retrieved_node <EMComposition.retrieved_nodes>` (which are inverted versions of
-     the matrices of the `MappingProjections` from the `query_input_nodes <EMComposition.query_input_nodes>` to each
-     of the corresponding `match_nodes <EMComposition.match_nodes>`), to compute the dot product of the weighted
-     softmax over entries with the corresponding field of each entry that yields the retreieved value for each field.
+     through its Projection to each `retrieved_node <EMComposition.retrieved_nodes>` (which are inverted versions
+     of the matrices of the `MappingProjections <MappingProjection>` from the `query_input_nodes
+     <EMComposition.query_input_nodes>` to each of the corresponding `match_nodes <EMComposition.match_nodes>`),
+     to compute the dot product of the weighted softmax over entries with the corresponding field of each entry
+     that yields the retreieved value for each field.
 
 .. _EMComposition_Output:
 
@@ -750,8 +751,8 @@ COMMENT
 
 If `learn <Composition.learn>` is called, `enable_learning <EMComposition.enable_learning>` is True or a list with at
 least one True entry, then errors will be computed for each of the `retrieved_nodes <EMComposition.retrieved_nodes>`
-that is specified for learning (see `EMComposition_Learning` for details about specification). These errors are
-derived either from any errors backprpated to the EMComposition from an outer Composition in which it is `nested
+that is specified for learning (see `Learning <EMComposition_Learning>` for details about specification). These errors
+are derived either from any errors backprpated to the EMComposition from an outer Composition in which it is `nested
 <Composition_Nested>`, or locally by the difference between the `retrieved_nodes <EMComposition.retrieved_nodes>`
 and the `target_nodes <EMComposition.target_nodes>` that are created for each of the `retrieved_nodes
 <EMComposition.retrieved_nodes>` that do not project to an outer Composition.  These errors are then backpropagated
@@ -1270,7 +1271,7 @@ class EMComposition(AutodiffComposition):
 
     learning_rate : float
         determines whether the rate at which `field_weights <EMComposition.field_weights>` are learned
-        if `learn_field_weights` is True;  see `EMComposition_Learning>` for additional details.
+        if `learn_field_weights` is True;  see `Learning <EMComposition_Learning>` for additional details.
 
     .. _EMComposition_Nodes:
 
