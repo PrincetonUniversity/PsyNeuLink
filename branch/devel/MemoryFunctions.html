@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MemoryFunctions &mdash; PsyNeuLink 0.15.1.0+341.g9677c8d89 documentation</title>
+  <title>MemoryFunctions &mdash; PsyNeuLink 0.15.1.0+342.g0e5a12567 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+341
+                  0.15.1.0+342
                 </div>
               
             
@@ -1141,7 +1141,7 @@ in`memory &lt;ContentAddressableMemory.memory&gt;` (see <code class="xref any do
 <span class="sig-name descname"><span class="pre">noise</span></span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.noise" title="Permalink to this definition">¶</a></dt>
 <dd><p>value added to <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>) before storing in
 <a class="reference internal" href="#id0" title="psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> (see <code class="xref any docutils literal notranslate"><span class="pre">noise</span></code> for additional details).
-If a 2d array (or <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> that returns one), its shape must be the same as <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>; that is, each array in the outer dimension (Axis 0) must have the
+If a 2d array (or <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> that returns one), its shape must be the same as <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>; that is, each array in the outer dimension (axis 0) must have the
 same length as the corresponding one in <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>, so that it
 can be added Hadamard style to <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> before storing it in
 <a class="reference internal" href="#id0" title="psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.</p>

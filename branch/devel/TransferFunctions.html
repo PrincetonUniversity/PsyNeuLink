@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferFunctions &mdash; PsyNeuLink 0.15.1.0+341.g9677c8d89 documentation</title>
+  <title>TransferFunctions &mdash; PsyNeuLink 0.15.1.0+342.g0e5a12567 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+341
+                  0.15.1.0+342
                 </div>
               
             
@@ -1870,8 +1870,8 @@ and then used to compute the derivative.</p>
 </div>
 </div></blockquote>
 <p id="softmax-adaptgain"><em>Thresholding and Adaptive Gain</em></p>
-<p>For cases in which SoftMax is used with vector that sparse (e.g., one-hots), the value(s) of the (most( significant
-entries (e.g., the one’s in a one-hot) can be sensitive to (diminished by) the number of other values in the vector
+<p>For cases in which SoftMax is used with sparse vectors (e.g., one-hots), the value(s) of the most significant
+entries (e.g., the 1s in a one-hot) can be sensitive to (diminished by) the number of other values in the vector
 (i.e., its length). For example, whereas for <code class="docutils literal notranslate"><span class="pre">[1</span> <span class="pre">0]</span></code> the SoftMax is <code class="docutils literal notranslate"><span class="pre">[0.73105858</span> <span class="pre">0.26894142]</span></code>, for <code class="docutils literal notranslate"><span class="pre">[1</span> <span class="pre">0</span> <span class="pre">0</span> <span class="pre">0]</span></code>
 it is <code class="docutils literal notranslate"><span class="pre">[0.47536689</span> <span class="pre">0.1748777</span>&#160; <span class="pre">0.1748777</span>&#160; <span class="pre">0.1748777]</span></code>. This can be addressed in one of two ways: either by
 thresholding <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.variable" title="psyneulink.core.components.functions.transferfunctions.SoftMax.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> before applying the SoftMax function, or by adapting the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.gain" title="psyneulink.core.components.functions.transferfunctions.SoftMax.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a> parametrically based on the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.variable" title="psyneulink.core.components.functions.transferfunctions.SoftMax.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>:</p>
@@ -1886,7 +1886,7 @@ based on the entropy and length of the variable, to keep the mass of the distrib
 as consistent as possible over different sized vectors. If <em>ADAPTIVE</em> is specified, then the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.mask_threshold" title="psyneulink.core.components.functions.transferfunctions.SoftMax.mask_threshold"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mask_threshold</span></code></a> argument is ignored. The gain is adapted by calling the SoftMax function’s <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain" title="psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">adapt_gain</span></code></a> method. This can be finicky, and may need to be further tuned to the length of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.variable" title="psyneulink.core.components.functions.transferfunctions.SoftMax.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>, which can be done using the SoftMax Function’s <strong>adapt_scale</strong>, <strong>adapt_base</strong>, and
 <strong>adapt_entropy_weighting</strong> arguments.</p></li>
 </ul>
-<p id="softmax-derivative"><em>Derivatve</em></p>
+<p id="softmax-derivative"><em>Derivative</em></p>
 <p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.derivative" title="psyneulink.core.components.functions.transferfunctions.SoftMax.derivative"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">derivative</span></code></a> returns the derivative of the SoftMax.  If <em>OUTPUT_TYPE</em> for the SoftMax
 is <em>ALL</em>, returns Jacobian matrix (derivative for each element of the output array with respect to each of the
 others):</p>
@@ -1901,10 +1901,10 @@ value with respect to the others (calculated as above). If <em>OUTPUT_TYPE</em> 
 <li><p><strong>default_variable</strong> (<em>1d array : default class_defaults.variable</em>) – specifies a template for the value to be transformed.</p></li>
 <li><p><strong>gain</strong> (<em>scalar</em><em> or </em><em>ADAPTIVE : default 1.0</em>) – specifies the value by which to multiply <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Linear.variable" title="psyneulink.core.components.functions.transferfunctions.Linear.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> before SoftMax transformation,
 which functions as the inverse “temperature” of the function.  If it is a scalar, it must be greater
-than zero.  If <em>ADAPTIVE</em> is specified, the value is determined dynamically based on the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.variable" title="psyneulink.core.components.functions.transferfunctions.SoftMax.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> <code class="xref any docutils literal notranslate"><span class="pre">SoftMax_AdaptGain</span></code> for details).</p></li>
+than zero.  If <em>ADAPTIVE</em> is specified, the value is determined dynamically based on the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.variable" title="psyneulink.core.components.functions.transferfunctions.SoftMax.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>; see <a class="reference internal" href="#softmax-adaptgain"><span class="std std-ref">Thresholding and Adaptive Gain</span></a> for details).</p></li>
 <li><p><strong>mask_threshold</strong> (<em>scalar : default None</em>) – specifies whether to mask_threshold the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.variable" title="psyneulink.core.components.functions.transferfunctions.SoftMax.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> before applying the SoftMax function;
 this only applies if <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.gain" title="psyneulink.core.components.functions.transferfunctions.SoftMax.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a> is specified as a scalar;  otherwise it is ignored
-(see <code class="xref any docutils literal notranslate"><span class="pre">SoftMax_AdaptGain</span></code> for details).</p></li>
+(see <a class="reference internal" href="#softmax-adaptgain"><span class="std std-ref">Thresholding and Adaptive Gain</span></a> for details).</p></li>
 <li><p><strong>adapt_scale</strong> (<em>scalar : default 1</em>) – specifies the <em>scale</em> parameter using by the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain" title="psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">adapt_gain</span></code></a> method (see method for details).</p></li>
 <li><p><strong>adapt_base</strong> (<em>scalar : default 1</em>) – specifies the <em>base</em> parameter using by the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain" title="psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">adapt_gain</span></code></a> method (see method for details).</p></li>
 <li><p><strong>adapt_entropy_weighting</strong> (<em>default .1</em>) – specifies the <em>entropy_weighting</em> parameter using by the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain" title="psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">adapt_gain</span></code></a> method
@@ -1939,7 +1939,7 @@ arguments of the constructor.</p></li>
 <dd><p>determines how <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="psyneulink.core.components.functions.transferfunctions.Logistic.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is scaled before the SoftMax transformation, determining the
 “sharpness” of the distribution (it is equivalent to the inverse of the temperature of the SoftMax function);
 if it is ‘ADAPTIVE’, it is determined dynamically adjusted using the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain" title="psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">adapt_gain</span></code></a> method
-(see <code class="xref any docutils literal notranslate"><span class="pre">SoftMax_AdaptGain</span></code> for additional details).</p>
+(see <a class="reference internal" href="#softmax-adaptgain"><span class="std std-ref">Thresholding and Adaptive Gain</span></a> for additional details).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>scalar or ADAPTIVE</p>
@@ -1954,7 +1954,7 @@ if it is ‘ADAPTIVE’, it is determined dynamically adjusted using the <a clas
 if it is a scalar, only elements of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.variable" title="psyneulink.core.components.functions.transferfunctions.SoftMax.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> with an absolute value greater than that
 value are considered when applying the SoftMax function (which are then scaled by the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.gain" title="psyneulink.core.components.functions.transferfunctions.SoftMax.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a>
 parameter; all other elements are assigned 0.  This only applies if <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.gain" title="psyneulink.core.components.functions.transferfunctions.SoftMax.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a> is specified as a
-scalar;  otherwise it is ignored (see <code class="xref any docutils literal notranslate"><span class="pre">SoftMax_AdaptGain</span></code> for details).</p>
+scalar;  otherwise it is ignored (see <a class="reference internal" href="#softmax-adaptgain"><span class="std std-ref">Thresholding and Adaptive Gain</span></a> for details).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>scalar or None</p>
@@ -2003,10 +2003,10 @@ scalar;  otherwise it is ignored (see <code class="xref any docutils literal not
 in the array returned by <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax._function" title="psyneulink.core.components.functions.transferfunctions.SoftMax._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a>:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><strong>ALL</strong>: array of all SoftMax-transformed values (the default);</p></li>
-<li><p><strong>MAX_VAL</strong>: SoftMax-transformed value for the element with the maximum such value, 0 for all others;</p></li>
-<li><p><strong>MAX_INDICATOR</strong>: 1 for the element with the maximum SoftMax-transformed value, 0 for all others;</p></li>
-<li><p><strong>PROB</strong>: probabilistically chosen element based on SoftMax-transformed values after setting the
+<li><p><em>ALL</em>: array of all SoftMax-transformed values (the default);</p></li>
+<li><p><em>MAX_VAL</em>: SoftMax-transformed value for the element with the maximum such value, 0 for all others;</p></li>
+<li><p><em>MAX_INDICATOR</em>: 1 for the element with the maximum SoftMax-transformed value, 0 for all others;</p></li>
+<li><p><em>PROB</em>: probabilistically chosen element based on SoftMax-transformed values after setting the
 sum of values to 1 (i.e., their <a class="reference external" href="https://en.wikipedia.org/wiki/Luce%27s_choice_axiom">Luce Ratio</a>),
 0 for all others.</p></li>
 </ul>
@@ -2358,7 +2358,7 @@ arguments of the constructor.</p></li>
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.transferfunctions.</span></span><span class="sig-name descname"><span class="pre">TransferFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function that transforms variable but maintains its shape.</p>
 <p>All TransferFunctions MUST have the following attributes:</p>
-<p><a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.bounds" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.bounds"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bounds</span></code></a> – specifies the lower and upper limits of the result;  if there are none, the attribute is set to
+<p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Exponential.bounds" title="psyneulink.core.components.functions.transferfunctions.Exponential.bounds"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bounds</span></code></a> – specifies the lower and upper limits of the result;  if there are none, the attribute is set to
 <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>;  if it has at least one bound, the attribute is set to a tuple specifying the lower and upper bounds,
 respectively, with <code class="xref any docutils literal notranslate"><span class="pre">None</span></code> as the entry for no bound.</p>
 <p><a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a> and <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">additive_param</span></a> – each

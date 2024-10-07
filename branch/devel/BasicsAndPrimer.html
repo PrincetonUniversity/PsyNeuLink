@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basics and Primer &mdash; PsyNeuLink 0.15.1.0+341.g9677c8d89 documentation</title>
+  <title>Basics and Primer &mdash; PsyNeuLink 0.15.1.0+342.g0e5a12567 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+341
+                  0.15.1.0+342
                 </div>
               
             
@@ -319,7 +319,8 @@ Composition’s <a class="reference internal" href="Composition.html#psyneulink.
 of the examples further below.</p>
 <p>PsyNeuLink picks sensible defaults when necessary Components are not specified.  In the example above no <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> were actually specified, so PsyNeuLink automatically created the appropriate types (in this case,
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>), and sized them appropriately to connect each pair of Mechanisms. Each
-Projection has a <code class="xref any docutils literal notranslate"><span class="pre">matrix</span></code> parameter that weights the connections between the elements of the output
+Projection has a <code class="xref any docutils literal notranslate"><span class="pre">matrix</span></code> parameter that weights the connections between the elements of the
+output
 of its <code class="xref any docutils literal notranslate"><span class="pre">sender</span></code> and those of the input to its <code class="xref any docutils literal notranslate"><span class="pre">receiver</span></code>.  Here, the
 default is to use a <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX" title="psyneulink.core.globals.keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">FULL_CONNECTIVITY_MATRIX</span></code></a>, that connects every element of the sender’s array to every element of
 the receiver’s array with a weight of 1. However, it is easy to specify a Projection explicitly, including its

@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ParameterEstimationComposition &mdash; PsyNeuLink 0.15.1.0+341.g9677c8d89 documentation</title>
+  <title>ParameterEstimationComposition &mdash; PsyNeuLink 0.15.1.0+342.g0e5a12567 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+341
+                  0.15.1.0+342
                 </div>
               
             
@@ -305,7 +305,7 @@ requires that the <strong>objective_function</strong> argument be specified:</p>
 <li><p><strong>objective_function</strong> - specifies a function used to evaluate the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">values</span></code></a> of the
 <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.outcome_variables" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.outcome_variables"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">outcome_variables</span></code></a>, according to which combinations of
 <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameters</span></code></a> are assessed; this must be an <code class="xref any docutils literal notranslate"><span class="pre">Callable</span></code>
-that takes a 3D array as its only argument, the shape of which will be (<strong>num_estimates</strong>, <strong>num_trials</strong>,
+that takes a 3d array as its only argument, the shape of which will be (<strong>num_estimates</strong>, <strong>num_trials</strong>,
 number of <strong>outcome_variables</strong>).  The function should specify how to aggregate the value of each
 <strong>outcome_variable</strong> over <strong>num_estimates</strong> and/or <strong>num_trials</strong> if either is greater than 1.</p></li>
 </ul>
