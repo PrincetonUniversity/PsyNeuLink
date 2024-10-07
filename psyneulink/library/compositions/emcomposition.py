@@ -298,7 +298,7 @@ its own corresponding input (key or value) and output (retrieved value) `Node <C
 which can be used to compute the similarity of the input (key) to entries in memory, that is used for retreieval.
 Fields can be differentially weighted to determine the influence they have on retrieval, using the
 `field_weights <ContentAddressableMemory.memory>` parameter (see `retrieval <EMComposition_Retrieval_Storage>` below).
-The number and shape of the fields in each entry is specified in the **memory_template* argument of the EMComposition's
+The number and shape of the fields in each entry is specified in the **memory_template** argument of the EMComposition's
 constructor (see `memory_template <EMComposition_Fields>`). Which fields treated as keys (i.e., matched against
 queries during retrieval) and which are treated as values (i.e., retrieved but not used for matching retrieval) is
 specified in the **field_weights** argument of the EMComposition's constructor (see `field_weights
@@ -308,13 +308,16 @@ specified in the **field_weights** argument of the EMComposition's constructor (
 
 **Operation**
 
-*Retrieval.*  The values retrieved from `memory <ContentAddressableMemory.memory>` (one for each field) are based on
-the relative similarity of the keys to the entries in memory, computed as the dot product of each key and the
+*Retrieval.*  The values retrieved from `memory <ContentAddressableMemory.memory>` (one for each field) are based
+on the relative similarity of the keys to the entries in memory, computed as the dot product of each key and the
 values in the corresponding field for each entry in memory.  These dot products are then softmaxed, and those
 softmax distributions are weighted by the corresponding `field_weights <EMComposition.field_weights>` for each field
-and then combined, to produce a single softmax distribution over the entries in memory, that is used to generate a
-weighted average as the retrieved value across all fields, and returned as the `result <Composition.result>` of the
-EMComposition's `execution <Composition_Execution>`.
+and then combined, to produce a single softmax distribution over the entries in memory. That is then used to generate
+a weighted average of the retrieved values across all fields, which is returned as the `result <Composition.result>`
+of the EMComposition's `execution <Composition_Execution>` (an EMComposition can also be configured to return the
+entry with the highest dot product weighted by field, however then it is not compatible with learning;
+see `softmax_choice <EMComposition_softmax_choice>`).
+
   COMMENT:
   TBD DISTANCE ATTRIBUTES:
   The distances used for the last retrieval is stored in XXXX and the distances of each of their corresponding fields
@@ -521,20 +524,27 @@ An EMComposition is created by calling its constructor, that takes the following
   then any values below the specified threshold are set to 0 before the dot products are softmaxed
   (see *mask_threhold* under `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for additional details).
 
-.. _EMComposition_Softmax_Output_Format:
+.. _EMComposition_Softmax_Choice:
 
-* **softmax_output_format** : specifies how the `SoftMax` Function of each of the EMComposition's `softmax_nodes
-  <EMComposition.softmax_nodes>` is used to normalize the dot products of queries and keys in memory; the following
-  options can be used (corresponding to the options of the **output** argument of the `Softmax` Function) along with
-  the value they retrieve from memory:
+* **softmax_choice** : specifies how the `SoftMax` Function of each of the EMComposition's `softmax_nodes
+  <EMComposition.softmax_nodes>` is used, with the dot products of queries and keys, to generate a retrieved item;
+  the following are the options that can be used and the retrieved value they produce:
 
-  * *ALL*: softmax-weighted average of entries, based on their dot products with the key(s); this is the default;
+  * *WEIGHTED*: softmax-weighted average of entries, based on their dot products with the key(s); this is the default;
 
-  * *MAX_VAL*: entry with the largest dot product, multipled by its softmax value;
+  * *ARG_MAX*: entry with the largest dot product.
 
-  * *MAX_INDICATOR*: entry with the largest dot product (i.e., argmax).
+  .. warning::
+     Use of the *ARG_MAX* option is not compatible with learning, as it implements a discrete choice and thus is not
+     differentiable; use of this with `enable_learning <EMComposition.enable_learning>` set to ``True`` will generate
+     an error.
 
-  * *PROB*: probabilistically-chosen entry, based on the softmax transformation of their dot products.
+  .. technical_note::
+     The *WEIGHTED* option is passed as *ALL* to the **output** argument of the `SoftMax` Function, and
+     *ARG_MAX* is passed as *MAX_INDICATOR*; the *MAX_VAL* and *PROB* arguments are not currently.
+  COMMENT:
+  * *PROB*: probabilistically-chosen entry, based on the softmax transformation of thee dot products.
+  COMMENT
 
 .. _EMComposition_Learning:
 
@@ -992,18 +1002,18 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import \
     (ADAPTIVE, ALL, AUTO, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, EM_COMPOSITION, FULL_CONNECTIVITY_MATRIX,
-     GAIN, IDENTITY_MATRIX, MAX_VAL, MAX_INDICATOR, MULTIPLICATIVE_PARAM, NAME, PARAMS, PROB, PRODUCT, PROJECTIONS,
+     GAIN, IDENTITY_MATRIX, MAX_INDICATOR, MULTIPLICATIVE_PARAM, NAME, PARAMS, PRODUCT, PROJECTIONS,
      RANDOM, SIZE, VARIABLE)
 from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric_scalar
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.llvm import ExecutionMode
 
 
-__all__ = [
-    'EMComposition'
-]
+__all__ = ['EMComposition', 'WEIGHTED', 'ARG_MAX']
 
 STORAGE_PROB = 'storage_prob'
+WEIGHTED = ALL
+ARG_MAX = MAX_INDICATOR
 
 QUERY_AFFIX = ' [QUERY]'
 VALUE_AFFIX = ' [VALUE]'
@@ -1125,10 +1135,9 @@ class EMComposition(AutodiffComposition):
         specifies the threshold used to mask out small values in the softmax calculation;
         see *mask_threshold* under `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for details).
 
-    softmax_output_format : ALL, MAX_VAL, MAX_INDICATOR, or PROB : default ALL
-        specifies how the softmax normalized dot products of keys and memories is formatted; see
-        `SoftMax output <Softmax.output>` for arguments, and `Softmax normalize matches over fields
-        <EMComposition_Processing>` for how this impacts softmax weighting of fields.
+    softmax_choice : WEIGHTED, ARG_MAX : default WEIGHTED
+        specifies how the softmax over dot products of keys and memories is used for retrieval; see `Softmax
+        normalize matches over fields <EMComposition_Processing>` description of each option.
 
     storage_prob : float : default 1.0
         specifies the probability that an item will be stored in `memory <EMComposition.memory>`
@@ -1224,10 +1233,9 @@ class EMComposition(AutodiffComposition):
         determines the threshold used to mask out small values in the softmax calculation;
         see *mask_threshold* under `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for details).
 
-    softmax_output_format : ALL, MAX_VAL, MAX_INDICATOR, or PROB
-        determines how the softmax normalized dot products of keys and memories is formatted; see
-        `SoftMax output <Softmax.output>` for meaning of options, and `Softmax normalize matches over fields
-        <EMComposition_Processing>` for how this impacts softmax weighting of fields.
+    softmax_choice : WEIGHTED or ARG_MAX
+        determines how the softmax over dot products of keys and memories is used for retrieval; see `Softmax
+        normalize matches over fields <EMComposition_Processing>` description of each option.
 
     storage_prob : float
         determines the probability that an item will be stored in `memory <EMComposition.memory>`
@@ -1453,9 +1461,9 @@ class EMComposition(AutodiffComposition):
                     :default value: 1.0
                     :type: ``float, ADAPTIVE or CONTROL``
 
-                softmax_output_format
-                    see `softmax_output_format <EMComposition.softmax_output_format>`
-                    :default value: ALL
+                softmax_choice
+                    see `softmax_choice <EMComposition.softmax_choice>`
+                    :default value: WEIGHTED
                     :type: ``keyword``
 
                 softmax_threshold
@@ -1479,7 +1487,7 @@ class EMComposition(AutodiffComposition):
         normalize_memories = Parameter(True)
         softmax_gain = Parameter(1.0, modulable=True)
         softmax_threshold = Parameter(.001, modulable=True, specify_none=True)
-        softmax_output_format = Parameter(ALL, modulable=False, specify_none=True)
+        softmax_choice = Parameter(WEIGHTED, modulable=False, specify_none=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         memory_decay_rate = Parameter(AUTO, modulable=True)
         enable_learning = Parameter(True, structural=True)
@@ -1557,7 +1565,7 @@ class EMComposition(AutodiffComposition):
                  normalize_memories:bool=True,
                  softmax_gain:Union[float, ADAPTIVE, CONTROL]=1.0,
                  softmax_threshold:Optional[float]=.001,
-                 softmax_output_format:Optional[Union[ALL, MAX_VAL, MAX_INDICATOR,PROB]]=ALL,
+                 softmax_choice:Optional[Union[WEIGHTED, ARG_MAX]]=WEIGHTED,
                  storage_prob:float=1.0,
                  memory_decay_rate:Union[float,AUTO]=AUTO,
                  enable_learning:Union[bool,list]=True,
@@ -1593,7 +1601,6 @@ class EMComposition(AutodiffComposition):
         if softmax_gain == CONTROL:
             self.parameters.softmax_gain.modulable = False
 
-
         # Instantiate Composition -------------------------------------------------------------------------
 
         super().__init__(name=name,
@@ -1604,7 +1611,7 @@ class EMComposition(AutodiffComposition):
                          concatenate_keys = concatenate_keys,
                          softmax_gain = softmax_gain,
                          softmax_threshold = softmax_threshold,
-                         softmax_output_format = softmax_output_format,
+                         softmax_choice = softmax_choice,
                          storage_prob = storage_prob,
                          memory_decay_rate = memory_decay_rate,
                          normalize_memories = normalize_memories,
@@ -1616,6 +1623,8 @@ class EMComposition(AutodiffComposition):
                          **kwargs
                          )
 
+        self._validate_softmax_choice(softmax_choice, enable_learning)
+
         self._construct_pathways(self.memory_template,
                                  self.memory_capacity,
                                  self.field_weights,
@@ -1623,7 +1632,7 @@ class EMComposition(AutodiffComposition):
                                  self.normalize_memories,
                                  self.softmax_gain,
                                  self.softmax_threshold,
-                                 self.softmax_output_format,
+                                 self.softmax_choice,
                                  self.storage_prob,
                                  self.memory_decay_rate,
                                  self.use_storage_node,
@@ -1706,7 +1715,7 @@ class EMComposition(AutodiffComposition):
     # *****************************************************************************************************************
     # ***********************************  Memory Construction Methods  ***********************************************
     # *****************************************************************************************************************
-
+    #region
     def _validate_memory_specs(self, memory_template, memory_capacity, memory_fill, field_weights, field_names, name):
         """Validate the memory_template, field_weights, and field_names arguments
         """
@@ -1942,10 +1951,12 @@ class EMComposition(AutodiffComposition):
         num_fields = len(memory_template) if single_entry else len(memory_template[0])
         return num_entries, num_fields
 
+    #endregion
+
     # *****************************************************************************************************************
     # ******************************  Nodes and Pathway Construction Methods  *****************************************
     # *****************************************************************************************************************
-
+    #region
     def _construct_pathways(self,
                             memory_template,
                             memory_capacity,
@@ -1954,7 +1965,7 @@ class EMComposition(AutodiffComposition):
                             normalize_memories,
                             softmax_gain,
                             softmax_threshold,
-                            softmax_output_format,
+                            softmax_choice,
                             storage_prob,
                             memory_decay_rate,
                             use_storage_node,
@@ -1983,7 +1994,7 @@ class EMComposition(AutodiffComposition):
                                                            field_weights,
                                                            softmax_gain,
                                                            softmax_threshold,
-                                                           softmax_output_format)
+                                                           softmax_choice)
         self.field_weight_nodes = self._construct_field_weight_nodes(field_weights,
                                                                      concatenate_keys,
                                                                      use_gating_for_weighting)
@@ -2183,8 +2194,13 @@ class EMComposition(AutodiffComposition):
 
         return match_nodes
 
+    def _validate_softmax_choice(self, softmax_choice, enable_learning):
+        if softmax_choice == ARG_MAX and enable_learning:
+            raise EMCompositionError(f"The ARG_MAX option for the 'softmax_choice' arg of '{self.name}' "
+                                     f"can not be used when 'enable_learning' is set to True; "
+                                     f"use WEIGHTED or set 'enable_learning' to False.")
     def _construct_softmax_nodes(self, memory_capacity, field_weights,
-                                 softmax_gain, softmax_threshold, softmax_output_format)->list:
+                                 softmax_gain, softmax_threshold, softmax_choice)->list:
         """Create nodes that, for each key field, compute the softmax over the similarities between the input and the
         memories in the corresponding match_node.
         """
@@ -2204,7 +2220,7 @@ class EMComposition(AutodiffComposition):
                                                             name=f'MATCH to SOFTMAX for {self.key_names[i]}')},
                                            function=SoftMax(gain=softmax_gain,
                                                             mask_threshold=softmax_threshold,
-                                                            output=softmax_output_format,
+                                                            output=softmax_choice,
                                                             adapt_entropy_weighting=.95),
                                            name='SOFTMAX' if len(self.match_nodes) == 1
                                            else f'{self.key_names[i]} [SOFTMAX]')
@@ -2329,8 +2345,11 @@ class EMComposition(AutodiffComposition):
 
         retrieved_nodes = self.retrieved_key_nodes + self.retrieved_value_nodes
         # Return nodes in order sorted by self.field_names
+        # IMPLEMENTATION NOTE:
+        #  "in" is used below instead of "==" in case more than one EMComposition is created,
+        #  in which case retrieved_nodes will have "-<int>" appended to their name
         return [node for name in self.field_names for node in retrieved_nodes
-                               if node in retrieved_nodes if (name + RETRIEVED_AFFIX) == node.name]
+                               if node in retrieved_nodes if (name + RETRIEVED_AFFIX) in node.name]
 
     def _construct_storage_node(self,
                                 memory_template,
@@ -2374,7 +2393,7 @@ class EMComposition(AutodiffComposition):
                                                             for i in range(self.num_fields)],
                                           fields=[self.input_nodes[i] for i in range(self.num_fields)],
                                           field_types=[0 if weight == 0 else 1 for weight in field_weights],
-                                          concatenation_node=self.concatenate_keys_node,
+                                          concatenation_node=concatenate_keys_node,
                                           memory_matrix=memory_template,
                                           learning_signals=learning_signals,
                                           storage_prob=storage_prob,
@@ -2396,11 +2415,12 @@ class EMComposition(AutodiffComposition):
             else:
                 projection.learnable = False
 
+    #endregion
 
     # *****************************************************************************************************************
     # *********************************** Execution Methods  **********************************************************
     # *****************************************************************************************************************
-
+    # region
     def execute(self,
                 inputs=None,
                 context=None,
@@ -2527,3 +2547,5 @@ class EMComposition(AutodiffComposition):
     def do_gradient_optimization(self, retain_in_pnl_options, context, optimization_num=None):
         # 7/10/24 - MAKE THIS CONTEXT DEPENDENT:  CALL super() IF BEING EXECUTED ON ITS OWN?
         pass
+
+    #endregion
