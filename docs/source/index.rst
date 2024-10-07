@@ -104,11 +104,12 @@ The longterm goal of PsyNeuLink is to provide an environment that integrates com
 and behavior at all levels of analysis.  While it is designed to be fully general, and can in principle be used to
 implement models at any level, it is still under development, and current efficiency considerations make it more
 suitable for some of forms of modeling than others. In its present form, it is well suited to the creation of
-simple to moderately complex models, and for the integration of disparate models into a single environment, while in
+simple to moderately complex models, and for the integration of disparate models into a single environment, and the
+creation of systems-level neuroscientific models, as well as cognitive neuroscientific and modestly scaled machine
+learning-style models, while in
 it is presently less well suited to efforts involving massively large computations, such as:
 
- - extensive model fitting
- - large scale simulations
+ - large scale machine learning simulations
  - highly detailed biophysical models of neurons or neuronal populations
 
 Other packages currently better suited to such applications are:
