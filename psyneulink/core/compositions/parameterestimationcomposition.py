@@ -128,7 +128,7 @@ requires that the **objective_function** argument be specified:
     * **objective_function** - specifies a function used to evaluate the `values <Mechanism_Base.value>` of the
       `outcome_variables <ParameterEstimationComposition.outcome_variables>`, according to which combinations of
       `parameters <ParameterEstimationComposition.parameters>` are assessed; this must be an `Callable`
-      that takes a 3D array as its only argument, the shape of which will be (**num_estimates**, **num_trials**,
+      that takes a 3d array as its only argument, the shape of which will be (**num_estimates**, **num_trials**,
       number of **outcome_variables**).  The function should specify how to aggregate the value of each
       **outcome_variable** over **num_estimates** and/or **num_trials** if either is greater than 1.
 
