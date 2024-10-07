@@ -274,16 +274,23 @@ The EMComposition implements a configurable, content-addressable form of episodi
 an `EpisodicMemoryMechanism` -- reproducing all of the functionality of its `ContentAddressableMemory` `Function` --
 in the form of an `AutodiffComposition` that is capable of learning how to differentially weight different cues used
 for retrieval,, and that adds the capability for `memory_decay <EMComposition.memory_decay_rate>`. Its `memory
-<EMComposition.memory>` is configured using the **memory_template** argument of its constructor, which defines how
-each entry in `memory <EMComposition.memory>` is structured (the number of fields in each entry and the length of
-each field), and its **field_weights** argument that defines which fields are used as cues for retrieval -- "keys" --
-and whether and how they are differentially weighted in the match process used for retrieval, and which are treated
-as "values" that are retrieved but not used by the match process.  The inputs corresponding to each key (i.e., used
-as "queries") and value are represented as `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of the EMComposition
-(listed in its `query_input_nodes <EMComposition.query_input_nodes>` and `value_input_nodes
+<EMComposition.memory>` is configured using two arguments of its constructor: **memory_template** argument, that
+defines how each entry in `memory <EMComposition.memory>` is structured (the number of fields in each entry and the
+length of each field); and **field_weights** argument, that defines which fields are used as cues for retrieval (
+"keys"; including whether and how they are differentially weighted in the match process used for retrieval) and which
+are treated as "values" that are stored retrieved, but not used by the match process. The inputs to an EMComposition,
+corresponding to each key ("query") and value field are assigned to each of its `INPUT <NodeRole.INPUT>` `Nodes
+<Composition_Nodes>` (listed in its `query_input_nodes <EMComposition.query_input_nodes>` and `value_input_nodes
 <EMComposition.value_input_nodes>` attributes, respectively), and the retrieved values are represented as `OUTPUT
 <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>` of the EMComposition.  The `memory <EMComposition.memory>` can be
 accessed using its `memory <EMComposition.memory>` attribute.
+
+    .. technical_note::
+       The memories of an EMComposition are actually stored in the `matrix <EMComposition_Memory>` attribute of a
+       set of `MappingProjections <MappingProjection>` (see `note below <EMComposition_Memory_Storage>`).  The `memory
+       <EMComposition.memory>` attribute compiles and formats these as a single 3d array, the rows of which (axis 0)
+       are each entry, the columns of which (axis 1) are the fields of each entry, and the items of which (axis 2)
+       are the values of each field (see `EMComposition_Memory` for additional details).
 
 .. _EMComposition_Organization:
 
@@ -596,27 +603,28 @@ and `value_input_nodes <EMComposition.value_input_nodes>` attributes, respective
 *Memory*
 ~~~~~~~~
 
-The `memory <EMComposition.memory>` attribute contains a record of the entries in the EMComposition's memory. This is
-in the form of a 2d array, in which rows (axis 0) are entries and columns (axis 1) are fields.  The number of fields
-is determined by the `memory_template <EMComposition_Memory_Template>` argument of the EMComposition's constructor,
-and the number of entries is determined by the `memory_capacity <EMComposition_Memory_Capacity>` argument.
+The `memory <EMComposition.memory>` attribute contains a record of the entries in the EMComposition's memory. This
+is in the form of a 3d array, in which rows (axis 0) are entries, columns (axis 1) are fields, and items (axis 2) are
+the values of the item in a given field.  The number of fields is determined by the `memory_template
+<EMComposition_Memory_Template>` argument of the EMComposition's constructor, and the number of entries is determined
+by the `memory_capacity <EMComposition_Memory_Capacity>` argument.
 
   .. _EMComposition_Memory_Storage:
   .. technical_note::
-     The memories are actually stored in the `matrix <MappingProjection.matrix>` parameters of the `MappingProjections`
+     The memories are actually stored in the `matrix <MappingProjection.matrix>` parameters of the`MappingProjections`
      from the `combined_softmax_node <EMComposition.combined_softmax_node>` to each of the `retrieved_nodes
-     <EMComposition.retrieved_nodes>`. Memories associated with each key are also stored (in inverted form) in the
-     `matrix <MappingProjection.matrix>` parameters of the `MappingProjections` from the `query_input_nodes
-     <EMComposition.query_input_nodes>` to each of the corresponding `match_nodes <EMComposition.match_nodes>`.
-     This is done so that the match of each query to the keys in memory for the corresponding field can be computed
-     simply by passing the input for each query through the Projection (which computes the dot product of the input with
-     the Projection's `matrix <MappingProjection.matrix>` parameter) to the corresponding match_node; and, similarly,
-     retrieivals can be computed by passing the softmax distributions and weighting for each field computed
-     in the `combined_softmax_node <EMComposition.combined_softmax_node>` through its Projection to each
-     `retrieved_node <EMComposition.retrieved_nodes>` (which are inverted versions of the matrices of the
-     `MappingProjections` from the `query_input_nodes <EMComposition.query_input_nodes>` to each of the corresponding
-     `match_nodes <EMComposition.match_nodes>`), to compute the dot product of the weighted softmax over
-     entries with the corresponding field of each entry that yields the retreieved value for each field.
+     <EMComposition.retrieved_nodes>`. Memories associated with each key are also stored (in inverted form)
+     in the `matrix <MappingProjection.matrix>` parameters of the `MappingProjection <MappingProjection>`
+     from the `query_input_nodes <EMComposition.query_input_nodes>` to each of the corresponding `match_nodes
+     <EMComposition.match_nodes>`. This is done so that the match of each query to the keys in memory for the
+     corresponding field can be computed simply by passing the input for each query through the Projection (which
+     computes the dot product of the input with the Projection's `matrix <MappingProjection.matrix>` parameter) to
+     the corresponding match_node; and, similarly, retrieivals can be computed by passing the softmax distributions
+     and weighting for each field computed in the `combined_softmax_node <EMComposition.combined_softmax_node>`
+     through its Projection to each `retrieved_node <EMComposition.retrieved_nodes>` (which are inverted versions of
+     the matrices of the `MappingProjections` from the `query_input_nodes <EMComposition.query_input_nodes>` to each
+     of the corresponding `match_nodes <EMComposition.match_nodes>`), to compute the dot product of the weighted
+     softmax over entries with the corresponding field of each entry that yields the retreieved value for each field.
 
 .. _EMComposition_Output:
 
@@ -1184,9 +1192,9 @@ class EMComposition(AutodiffComposition):
     Attributes
     ----------
 
-    memory : list[list[list[float]]]
-        list of entries in memory, in which each row (outer dimensions) is an entry and each item in the row is the
-        value for the corresponding field;  see `EMComposition_Memory` for additional details.
+    memory : ndarray
+        3d array of entries in memory, in which each row (axis 0) is an entry, each column (axis 1) is a field, and
+        each item (axis 2) is the value for the corresponding field;  see `EMComposition_Memory` for additional details.
 
         .. note::
            This is a read-only attribute;  memories can be added to the EMComposition's memory either by

@@ -916,7 +916,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         value added to `variable <ContentAddressableMemory.variable>`) before storing in
         `memory <ContentAddressableMemory.memory>` (see `noise <Stateful_Noise>` for additional details).
         If a 2d array (or `Function` that returns one), its shape must be the same as `variable
-        <ContentAddressableMemory.variable>`; that is, each array in the outer dimension (Axis 0) must have the
+        <ContentAddressableMemory.variable>`; that is, each array in the outer dimension (axis 0) must have the
         same length as the corresponding one in `variable <ContentAddressableMemory.variable>`, so that it
         can be added Hadamard style to `variable <ContentAddressableMemory.variable>` before storing it in
         `memory <ContentAddressableMemory.memory>`.
