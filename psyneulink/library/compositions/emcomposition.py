@@ -274,13 +274,13 @@ The EMComposition implements a configurable, content-addressable form of episodi
 an `EpisodicMemoryMechanism` -- reproducing all of the functionality of its `ContentAddressableMemory` `Function` --
 in the form of an `AutodiffComposition` that is capable of learning how to differentially weight different cues used
 for retrieval,, and that adds the capability for `memory_decay <EMComposition.memory_decay_rate>`. Its `memory
-<EMComposition.memory>` is configured using two arguments of its constructor: **memory_template** argument, that
-defines how each entry in `memory <EMComposition.memory>` is structured (the number of fields in each entry and the
-length of each field); and **field_weights** argument, that defines which fields are used as cues for retrieval (
-"keys"; including whether and how they are differentially weighted in the match process used for retrieval) and which
-are treated as "values" that are stored retrieved, but not used by the match process. The inputs to an EMComposition,
-corresponding to each key ("query") and value field are assigned to each of its `INPUT <NodeRole.INPUT>` `Nodes
-<Composition_Nodes>` (listed in its `query_input_nodes <EMComposition.query_input_nodes>` and `value_input_nodes
+<EMComposition.memory>` is configured using two arguments of its constructor: **memory_template** argument, that defines
+how each entry in `memory <EMComposition.memory>` is structured (the number of fields in each entry and the length
+of each field); and **field_weights** argument, that defines which fields are used as cues for retrieval, i.e., "keys",
+including whether and how they are differentially weighted in the match process used for retrieval); and which
+fields are treated as "values" that are stored retrieved, but not used by the match process. The inputs to an
+EMComposition, corresponding to each key ("query") and value field are assigned to each of its `INPUT <NodeRole.INPUT>`
+`Nodes <Composition_Nodes>` (listed in its `query_input_nodes <EMComposition.query_input_nodes>` and `value_input_nodes
 <EMComposition.value_input_nodes>` attributes, respectively), and the retrieved values are represented as `OUTPUT
 <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>` of the EMComposition.  The `memory <EMComposition.memory>` can be
 accessed using its `memory <EMComposition.memory>` attribute.
