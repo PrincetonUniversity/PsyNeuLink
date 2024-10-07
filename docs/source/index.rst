@@ -55,6 +55,8 @@ combine these components to implement published models.  As an open source proje
 to be enhanced and extended, and its library is meant to provide an expanding repository of models, written in a
 concise, executable, and easy to interpret form, that can be shared, compared, and extended by the scientific community.
 
+*(Note: the PsyNeuLink development effort was initiated and named in 2016, entirely independently and without
+awareness of Neuralink, with which it bears no association nor any intentional relationsip.)*
 
 .. _What_PsyNeuLink_IS:
 
