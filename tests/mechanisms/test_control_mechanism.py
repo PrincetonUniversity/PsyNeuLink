@@ -88,7 +88,7 @@ class TestLCControlMechanism:
         expected = [[3.001397762387422]]
         # The difference in result shape is caused by shape mismatch in output port values.
         # The default shape is 1D, giving 2D overall result in compiled mode.
-        # The true results are 2D per port, giving 3D overall result in Python mode.
+        # The true results are 2D per port, giving 3d overall result in Python mode.
         if mech_mode == 'Python':
             expected = [[ex] for ex in expected]
         np.testing.assert_allclose(val, expected)

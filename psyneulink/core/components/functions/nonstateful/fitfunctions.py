@@ -113,9 +113,9 @@ def simulation_likelihood(
 
     Parameters
     ----------
-    sim_data: Data collected over many simulations. This must be either a 2D or 3D numpy array.
+    sim_data: Data collected over many simulations. This must be either a 2d or 3d numpy array.
         If 2D, the first dimension is the simulation number and the second dimension is data points. That is,
-        each row is a simulation. If 3D, the first dimension is the trial, the second dimension is the
+        each row is a simulation. If 3d, the first dimension is the trial, the second dimension is the
         simulation number, and the final dimension is data points.
 
     exp_data: This must be a numpy array with identical format as the simulation data, with the exception
@@ -275,7 +275,7 @@ class PECOptimizationFunction(OptimizationFunction):
         PEC is trying to solve. The function is used to evaluate the `values <Mechanism_Base.value>` of the
         `outcome_variables <ParameterEstimationComposition.outcome_variables>`, according to which combinations of
         `parameters <ParameterEstimationComposition.parameters>` are assessed; this must be an `Callable`
-        that takes a 3D array as its only argument, the shape of which must be (**num_estimates**, **num_trials**,
+        that takes a 3d array as its only argument, the shape of which must be (**num_estimates**, **num_trials**,
         number of **outcome_variables**).  The function should specify how to aggregate the value of each
         **outcome_variable** over **num_estimates** and/or **num_trials** if either is greater than 1.
 
