@@ -303,13 +303,12 @@ length.  However, all entries must have the same number of fields, and the corre
 length across entries. Each field is treated as a separate "channel" for storage and retrieval, and is associated with
 its own corresponding input (key or value) and output (retrieved value) `Node <Composition_Nodes>` some or all of
 which can be used to compute the similarity of the input (key) to entries in memory, that is used for retreieval.
-Fields can be differentially weighted to determine the influence they have on retrieval, using the
-`field_weights <ContentAddressableMemory.memory>` parameter (see `retrieval <EMComposition_Retrieval_Storage>` below).
-The number and shape of the fields in each entry is specified in the **memory_template** argument of the EMComposition's
-constructor (see `memory_template <EMComposition_Fields>`). Which fields treated as keys (i.e., matched against
-queries during retrieval) and which are treated as values (i.e., retrieved but not used for matching retrieval) is
-specified in the **field_weights** argument of the EMComposition's constructor (see `field_weights
-<EMComposition_Field_Weights>`).
+Fields can be differentially weighted to determine the influence they have on retrieval, using the `field_weights
+<ContentAddressableMemory.memory>` parameter (see `retrieval <EMComposition_Retrieval_Storage>` below). The number and
+shape of the fields in each entry is specified in the **memory_template** argument of the EMComposition's constructor
+(see `memory_template <EMComposition_Fields>`). Which fields treated as keys (i.e., matched against queries during
+retrieval) and which are treated as values (i.e., retrieved but not used for matching retrieval) is specified in the
+**field_weights** argument of the EMComposition's constructor (see `field_weights <EMComposition_Field_Weights>`).
 
 .. _EMComposition_Operation:
 
