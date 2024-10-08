@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EMComposition &mdash; PsyNeuLink 0.15.1.0+342.g0e5a12567 documentation</title>
+  <title>EMComposition &mdash; PsyNeuLink 0.15.1.0+343.g8b3250f4e documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+342
+                  0.15.1.0+343
                 </div>
               
             
@@ -493,16 +493,18 @@ the following are the options that can be used and the retrieved value they prod
 <ul class="simple">
 <li><p><em>WEIGHTED</em>: softmax-weighted average of entries, based on their dot products with the key(s); this is the default;</p></li>
 <li><p><em>ARG_MAX</em>: entry with the largest dot product.</p></li>
+<li><p><em>PROBABISTIC</em>: probabilistically chosen entry based on softmax-transformed distribution of dot products.</p></li>
 </ul>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>Use of the <em>ARG_MAX</em> option is not compatible with learning, as it implements a discrete choice and thus is not
-differentiable; use of this with <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.enable_learning" title="psyneulink.library.compositions.emcomposition.EMComposition.enable_learning"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">enable_learning</span></code></a> set to <code class="docutils literal notranslate"><span class="pre">True</span></code> will generate
-an error.</p>
+<p>Use of the <em>ARG_MAX</em> and <em>PROBABILISTIC</em> options is not compatible with learning, as these implement a discrete
+choice and thus are not differentiable. Constructing an EMComposition with <strong>softmax_choice</strong> set to either of
+these options and <strong>enable_learning</strong> set to True will generate a warning, and calling the EMComposition’s
+<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method will generate an error; it must be changed to <em>WEIGHTED</em> to execute learning.</p>
 </div>
 <div class="technical-note docutils container">
-<p>The <em>WEIGHTED</em> option is passed as <em>ALL</em> to the <strong>output</strong> argument of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.SoftMax" title="psyneulink.core.components.functions.transferfunctions.SoftMax"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SoftMax</span></code></a> Function, and
-<em>ARG_MAX</em> is passed as <em>MAX_INDICATOR</em>; the <em>MAX_VAL</em> and <em>PROB</em> arguments are not currently.</p>
+<p>The <em>WEIGHTED</em> option is passed as <em>ALL</em> to the <strong>output</strong> argument of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.SoftMax" title="psyneulink.core.components.functions.transferfunctions.SoftMax"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SoftMax</span></code></a> Function, <em>ARG_MAX</em> is
+passed as <em>MAX_INDICATOR</em>; <em>PROBALISTIC</em> is passed as <em>PROB_INDICATOR</em>; and <em>MAX_VAL</em> is not currently supported.</p>
 </div>
 </li>
 </ul>
@@ -853,8 +855,8 @@ see <a class="reference internal" href="#emcomposition-processing"><span class="
 see <a class="reference internal" href="#emcomposition-processing"><span class="std std-ref">Softmax normalize matches over fields</span></a> for additional details.</p></li>
 <li><p><strong>softmax_threshold</strong> (<em>float : default .0001</em>) – specifies the threshold used to mask out small values in the softmax calculation;
 see <em>mask_threshold</em> under <a class="reference internal" href="TransferFunctions.html#softmax-adaptgain"><span class="std std-ref">Thresholding and Adaptive Gain</span></a> for details).</p></li>
-<li><p><strong>softmax_choice</strong> (<em>WEIGHTED</em><em>, </em><em>ARG_MAX : default WEIGHTED</em>) – specifies how the softmax over dot products of keys and memories is used for retrieval; see <a class="reference internal" href="#emcomposition-processing"><span class="std std-ref">Softmax
-normalize matches over fields</span></a> description of each option.</p></li>
+<li><p><strong>softmax_choice</strong> (<em>WEIGHTED</em><em>, </em><em>ARG_MAX</em><em>, </em><em>PROBABILISTIC : default WEIGHTED</em>) – specifies how the softmax over dot products of keys and memories is used for retrieval;
+see <a class="reference internal" href="#emcomposition-softmax-choice"><span class="std std-ref">softmax_choice</span></a> for a description of each option.</p></li>
 <li><p><strong>storage_prob</strong> (<em>float : default 1.0</em>) – specifies the probability that an item will be stored in <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>
 when the EMComposition is executed (see <a class="reference internal" href="#emcomposition-storage"><span class="std std-ref">Retrieval and Storage</span></a> for
 additional details).</p></li>
@@ -1006,11 +1008,11 @@ see <em>mask_threshold</em> under <a class="reference internal" href="TransferFu
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition.softmax_choice">
 <span class="sig-name descname"><span class="pre">softmax_choice</span></span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition.softmax_choice" title="Permalink to this definition">¶</a></dt>
-<dd><p>determines how the softmax over dot products of keys and memories is used for retrieval; see <a class="reference internal" href="#emcomposition-processing"><span class="std std-ref">Softmax
-normalize matches over fields</span></a> description of each option.</p>
+<dd><p>determines how the softmax over dot products of keys and memories is used for retrieval;
+see <a class="reference internal" href="#emcomposition-softmax-choice"><span class="std std-ref">softmax_choice</span></a> for a description of each option.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>WEIGHTED or ARG_MAX</p>
+<dd class="field-odd"><p>WEIGHTED, ARG_MAX or PROBABILISTIC</p>
 </dd>
 </dl>
 </dd></dl>
