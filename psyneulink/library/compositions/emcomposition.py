@@ -55,7 +55,7 @@
 #        - define "key weights" explicitly as field_weights for all non-zero values
 #        - make it clear that full size of memory is initialized (rather than "filling up" w/ use)
 #        - write examples for run()
-# - FIX: ADD NOISE (AND/OR SOFTMAX PROBABILISTIC RETRIEVAL MODE)
+# - FIX: ADD NOISE
 # - FIX: ?ADD add_memory() METHOD FOR STORING W/O RETRIEVAL, OR JUST ADD retrieval_prob AS modulable Parameter
 # - FIX: CONFIDENCE COMPUTATION (USING SIGMOID ON DOT PRODUCTS) AND REPORT THAT (EVEN ON FIRST CALL)
 # - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
@@ -544,9 +544,9 @@ An EMComposition is created by calling its constructor, that takes the following
 
   .. warning::
      Use of the *ARG_MAX* and *PROBABILISTIC* options is not compatible with learning, as these implement a discrete
-     choice and thus are not differentiable; calling the `learn <Composition.learn>` method of the EMComposition
-     with when `softmax_choice <EMComposition.softmax_choice>` is set to *ARG_MAX* or *PROBABILISTIC* will
-     generate an error, and must be changed to *WEIGHTED* to execute learning.
+     choice and thus are not differentiable. Constructing an EMComposition with **softmax_choice** set to either of
+     these options and **enable_learning** set to True will generate a warning, and calling the EMComposition's
+     `learn <Composition.learn>` method will generate an error; it must be changed to *WEIGHTED* to execute learning.
 
   .. technical_note::
      The *WEIGHTED* option is passed as *ALL* to the **output** argument of the `SoftMax` Function, *ARG_MAX* is
@@ -1633,6 +1633,8 @@ class EMComposition(AutodiffComposition):
                          **kwargs
                          )
 
+        self._validate_softmax_choice(softmax_choice, enable_learning)
+
         self._construct_pathways(self.memory_template,
                                  self.memory_capacity,
                                  self.field_weights,
@@ -2201,6 +2203,12 @@ class EMComposition(AutodiffComposition):
             ]
 
         return match_nodes
+
+    def _validate_softmax_choice(self, softmax_choice, enable_learning):
+        if softmax_choice in {ARG_MAX, PROBABILISTIC} and enable_learning:
+            warnings.warn(f"The 'softmax_choice' arg of '{self.name}' is set to {softmax_choice} with "
+                          f"'enable_learning' set to True; this will generate an error if its 'learn' "
+                          f"method is called;  set 'softmax_choice' to WEIGHTED to use learning.")
 
     def _construct_softmax_nodes(self, memory_capacity, field_weights,
                                  softmax_gain, softmax_threshold, softmax_choice)->list:
