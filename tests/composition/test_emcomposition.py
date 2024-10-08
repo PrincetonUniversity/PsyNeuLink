@@ -233,7 +233,7 @@ class TestConstruction:
             test_memory_fill(start=repeat, memory_fill=memory_fill)
 
     def test_softmax_choice(self):
-        for softmax_choice in [pnl.WEIGHTED, pnl.ARG_MAX]:
+        for softmax_choice in [pnl.WEIGHTED, pnl.ARG_MAX, pnl.PROBABILISTIC]:
             em = EMComposition(memory_template=[[[1,.1,.1]], [[.1,1,.1]], [[.1,.1,1]]],
                                softmax_choice=softmax_choice,
                                enable_learning=False)
@@ -242,13 +242,24 @@ class TestConstruction:
                 np.testing.assert_allclose(result, [[0.21330295, 0.77339411, 0.21330295]])
             if softmax_choice == pnl.ARG_MAX:
                 np.testing.assert_allclose(result, [[.1, 1, .1]])
+            if softmax_choice == pnl.PROBABILISTIC: # NOTE: actual stochasticity not tested here
+                np.testing.assert_allclose(result, [[.1, 1, .1]])
 
         with pytest.raises(pnl.ComponentError) as error_text:
             em = EMComposition(memory_template=[[[1,.1,.1]], [[.1,1,.1]], [[.1,.1,1]]],
                                softmax_choice=pnl.ARG_MAX)
-        assert ("The ARG_MAX option for the 'softmax_choice' arg of 'EM_Composition-2' can not be used "
-                "when 'enable_learning' is set to True; use WEIGHTED or set 'enable_learning' to False."
+        assert ("The ARG_MAX and PROBABILISTIC options for the 'softmax_choice' arg of 'EM_Composition-3' cannot "
+                "be used when 'enable_learning' is set to True; use WEIGHTED or set 'enable_learning' to False."
                 in str(error_text.value))
+
+        for softmax_choice in [pnl.ARG_MAX, pnl.PROBABILISTIC]:
+            with pytest.raises(pnl.ComponentError) as error_text:
+                em = EMComposition(memory_template=[[[1,.1,.1]], [[.1,1,.1]], [[.1,.1,1]]],
+                                   softmax_choice=softmax_choice)
+        assert ("The ARG_MAX and PROBABILISTIC options for the 'softmax_choice' arg of 'EM_Composition-5' cannot "
+                "be used when 'enable_learning' is set to True; use WEIGHTED or set 'enable_learning' to False."
+                in str(error_text.value))
+
 
 @pytest.mark.pytorch
 class TestExecution:

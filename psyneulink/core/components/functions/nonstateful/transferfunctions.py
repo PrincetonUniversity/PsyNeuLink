@@ -3188,7 +3188,7 @@ class SoftMax(TransferFunction):
             return f'must be a scalar greater than 0'
 
         def _validate_output(self, output):
-            options = {ALL, MAX_VAL, MAX_INDICATOR, PROB}
+            options = {ALL, MAX_VAL, MAX_INDICATOR, PROB, PROB_INDICATOR}
             if output in options:
                 return None
             else:
@@ -3277,7 +3277,6 @@ class SoftMax(TransferFunction):
             sm = v / np.sum(v, axis=0)
 
         # Generate one-hot encoding based on selected output_type
-
         if output_type in {MAX_VAL, MAX_INDICATOR}:
             return self.one_hot_function(sm)
         elif output_type in {PROB, PROB_INDICATOR}:
@@ -3316,8 +3315,8 @@ class SoftMax(TransferFunction):
         if isinstance(gain, str) and gain == ADAPTIVE:
             gain = self.adapt_gain(variable, context)
         per_item = self._get_current_parameter_value(PER_ITEM, context)
-        # Compute softmax and assign to sm
 
+        # Compute softmax and assign to sm
         if per_item and len(np.shape(variable)) > 1:
             output = []
             for item in variable:
