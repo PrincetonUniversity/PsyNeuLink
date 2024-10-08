@@ -245,20 +245,13 @@ class TestConstruction:
             if softmax_choice == pnl.PROBABILISTIC: # NOTE: actual stochasticity not tested here
                 np.testing.assert_allclose(result, [[.1, 1, .1]])
 
-        with pytest.raises(pnl.ComponentError) as error_text:
-            em = EMComposition(memory_template=[[[1,.1,.1]], [[.1,1,.1]], [[.1,.1,1]]],
-                               softmax_choice=pnl.ARG_MAX)
-        assert ("The ARG_MAX and PROBABILISTIC options for the 'softmax_choice' arg of 'EM_Composition-3' cannot "
-                "be used when 'enable_learning' is set to True; use WEIGHTED or set 'enable_learning' to False."
-                in str(error_text.value))
-
+        em = EMComposition(memory_template=[[[1,.1,.1]], [[.1,1,.1]], [[.1,.1,1]]])
         for softmax_choice in [pnl.ARG_MAX, pnl.PROBABILISTIC]:
             with pytest.raises(pnl.ComponentError) as error_text:
-                em = EMComposition(memory_template=[[[1,.1,.1]], [[.1,1,.1]], [[.1,.1,1]]],
-                                   softmax_choice=softmax_choice)
-        assert ("The ARG_MAX and PROBABILISTIC options for the 'softmax_choice' arg of 'EM_Composition-5' cannot "
-                "be used when 'enable_learning' is set to True; use WEIGHTED or set 'enable_learning' to False."
-                in str(error_text.value))
+                em.parameters.softmax_choice.set(softmax_choice)
+                em.learn()
+            assert (f"The ARG_MAX and PROBABILISTIC options for the 'softmax_choice' arg "
+                    f"of '{em.name}' cannot be used during learning; change to WEIGHTED." in str(error_text.value))
 
 
 @pytest.mark.pytorch
