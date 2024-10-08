@@ -1380,9 +1380,9 @@ class Report:
         # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
         #      if you want more specific output, you can add conditional tests here
         try:
-            input_string = [float("{:0.3}".format(float(i))) for i in input_val].__str__().strip("[]")
+            input_string = ", ".join([np.format_float_positional(i.item(), precision=2, trim='0') for i in input_val])
             # input_string = re.sub(r'[\[,\],\n]', '', str([float("{:0.3}".format(float(i))) for i in input_val]))
-        except TypeError:
+        except ValueError:
             input_string = node.parameters.variable.get(context)
 
         input_report = f"input: {input_string}"

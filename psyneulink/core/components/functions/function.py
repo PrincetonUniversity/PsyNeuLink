@@ -375,7 +375,7 @@ def _random_state_getter(self, owning_component, context, modulated=False):
     # 'has_modulation' indicates that seed has an active modulatory projection
     # 'modulated' indicates that the modulated value is requested
     if has_modulation and modulated:
-        seed_value = [int(owning_component._get_current_parameter_value(seed_param, context))]
+        seed_value = [int(owning_component._get_current_parameter_value(seed_param, context).item())]
     else:
         seed_value = [int(seed_param._get(context=context))]
 
@@ -832,7 +832,7 @@ class Function_Base(Function):
         # Note: if 2D or 1D array has more than two items, generate exception
         elif output_type is FunctionOutputType.NP_0D_ARRAY:
             if object_has_single_value(value):
-                value = np.array(float(value))
+                value = np.asfarray(value)
             else:
                 raise FunctionError(f"Can't convert value ({value}) with more than a single number to a raw number.")
 
