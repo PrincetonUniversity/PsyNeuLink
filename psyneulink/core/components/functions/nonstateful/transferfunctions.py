@@ -2931,8 +2931,8 @@ class SoftMax(TransferFunction):
 
     *Thresholding and Adaptive Gain*
 
-    For cases in which SoftMax is used with vector that sparse (e.g., one-hots), the value(s) of the (most( significant
-    entries (e.g., the one's in a one-hot) can be sensitive to (diminished by) the number of other values in the vector
+    For cases in which SoftMax is used with sparse vectors (e.g., one-hots), the value(s) of the most significant
+    entries (e.g., the 1s in a one-hot) can be sensitive to (diminished by) the number of other values in the vector
     (i.e., its length). For example, whereas for ``[1 0]`` the SoftMax is ``[0.73105858 0.26894142]``, for ``[1 0 0 0]``
     it is ``[0.47536689 0.1748777  0.1748777  0.1748777]``. This can be addressed in one of two ways: either by
     thresholding `variable <SoftMax.variable>` before applying the SoftMax function, or by adapting the `gain
@@ -2955,7 +2955,7 @@ class SoftMax(TransferFunction):
 
     .. _SoftMax_Derivative:
 
-    *Derivatve*
+    *Derivative*
 
     `derivative <SoftMax.derivative>` returns the derivative of the SoftMax.  If *OUTPUT_TYPE* for the SoftMax
     is *ALL*, returns Jacobian matrix (derivative for each element of the output array with respect to each of the
@@ -2978,12 +2978,12 @@ class SoftMax(TransferFunction):
         specifies the value by which to multiply `variable <Linear.variable>` before SoftMax transformation,
         which functions as the inverse "temperature" of the function.  If it is a scalar, it must be greater
         than zero.  If *ADAPTIVE* is specified, the value is determined dynamically based on the `variable
-        <SoftMax.variable>` `SoftMax_AdaptGain` for details).
+        <SoftMax.variable>`; see `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for details).
 
     mask_threshold : scalar : default None
         specifies whether to mask_threshold the `variable <SoftMax.variable>` before applying the SoftMax function;
         this only applies if `gain <SoftMax.gain>` is specified as a scalar;  otherwise it is ignored
-        (see `SoftMax_AdaptGain` for details).
+        (see `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for details).
 
     adapt_scale : scalar : default 1
         specifies the *scale* parameter using by the `adapt_gain <SoftMax.adapt_gain>` method (see method for details).
@@ -3027,14 +3027,14 @@ class SoftMax(TransferFunction):
         determines how `variable <Logistic.variable>` is scaled before the SoftMax transformation, determining the
         "sharpness" of the distribution (it is equivalent to the inverse of the temperature of the SoftMax function);
         if it is 'ADAPTIVE', it is determined dynamically adjusted using the `adapt_gain <SoftMax.adapt_gain>` method
-        (see `SoftMax_AdaptGain` for additional details).
+        (see `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for additional details).
 
     mask_threshold : scalar or None
         determines whether the `variable <SoftMax.variable>` is thresholded before applying the SoftMax function;
         if it is a scalar, only elements of `variable <SoftMax.variable>` with an absolute value greater than that
         value are considered when applying the SoftMax function (which are then scaled by the `gain <SoftMax.gain>`
         parameter; all other elements are assigned 0.  This only applies if `gain <SoftMax.gain>` is specified as a
-        scalar;  otherwise it is ignored (see `SoftMax_AdaptGain` for details).
+        scalar;  otherwise it is ignored (see `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for details).
 
     adapt_scale : scalar
         determined the *scale* parameter using by the `adapt_gain <SoftMax.adapt_gain>` method (see method for details).
@@ -3049,10 +3049,10 @@ class SoftMax(TransferFunction):
     output : ALL, MAX_VAL, MAX_INDICATOR, or PROB
         determines how the SoftMax-transformed values of the elements in `variable <SoftMax.variable>` are reported
         in the array returned by `function <SoftMax._function>`:
-            * **ALL**: array of all SoftMax-transformed values (the default);
-            * **MAX_VAL**: SoftMax-transformed value for the element with the maximum such value, 0 for all others;
-            * **MAX_INDICATOR**: 1 for the element with the maximum SoftMax-transformed value, 0 for all others;
-            * **PROB**: probabilistically chosen element based on SoftMax-transformed values after setting the
+            * *ALL*: array of all SoftMax-transformed values (the default);
+            * *MAX_VAL*: SoftMax-transformed value for the element with the maximum such value, 0 for all others;
+            * *MAX_INDICATOR*: 1 for the element with the maximum SoftMax-transformed value, 0 for all others;
+            * *PROB*: probabilistically chosen element based on SoftMax-transformed values after setting the
               sum of values to 1 (i.e., their `Luce Ratio <https://en.wikipedia.org/wiki/Luce%27s_choice_axiom>`_),
               0 for all others.
 
@@ -3188,7 +3188,7 @@ class SoftMax(TransferFunction):
             return f'must be a scalar greater than 0'
 
         def _validate_output(self, output):
-            options = {ALL, MAX_VAL, MAX_INDICATOR, PROB}
+            options = {ALL, MAX_VAL, MAX_INDICATOR, PROB, PROB_INDICATOR}
             if output in options:
                 return None
             else:
@@ -3277,7 +3277,6 @@ class SoftMax(TransferFunction):
             sm = v / np.sum(v, axis=0)
 
         # Generate one-hot encoding based on selected output_type
-
         if output_type in {MAX_VAL, MAX_INDICATOR}:
             return self.one_hot_function(sm)
         elif output_type in {PROB, PROB_INDICATOR}:
@@ -3316,8 +3315,8 @@ class SoftMax(TransferFunction):
         if isinstance(gain, str) and gain == ADAPTIVE:
             gain = self.adapt_gain(variable, context)
         per_item = self._get_current_parameter_value(PER_ITEM, context)
-        # Compute softmax and assign to sm
 
+        # Compute softmax and assign to sm
         if per_item and len(np.shape(variable)) > 1:
             output = []
             for item in variable:

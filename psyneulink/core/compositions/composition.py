@@ -10481,7 +10481,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # shapes of entries will be validated in _validate_input_shapes_and_expand_for_all_trials())
 
                 else:
-                    # 3D ragged array or 2d array
+                    # 3d ragged array or 2d array
                     entry = convert_to_np_array(_inputs)
                     ragged_array = entry.dtype == object
                     if ragged_array:

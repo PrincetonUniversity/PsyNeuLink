@@ -143,7 +143,8 @@ of the examples further below.
 PsyNeuLink picks sensible defaults when necessary Components are not specified.  In the example above no `Projections
 <Projection>` were actually specified, so PsyNeuLink automatically created the appropriate types (in this case,
 `MappingProjections<MappingProjection>`), and sized them appropriately to connect each pair of Mechanisms. Each
-Projection has a `matrix <Projection.matrix>` parameter that weights the connections between the elements of the output
+Projection has a `matrix <Projection_Base.matrix>` parameter that weights the connections between the elements of the
+output
 of its `sender <Projection.sender>` and those of the input to its `receiver <Projection.receiver>`.  Here, the
 default is to use a `FULL_CONNECTIVITY_MATRIX`, that connects every element of the sender's array to every element of
 the receiver's array with a weight of 1. However, it is easy to specify a Projection explicitly, including its
