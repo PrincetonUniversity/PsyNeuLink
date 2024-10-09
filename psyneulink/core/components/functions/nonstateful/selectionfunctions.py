@@ -399,7 +399,17 @@ class OneHot(SelectionFunction):
             max_value = np.max(np.absolute(variable))
             result = np.where(np.absolute(variable) == max_value, 1, 0)
 
-        if self.mode == MIN_VAL:
+        # MODIFIED 10/9/94 END
+        elif self.mode in {ARG_MAX, ARG_MAX_INDICATOR}:
+            max_idx = np.argmax(variable)
+            result = np.zeros_like(variable)
+            if self.mode == ARG_MAX:
+                result[max_idx] = variable[max_idx]
+            else:
+                result[max_idx] = 1
+        # MODIFIED 10/9/94 END
+
+        elif self.mode == MIN_VAL:
             min_value = np.min(variable)
             result = np.where(variable == min_value, min_value, 0)
 
@@ -414,6 +424,17 @@ class OneHot(SelectionFunction):
         elif self.mode == MIN_ABS_INDICATOR:
             min_value = np.min(np.absolute(variable))
             result = np.where(np.absolute(variable) == min_value, 1, 0)
+
+        # MODIFIED 10/9/94 END
+        elif self.mode in {ARG_MIN, ARG_MIN_INDICATOR}:
+            max_idx = np.argmin(variable)
+            result = np.zeros_like(variable)
+            if self.mode == ARG_MIN:
+                result[max_idx] = variable[max_idx]
+            else:
+                result[max_idx] = 1
+        # MODIFIED 10/9/94 END
+
 
         elif self.mode in {PROB, PROB_INDICATOR}:
             # 1st item of variable should be data, and 2nd a probability distribution for choosing
