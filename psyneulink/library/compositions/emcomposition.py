@@ -997,6 +997,7 @@ from psyneulink._typing import Optional, Union
 # from psyneulink.library.compositions import torch_available
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax, LinearMatrix
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate, LinearCombination
+from psyneulink.core.components.functions.nonstateful.selectionfunctions import ARG_MAX, ARG_MAX_INDICATOR
 from psyneulink.core.components.functions.function import \
     DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.compositions.composition import CompositionError, NodeRole
@@ -1018,11 +1019,10 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.llvm import ExecutionMode
 
 
-__all__ = ['EMComposition', 'WEIGHTED', 'ARG_MAX', 'PROBABILISTIC']
+__all__ = ['EMComposition', 'WEIGHTED', 'PROBABILISTIC']
 
 STORAGE_PROB = 'storage_prob'
 WEIGHTED = ALL
-ARG_MAX = MAX_INDICATOR
 PROBABILISTIC = PROB_INDICATOR
 
 QUERY_AFFIX = ' [QUERY]'
@@ -2224,6 +2224,11 @@ class EMComposition(AutodiffComposition):
             f"PROGRAM ERROR: number of keys ({self.num_keys}) does not match number of " \
             f"non-zero values in field_weights ({len(key_indices)})."
 
+        if softmax_choice == ARG_MAX:
+            # ARG_MAX would return entry multiplied by its dot product
+            # ARG_MAX_INDICATOR returns the entry unmodified
+            softmax_choice = ARG_MAX_INDICATOR
+
         softmax_nodes = [TransferMechanism(input_ports={SIZE:memory_capacity,
                                                         PROJECTIONS: MappingProjection(
                                                             sender=match_node.output_port,
@@ -2518,9 +2523,9 @@ class EMComposition(AutodiffComposition):
             # Assign updated matrix to Projection
             self.retrieved_nodes[i].path_afferents[0].parameters.matrix.set(field_memories, context)
 
-    # 7/10/24 - FIX:  WHY BOTHER WITH OVERRIDE IF NOTHING IS DONE:
     @handle_external_context()
     def learn(self, *args, **kwargs)->list:
+        """Override to check for inappropriate use of ARG_MAX or PROBABILISTIC options for retrieval with learning"""
         arg = self.parameters.softmax_choice.get(kwargs[CONTEXT])
         if arg in {ARG_MAX, PROBABILISTIC}:
             raise EMCompositionError(f"The ARG_MAX and PROBABILISTIC options for the 'softmax_choice' arg "

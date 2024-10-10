@@ -22,7 +22,9 @@ Functions that selects a subset of elements to maintain or transform, while null
 
 """
 
-__all__ = ['SelectionFunction', 'OneHot', 'max_vs_avg', 'max_vs_next', 'MAX_VS_NEXT', 'MAX_VS_AVG']
+__all__ = ['SelectionFunction', 'OneHot',
+           'ARG_MAX', 'ARG_MAX_INDICATOR', 'ARG_MIN', 'ARG_MIN_INDICATOR',
+           'max_vs_avg', 'max_vs_next', 'MAX_VS_NEXT', 'MAX_VS_AVG']
 
 import numpy as np
 from beartype import beartype
@@ -43,8 +45,16 @@ from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, ValidPrefSet
 
 
+ARG_MAX = 'arg_max'
+ARG_MAX_INDICATOR = 'arg_max_indicator'
+ARG_MIN = 'arg_min'
+ARG_MIN_INDICATOR = 'arg_min_indicator'
 MAX_VS_NEXT = 'max_vs_next'
 MAX_VS_AVG = 'max_vs_avg'
+
+options = [MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, ARG_MAX, ARG_MAX_INDICATOR,
+           MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR, ARG_MIN, ARG_MIN_INDICATOR,
+           PROB, PROB_INDICATOR]
 
 # FIX: IMPLEMENT AS Functions
 def max_vs_next(x):
@@ -83,16 +93,21 @@ class OneHot(SelectionFunction):
     .. _OneHot:
 
     `function <Selection.function>` returns an array the same length as the first item in `variable <OneHot.variable>`,
-    with all of its values zeroed except one identified in first item `variable <OneHot.variable>` as specified by
-    `mode <OneHot.mode>`:
+    with all of its values zeroed except one as specified by `mode <OneHot.mode>`:
 
-        * *MAX_VAL*: signed value of the element with the maximum signed value;
+        * *MAX_VAL*: signed value of the element(s) with the maximum signed value;
 
-        * *MAX_ABS_VAL*: absolute value of the element with the maximum absolute value;
+        * *MAX_ABS_VAL*: absolute value of the element(s) with the maximum absolute value;
 
-        * *MAX_INDICATOR*: 1 in place of the element with the maximum signed value;
+        * *MAX_INDICATOR*: 1 in place of the element(s) with the maximum signed value;
 
-        * *MAX_ABS_INDICATOR*: 1 in place of the element with the maximum absolute value;
+        * *MAX_ABS_INDICATOR*: 1 in place of the element(s) with the maximum absolute value;
+
+        * *ARG_MAX*: signed value of a single element with the maximum signed value
+          (one with lowest index if there are multiple with the same value);
+
+        * *ARG_MAX_INDICATOR*: 1 in place of single element with maximum signed value;
+          (one with lowest index if there are multiple with the same value);
 
         * *MIN_VAL*: signed value of the element with the minimum signed value;
 
@@ -101,6 +116,12 @@ class OneHot(SelectionFunction):
         * *MIN_INDICATOR*: 1 in place of the element with the minimum signed value;
 
         * *MIN_ABS_INDICATOR*: 1 in place of the element with the minimum absolute value;
+
+        * *ARG_MIN*: signed value of a single element with the minium signed value
+          (one with lowest index if there are multiple with the same value);
+
+        * *ARG_MIN_INDICATOR*: 1 in place of single element with minimum signed value;
+          (one with lowest index if there are multiple with the same value);
 
         * *PROB*: value of probabilistically chosen element based on probabilities passed in second item of variable;
 
@@ -114,9 +135,10 @@ class OneHot(SelectionFunction):
         First (possibly only) item specifies a template for the array to be transformed;  if `mode <OneHot.mode>` is
         *PROB* then a 2nd item must be included that is a probability distribution with same length as 1st item.
 
-    mode : MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR,
-    MIN_ABS_INDICATOR, PROB or PROB_INDICATOR : default MAX_VAL
-        specifies the nature of the single non-zero value in the array returned by `function <OneHot.function>`
+    mode : MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, ARG_MAX, ARG_MAX_INDICATOR,
+    MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR,  MIN_ABS_INDICATOR, ARG_MIN, ARG_MIN_INDICATOR,
+    PROB or PROB_INDICATOR : default MAX_VAL
+        specifies how the single non-zero value in the array returned by `function <OneHot.function>` is determined
         (see `mode <OneHot.mode>` for details).
 
     params : Dict[param keyword: param value] : default None
@@ -143,9 +165,10 @@ class OneHot(SelectionFunction):
         distribution, each element of which specifies the probability for selecting the corresponding element of the
         1st item.
 
-    mode : MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR,
-    MIN_ABS_INDICATOR, PROB or PROB_INDICATOR
-        determines the nature of the single non-zero value in the array returned by `function <OneHot.function>`
+    mode : MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, ARG_MAX, ARG_MAX_INDICATOR,
+    MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR,  MIN_ABS_INDICATOR, ARG_MIN, ARG_MIN_INDICATOR,
+    PROB or PROB_INDICATOR
+        determines how the single non-zero value in the array returned by `function <OneHot.function>` is determined
         (see `above <OneHot>` for options).
 
     random_state : numpy.RandomState
@@ -193,13 +216,7 @@ class OneHot(SelectionFunction):
         seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
 
         def _validate_mode(self, mode):
-            options = {MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
-                       MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR,
-                       PROB, PROB_INDICATOR}
-            if mode in options:
-                # returns None indicating no error message (this is a valid assignment)
-                return None
-            else:
+            if mode not in options:
                 # returns error message
                 return 'not one of {0}'.format(options)
 
@@ -207,9 +224,10 @@ class OneHot(SelectionFunction):
     @beartype
     def __init__(self,
                  default_variable=None,
-                 mode: Optional[Literal['MAX_VAL', 'MAX_ABS_VAL', 'MAX_INDICATOR', 'MAX_ABS_INDICATOR',
-                               'MIN_VAL', 'MIN_ABS_VAL', 'MIN_INDICATOR', 'MIN_ABS_INDICATOR',
-                               'PROB', 'PROB_INDICATOR']] = None,
+                 mode: Optional[Literal[MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
+                                ARG_MAX, ARG_MAX_INDICATOR,
+                                MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR,
+                                ARG_MIN, ARG_MIN_INDICATOR, PROB, PROB_INDICATOR]] = None,
                  seed=None,
                  params=None,
                  owner=None,

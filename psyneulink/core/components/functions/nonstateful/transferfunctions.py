@@ -85,7 +85,7 @@ from psyneulink.core.components.functions.function import (
     get_matrix, is_function_type,
 )
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
-from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
+from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot, ARG_MAX, ARG_MAX_INDICATOR
 from psyneulink.core.components.functions.stateful.integratorfunctions import SimpleIntegrator
 from psyneulink.core.components.shellclasses import Projection
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
@@ -2895,6 +2895,9 @@ class Dropout(TransferFunction):  #
 #                                                   SoftMax
 # **********************************************************************************************************************
 
+softmax_modes =  {ALL, MAX_VAL, MAX_INDICATOR, ARG_MAX, ARG_MAX_INDICATOR, PROB, PROB_INDICATOR}
+
+
 class SoftMax(TransferFunction):
     """
     SoftMax(                        \
@@ -2995,7 +2998,7 @@ class SoftMax(TransferFunction):
         specifies the *entropy_weighting* parameter using by the `adapt_gain <SoftMax.adapt_gain>` method
         (see method for details).
 
-    output : ALL, MAX_VAL, MAX_INDICATOR, or PROB : default ALL
+    output : ALL, MAX_VAL, MAX_INDICATOR, ARG_MAX, ARG_MAX_INDICATOR, or PROB : default ALL
         specifies the format of array returned by `function <SoftMax._function>`
         (see `output <SoftMax.output>` for details).
 
@@ -3050,8 +3053,12 @@ class SoftMax(TransferFunction):
         determines how the SoftMax-transformed values of the elements in `variable <SoftMax.variable>` are reported
         in the array returned by `function <SoftMax._function>`:
             * *ALL*: array of all SoftMax-transformed values (the default);
-            * *MAX_VAL*: SoftMax-transformed value for the element with the maximum such value, 0 for all others;
-            * *MAX_INDICATOR*: 1 for the element with the maximum SoftMax-transformed value, 0 for all others;
+            * *MAX_VAL*: SoftMax-transformed value for the element(s) with the maximum such value, 0 for all others;
+            * *MAX_INDICATOR*: 1 for the element(s) with the maximum SoftMax-transformed value, 0 for all others;
+            * *ARG_MAX*: 1 for single element with the maximum SoftMax-transformed value, 0 for all others;
+              (one with lowest index of there are multiple maximum values);
+            * *ARG_MAX_INDICATOR*: 1 for a single element with the maximum SoftMax-transformed value, 0 for all others;
+              (one with lowest index of there are multiple maximum values);
             * *PROB*: probabilistically chosen element based on SoftMax-transformed values after setting the
               sum of values to 1 (i.e., their `Luce Ratio <https://en.wikipedia.org/wiki/Luce%27s_choice_axiom>`_),
               0 for all others.
@@ -3188,11 +3195,8 @@ class SoftMax(TransferFunction):
             return f'must be a scalar greater than 0'
 
         def _validate_output(self, output):
-            options = {ALL, MAX_VAL, MAX_INDICATOR, PROB, PROB_INDICATOR}
-            if output in options:
-                return None
-            else:
-                return 'not one of {0}'.format(options)
+            if output not in softmax_modes:
+                return 'not one of {0}'.format(softmax_modes)
 
     @check_user_specified
     @beartype
@@ -3277,7 +3281,7 @@ class SoftMax(TransferFunction):
             sm = v / np.sum(v, axis=0)
 
         # Generate one-hot encoding based on selected output_type
-        if output_type in {MAX_VAL, MAX_INDICATOR}:
+        if output_type in {MAX_VAL, MAX_INDICATOR, ARG_MAX, ARG_MAX_INDICATOR}:
             return self.one_hot_function(sm)
         elif output_type in {PROB, PROB_INDICATOR}:
             return self.one_hot_function([input_value, sm])
@@ -3386,7 +3390,7 @@ class SoftMax(TransferFunction):
                     else:
                         d = 0
                     derivative[j, i] = sm[i] * (d - sm[j])
-            elif output_type in {MAX_VAL, MAX_INDICATOR}:
+            elif output_type in {MAX_VAL, MAX_INDICATOR, ARG_MAX, ARG_MAX_INDICATOR}:
                 # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
                 derivative = np.empty(size)
                 # Get the element of output returned as non-zero (max val) when output_type is not ALL
