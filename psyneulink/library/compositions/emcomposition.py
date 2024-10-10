@@ -428,12 +428,12 @@ An EMComposition is created by calling its constructor, that takes the following
   process, but the values of which are retrieved and assigned as the `value <Mechanism_Base.value>` of the
   corresponding `retrieved_node <EMComposition.retrieved_nodes>`. This distinction between keys and value corresponds
   to the format of a standard "dictionary," though in that case only a single key and value are allowed, whereas
-  here there can be one or more keys and any number of values;  if all fields are keys, this implements a full
-  form of content-addressable memory. If **learn_field_weight** is True (and `enable_learning
-  <EMComposition.enable_learning>` is either True or a list), then the field_weights can be modified
-  during training (this functions similarly to the attention head of a Transformer model, although at present the
-  field can only be scalar values rather than vecdtors); if **learn_field_weight** is False, then the field_weights are
-  fixed. The following options can be used to specify **field_weights**:
+  here there can be one or more keys and any number of values;  if all fields are keys, this implements a full form of
+  content-addressable memory. If **learn_field_weight** is True (and `enable_learning<EMComposition.enable_learning>`
+  is either True or a list with True for at least one entry), then the field_weights can be modified during training
+  (this functions similarly to the attention head of a Transformer model, although at present the field can only be
+  scalar values rather than vecdtors); if **learn_field_weight** is False, then the field_weights are fixed.
+  The following options can be used to specify **field_weights**:
 
     * *None* (the default): all fields except the last are treated as keys, and are weighted equally for retrieval,
       while the last field is treated as a value field;
@@ -538,15 +538,17 @@ An EMComposition is created by calling its constructor, that takes the following
 
   * *WEIGHTED_AVG* (default): softmax-weighted average of entries, based on their dot products with the key(s).
 
-  * *ARG_MAX*: entry with the largest dot product.
+  * *ARG_MAX*: entry with the largest dot product (one with lowest index in `memory <EMComposition.memory>`)\
+               if there are identical ones).
 
   * *PROBABISTIC*: probabilistically chosen entry based on softmax-transformed distribution of dot products.
 
   .. warning::
      Use of the *ARG_MAX* and *PROBABILISTIC* options is not compatible with learning, as these implement a discrete
      choice and thus are not differentiable. Constructing an EMComposition with **softmax_choice** set to either of
-     these options and **enable_learning** set to True will generate a warning, and calling the EMComposition's `learn
-     <Composition.learn>` method will generate an error; it must be changed to *WEIGHTED_AVG* to execute learning.
+     these options and **enable_learning** set to True (or a list with any True entries) will generate a warning, and
+     calling the EMComposition's `learn <Composition.learn>` method will generate an error; it must be changed to
+     *WEIGHTED_AVG* to execute learning.
 
   .. technical_note::
      The *WEIGHTED_AVG* option is passed as *ALL* to the **output** argument of the `SoftMax` Function, *ARG_MAX* is
@@ -749,8 +751,8 @@ COMMENT
 *Training*
 ~~~~~~~~~~
 
-If `learn <Composition.learn>` is called, `enable_learning <EMComposition.enable_learning>` is True or a list with at
-least one True entry, then errors will be computed for each of the `retrieved_nodes <EMComposition.retrieved_nodes>`
+If `learn <Composition.learn>` is called, `enable_learning <EMComposition.enable_learning>` is True or a list with
+any True entries, then errors will be computed for each of the `retrieved_nodes <EMComposition.retrieved_nodes>`
 that is specified for learning (see `Learning <EMComposition_Learning>` for details about specification). These errors
 are derived either from any errors backprpated to the EMComposition from an outer Composition in which it is `nested
 <Composition_Nested>`, or locally by the difference between the `retrieved_nodes <EMComposition.retrieved_nodes>`
@@ -1268,8 +1270,8 @@ class EMComposition(AutodiffComposition):
 
     learn_field_weights : bool
         determines whether `field_weights <EMComposition.field_weights>` are learnable during training;
-        requires `enable_learning <EMComposition.enable_learning>` to be True for the corresponding field;
-        see `Learning <EMComposition_Learning>` for additional details.
+        requires `enable_learning <EMComposition.enable_learning>` to be True or a list with at least one True
+        entry for the corresponding field; see `Learning <EMComposition_Learning>` for additional details.
 
     learning_rate : float
         determines whether the rate at which `field_weights <EMComposition.field_weights>` are learned
@@ -2207,9 +2209,9 @@ class EMComposition(AutodiffComposition):
 
     def _validate_softmax_choice(self, softmax_choice, enable_learning):
         if softmax_choice in {ARG_MAX, PROBABILISTIC} and enable_learning:
-            warnings.warn(f"The 'softmax_choice' arg of '{self.name}' is set to {softmax_choice} with "
-                          f"'enable_learning' set to True; this will generate an error if its 'learn' "
-                          f"method is called;  set 'softmax_choice' to WEIGHTED_AVG to use learning.")
+            warnings.warn(f"The 'softmax_choice' arg of '{self.name}' is set to '{softmax_choice}' with "
+                          f"'enable_learning' set to True (or a list); this will generate an error if its "
+                          f"'learn' method is called. Set 'softmax_choice' to WEIGHTED_AVG before learning.")
 
     def _construct_softmax_nodes(self, memory_capacity, field_weights,
                                  softmax_gain, softmax_threshold, softmax_choice)->list:

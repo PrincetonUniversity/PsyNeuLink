@@ -253,6 +253,15 @@ class TestConstruction:
             assert (f"The ARG_MAX and PROBABILISTIC options for the 'softmax_choice' arg "
                     f"of '{em.name}' cannot be used during learning; change to WEIGHTED_AVG." in str(error_text.value))
 
+        for softmax_choice in [pnl.ARG_MAX, pnl.PROBABILISTIC]:
+            with pytest.warns(UserWarning) as warning:
+                em = EMComposition(softmax_choice=softmax_choice, enable_learning=True)
+                warning_msg = (f"The 'softmax_choice' arg of '{em.name}' is set to '{softmax_choice}' with "
+                               f"'enable_learning' set to True (or a list); this will generate an error if its "
+                               f"'learn' method is called. Set 'softmax_choice' to WEIGHTED_AVG before learning.")
+            assert warning_msg in str(warning[0].message)
+
+
 
 @pytest.mark.pytorch
 class TestExecution:
