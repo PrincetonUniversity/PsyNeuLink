@@ -113,7 +113,7 @@ def figure_5a():
         delta_vals = prediction_error_mechanism.log.nparray_dictionary()[composition_name][pnl.VALUE]
 
         # Plot Delta Values form trials 1, 30, and 50
-        with plt.style.context('seaborn'):
+        with plt.style.context('seaborn-v0_8'):
             plt.plot(delta_vals[0][0], "-o", label="Trial 1")
             plt.plot(delta_vals[29][0], "-s", label="Trial 30")
             plt.plot(delta_vals[49][0], "-o", label="Trial 50")
@@ -176,7 +176,7 @@ def figure_5b():
         # Get Delta Values from Log
         delta_vals = prediction_error_mechanism.log.nparray_dictionary()[composition_name][pnl.VALUE]
 
-        with plt.style.context('seaborn'):
+        with plt.style.context('seaborn-v0_8'):
             fig = plt.figure()
             ax = fig.add_subplot(111, projection='3d')
             x_vals, y_vals = np.meshgrid(np.arange(120), np.arange(40, 60, step=1))
@@ -240,7 +240,7 @@ def figure_5c():
         # Get Delta Values from Log
         delta_vals = prediction_error_mechanism.log.nparray_dictionary()[composition_name][pnl.VALUE]
 
-        with plt.style.context('seaborn'):
+        with plt.style.context('seaborn-v0_8'):
             fig = plt.figure()
             ax = fig.add_subplot(111, projection='3d')
             x_vals, y_vals = np.meshgrid(np.arange(150), np.arange(40, 60, step=1))
