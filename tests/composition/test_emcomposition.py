@@ -233,17 +233,17 @@ class TestConstruction:
             test_memory_fill(start=repeat, memory_fill=memory_fill)
 
     def test_softmax_choice(self):
-        for softmax_choice in [pnl.WEIGHTED, pnl.ARG_MAX, pnl.PROBABILISTIC]:
-            em = EMComposition(memory_template=[[[1,.1,.1]], [[.1,1,.1]], [[.1,.1,1]]],
+        for softmax_choice in [pnl.WEIGHTED_AVG, pnl.ARG_MAX, pnl.PROBABILISTIC]:
+            em = EMComposition(memory_template=[[[1,.1,.1]], [[1,.1,.1]], [[.1,.1,1]]],
                                softmax_choice=softmax_choice,
                                enable_learning=False)
-            result = em.run(inputs={em.query_input_nodes[0]:[[0,1,0]]})
-            if softmax_choice == pnl.WEIGHTED:
-                np.testing.assert_allclose(result, [[0.21330295, 0.77339411, 0.21330295]])
+            result = em.run(inputs={em.query_input_nodes[0]:[[1,0,0]]})
+            if softmax_choice == pnl.WEIGHTED_AVG:
+                np.testing.assert_allclose(result, [[0.93016008, 0.1, 0.16983992]])
             if softmax_choice == pnl.ARG_MAX:
-                np.testing.assert_allclose(result, [[.1, 1, .1]])
+                np.testing.assert_allclose(result, [[1, .1, .1]])
             if softmax_choice == pnl.PROBABILISTIC: # NOTE: actual stochasticity not tested here
-                np.testing.assert_allclose(result, [[.1, 1, .1]])
+                np.testing.assert_allclose(result, [[1, .1, .1]])
 
         em = EMComposition(memory_template=[[[1,.1,.1]], [[.1,1,.1]], [[.1,.1,1]]])
         for softmax_choice in [pnl.ARG_MAX, pnl.PROBABILISTIC]:
@@ -251,7 +251,7 @@ class TestConstruction:
                 em.parameters.softmax_choice.set(softmax_choice)
                 em.learn()
             assert (f"The ARG_MAX and PROBABILISTIC options for the 'softmax_choice' arg "
-                    f"of '{em.name}' cannot be used during learning; change to WEIGHTED." in str(error_text.value))
+                    f"of '{em.name}' cannot be used during learning; change to WEIGHTED_AVG." in str(error_text.value))
 
 
 @pytest.mark.pytorch

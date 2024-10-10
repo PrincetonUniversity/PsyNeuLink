@@ -536,7 +536,7 @@ An EMComposition is created by calling its constructor, that takes the following
   <EMComposition.softmax_nodes>` is used, with the dot products of queries and keys, to generate a retrieved item;
   the following are the options that can be used and the retrieved value they produce:
 
-  * *WEIGHTED*: softmax-weighted average of entries, based on their dot products with the key(s); this is the default;
+  * *WEIGHTED_AVG* (default): softmax-weighted average of entries, based on their dot products with the key(s).
 
   * *ARG_MAX*: entry with the largest dot product.
 
@@ -545,12 +545,13 @@ An EMComposition is created by calling its constructor, that takes the following
   .. warning::
      Use of the *ARG_MAX* and *PROBABILISTIC* options is not compatible with learning, as these implement a discrete
      choice and thus are not differentiable. Constructing an EMComposition with **softmax_choice** set to either of
-     these options and **enable_learning** set to True will generate a warning, and calling the EMComposition's
-     `learn <Composition.learn>` method will generate an error; it must be changed to *WEIGHTED* to execute learning.
+     these options and **enable_learning** set to True will generate a warning, and calling the EMComposition's `learn
+     <Composition.learn>` method will generate an error; it must be changed to *WEIGHTED_AVG* to execute learning.
 
   .. technical_note::
-     The *WEIGHTED* option is passed as *ALL* to the **output** argument of the `SoftMax` Function, *ARG_MAX* is
-     passed as *MAX_INDICATOR*; *PROBALISTIC* is passed as *PROB_INDICATOR*; and *MAX_VAL* is not currently supported.
+     The *WEIGHTED_AVG* option is passed as *ALL* to the **output** argument of the `SoftMax` Function, *ARG_MAX* is
+     passed as *ARG_MAX_INDICATOR*; and *PROBALISTIC* is passed as *PROB_INDICATOR*; the other SoftMax options are
+     not currently supported.
 
 .. _EMComposition_Learning:
 
@@ -1019,10 +1020,10 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.llvm import ExecutionMode
 
 
-__all__ = ['EMComposition', 'WEIGHTED', 'PROBABILISTIC']
+__all__ = ['EMComposition', 'WEIGHTED_AVG', 'PROBABILISTIC']
 
 STORAGE_PROB = 'storage_prob'
-WEIGHTED = ALL
+WEIGHTED_AVG = ALL
 PROBABILISTIC = PROB_INDICATOR
 
 QUERY_AFFIX = ' [QUERY]'
@@ -1145,7 +1146,7 @@ class EMComposition(AutodiffComposition):
         specifies the threshold used to mask out small values in the softmax calculation;
         see *mask_threshold* under `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for details).
 
-    softmax_choice : WEIGHTED, ARG_MAX, PROBABILISTIC : default WEIGHTED
+    softmax_choice : WEIGHTED_AVG, ARG_MAX, PROBABILISTIC : default WEIGHTED_AVG
         specifies how the softmax over dot products of keys and memories is used for retrieval;
         see `softmax_choice <EMComposition_Softmax_Choice>` for a description of each option.
 
@@ -1243,7 +1244,7 @@ class EMComposition(AutodiffComposition):
         determines the threshold used to mask out small values in the softmax calculation;
         see *mask_threshold* under `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for details).
 
-    softmax_choice : WEIGHTED, ARG_MAX or PROBABILISTIC
+    softmax_choice : WEIGHTED_AVG, ARG_MAX or PROBABILISTIC
         determines how the softmax over dot products of keys and memories is used for retrieval;
         see `softmax_choice <EMComposition_Softmax_Choice>` for a description of each option.
 
@@ -1473,7 +1474,7 @@ class EMComposition(AutodiffComposition):
 
                 softmax_choice
                     see `softmax_choice <EMComposition.softmax_choice>`
-                    :default value: WEIGHTED
+                    :default value: WEIGHTED_AVG
                     :type: ``keyword``
 
                 softmax_threshold
@@ -1497,7 +1498,7 @@ class EMComposition(AutodiffComposition):
         normalize_memories = Parameter(True)
         softmax_gain = Parameter(1.0, modulable=True)
         softmax_threshold = Parameter(.001, modulable=True, specify_none=True)
-        softmax_choice = Parameter(WEIGHTED, modulable=False, specify_none=True)
+        softmax_choice = Parameter(WEIGHTED_AVG, modulable=False, specify_none=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         memory_decay_rate = Parameter(AUTO, modulable=True)
         enable_learning = Parameter(True, structural=True)
@@ -1575,7 +1576,7 @@ class EMComposition(AutodiffComposition):
                  normalize_memories:bool=True,
                  softmax_gain:Union[float, ADAPTIVE, CONTROL]=1.0,
                  softmax_threshold:Optional[float]=.001,
-                 softmax_choice:Optional[Union[WEIGHTED, ARG_MAX, PROBABILISTIC]]=WEIGHTED,
+                 softmax_choice:Optional[Union[WEIGHTED_AVG, ARG_MAX, PROBABILISTIC]]=WEIGHTED_AVG,
                  storage_prob:float=1.0,
                  memory_decay_rate:Union[float,AUTO]=AUTO,
                  enable_learning:Union[bool,list]=True,
@@ -2208,7 +2209,7 @@ class EMComposition(AutodiffComposition):
         if softmax_choice in {ARG_MAX, PROBABILISTIC} and enable_learning:
             warnings.warn(f"The 'softmax_choice' arg of '{self.name}' is set to {softmax_choice} with "
                           f"'enable_learning' set to True; this will generate an error if its 'learn' "
-                          f"method is called;  set 'softmax_choice' to WEIGHTED to use learning.")
+                          f"method is called;  set 'softmax_choice' to WEIGHTED_AVG to use learning.")
 
     def _construct_softmax_nodes(self, memory_capacity, field_weights,
                                  softmax_gain, softmax_threshold, softmax_choice)->list:
@@ -2529,7 +2530,7 @@ class EMComposition(AutodiffComposition):
         arg = self.parameters.softmax_choice.get(kwargs[CONTEXT])
         if arg in {ARG_MAX, PROBABILISTIC}:
             raise EMCompositionError(f"The ARG_MAX and PROBABILISTIC options for the 'softmax_choice' arg "
-                                     f"of '{self.name}' cannot be used during learning; change to WEIGHTED.")
+                                     f"of '{self.name}' cannot be used during learning; change to WEIGHTED_AVG.")
         return super().learn(*args, **kwargs)
 
     def _get_execution_mode(self, execution_mode):
