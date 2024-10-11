@@ -284,52 +284,56 @@ class OneHot(SelectionFunction):
 
             if self.mode not in {PROB, PROB_INDICATOR}:
                 fabs = ctx.get_builtin("fabs", [current.type])
-                prev_best = b1.load(best_ptr)
+
+                is_first = b1.icmp_unsigned("==", idx, idx.type(0))
+
+                # Allow the first element to win the comparison
+                prev_best = b1.select(is_first, best_ptr.type.pointee(float("NaN")), b1.load(best_ptr))
 
             if self.mode == MAX_VAL:
-                cmp_op = ">="
+                cmp_op = ">"
                 cmp_prev = prev_best
                 cmp_curr = current
                 val = current
 
             elif self.mode == MAX_ABS_VAL:
-                cmp_op = ">="
+                cmp_op = ">"
                 cmp_prev = b1.call(fabs, [prev_best])
                 cmp_curr = b1.call(fabs, [current])
                 val = b1.call(fabs, [current])
 
             elif self.mode == MAX_INDICATOR:
-                cmp_op = ">="
+                cmp_op = ">"
                 cmp_prev = prev_best
                 cmp_curr = current
                 val = current.type(1.0)
 
             elif self.mode == MAX_ABS_INDICATOR:
-                cmp_op = ">="
+                cmp_op = ">"
                 cmp_prev = b1.call(fabs, [prev_best])
                 cmp_curr = b1.call(fabs, [current])
                 val = current.type(1.0)
 
             elif self.mode == MIN_VAL:
-                cmp_op = "<="
+                cmp_op = "<"
                 cmp_prev = prev_best
                 cmp_curr = current
                 val = current
 
             elif self.mode == MIN_ABS_VAL:
-                cmp_op = "<="
+                cmp_op = "<"
                 cmp_prev = b1.call(fabs, [prev_best])
                 cmp_curr = b1.call(fabs, [current])
                 val = current
 
             elif self.mode == MIN_INDICATOR:
-                cmp_op = "<="
+                cmp_op = "<"
                 cmp_prev = prev_best
                 cmp_curr = current
                 val = current.type(1.0)
 
             elif self.mode == MIN_ABS_INDICATOR:
-                cmp_op = "<="
+                cmp_op = "<"
                 cmp_prev = b1.call(fabs, [prev_best])
                 cmp_curr = b1.call(fabs, [current])
                 val = current.type(1.0)
@@ -361,7 +365,7 @@ class OneHot(SelectionFunction):
             # Make sure other elements are zeroed
             builder.store(cur_res_ptr.type.pointee(0), cur_res_ptr)
 
-            cmp_res = builder.fcmp_ordered(cmp_op, cmp_curr, cmp_prev)
+            cmp_res = builder.fcmp_unordered(cmp_op, cmp_curr, cmp_prev)
             with builder.if_then(cmp_res):
                 builder.store(prev_res_ptr.type.pointee(0), prev_res_ptr)
                 builder.store(val, cur_res_ptr)
