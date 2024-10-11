@@ -638,7 +638,7 @@ class RegressionCFA(CompositionFunctionApproximator):
             # Compute value of each control_signal from its variable
             c = np.zeros((len(control_allocation), ))
             for i, var in enumerate(control_allocation):
-                c[i] = self.control_signal_functions[i](var, context=context)
+                c[i] = self.control_signal_functions[i](var, context=context).item()
             computed_terms[PV.C] = c
 
             # Compute costs for new control_signal values
