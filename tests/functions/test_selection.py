@@ -24,36 +24,22 @@ llvm_res['fp32'][expected_philox_prob] = (0.09762700647115707, 0.0, 0.0, 0.0, 0.
 llvm_res['fp32'][expected_philox_ind] = (1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
 test_data = [
-    (Functions.OneHot, test_var, {'mode':kw.MAX_VAL}, (0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.)),
-    (Functions.OneHot, test_var, {'mode':kw.MAX_ABS_VAL}, (0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.)),
-    (Functions.OneHot, -test_var, {'mode':kw.MAX_ABS_VAL}, (0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.)),
-    (Functions.OneHot, test_var, {'mode':kw.MAX_INDICATOR}, (0., 0., 0., 0., 0., 0., 0., 0., 1., 0.)),
-    (Functions.OneHot, test_var, {'mode':kw.MAX_ABS_INDICATOR}, (0., 0., 0., 0., 0., 0., 0., 0., 1., 0.)),
-    (Functions.OneHot, test_var, {'mode':kw.MIN_VAL}, (0., 0., 0., 0., 0., 0., 0., 0., 0., -0.23311696)),
-    (Functions.OneHot, test_var, {'mode':kw.MIN_ABS_VAL}, (0., 0., 0., 0.08976637, 0., 0., 0., 0., 0., 0.)),
-    (Functions.OneHot, test_var, {'mode':kw.MIN_INDICATOR}, (0., 0., 0., 0., 0., 0., 0., 0., 0., 1.)),
-    (Functions.OneHot, test_var, {'mode':kw.MIN_ABS_INDICATOR}, (0., 0., 0., 1.,0., 0., 0., 0., 0., 0.)),
-    (Functions.OneHot, [test_var, test_prob], {'mode':kw.PROB}, (0., 0., 0., 0.08976636599379373, 0., 0., 0., 0., 0., 0.)),
-    (Functions.OneHot, [test_var, test_prob], {'mode':kw.PROB_INDICATOR}, (0., 0., 0., 1., 0., 0., 0., 0., 0., 0.)),
-    (Functions.OneHot, [test_var, test_philox], {'mode':kw.PROB}, expected_philox_prob),
-    (Functions.OneHot, [test_var, test_philox], {'mode':kw.PROB_INDICATOR}, expected_philox_ind),
-]
-
-# use list, naming function produces ugly names
-names = [
-    "OneHot MAX_VAL",
-    "OneHot MAX_ABS_VAL",
-    "OneHot MAX_ABS_VAL_NEG",
-    "OneHot MAX_INDICATOR",
-    "OneHot MAX_ABS_INDICATOR",
-    "OneHot MIN_VAL",
-    "OneHot MIN_ABS_VAL",
-    "OneHot MIN_INDICATOR",
-    "OneHot MIN_ABS_INDICATOR",
-    "OneHot PROB",
-    "OneHot PROB_INDICATOR",
-    "OneHot PROB Philox",
-    "OneHot PROB_INDICATOR Philox",
+    pytest.param(Functions.OneHot, test_var, {'mode':kw.MAX_VAL}, (0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.), id="OneHot MAX_VAL"),
+    pytest.param(Functions.OneHot, test_var, {'mode':kw.MAX_ABS_VAL}, (0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.), id="OneHot MAX_ABS_VAL"),
+    pytest.param(Functions.OneHot, -test_var, {'mode':kw.MAX_ABS_VAL}, (0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.), id="OneHot MAX_ABS_VAL Neg"),
+    pytest.param(Functions.OneHot, test_var, {'mode':kw.MAX_INDICATOR}, (0., 0., 0., 0., 0., 0., 0., 0., 1., 0.), id="OneHot MAX_INDICATOR"),
+    pytest.param(Functions.OneHot, test_var, {'mode':kw.MAX_ABS_INDICATOR}, (0., 0., 0., 0., 0., 0., 0., 0., 1., 0.), id="OneHot MAX_ABS_INDICATOR"),
+    pytest.param(Functions.OneHot, -test_var, {'mode':kw.MAX_ABS_INDICATOR}, (0., 0., 0., 0., 0., 0., 0., 0., 1., 0.), id="OneHot MAX_ABS_INDICATOR Neg"),
+    pytest.param(Functions.OneHot, test_var, {'mode':kw.MIN_VAL}, (0., 0., 0., 0., 0., 0., 0., 0., 0., -0.23311696), id="OneHot MIN_VAL"),
+    pytest.param(Functions.OneHot, test_var, {'mode':kw.MIN_ABS_VAL}, (0., 0., 0., 0.08976637, 0., 0., 0., 0., 0., 0.), id="OneHot MIN_ABS_VAL"),
+    pytest.param(Functions.OneHot, -test_var, {'mode':kw.MIN_ABS_VAL}, (0., 0., 0., 0.08976637, 0., 0., 0., 0., 0., 0.), id="OneHot MIN_ABS_VAL Neg"),
+    pytest.param(Functions.OneHot, test_var, {'mode':kw.MIN_INDICATOR}, (0., 0., 0., 0., 0., 0., 0., 0., 0., 1.), id="OneHot MIN_INDICATOR"),
+    pytest.param(Functions.OneHot, test_var, {'mode':kw.MIN_ABS_INDICATOR}, (0., 0., 0., 1.,0., 0., 0., 0., 0., 0.), id="OneHot MIN_ABS_INDICATOR"),
+    pytest.param(Functions.OneHot, -test_var, {'mode':kw.MIN_ABS_INDICATOR}, (0., 0., 0., 1.,0., 0., 0., 0., 0., 0.), id="OneHot MIN_ABS_INDICATOR Neg"),
+    pytest.param(Functions.OneHot, [test_var, test_prob], {'mode':kw.PROB}, (0., 0., 0., 0.08976636599379373, 0., 0., 0., 0., 0., 0.), id="OneHot PROB"),
+    pytest.param(Functions.OneHot, [test_var, test_prob], {'mode':kw.PROB_INDICATOR}, (0., 0., 0., 1., 0., 0., 0., 0., 0., 0.), id="OneHot PROB_INDICATOR"),
+    pytest.param(Functions.OneHot, [test_var, test_philox], {'mode':kw.PROB}, expected_philox_prob, id="OneHot PROB Philox"),
+    pytest.param(Functions.OneHot, [test_var, test_philox], {'mode':kw.PROB_INDICATOR}, expected_philox_ind, id="OneHot PROB_INDICATOR Philox"),
 ]
 
 GROUP_PREFIX="SelectionFunction "
@@ -61,7 +47,7 @@ GROUP_PREFIX="SelectionFunction "
 @pytest.mark.function
 @pytest.mark.integrator_function
 @pytest.mark.benchmark
-@pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
+@pytest.mark.parametrize("func, variable, params, expected", test_data)
 def test_basic(func, variable, params, expected, benchmark, func_mode):
     benchmark.group = GROUP_PREFIX + func.componentName + params['mode']
 

@@ -259,99 +259,117 @@ class OneHot(SelectionFunction):
                                     format(MODE, self.__class__.__name__, Function.__name__, PROB, prob_dist))
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        idx_ptr = builder.alloca(ctx.int32_ty)
-        builder.store(ctx.int32_ty(0), idx_ptr)
+        best_idx_ptr = builder.alloca(ctx.int32_ty)
+        builder.store(best_idx_ptr.type.pointee(0), best_idx_ptr)
 
         if self.mode in {PROB, PROB_INDICATOR}:
-            dice_ptr = builder.alloca(ctx.float_ty)
+            sum_ptr = builder.alloca(ctx.float_ty)
+            builder.store(sum_ptr.type.pointee(-0.0), sum_ptr)
+
+            random_draw_ptr = builder.alloca(ctx.float_ty)
             rand_state_ptr = ctx.get_random_state_ptr(builder, self, state, params)
             rng_f = ctx.get_uniform_dist_function_by_state(rand_state_ptr)
-            builder.call(rng_f, [rand_state_ptr, dice_ptr])
-            dice = builder.load(dice_ptr)
-            sum_ptr = builder.alloca(ctx.float_ty)
-            builder.store(ctx.float_ty(-0.0), sum_ptr)
+            builder.call(rng_f, [rand_state_ptr, random_draw_ptr])
+            random_draw = builder.load(random_draw_ptr)
+
             prob_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
             arg_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "search") as (b1, index):
-            idx = b1.load(idx_ptr)
-            prev_ptr = b1.gep(arg_in, [ctx.int32_ty(0), idx])
-            current_ptr = b1.gep(arg_in, [ctx.int32_ty(0), index])
-            prev = b1.load(prev_ptr)
+        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "search") as (b1, idx):
+            best_idx = b1.load(best_idx_ptr)
+            best_ptr = b1.gep(arg_in, [ctx.int32_ty(0), best_idx])
+
+            current_ptr = b1.gep(arg_in, [ctx.int32_ty(0), idx])
             current = b1.load(current_ptr)
 
-            prev_res_ptr = b1.gep(arg_out, [ctx.int32_ty(0), idx])
-            cur_res_ptr = b1.gep(arg_out, [ctx.int32_ty(0), index])
             if self.mode not in {PROB, PROB_INDICATOR}:
                 fabs = ctx.get_builtin("fabs", [current.type])
+
+                is_first = b1.icmp_unsigned("==", idx, idx.type(0))
+
+                # Allow the first element to win the comparison
+                prev_best = b1.select(is_first, best_ptr.type.pointee(float("NaN")), b1.load(best_ptr))
+
             if self.mode == MAX_VAL:
-                cmp_op = ">="
-                cmp_prev = prev
+                cmp_op = ">"
+                cmp_prev = prev_best
                 cmp_curr = current
                 val = current
+
             elif self.mode == MAX_ABS_VAL:
-                cmp_op = ">="
-                cmp_prev = b1.call(fabs, [prev])
+                cmp_op = ">"
+                cmp_prev = b1.call(fabs, [prev_best])
                 cmp_curr = b1.call(fabs, [current])
                 val = b1.call(fabs, [current])
+
             elif self.mode == MAX_INDICATOR:
-                cmp_op = ">="
-                cmp_prev = prev
+                cmp_op = ">"
+                cmp_prev = prev_best
                 cmp_curr = current
                 val = current.type(1.0)
+
             elif self.mode == MAX_ABS_INDICATOR:
-                cmp_op = ">="
-                cmp_prev = b1.call(fabs, [prev])
+                cmp_op = ">"
+                cmp_prev = b1.call(fabs, [prev_best])
                 cmp_curr = b1.call(fabs, [current])
                 val = current.type(1.0)
+
             elif self.mode == MIN_VAL:
-                cmp_op = "<="
-                cmp_prev = prev
+                cmp_op = "<"
+                cmp_prev = prev_best
                 cmp_curr = current
                 val = current
+
             elif self.mode == MIN_ABS_VAL:
-                cmp_op = "<="
-                cmp_prev = b1.call(fabs, [prev])
+                cmp_op = "<"
+                cmp_prev = b1.call(fabs, [prev_best])
                 cmp_curr = b1.call(fabs, [current])
-                val = current
+                val = b1.call(fabs, [current])
+
             elif self.mode == MIN_INDICATOR:
-                cmp_op = "<="
-                cmp_prev = prev
+                cmp_op = "<"
+                cmp_prev = prev_best
                 cmp_curr = current
                 val = current.type(1.0)
+
             elif self.mode == MIN_ABS_INDICATOR:
-                cmp_op = "<="
-                cmp_prev = b1.call(fabs, [prev])
+                cmp_op = "<"
+                cmp_prev = b1.call(fabs, [prev_best])
                 cmp_curr = b1.call(fabs, [current])
                 val = current.type(1.0)
+
             elif self.mode in {PROB, PROB_INDICATOR}:
                 # Update prefix sum
-                current_prob_ptr = b1.gep(prob_in, [ctx.int32_ty(0), index])
+                current_prob_ptr = b1.gep(prob_in, [ctx.int32_ty(0), idx])
                 sum_old = b1.load(sum_ptr)
                 sum_new = b1.fadd(sum_old, b1.load(current_prob_ptr))
                 b1.store(sum_new, sum_ptr)
 
-                old_below = b1.fcmp_ordered("<=", sum_old, dice)
-                new_above = b1.fcmp_ordered("<", dice, sum_new)
+                old_below = b1.fcmp_ordered("<=", sum_old, random_draw)
+                new_above = b1.fcmp_ordered("<", random_draw, sum_new)
                 cond = b1.and_(new_above, old_below)
-                cmp_prev = ctx.float_ty(1.0)
-                cmp_curr = b1.select(cond, cmp_prev, ctx.float_ty(0.0))
+
+                cmp_prev = current.type(1.0)
+                cmp_curr = b1.select(cond, cmp_prev, cmp_prev.type(0.0))
                 cmp_op = "=="
                 if self.mode == PROB:
                     val = current
                 else:
-                    val = ctx.float_ty(1.0)
+                    val = current.type(1.0)
             else:
                 assert False, "Unsupported mode: {}".format(self.mode)
+
+            prev_res_ptr = b1.gep(arg_out, [ctx.int32_ty(0), best_idx])
+            cur_res_ptr = b1.gep(arg_out, [ctx.int32_ty(0), idx])
 
             # Make sure other elements are zeroed
             builder.store(cur_res_ptr.type.pointee(0), cur_res_ptr)
 
-            cmp_res = builder.fcmp_ordered(cmp_op, cmp_curr, cmp_prev)
+            cmp_res = builder.fcmp_unordered(cmp_op, cmp_curr, cmp_prev)
             with builder.if_then(cmp_res):
                 builder.store(prev_res_ptr.type.pointee(0), prev_res_ptr)
                 builder.store(val, cur_res_ptr)
-                builder.store(index, idx_ptr)
+                builder.store(idx, best_idx_ptr)
 
         return builder
 
