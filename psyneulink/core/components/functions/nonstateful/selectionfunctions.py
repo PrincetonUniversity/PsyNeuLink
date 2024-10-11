@@ -324,7 +324,7 @@ class OneHot(SelectionFunction):
                 cmp_op = "<"
                 cmp_prev = b1.call(fabs, [prev_best])
                 cmp_curr = b1.call(fabs, [current])
-                val = current
+                val = b1.call(fabs, [current])
 
             elif self.mode == MIN_INDICATOR:
                 cmp_op = "<"
