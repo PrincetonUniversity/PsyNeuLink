@@ -3,7 +3,6 @@ import enum
 import graph_scheduler.time
 import pint.util
 import typing
-import typing.typing
 from _typeshed import Incomplete
 from typing import ClassVar
 
@@ -56,7 +55,7 @@ class Operation(enum.Enum):
     DIFFERENCE: ClassVar[Operation] = ...
     INVERSE_DIFFERENCE: ClassVar[Operation] = ...
     SYMMETRIC_DIFFERENCE: ClassVar[Operation] = ...
-    def __call__(self, source_neighbors: typing.typing.Set[typing.Hashable], comparison_neighbors: typing.typing.Set[typing.Hashable]) -> typing.typing.Set[typing.Hashable]:
+    def __call__(self, source_neighbors: set[typing.Hashable], comparison_neighbors: set[typing.Hashable]) -> set[typing.Hashable]:
         """
         Returns the set resulting from applying an `Operation` on
         **source_neighbors** and **comparison_neighbors**
@@ -111,12 +110,12 @@ class ConditionSet:
         applied to a `Scheduler`)
 
     """
-    def __init__(self, *condition_sets: typing.typing.Dict[typing.Hashable, None | typing.Iterable[None]], conditions: typing.typing.Dict[typing.Hashable, None | typing.Iterable[None]]) -> None: ...
+    def __init__(self, *condition_sets: dict[typing.Hashable, None | typing.Iterable[None]], conditions: dict[typing.Hashable, None | typing.Iterable[None]]) -> None: ...
     def __contains__(self, item) -> bool: ...
     def __iter__(self): ...
     def __getitem__(self, key): ...
     def __setitem__(self, key, value) -> None: ...
-    def add_condition(self, owner: typing.typing.Hashable, condition: ConditionBase):
+    def add_condition(self, owner: typing.Hashable, condition: ConditionBase):
         """
         Adds a `basic <graph_scheduler.condition.Condition>` or `graph
         structure <GraphStructureCondition>` Condition to the
@@ -139,7 +138,7 @@ class ConditionSet:
             specifies the condition associated with **owner** to be
             added to the ConditionSet.
         """
-    def remove_condition(self, owner_or_condition: typing.typing.Union[typing.Hashable, None]) -> typing.typing.Optional[None]:
+    def remove_condition(self, owner_or_condition: typing.Hashable | None) -> None | None:
         """
         Removes the condition specified as or owned by
         **owner_or_condition**.
@@ -158,7 +157,7 @@ class ConditionSet:
                 - when **owner_or_condition** is a condition and its
                   owner is None
         """
-    def add_condition_set(self, conditions: typing.typing.Union[None, dict[typing.Hashable, None | typing.Iterable[None]]]):
+    def add_condition_set(self, conditions: None | dict[typing.Hashable, None | typing.Iterable[None]]):
         """
         Adds a set of `basic <graph_scheduler.condition.Condition>` or
         `graph structure <GraphStructureCondition>` Conditions (in the
@@ -200,7 +199,7 @@ class ConditionBase:
 
     """
     owner: Incomplete
-    def __init__(self, _owner: typing.typing.Hashable, **kwargs) -> None: ...
+    def __init__(self, _owner: typing.Hashable, **kwargs) -> None: ...
 
 class Condition(ConditionBase):
 
@@ -549,7 +548,7 @@ class TimeInterval(AbsoluteCondition):
         *start_inclusive* and *end_inclusive* may not behave as
         expected. See `Scheduler_Exact_Time` for more info.
     """
-    def __init__(self, repeat: typing.typing.Union[int, str, pint.util.Quantity], start: typing.typing.Union[int, str, pint.util.Quantity], end: typing.typing.Union[int, str, pint.util.Quantity], unit: str | pint.util.Unit = ..., start_inclusive: bool = ..., end_inclusive: bool = ...) -> None: ...
+    def __init__(self, repeat: int | str | pint.util.Quantity, start: int | str | pint.util.Quantity, end: int | str | pint.util.Quantity, unit: str | pint.util.Unit = ..., start_inclusive: bool = ..., end_inclusive: bool = ...) -> None: ...
     @property
     def absolute_intervals(self): ...
     @property
@@ -577,7 +576,7 @@ class TimeTermination(AbsoluteCondition):
 
         At/After time *t*
     """
-    def __init__(self, t: typing.typing.Union[int, str, pint.util.Quantity], inclusive: bool = ..., unit: str | pint.util.Unit = ...) -> None: ...
+    def __init__(self, t: int | str | pint.util.Quantity, inclusive: bool = ..., unit: str | pint.util.Unit = ...) -> None: ...
     @property
     def absolute_fixed_points(self): ...
 
@@ -1308,7 +1307,7 @@ class GraphStructureCondition(ConditionBase):
     """
     __abstractmethods__: ClassVar[frozenset] = ...
     _abc_impl: ClassVar[_abc._abc_data] = ...
-    def modify_graph(self, graph: typing.typing.Dict[typing.Hashable, set[typing.Hashable]]) -> typing.typing.Dict[typing.Hashable, set[typing.Hashable]]:
+    def modify_graph(self, graph: dict[typing.Hashable, set[typing.Hashable]]) -> dict[typing.Hashable, set[typing.Hashable]]:
         """
         Modifies **graph** based on the transformation specified by this
         condition
@@ -1336,7 +1335,7 @@ class CustomGraphStructureCondition(GraphStructureCondition):
     """
     __abstractmethods__: ClassVar[frozenset] = ...
     _abc_impl: ClassVar[_abc._abc_data] = ...
-    def __init__(self, process_graph_function: typing.typing.Callable, **kwargs) -> None: ...
+    def __init__(self, process_graph_function: typing.Callable, **kwargs) -> None: ...
 
 class _GSCUsingNodes(GraphStructureCondition):
 
@@ -1346,7 +1345,7 @@ class _GSCUsingNodes(GraphStructureCondition):
     """
     __abstractmethods__: ClassVar[frozenset] = ...
     _abc_impl: ClassVar[_abc._abc_data] = ...
-    def __init__(self, *nodes: typing.typing.Hashable, **kwargs) -> None: ...
+    def __init__(self, *nodes: typing.Hashable, **kwargs) -> None: ...
 
 class _GSCSingleNode(_GSCUsingNodes):
 
@@ -1419,7 +1418,7 @@ class _GSCWithOperations(_GSCUsingNodes):
     """
     __abstractmethods__: ClassVar[frozenset] = ...
     _abc_impl: ClassVar[_abc._abc_data] = ...
-    def __init__(self, *nodes: typing.typing.Hashable, owner_senders: Operation | str = ..., owner_receivers: Operation | str = ..., subject_senders: None | str | dict[typing.Hashable, None | str] = ..., subject_receivers: None | str | dict[typing.Hashable, None | str] = ..., reconnect_non_subject_receivers: bool = ..., remove_new_self_referential_edges: bool = ..., prune_cycles: bool = ..., ignore_conflicts: bool = ..., **kwargs) -> None: ...
+    def __init__(self, *nodes: typing.Hashable, owner_senders: Operation | str = ..., owner_receivers: Operation | str = ..., subject_senders: None | str | dict[typing.Hashable, None | str] = ..., subject_receivers: None | str | dict[typing.Hashable, None | str] = ..., reconnect_non_subject_receivers: bool = ..., remove_new_self_referential_edges: bool = ..., prune_cycles: bool = ..., ignore_conflicts: bool = ..., **kwargs) -> None: ...
 
 class _GSCReposition(_GSCUsingNodes):
     _already_valid_message: ClassVar[str] = ...
