@@ -1,19 +1,16 @@
-import abc
+import _abc
 import enum
-from typing import Callable, Dict, Hashable, Iterable, List, Set, Union
-
-import pint
+import graph_scheduler.time
+import pint.util
+import typing
+import typing.typing
 from _typeshed import Incomplete
+from typing import ClassVar
 
 __all__ = ['Operation', 'ConditionError', 'ConditionSet', 'ConditionBase', 'Condition', 'AbsoluteCondition', 'While', 'WhileNot', 'Always', 'Never', 'CompositeCondition', 'All', 'Any', 'And', 'Or', 'Not', 'NWhen', 'TimeInterval', 'TimeTermination', 'BeforeConsiderationSetExecution', 'AtConsiderationSetExecution', 'AfterConsiderationSetExecution', 'AfterNConsiderationSetExecutions', 'BeforePass', 'AtPass', 'AfterPass', 'AfterNPasses', 'EveryNPasses', 'BeforeEnvironmentStateUpdate', 'AtEnvironmentStateUpdate', 'AfterEnvironmentStateUpdate', 'AfterNEnvironmentStateUpdates', 'AtEnvironmentSequence', 'AfterEnvironmentSequence', 'AfterNEnvironmentSequences', 'BeforeNCalls', 'AtNCalls', 'AfterCall', 'AfterNCalls', 'AfterNCallsCombined', 'EveryNCalls', 'JustRan', 'AllHaveRun', 'WhenFinished', 'WhenFinishedAny', 'WhenFinishedAll', 'AtEnvironmentStateUpdateStart', 'AtEnvironmentStateUpdateNStart', 'AtEnvironmentSequenceStart', 'AtEnvironmentSequenceNStart', 'Threshold', 'GraphStructureCondition', 'CustomGraphStructureCondition', 'BeforeNodes', 'BeforeNode', 'WithNode', 'AfterNodes', 'AfterNode', 'AddEdgeTo', 'RemoveEdgeFrom']
 
-
-SubjectOperation = Union['Operation', str, Dict[Hashable, Union['Operation', str]]]
-ConditionSetDict = Dict[Hashable, Union['ConditionBase', Iterable['ConditionBase']]]
-GraphDependencyDict = Dict[Hashable, Set[Hashable]]
-
-
 class Operation(enum.Enum):
+
     """
     Used in conjunction with `GraphStructureCondition` to indicate how a
     set of source nodes (**S** below) should be combined with a set of
@@ -46,16 +43,20 @@ class Operation(enum.Enum):
             of **S** or **C** but not both
 
     """
-    KEEP: Incomplete
-    REPLACE: Incomplete
-    DISCARD: Incomplete
-    INTERSECTION: Incomplete
-    UNION: Incomplete
-    MERGE: Incomplete
-    DIFFERENCE: Incomplete
-    INVERSE_DIFFERENCE: Incomplete
-    SYMMETRIC_DIFFERENCE: Incomplete
-    def __call__(self, source_neighbors: Set[Hashable], comparison_neighbors: Set[Hashable]) -> Set[Hashable]:
+    _member_names_: ClassVar[list] = ...
+    _member_map_: ClassVar[dict] = ...
+    _member_type_: ClassVar[type[object]] = ...
+    _value2member_map_: ClassVar[dict] = ...
+    KEEP: ClassVar[Operation] = ...
+    REPLACE: ClassVar[Operation] = ...
+    DISCARD: ClassVar[Operation] = ...
+    INTERSECTION: ClassVar[Operation] = ...
+    UNION: ClassVar[Operation] = ...
+    MERGE: ClassVar[Operation] = ...
+    DIFFERENCE: ClassVar[Operation] = ...
+    INVERSE_DIFFERENCE: ClassVar[Operation] = ...
+    SYMMETRIC_DIFFERENCE: ClassVar[Operation] = ...
+    def __call__(self, source_neighbors: typing.typing.Set[typing.Hashable], comparison_neighbors: typing.typing.Set[typing.Hashable]) -> typing.typing.Set[typing.Hashable]:
         """
         Returns the set resulting from applying an `Operation` on
         **source_neighbors** and **comparison_neighbors**
@@ -67,10 +68,12 @@ class Operation(enum.Enum):
         Returns:
             Set[Hashable]
         """
+    @classmethod
+    def __init__(cls, value) -> None: ...
 
 class ConditionError(Exception): ...
-
 class ConditionSet:
+
     """Used in conjunction with a `Scheduler <graph_scheduler.scheduler.Scheduler>` to store the `Conditions <Condition>` associated with a node.
 
     Arguments
@@ -108,15 +111,12 @@ class ConditionSet:
         applied to a `Scheduler`)
 
     """
-    conditions_basic: Incomplete
-    conditions_structural: Incomplete
-    structural_condition_order: Incomplete
-    def __init__(self, *condition_sets: ConditionSetDict, conditions: ConditionSetDict = None) -> None: ...
+    def __init__(self, *condition_sets: typing.typing.Dict[typing.Hashable, None | typing.Iterable[None]], conditions: typing.typing.Dict[typing.Hashable, None | typing.Iterable[None]]) -> None: ...
     def __contains__(self, item) -> bool: ...
     def __iter__(self): ...
     def __getitem__(self, key): ...
     def __setitem__(self, key, value) -> None: ...
-    def add_condition(self, owner: Hashable, condition: ConditionBase):
+    def add_condition(self, owner: typing.typing.Hashable, condition: ConditionBase):
         """
         Adds a `basic <graph_scheduler.condition.Condition>` or `graph
         structure <GraphStructureCondition>` Condition to the
@@ -139,7 +139,7 @@ class ConditionSet:
             specifies the condition associated with **owner** to be
             added to the ConditionSet.
         """
-    def remove_condition(self, owner_or_condition: Hashable | ConditionBase) -> ConditionBase | None:
+    def remove_condition(self, owner_or_condition: typing.typing.Union[typing.Hashable, None]) -> typing.typing.Optional[None]:
         """
         Removes the condition specified as or owned by
         **owner_or_condition**.
@@ -158,7 +158,7 @@ class ConditionSet:
                 - when **owner_or_condition** is a condition and its
                   owner is None
         """
-    def add_condition_set(self, conditions: ConditionSet | ConditionSetDict):
+    def add_condition_set(self, conditions: typing.typing.Union[None, dict[typing.Hashable, None | typing.Iterable[None]]]):
         """
         Adds a set of `basic <graph_scheduler.condition.Condition>` or
         `graph structure <GraphStructureCondition>` Conditions (in the
@@ -184,23 +184,10 @@ class ConditionSet:
 
         """
     @property
-    def conditions(self) -> ConditionBase | List['ConditionBase']:
-        """
-        Returns the Conditions contained within this ConditionSet
-
-        Returns:
-            dict[node: Union[`ConditionBase`, List[`ConditionBase`]]]: a
-            dictionary mapping owners to their conditions. The value for
-            an owner will be a list if there is more than one condition
-            for an owner
-
-        Note:
-            This property maintains compatibility for v1.x. Prefer the
-            `conditions_basic` and `conditions_structural` attributes
-            for new code.
-        """
+    def conditions(self): ...
 
 class ConditionBase:
+
     """
     Abstract base class for `basic conditions
     <graph_scheduler.condition.Condition>` and `graph structure
@@ -212,14 +199,11 @@ class ConditionBase:
             execution of which it determines.
 
     """
-    kwargs: Incomplete
-    def __init__(self, _owner: Hashable = None, **kwargs) -> None: ...
-    @property
-    def owner(self): ...
-    @owner.setter
-    def owner(self, value) -> None: ...
+    owner: Incomplete
+    def __init__(self, _owner: typing.typing.Hashable, **kwargs) -> None: ...
 
 class Condition(ConditionBase):
+
     """
     Used in conjunction with a :class:`Scheduler` to specify the condition under which a node should be
     allowed to execute.
@@ -230,26 +214,24 @@ class Condition(ConditionBase):
     func : callable
         specifies function to be called when the Condition is evaluated, to determine whether it is currently satisfied.
 
-    args : \\*args
+    args : *args
         specifies formal arguments to pass to `func` when the Condition is evaluated.
 
-    kwargs : \\*\\*kwargs
+    kwargs : **kwargs
         specifies keyword arguments to pass to `func` when the Condition is evaluated.
     """
-    func: Incomplete
-    args: Incomplete
     def __init__(self, func, *args, **kwargs) -> None: ...
-    def is_satisfied(self, *args, execution_id: Incomplete | None = None, **kwargs):
+    def is_satisfied(self, *args, execution_id, **kwargs):
         """
         the function called to determine satisfaction of this Condition.
 
         Arguments
         ---------
-        args : \\*args
+        args : *args
             specifies additional formal arguments to pass to `func` when the Condition is evaluated.
             these are appended to the **args** specified at instantiation of this Condition
 
-        kwargs : \\*\\*kwargs
+        kwargs : **kwargs
             specifies additional keyword arguments to pass to `func` when the Condition is evaluated.
             these are added to the **kwargs** specified at instantiation of this Condition
 
@@ -259,17 +241,9 @@ class Condition(ConditionBase):
             False - if the Condition is not satisfied
         """
     @property
-    def absolute_intervals(self):
-        """
-        In absolute time, repeated intervals for satisfaction or
-        unsatisfaction of this Condition or those it contains
-        """
+    def absolute_intervals(self): ...
     @property
-    def absolute_fixed_points(self):
-        """
-        In absolute time, specific time points for satisfaction or
-        unsatisfaction of this Condition or those it contains
-        """
+    def absolute_fixed_points(self): ...
     @property
     def is_absolute(self): ...
 
@@ -278,9 +252,53 @@ class AbsoluteCondition(Condition):
     def is_absolute(self): ...
 
 class _DependencyValidation: ...
-While = Condition
+class While(ConditionBase):
+
+    """
+    Used in conjunction with a :class:`Scheduler` to specify the condition under which a node should be
+    allowed to execute.
+
+    Arguments
+    ---------
+
+    func : callable
+        specifies function to be called when the Condition is evaluated, to determine whether it is currently satisfied.
+
+    args : *args
+        specifies formal arguments to pass to `func` when the Condition is evaluated.
+
+    kwargs : **kwargs
+        specifies keyword arguments to pass to `func` when the Condition is evaluated.
+    """
+    def __init__(self, func, *args, **kwargs) -> None: ...
+    def is_satisfied(self, *args, execution_id, **kwargs):
+        """
+        the function called to determine satisfaction of this Condition.
+
+        Arguments
+        ---------
+        args : *args
+            specifies additional formal arguments to pass to `func` when the Condition is evaluated.
+            these are appended to the **args** specified at instantiation of this Condition
+
+        kwargs : **kwargs
+            specifies additional keyword arguments to pass to `func` when the Condition is evaluated.
+            these are added to the **kwargs** specified at instantiation of this Condition
+
+        Returns
+        -------
+            True - if the Condition is satisfied
+            False - if the Condition is not satisfied
+        """
+    @property
+    def absolute_intervals(self): ...
+    @property
+    def absolute_fixed_points(self): ...
+    @property
+    def is_absolute(self): ...
 
 class WhileNot(Condition):
+
     """
     WhileNot
 
@@ -289,10 +307,10 @@ class WhileNot(Condition):
         func : callable
             specifies function to be called when the Condition is evaluated, to determine whether it is currently satisfied.
 
-        args : \\*args
+        args : *args
             specifies formal arguments to pass to `func` when the Condition is evaluated.
 
-        kwargs : \\*\\*kwargs
+        kwargs : **kwargs
             specifies keyword arguments to pass to `func` when the Condition is evaluated.
 
     Satisfied when:
@@ -303,6 +321,7 @@ class WhileNot(Condition):
     def __init__(self, func, *args, **kwargs) -> None: ...
 
 class Always(Condition):
+
     """Always
 
     Parameters:
@@ -317,6 +336,7 @@ class Always(Condition):
     def __init__(self) -> None: ...
 
 class Never(Condition):
+
     """Never
 
     Parameters:
@@ -330,8 +350,7 @@ class Never(Condition):
     def __init__(self) -> None: ...
 
 class CompositeCondition(Condition):
-    @Condition.owner.setter
-    def owner(self, value) -> None: ...
+    owner: Incomplete
     @property
     def absolute_intervals(self): ...
     @property
@@ -340,6 +359,7 @@ class CompositeCondition(Condition):
     def is_absolute(self): ...
 
 class All(CompositeCondition):
+
     """All
 
     Parameters:
@@ -358,13 +378,14 @@ class All(CompositeCondition):
 
           unpack the list to supply its members as args::
 
-           composite_condition = All(\\*conditions)
+           composite_condition = All(*conditions)
 
     """
     def __init__(self, *args, **dependencies) -> None: ...
     def satis(self, *conds, **kwargs): ...
 
 class Any(CompositeCondition):
+
     """Any
 
     Parameters:
@@ -383,15 +404,66 @@ class Any(CompositeCondition):
 
           unpack the list to supply its members as args::
 
-           composite_condition = Any(\\*conditions)
+           composite_condition = Any(*conditions)
 
     """
     def __init__(self, *args, **dependencies) -> None: ...
     def satis(self, *conds, **kwargs): ...
-And = All
-Or = Any
+
+class And(CompositeCondition):
+
+    """All
+
+    Parameters:
+
+        args: one or more `Conditions <Condition>`
+
+    Satisfied when:
+
+        - all of the Conditions in args are satisfied.
+
+    Notes:
+
+        - To initialize with a list (for example)::
+
+            conditions = [AfterNCalls(node, 5) for node in node_list]
+
+          unpack the list to supply its members as args::
+
+           composite_condition = All(*conditions)
+
+    """
+    def __init__(self, *args, **dependencies) -> None: ...
+    def satis(self, *conds, **kwargs): ...
+
+class Or(CompositeCondition):
+
+    """Any
+
+    Parameters:
+
+        args: one or more `Conditions <Condition>`
+
+    Satisfied when:
+
+        - one or more of the Conditions in **args** is satisfied.
+
+    Notes:
+
+        - To initialize with a list (for example)::
+
+            conditions = [AfterNCalls(node, 5) for node in node_list]
+
+          unpack the list to supply its members as args::
+
+           composite_condition = Any(*conditions)
+
+    """
+    def __init__(self, *args, **dependencies) -> None: ...
+    def satis(self, *conds, **kwargs): ...
 
 class Not(Condition):
+
     """Not
 
     Parameters:
@@ -403,12 +475,11 @@ class Not(Condition):
         - **condition** is not satisfied.
 
     """
-    condition: Incomplete
+    owner: Incomplete
     def __init__(self, condition) -> None: ...
-    @Condition.owner.setter
-    def owner(self, value) -> None: ...
 
 class NWhen(Condition):
+
     """NWhen
 
     Parameters:
@@ -422,20 +493,18 @@ class NWhen(Condition):
         - the first **n** times **condition** is satisfied upon evaluation
 
     """
-    satisfactions: Incomplete
-    condition: Incomplete
-    def __init__(self, condition, n: int = 1) -> None: ...
-    @Condition.owner.setter
-    def owner(self, value) -> None: ...
-    def satis(self, condition, n, *args, scheduler: Incomplete | None = None, execution_id: Incomplete | None = None, **kwargs): ...
+    owner: Incomplete
+    def __init__(self, condition, n: int = ...) -> None: ...
+    def satis(self, condition, n, *args, scheduler, execution_id, **kwargs): ...
 
 class TimeInterval(AbsoluteCondition):
+
     """TimeInterval
 
     Attributes:
 
         repeat
-            the interval between *unit*\\ s where this condition can be
+            the interval between *unit*s where this condition can be
             satisfied
 
         start
@@ -480,13 +549,14 @@ class TimeInterval(AbsoluteCondition):
         *start_inclusive* and *end_inclusive* may not behave as
         expected. See `Scheduler_Exact_Time` for more info.
     """
-    def __init__(self, repeat: int | str | pint.Quantity = None, start: int | str | pint.Quantity = None, end: int | str | pint.Quantity = None, unit: str | pint.Unit = ..., start_inclusive: bool = True, end_inclusive: bool = True) -> None: ...
+    def __init__(self, repeat: typing.typing.Union[int, str, pint.util.Quantity], start: typing.typing.Union[int, str, pint.util.Quantity], end: typing.typing.Union[int, str, pint.util.Quantity], unit: str | pint.util.Unit = ..., start_inclusive: bool = ..., end_inclusive: bool = ...) -> None: ...
     @property
     def absolute_intervals(self): ...
     @property
     def absolute_fixed_points(self): ...
 
 class TimeTermination(AbsoluteCondition):
+
     """TimeTermination
 
     Attributes:
@@ -507,11 +577,12 @@ class TimeTermination(AbsoluteCondition):
 
         At/After time *t*
     """
-    def __init__(self, t: int | str | pint.Quantity, inclusive: bool = True, unit: str | pint.Unit = ...) -> None: ...
+    def __init__(self, t: typing.typing.Union[int, str, pint.util.Quantity], inclusive: bool = ..., unit: str | pint.util.Unit = ...) -> None: ...
     @property
     def absolute_fixed_points(self): ...
 
 class BeforeConsiderationSetExecution(Condition):
+
     """BeforeConsiderationSetExecution
 
     Parameters:
@@ -530,9 +601,10 @@ class BeforeConsiderationSetExecution(Condition):
           so, `BeforeConsiderationSetExecution(2)` is satisfied at `CONSIDERATION_SET_EXECUTION` 0 and `CONSIDERATION_SET_EXECUTION` 1.
 
     """
-    def __init__(self, n, time_scale=...) -> None: ...
+    def __init__(self, n, time_scale: graph_scheduler.time.TimeScale = ...) -> None: ...
 
 class AtConsiderationSetExecution(Condition):
+
     """AtConsiderationSetExecution
 
     Parameters:
@@ -552,9 +624,10 @@ class AtConsiderationSetExecution(Condition):
           when two `CONSIDERATION_SET_EXECUTION`\\ s have occurred (`CONSIDERATION_SET_EXECUTION` 0 and `CONSIDERATION_SET_EXECUTION` 1), etc..
 
     """
-    def __init__(self, n, time_scale=...) -> None: ...
+    def __init__(self, n, time_scale: graph_scheduler.time.TimeScale = ...) -> None: ...
 
 class AfterConsiderationSetExecution(Condition):
+
     """AfterConsiderationSetExecution
 
     Parameters:
@@ -573,9 +646,10 @@ class AfterConsiderationSetExecution(Condition):
           `AfterConsiderationSetExecution(1)` is satisfied after `CONSIDERATION_SET_EXECUTION` 1 has occurred and thereafter (i.e., in `CONSIDERATION_SET_EXECUTION`\\ s 2, 3, 4, etc.).
 
     """
-    def __init__(self, n, time_scale=...) -> None: ...
+    def __init__(self, n, time_scale: graph_scheduler.time.TimeScale = ...) -> None: ...
 
 class AfterNConsiderationSetExecutions(Condition):
+
     """AfterNConsiderationSetExecutions
 
     Parameters:
@@ -590,9 +664,10 @@ class AfterNConsiderationSetExecutions(Condition):
         - at least n `CONSIDERATION_SET_EXECUTION`\\ s have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
 
     """
-    def __init__(self, n, time_scale=...) -> None: ...
+    def __init__(self, n, time_scale: graph_scheduler.time.TimeScale = ...) -> None: ...
 
 class BeforePass(Condition):
+
     """BeforePass
 
     Parameters:
@@ -611,9 +686,10 @@ class BeforePass(Condition):
           so, `BeforePass(2)` is satisfied at `PASS` 0 and `PASS` 1.
 
     """
-    def __init__(self, n, time_scale=...) -> None: ...
+    def __init__(self, n, time_scale: graph_scheduler.time.TimeScale = ...) -> None: ...
 
 class AtPass(Condition):
+
     """AtPass
 
     Parameters:
@@ -633,9 +709,10 @@ class AtPass(Condition):
           when two `PASS`\\ es have occurred (`PASS` 0 and `PASS` 1), etc..
 
     """
-    def __init__(self, n, time_scale=...) -> None: ...
+    def __init__(self, n, time_scale: graph_scheduler.time.TimeScale = ...) -> None: ...
 
 class AfterPass(Condition):
+
     """AfterPass
 
     Parameters:
@@ -654,9 +731,10 @@ class AfterPass(Condition):
           `AfterPass(1)` is satisfied after `PASS` 1 has occurred and thereafter (i.e., in `PASS`\\ es 2, 3, 4, etc.).
 
     """
-    def __init__(self, n, time_scale=...) -> None: ...
+    def __init__(self, n, time_scale: graph_scheduler.time.TimeScale = ...) -> None: ...
 
 class AfterNPasses(Condition):
+
     """AfterNPasses
 
     Parameters:
@@ -671,9 +749,10 @@ class AfterNPasses(Condition):
         - at least n `PASS`\\ es have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
 
     """
-    def __init__(self, n, time_scale=...) -> None: ...
+    def __init__(self, n, time_scale: graph_scheduler.time.TimeScale = ...) -> None: ...
 
 class EveryNPasses(Condition):
+
     """EveryNPasses
 
     Parameters:
@@ -690,9 +769,10 @@ class EveryNPasses(Condition):
           **time_scale**) is evenly divisible by n.
 
     """
-    def __init__(self, n, time_scale=...) -> None: ...
+    def __init__(self, n, time_scale: graph_scheduler.time.TimeScale = ...) -> None: ...
 
 class BeforeEnvironmentStateUpdate(Condition):
+
     """BeforeEnvironmentStateUpdate
 
     Parameters:
@@ -714,9 +794,10 @@ class BeforeEnvironmentStateUpdate(Condition):
           and `ENVIRONMENT_STATE_UPDATE <TimeScale.ENVIRONMENT_STATE_UPDATE>` 1.
 
     """
-    def __init__(self, n, time_scale=...) -> None: ...
+    def __init__(self, n, time_scale: graph_scheduler.time.TimeScale = ...) -> None: ...
 
 class AtEnvironmentStateUpdate(Condition):
+
     """AtEnvironmentStateUpdate
 
     Parameters:
@@ -738,9 +819,10 @@ class AtEnvironmentStateUpdate(Condition):
           `ENVIRONMENT_STATE_UPDATE <TimeScale.ENVIRONMENT_STATE_UPDATE>` (`ENVIRONMENT_STATE_UPDATE <TimeScale.ENVIRONMENT_STATE_UPDATE>` 0) has already occurred.
 
     """
-    def __init__(self, n, time_scale=...) -> None: ...
+    def __init__(self, n, time_scale: graph_scheduler.time.TimeScale = ...) -> None: ...
 
 class AfterEnvironmentStateUpdate(Condition):
+
     """AfterEnvironmentStateUpdate
 
     Parameters:
@@ -762,9 +844,10 @@ class AfterEnvironmentStateUpdate(Condition):
         has occurred and thereafter (i.e., in `ENVIRONMENT_STATE_UPDATE <TimeScale.ENVIRONMENT_STATE_UPDATE>`\\ s 2, 3, 4, etc.).
 
     """
-    def __init__(self, n, time_scale=...) -> None: ...
+    def __init__(self, n, time_scale: graph_scheduler.time.TimeScale = ...) -> None: ...
 
 class AfterNEnvironmentStateUpdates(Condition):
+
     """AfterNEnvironmentStateUpdates
 
     Parameters:
@@ -780,9 +863,10 @@ class AfterNEnvironmentStateUpdates(Condition):
           specified by **time_scale**.
 
     """
-    def __init__(self, n, time_scale=...) -> None: ...
+    def __init__(self, n, time_scale: graph_scheduler.time.TimeScale = ...) -> None: ...
 
 class AtEnvironmentSequence(Condition):
+
     """AtEnvironmentSequence
 
     Parameters:
@@ -800,6 +884,7 @@ class AtEnvironmentSequence(Condition):
     def __init__(self, n) -> None: ...
 
 class AfterEnvironmentSequence(Condition):
+
     """AfterEnvironmentSequence
 
     Parameters:
@@ -817,6 +902,7 @@ class AfterEnvironmentSequence(Condition):
     def __init__(self, n) -> None: ...
 
 class AfterNEnvironmentSequences(Condition):
+
     """AfterNEnvironmentSequences
 
     Parameters:
@@ -834,6 +920,7 @@ class AfterNEnvironmentSequences(Condition):
     def __init__(self, n) -> None: ...
 
 class BeforeNCalls(_DependencyValidation, Condition):
+
     """BeforeNCalls
 
     Parameters:
@@ -851,10 +938,10 @@ class BeforeNCalls(_DependencyValidation, Condition):
           within one unit of time at the `TimeScale` specified by **time_scale**.
 
     """
-    time_scale: Incomplete
-    def __init__(self, dependency, n, time_scale=...) -> None: ...
+    def __init__(self, dependency, n, time_scale: graph_scheduler.time.TimeScale = ...) -> None: ...
 
 class AtNCalls(_DependencyValidation, Condition):
+
     """AtNCalls
 
     Parameters:
@@ -872,10 +959,10 @@ class AtNCalls(_DependencyValidation, Condition):
           within one unit of time at the `TimeScale` specified by **time_scale**.
 
     """
-    time_scale: Incomplete
-    def __init__(self, dependency, n, time_scale=...) -> None: ...
+    def __init__(self, dependency, n, time_scale: graph_scheduler.time.TimeScale = ...) -> None: ...
 
 class AfterCall(_DependencyValidation, Condition):
+
     """AfterCall
 
     Parameters:
@@ -893,9 +980,10 @@ class AfterCall(_DependencyValidation, Condition):
           within one unit of time at the `TimeScale` specified by **time_scale**.
 
     """
-    def __init__(self, dependency, n, time_scale=...) -> None: ...
+    def __init__(self, dependency, n, time_scale: graph_scheduler.time.TimeScale = ...) -> None: ...
 
 class AfterNCalls(_DependencyValidation, Condition):
+
     """AfterNCalls
 
     Parameters:
@@ -913,15 +1001,15 @@ class AfterNCalls(_DependencyValidation, Condition):
           within one unit of time at the `TimeScale` specified by **time_scale**.
 
     """
-    time_scale: Incomplete
-    def __init__(self, dependency, n, time_scale=...) -> None: ...
+    def __init__(self, dependency, n, time_scale: graph_scheduler.time.TimeScale = ...) -> None: ...
 
 class AfterNCallsCombined(_DependencyValidation, Condition):
+
     """AfterNCallsCombined
 
     Parameters:
 
-        \\*nodes(nodes):  one or more nodes on which the Condition depends
+        *nodes(nodes):  one or more nodes on which the Condition depends
 
         n(int): the number of combined executions of all nodes specified in **dependencies** after which the
         Condition is satisfied (default: None)
@@ -936,9 +1024,10 @@ class AfterNCallsCombined(_DependencyValidation, Condition):
           within one unit of time at the `TimeScale` specified by **time_scale**.
 
     """
-    def __init__(self, *dependencies, n: Incomplete | None = None, time_scale=...) -> None: ...
+    def __init__(self, *dependencies, n, time_scale: graph_scheduler.time.TimeScale = ...) -> None: ...
 
 class EveryNCalls(_DependencyValidation, Condition):
+
     '''EveryNCalls
 
     Parameters:
@@ -953,20 +1042,6 @@ class EveryNCalls(_DependencyValidation, Condition):
         - the node specified in **dependency** has executed at least n times since the last time the
           Condition\'s owner executed.
 
-        COMMENT:
-            JDC: IS THE FOLLOWING TRUE OF ALL OF THE ABOVE AS WELL??
-            K: No, EveryNCalls is tricky in how it needs to be implemented, because it\'s in a sense
-                tracking the relative frequency of calls between two objects. So the idea is that the scheduler
-                tracks how many executions of a node are "useable" by other nodes for EveryNCalls conditions.
-                So, suppose you had something like add_condition(B, All(AfterNCalls(A, 10), EveryNCalls(A, 2))). You
-                would want the AAB pattern to start happening after A has run 10 times. Useable counts allows B to see
-                whether A has run enough times for it to run, and then B spends its "useable executions" of A. Then,
-                A must run two more times for B to run again. If you didn\'t reset the counts of A useable by B
-                to 0 (question below) when B runs, then in the
-                above case B would continue to run every pass for the next 4 passes, because it would see an additional
-                8 executions of A it could spend to execute.
-            JDC: IS THIS A FORM OF MODULO?  IF SO, WOULD IT BE EASIER TO EXPLAIN IN THAT FORM?
-        COMMENT
 
     Notes:
 
@@ -977,6 +1052,7 @@ class EveryNCalls(_DependencyValidation, Condition):
     def __init__(self, dependency, n) -> None: ...
 
 class JustRan(_DependencyValidation, Condition):
+
     """JustRan
 
     Parameters:
@@ -997,11 +1073,12 @@ class JustRan(_DependencyValidation, Condition):
     def __init__(self, dependency) -> None: ...
 
 class AllHaveRun(_DependencyValidation, Condition):
+
     """AllHaveRun
 
     Parameters:
 
-        \\*nodes(nodes):  an iterable of nodes on which the Condition depends
+        *nodes(nodes):  an iterable of nodes on which the Condition depends
 
         time_scale(TimeScale): the TimeScale used as basis for counting executions of **dependency**
         (default: TimeScale.ENVIRONMENT_STATE_UPDATE)
@@ -1012,10 +1089,10 @@ class AllHaveRun(_DependencyValidation, Condition):
           within one unit of time at the `TimeScale` specified by **time_scale**.
 
     """
-    time_scale: Incomplete
-    def __init__(self, *dependencies, time_scale=...) -> None: ...
+    def __init__(self, *dependencies, time_scale: graph_scheduler.time.TimeScale = ...) -> None: ...
 
 class WhenFinished(_DependencyValidation, Condition):
+
     """WhenFinished
 
     Parameters:
@@ -1038,11 +1115,12 @@ class WhenFinished(_DependencyValidation, Condition):
     def __init__(self, dependency) -> None: ...
 
 class WhenFinishedAny(_DependencyValidation, Condition):
+
     """WhenFinishedAny
 
     Parameters:
 
-        \\*nodes(nodes):  zero or more nodes on which the Condition depends
+        *nodes(nodes):  zero or more nodes on which the Condition depends
 
     Satisfied when:
 
@@ -1064,11 +1142,12 @@ class WhenFinishedAny(_DependencyValidation, Condition):
     def __init__(self, *dependencies) -> None: ...
 
 class WhenFinishedAll(_DependencyValidation, Condition):
+
     """WhenFinishedAll
 
     Parameters:
 
-        \\*nodes(nodes):  zero or more nodes on which the Condition depends
+        *nodes(nodes):  zero or more nodes on which the Condition depends
 
     Satisfied when:
 
@@ -1090,6 +1169,7 @@ class WhenFinishedAll(_DependencyValidation, Condition):
     def __init__(self, *dependencies) -> None: ...
 
 class AtEnvironmentStateUpdateStart(AtPass):
+
     """AtEnvironmentStateUpdateStart
 
     Satisfied when:
@@ -1103,6 +1183,7 @@ class AtEnvironmentStateUpdateStart(AtPass):
     def __init__(self) -> None: ...
 
 class AtEnvironmentStateUpdateNStart(All):
+
     """AtEnvironmentStateUpdateNStart
 
     Parameters:
@@ -1121,9 +1202,10 @@ class AtEnvironmentStateUpdateNStart(All):
         - identical to All(AtPass(0), AtEnvironmentStateUpdate(n, time_scale))
 
     """
-    def __init__(self, n, time_scale=...) -> None: ...
+    def __init__(self, n, time_scale: graph_scheduler.time.TimeScale = ...) -> None: ...
 
 class AtEnvironmentSequenceStart(AtEnvironmentStateUpdate):
+
     """AtEnvironmentSequenceStart
 
     Satisfied when:
@@ -1137,6 +1219,7 @@ class AtEnvironmentSequenceStart(AtEnvironmentStateUpdate):
     def __init__(self) -> None: ...
 
 class AtEnvironmentSequenceNStart(All):
+
     """AtEnvironmentSequenceNStart
 
     Parameters:
@@ -1155,6 +1238,7 @@ class AtEnvironmentSequenceNStart(All):
     def __init__(self, n) -> None: ...
 
 class Threshold(_DependencyValidation, Condition):
+
     """Threshold
 
     Attributes:
@@ -1209,11 +1293,12 @@ class Threshold(_DependencyValidation, Condition):
         **parameter** contains more than one item, **indices** must be
         specified.
     """
-    def __init__(self, dependency, parameter, threshold, comparator, indices: Incomplete | None = None, atol: int = 0, rtol: int = 0, custom_parameter_getter: Incomplete | None = None, custom_parameter_validator: Incomplete | None = None) -> None: ...
-    def get_parameter_value(self, execution_id: Incomplete | None = None): ...
-    def validate_parameter(self, dependency, parameter, custom_parameter_validator: Incomplete | None = None) -> None: ...
+    def __init__(self, dependency, parameter, threshold, comparator, indices, atol: int = ..., rtol: int = ..., custom_parameter_getter=..., custom_parameter_validator=...) -> None: ...
+    def get_parameter_value(self, execution_id): ...
+    def validate_parameter(self, dependency, parameter, custom_parameter_validator): ...
 
-class GraphStructureCondition(ConditionBase, metaclass=abc.ABCMeta):
+class GraphStructureCondition(ConditionBase):
+
     """
     Abstract base class for `graph structure conditions
     <Condition_Graph_Structure_Intro>`
@@ -1221,7 +1306,9 @@ class GraphStructureCondition(ConditionBase, metaclass=abc.ABCMeta):
     Subclasses must implement:
         `_process`
     """
-    def modify_graph(self, graph: GraphDependencyDict) -> GraphDependencyDict:
+    __abstractmethods__: ClassVar[frozenset] = ...
+    _abc_impl: ClassVar[_abc._abc_data] = ...
+    def modify_graph(self, graph: typing.typing.Dict[typing.Hashable, set[typing.Hashable]]) -> typing.typing.Dict[typing.Hashable, set[typing.Hashable]]:
         """
         Modifies **graph** based on the transformation specified by this
         condition
@@ -1237,6 +1324,7 @@ class GraphStructureCondition(ConditionBase, metaclass=abc.ABCMeta):
         """
 
 class CustomGraphStructureCondition(GraphStructureCondition):
+
     """
     Applies a user-defined function to a graph
 
@@ -1244,26 +1332,35 @@ class CustomGraphStructureCondition(GraphStructureCondition):
         process_graph_function (Callable): a function taking an optional
             'self' argument (as the first argument, if present), and a
             graph dependency dictionary
-        kwargs (\\*\\*kwargs): optional arguments to be stored as attributes
+        kwargs (**kwargs): optional arguments to be stored as attributes
     """
-    def __init__(self, process_graph_function: Callable, **kwargs) -> None: ...
+    __abstractmethods__: ClassVar[frozenset] = ...
+    _abc_impl: ClassVar[_abc._abc_data] = ...
+    def __init__(self, process_graph_function: typing.typing.Callable, **kwargs) -> None: ...
 
-class _GSCUsingNodes(GraphStructureCondition, metaclass=abc.ABCMeta):
+class _GSCUsingNodes(GraphStructureCondition):
+
     """
     Attributes:
         nodes: the subject nodes
     """
-    def __init__(self, *nodes: Hashable, **kwargs) -> None: ...
+    __abstractmethods__: ClassVar[frozenset] = ...
+    _abc_impl: ClassVar[_abc._abc_data] = ...
+    def __init__(self, *nodes: typing.typing.Hashable, **kwargs) -> None: ...
 
-class _GSCSingleNode(_GSCUsingNodes, metaclass=abc.ABCMeta):
+class _GSCSingleNode(_GSCUsingNodes):
+
     """
     Attributes:
         node: the subject node
     """
+    __abstractmethods__: ClassVar[frozenset] = ...
+    _abc_impl: ClassVar[_abc._abc_data] = ...
     @property
     def node(self): ...
 
 class _GSCWithOperations(_GSCUsingNodes):
+
     """
     Args:
         owner_senders: `Operation` that determines how the original
@@ -1316,52 +1413,376 @@ class _GSCWithOperations(_GSCUsingNodes):
             different results for the new senders and receivers of a
             node in `modify_graph`, an error will not be raised.
             Defaults to False.
-    """
-    def __init__(self, *nodes: Hashable, owner_senders: Operation | str = ..., owner_receivers: Operation | str = ..., subject_senders: SubjectOperation = ..., subject_receivers: SubjectOperation = ..., reconnect_non_subject_receivers: bool = True, remove_new_self_referential_edges: bool = True, prune_cycles: bool = True, ignore_conflicts: bool = False, **kwargs) -> None: ...
 
-class _GSCReposition(_GSCUsingNodes, metaclass=abc.ABCMeta): ...
+    Attributes:
+        nodes: the subject nodes
+    """
+    __abstractmethods__: ClassVar[frozenset] = ...
+    _abc_impl: ClassVar[_abc._abc_data] = ...
+    def __init__(self, *nodes: typing.typing.Hashable, owner_senders: Operation | str = ..., owner_receivers: Operation | str = ..., subject_senders: None | str | dict[typing.Hashable, None | str] = ..., subject_receivers: None | str | dict[typing.Hashable, None | str] = ..., reconnect_non_subject_receivers: bool = ..., remove_new_self_referential_edges: bool = ..., prune_cycles: bool = ..., ignore_conflicts: bool = ..., **kwargs) -> None: ...
+
+class _GSCReposition(_GSCUsingNodes):
+    _already_valid_message: ClassVar[str] = ...
+    __abstractmethods__: ClassVar[frozenset] = ...
+    _abc_impl: ClassVar[_abc._abc_data] = ...
 
 class BeforeNodes(_GSCReposition, _GSCWithOperations):
+
     """
     Adds a dependency from the owner to each of the specified nodes and
     optionally modifies the senders and receivers of all affected nodes
+
+    Args:
+        owner_senders: `Operation` that determines how the original
+            senders of `owner <ConditionBase.owner>` (the Operation
+            source) combine with the union of all original senders of
+            all subject `nodes <_GSCUsingNodes.nodes>` (the
+            Operation comparison) to produce the new set of senders of
+            `owner <ConditionBase.owner>` after `modify_graph`
+        owner_receivers: `Operation` that determines how the
+            original receivers of `owner <ConditionBase.owner>` (the
+            Operation source) combine with the union of all original
+            receivers of all subject `nodes
+            <_GSCUsingNodes.nodes>` (the Operation comparison)
+            to produce the new set of receivers of `owner
+            <ConditionBase.owner>` after `modify_graph`
+        subject_senders: `Operation` that determines how the
+            original senders for each of the subject `nodes
+            <_GSCUsingNodes.nodes>` (the Operation source) combine with
+            the original senders of `owner <ConditionBase.owner>` (the
+            Operation comparison) to produce the new set of senders for
+            the subject `nodes <_GSCUsingNodes.nodes>` after
+            `modify_graph`. Operations are applied individually to each
+            subject node, and this argument may also be specified as a
+            dictionary mapping nodes to separate operations.
+        subject_receivers: `Operation` that determines how the
+            original receivers for each of the subject `nodes
+            <_GSCUsingNodes.nodes>` (the Operation source) combine with
+            the original receivers of `owner <ConditionBase.owner>` (the
+            Operation comparison) to produce the new set of receivers
+            for the subject `nodes <_GSCUsingNodes.nodes>` after
+            `modify_graph`. Operations are applied individually to each
+            subject node, and this argument may also be specified as a
+            dictionary mapping nodes to separate operations.
+        reconnect_non_subject_receivers: If True, `modify_graph`
+            will create an edge from all prior senders of `owner` to
+            all receivers of `owner` that are not in `nodes`, if
+            there is no longer a path from that sender to that
+            receiver.
+            Defaults to True.
+        remove_new_self_referential_edges: If True, `modify_graph`
+            will remove any newly-created edges from a node to
+            itself.
+            Defaults to True.
+        prune_cycles: If True, `modify_graph` will attempt to prune
+            any newly-created cycles, preferring to remove edges
+            adjacent to `owner` that affect the placement of `owner`
+            more than any subject `node <nodes>`.
+            Defaults to True.
+        ignore_conflicts: If True, when any two operations give
+            different results for the new senders and receivers of a
+            node in `modify_graph`, an error will not be raised.
+            Defaults to False.
+
+    Attributes:
+        nodes: the subject nodes
     """
-    def __init__(self, *nodes, owner_senders: Operation | str = ..., owner_receivers: Operation | str = ..., subject_senders: SubjectOperation = ..., subject_receivers: SubjectOperation = ..., reconnect_non_subject_receivers: bool = True, remove_new_self_referential_edges: bool = True, prune_cycles: bool = True, ignore_conflicts: bool = False) -> None: ...
+    _already_valid_message: ClassVar[str] = ...
+    __abstractmethods__: ClassVar[frozenset] = ...
+    _abc_impl: ClassVar[_abc._abc_data] = ...
+    def __init__(self, *nodes, owner_senders: Operation | str = ..., owner_receivers: Operation | str = ..., subject_senders: None | str | dict[typing.Hashable, None | str] = ..., subject_receivers: None | str | dict[typing.Hashable, None | str] = ..., reconnect_non_subject_receivers: bool = ..., remove_new_self_referential_edges: bool = ..., prune_cycles: bool = ..., ignore_conflicts: bool = ...) -> None: ...
 
 class BeforeNode(BeforeNodes, _GSCSingleNode):
+
     """
     Adds a dependency from the owner to the specified node and
     optionally modifies the senders and receivers of both
+
+    Args:
+        owner_senders: `Operation` that determines how the original
+            senders of `owner <ConditionBase.owner>` (the Operation
+            source) combine with the union of all original senders of
+            all subject `nodes <_GSCUsingNodes.nodes>` (the
+            Operation comparison) to produce the new set of senders of
+            `owner <ConditionBase.owner>` after `modify_graph`
+        owner_receivers: `Operation` that determines how the
+            original receivers of `owner <ConditionBase.owner>` (the
+            Operation source) combine with the union of all original
+            receivers of all subject `nodes
+            <_GSCUsingNodes.nodes>` (the Operation comparison)
+            to produce the new set of receivers of `owner
+            <ConditionBase.owner>` after `modify_graph`
+        subject_senders: `Operation` that determines how the
+            original senders for each of the subject `nodes
+            <_GSCUsingNodes.nodes>` (the Operation source) combine with
+            the original senders of `owner <ConditionBase.owner>` (the
+            Operation comparison) to produce the new set of senders for
+            the subject `nodes <_GSCUsingNodes.nodes>` after
+            `modify_graph`. Operations are applied individually to each
+            subject node, and this argument may also be specified as a
+            dictionary mapping nodes to separate operations.
+        subject_receivers: `Operation` that determines how the
+            original receivers for each of the subject `nodes
+            <_GSCUsingNodes.nodes>` (the Operation source) combine with
+            the original receivers of `owner <ConditionBase.owner>` (the
+            Operation comparison) to produce the new set of receivers
+            for the subject `nodes <_GSCUsingNodes.nodes>` after
+            `modify_graph`. Operations are applied individually to each
+            subject node, and this argument may also be specified as a
+            dictionary mapping nodes to separate operations.
+        reconnect_non_subject_receivers: If True, `modify_graph`
+            will create an edge from all prior senders of `owner` to
+            all receivers of `owner` that are not in `nodes`, if
+            there is no longer a path from that sender to that
+            receiver.
+            Defaults to True.
+        remove_new_self_referential_edges: If True, `modify_graph`
+            will remove any newly-created edges from a node to
+            itself.
+            Defaults to True.
+        prune_cycles: If True, `modify_graph` will attempt to prune
+            any newly-created cycles, preferring to remove edges
+            adjacent to `owner` that affect the placement of `owner`
+            more than any subject `node <nodes>`.
+            Defaults to True.
+        ignore_conflicts: If True, when any two operations give
+            different results for the new senders and receivers of a
+            node in `modify_graph`, an error will not be raised.
+            Defaults to False.
+
+    Attributes:
+        nodes: the subject nodes
+
+    Attributes:
+        node: the subject node
     """
+    __abstractmethods__: ClassVar[frozenset] = ...
+    _abc_impl: ClassVar[_abc._abc_data] = ...
 
 class WithNode(_GSCReposition, _GSCWithOperations, _GSCSingleNode):
+
     """
     Adds a dependency from each of the senders of both the owner and the
     specified node to both the owner and the specified node, and
     optionally modifies the receivers of both
+
+    Args:
+        owner_senders: `Operation` that determines how the original
+            senders of `owner <ConditionBase.owner>` (the Operation
+            source) combine with the union of all original senders of
+            all subject `nodes <_GSCUsingNodes.nodes>` (the
+            Operation comparison) to produce the new set of senders of
+            `owner <ConditionBase.owner>` after `modify_graph`
+        owner_receivers: `Operation` that determines how the
+            original receivers of `owner <ConditionBase.owner>` (the
+            Operation source) combine with the union of all original
+            receivers of all subject `nodes
+            <_GSCUsingNodes.nodes>` (the Operation comparison)
+            to produce the new set of receivers of `owner
+            <ConditionBase.owner>` after `modify_graph`
+        subject_senders: `Operation` that determines how the
+            original senders for each of the subject `nodes
+            <_GSCUsingNodes.nodes>` (the Operation source) combine with
+            the original senders of `owner <ConditionBase.owner>` (the
+            Operation comparison) to produce the new set of senders for
+            the subject `nodes <_GSCUsingNodes.nodes>` after
+            `modify_graph`. Operations are applied individually to each
+            subject node, and this argument may also be specified as a
+            dictionary mapping nodes to separate operations.
+        subject_receivers: `Operation` that determines how the
+            original receivers for each of the subject `nodes
+            <_GSCUsingNodes.nodes>` (the Operation source) combine with
+            the original receivers of `owner <ConditionBase.owner>` (the
+            Operation comparison) to produce the new set of receivers
+            for the subject `nodes <_GSCUsingNodes.nodes>` after
+            `modify_graph`. Operations are applied individually to each
+            subject node, and this argument may also be specified as a
+            dictionary mapping nodes to separate operations.
+        reconnect_non_subject_receivers: If True, `modify_graph`
+            will create an edge from all prior senders of `owner` to
+            all receivers of `owner` that are not in `nodes`, if
+            there is no longer a path from that sender to that
+            receiver.
+            Defaults to True.
+        remove_new_self_referential_edges: If True, `modify_graph`
+            will remove any newly-created edges from a node to
+            itself.
+            Defaults to True.
+        prune_cycles: If True, `modify_graph` will attempt to prune
+            any newly-created cycles, preferring to remove edges
+            adjacent to `owner` that affect the placement of `owner`
+            more than any subject `node <nodes>`.
+            Defaults to True.
+        ignore_conflicts: If True, when any two operations give
+            different results for the new senders and receivers of a
+            node in `modify_graph`, an error will not be raised.
+            Defaults to False.
+
+    Attributes:
+        nodes: the subject nodes
+
+    Attributes:
+        node: the subject node
     """
-    def __init__(self, node, owner_receivers: Operation | str = ..., subject_receivers: SubjectOperation = ..., reconnect_non_subject_receivers: bool = True, remove_new_self_referential_edges: bool = True, prune_cycles: bool = True, ignore_conflicts: bool = False) -> None: ...
+    _already_valid_message: ClassVar[str] = ...
+    __abstractmethods__: ClassVar[frozenset] = ...
+    _abc_impl: ClassVar[_abc._abc_data] = ...
+    def __init__(self, node, owner_receivers: Operation | str = ..., subject_receivers: None | str | dict[typing.Hashable, None | str] = ..., reconnect_non_subject_receivers: bool = ..., remove_new_self_referential_edges: bool = ..., prune_cycles: bool = ..., ignore_conflicts: bool = ...) -> None: ...
 
 class AfterNodes(_GSCReposition, _GSCWithOperations):
+
     """
     Adds a dependency from each of the specified nodes to the owner
     and optionally modifies the senders and receivers of all
     affected nodes
+
+    Args:
+        owner_senders: `Operation` that determines how the original
+            senders of `owner <ConditionBase.owner>` (the Operation
+            source) combine with the union of all original senders of
+            all subject `nodes <_GSCUsingNodes.nodes>` (the
+            Operation comparison) to produce the new set of senders of
+            `owner <ConditionBase.owner>` after `modify_graph`
+        owner_receivers: `Operation` that determines how the
+            original receivers of `owner <ConditionBase.owner>` (the
+            Operation source) combine with the union of all original
+            receivers of all subject `nodes
+            <_GSCUsingNodes.nodes>` (the Operation comparison)
+            to produce the new set of receivers of `owner
+            <ConditionBase.owner>` after `modify_graph`
+        subject_senders: `Operation` that determines how the
+            original senders for each of the subject `nodes
+            <_GSCUsingNodes.nodes>` (the Operation source) combine with
+            the original senders of `owner <ConditionBase.owner>` (the
+            Operation comparison) to produce the new set of senders for
+            the subject `nodes <_GSCUsingNodes.nodes>` after
+            `modify_graph`. Operations are applied individually to each
+            subject node, and this argument may also be specified as a
+            dictionary mapping nodes to separate operations.
+        subject_receivers: `Operation` that determines how the
+            original receivers for each of the subject `nodes
+            <_GSCUsingNodes.nodes>` (the Operation source) combine with
+            the original receivers of `owner <ConditionBase.owner>` (the
+            Operation comparison) to produce the new set of receivers
+            for the subject `nodes <_GSCUsingNodes.nodes>` after
+            `modify_graph`. Operations are applied individually to each
+            subject node, and this argument may also be specified as a
+            dictionary mapping nodes to separate operations.
+        reconnect_non_subject_receivers: If True, `modify_graph`
+            will create an edge from all prior senders of `owner` to
+            all receivers of `owner` that are not in `nodes`, if
+            there is no longer a path from that sender to that
+            receiver.
+            Defaults to True.
+        remove_new_self_referential_edges: If True, `modify_graph`
+            will remove any newly-created edges from a node to
+            itself.
+            Defaults to True.
+        prune_cycles: If True, `modify_graph` will attempt to prune
+            any newly-created cycles, preferring to remove edges
+            adjacent to `owner` that affect the placement of `owner`
+            more than any subject `node <nodes>`.
+            Defaults to True.
+        ignore_conflicts: If True, when any two operations give
+            different results for the new senders and receivers of a
+            node in `modify_graph`, an error will not be raised.
+            Defaults to False.
+
+    Attributes:
+        nodes: the subject nodes
     """
-    def __init__(self, *nodes, owner_senders: Operation | str = ..., owner_receivers: Operation | str = ..., subject_senders: SubjectOperation = ..., subject_receivers: SubjectOperation = ..., reconnect_non_subject_receivers: bool = True, remove_new_self_referential_edges: bool = True, prune_cycles: bool = True, ignore_conflicts: bool = False) -> None: ...
+    _already_valid_message: ClassVar[str] = ...
+    __abstractmethods__: ClassVar[frozenset] = ...
+    _abc_impl: ClassVar[_abc._abc_data] = ...
+    def __init__(self, *nodes, owner_senders: Operation | str = ..., owner_receivers: Operation | str = ..., subject_senders: None | str | dict[typing.Hashable, None | str] = ..., subject_receivers: None | str | dict[typing.Hashable, None | str] = ..., reconnect_non_subject_receivers: bool = ..., remove_new_self_referential_edges: bool = ..., prune_cycles: bool = ..., ignore_conflicts: bool = ...) -> None: ...
 
 class AfterNode(AfterNodes, _GSCSingleNode):
+
     """
     Adds a dependency from the specified node to the owner and
     optionally modifies the senders and receivers of both
+
+    Args:
+        owner_senders: `Operation` that determines how the original
+            senders of `owner <ConditionBase.owner>` (the Operation
+            source) combine with the union of all original senders of
+            all subject `nodes <_GSCUsingNodes.nodes>` (the
+            Operation comparison) to produce the new set of senders of
+            `owner <ConditionBase.owner>` after `modify_graph`
+        owner_receivers: `Operation` that determines how the
+            original receivers of `owner <ConditionBase.owner>` (the
+            Operation source) combine with the union of all original
+            receivers of all subject `nodes
+            <_GSCUsingNodes.nodes>` (the Operation comparison)
+            to produce the new set of receivers of `owner
+            <ConditionBase.owner>` after `modify_graph`
+        subject_senders: `Operation` that determines how the
+            original senders for each of the subject `nodes
+            <_GSCUsingNodes.nodes>` (the Operation source) combine with
+            the original senders of `owner <ConditionBase.owner>` (the
+            Operation comparison) to produce the new set of senders for
+            the subject `nodes <_GSCUsingNodes.nodes>` after
+            `modify_graph`. Operations are applied individually to each
+            subject node, and this argument may also be specified as a
+            dictionary mapping nodes to separate operations.
+        subject_receivers: `Operation` that determines how the
+            original receivers for each of the subject `nodes
+            <_GSCUsingNodes.nodes>` (the Operation source) combine with
+            the original receivers of `owner <ConditionBase.owner>` (the
+            Operation comparison) to produce the new set of receivers
+            for the subject `nodes <_GSCUsingNodes.nodes>` after
+            `modify_graph`. Operations are applied individually to each
+            subject node, and this argument may also be specified as a
+            dictionary mapping nodes to separate operations.
+        reconnect_non_subject_receivers: If True, `modify_graph`
+            will create an edge from all prior senders of `owner` to
+            all receivers of `owner` that are not in `nodes`, if
+            there is no longer a path from that sender to that
+            receiver.
+            Defaults to True.
+        remove_new_self_referential_edges: If True, `modify_graph`
+            will remove any newly-created edges from a node to
+            itself.
+            Defaults to True.
+        prune_cycles: If True, `modify_graph` will attempt to prune
+            any newly-created cycles, preferring to remove edges
+            adjacent to `owner` that affect the placement of `owner`
+            more than any subject `node <nodes>`.
+            Defaults to True.
+        ignore_conflicts: If True, when any two operations give
+            different results for the new senders and receivers of a
+            node in `modify_graph`, an error will not be raised.
+            Defaults to False.
+
+    Attributes:
+        nodes: the subject nodes
+
+    Attributes:
+        node: the subject node
     """
+    __abstractmethods__: ClassVar[frozenset] = ...
+    _abc_impl: ClassVar[_abc._abc_data] = ...
+
 class AddEdgeTo(_GSCSingleNode):
+
     """
     Adds an edge from `AddEdgeTo.owner <ConditionBase.owner>` to
     `AddEdgeTo.node`
+
+    Attributes:
+        node: the subject node
     """
+    __abstractmethods__: ClassVar[frozenset] = ...
+    _abc_impl: ClassVar[_abc._abc_data] = ...
+
 class RemoveEdgeFrom(_GSCSingleNode):
+
     """
     Removes an edge from `RemoveEdgeFrom.node` to `RemoveEdgeFrom.owner
     <ConditionBase.owner>`
+
+    Attributes:
+        node: the subject node
     """
+    __abstractmethods__: ClassVar[frozenset] = ...
+    _abc_impl: ClassVar[_abc._abc_data] = ...
