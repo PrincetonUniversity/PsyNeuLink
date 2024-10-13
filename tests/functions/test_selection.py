@@ -24,11 +24,20 @@ llvm_res['fp32'][expected_philox_prob] = (0.09762700647115707, 0.0, 0.0, 0.0, 0.
 llvm_res['fp32'][expected_philox_ind] = (1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
 test_data = [
+    (Functions.OneHot, test_var, {'mode':Functions.ARG_MAX}, (0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.)),
+    (Functions.OneHot, test_var, {'mode':Functions.ARG_MAX_ABS}, (0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.)),
+    (Functions.OneHot, -test_var, {'mode':Functions.ARG_MAX_ABS}, (0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.)),
+    (Functions.OneHot, test_var, {'mode':Functions.ARG_MAX_INDICATOR}, (0., 0., 0., 0., 0., 0., 0., 0., 1., 0.)),
+    (Functions.OneHot, test_var, {'mode':Functions.ARG_MAX_ABS_INDICATOR}, (0., 0., 0., 0., 0., 0., 0., 0., 1., 0.)),
     (Functions.OneHot, test_var, {'mode':kw.MAX_VAL}, (0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.)),
     (Functions.OneHot, test_var, {'mode':kw.MAX_ABS_VAL}, (0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.)),
     (Functions.OneHot, -test_var, {'mode':kw.MAX_ABS_VAL}, (0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.)),
     (Functions.OneHot, test_var, {'mode':kw.MAX_INDICATOR}, (0., 0., 0., 0., 0., 0., 0., 0., 1., 0.)),
     (Functions.OneHot, test_var, {'mode':kw.MAX_ABS_INDICATOR}, (0., 0., 0., 0., 0., 0., 0., 0., 1., 0.)),
+    (Functions.OneHot, test_var, {'mode':Functions.ARG_MIN}, (0., 0., 0., 0., 0., 0., 0., 0., 0, -0.23311696)),
+    (Functions.OneHot, test_var, {'mode':Functions.ARG_MIN_ABS}, (0., 0., 0., 0.08976637, 0., 0., 0., 0., 0., 0.)),
+    (Functions.OneHot, test_var, {'mode':Functions.ARG_MIN_INDICATOR}, (0., 0., 0., 0., 0., 0., 0., 0., 0., 1.)),
+    (Functions.OneHot, test_var, {'mode':Functions.ARG_MIN_ABS_INDICATOR}, (0., 0., 0., 1.,0., 0., 0., 0., 0., 0.)),
     (Functions.OneHot, test_var, {'mode':kw.MIN_VAL}, (0., 0., 0., 0., 0., 0., 0., 0., 0., -0.23311696)),
     (Functions.OneHot, test_var, {'mode':kw.MIN_ABS_VAL}, (0., 0., 0., 0.08976637, 0., 0., 0., 0., 0., 0.)),
     (Functions.OneHot, test_var, {'mode':kw.MIN_INDICATOR}, (0., 0., 0., 0., 0., 0., 0., 0., 0., 1.)),
@@ -41,11 +50,20 @@ test_data = [
 
 # use list, naming function produces ugly names
 names = [
+    "OneHot ARG_MAX",
+    "OneHot ARG_MAX_ABS",
+    "OneHot ARG_MAX_ABS_NEG",
+    "OneHot ARG_MAX_INDICATOR",
+    "OneHot ARG_MAX_ABS_INDICATOR",
     "OneHot MAX_VAL",
     "OneHot MAX_ABS_VAL",
     "OneHot MAX_ABS_VAL_NEG",
     "OneHot MAX_INDICATOR",
     "OneHot MAX_ABS_INDICATOR",
+    "OneHot ARG_MIN",
+    "OneHot ARG_MIN_ABS",
+    "OneHot ARG_MIN_INDICATOR",
+    "OneHot ARG_MIN_ABS_INDICATOR",
     "OneHot MIN_VAL",
     "OneHot MIN_ABS_VAL",
     "OneHot MIN_INDICATOR",
@@ -70,6 +88,9 @@ def test_basic(func, variable, params, expected, benchmark, func_mode):
         f.parameters.random_state.set(_SeededPhilox([0]))
 
     if func_mode != 'Python':
+        if params['mode'] in {kw.MAX_VAL, kw.MAX_ABS_VAL, kw.MAX_INDICATOR, kw.MAX_ABS_INDICATOR,
+                              kw.MIN_VAL, kw.MIN_ABS_VAL, kw.MIN_INDICATOR, kw.MIN_ABS_INDICATOR}:
+            pytest.skip("{params['mode']} is not supported in {func_mode}")
         precision = pytest.helpers.llvm_current_fp_precision()
         expected = llvm_res[precision].get(expected, expected)
 

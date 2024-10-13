@@ -2895,7 +2895,7 @@ class Dropout(TransferFunction):  #
 #                                                   SoftMax
 # **********************************************************************************************************************
 
-softmax_modes =  {ALL, MAX_VAL, MAX_INDICATOR, ARG_MAX, ARG_MAX_INDICATOR, PROB, PROB_INDICATOR}
+softmax_modes =  {ALL, ARG_MAX, ARG_MAX_INDICATOR, MAX_VAL, MAX_INDICATOR, PROB, PROB_INDICATOR}
 
 
 class SoftMax(TransferFunction):
@@ -2967,9 +2967,9 @@ class SoftMax(TransferFunction):
     .. math::
         D_jS_i = S_i(\\delta_{i,j} - S_j),\\ where\\ \\delta_{i,j}=1\\ if\\ i=j\\ and\\ \\delta_{i,j}=0\\ if\\ i≠j.
 
-    If *OUTPUT_TYPE* is *MAX_VAL* or *MAX_INDICATOR*, returns 1d array of the derivatives of the maximum
-    value with respect to the others (calculated as above). If *OUTPUT_TYPE* is *PROB*, raises an exception
-    (since it is ambiguous as to which element would have been chosen by the SoftMax function)
+    If *OUTPUT_TYPE* is *ARG_MAX*, *ARG_MAX_INDICATOR*, *MAX_VAL*, *MAX_INDICATOR*, returns 1d array of the
+    derivatives of the maximum value(s) with respect to the others (calculated as above). If *OUTPUT_TYPE* is *PROB*,
+    raises an exception (since it is ambiguous as to which element would have been chosen by the SoftMax function)
 
     Arguments
     ---------
@@ -2998,7 +2998,7 @@ class SoftMax(TransferFunction):
         specifies the *entropy_weighting* parameter using by the `adapt_gain <SoftMax.adapt_gain>` method
         (see method for details).
 
-    output : ALL, MAX_VAL, MAX_INDICATOR, ARG_MAX, ARG_MAX_INDICATOR, or PROB : default ALL
+    output : ALL, ARG_MAX, ARG_MAX_INDICATOR, MAX_VAL, MAX_INDICATOR, or PROB : default ALL
         specifies the format of array returned by `function <SoftMax._function>`
         (see `output <SoftMax.output>` for details).
 
@@ -3049,16 +3049,16 @@ class SoftMax(TransferFunction):
         determines the *entropy_weighting* parameter using by the `adapt_gain <SoftMax.adapt_gain>` method
         (see method for details).
 
-    output : ALL, MAX_VAL, MAX_INDICATOR, or PROB
+    output : ALL, ARG_MAX, ARG_MAX_INDICATOR, MAX_VAL, MAX_INDICATOR, or PROB
         determines how the SoftMax-transformed values of the elements in `variable <SoftMax.variable>` are reported
         in the array returned by `function <SoftMax._function>`:
             * *ALL*: array of all SoftMax-transformed values (the default);
-            * *MAX_VAL*: SoftMax-transformed value for the element(s) with the maximum such value, 0 for all others;
-            * *MAX_INDICATOR*: 1 for the element(s) with the maximum SoftMax-transformed value, 0 for all others;
             * *ARG_MAX*: 1 for single element with the maximum SoftMax-transformed value, 0 for all others;
               (one with lowest index of there are multiple maximum values);
             * *ARG_MAX_INDICATOR*: 1 for a single element with the maximum SoftMax-transformed value, 0 for all others;
               (one with lowest index of there are multiple maximum values);
+            * *MAX_VAL*: SoftMax-transformed value for the element(s) with the maximum such value, 0 for all others;
+            * *MAX_INDICATOR*: 1 for the element(s) with the maximum SoftMax-transformed value, 0 for all others;
             * *PROB*: probabilistically chosen element based on SoftMax-transformed values after setting the
               sum of values to 1 (i.e., their `Luce Ratio <https://en.wikipedia.org/wiki/Luce%27s_choice_axiom>`_),
               0 for all others.
@@ -3067,7 +3067,7 @@ class SoftMax(TransferFunction):
         for 2d variables, determines whether the SoftMax function is applied to the entire variable (per_item =
         False), or applied to each item in the variable separately (per_item = True).
 
-    bounds : None if `output <SoftMax.output>` == MAX_VAL, else (0,1) : default (0,1)
+    bounds : None if `output <SoftMax.output>` in {ARG_MAX, MAX_VAL}, else (0,1) : default (0,1)
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -3281,7 +3281,7 @@ class SoftMax(TransferFunction):
             sm = v / np.sum(v, axis=0)
 
         # Generate one-hot encoding based on selected output_type
-        if output_type in {MAX_VAL, MAX_INDICATOR, ARG_MAX, ARG_MAX_INDICATOR}:
+        if output_type in {ARG_MAX, ARG_MAX_INDICATOR, MAX_VAL, MAX_INDICATOR}:
             return self.one_hot_function(sm)
         elif output_type in {PROB, PROB_INDICATOR}:
             return self.one_hot_function([input_value, sm])
@@ -3356,8 +3356,9 @@ class SoftMax(TransferFunction):
         derivative(output)
 
         .. technical note::
-           If MAX_VAL is specified for the `output <SoftMax.output>` parameter, and there is a tie for the maximum
-           value, the element with the lower index is used to compute the derivative (see IMPLEMENTATION NOTE below).
+           If ARG_MAX or MAX_VAL is specified for the `output <SoftMax.output>` parameter, and there is more than one
+           equivalent maximum value, the element with the lowest index is used to compute the derivative (see
+           IMPLEMENTATION NOTE below).
 
         Returns
         -------
@@ -3390,11 +3391,11 @@ class SoftMax(TransferFunction):
                     else:
                         d = 0
                     derivative[j, i] = sm[i] * (d - sm[j])
-            elif output_type in {MAX_VAL, MAX_INDICATOR, ARG_MAX, ARG_MAX_INDICATOR}:
+            elif output_type in {ARG_MAX, ARG_MAX_INDICATOR, MAX_VAL, MAX_INDICATOR}:
                 # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
                 derivative = np.empty(size)
                 # Get the element of output returned as non-zero (max val) when output_type is not ALL
-                # IMPLEMENTATION NOTES:
+                # IMPLEMENTATION NOTE:
                 #    if there is a tie for max, this chooses the item in sm with the lowest index in sm:
                 index_of_max = int(np.where(sm == np.max(sm))[-1][0])
                 #    the following would randomly choose a value in case of a tie,
@@ -3472,7 +3473,7 @@ class SoftMax(TransferFunction):
         one_hot_out = arg_out
         one_hot_in = builder.alloca(one_hot_f.args[2].type.pointee)
 
-        if output_type in {MAX_VAL, MAX_INDICATOR}:
+        if output_type in {ARG_MAX, ARG_MAX_INDICATOR}:
             with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as (b, i):
                 self.__gen_llvm_exp_div(ctx=ctx, vi=arg_in, vo=one_hot_in,
                                         gain=gain, exp_sum=exp_sum, builder=b, index=i)
@@ -3494,7 +3495,7 @@ class SoftMax(TransferFunction):
 
             builder.call(one_hot_f, [one_hot_p, one_hot_s, one_hot_in, one_hot_out])
         else:
-            assert False, "Unsupported output in {}: {}".format(self, output_type)
+            assert False, "Unsupported output in {} for LLVM execution mode: {}".format(self, output_type)
 
         return builder
 
@@ -3523,8 +3524,9 @@ class SoftMax(TransferFunction):
 
     def __gen_llvm_apply_derivative(self, ctx, builder, params, state, all_out, arg_out, *, tags:frozenset):
 
-        assert self.output in {MAX_VAL, MAX_INDICATOR}, \
-            "Derivative of SoftMax is only implemented for MAX_VAL and MAX_INDICATOR! ({})".format(self.output)
+        assert self.output in {ARG_MAX, ARG_MAX_INDICATOR, MAX_VAL, MAX_INDICATOR}, (
+            "Derivative of SoftMax is only implemented for ARG_MAX and ARG_MAX_INDICATOR "
+            "in LLVM execution mode ({})".format(self.output))
 
         max_pos_ptr = builder.alloca(ctx.int32_ty)
         builder.store(max_pos_ptr.type.pointee(-1), max_pos_ptr)
