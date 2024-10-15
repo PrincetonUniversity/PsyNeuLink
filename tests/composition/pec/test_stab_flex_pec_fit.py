@@ -480,7 +480,7 @@ def test_stab_flex_cond_fit():
 
     inputs = make_input_dict(comp, taskTrain, stimulusTrain, cueTrain, correctResponse)
 
-    ret = pec.run(inputs=inputs)
+    pec.run(inputs=inputs)
     optimal_parameters = pec.optimized_parameter_values
 
     # These aren't the recovered parameters, we are doing too few trials and too few estimates to get the correct

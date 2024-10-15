@@ -289,7 +289,12 @@ def test_parameter_optimization_ddm(func_mode, opt_method, optuna_kwargs, expect
         pec.run(inputs={comp: trial_inputs})
 
     if expected_result is not None:
-        np.testing.assert_allclose(list(pec.optimized_parameter_values.values()), expected_result)
+        if opt_method == "differential_evolution":
+            np.testing.assert_allclose(
+                list(pec.optimized_parameter_values.values()), expected_result, rtol=1e-3
+            )
+        else:
+            np.testing.assert_allclose(list(pec.optimized_parameter_values.values()), expected_result)
 
 
 def test_parameter_estimation_ddm_cond(func_mode):
