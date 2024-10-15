@@ -461,7 +461,7 @@ class TestIntegratorFunctions:
         expected = [[0.10501801629915011], [0.10501801629915011], [0.10501801629915011]]
         # The difference in results is caused by a shape mismatch;
         # default output port values are 1D, giving 2D results in compiled mode
-        # in reality Python returns 2D value per output port for a 3D result
+        # in reality Python returns 2D value per output port for a 3d result
         if mech_mode == 'Python':
             expected = [[e] for e in expected]
 

@@ -3504,6 +3504,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         include_probes_in_output=False     \
         disable_learning=False,            \
         learning_rate=None,                \
+        minibatch_size=1,                  \
+        optimizations_per_minibatch=1,     \
         controller=None,                   \
         enable_controller=None,            \
         controller_mode=AFTER,             \
@@ -3570,6 +3572,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         specifies the learning_rate to be used by `LearningMechanisms <LearningMechanism>` in the Composition
         that do not have their own `learning_rate <LearningMechanism.learning_rate>` otherwise specified
         (see `Composition_Learning_Rate` for additional details).
+
+    minibatch_size : int : default 1
+        specifies the default for the Composition for the number of distinct inputs from the training set used to
+        compute the `error_signal <LearningMechanism.error_signal>` in one step of learning; it can be overridden by
+        specifying the **minibatch_size** argument in the `learn <Composition.learn>` method (see `minibatch_size
+        <Composition.minibatch_size>` for additional details.
+
+    optimizations_per_minibatch : int : default 1
+        specifies the default for the Composition for the number of repetitions of each stimulus in the training set
+        is used to compute the `error_signal <LearningMechanism.error_signal>` for a given `minibatch
+        <LearningScale.MINIBATCH>`; it can be overridden by specifying the **minibatch_size** argument in the `learn
+        <Composition.learn>` method (see `optimizations_per_minibatch <Composition.optimizations_per_minibatch>` for
+        additional details.
 
     controller : `OptimizationControlMechanism` : default None
         specifies the `OptimizationControlMechanism` to use as the `Composition's controller
@@ -3842,6 +3857,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <LearningMechanism.learning_rate>` Parameter of a LearningMechanism (see `Composition_Learning_Rate` for
         additional details).
 
+    minibatch_size : int
+        determines the number of input stimuli from the training set used to compute the `error_signal
+        <LearningMechanism.error_signal>` in one gradient step of learning if this is not specified in the call to
+        `learn <Composition.learn>` (see `minibatch <LearningScale.MINIBATCH>` for additional details).
+
+    optimizations_per_minibatch : int
+        determines the number of repetitions of each stimulus in the training set used to compute an `error_signal
+        <LearningMechanism.error_signal>` for single gradient step in learning if this is not specified in the call
+        to `learn <Composition.learn>` (see `minibatch <LearningScale.OPTIMIZATION_STEP>` for additional details).
+
     learning_components : list[list]
         a list of the learning-related components in the Composition, all or many of which may have been
         created automatically in a call to one of its `add_<*learning_type*>_pathway' methods (see
@@ -3936,6 +3961,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     :default value: []
                     :type: ``list``
 
+                minibatch_size
+                    see `minibatch_size <Composition.minibatch_size>`
+
+                    :default value: 1
+                    :type: ``int``
+
+                optimizations_per_minibatch
+                    see `optimizations_per_minibatch <Composition.optimizations_per_minibatch>`
+
+                    :default value: 1
+                    :type: ``int``
+
                 results
                     see `results <Composition.results>`
 
@@ -3954,12 +3991,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     :default value: []
                     :type: ``list``
         """
+        minibatch_size = Parameter(1, modulable=True, pnl_internal=True)
+        optimizations_per_minibatch = Parameter(1, modulable=True, pnl_internal=True)
         results = Parameter([], loggable=False, pnl_internal=True)
         learning_results = Parameter([], loggable=False, pnl_internal=True)
         simulation_results = Parameter([], loggable=False, pnl_internal=True)
         retain_old_simulation_data = Parameter(False, stateful=False, loggable=False, pnl_internal=True)
         input_specification = Parameter(None, stateful=False, loggable=False, pnl_internal=True)
         value = Parameter(NotImplemented, read_only=True)  # replaces deletion in constructor below
+
+        def _validate_minibatch_size(self, minibatch_size):
+            if minibatch_size < 1:
+                raise CompositionError(f"`minibatch_size` ({minibatch_size}) must an int greater than or equal to 1.")
+
+        def _validate_optimizations_per_minibatch(self, optimizations_per_minibatch):
+            if optimizations_per_minibatch < 1:
+                raise CompositionError(f"`optimizations_per_minibatch` ({optimizations_per_minibatch}) "
+                                       f"must an int greater than or equal to 1.")
 
     class _CompilationData(ParametersBase):
         execution = None
@@ -3974,6 +4022,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             include_probes_in_output: bool = False,
             disable_learning: bool = False,
             learning_rate:Optional[Union[float, int]] = None,
+            minibatch_size:int = 1,
+            optimizations_per_minibatch:int = 1,
             controller: ControlMechanism = None,
             enable_controller=None,
             controller_mode: Literal['before', 'after'] = 'after',
@@ -4059,6 +4109,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._initialize_parameters(
             **param_defaults,
+            minibatch_size=minibatch_size,
+            optimizations_per_minibatch=optimizations_per_minibatch,
             retain_old_simulation_data=retain_old_simulation_data,
             context=context
         )
@@ -9919,7 +9971,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
             # Reassign target inputs from output Nodes to target mechanisms constructed for PyTorch execution
-            return {target: value for target, value in zip(self.target_output_map.keys(), targets.values())}
+            return {target: value for target, value in zip(self.targets_from_outputs_map.keys(), targets.values())}
 
         ret = {}
         for node, values in targets.items():
@@ -10145,7 +10197,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # If Composition is in learning mode, not called from COMMAND_LINE, and not still preparing,
         #   presumably inputs have already been parsed so shouldn't do it again
-        # FIX: 11/3/23 - NOTE: This circumvents parsing of inputs when they are a func and called from autodiff_training
+        # FIX: 11/3/23 - NOTE: This circumvents parsing of inputs when they are a func and called from autodiff_forward
         if (context and (context.runmode & ContextFlags.LEARNING_MODE)
                 and (context.source & ContextFlags.COMPOSITION)
                 and not (context.execution_phase & ContextFlags.PREPARING)):
@@ -10431,7 +10483,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # shapes of entries will be validated in _validate_input_shapes_and_expand_for_all_trials())
 
                 else:
-                    # 3D ragged array or 2d array
+                    # 3d ragged array or 2d array
                     entry = convert_to_np_array(_inputs)
                     ragged_array = entry.dtype == object
                     if ragged_array:
@@ -10864,7 +10916,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             context=None,
             base_context=Context(execution_id=None),
             **kwargs
-            ):
+            )->list:
         """Pass inputs to Composition, then execute sets of nodes that are eligible to run until termination
         conditions are met.
 
@@ -11328,6 +11380,8 @@ _
                    content='run_start',
                    context=context)
 
+            self.TRIAL_NUM = -1
+
             # Loop over the length of the list of inputs - each input represents a TRIAL
             for trial_num in range(num_trials):
 
@@ -11355,7 +11409,7 @@ _
                     break
 
                 # execute processing, passing stimuli for this trial
-                # IMPLEMENTATION NOTE: for autdoiff, the following is the forward pass for the current trial
+                # IMPLEMENTATION NOTE: for autodiff, the following executes the forward pass for a single input
                 trial_output = self.execute(inputs=execution_stimuli,
                                             scheduler=scheduler,
                                             termination_processing=termination_processing,
@@ -11371,20 +11425,20 @@ _
                                             skip_initialization=True,
                                             execution_mode=execution_mode,
                                             report=report,
-                                            report_num=report_num
+                                            report_num=report_num,
+                                            **kwargs
                                             )
 
                 # ---------------------------------------------------------------------------------
                 # store the result of this execution in case it will be the final result
 
-
-                assert "AFFTER FOWARD PASS"
-
-                # object.results.append(result)
                 trial_output = copy_parameter_value(trial_output)
 
-                results.append(trial_output)
-                self.parameters.results._set(convert_to_np_array(results), context)
+                self._update_results(results,
+                                     trial_output,
+                                     execution_mode,
+                                     kwargs['synch_with_pnl_options'] if 'synch_with_pnl_options' in kwargs else None,
+                                     context)
 
                 if not self.parameters.retain_old_simulation_data._get():
                     if self.controller is not None:
@@ -11466,19 +11520,18 @@ _
             num_trials: Optional[int] = None,
             epochs: int = 1,
             learning_rate: Optional[Union[int,float]]=None,
-            minibatch_size: int = 1,
-            optimizations_per_minibatch: int = 1,
+            minibatch_size:Optional[int]=None,
+            optimizations_per_minibatch:Optional[int]=None,
             patience: Optional[int] = None,
             min_delta: int = 0,
-            synchronize_pnl_values: bool = True,
-            context: Optional[Context] = None,
             execution_mode: pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
             randomize_minibatches=False,
             call_before_minibatch=None,
             call_after_minibatch=None,
+            context: Optional[Context] = None,
             *args,
             **kwargs
-    ):
+    )->list:
         """
             Runs the composition in learning mode - that is, any components with disable_learning False will be
             executed in learning mode. See `Composition_Learning` for details.
@@ -11523,12 +11576,15 @@ _
                 the learn method (see `Composition_Learning_Rate` for additional details).
 
             minibatch_size : int (default=1)
-                specifies the size of the minibatches to use. The input trials will be batched and run, after which
-                learning mechanisms with learning mode TRIAL will update weights
+                specifies the number of inputs used to calculate the `error_signal <LearningMechanism.error_signal>`
+                for one step (gradient update) of learning, after which LearningMechanisms with learning mode TRIAL
+                will update the `matrix <MappingProjection.matrix>` parameter of the `MappingProjection` for which
+                they are responsible; this overrides the Composition's default value.
 
             optimizations_per_minibatch : int (default=1)
-                specified the number of executions and weight updates of learnable pathways are carried out for
-                each set of stimuli in a minibatch.
+                specifies the number of executions and weight updates of learnable pathways that are carried out for
+                each set of stimuli in a `minibatch <LearningScale.MINIBATCH>`; this overrides the Composition's
+                default value.
 
                 .. hint::
                    This can be used to implement the `backprop-to-activation proceedure
@@ -11538,7 +11594,7 @@ _
                    downstream purpose.
 
             randomize_minibatch: bool (default=False)
-                specifies whether the order of the input trials should be randomized on each epoch
+                specifies whether the order of the input trials should be randomized in each epoch
 
             patience : int or None (default=None)
                 used for early stopping of training; If a model has more than `patience` bad consecutive epochs,
@@ -11549,18 +11605,9 @@ _
                 Any reduction less than this value is considered to be a bad epoch.
                 Used for early stopping of training, in combination with `patience`.
 
-            synchronize_pnl_values : bool : default True
-                specifies whether to synchronize the `values <Mechanism_Base.value>` of the `Mechanisms <Mechanism>`
-                in the PsyNeuLink Composition with the corresponding modules of the PyTorch implementation after each
-                forward pass when an `AutodiffComposition` is used is executed in ``PyTorch mode
-                <AutodiffComposition_PyTorch>`.
-
             scheduler : Scheduler
                 the scheduler object that owns the conditions that will instruct the execution of the Composition
                 If not specified, the Composition will use its automatically generated scheduler.
-
-            context
-                context will be set to self.default_execution_id if unspecified
 
             call_before_minibatch : callable
                 called before each minibatch is executed
@@ -11589,6 +11636,9 @@ _
                 specifies where output and progress should be reported; see `Report_To_Device` for additional
                 details and `ReportDevices` for options.
 
+            context
+                context will be set to self.default_execution_id if unspecified
+
             Returns
             ---------
 
@@ -11611,14 +11661,12 @@ _
             warnings.warn(f"learn() method called on '{self.name}', but it has no learning components; "
                           f"it will be run but no learning will occur.")
 
+        # Prepare graph and context for learning
         context.add_flag(ContextFlags.LEARNING_MODE)
-
         execution_phase_at_entry = context.execution_phase
         context.execution_phase=ContextFlags.PREPARING
-
         self._analyze_graph()
         self._check_nested_target_mechs()
-
         context.execution_phase = execution_phase_at_entry
 
         result = runner.run_learning(
@@ -11627,11 +11675,14 @@ _
             num_trials=num_trials,
             epochs=epochs,
             learning_rate=learning_rate,
-            minibatch_size=minibatch_size,
-            optimizations_per_minibatch=optimizations_per_minibatch,
+            minibatch_size=minibatch_size
+                            or self.parameters.minibatch_size._get(context)
+                            or self.parameters.minibatch_size.default_value,
+            optimizations_per_minibatch=optimizations_per_minibatch
+                                        or self.parameters.optimizations_per_minibatch._get(context)
+                                        or self.parameters.optimizations_per_minibatch.default_value,
             patience=patience,
             min_delta=min_delta,
-            synchronize_pnl_values=synchronize_pnl_values,
             randomize_minibatches=randomize_minibatches,
             call_before_minibatch=call_before_minibatch,
             call_after_minibatch=call_after_minibatch,
@@ -11683,7 +11734,8 @@ _
                     assert (execution_mode == pnlvm.ExecutionMode.LLVM
                             or execution_mode & pnlvm.ExecutionMode._Fallback),\
                         f"PROGRAM ERROR: Unrecognized compiled execution_mode: '{execution_mode}'."
-                    _comp_ex.execute_node(self.controller, context=context)
+                    _comp_ex.freeze_values()
+                    _comp_ex.execute_node(self.controller)
 
                 context.remove_flag(ContextFlags.PROCESSING)
 
@@ -11728,7 +11780,8 @@ _
             report_to_devices:ReportDevices=None,
             report=None,
             report_num=None,
-            ):
+            **kwargs
+            )->np.ndarray:
         """
             Passes inputs to any `Nodes <Composition_Nodes>` receiving inputs directly from the user (via the "inputs"
             argument) then coordinates with the `Scheduler` to execute sets of Nodes that are eligible to execute until
@@ -11810,7 +11863,7 @@ _
 
             Returns
             ---------
-            output_values : List
+            output_values : np.ndarray
             These are the values of the Composition's output_CIM.output_ports, excluding those the source of which
             are from a (potentially nested) Node with NodeRole.PROBE in its enclosing Composition.
         """
@@ -12012,7 +12065,7 @@ _
                 build_CIM_input = self._build_variable_for_input_CIM(inputs)
 
             if execution_mode & pnlvm.ExecutionMode.COMPILED:
-                _comp_ex.execute_node(self.input_CIM, inputs, context)
+                _comp_ex.execute_node(self.input_CIM, inputs)
                 # FIXME: parameter_CIM should be executed here as well,
                 #        but node execution of nested compositions with
                 #        outside control is not supported yet.
@@ -12297,7 +12350,7 @@ _
 
                         # Execute Mechanism
                         if execution_mode & pnlvm.ExecutionMode.COMPILED:
-                            _comp_ex.execute_node(node, context=context)
+                            _comp_ex.execute_node(node)
                         else:
                             if node is not self.controller:
                                 mech_context = copy(context)
@@ -12509,7 +12562,7 @@ _
             # Extract result here
             if execution_mode & pnlvm.ExecutionMode.COMPILED:
                 _comp_ex.freeze_values()
-                _comp_ex.execute_node(self.output_CIM, context=context)
+                _comp_ex.execute_node(self.output_CIM)
                 report(self,
                        PROGRESS_REPORT,
                        report_num=report_num,
@@ -12813,7 +12866,15 @@ _
         else:
             return {k:np.array(v).tolist() for k,v in result_set}
 
-    def _update_learning_parameters(self, context):
+    def _update_results(self, results, trial_output, execution_mode, synch_with_pnl_options, context):
+        """Update results by appending most recent trial_output
+        This is included as a helper so it can be overriden by subclasses (such as AutodiffComposition)
+        that may need to do this less frequently for scallable exeuction
+        """
+        results.append(trial_output)
+        self.parameters.results._set(convert_to_np_array(results), context)
+
+    def do_gradient_optimization(self, retain_in_pnl_options, context, optimization_num=None):
         pass
 
     @handle_external_context(fallback_most_recent=True)

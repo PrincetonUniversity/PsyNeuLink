@@ -52,8 +52,7 @@ def test_builtin_op(benchmark, op, args, builtin, result, func_mode):
 
         # The result argument is a pointer, use it to derive
         # the right argument type
-        assert bin_f.byref_arg_types[-1] is not None
-        dty = np.dtype(bin_f.byref_arg_types[-1])
+        dty = bin_f.np_arg_dtypes[1].base
 
         ptx_res = np.empty_like(result, dtype=dty)
         ptx_res_arg = pnlvm.jit_engine.pycuda.driver.Out(ptx_res)

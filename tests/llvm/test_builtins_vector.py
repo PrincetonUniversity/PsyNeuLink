@@ -29,25 +29,18 @@ smul_res = np.multiply(u, scalar)
 def test_vector_op(benchmark, op, v, builtin, result, func_mode):
 
     def _numpy_args(bin_f):
-        dty = np.dtype(bin_f.byref_arg_types[0])
+        np_u = u.astype(bin_f.np_arg_dtypes[0])
+        np_v = bin_f.np_arg_dtypes[1].type(v) if np.isscalar(v) else v.astype(bin_f.np_arg_dtypes[1])
+        np_res = np.empty_like(np_u)
 
-        # non-pointer arguments have None is the respective byref_arg_types position
-        if bin_f.byref_arg_types[1] is not None:
-            assert dty == np.dtype(bin_f.byref_arg_types[1])
-        assert dty == np.dtype(bin_f.byref_arg_types[3])
-
-        lu = u.astype(dty)
-        lv = dty.type(v) if np.isscalar(v) else v.astype(dty)
-        lres = np.empty_like(lu)
-
-        return lu, lv, lres
+        return np_u, np_v, np_res
 
     if func_mode == 'Python':
         def ex():
             return op(u, v)
 
     elif func_mode == 'LLVM':
-        bin_f = pnlvm.LLVMBinaryFunction.get(builtin)
+        bin_f = pnlvm.LLVMBinaryFunction.get(builtin, ctype_ptr_args=(0, 1, 3))
         lu, lv, lres = _numpy_args(bin_f)
 
         ct_u = lu.ctypes.data_as(bin_f.c_func.argtypes[0])
@@ -82,30 +75,29 @@ def test_vector_sum(benchmark, func_mode):
             return np.sum(u)
 
     elif func_mode == 'LLVM':
-        bin_f = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vec_sum")
+        bin_f = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vec_sum", ctype_ptr_args=(0,))
 
-        lu = u.astype(np.dtype(bin_f.byref_arg_types[0]))
-        lres = np.empty(1, dtype=lu.dtype)
+        np_u = u.astype(bin_f.np_arg_dtypes[0])
+        np_res = bin_f.np_buffer_for_arg(2)
 
-        ct_u = lu.ctypes.data_as(bin_f.c_func.argtypes[0])
-        ct_res = lres.ctypes.data_as(bin_f.c_func.argtypes[2])
+        ct_u = np_u.ctypes.data_as(bin_f.c_func.argtypes[0])
 
         def ex():
-            bin_f(ct_u, DIM_X, ct_res)
-            return lres[0]
+            bin_f(ct_u, DIM_X, np_res)
+            return np_res
 
     elif func_mode == 'PTX':
         bin_f = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vec_sum")
 
-        lu = u.astype(np.dtype(bin_f.byref_arg_types[0]))
-        res = np.empty(1, dtype=lu.dtype)
+        np_u = u.astype(bin_f.np_arg_dtypes[0])
+        np_res = bin_f.np_buffer_for_arg(2)
 
-        cuda_u = pnlvm.jit_engine.pycuda.driver.In(lu)
-        cuda_res = pnlvm.jit_engine.pycuda.driver.Out(res)
+        cuda_u = pnlvm.jit_engine.pycuda.driver.In(np_u)
+        cuda_res = pnlvm.jit_engine.pycuda.driver.Out(np_res)
 
         def ex():
             bin_f.cuda_call(cuda_u, np.int32(DIM_X), cuda_res)
-            return res[0]
+            return np_res
 
     res = benchmark(ex)
     np.testing.assert_allclose(res, np.sum(u))

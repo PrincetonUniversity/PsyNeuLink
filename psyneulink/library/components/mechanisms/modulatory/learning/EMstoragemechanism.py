@@ -642,7 +642,7 @@ class EMStorageMechanism(LearningMechanism):
                                               f"a list or 2d np.array containing entries that have the same shape "
                                               f"({memory_matrix.shape}) as an entry (row) in 'memory_matrix' arg.")
 
-        # Ensure the number of fields is equal to the number of items in variable
+        # Ensure the number of fields is equal to the numbder of items in variable
         if FIELDS in request_set:
             fields = request_set[FIELDS]
             if len(fields) != len(self.variable):

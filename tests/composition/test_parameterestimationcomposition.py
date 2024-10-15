@@ -233,7 +233,7 @@ def test_parameter_optimization_ddm(func_mode, opt_method, optuna_kwargs, expect
     def reward_rate(sim_data):
         """
         Objective function for PEC to optimize. This function takes in the simulation data,
-        a 3D array of shape (num_trials, num_estimates, num_outcome_vars), and returns a
+        a 3d array of shape (num_trials, num_estimates, num_outcome_vars), and returns a
         scalar value that is the reward rate.
         """
         return np.mean(sim_data[:, :, 0][:] / sim_data[:, :, 1][:])

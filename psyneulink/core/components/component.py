@@ -1463,7 +1463,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "objective_mechanism", "agent_rep", "projections",
                      "outcome_input_ports", "state_input_ports",
                      # autodiff specific types
-                     "pytorch_representation", "optimizer",
+                     "pytorch_representation", "optimizer", "synch_projection_matrices_with_torch",
                      # duplicate
                      "allocation_samples", "control_allocation_search_space",
                      # not used in computation
@@ -1490,10 +1490,14 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "error_matrix", "error_signal", "activation_input",
                      "activation_output", "error_sources", "covariates_sources",
                      "target", "sample", "learning_function",
-                     "device",
+                     "minibatch_size", "optimizations_per_minibatch", "device",
+                     "retain_torch_trained_outputs", "retain_torch_targets", "retain_torch_losses"
+                     "torch_trained_outputs", "torch_targets", "torch_losses",
                      # should be added to relevant _gen_llvm_function... when aug:
                      # SoftMax:
-                     'mask_threshold', 'adapt_scale', 'adapt_base', 'adapt_entropy_weighting'
+                     'mask_threshold', 'adapt_scale', 'adapt_base', 'adapt_entropy_weighting',
+                     # LCAMechanism
+                     "mask"
                      }
         # Mechanism's need few extra entries:
         # * matrix -- is never used directly, and is flatened below
@@ -1700,7 +1704,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                     # CAVEAT: assuming here that object dtype implies there are list objects (i.e. array with
                     # different sized arrays/lists inside like [[0, 1], [2, 3, 4]]), even though putting a None
                     # value in the array will give object dtype. This case doesn't really make sense in our
-                    # context though, so ignoring this case in the interest of quickly fixing 3D variable behavior
+                    # context though, so ignoring this case in the interest of quickly fixing 3d variable behavior
                     variable = np.atleast_1d(variable)
                 else:
                     variable = np.atleast_2d(variable)
