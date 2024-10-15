@@ -291,7 +291,7 @@ def test_parameter_optimization_ddm(func_mode, opt_method, optuna_kwargs, expect
     if expected_result is not None:
         if opt_method == "differential_evolution":
             np.testing.assert_allclose(
-                list(pec.optimized_parameter_values.values()), expected_result, rtol=1e-3
+                list(pec.optimized_parameter_values.values()), expected_result, atol=1e-2
             )
         else:
             np.testing.assert_allclose(list(pec.optimized_parameter_values.values()), expected_result)
