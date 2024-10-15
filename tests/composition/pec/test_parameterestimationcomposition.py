@@ -185,7 +185,7 @@ else:
 @pytest.mark.parametrize(
     "opt_method, optuna_kwargs, expected_result",
     [
-        ("differential_evolution", expected_differential_evolution),
+        ("differential_evolution", None, expected_differential_evolution),
         (optuna.samplers.RandomSampler(seed=0), None, [0.01]),
         (optuna.samplers.QMCSampler(seed=0), None, [0.01]),
         (optuna.samplers.RandomSampler, {'seed': 0}, [0.01]),
@@ -289,7 +289,7 @@ def test_parameter_optimization_ddm(func_mode, opt_method, optuna_kwargs, expect
         pec.run(inputs={comp: trial_inputs})
 
     if expected_result is not None:
-        np.testing.assert_allclose(list(pec.optimized_parameter_values.values()), result)
+        np.testing.assert_allclose(list(pec.optimized_parameter_values.values()), expected_result)
 
 
 def test_parameter_estimation_ddm_cond(func_mode):
