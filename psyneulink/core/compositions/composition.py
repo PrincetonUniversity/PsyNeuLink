@@ -10193,14 +10193,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         """
 
-        # If Composition is in learning mode, not called from COMMAND_LINE, and not still preparing,
-        #   presumably inputs have already been parsed so shouldn't do it again
-        # FIX: 11/3/23 - NOTE: This circumvents parsing of inputs when they are a func and called from autodiff_forward
-        if (context and (context.runmode & ContextFlags.LEARNING_MODE)
-                and (context.source & ContextFlags.COMPOSITION)
-                and not (context.execution_phase & ContextFlags.PREPARING)):
-            return inputs, 1
-
         # parse a user-provided input dict to format it properly for execution.
         # compute number of input sets and return that as well
         _inputs = self._parse_names_in_inputs(inputs)
@@ -11402,7 +11394,15 @@ _
                 # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
                 try:
                     # IMPLEMENTATION NOTE: for autdoiff, the following includes backward pass after forward pass
-                    execution_stimuli = self._parse_trial_inputs(inputs, trial_num, context)
+
+                    # If this is an instance of generator CompositionRunner._batch_inputs, then there is no
+                    # need to call _parse_trial_inputs, as the inputs are already in the correct format
+                    # from the call to _parse_learning_spec
+                    if isgenerator(inputs) and 'CompositionRunner._batch_inputs' in str(inputs):
+                        execution_stimuli = next(inputs)
+                    else:
+                        execution_stimuli = self._parse_trial_inputs(inputs, trial_num, context)
+
                 except StopIteration:
                     break
 

@@ -1107,9 +1107,7 @@ class AutodiffComposition(Composition):
         # Get value of TARGET nodes for current trial
         curr_tensors_for_targets = {}
         for component in targets.keys():
-            curr_tensors_for_targets[component] = [torch.tensor(np.atleast_1d(target),
-                                                           device=self.device).double()
-                                              for target in targets[component]]
+            curr_tensors_for_targets[component] = [targets[component][:, i, :] for i in range(targets[component].shape[1])]
 
         # Get value of TARGET nodes for trained OUTPUT nodes
         curr_target_tensors_for_trained_outputs = {}
@@ -1119,8 +1117,8 @@ class AutodiffComposition(Composition):
         # Calculate and track the loss over the trained OUTPUT nodes
         for component in curr_tensors_for_trained_outputs.keys():
             trial_loss = 0
-            for i in range(len(curr_tensors_for_trained_outputs[component])):
-                trial_loss += self.loss_function(curr_tensors_for_trained_outputs[component][i],
+            for i in range(curr_tensors_for_trained_outputs[component].shape[1]):
+                trial_loss += self.loss_function(curr_tensors_for_trained_outputs[component][:, i, :],
                                                curr_target_tensors_for_trained_outputs[component][i])
             pytorch_rep.minibatch_loss += trial_loss
         pytorch_rep.minibatch_loss_count += 1
@@ -1560,6 +1558,7 @@ class AutodiffComposition(Composition):
             retain_torch_trained_outputs:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
             retain_torch_targets:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
             retain_torch_losses:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
+            batched_results:bool=False,
             **kwargs):
         """Override to handle synch and retain args if run called directly from run() rather than learn()
         Note: defaults for synch and retain args are NotImplemented, so that the user can specify None if they want
@@ -1567,6 +1566,9 @@ class AutodiffComposition(Composition):
               for details). This is distinct from the user assigning the Parameter default_values(s), which is done
               in the AutodiffComposition constructor and handled by the Parameter._specify_none attribute.
         """
+
+        # Store whether we need to return results list with a batch dimension, or flatten it
+        self.batched_results = batched_results
 
         if not ('synch_with_pnl_options' in kwargs and 'retain_in_pnl_options' in kwargs):
             # No synch_with_pnl_options and retain_in_pnl_options dicts:
@@ -1609,11 +1611,20 @@ class AutodiffComposition(Composition):
             if (RESULTS in synch_with_pnl_options
                     and synch_with_pnl_options[RESULTS] in {TRIAL, MINIBATCH}):
                 # Use Composition's own _update_results method since no savings when done trial-by-trial
-                super()._update_results(results, trial_output, execution_mode, synch_with_pnl_options, context)
+                if not self.batched_results:
+                    for out in trial_output:
+                        super()._update_results(results, out, execution_mode, synch_with_pnl_options, context)
+                else:
+                    super()._update_results(results, trial_output, execution_mode, synch_with_pnl_options, context)
+
             elif (RESULTS in synch_with_pnl_options
                     and synch_with_pnl_options[RESULTS] == RUN):
                 # Use pytorch_reps method to keep a local list of results that are copied to autodiff.results after run
-                self.parameters.pytorch_representation._get(context).retain_results(trial_output)
+                if not self.batched_results:
+                    for out in trial_output:
+                        self.parameters.pytorch_representation._get(context).retain_results(out)
+                else:
+                    self.parameters.pytorch_representation._get(context).retain_results(trial_output)
         else:
             super()._update_results(results, trial_output, execution_mode, synch_with_pnl_options, context)
 

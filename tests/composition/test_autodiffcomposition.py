@@ -3910,6 +3910,7 @@ class TestBatching:
                 context=c2,
                 minibatch_size=TRAINING_SET
             )
+
             xor.learn(
                 inputs=inputs_dict_3,
                 context=c2,

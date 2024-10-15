@@ -92,6 +92,11 @@ class CompositionRunner():
                         tensor_inputs[k] = torch.from_numpy(np.array(v))
                     else:
                         tensor_inputs[k] = torch.tensor(v)
+
+                    # Convert integer types to double
+                    if tensor_inputs[k].dtype in [torch.int64, torch.int32, torch.int16, torch.int8]:
+                        tensor_inputs[k] = tensor_inputs[k].double()
+
                 else:
                     tensor_inputs[k] = np.array(v)
             else:

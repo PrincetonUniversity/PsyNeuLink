@@ -972,18 +972,18 @@ class PytorchMechanismWrapper():
         # FIX: USING _port_idx TO INDEX INTO sender.value GETS IT WRONG IF THE MECHANISM HAS AN OUTPUT PORT
         #      USED BY A PROJECTION NOT IN THE CURRENT COMPOSITION
         if port is not None:
-            return sum(proj_wrapper.execute(proj_wrapper._curr_sender_value).unsqueeze(0)
+            return sum(proj_wrapper.execute(proj_wrapper._curr_sender_value).unsqueeze(1)
                                             for proj_wrapper in self.afferents
                                             if proj_wrapper._pnl_proj
                                             in self._mechanism.input_ports[port].path_afferents)
         # Has only one input_port
         elif len(self._mechanism.input_ports) == 1:
             # Get value corresponding to port from which each afferent projects
-            return sum((proj_wrapper.execute(proj_wrapper._curr_sender_value).unsqueeze(0)
+            return sum((proj_wrapper.execute(proj_wrapper._curr_sender_value).unsqueeze(1)
                         for proj_wrapper in self.afferents))
         # Has multiple input_ports
         else:
-            return [sum(proj_wrapper.execute(proj_wrapper._curr_sender_value).unsqueeze(0)
+            return [sum(proj_wrapper.execute(proj_wrapper._curr_sender_value).unsqueeze(1)
                          for proj_wrapper in self.afferents
                          if proj_wrapper._pnl_proj in input_port.path_afferents)
                      for input_port in self._mechanism.input_ports]
@@ -1004,7 +1004,7 @@ class PytorchMechanismWrapper():
                 # or if CombinationFunction (which reduces output to single item from multi-item input)
                 if isinstance(variable, torch.Tensor):
                     variable = variable.squeeze(0)
-                return function(variable).unsqueeze(0)
+                return function(variable).unsqueeze(1)
             elif is_combination_fct:
                 # Function combines the elements
                 return function(variable)

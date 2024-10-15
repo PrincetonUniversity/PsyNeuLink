@@ -1111,7 +1111,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
         gain = self._get_pytorch_fct_param_value('gain', device, context)
         bias = self._get_pytorch_fct_param_value('bias', device, context)
         offset = self._get_pytorch_fct_param_value('offset', device, context)
-        return lambda x: 1 / (1 + torch.exp(-gain * (x + bias) + offset))
+
+        def logistic(x):
+            return 1 / (1 + torch.exp(-gain * (x + bias) + offset))
+
+        return logistic
 
     def as_mdf_model(self):
         model = super().as_mdf_model()
