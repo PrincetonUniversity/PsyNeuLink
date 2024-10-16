@@ -11,7 +11,7 @@ set_global_seed(0)
 # High-level parameters the impact performance of the test
 num_trials = 50
 time_step_size = 0.01
-num_estimates = 40000
+num_estimates = 4000
 
 ddm_params = dict(
     starting_value=0.0,
@@ -73,6 +73,8 @@ fit_parameters = {
 }
 
 #%%
+import optuna
+
 pec = pnl.ParameterEstimationComposition(
     name="pec",
     nodes=[comp],
@@ -82,7 +84,7 @@ pec = pnl.ParameterEstimationComposition(
         decision.output_ports[pnl.RESPONSE_TIME],
     ],
     data=data_to_fit,
-    optimization_function="differential_evolution",
+    optimization_function=pnl.PECOptimizationFunction(method=optuna.samplers.CmaEsSampler(seed=0), max_iterations=1000),
     num_estimates=num_estimates,
     initial_seed=42,
 )
@@ -90,7 +92,7 @@ pec = pnl.ParameterEstimationComposition(
 pec.controller.parameters.comp_execution_mode.set("LLVM")
 pec.controller.function.parameters.save_values.set(True)
 ret = pec.run(inputs={comp: trial_inputs})
-optimal_parameters = pec.optimized_parameter_values
+optimal_parameters = list(pec.optimized_parameter_values.values())
 
 # Check that the parameters are recovered and that the log-likelihood is correct, set the tolerance pretty high,
 # things are noisy because of the low number of trials and estimates.

@@ -168,8 +168,11 @@ from beartype import beartype
 from psyneulink._typing import Optional, Union, Dict, List, Callable, Literal
 
 import psyneulink.core.llvm as pnllvm
+from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_np_array
 from psyneulink.core.components.shellclasses import Mechanism
-from psyneulink.core.compositions.composition import Composition, CompositionError
+from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
+from psyneulink.core.components.ports.port import Port_Base
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import (
     OptimizationControlMechanism,
 )
@@ -190,6 +193,8 @@ from psyneulink.core.globals.parameters import Parameter, SharedParameter, check
 from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, convert_to_list
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.components.ports.outputport import OutputPort
+from psyneulink.core.globals.defaults import defaultControlAllocation
+
 
 
 __all__ = ["ParameterEstimationComposition", "ParameterEstimationCompositionError"]
@@ -228,6 +233,13 @@ class ParameterEstimationComposition(Composition):
         <ParameterEstimationComposition.model>` to be estimated.  These are specified in a dict, in which the key
         of each entry specifies a parameter to estimate, and its value is a list values to sample for that
         parameter.
+
+    depends_on :
+        A dictionary that specifies which parameters depend on a condition. The keys of the dictionary are the
+        specified identically to the keys of the parameters dictionary. The values are a string that specifies a
+        column in the data that the parameter depends on. The values of this column must be categorical. Each unique
+        value will represent a condition and will result in a separate parameter being estimated for it. The number of
+        unique values should be small because each unique value will result in a separate parameter being estimated.
 
     outcome_variables :
         specifies the `OUTPUT` `Nodes <Composition_Nodes>` of the `model
@@ -460,12 +472,14 @@ class ParameterEstimationComposition(Composition):
         ],
         model: Optional[Composition] = None,
         data: Optional[pd.DataFrame] = None,
+        likelihood_include_mask: Optional[np.ndarray] = None,
         data_categorical_dims=None,
         objective_function: Optional[Callable] = None,
         num_estimates: int = 1,
         num_trials_per_estimate: Optional[int] = None,
         initial_seed: Optional[int] = None,
         same_seed_for_all_parameter_combinations: Optional[bool] = None,
+        depends_on: Optional[Dict] = None,
         name: Optional[str] = None,
         context: Optional[Context] = None,
         **kwargs,
@@ -511,7 +525,21 @@ class ParameterEstimationComposition(Composition):
         kwargs.update({"nodes": model})
         self.model = model
 
+        self.depends_on = depends_on
+
+        # These will be assigned in _validate_date if depends_on is not None
+        self.cond_levels = None
+        self.cond_mask = None
+        self.cond_data = None
+
         self.optimized_parameter_values = []
+
+        self.pec_control_mechs = {}
+        for (pname, mech), values in parameters.items():
+            self.pec_control_mechs[(pname, mech)] = ControlMechanism(name=f"{pname}_control",
+                                                                     control_signals=[(pname, mech)],
+                                                                     modulation=OVERRIDE)
+            self.model.add_node(self.pec_control_mechs[(pname, mech)])
 
         super().__init__(
             name=name,
@@ -572,6 +600,22 @@ class ParameterEstimationComposition(Composition):
         if self.data is not None:
             self._validate_data()
 
+            if likelihood_include_mask is not None:
+
+                # Make sure the length is correct
+                if len(likelihood_include_mask) != len(self.data):
+                    raise ValueError(
+                        "Likelihood include mask must be the same length as the number of rows in the data!")
+
+                # If the include mask is 2D, make it 1D
+                if likelihood_include_mask.ndim == 2:
+                    likelihood_include_mask = likelihood_include_mask.flatten()
+
+                self.likelihood_include_mask = likelihood_include_mask
+
+            else:
+                self.likelihood_include_mask = np.ones(len(self.data), dtype=bool)
+
         # Store the parameters specified for fitting
         self.fit_parameters = parameters
 
@@ -608,6 +652,54 @@ class ParameterEstimationComposition(Composition):
 
     def _validate_data(self):
         """Check if user supplied data to fit is valid for data fitting mode."""
+
+        # If there is a depends_on attribute, the user is doing a conditional parameterization. The data must be a
+        # pandas dataframe, and we must strip out any columns that parameters are marked to depend on. These columns
+        # should be categorical or string columns.
+        if self.depends_on:
+            if not isinstance(self.data, pd.DataFrame):
+                raise ValueError(
+                    "If using conditional parameterization, the data must be a pandas dataframe."
+                )
+
+            # Check if the dependent columns are in the data
+            for param, col in self.depends_on.items():
+                if col not in self.data.columns:
+                    raise ValueError(f"The data does not contain the column '{col}' that parameter '{param}' "
+                                     f"is dependent on.")
+
+                # If the column is string, convert to categorical
+                if self.data[col].dtype == object:
+                    self.data[col] = self.data[col].astype('category')
+
+                # If the column is not categorical, return and error
+                if not self.data[col].dtype.name == 'category':
+                    raise ValueError(f"The column '{col}' that parameter '{param}' is dependent on must be a string or"
+                                     f" categorical column.")
+
+                # Make sure the column does not have too many unique values.
+                if len(self.data[col].unique()) > 5:
+                    warnings.warn(f"Column '{col}' has more than 5 unique values. Values = {self.data[col].unique()}. "
+                                  f"Each unique value will be treated as a separate condition. This may lead to a "
+                                  f"large number of parameters to estimate. Consider reducing the number of unique "
+                                  f"values in this column.")
+
+            # Get a separate copy of the dataframe with conditional columns
+            self.cond_data = self.data[list(set(self.depends_on.values()))].copy()
+
+            # For each value in depends_on, get the unique levels of the column. This will determine the number of
+            # of conditional parameters that need to be estimated for that parameter.
+            self.cond_levels = {param: self.cond_data[col].unique() for param, col in self.depends_on.items()}
+
+            # We also need a mask to keep track of which trials are associated with which condition
+            self.cond_mask = {}
+            for param, col in self.depends_on.items():
+                self.cond_mask[param] = {}
+                for level in self.cond_levels[param]:
+                    self.cond_mask[param][level] = self.cond_data[col] == level
+
+            # Remove the dependent columns from the data
+            self.data = self.data.drop(columns=self.depends_on.values())
 
         # If the data is not in numpy format (could be a pandas dataframe) convert it to numpy. Cast all values to
         # floats and keep track of categorical dimensions with a mask. This preprocessing is done to make the data
@@ -717,16 +809,6 @@ class ParameterEstimationComposition(Composition):
         same_seed_for_all_parameter_combinations,
         context=None,
     ):
-        # # Parse **parameters** into ControlSignals specs
-        control_signals = []
-        for param, allocation in parameters.items():
-            control_signals.append(
-                ControlSignal(
-                    modulates=param,
-                    modulation=OVERRIDE,
-                    allocation_samples=allocation,
-                )
-            )
 
         # For the PEC, the objective mechanism is not needed because in context of optimization of data fitting
         # we require all trials (and number of estimates) to compute the scalar objective value. In data fitting
@@ -748,7 +830,7 @@ class ParameterEstimationComposition(Composition):
                     categorical_dims=self.data_categorical_dims,
                 )
 
-                return np.sum(np.log(like))
+                return np.sum(np.log(like[self.likelihood_include_mask]))
 
             objective_function = f
 
@@ -781,9 +863,15 @@ class ParameterEstimationComposition(Composition):
         # indices it needs from composition output. This needs to be passed down from the PEC.
         optimization_function.outcome_variable_indices = self._outcome_variable_indices
 
+        control_signals = None
+        outcome_variables = None
         ocm = PEC_OCM(
             agent_rep=agent_rep,
             monitor_for_control=outcome_variables,
+            fit_parameters=parameters,
+            depends_on=self.depends_on,
+            cond_levels=self.cond_levels,
+            cond_mask=self.cond_mask,
             allow_probes=True,
             objective_mechanism=objective_mechanism,
             function=optimization_function,
@@ -815,9 +903,33 @@ class ParameterEstimationComposition(Composition):
 
         # Capture the input passed to run and pass it on to the OCM
         assert self.controller is not None
-        self.controller.set_pec_inputs_cache(
-            kwargs.get("inputs", None if not args else args[0])
-        )
+
+        # Get the inputs
+        inputs = kwargs.get("inputs", None if not args else args[0])
+
+        # Since we are passing fitting\optimization parameters as inputs we need add them to the inputs
+        if inputs:
+
+            # Don't check inputs if we are within a call to evaluate_agent_rep, the inputs have already been checked and
+            # cached on the PEC controller.
+            if ContextFlags.PROCESSING not in context.flags:
+                self.controller.check_pec_inputs(inputs)
+
+            # Run parse input dict on the inputs, this will fill in missing input ports with default values. There
+            # will be missing input ports because the user doesn't know about the control mechanism's input ports that
+            # have been added by the PEC for the fitting parameters.
+            if self.model in inputs and len(inputs) == 1:
+                full_inputs = inputs
+            else:
+                full_inputs, num_trials = self.model._parse_input_dict(inputs, context)
+
+            # Add the fitting parameters to the inputs, these will be modulated during fitting or optimization,
+            # we just use a dummy value here for now (the first value in the range of the parameter)
+            dummy_params = [v[0] for v in self.controller.function.fit_param_bounds.values()]
+            self.controller.set_parameters_in_inputs(dummy_params, full_inputs)
+
+        self.controller.set_pec_inputs_cache(full_inputs)
+
         # We need to set the inputs for the composition during simulation, by assigning the inputs dict passed in
         # PEC run() to its controller's state_feature_values (this is in order to accomodate multi-trial inputs
         # without having the PEC provide them one-by-one to the simulated composition. This assumes that the inputs
@@ -836,6 +948,10 @@ class ParameterEstimationComposition(Composition):
 
         kwargs.pop("inputs", None)
 
+        # Turn off warnings about no inputs the PEC. This is because the PEC doesn't have any inputs itself, it
+        # caches the inputs passed to it and passes them along to the inner composition during simulation.
+        self.warned_about_run_with_no_inputs = True
+
         num_trials_per_estimate = len(inputs_dict[list(inputs_dict.keys())[0]])
         self.controller.parameters.num_trials_per_estimate.set(
             num_trials_per_estimate, context=context
@@ -847,9 +963,10 @@ class ParameterEstimationComposition(Composition):
         # IMPLEMENTATION NOTE: has not executed OCM after first call
         if hasattr(self.controller, "optimal_control_allocation"):
             # Assign optimized_parameter_values and optimal_value    (remove randomization dimension)
-            self.optimized_parameter_values = (
+            self.optimized_parameter_values = dict(zip(
+                self.controller.function.fit_param_names,
                 self.controller.optimal_control_allocation[:-1]
-            )
+            ))
             self.optimal_value = self.controller.optimal_net_outcome
 
         return results
@@ -974,7 +1091,88 @@ class PEC_OCM(OptimizationControlMechanism):
 
     def __init__(self, *args, **kwargs):
         self._pec_input_values = None
+
+        self._pec_control_mech_indices = None
+
+        if 'fit_parameters' in kwargs:
+            self.fit_parameters = kwargs['fit_parameters']
+            del kwargs['fit_parameters']
+        else:
+            raise ValueError("PEC_OCM requires that the PEC parameters be passed down to it.")
+
+        if 'depends_on' in kwargs:
+            self.depends_on = kwargs['depends_on']
+            del kwargs['depends_on']
+        else:
+            self.depends_on = None
+
+        if 'cond_levels' in kwargs:
+            self.cond_levels = kwargs['cond_levels']
+            del kwargs['cond_levels']
+
+        if 'cond_mask' in kwargs:
+            self.cond_mask = kwargs['cond_mask']
+            del kwargs['cond_mask']
+
         super().__init__(*args, **kwargs)
+
+    def _instantiate_output_ports(self, context=None):
+        """Assign CostFunctions.DEFAULTS as default for cost_option of ControlSignals.
+        """
+
+        # The only control signal that we need for the PEC is the randomization control signal. All other parameter
+        # values will be passed through the inputs. This allows for trial-wise conditional parameter values to be
+        # passed to the composition being fit or optimized.
+        output_ports = ContentAddressableList(component_type=Port_Base)
+        self.parameters.output_ports._set(output_ports, context)
+        self._create_randomization_control_signal(context)
+
+    def check_pec_inputs(self, inputs_dict: dict):
+
+        model = self.composition.model
+
+        # Since we added control mechanisms to the composition, we need to make sure that we subtract off
+        # the number of control mechanisms from the number of state input ports in the error message.
+        num_state_input_ports = self.num_state_input_ports - len(self.fit_parameters)
+
+        if not inputs_dict:
+            pass
+
+        # If inputs_dict has model as its only entry, then check that its format is OK to pass to pec.run()
+        elif len(inputs_dict) == 1 and model in inputs_dict:
+            if not all(
+                    len(trial) == num_state_input_ports for trial in inputs_dict[model]
+            ):
+                raise ParameterEstimationCompositionError(
+                    f"The array in the dict specified for the 'inputs' arg of "
+                    f"{self.composition.name}.run() is badly formatted: "
+                    f"the length of each item in the outer dimension (a trial's "
+                    f"worth of inputs) must be equal to the number of inputs to "
+                    f"'{model.name}' ({num_state_input_ports})."
+                )
+
+        else:
+
+            # Restructure inputs as nd array with each row (outer dim) a trial's worth of inputs
+            #    and each item in the row (inner dim) the input to a node (or input_port) for that trial
+            if len(inputs_dict) != num_state_input_ports:
+
+                raise ParameterEstimationCompositionError(
+                    f"The dict specified in the `input` arg of "
+                    f"{self.composition.name}.run() is badly formatted: "
+                    f"the number of entries should equal the number of inputs "
+                    f"to '{model.name}' ({num_state_input_ports})."
+                )
+            trial_seqs = list(inputs_dict.values())
+            num_trials = len(trial_seqs[0])
+            for trial in range(num_trials):
+                for trial_seq in trial_seqs:
+                    if len(trial_seq) != num_trials:
+                        raise ParameterEstimationCompositionError(
+                            f"The dict specified in the `input` arg of "
+                            f"ParameterEstimationMechanism.run() is badly formatted: "
+                            f"every entry must have the same number of inputs."
+                        )
 
     def set_pec_inputs_cache(self, inputs_dict: dict) -> dict:
         """Cache input values passed to the last call of run for the composition that this OCM controls.
@@ -989,45 +1187,160 @@ class PEC_OCM(OptimizationControlMechanism):
 
         model = self.composition.model
 
-        if not inputs_dict:
+        if not inputs_dict or (len(inputs_dict) == 1 and model in inputs_dict):
             pass
-
-        # If inputs_dict has model as its only entry, then check that its format is OK to pass to pec.run()
-        elif len(inputs_dict) == 1 and model in inputs_dict:
-            if not all(
-                len(trial) == self.num_state_input_ports for trial in inputs_dict[model]
-            ):
-                raise ParameterEstimationCompositionError(
-                    f"The array in the dict specified for the 'inputs' arg of "
-                    f"{self.composition.name}.run() is badly formatted: "
-                    f"the length of each item in the outer dimension (a trial's "
-                    f"worth of inputs) must be equal to the number of inputs to "
-                    f"'{model.name}' ({self.num_state_input_ports})."
-                )
-
         else:
-            # Restructure inputs as nd array with each row (outer dim) a trial's worth of inputs
-            #    and each item in the row (inner dim) the input to a node (or input_port) for that trial
-            if len(inputs_dict) != self.num_state_input_ports:
-                raise ParameterEstimationCompositionError(
-                    f"The dict specified in the `input` arg of "
-                    f"{self.composition.name}.run() is badly formatted: "
-                    f"the number of entries should equal the number of inputs "
-                    f"to '{model.name}' ({self.num_state_input_ports})."
-                )
             trial_seqs = list(inputs_dict.values())
             num_trials = len(trial_seqs[0])
             input_values = [[] for _ in range(num_trials)]
             for trial in range(num_trials):
                 for trial_seq in trial_seqs:
-                    if len(trial_seq) != num_trials:
-                        raise ParameterEstimationCompositionError(
-                            f"The dict specified in the `input` arg of "
-                            f"ParameterEstimationMechanism.run() is badly formatted: "
-                            f"every entry must have the same number of inputs."
-                        )
-                    # input_values[trial].append(np.array([trial_seq[trial].tolist()]))
                     input_values[trial].extend(trial_seq[trial])
             inputs_dict = {model: input_values}
 
         self._pec_input_values = inputs_dict
+
+
+    def set_parameters_in_inputs(self, parameters, inputs):
+        """
+        Add the fitting parameters to the inputs passed to the model for each trial. Originally, the PEC used the
+        OCM to modulate the parameters of the model. However, this did not allow for trial-wise conditional or varying
+        parameter values. The current implementation passes the fitting parameters directly to the model as inputs.
+        These inputs go to dummy control mechanisms that are added to the composition before fitting or optimization.
+        The control mechanisms are then used to modulate the parameters of the model. This function has side effects
+        because it modifies the inputs dictionary in place.
+
+        Args:
+            parameters (list): A list of fitting parameters that are to be passed to the model as inputs.
+            inputs (dict): A dictionary of inputs that are passed to the model for each trial.
+
+        """
+
+        # Get the input indices for the control mechanisms that are used to modulate the fitting parameters
+        if self._pec_control_mech_indices is None:
+            self.composition.model._analyze_graph()
+            input_nodes = [node for node, roles in self.composition.model.nodes_to_roles.items()
+                           if NodeRole.INPUT in roles]
+            self._pec_control_mech_indices = [input_nodes.index(m) for m in self.composition.pec_control_mechs.values()]
+
+        # If the model is in the inputs, then inputs are passed as list of lists and we need to add the fitting
+        # parameters to each trial as a concatenated list.
+        if self.composition.model in inputs:
+
+            in_arr = inputs[self.composition.model]
+
+            if type(in_arr) is not np.ndarray:
+                in_arr = convert_to_np_array(in_arr)
+
+            # Make sure it is 3D (only if not ragged)
+            if in_arr.dtype != object:
+                in_arr = np.atleast_3d(in_arr)
+
+                # If the inputs don't have columns for the fitting parameters, then we need to add them
+            if in_arr.shape[1] != len(self.composition.input_ports):
+                num_missing = len(self.composition.input_ports) - in_arr.shape[1]
+                if in_arr.ndim == 3:
+                    in_arr = np.hstack((in_arr, np.zeros((in_arr.shape[0], num_missing, 1))))
+                elif in_arr.ndim == 2:
+                    in_arr = np.hstack((in_arr, np.zeros((in_arr.shape[0], num_missing))))
+
+            j = 0
+            for i, (pname, mech) in enumerate(self.fit_parameters.keys()):
+                mech_idx = self._pec_control_mech_indices[i]
+                if not self.depends_on or (pname, mech) not in self.depends_on:
+                    if in_arr.ndim == 3:
+                        in_arr[:, mech_idx, 0] = parameters[j]
+                    else:
+                        for k in range(in_arr.shape[0]):
+                            in_arr[k, mech_idx] = np.array([parameters[j]])
+                    j += 1
+                else:
+                    for level in self.cond_levels[(pname, mech)]:
+                        mask = self.cond_mask[(pname, mech)][level]
+                        if in_arr.ndim == 3:
+                            in_arr[mask, mech_idx, 0] = parameters[j]
+                        else:
+                            for k in range(in_arr.shape[0]):
+                                if mask[k]:
+                                    in_arr[k, mech_idx] = np.array([parameters[j]])
+                        j += 1
+
+            inputs[self.composition.model] = in_arr
+
+        # Otherwise, assume the inputs are passed to each mechanism individually. Thus, we need to feed the
+        # fitting parameters to the model to their respective control mechanisms
+        else:
+            j = 0
+            for i, ((pname, mech), values) in enumerate(self.fit_parameters.items()):
+                control_mech = self.composition.pec_control_mechs[(pname, mech)]
+                if not self.depends_on or (pname, mech) not in self.depends_on:
+                    inputs[control_mech] = np.ones_like(inputs[control_mech]) * parameters[j]
+                    j += 1
+                else:
+                    inputs[control_mech] = np.zeros_like(inputs[control_mech])
+                    for level in self.cond_levels[(pname, mech)]:
+                        mask = self.cond_mask[(pname, mech)][level]
+                        inputs[control_mech][mask] = parameters[j]
+                        j += 1
+
+    def _execute(self, variable=None, context=None, runtime_params=None)->np.ndarray:
+        """Return control_allocation that optimizes net_outcome of agent_rep.evaluate().
+        """
+
+        if self.is_initializing:
+            return [defaultControlAllocation]
+
+        # Assign default control_allocation if it is not yet specified (presumably first trial)
+        control_allocation = self.parameters.control_allocation._get(context)
+        if control_allocation is None:
+            control_allocation = [c.defaults.variable for c in self.control_signals]
+
+        # Give the agent_rep a chance to adapt based on last trial's state_feature_values and control_allocation
+        if hasattr(self.agent_rep, "adapt"):
+            # KAM 4/11/19 switched from a try/except to hasattr because in the case where we don't
+            # have an adapt method, we also don't need to call the net_outcome getter
+            net_outcome = self.parameters.net_outcome._get(context)
+
+            self.agent_rep.adapt(self.parameters.state_feature_values._get(context),
+                                 control_allocation,
+                                 net_outcome,
+                                 context=context)
+
+        # freeze the values of current context, because they can be changed in between simulations,
+        # and the simulations must start from the exact spot
+        frozen_context = self._get_frozen_context(context)
+
+        alt_controller = None
+        if self.agent_rep.controller is None:
+            try:
+                alt_controller = context.composition.controller
+            except AttributeError:
+                alt_controller = None
+
+        self.agent_rep._initialize_as_agent_rep(
+            frozen_context, base_context=context, alt_controller=alt_controller
+        )
+
+        # Get control_allocation that optimizes net_outcome using OptimizationControlMechanism's function
+        # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
+        optimal_control_allocation, optimal_net_outcome, saved_samples, saved_values = \
+                                                super(ControlMechanism,self)._execute(
+                                                    variable=control_allocation,
+                                                    num_estimates=self.parameters.num_estimates._get(context),
+                                                    context=context,
+                                                    runtime_params=runtime_params
+                                                )
+
+        # clean up frozen values after execution
+        self.agent_rep._clean_up_as_agent_rep(frozen_context, alt_controller=alt_controller)
+
+        if self.function.save_samples:
+            self.saved_samples = saved_samples
+        if self.function.save_values:
+            self.saved_values = saved_values
+
+        self.optimal_control_allocation = optimal_control_allocation
+        self.optimal_net_outcome = optimal_net_outcome
+
+        # Return optimal control_allocation formatted as 2d array
+        return [defaultControlAllocation]

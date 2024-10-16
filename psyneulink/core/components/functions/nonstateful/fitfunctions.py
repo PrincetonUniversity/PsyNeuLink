@@ -36,6 +36,8 @@ from rich.progress import Progress, BarColumn, TimeRemainingColumn
 import warnings
 import logging
 
+from rich.markup import escape
+
 logger = logging.getLogger(__name__)
 
 __all__ = ["PECOptimizationFunction", "BadLikelihoodWarning", "PECObjectiveFuncWarning"]
@@ -55,7 +57,7 @@ def get_param_str(params):
 
     """
     return ", ".join(
-        f"{name.replace('PARAMETER_CIM_', '')}={value:.5f}"
+        f"[dodger_blue1]{escape(name.replace('PARAMETER_CIM_', ''))}[/dodger_blue1]=[spring_green1]{value:.5f}[/spring_green1]"
         for name, value in params.items()
     )
 
@@ -269,6 +271,15 @@ class PECOptimizationFunction(OptimizationFunction):
 
             - 'differential_evolution' : Differential evolution as implemented by scipy.optimize.differential_evolution
             - optuna.samplers: Pass any instance of an optuna sampler to use optuna for optimization.
+            - Type[optuna.samplers.BaseSampler]: Pass a class of type optuna.samplers.BaseSampler to use optuna
+            for optimization. In this case, the random seed used for the sampler will be the same as the seed used
+            as the intial_seed passed to PEC at contruction. Additonal desired keyword arguments can be passed to the
+            sampler via the optuna_kwargs argument.
+
+    optuna_kwargs :
+        A dictionary of keyword arguments to pass to the optuna sampler. This is only used if method is an class of
+        type optuna.samplers.BaseSampler. Note: this argument is ignored if method is an already instantiated instance
+        of an optuna sampler.
 
     objective_function :
         The objective function to use for optimization. This is the function that defines the optimization problem the
@@ -296,7 +307,8 @@ class PECOptimizationFunction(OptimizationFunction):
     @beartype
     def __init__(
         self,
-        method: Union[Literal["differential_evolution"], optuna.samplers.BaseSampler],
+        method: Union[Literal["differential_evolution"], optuna.samplers.BaseSampler, Type[optuna.samplers.BaseSampler]],
+        optuna_kwargs: Optional[Dict] = None,
         objective_function: Optional[Callable] = None,
         search_space=None,
         save_samples: Optional[bool] = None,
@@ -306,6 +318,8 @@ class PECOptimizationFunction(OptimizationFunction):
         **kwargs,
     ):
         self.method = method
+        self._optuna_kwargs = {} if optuna_kwargs is None else optuna_kwargs
+
         self.direction = direction
 
         # The outcome variables to select from the composition's output need to be specified. These will be
@@ -358,6 +372,8 @@ class PECOptimizationFunction(OptimizationFunction):
         # Keep track of the best parameters
         self._best_params = {}
 
+        self._method_kwargs = kwargs if kwargs else {}
+
         super().__init__(
             search_space=search_space,
             save_samples=save_samples,
@@ -365,7 +381,6 @@ class PECOptimizationFunction(OptimizationFunction):
             search_function=search_function,
             search_termination_function=search_termination_function,
             aggregation_function=None,
-            **kwargs,
         )
 
     def set_pec_objective_function(self, objective_function: Callable):
@@ -427,31 +442,10 @@ class PECOptimizationFunction(OptimizationFunction):
                 f"Expected {len(self.fit_param_names)} arguments, got {len(args)}"
             )
 
-        # Set the search space to the control allocation. The only thing evaluate is actually "searching" over is the
-        # randomization dimension, which should be the last sample iterator in the search space list.
-        search_space = self.parameters.search_space._get(context)
-        for i, arg in enumerate(args):
-            # Map the args in order of the fittable parameters
-            len_search_space = (
-                len(search_space)
-                if self.owner.num_estimates is None
-                else len(search_space) - 1
-            )
-            if i < len_search_space:
-                assert search_space[i].num == 1, (
-                    "Search space for this dimension must be a single value, during search "
-                    "we will change the value but not the shape."
-                )
-
-                # All of this code is required to set the value of the singleton search space without creating a new
-                # object. It seems cleaner to just use search_space[i] = SampleIterator([arg]) but this seems to cause
-                # problems for Jan in compilation. Need to confirm this, maybe its ok as long as size doesn't change.
-                # We can protect against this with the above assert.
-                search_space[i].specification = [arg]
-                search_space[i].generator = search_space[i].specification
-                search_space[i].start = arg
-            else:
-                raise ValueError("Too many arguments passed to run_simulations")
+        # If the model is in the inputs, then inputs are passed as list of lists and we need to add the fitting
+        # parameters to each trial as a concatenated list
+        inputs = self.owner.composition.controller._pec_input_values
+        self.owner.composition.controller.set_parameters_in_inputs(parameters=args, inputs=inputs)
 
         # Reset the search grid
         self.reset_grid(context)
@@ -546,8 +540,28 @@ class PECOptimizationFunction(OptimizationFunction):
         if self.method == "differential_evolution":
             return self._fit_differential_evolution(obj_func, display_iter, context)
         elif isinstance(self.method, optuna.samplers.BaseSampler):
+
+            if self.owner.initial_seed is not None:
+                warnings.warn("initial_seed on PEC is not None, but instantiated optuna sampler is being used. If you "
+                              "want deterministic behavior, make sure to specify seed on optuna sampler as well")
+
             return self._fit_optuna(
                 obj_func=obj_func, opt_func=self.method, display_iter=display_iter
+            )
+        # If this is a class of type base sampler, instantiate it and pass it to _fit_optuna
+        elif isinstance(self.method, type) and issubclass(self.method, optuna.samplers.BaseSampler):
+
+            if self.owner.initial_seed is not None:
+                if "seed" in self._optuna_kwargs:
+                    warnings.warn(
+                        f"Overriding seed passed to optuna sampler with seed passed to PEC. "
+                        f"Optuna sampler seed: {self._optuna_kwargs['seed']}, PEC.initial_seed: {self.owner.initial_seed}"
+                    )
+
+                self._optuna_kwargs["seed"] = self.owner.initial_seed
+
+            return self._fit_optuna(
+                obj_func=obj_func, opt_func=self.method(**self._optuna_kwargs), display_iter=display_iter
             )
         else:
             raise ValueError(f"Invalid optimization_function method: {self.method}")
@@ -594,13 +608,15 @@ class PECOptimizationFunction(OptimizationFunction):
                         f"{get_param_str(params)}, {self.obj_func_desc_str}: {obj_val}, "
                         f"Eval-Time: {elapsed} (seconds)",
                         style="bold red",
+                        highlight=False,
                     )
                     # Clear the warnings
                     warns.clear()
                 else:
                     progress.console.print(
                         f"{get_param_str(params)}, {self.obj_func_desc_str}: {obj_val}, "
-                        f"Eval-Time: {elapsed} (seconds)"
+                        f"Eval-Time: {elapsed} (seconds)",
+                        highlight=False,
                     )
 
                 # Certain algorithms like differential evolution evaluate the objective function multiple times per
@@ -722,6 +738,7 @@ class PECOptimizationFunction(OptimizationFunction):
                     seed=seed_for_scipy,
                     popsize=15,
                     polish=False,
+                    **self._method_kwargs
                 )
 
             # Bind the fitted parameters to their names
@@ -804,10 +821,6 @@ class PECOptimizationFunction(OptimizationFunction):
 
                     progress.update(opt_task, advance=1)
 
-                # We need to hook into Optuna's random number generator here so that we can allow PsyNeuLink's RNS to
-                # determine the seed for Optuna's RNG. Pretty hacky unfortunately.
-                opt_func._rng = np.random.RandomState(self.owner.initial_seed)
-
                 # Turn off optuna logging except for errors or warnings, it doesn't work well with our PNL progress bar
                 optuna.logging.set_verbosity(optuna.logging.WARNING)
 
@@ -837,11 +850,21 @@ class PECOptimizationFunction(OptimizationFunction):
     def fit_param_names(self) -> List[str]:
         """Get a unique name for each parameter in the fit."""
         if self.owner is not None:
-            return [
-                cs.efferents[0].receiver.name
-                for i, cs in enumerate(self.owner.control_signals)
-                if i != self.randomization_dimension
-            ]
+            # Go through each parameter and create a unique name for it
+            if not self.owner.depends_on:
+                return [f"{mech.name}.{param_name}"
+                        for param_name, mech in self.owner.fit_parameters.keys()]
+            else:
+                names = []
+                for param_name, mech in self.owner.fit_parameters.keys():
+                    if (param_name, mech) in self.owner.cond_levels:
+                        for level in self.owner.cond_levels[(param_name, mech)]:
+                            names.append(f"{mech.name}.{param_name}[{level}]")
+                    else:
+                        names.append(f"{mech.name}.{param_name}")
+
+                return names
+
         else:
             return None
 
@@ -857,16 +880,22 @@ class PECOptimizationFunction(OptimizationFunction):
         """
 
         if self.owner is not None:
-            acs = [
-                cs.specification
-                for i, cs in enumerate(self._full_search_space)
-                if i != self.randomization_dimension
-            ]
 
-            bounds = [(float(min(s)), float(max(s))) for s in acs]
-
-            # Get the step size for each parameter.
-            steps = [np.unique(np.diff(s).round(decimals=5)) for s in acs]
+            if not self.owner.depends_on:
+                bounds = [(float(min(s)), float(max(s))) for s in self.owner.fit_parameters.values()]
+                steps = [np.unique(np.diff(s).round(decimals=5)) for s in self.owner.fit_parameters.values()]
+            else:
+                bounds = []
+                steps = []
+                for param_name, mech in self.owner.fit_parameters.keys():
+                    s = self.owner.fit_parameters[(param_name, mech)]
+                    if (param_name, mech) in self.owner.cond_levels:
+                        for _ in self.owner.cond_levels[(param_name, mech)]:
+                            bounds.append((float(min(s)), float(max(s))))
+                            steps.append(np.unique(np.diff(s).round(decimals=5)))
+                    else:
+                        bounds.append((float(min(s)), float(max(s))))
+                        steps.append(np.unique(np.diff(s).round(decimals=5)))
 
             # We also check if step size is constant, if not we raise an error
             for s in steps:

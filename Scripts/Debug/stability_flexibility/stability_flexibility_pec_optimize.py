@@ -114,7 +114,7 @@ pec = pnl.ParameterEstimationComposition(
         responseGate.output_ports[0],
     ],
     objective_function=reward_rate,
-    optimization_function=pnl.PECOptimizationFunction(method=optuna.samplers.CmaEsSampler(),
+    optimization_function=pnl.PECOptimizationFunction(method=optuna.samplers.QMCSampler(),
                                                       max_iterations=50,
                                                       direction='minimize'),
     num_estimates=num_estimates,
