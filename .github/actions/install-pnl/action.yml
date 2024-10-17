@@ -67,6 +67,8 @@ runs:
           echo "contourpy<1.1.0" >> env_constraints.txt
           # pillow >= 10.0.0 doesn't provide win32 wheel
           echo "pillow < 10.0.0" >> env_constraints.txt
+          # pandas >= 2.1.0 doesn't provide win32 wheel
+          echo "pandas < 2.1.0" >> env_constraints.txt
         fi
 
     - name: Install updated package
