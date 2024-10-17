@@ -55,7 +55,7 @@ jobs:
         # It's not possible to condition steps on env or secrets,
         # We need an explicit check here
         if [ -n "$TWINE_USERNAME" -a -n "$TWINE_PASSWORD" ]; then
-          twine upload dist/*
+          twine upload --verbose dist/*
         else
           echo "::warning::Not uploading to test PyPI, no credentials available!"
         fi
@@ -157,7 +157,7 @@ jobs:
         # It's not possible to condition steps on env or secrets,
         # We need an explicit check here
         if [ -n "$TWINE_USERNAME" -a -n "$TWINE_PASSWORD" ]; then
-          twine upload dist/*
+          twine upload --verbose dist/*
         else
           echo "::warning::Not uploading to PyPI, no credentials available!"
         fi
