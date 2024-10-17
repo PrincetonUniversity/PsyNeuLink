@@ -185,8 +185,8 @@ RumelNet = pnl.AutodiffComposition(
         learning_rate=1,
         randomize=False
         )
-    
-    
+
+
 RumelNet.add_node(nouns_in)
 RumelNet.add_node(rels_in)
 RumelNet.add_node(hn)
@@ -257,7 +257,7 @@ tot_reps=200
 for reps in range(tot_reps):
   print('Training rep: ',reps + 1, ' of: ', tot_reps)
   for noun in range(len(nouns)):
-    
+
     inputs_dict = {}
 
     targets_dict = {}
@@ -277,7 +277,7 @@ for reps in range(tot_reps):
         targ_is = truth_is[noun],
         targ_has = irrel_has[noun],
         targ_can = irrel_can[noun],
-        
+
         targ_is=np.reshape(targ_is,np.amax(np.shape(targ_is)))
         targ_has=np.reshape(targ_has,np.amax(np.shape(targ_has)))
         targ_can=np.reshape(targ_can,np.amax(np.shape(targ_can)))
@@ -288,7 +288,7 @@ for reps in range(tot_reps):
         targ_is = irrel_is[noun] ,
         targ_has = truth_has[noun],
         targ_can = irrel_can[noun],
-        
+
         targ_is=np.reshape(targ_is,np.amax(np.shape(targ_is)))
         targ_has=np.reshape(targ_has,np.amax(np.shape(targ_has)))
         targ_can=np.reshape(targ_can,np.amax(np.shape(targ_can)))
@@ -300,7 +300,7 @@ for reps in range(tot_reps):
         targ_is = irrel_is[noun] ,
         targ_has = irrel_has[noun],
         targ_can = truth_can[noun],
-        
+
         targ_is=np.reshape(targ_is,np.amax(np.shape(targ_is)))
         targ_has=np.reshape(targ_has,np.amax(np.shape(targ_has)))
         targ_can=np.reshape(targ_can,np.amax(np.shape(targ_can)))
@@ -314,7 +314,7 @@ for reps in range(tot_reps):
       targets_dict[out_sig_I].append(truth_nouns[noun])
       inputs_dict[rels_in].append(rels_onehot[i])
 
-    
+
     result = RumelNet.run(inputs=[{'inputs': inputs_dict,
                                 'targets': targets_dict,
                                 'epochs': n_epochs}],do_logging=True)
@@ -351,16 +351,16 @@ data_has=out_sig_has.log.nparray()[1,1]
 data_can=out_sig_can.log.nparray()[1,1]
 
 data_I=np.array(data_I[1][1::])
-data_I=np.matrix(data_I)
+data_I=np.array(data_I)
 
 data_is=np.array(data_is[1][1::])
-data_is=np.matrix(data_is)
-                 
+data_is=np.array(data_is)
+
 data_has=np.array(data_has[1][1::])
-data_has=np.matrix(data_has)
+data_has=np.array(data_has)
 
 data_can=np.array(data_can[1][1::])
-data_can=np.matrix(data_can)
+data_can=np.array(data_can)
 
 log_length=np.shape(data_I)[0]
 
@@ -374,33 +374,33 @@ for i in range(int(log_length / len(relations)) - 1):
   is_rel_log = np.append(is_rel_log,data_is[3 * (i + 1), :].T, 1)
   has_rel_log = np.append(has_rel_log,data_has[3 * (i + 1) + 1, :].T, 1)
   can_rel_log = np.append(can_rel_log,data_can[3 * (i + 1) + 2, :].T, 1)
-  
+
   # This cell plots the last output values from the network for each noun/relation pair
 # This will show you what the network has learned with regards to the properties of
 # each noun.
 
 for i in range(len(nouns)):
   n=-i
-  
+
   plt.stem(I_rel_log[:, n - 1])
-  
+
   plt.title(nouns[n - 1])
   plt.ylabel('Strength of Association')
   plt.xticks(np.arange(len(nouns)), nouns,rotation=35)
   plt.yticks(np.arange(0,1.1,.1))
   plt.show()
 
-  
+
   plt.stem(is_rel_log[:, n - 1])
-  
+
   plt.title([nouns[n - 1], ' is:'])
   plt.ylabel('Strength of Association')
   plt.xticks(np.arange(len(is_list)), is_list,rotation=35)
   plt.yticks(np.arange(0,1.1,.1))
   plt.show()
-  
+
   plt.stem(has_rel_log[:, n - 1])
-  
+
   plt.title([nouns[n - 1], ' has:'])
   plt.ylabel('Strength of Association')
   plt.xticks(np.arange(len(has_list)), has_list,rotation=35)
@@ -408,7 +408,7 @@ for i in range(len(nouns)):
   plt.show()
 
   plt.stem(can_rel_log[:, n - 1])
-  
+
   plt.title([nouns[n - 1], ' can:'])
   plt.ylabel('Strength of Association')
   plt.xticks(np.arange(len(can_list)), can_list,rotation=35)

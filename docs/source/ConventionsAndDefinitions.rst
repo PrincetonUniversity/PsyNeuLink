@@ -43,7 +43,7 @@ and Compositions (combinations of Components that implement a model).
 .. _Definitions_Components:
 
 `Components <Component>`
-~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 Components are objects that perform a specific function. Every Component has a:
 

@@ -271,6 +271,10 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                 variable_shape[-1] = function_variable.shape[-1]
                 # self.parameters.variable.default_value = np.zeros(tuple(variable_shape))
                 variable = np.zeros(tuple(variable_shape))
+            else:
+                variable = default_variable
+        else:
+            variable = default_variable
 
             # IMPLEMENTATON NOTE:
             #    Don't worry about case in which length of function's variable is 1 and Mechanism's is > 1

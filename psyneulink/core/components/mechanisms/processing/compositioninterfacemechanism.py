@@ -189,8 +189,6 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
                  name=None,
                  prefs:   Optional[ValidPrefSet] = None):
 
-        if default_variable is None and size is None:
-            default_variable = self.class_defaults.variable
         self.composition = composition
         self.port_map = port_map
         self.connected_to_composition = False

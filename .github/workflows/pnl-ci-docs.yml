@@ -20,19 +20,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
-      # Matrix setup is a hacky way to include 'base' build in pull requests
-      # The entire matrix is set up and 'base' builds are pruned based
-      # on event name and final configuration (ubuntu, python3.11).
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
-        python-architecture: ['x64']
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11', '3.12']
         os: [ubuntu-latest, macos-latest, windows-latest]
-        event:
-          - ${{ github.event_name }}
-        pnl-version: ['head', 'base']
+        pnl-version: ${{ (github.event_name == 'push') && fromJSON('["head"]') || fromJSON('["head", "base"]') }}
         exclude:
-          - event: 'push'
-            pnl-version: 'base'
           - os: macos-latest
             pnl-version: 'base'
           - os: windows-latest
@@ -45,6 +37,16 @@ jobs:
             pnl-version: 'base'
           - python-version: '3.10'
             pnl-version: 'base'
+          - python-version: '3.12'
+            pnl-version: 'base'
+
+            # Python 3.7 x64 on macos-14 (arm64) images is broken [0]
+            # and arm64 version is not available [1].
+            # Restrict python 3.7 macos runs to macos-13
+            # [0] https://github.com/actions/setup-python/issues/855
+            # [1] https://github.com/actions/setup-python/issues/856
+          - python-version: '3.7'
+            os: macos-latest
 
     outputs:
       on_master: ${{ steps.on_master.outputs.on-branch }}
@@ -81,7 +83,6 @@ jobs:
         # Block python3.7.17 on macos. see:
         # https://github.com/actions/setup-python/issues/682
         python-version: ${{ (matrix.os == 'macos-latest' && matrix.python-version == '3.7') && '3.7.16' || matrix.python-version }}
-        architecture: ${{ matrix.python-architecture }}
 
     - name: Get pip cache location
       shell: bash
@@ -95,8 +96,8 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ${{ steps.pip_cache.outputs.pip_cache_dir }}/wheels
-        key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-${{ hashFiles('requirements.txt', 'doc_requirements.txt') }}-${{ github.sha }}
-        restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-${{ hashFiles('requirements.txt', 'doc_requirements.txt') }}
+        key: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels-${{ hashFiles('requirements.txt', 'doc_requirements.txt') }}-${{ github.sha }}
+        restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels-${{ hashFiles('requirements.txt', 'doc_requirements.txt') }}
 
     # We need to install all PNL deps since docs config imports psyneulink module
     - name: Install local, editable PNL package
@@ -126,7 +127,7 @@ jobs:
     - name: Upload Documentation
       uses: actions/upload-artifact@v4
       with:
-        name: Documentation-${{matrix.pnl-version}}-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
+        name: Documentation-${{matrix.pnl-version}}-${{ matrix.os }}-${{ matrix.python-version }}
         retention-days: 1
         path: docs/build/html
 
@@ -172,7 +173,7 @@ jobs:
     - name: Download branch docs
       uses: actions/download-artifact@v4
       with:
-        name: Documentation-head-${{ matrix.os }}-${{ matrix.python-version }}-x64
+        name: Documentation-head-${{ matrix.os }}-${{ matrix.python-version }}
         path: _built_docs/${{ github.ref }}
       if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/devel' || github.ref == 'refs/heads/docs'
 
@@ -189,7 +190,7 @@ jobs:
     - name: Download main docs
       uses: actions/download-artifact@v4
       with:
-        name: Documentation-head-${{ matrix.os }}-${{ matrix.python-version }}-x64
+        name: Documentation-head-${{ matrix.os }}-${{ matrix.python-version }}
         # This overwrites files in current directory
       if: startsWith(github.ref, 'refs/tags/') && contains(needs.*.outputs.on_master, 'master')
 

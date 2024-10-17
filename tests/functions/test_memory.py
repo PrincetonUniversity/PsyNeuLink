@@ -6,7 +6,7 @@ import pytest
 import psyneulink.core.components.functions.stateful.memoryfunctions as Functions
 import psyneulink.core.llvm as pnlvm
 from psyneulink import *
-from psyneulink.core.globals.utilities import _SeededPhilox
+from psyneulink.core.globals.utilities import _SeededPhilox, convert_all_elements_to_np_array
 
 # **********************************************************************************************************************
 # OMINBUS TEST *********************************************************************************************************
@@ -144,9 +144,7 @@ def test_basic(func, variable, params, expected, benchmark, func_mode):
     if variable is philox_var:
         f.parameters.random_state.set(_SeededPhilox([module_seed]))
 
-    # Do not allow writeback. "ring_memory" used by DictionaryMemory is a
-    # custom structure, not a PNL parameter
-    EX = pytest.helpers.get_func_execution(f, func_mode, writeback=False)
+    EX = pytest.helpers.get_func_execution(f, func_mode)
 
     EX(variable)
 
@@ -172,6 +170,24 @@ def test_basic(func, variable, params, expected, benchmark, func_mode):
 #region
 
 class TestDictionaryMemory:
+
+    # standard numpy comparison methods don't work well with ragged arrays
+    @staticmethod
+    def _get_retrieved_key(stimuli, retrieved_value):
+        # assumes as in tests below that at most one stimulus key will match
+        for k, v in stimuli.items():
+            v = convert_all_elements_to_np_array(v)
+            if len(v) != len(retrieved_value):
+                continue
+
+            for i in range(len(v)):
+                if not np.array_equal(v[i], retrieved_value[i]):
+                    break
+            else:
+                return [k]
+
+        return [None]
+
     # Test of DictionaryMemory without LLVM:
     def test_DictionaryMemory_with_initializer_and_key_size_same_as_val_size(self):
 
@@ -195,8 +211,8 @@ class TestDictionaryMemory:
 
         retrieved_keys=[]
         for key in sorted(stimuli.keys()):
-            retrieved = [i for i in em.execute(stimuli[key])]
-            retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
+            retrieved = em.execute(stimuli[key])
+            retrieved_key = [k for k, v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
             retrieved_keys.append(retrieved_key)
         assert retrieved_keys == [['F'], ['A'], ['A'], ['C'], ['B'], ['F']]
 
@@ -204,20 +220,20 @@ class TestDictionaryMemory:
         em.function.reset(np.array([stimuli['A'], stimuli['F']], dtype=object))
         retrieved_keys=[]
         for key in sorted(stimuli.keys()):
-            retrieved = [i for i in em.execute(stimuli[key])]
-            retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
+            retrieved = em.execute(stimuli[key])
+            retrieved_key = [k for k, v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
             retrieved_keys.append(retrieved_key)
         assert retrieved_keys == [['A'], ['A'], ['A'], ['A'], ['B'], ['F']]
 
         stim = 'C'
         em.function.equidistant_keys_select = OLDEST
-        retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-        retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
+        retrieved = em.function.get_memory(stimuli[stim][0])
+        retrieved_key = [k for k, v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
         assert retrieved_key == ['A']
 
         em.function.equidistant_keys_select = NEWEST
-        retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-        retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
+        retrieved = em.function.get_memory(stimuli[stim][0])
+        retrieved_key = [k for k, v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
         assert retrieved_key == ['D']
 
         # Test that after allowing dups, warning is issued and memory with zeros is returned
@@ -228,10 +244,10 @@ class TestDictionaryMemory:
         with pytest.warns(UserWarning, match=text):
             retrieved = em.execute(stimuli[stim])
 
-        retrieved_key = [k for k,v in stimuli.items() if v==list(retrieved)] or [None]
+        retrieved_key = [k for k, v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
         assert retrieved_key == [None]
-        assert retrieved[0] == [0, 0, 0]
-        assert retrieved[1] == [0, 0, 0]
+        np.testing.assert_array_equal(retrieved[0], [0, 0, 0])
+        np.testing.assert_array_equal(retrieved[1], [0, 0, 0])
 
     def test_DictionaryMemory_with_initializer_and_key_size_diff_from_val_size(self):
 
@@ -257,20 +273,17 @@ class TestDictionaryMemory:
         for key in sorted(stimuli.keys()):
             print(key)
             retrieved = [i for i in em.execute(stimuli[key])]
-            retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
-            retrieved_keys.append(retrieved_key)
+            retrieved_keys.append(TestDictionaryMemory._get_retrieved_key(stimuli, retrieved))
         assert retrieved_keys == [['F'], ['A'], ['A'], ['A'], ['B'], ['F']]
 
         stim = 'C'
         em.function.equidistant_keys_select = OLDEST
         retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-        retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
-        assert retrieved_key == ['A']
+        assert TestDictionaryMemory._get_retrieved_key(stimuli, retrieved) == ['A']
 
         em.function.equidistant_keys_select = NEWEST
         retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-        retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
-        assert retrieved_key == ['D']
+        assert TestDictionaryMemory._get_retrieved_key(stimuli, retrieved) == ['D']
 
         # Test that after allowing dups, warning is issued and memory with zeros is returned
         em.function.duplicate_keys = False
@@ -280,10 +293,10 @@ class TestDictionaryMemory:
         with pytest.warns(UserWarning, match=text):
             retrieved = em.execute(stimuli[stim])
 
-        retrieved_key = [k for k,v in stimuli.items() if v==list(retrieved)] or [None]
+        retrieved_key = [k for k, v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
         assert retrieved_key == [None]
-        assert retrieved[0] == [0, 0, 0]
-        assert retrieved[1] == [0, 0, 0, 0]
+        np.testing.assert_array_equal(retrieved[0], [0, 0, 0])
+        np.testing.assert_array_equal(retrieved[1], [0, 0, 0, 0])
 
     # def test_DictionaryMemory_without_initializer_in_composition():
     #
@@ -327,19 +340,19 @@ class TestDictionaryMemory:
         retrieved_keys=[]
         for key in sorted(stimuli.keys()):
             retrieved = [i for i in em.execute(stimuli[key])]
-            retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
+            retrieved_key = [k for k, v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
             retrieved_keys.append(retrieved_key)
         assert retrieved_keys == [[None], ['A'], ['A'], ['C'], ['B'], ['D']]
 
         stim = 'C'
         em.function.equidistant_keys_select = OLDEST
         retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-        retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
+        retrieved_key = [k for k, v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
         assert retrieved_key == ['A']
 
         em.function.equidistant_keys_select = NEWEST
         retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-        retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
+        retrieved_key = [k for k, v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
         assert retrieved_key == ['D']
 
         # Test that after allowing dups, warning is issued and memory with zeros is returned
@@ -350,10 +363,10 @@ class TestDictionaryMemory:
         with pytest.warns(UserWarning, match=text):
             retrieved = em.execute(stimuli[stim])
 
-        retrieved_key = [k for k,v in stimuli.items() if v==list(retrieved)] or [None]
+        retrieved_key = [k for k, v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
         assert retrieved_key == [None]
-        assert retrieved[0] == [0, 0, 0]
-        assert retrieved[1] == [0, 0, 0]
+        np.testing.assert_array_equal(retrieved[0], [0, 0, 0])
+        np.testing.assert_array_equal(retrieved[1], [0, 0, 0])
 
     def test_DictionaryMemory_without_initializer_and_key_size_diff_from_val_size(self):
 
@@ -377,20 +390,17 @@ class TestDictionaryMemory:
         retrieved_keys=[]
         for key in sorted(stimuli.keys()):
             retrieved = [i for i in em.execute(stimuli[key])]
-            retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
-            retrieved_keys.append(retrieved_key)
+            retrieved_keys.append(TestDictionaryMemory._get_retrieved_key(stimuli, retrieved))
         assert retrieved_keys == [[None], ['A'], ['A'], ['C'], ['B'], ['D']]
 
         stim = 'C'
         em.function.equidistant_keys_select = OLDEST
         retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-        retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
-        assert retrieved_key == ['A']
+        assert TestDictionaryMemory._get_retrieved_key(stimuli, retrieved) == ['A']
 
         em.function.equidistant_keys_select = NEWEST
         retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-        retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
-        assert retrieved_key == ['D']
+        assert TestDictionaryMemory._get_retrieved_key(stimuli, retrieved) == ['D']
 
         # Test that after allowing dups, warning is issued and memory with zeros is returned
         em.function.duplicate_keys = False
@@ -400,10 +410,10 @@ class TestDictionaryMemory:
         with pytest.warns(UserWarning, match=text):
             retrieved = em.execute(stimuli[stim])
 
-        retrieved_key = [k for k,v in stimuli.items() if v==list(retrieved)] or [None]
+        retrieved_key = [k for k, v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
         assert retrieved_key == [None]
-        assert retrieved[0] == [0, 0, 0]
-        assert retrieved[1] == [0, 0, 0, 0]
+        np.testing.assert_array_equal(retrieved[0], [0, 0, 0])
+        np.testing.assert_array_equal(retrieved[1], [0, 0, 0, 0])
 
     def test_DictionaryMemory_without_assoc(self):
 
@@ -430,14 +440,14 @@ class TestDictionaryMemory:
         for key in sorted(stimuli.keys()):
             print(f'\nCurrent memory: \n{em.memory}\n')
             retrieved = [i for i in em.execute(stimuli[key])]
-            retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
+            retrieved_key = [k for k, v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
             print(f'\nExecuted with stimulus {key}: {stimuli[key]};'
                   f'\nRetrieved memory {retrieved_key[0]}: \n\t{retrieved}')
 
         retrieved_keys=[]
         for key in sorted(stimuli.keys()):
             retrieved = [i for i in em.execute(stimuli[key])]
-            retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
+            retrieved_key = [k for k, v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
             retrieved_keys.append(retrieved_key)
 
         assert retrieved_keys == [['A', 'C', 'D'], ['B'], ['A', 'C', 'D'], ['A', 'C', 'D'], ['E'], ['F']]
@@ -624,7 +634,7 @@ class TestDictionaryMemory:
 
 def retrieve_label_helper(retrieved, stimuli):
     return [k for k,v in stimuli.items()
-            if all(np.alltrue(a)
+            if all(all(a)
                    for a in np.equal(np.array(retrieved, dtype=object),
                                      np.array(v, dtype=object),
                                      dtype=object))] or [None]
@@ -696,41 +706,41 @@ class TestContentAddressableMemory:
         c.distance_field_weights=[1,0]
         retrieved = c([[1, 2, 3], [4, 5, 10]])
         np.testing.assert_equal(retrieved, [[1, 2, 3], [4, 5, 6]])
-        assert c.distances_by_field == [0.0, 0.0]
+        np.testing.assert_equal(c.distances_by_field, [0.0, 0.0])
 
         # Test with 0 as the other field weight
         c.distance_field_weights=[0,1]
         retrieved = c([[1, 2, 3], [4, 5, 10]])
         np.testing.assert_equal(retrieved, [[1, 2, 10], [4, 5, 10]])
-        assert c.distances_by_field == [0.0, 0.0]
+        np.testing.assert_equal(c.distances_by_field, [0.0, 0.0])
 
         # Test with 0 as both field weights (equvialent to setting retrieval_prob=0, so should return 0's)
         c.distance_field_weights=[0,0]
         retrieved = c([[1, 2, 3], [4, 5, 10]])
         np.testing.assert_equal(retrieved, [[0, 0, 0], [0, 0, 0]])
-        assert c.distances_by_field == [0.0, 0.0]
+        np.testing.assert_equal(c.distances_by_field, [0.0, 0.0])
 
         # Test with None as field weight
         c.distance_field_weights=[None,1]
         retrieved = c([[1, 2, 3], [4, 5, 10]])
         np.testing.assert_equal(retrieved, [[1, 2, 10], [4, 5, 10]])
-        assert c.distances_by_field == [None, 0.0]
+        np.testing.assert_equal(c.distances_by_field, [None, 0.0])
 
         c.distance_field_weights=[1, None]
         retrieved = c([[1, 2, 3], [4, 5, 10]])
         np.testing.assert_equal(retrieved, [[1, 2, 3], [4, 5, 6]])
-        assert c.distances_by_field == [0.0, None]
+        np.testing.assert_equal(c.distances_by_field, [0.0, None])
 
         # Test with [] as field weight
         c.distance_field_weights=[[],1]
         retrieved = c([[1, 2, 3], [4, 5, 10]])
         np.testing.assert_equal(retrieved, [[1, 2, 10], [4, 5, 10]])
-        assert c.distances_by_field == [None, 0.0]
+        np.testing.assert_equal(c.distances_by_field, [None, 0.0])
 
         c.distance_field_weights=[1, []]
         retrieved = c([[1, 2, 3], [4, 5, 10]])
         np.testing.assert_equal(retrieved, [[1, 2, 3], [4, 5, 6]])
-        assert c.distances_by_field == [0.0, None]
+        np.testing.assert_equal(c.distances_by_field, [0.0, None])
 
     # FIX: COULD CONDENSE THESE TESTS BY PARAMETERIZING FIELD-WEIGHTS AND ALSO INCLUDE DISTANCE METRIC AS A PARAM
     def test_ContentAddressableMemory_parametric_distances(self):
@@ -975,7 +985,7 @@ class TestContentAddressableMemory:
         retrieved_label = retrieve_label_helper(retrieved, stimuli)
         assert retrieved_label == [None]
         expected = np.array([np.array([0,0,0]),np.array([0,0,0])])
-        assert all(np.alltrue(x) for x in np.equal(expected,retrieved, dtype=object))
+        assert all(all(x) for x in np.equal(expected,retrieved, dtype=object))
 
     def test_ContentAddressableMemory_without_initializer_and_diff_field_sizes(self):
 

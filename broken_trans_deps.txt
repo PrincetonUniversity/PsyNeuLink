@@ -30,6 +30,10 @@ cattrs != 23.1.1; python_version < '3.8'
 # https://github.com/python-attrs/cattrs/issues/453
 cattrs != 23.2.1, != 23.2.2
 
+# beartype 0.17.1 is broken on older releases of python3.9
+# https://github.com/beartype/beartype/issues/324
+beartype != 0.17.1; python_version == '3.9'
+
 # The following need at least sphinx-5 without indicating it in dependencies:
 # * sphinxcontrib-applehelp >=1.0.8,
 # * sphinxcontrib-devhelp >=1.0.6,

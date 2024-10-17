@@ -195,8 +195,13 @@ class TestCompositionRuntimeParams:
         assert T2.input_port.function.parameters.weights.get(C) is None
 
         C.run(inputs={T1: 2.0}, )
-        assert C.results == [[[1201.5]], # (2*3*20*10)+1+0.5
-                             [[40.]]]    # 2*5*4
+        np.testing.assert_array_equal(
+            C.results,
+            [
+                [[1201.5]],  # (2*3*20*10)+1+0.5
+                [[40.]]      # 2*5*4
+            ]
+        )
         assert T1.function.slope.base == 5.0
         assert T1.parameter_ports['slope'].parameters.value.get(C) == 5.0
         assert T2.input_port.function.parameters.scale.get(C.default_execution_id) == 4.0

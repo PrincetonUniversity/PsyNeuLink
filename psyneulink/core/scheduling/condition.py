@@ -126,6 +126,11 @@ class Condition(*condition_class_parents, MDFSerializable):
                 return parse_valid_identifier(arg.name)
             elif isinstance(arg, Condition):
                 return arg.as_mdf_model()
+            elif (
+                isinstance(arg, np.number)
+                or (isinstance(arg, np.ndarray) and arg.ndim == 0)
+            ):
+                return arg.item()
             elif arg is None or isinstance(arg, numbers.Number):
                 return arg
             else:
@@ -319,7 +324,7 @@ class Threshold(graph_scheduler.condition._DependencyValidation, Condition):
                 for i in indices:
                     param_value = param_value[i]
 
-            param_value = float(param_value)
+            param_value = float(np.array(param_value).item())
 
             if comparator == '==':
                 return np.isclose(param_value, threshold, atol=atol, rtol=rtol)

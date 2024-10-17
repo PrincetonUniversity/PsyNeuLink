@@ -240,7 +240,7 @@ class GatingMechanism(ControlMechanism):
         modulation=MULTIPLICATIVE)
 
     Subclass of `ModulatoryMechanism <ModulatoryMechanism>` that gates (modulates) the value(s) of one or more `Ports
-    <Port>`.  See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes.
+    <Port>`. See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes.
 
     COMMENT:
         Description:
@@ -284,7 +284,7 @@ class GatingMechanism(ControlMechanism):
         specifies the `InputPorts <InputPort>` and/or `OutputPorts <OutputPorts>` to be gated by the
         GatingMechanism; the number of items must equal the length of the **default_gating_allocation**
         argument; if a `Mechanism <Mechanism>` is specified, its `primary InputPort <InputPort_Primary>`
-        is used (see `GatingMechanism_GatingSignals for details).
+        is used (see `GatingMechanism_GatingSignals` for details).
 
     modulation : str : MULTIPLICATIVE
         specifies the default form of modulation used by the GatingMechanism's `GatingSignals <GatingSignal>`,

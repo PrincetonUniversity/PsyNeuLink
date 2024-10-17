@@ -88,7 +88,7 @@ class TestLCControlMechanism:
         expected = [[3.001397762387422]]
         # The difference in result shape is caused by shape mismatch in output port values.
         # The default shape is 1D, giving 2D overall result in compiled mode.
-        # The true results are 2D per port, giving 3D overall result in Python mode.
+        # The true results are 2D per port, giving 3d overall result in Python mode.
         if mech_mode == 'Python':
             expected = [[ex] for ex in expected]
         np.testing.assert_allclose(val, expected)
@@ -131,7 +131,7 @@ class TestControlMechanism:
         assert Tz.parameter_ports[pnl.SLOPE].mod_afferents[0].sender.owner == C
         assert C.parameters.control_allocation.get() == [1]
         result = comp.run(inputs={Tx:[1,1], Ty:[4,4]})
-        assert comp.results == [[[4.], [4.]], [[4.], [4.]]]
+        np.testing.assert_array_equal(comp.results, [[[4.], [4.]], [[4.], [4.]]])
 
 
     def test_identicalness_of_control_and_gating(self):

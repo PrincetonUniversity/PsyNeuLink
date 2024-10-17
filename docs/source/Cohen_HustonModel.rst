@@ -141,7 +141,7 @@ are turned on again and the system is run either for a certain amount of trials,
 stimulus is turned on.
 
 PLEASE NOTE:
------------
+------------
 Note that this implementation is slightly different than what was originally reported. The integration rate was set to
 0.1 instead of 0.01. Noise was turned of to better understand the core processes, and not having to deal with several
 runs, averaging these runs and plotting standard errors for these averages (which depend on the noise and amount of

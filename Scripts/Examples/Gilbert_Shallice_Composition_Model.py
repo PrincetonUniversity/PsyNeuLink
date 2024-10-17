@@ -49,83 +49,83 @@ COLOR_RECURRENT_LAYER = pnl.TransferMechanism(size = 3,
 ### WEIGHTS
 
 #   WORD INPUT TO WORD OUTPUT
-word_weights = pnl.MappingProjection(matrix=np.matrix([[3.5, 0.0, 0.0],
+word_weights = pnl.MappingProjection(matrix=np.array([[3.5, 0.0, 0.0],
                                                         [0.0, 3.5, 0.0],
                                                         [0.0, 0.0, 3.5]]),
                                      name='WORD_WEIGHTS')
 
 #   COLOR INPUT TO COLOR OUTPUT
-color_weights = pnl.MappingProjection(matrix=np.matrix([[1.9, 0.0, 0.0],
+color_weights = pnl.MappingProjection(matrix=np.array([[1.9, 0.0, 0.0],
                                                         [0.0, 1.9, 0.0],
                                                         [0.0, 0.0, 1.9]]),
                                       name='COLOR_WEIGHTS')
 
 #    WORD INPUT to TASK DEMAND LAYER
-word_task_demand_weights = pnl.MappingProjection(matrix=np.matrix([[1.0, 1.0],
+word_task_demand_weights = pnl.MappingProjection(matrix=np.array([[1.0, 1.0],
                                                                     [1.0, 1.0],
                                                                     [1.0, 1.0]]),
                                                  name='WORD_TASK_DEMAND_WEIGHTS')
 
 #    COLOR INPUT to TASK DEMAND LAYER
-color_task_demand_weights = pnl.MappingProjection(matrix=np.matrix([[1.0, 1.0],
+color_task_demand_weights = pnl.MappingProjection(matrix=np.array([[1.0, 1.0],
                                                                     [1.0, 1.0],
                                                                     [1.0, 1.0]]),
                                                   name='COLOR_TASK_DEMAND_WEIGHTS')
 
 
 #   TASK DEMAND TO WORD OUTPUT
-task_demand_word_output_weights = pnl.MappingProjection(matrix=np.matrix([[2.5, 2.5, 2.5],
+task_demand_word_output_weights = pnl.MappingProjection(matrix=np.array([[2.5, 2.5, 2.5],
                                                                           [-2.5, -2.5, -2.5]]),
                                                         name='TASK_DEMAND_WORD_OUTPUT_WEIGHTS')
 
 #   TASK DEMAND TO COLOR OUTPUT
-task_demand_color_output_weights = pnl.MappingProjection(matrix=np.matrix([[-2.5, -2.5, -2.5],
+task_demand_color_output_weights = pnl.MappingProjection(matrix=np.array([[-2.5, -2.5, -2.5],
                                                                            [2.5, 2.5, 2.5]]),
                                                          name='TASK_DEMAND_COLOR_OUTPUT_WEIGHTS')
 
 #   WORD OUTPUT TO TASK DEMAND
-word_output_task_demand_weights = pnl.MappingProjection(matrix=np.matrix([[1.0, -1.0],
+word_output_task_demand_weights = pnl.MappingProjection(matrix=np.array([[1.0, -1.0],
                                                                           [1.0, -1.0],
                                                                           [1.0, -1.0]]),
                                                         name='WORD_OUTPUT_TASK_DEMAND_WEIGHTS')
 
 #   WORD OUTPUT TO TASK DEMAND
-color_output_task_demand_weights = pnl.MappingProjection(matrix=np.matrix([[-1.0, 1.0],
+color_output_task_demand_weights = pnl.MappingProjection(matrix=np.array([[-1.0, 1.0],
                                                                            [-1.0, 1.0],
                                                                            [-1.0, 1.0]]),
                                                         name='COLOR_OUTPUT_TASK_DEMAND_WEIGHTS')
 
 #   WORD OUTPUT to COLOR OUTPUT
-word_output_color_output_weights = pnl.MappingProjection(matrix=np.matrix([[2.0, -2.0, -2.0],
+word_output_color_output_weights = pnl.MappingProjection(matrix=np.array([[2.0, -2.0, -2.0],
                                                                            [-2.0, 2.0, -2.0],
                                                                            [-2.0, -2.0, 2.0]]),
                                                          name='WORD_OUTPUT_COLOR_OUTPUT_WEIGHTS')
 # WORD OUTPUT TO TASK DEMAND
-word_output_output_to_task_demand_weights = pnl.MappingProjection(matrix=np.matrix([[1.0, 1.0],
+word_output_output_to_task_demand_weights = pnl.MappingProjection(matrix=np.array([[1.0, 1.0],
                                                                                           [1.0, 1.0],
                                                                                           [1.0, 1.0]]),
                                                                         name='WORD_COLOR_OUTPUT_TASK_DEMAND_WEIGHTS')
 
 # COLOR OUTPUT TO TASK DEMAND
-color_output_output_to_task_demand_weights = pnl.MappingProjection(matrix=np.matrix([[1.0, 1.0],
+color_output_output_to_task_demand_weights = pnl.MappingProjection(matrix=np.array([[1.0, 1.0],
                                                                                           [1.0, 1.0],
                                                                                           [1.0, 1.0]]),
                                                                         name='COLOR_COLOR_OUTPUT_TASK_DEMAND_WEIGHTS')
 
 # RECURRENT WORD weights
-word_recurrent = pnl.MappingProjection(matrix=np.matrix([[0.0, -2.0, -2.0],
+word_recurrent = pnl.MappingProjection(matrix=np.array([[0.0, -2.0, -2.0],
                                                          [-2.0, 0.0, -2.0],
                                                          [-2.0, -2.0, 0.0]]),
                                        name='WORD_RECURRENT_WEIGHTS')
 
 # RECURRENT COLOR weights
-color_recurrent = pnl.MappingProjection(matrix=np.matrix([[0.0, -2.0, -2.0],
+color_recurrent = pnl.MappingProjection(matrix=np.array([[0.0, -2.0, -2.0],
                                                           [-2.0, 0.0, -2.0],
                                                           [-2.0, -2.0, 0.0]]),
                                        name='TASK_RECURRENT_WEIGHTS')
 
 # RECURRENT TASK weights
-task_recurrent = pnl.MappingProjection(matrix=np.matrix([[0.0, -2.0, -2.0],
+task_recurrent = pnl.MappingProjection(matrix=np.array([[0.0, -2.0, -2.0],
                                                          [-2.0, 0.0, -2.0],
                                                          [-2.0, -2.0, 0.0]]),
                                        name='TASK_RECURRENT_WEIGHTS')
