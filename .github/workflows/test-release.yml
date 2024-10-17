@@ -181,53 +181,9 @@ jobs:
         path: dist/
 
     - name: Upload dist files to release
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const fs = require('fs')
-          tag = context.ref.split('/').pop()
-          console.log('running on:' + context.ref);
-          console.log('Looking for release for tag:' + tag);
-
-          var release
-          try {
-            release = await github.rest.repos.getReleaseByTag({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag: tag
-            });
-            console.log('Release found at: ' + release.data.html_url); // '
-          } catch (err) {
-            if (err.status == 404) {
-              console.log('Release not found, creating a new one');
-              release = await github.rest.repos.createRelease({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  tag_name: tag,
-                  name: 'Release ' + tag,
-                  body: 'New features and fixed bugs'
-              });
-            } else {
-              throw err;
-            }
-          }
-
-          console.log('Using release upload url: ' + release['data']['upload_url']);
-          // Determine content-length for header to upload asset
-          for (asset of ['${{ needs.create-python-dist.outputs.wheel }}', '${{ needs.create-python-dist.outputs.sdist }}']) {
-            const file_path = 'dist/' + asset;
-            const file_size = file_path => fs.statSync(file_path).size;
-            console.log('Uploading: ' + file_path);
-
-            // Setup headers for API call, see Octokit Documentation:
-            // https://octokit.github.io/rest.js/#octokit-routes-repos-upload-release-asset for more information
-            const headers = { 'content-type': 'application/zip', 'content-length': file_size(file_path) };
-
-            // Upload a release asset
-            const uploadAssetResponse = await github.rest.repos.uploadReleaseAsset({
-              url: release.data.upload_url,
-              headers,
-              name: asset,
-              file: fs.readFileSync(file_path)
-            });
-          }
+      shell: bash
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        previous_release=$(gh --repo ${{ github.repository }} release list | head -n 1 | awk '{print $1}')
+        gh --repo ${{ github.repository }} release create --generate-notes --notes-start-tag "$previous_release" ${{ github.ref }} dist/*
