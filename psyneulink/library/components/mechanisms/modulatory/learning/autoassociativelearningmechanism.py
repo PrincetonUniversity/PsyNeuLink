@@ -76,9 +76,9 @@ Execution
 ---------
 
 An AutoAssociativeLearningMechanism executes in the same manner as standard `LearningMechanism`, with two exceptions:
-* 1) its execution can be enabled or disabled by setting the `learning_enabled
-  <RecurrentTransferMechanism.learning_enabled>` attribute of the `RecurrentTransferMechanism` with which it is
-  associated (identified in its `activity_source <AutoAssociativeLearningMechanism.activity_source>` attribute).
+* 1) its execution can be enabled or disabled by setting the `learning_enabled <RecurrentTransferMechanism.learning_enabled>`
+  attribute of the `RecurrentTransferMechanism` with which it is associated (identified in its
+  `activity_source <AutoAssociativeLearningMechanism.activity_source>` attribute).
 * 2) it is executed during the `execution phase <Composition_Execution>` of the Composition's execution.  Note that this is
   different from the behavior of supervised learning algorithms (such as `Reinforcement` and `BackPropagation`),
   that are executed during the `learning phase <Composition_Execution>` of a Composition's execution
@@ -163,7 +163,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
     function : LearningFunction or function : default Hebbian
         specifies the function used to calculate the AutoAssociativeLearningMechanism's `learning_signal
         <AutoAssociativeLearningMechanism.learning_signal>` attribute.  It must take as its **variable** argument a
-        list or 1d array of numeric values (the "activity vector") and return a list, 2d np.array or np.matrix
+        list or 1d array of numeric values (the "activity vector") and return a list, 2d np.array
         representing a square matrix with dimensions that equal the length of its variable (the "weight change
         matrix").
 
@@ -208,10 +208,10 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         It's `variable <Function_Base.variable>` must be a list or 1d np.array of numeric entries, corresponding in
         length to the AutoAssociativeLearningMechanism's *ACTIVATION_INPUT* (`primary <InputPort_Primary>`) InputPort.
 
-    learning_rate : float, 1d or 2d np.array, or np.matrix of numeric values : default None
+    learning_rate : float, 1d or 2d np.array of numeric values : default None
         determines the learning rate used by the AutoAssociativeLearningMechanism's `function
         <AutoAssociativeLearningMechanism.function>` to scale the weight change matrix it returns. If it is a scalar,
-        it is used to multiply the weight change matrix;  if it is a 2d array or matrix,
+        it is used to multiply the weight change matrix;  if it is a 2d array,
         it is used to Hadamard (elementwise) multiply the weight matrix (allowing the contribution of individual
         *connections* to be scaled);  if it is a 1d np.array, it is used to Hadamard (elementwise) multiply the input
         to the `function <AutoAssociativeLearningMechanism.function>` (i.e., the `value <InputPort.value>` of the

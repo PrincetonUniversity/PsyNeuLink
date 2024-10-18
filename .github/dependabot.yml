@@ -27,5 +27,5 @@ updates:
       prefix: "requirements"
     labels:
       - "deps"
-    open-pull-requests-limit: 15
+    open-pull-requests-limit: 25
     rebase-strategy: "disabled"

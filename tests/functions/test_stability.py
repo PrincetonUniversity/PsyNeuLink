@@ -41,7 +41,7 @@ def test_basic(variable, metric, normalize, expected, benchmark, func_mode):
     benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
     res = benchmark(EX, variable)
     np.testing.assert_allclose(res, expected)
-    assert np.isscalar(res) or len(res) == 1
+    assert np.isscalar(res) or res.ndim == 0 or len(res) == 1
 
 
 def test_Stability_squeezes_variable():

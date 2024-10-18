@@ -392,7 +392,7 @@ class LCAMechanism(RecurrentTransferMechanism):
 
         matrix = Parameter(
             INVERSE_HOLLOW_MATRIX,
-            modulable=True,
+            modulable=False,
             getter=_recurrent_transfer_mechanism_matrix_getter,
             setter=_recurrent_transfer_mechanism_matrix_setter
         )
@@ -402,9 +402,9 @@ class LCAMechanism(RecurrentTransferMechanism):
             function_parameter_name='rate',
             aliases='leak'
         )
-        auto = Parameter(0.0, modulable=True, aliases='self_excitation')
-        hetero = Parameter(-1.0, modulable=True)
-        competition = Parameter(1.0, modulable=True)
+        auto = Parameter(0.0, modulable=False, aliases='self_excitation')
+        hetero = Parameter(-1.0, modulable=False)
+        competition = Parameter(1.0, modulable=False)
         time_step_size = FunctionParameter(0.1, function_name='integrator_function')
 
         integrator_mode = Parameter(True, setter=_integrator_mode_setter, valid_types=bool)

@@ -18,6 +18,7 @@
 
 import abc
 import collections
+import copy
 import numbers
 import warnings
 
@@ -34,7 +35,14 @@ from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import STATEFUL_FUNCTION_TYPE, STATEFUL_FUNCTION, NOISE, RATE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
-from psyneulink.core.globals.utilities import iscompatible, convert_to_np_array, contains_type
+from psyneulink.core.globals.utilities import (
+    contains_type,
+    convert_all_elements_to_np_array,
+    convert_to_np_array,
+    fill_array,
+    iscompatible,
+    safe_len,
+)
 
 __all__ = ['StatefulFunction']
 
@@ -264,7 +272,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             rate = request_set[RATE]
 
             if isinstance(rate, (list, np.ndarray)) and not iscompatible(rate, self.defaults.variable):
-                if len(rate) != 1 and len(rate) != np.array(self.defaults.variable).size:
+                if safe_len(rate) != 1 and safe_len(rate) != np.array(self.defaults.variable).size:
                     # If the variable was not specified, then reformat it to match rate specification
                     #    and assign class_defaults.variable accordingly
                     # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
@@ -276,13 +284,13 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                     if self._variable_shape_flexibility is DefaultsFlexibility.FLEXIBLE:
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
                         if self.verbosePref:
-                            warnings.warn(f"The length ({len(rate)}) of the array specified for "
+                            warnings.warn(f"The length ({safe_len(rate)}) of the array specified for "
                                           f"the rate parameter ({rate}) of {self.name} must match the length "
                                           f"({np.array(self.defaults.variable).size}) of the default input "
                                           f"({self.defaults.variable}); the default input has been updated to match.")
                     else:
                         raise FunctionError(f"The length of the array specified for the rate parameter of {self.name}"
-                                            f"({len(rate)}) must match the length of the default input "
+                                            f"({safe_len(rate)}) must match the length of the default input "
                                             f"({np.array(self.defaults.variable).size}).")
 
         super()._validate_params(request_set=request_set,
@@ -331,11 +339,11 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                 raise FunctionError(rate_type_msg.format(self.name, rate))
 
             if isinstance(rate, np.ndarray) and not iscompatible(rate, self.defaults.variable):
-                if len(rate) != 1 and len(rate) != np.array(self.defaults.variable).size:
+                if safe_len(rate) != 1 and safe_len(rate) != np.array(self.defaults.variable).size:
                     if self._variable_shape_flexibility is DefaultsFlexibility.FLEXIBLE:
                         self.defaults.variable = np.zeros_like(np.array(rate))
                         if self.verbosePref:
-                            warnings.warn(f"The length ({len(rate)}) of the array specified for the rate parameter "
+                            warnings.warn(f"The length ({safe_len(rate)}) of the array specified for the rate parameter "
                                           f"({rate}) of {self.name} must match the length "
                                           f"({np.array(self.defaults.variable).size}) of the default input "
                                           f"({self.defaults.variable}); the default input has been updated to match.")
@@ -343,7 +351,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                         self._variable_shape_flexibility = DefaultsFlexibility.INCREASE_DIMENSION
                     else:
                         raise FunctionError(f"The length of the array specified for the rate parameter of "
-                                            f"{len(rate)} ({self.name}) must match the length of the default input "
+                                            f"{safe_len(rate)} ({self.name}) must match the length of the default input "
                                             f"({np.array(self.defaults.variable).size}).")
 
     # Ensure that the noise parameter makes sense with the input type and shape; flag any noise functions that will
@@ -355,7 +363,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             noise = noise.execute
 
         if isinstance(noise, (np.ndarray, list)):
-            if len(noise) == 1:
+            if safe_len(noise) == 1:
                 pass
             # Variable is a list/array
             elif (not iscompatible(np.atleast_2d(noise), self.defaults.variable)
@@ -377,7 +385,9 @@ class StatefulFunction(Function_Base): #  --------------------------------------
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         if not self.parameters.initializer._user_specified:
-            self._initialize_previous_value(np.zeros_like(self.defaults.variable), context)
+            new_previous_value = copy.deepcopy(self.defaults.variable)
+            fill_array(new_previous_value, 0)
+            self._initialize_previous_value(new_previous_value, context)
         self._instantiate_stateful_attributes(self.stateful_attributes, self.initializers, context)
         super()._instantiate_attributes_before_function(function=function, context=context)
 
@@ -414,6 +424,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
     @handle_external_context()
     def _update_default_variable(self, new_default_variable, context=None):
         if not self.parameters.initializer._user_specified:
+            new_default_variable = convert_all_elements_to_np_array(new_default_variable)
             self._initialize_previous_value(np.zeros_like(new_default_variable), context)
 
         super()._update_default_variable(new_default_variable, context=context)

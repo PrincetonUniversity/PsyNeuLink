@@ -77,7 +77,7 @@ class TestBuffer():
         B.execute([7, 8, 9])
         val = B.execute([10, 11, 12])
 
-        assert counter_f.count == 4
+        assert B.noise[1].count == 4
         expected_val = [[24, 12.0, 46], [17, 12.0, 29], [10, 11, 12]]
         np.testing.assert_allclose(val, expected_val)
 
@@ -100,7 +100,7 @@ class TestBuffer():
         val = benchmark(P.execute, 1.0)
 
         # NOTE: actual output is [0, [[1]]]
-        np.testing.assert_allclose(np.asfarray(val, dtype=object), [0., 1.])
+        np.testing.assert_allclose(np.asfarray(val, dtype=object), [[0., 1.]])
 
         # fails due to value and variable problems when Buffer is the function of a mechanism
         # P = ProcessingMechanism(function=Buffer(default_variable=[[0.0], [1.0], [2.0]],

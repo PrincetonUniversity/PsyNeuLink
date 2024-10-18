@@ -8,6 +8,23 @@ from psyneulink.core.components.mechanisms.processing.integratormechanism import
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.compositions.composition import Composition
 
+
+@pytest.fixture(autouse=True)
+def preserve_env():
+
+    # Save old debug env var
+    old_env = os.environ.get("PNL_LLVM_DEBUG")
+
+    yield
+
+    # Restore old debug env var and reset the debug configuration
+    if old_env is None:
+        del os.environ["PNL_LLVM_DEBUG"]
+    else:
+        os.environ["PNL_LLVM_DEBUG"] = old_env
+    pnlvm.debug._update()
+
+
 debug_options = ["const_input=[[[7]]]", "const_input", "const_params", "const_data", "const_state",
                  "stat", "time_stat", "unaligned_copy"]
 options_combinations = (";".join(c) for c in pytest.helpers.power_set(debug_options))
@@ -18,8 +35,6 @@ options_combinations = (";".join(c) for c in pytest.helpers.power_set(debug_opti
                                  ])
 @pytest.mark.parametrize("debug_env", [comb for comb in options_combinations if comb.count("const_input") < 2])
 def test_debug_comp(mode, debug_env):
-    # save old debug env var
-    old_env = os.environ.get("PNL_LLVM_DEBUG")
     if debug_env is not None:
         os.environ["PNL_LLVM_DEBUG"] = debug_env
         pnlvm.debug._update()
@@ -32,12 +47,6 @@ def test_debug_comp(mode, debug_env):
     inputs_dict = {A: [5]}
     output1 = comp.run(inputs=inputs_dict, execution_mode=mode)
     output2 = comp.run(inputs=inputs_dict, execution_mode=mode)
-    # restore old debug env var and cleanup the debug configuration
-    if old_env is None:
-        del os.environ["PNL_LLVM_DEBUG"]
-    else:
-        os.environ["PNL_LLVM_DEBUG"] = old_env
-    pnlvm.debug._update()
 
     assert len(comp.results) == 2
 

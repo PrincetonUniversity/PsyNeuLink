@@ -367,6 +367,7 @@ import warnings
 from collections import namedtuple
 from collections.abc import Iterable
 
+import numpy as np
 from beartype import beartype
 
 from psyneulink._typing import Optional, Union
@@ -766,13 +767,19 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         if WEIGHTS in self.function.parameters:
             if any(weight is not None for weight in weights):
                 self.function.parameters.weights._set(
-                    [[weight or DEFAULT_WEIGHT] for weight in weights],
+                    np.asarray([
+                        [weight if weight is not None else DEFAULT_WEIGHT]
+                        for weight in weights
+                    ]),
                     context
                 )
         if EXPONENTS in self.function.parameters:
             if any(exponent is not None for exponent in exponents):
                 self.function.parameters.exponents._set(
-                    [[exponent or DEFAULT_EXPONENT] for exponent in exponents],
+                    np.asarray([
+                        [exponent if exponent is not None else DEFAULT_EXPONENT]
+                        for exponent in exponents
+                    ]),
                     context
                 )
         assert True

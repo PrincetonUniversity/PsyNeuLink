@@ -16,8 +16,9 @@ import torch
 #     torch = None
 from typing import Optional
 
-from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper
+from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper
 from psyneulink.library.components.mechanisms.modulatory.learning.EMstoragemechanism import EMStorageMechanism
+from psyneulink.core.globals.keywords import AFTER
 
 __all__ = ['PytorchEMCompositionWrapper']
 
@@ -27,13 +28,17 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Assign storage_node (EMComposition's EMStorageMechanism)
+        # Assign storage_node (EMComposition's EMStorageMechanism) (assumes there is only one)
         self.storage_node = [node for node in self.nodes_map.values()
                              if isinstance(node._mechanism, EMStorageMechanism)][0]
+        # Execute storage_node after gradient calculation,
+        #     since it assigns weights manually which messes up PyTorch gradient tracking in forward() and backward()
+        self.storage_node.exclude_from_gradient_calc = AFTER
 
         # Get PytorchProjectionWrappers for Projections to match and retrieve nodes;
         #   used by get_memory() to construct memory_matrix and store_memory() to store entry in it
         pnl_storage_mech = self.storage_node._mechanism
+
         num_fields = len(pnl_storage_mech.input_ports)
         num_learning_signals = len(pnl_storage_mech.learning_signals)
         num_match_fields = num_learning_signals - num_fields
@@ -52,12 +57,15 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         self.retrieve_projection_wrappers = [self.projections_map[pnl_retrieve_proj]
                            for pnl_retrieve_proj in pnl_retrieve_projs]
 
-    def execute_node(self, node, variable, context):
+    def execute_node(self, node, variable, optimization_num, context):
         """Override to handle storage of entry to memory_matrix by EMStorage Function"""
         if node is self.storage_node:
-            self.store_memory(variable, context)
+            # Only execute store after last optimization repetition for current mini-batch
+            # 7/10/24:  FIX: MOVE PASSING OF THESE PARAMETERS TO context
+            if not (optimization_num + 1) % context.composition.parameters.optimizations_per_minibatch.get(context):
+                self.store_memory(variable, context)
         else:
-            super().execute_node(node, variable, context)
+            super().execute_node(node, variable, optimization_num, context)
 
     @property
     def memory(self)->Optional[torch.Tensor]:
@@ -72,6 +80,9 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
                                                for j in range(num_fields)])
                                   for i in range(memory_capacity)]))
 
+    # # MODIFIED 7/29/24 NEW: NEEDED FOR torch MPS SUPPORT
+    # @torch.jit.script_method
+    # MODIFIED 7/29/24 END
     def store_memory(self, memory_to_store, context):
         """Store variable in memory_matrix (parallel EMStorageMechanism._execute)
 
@@ -103,13 +114,20 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         storage_prob = mech.parameters.storage_prob._get(context)  # modulable, so use getter
         field_weights = mech.parameters.field_weights.get(context) # modulable, so use getter
         concatenation_node = mech.concatenation_node
+        # MODIFIED 7/29/24 OLD:
         num_match_fields = 1 if concatenation_node else len([i for i in mech.field_types if i==1])
+        # # MODIFIED 7/29/24 NEW: NEEDED FOR torch MPS SUPPORT
+        # if concatenation_node:
+        #     num_match_fields = 1
+        # else:
+        #     num_match_fields = 0
+        #     for i in mech.field_types:
+        #         if i==1:
+        #             num_match_fields += 1
+        # MODIFIED 7/29/24 END
 
         # Find weakest memory (i.e., with lowest norm)
-        field_norms = torch.empty((len(memory),len(memory[0])))
-        for row in range(len(memory)):
-            for col in range(len(memory[0])):
-                field_norms[row][col] = torch.linalg.norm(memory[row][col])
+        field_norms = torch.linalg.norm(memory, dim=2)
         if field_weights is not None:
             field_norms *= field_weights
         row_norms = torch.sum(field_norms, axis=1)
@@ -121,9 +139,9 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
                 # For match projections, get entry to store from value of sender of Projection matrix
                 #   (this is to accomodate concatenation_node)
                 axis = 0
-                entry_to_store = field_projection.sender.value
+                entry_to_store = field_projection.sender.output
                 if concatenation_node is None:
-                    assert (entry_to_store == memory_to_store[i]).all(), \
+                    assert (entry_to_store  == memory_to_store[i]).all(), \
                         f"PROGRAM ERROR: misalignment between inputs and fields for storing them"
             else:
                 # For retrieve projections, get entry to store from memory_to_store (which has inputs to all fields)

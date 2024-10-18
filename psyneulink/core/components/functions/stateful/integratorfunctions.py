@@ -53,8 +53,8 @@ from psyneulink.core.globals.keywords import \
     PREVIOUS_VALUE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
-from psyneulink.core.globals.utilities import ValidParamSpecType, all_within_range, \
-    convert_all_elements_to_np_array, parse_valid_identifier, safe_len
+from psyneulink.core.globals.utilities import ValidParamSpecType, all_within_range, is_numeric_scalar, \
+    convert_all_elements_to_np_array, parse_valid_identifier, safe_len, try_extract_0d_array_item
 
 __all__ = ['SimpleIntegrator', 'AdaptiveIntegrator', 'DriftDiffusionIntegrator', 'DriftOnASphereIntegrator',
            'OrnsteinUhlenbeckIntegrator', 'FitzHughNagumoIntegrator', 'AccumulatorIntegrator',
@@ -1098,7 +1098,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         if RATE in request_set:
             rate = request_set[RATE]
             if isinstance(rate, (list, np.ndarray)):
-                if len(rate) != 1 and len(rate) != np.array(self.defaults.variable).size:
+                if safe_len(rate) != 1 and safe_len(rate) != np.array(self.defaults.variable).size:
                     # If the variable was not specified, then reformat it to match rate specification
                     #    and assign class_defaults.variable accordingly
                     # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
@@ -1113,12 +1113,12 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
                             warnings.warn(
                                 "The length ({}) of the array specified for the {} parameter ({}) of {} "
                                 "must match the length ({}) of the default input ({});  "
-                                "the default input has been updated to match".
-                                    format(len(rate), repr(RATE), rate, self.name,
+                                "the default input has been updated to match".format(
+                                    safe_len(rate), repr(RATE), rate, self.name,
                                     np.array(self.defaults.variable).size, self.defaults.variable))
                     else:
                         raise FunctionError(
-                            f"The length ({len(rate)}) of the array specified for the rate parameter ({rate}) "
+                            f"The length ({safe_len(rate)}) of the array specified for the rate parameter ({rate}) "
                             f"of {self.name} must match the length ({np.array(self.defaults.variable).size}) "
                             f"of the default input ({self.defaults.variable}).")
 
@@ -1220,11 +1220,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         # execute noise if it is a function
         noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), variable, context=context)
 
-        # # MODIFIED 6/14/19 OLD:
-        # previous_value = np.atleast_2d(self.parameters.previous_value._get(context))
-        # # MODIFIED 6/14/19 NEW: [JDC]
         previous_value = self.parameters.previous_value._get(context)
-        # MODIFIED 6/14/19 END
 
         try:
             value = self._EWMA_filter(previous_value, rate, variable) + noise
@@ -1241,11 +1237,13 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         if not self.is_initializing:
             self.parameters.previous_value._set(adjusted_value, context)
 
-        # # MODIFIED 6/21/19 OLD:
-        # return self.convert_output_type(adjusted_value)
-        # MODIFIED 6/21/19 NEW: [JDC]
         return self.convert_output_type(adjusted_value, variable)
-        # MODIFIED 6/21/19 END
+
+    def _gen_pytorch_fct(self, device, context=None):
+        rate = self._get_pytorch_fct_param_value('rate', device, context)
+        offset = self._get_pytorch_fct_param_value('offset', device, context)
+        noise = self._get_pytorch_fct_param_value('noise', device, context)
+        return lambda prev_val, variable: self._EWMA_filter(prev_val, rate, variable) + noise + offset
 
     def as_expression(self):
         return f'(1 - rate) * previous_value + rate * {MODEL_SPEC_ID_MDF_VARIABLE} + noise + offset'
@@ -1624,7 +1622,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         if RATE in request_set:
             rate = request_set[RATE]
             if isinstance(rate, (list, np.ndarray)):
-                if len(rate) != 1 and len(rate) != np.array(self.defaults.variable).size:
+                if safe_len(rate) != 1 and safe_len(rate) != np.array(self.defaults.variable).size:
                     # If the variable was not specified, then reformat it to match rate specification
                     #    and assign class_defaults.variable accordingly
                     # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
@@ -1640,7 +1638,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                                 "The length ({}) of the array specified for the rate parameter ({}) of {} "
                                 "must match the length ({}) of the default input ({});  "
                                 "the default input has been updated to match".format(
-                                    len(rate),
+                                    safe_len(rate),
                                     rate,
                                     self.name,
                                     np.array(self.defaults.variable).size
@@ -1651,7 +1649,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                         raise FunctionError(
                             "The length ({}) of the array specified for the rate parameter ({}) of {} "
                             "must match the length ({}) of the default input ({})".format(
-                                len(rate),
+                                safe_len(rate),
                                 rate,
                                 self.name,
                                 np.array(self.defaults.variable).size,
@@ -2413,7 +2411,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         time_step_size = Parameter(1.0, modulable=True)
         previous_time = Parameter(0.0, initializer='non_decision_time')
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
         enable_output_type_conversion = Parameter(
             False,
             stateful=False,
@@ -2425,7 +2423,6 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         random_draw = Parameter()
 
         def _parse_initializer(self, initializer):
-            initializer = np.array(initializer)
             if initializer.ndim > 1:
                 return np.atleast_1d(initializer.squeeze())
             else:
@@ -2969,10 +2966,10 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         time_step_size = Parameter(1.0, modulable=True)
         previous_time = Parameter(0.0, initializer='starting_point', pnl_internal=True)
         dimension = Parameter(3, stateful=False, read_only=True)
-        initializer = Parameter([0], initalizer='variable', dependencies=dimension, stateful=True)
+        initializer = Parameter([0, 0], initalizer='variable', dependencies=dimension, stateful=True)
         angle_function = Parameter(None, stateful=False, loggable=False)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
         enable_output_type_conversion = Parameter(
             False,
             stateful=False,
@@ -2982,8 +2979,14 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         )
 
         def _validate_dimension(self, dimension):
+            dimension = try_extract_0d_array_item(dimension)
             if not isinstance(dimension, int) or dimension < 2:
                 return 'dimension must be an integer >= 2'
+
+        def _parse_initializer(self, initializer):
+            if initializer is not None:
+                initializer = np.asarray(initializer)
+            return initializer
 
         # FIX: THIS SEEMS DUPLICATIVE OF DriftOnASphereIntegrator._validate_params() (THOUGH THAT GETS CAUGHT EARLIER)
         def _validate_initializer(self, initializer):
@@ -2992,21 +2995,6 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
                     and (initializer.ndim != 1 or len(initializer) != initializer_len)):
                 return f"'initializer' must be a list or 1d array of length {initializer_len} " \
                        f"(the value of the \'dimension\' parameter minus 1)"
-
-        def _parse_initializer(self, initializer):
-            """Assign initial value as array of random values of length dimension-1"""
-            initializer = np.array(initializer)
-            initializer_dim = self.dimension.default_value - 1
-            if initializer.ndim != 1 or len(initializer) != initializer_dim:
-                initializer = np.random.random(initializer_dim)
-                self.initializer._set_default_value(initializer)
-            return initializer
-
-        def _parse_noise(self, noise):
-            """Assign initial value as array of random values of length dimension-1"""
-            if isinstance(noise, list):
-                noise = np.array(noise)
-            return noise
 
     @check_user_specified
     @beartype
@@ -3069,7 +3057,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
                     f"DriftOnASphereIntegrator requires noise parameter to be a float or float array.")
             if isinstance(noise, np.ndarray):
                 initializer_len = self.parameters.dimension.default_value - 1
-                if noise.ndim !=1 or len(noise) != initializer_len:
+                if noise.ndim > 1 or (noise.ndim == 1 and len(noise) != initializer_len):
                     owner_str = f"'of '{self.owner.name}" if self.owner else ""
                     raise FunctionError(f"'noise' parameter for {self.name}{owner_str} must be a list or 1d array of "
                                         f"length {initializer_len} (the value of the \'dimension\' parameter minus 1)")
@@ -3085,7 +3073,9 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         """Need to override this to manage mismatch in dimensionality of initializer vs. variable"""
 
         if not self.parameters.initializer._user_specified:
-            self._initialize_previous_value(self.parameters.initializer.get(context), context)
+            expected_initializer_dim = self.parameters.dimension._get(context) - 1
+            initializer = np.random.random(expected_initializer_dim)
+            self._initialize_previous_value(initializer, context)
 
         # Remove initializer from self.initializers to manage mismatch in dimensionality of initializer vs. variable
         initializers = list(self.initializers)
@@ -3126,7 +3116,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
             if angle_result.ndim != 1 and len(angle_result) != dimension:
                 raise FunctionError(f"{fct_msg} specified for 'angle_function' arg of "
                                     f"{self.__class__.__name__} ({angle_function}) must accept a list or 1d array "
-                                    f"of length {dimension-1} and return a 1d array of length {dimension}.")
+                                    f"of length {dimension - 1} and return a 1d array of length {dimension}.")
         except:
             raise FunctionError(f"Problem with {fct_msg} specified for 'angle_function' arg of "
                                 f"{self.__class__.__name__} ({angle_function}).")
@@ -3177,7 +3167,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
             owner_str = f"'of '{self.owner.name}" if self.owner else ""
             raise FunctionError(f"Length of 'variable' for {self.name}{owner_str} ({len(variable)}) must be "
                                 # f"1 or one less than its 'dimension' parameter ({dimension}-1={dimension-1}).")
-                                f"1 or {dimension-1} (one less than its 'dimension' parameter: {dimension}).")
+                                f"1 or {dimension - 1} (one less than its 'dimension' parameter: {dimension}).")
 
         random_draw = np.array([random_state.normal() for i in range(dimension - 1)])
         value = previous_value + rate * drift * time_step_size \
@@ -3448,7 +3438,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         non_decision_time = Parameter(0.0, modulable=True)
         previous_time = Parameter(0.0, initializer='non_decision_time', pnl_internal=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
         enable_output_type_conversion = Parameter(
             False,
             stateful=False,
@@ -3458,7 +3448,6 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         )
 
         def _parse_initializer(self, initializer):
-            initializer = np.array(initializer)
             if initializer.ndim > 1:
                 return np.atleast_1d(initializer.squeeze())
             else:
@@ -3503,7 +3492,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         )
 
     def _validate_noise(self, noise):
-        if noise is not None and not isinstance(noise, float):
+        if noise is not None and not is_numeric_scalar(noise):
             raise FunctionError(
                 "Invalid noise parameter for {}. OrnsteinUhlenbeckIntegrator requires noise parameter to be a float. "
                 "Noise parameter is used to construct the standard DDM noise distribution".format(self.name))
@@ -3913,7 +3902,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
     .. _FitzHughNagumoIntegrator:
 
     `function <FitzHughNagumoIntegrator._function>` returns one time step of integration of the `Fitzhugh-Nagumo model
-    https://en.wikipedia.org/wiki/FitzHugh–Nagumo_model>`_ of an excitable oscillator:
+    <https://en.wikipedia.org/wiki/FitzHugh–Nagumo_model>`_ of an excitable oscillator:
 
     .. math::
             time\\_constant_v \\frac{dv}{dt} = a_v * v^3 + (1 + threshold) * b_v * v^2 + (- threshold) * c_v * v^2 +
@@ -4059,7 +4048,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
             +---------------------------------------+------------------------------------------------+----------------------------------------------+------------------------------------+---------------------------------------------------------------+
             |**FitzHughNagumoIntegrator Parameter** |`threshold <FitzHughNagumoIntegrator.threshold>`|`variable <FitzHughNagumoIntegrator.variable>`|`f_v <FitzHughNagumoIntegrator.f_v>`|`time_constant_v <FitzHughNagumoIntegrator.time_constant_v>`   |
             +---------------------------------------+------------------------------------------------+----------------------------------------------+-------------------------+--------------------------------------------------------------------------+
-            |**Gilzenrat Parameter**                |a                                               |:math:`f(X_1)`                                |:math:`w_{vX_1}`                    |:math:`T_{v}`                                                  |
+            |**Gilzenrat Parameter**                |a                                               | :math:`f(X_1)`                               | :math:`w_{vX_1}`                   | :math:`T_{v}`                                                 |
             +---------------------------------------+------------------------------------------------+----------------------------------------------+------------------------------------+---------------------------------------------------------------+
 
             The following FitzHughNagumoIntegrator parameter values must be set in the equation for :math:`\\frac{dw}{dt}`:
@@ -4861,7 +4850,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
             self.parameters.previous_w._set(previous_w, context)
             self.parameters.previous_time._set(previous_time, context)
 
-        return previous_v, previous_w, previous_time
+        return convert_all_elements_to_np_array([previous_v, previous_w, previous_time])
 
     def reset(self, previous_v=None, previous_w=None, previous_time=None, context=None):
         return super().reset(

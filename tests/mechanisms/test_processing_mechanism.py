@@ -63,7 +63,7 @@ class TestProcessingMechanismFunctions:
         "function,expected", [
             (LinearCombination, [[1.]]),
             (Reduce, [[1.]]),
-            (CombineMeans, [1.0]),
+            (CombineMeans, [[1.0]]),
             (Exponential, [[2.71828183]]),
             (Logistic, [[0.73105858]]),
             (SoftMax, [[1, ]]),
@@ -279,7 +279,7 @@ class TestLinearMatrixFunction:
 
         np.testing.assert_allclose(PM_2d_array.value, 4.0)
 
-        PM_matrix = ProcessingMechanism(function=LinearMatrix(matrix=np.matrix([[4.0]])))
+        PM_matrix = ProcessingMechanism(function=LinearMatrix(matrix=np.array([[4.0]])))
         PM_matrix.execute(1.0)
 
         np.testing.assert_allclose(PM_matrix.value, 4.0)

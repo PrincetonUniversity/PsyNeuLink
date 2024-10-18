@@ -36,8 +36,8 @@ A ModulatorySignal is a subclas of `OutputPort` that belongs to a `ModulatoryMec
 used to `modulate <ModulatorySignal_Modulation>` the `value <Port_Base.value>` of one or more `Ports <Port>` by way of
 one or more `ModulatoryProjctions <ModulatoryProjection>`. A ModulatorySignal modulates the value of a Port by modifying
 a  parameter of that Port's `function <Port_Base.function>`.  There are three types of ModulatorySignals, each of which
-is  associated wth a particular type of `ModulatoryMechanism <ModulatoryMechanism>` and `ModulatoryProjection
-<ModulatoryProjection>`, and modifies the value of different types of Ports, as summarized `below:
+is associated with a particular type of `ModulatoryMechanism <ModulatoryMechanism>` and `ModulatoryProjection
+<ModulatoryProjection>`, and modifies the value of different types of Ports, as summarized below:
 
 * `ControlSignal`
     takes the `allocation <ControlSignal.allocation>` assigned to it by the `function <ControlMechanism.function>`
@@ -47,8 +47,8 @@ is  associated wth a particular type of `ModulatoryMechanism <ModulatoryMechanis
     Mechanism's `InputPorts <InputPort>` or `OutputPorts <OutputPort>` (and thereby the `value <Port_Base.value>`
     of the corresponding Port).
 ..
-* `GatingSignal` takes the `allocation <GatingSignal.allocation>` assigned to it by the `function
-    <GatingMechanism.function>` of the `GatingMechanism` to which it belongs, and uses it to modulate the parameter
+* `GatingSignal` takes the `allocation <GatingSignal.allocation>` assigned to it by the
+    `function <GatingMechanism.function>` of the `GatingMechanism` to which it belongs, and uses it to modulate the parameter
     of the `function <Port_Base.function>` of an `InputPort` or `OutputPort` (and hence that Port's `value
     <Port_Base.value>`).  A GatingMechanism and GatingSignal can be thought of as implementing a form of control
     specialized for gating the input to and/or output of a Mechanism.

@@ -1,3 +1,5 @@
+import numpy as np
+
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Exponential
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
@@ -37,7 +39,7 @@ class TestControlSignals:
         # comp2.add_nodes([tMech3, tMech4, cMech2])
         comp2.add_linear_processing_pathway([cMech2, tMech3, tMech4])
         comp2.run(inputs=inputs)
-        assert comp1.results == comp2.results
+        np.testing.assert_array_equal(comp1.results, comp2.results)
 
 class TestGatingSignals:
     def test_alias_equivalence_for_modulates_and_projections(self):
@@ -58,4 +60,4 @@ class TestGatingSignals:
         comp2.add_linear_processing_pathway([Tx2, Ty2, G2, Tx2])
         comp2.run(inputs={Tx2: inputs})
 
-        assert comp1.results == comp2.results
+        np.testing.assert_array_equal(comp1.results, comp2.results)
