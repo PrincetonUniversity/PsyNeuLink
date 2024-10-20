@@ -1331,10 +1331,8 @@ class TestNestedNoLearning:
             (400, 4, 10, .00001),
         ]
     )
+    @pytest.mark.llvm_not_implemented
     def test_xor_nested_no_train_then_train(self, num_epochs, learning_rate, patience, min_delta, autodiff_mode):
-        if autodiff_mode != pnl.ExecutionMode.PyTorch:
-            pytest.skip("LLVM not available")
-
         xor_inputs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
         xor_targets = np.array([[0], [1], [1], [0]])
 
@@ -2800,15 +2798,12 @@ class TestMiscTrainingFunctionality:
     @pytest.mark.parametrize(
         'loss, expected', [
             (Loss.CROSS_ENTROPY, [[[0.99330715]], [[0.99933202]], [[0.99933202]], [[0.99985049]]]),
-            (Loss.L1, [[[0.99330641]], [[0.9993319 ]], [[0.9993319 ]], [[0.99985045]]]),
+            pytest.param(Loss.L1, [[[0.99330641]], [[0.9993319 ]], [[0.9993319 ]], [[0.99985045]]], marks=pytest.mark.llvm_not_implemented),
             (Loss.MSE, [[[0.99330509]], [[0.99933169]], [[0.99933169]], [[0.9998504]]]),
-            (Loss.POISSON_NLL, [[[0.99330385]], [[0.99933149]], [[0.99933149]], [[0.99985034]]]),
+            pytest.param(Loss.POISSON_NLL, [[[0.99330385]], [[0.99933149]], [[0.99933149]], [[0.99985034]]], marks=pytest.mark.llvm_not_implemented),
         ]
     )
     def test_loss_specs(self, loss, expected, autodiff_mode):
-        if autodiff_mode is not pnl.ExecutionMode.PyTorch and loss in [Loss.POISSON_NLL, Loss.L1]:
-            pytest.skip("Loss spec not yet implemented!")
-
         xor_in = TransferMechanism(name='xor_in', default_variable=np.zeros(2))
         xor_hid = TransferMechanism(name='xor_hid', default_variable=np.zeros(10), function=Logistic())
         xor_out = TransferMechanism(name='xor_out', default_variable=np.zeros(1), function=Logistic())
@@ -2834,10 +2829,8 @@ class TestMiscTrainingFunctionality:
         tol = {'atol': 2e-6, 'rtol': 2e-6} if loss == Loss.CROSS_ENTROPY else {}
         np.testing.assert_allclose(xor.learning_results, expected, **tol)
 
+    @pytest.mark.llvm_not_implemented
     def test_pytorch_loss_spec(self, autodiff_mode):
-        if autodiff_mode is not pnl.ExecutionMode.PyTorch:
-            pytest.skip("Loss spec not yet implemented!")
-
         import torch
         ls = torch.nn.SoftMarginLoss(reduction='sum')
 

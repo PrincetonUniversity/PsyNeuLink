@@ -5569,10 +5569,8 @@ class TestNestedCompositions:
 class TestImportComposition:
     @pytest.mark.pytorch
     @pytest.mark.composition
+    @pytest.mark.llvm_not_implemented
     def test_import_composition(self, comp_mode):
-
-        if comp_mode != pnl.ExecutionMode.Python:
-            pytest.skip('Compilation not yet support for Composition.import.')
 
         em = EMComposition(memory_template=(2,5), memory_capacity=4)
 

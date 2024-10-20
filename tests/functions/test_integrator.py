@@ -191,7 +191,7 @@ GROUP_PREFIX="IntegratorFunction "
     (pnl.DriftDiffusionIntegrator, DriftIntFun),
     (pnl.LeakyCompetingIntegrator, LeakyFun),
     (pnl.AccumulatorIntegrator, AccumulatorFun),
-    (pnl.DriftOnASphereIntegrator, DriftOnASphereFun),
+    pytest.param((pnl.DriftOnASphereIntegrator, DriftOnASphereFun), marks=pytest.mark.llvm_not_implemented),
     ], ids=lambda x: x[0])
 @pytest.mark.benchmark
 def test_execute(func, func_mode, variable, noise, params, benchmark):
@@ -209,8 +209,6 @@ def test_execute(func, func_mode, variable, noise, params, benchmark):
 
     if 'DriftOnASphereIntegrator' in func[0].componentName:
         params = {**params, 'dimension': len(variable) + 1}
-        if func_mode != 'Python':
-            pytest.skip("DriftOnASphereIntegrator not yet compiled")
 
     elif issubclass(func_class, pnl.AccumulatorIntegrator):
         params = {**params, 'increment': RAND0_1}
