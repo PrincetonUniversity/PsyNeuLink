@@ -78,13 +78,12 @@ def test_autodiff_without_torch():
     mech_B = TransferMechanism()
     comp = AutodiffComposition([mech_A, mech_B])
     comp.run()
-    result = comp.learn(inputs={mech_A:[[1], [2]]},
-                       epochs=3,
-               execution_mode = pnl.ExecutionMode.Python)
+    result = comp.learn(inputs={mech_A:[[1], [2]]}, epochs=3, execution_mode=pnl.ExecutionMode.Python)
+
     assert comp.pytorch_representation is None
     np.testing.assert_allclose(result,[[1.95634283]], atol=1e-08, rtol=1e-08)
 
-    # If torch is not installed, should raise exception for learn() with ExecutionMode.Python
+    # If torch is not installed, should raise exception for learn() with ExecutionMode.PyTorch
     from psyneulink.library.compositions.autodiffcomposition import torch_available
     if not torch_available:
         mech_A = TransferMechanism()
@@ -94,7 +93,7 @@ def test_autodiff_without_torch():
         with pytest.raises(AutodiffCompositionError) as error:
             result = comp.learn(inputs={mech_A:[[1], [2]]},
                                 epochs=3,
-                                execution_mode = pnl.ExecutionMode.PyTorch)
+                                execution_mode=pnl.ExecutionMode.PyTorch)
             np.testing.assert_allclose(result,[[1.95634283]], atol=1e-08, rtol=1e-08)
         assert (f"'autodiff_composition-1.learn()' has been called with ExecutionMode.Pytorch, "
                 f"but Pytorch module ('torch') is not installed. "
@@ -488,7 +487,7 @@ class TestTrainingCorrectness:
                     0.26739429, 0.25464059, 0.25453138, 0.49761396]]]
 
 
-        if pytest.helpers.llvm_current_fp_precision() == 'fp32' and autodiff_mode != pnl.ExecutionMode.Python:
+        if pytest.helpers.llvm_current_fp_precision() == 'fp32' and autodiff_mode != pnl.ExecutionMode.PyTorch:
             accuracy_args = {"atol": 1e-8, "rtol": 1e-6}
         else:
             accuracy_args = {}
@@ -1332,28 +1331,18 @@ class TestNestedNoLearning:
             (400, 4, 10, .00001),
         ]
     )
-    def test_xor_nested_no_train_then_train(self, num_epochs, learning_rate,
-                                            patience, min_delta, autodiff_mode):
-        if autodiff_mode is not pnl.ExecutionMode.Python:
-            pytest.skip("")
-        # the inputs we will provide to the model
-        xor_inputs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+    def test_xor_nested_no_train_then_train(self, num_epochs, learning_rate, patience, min_delta, autodiff_mode):
+        if autodiff_mode != pnl.ExecutionMode.PyTorch:
+            pytest.skip("LLVM not available")
 
-        # the outputs we wish to see from the model
+        xor_inputs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
         xor_targets = np.array([[0], [1], [1], [0]])
 
         # -----------------------------------------------------------------
 
-        xor_in = pnl.TransferMechanism(name='xor_in',
-                                       default_variable=np.zeros(2))
-
-        xor_hid = pnl.TransferMechanism(name='xor_hid',
-                                        default_variable=np.zeros(10),
-                                        function=Logistic())
-
-        xor_out = pnl.TransferMechanism(name='xor_out',
-                                        default_variable=np.zeros(1),
-                                        function=Logistic())
+        xor_in = pnl.TransferMechanism(name='xor_in', default_variable=np.zeros(2))
+        xor_hid = pnl.TransferMechanism(name='xor_hid', default_variable=np.zeros(10), function=Logistic())
+        xor_out = pnl.TransferMechanism(name='xor_out', default_variable=np.zeros(1), function=Logistic())
 
         hid_map = pnl.MappingProjection(name='input_to_hidden',
                                         matrix=np.random.randn(2, 10) * 0.1,
@@ -1367,9 +1356,7 @@ class TestNestedNoLearning:
 
         # -----------------------------------------------------------------
 
-        xor_autodiff = AutodiffComposition(
-            learning_rate=learning_rate,
-        )
+        xor_autodiff = AutodiffComposition(learning_rate=learning_rate)
 
         xor_autodiff.add_node(xor_in)
         xor_autodiff.add_node(xor_hid)
@@ -1387,7 +1374,9 @@ class TestNestedNoLearning:
         parentComposition.add_node(xor_autodiff)
         input = {xor_autodiff: input_dict}
         no_training_input = {xor_autodiff: no_training_input_dict}
+
         learning_context = Context()
+
         result1 = xor_autodiff.run(inputs=input[xor_autodiff]['inputs'], execution_mode=autodiff_mode, context=learning_context)
         xor_autodiff.learn(inputs=input_dict, execution_mode=autodiff_mode, context=learning_context, patience=patience, min_delta=min_delta)
         result2 = parentComposition.run(inputs=no_training_input, execution_mode=autodiff_mode, context=learning_context)
@@ -1722,10 +1711,6 @@ class TestNestedNoLearning:
         no_training_input = {sem_net: inputs_dict.copy()}
 
         sem_net.learn(inputs=input_dict, execution_mode=autodiff_mode)
-
-        if autodiff_mode is not pnl.ExecutionMode.Python:
-            #FIXME: Enable the rest of the test when recompilation is supported
-            return
 
         parentComposition.run(inputs=no_training_input)
 
@@ -2313,12 +2298,14 @@ class TestNestedLearning:
         def get_inputs_auto_diff(idx):
             return {"inputs": {xor_in_func: xor_inputs_func[idx]},
                     "targets": {xor_out_func: xor_targets_func[idx]}}
+
         def get_inputs_comp(idx):
             return {xor_in_func: xor_inputs_func[idx]}
+
         def get_targets_comp(idx):
             return {xor_out_func: xor_targets_func[idx]}
 
-        xor_func.learn(inputs=get_inputs_auto_diff)
+        xor_func.learn(inputs=get_inputs_auto_diff, execution_mode=pnl.ExecutionMode.PyTorch)
 
         results = xor_func.results
         np.testing.assert_allclose(results, [[[0.62245933]],[[0.62813197]],[[0.6282438]],[[0.6341436]]])
@@ -2353,21 +2340,25 @@ class TestNestedLearning:
         # Test for error on learning if nested is Composition
         nested = pnl.Composition(name='nested', nodes=[hidden_mech])
         autodiff = pnl.AutodiffComposition([input_mech, nested, output_mech], name='comp')
-        autodiff.run()
+        autodiff.run([0, 0])
+
         error_msg = (f"Unable execute learning for 'comp' because it contains nested Composition(s) "
                      f"that are not AutodiffCompositions: 'nested'.")
         with pytest.raises(AutodiffCompositionError) as error:
-            autodiff.learn(inputs={input_mech: [[0, 0]]})
+            autodiff.learn(inputs={input_mech: [[0, 0]]}, execution_mode=pnl.ExecutionMode.PyTorch)
+
         assert error_msg in str(error.value)
 
         # Test for error on learning if nested is AutodiffComposition but execution_mode is Python
         nested = pnl.AutodiffComposition(name='nested', nodes=[hidden_mech])
         autodiff = pnl.AutodiffComposition([input_mech, nested, output_mech], name='comp')
-        autodiff.run()
+        autodiff.run([0, 0])
+
         error_msg = ("Unable to execute learning in Python mode for 'comp-1' "
                      "because it contains one or more nested Compositions: 'nested-1'.")
         with pytest.raises(AutodiffCompositionError) as error:
             autodiff.learn(inputs={input_mech: [[0, 0]]}, execution_mode=pnl.ExecutionMode.Python)
+
         assert error_msg in str(error.value)
 
 
@@ -2420,7 +2411,9 @@ class TestAutodiffMultipleOutput_ports:
         # autodiff.show_graph(show_all=True)
         result_autodiff_ports = autodiff.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
                                                        input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
-                                               learning_rate = .01, epochs=3)
+                                               learning_rate=.01,
+                                               epochs=3,
+                                               execution_mode=pnl.ExecutionMode.PyTorch)
 
         # # Autodiff: PARALLEL PATHWAYS USING SEPARATE HIDDEN NODES (hidden_1 VS. hidden_2)
         sizes = {HIDDEN_B: 3}
@@ -2431,19 +2424,15 @@ class TestAutodiffMultipleOutput_ports:
         hidden_B = nodes[HIDDEN_B]
         hidden_C = nodes[HIDDEN_C]
         output = nodes[OUTPUT_A]
-        autodiff = pnl.AutodiffComposition(pathways=[[input_A,
-                                                  hidden_A,
-                                                  hidden_C,
-                                                  output],
-                                                 [input_B,
-                                                  hidden_B,
-                                                  hidden_C,
-                                                  output]],
-                                       name='autodiff')
+        autodiff = pnl.AutodiffComposition(pathways=[[input_A, hidden_A, hidden_C, output],
+                                                     [input_B, hidden_B, hidden_C, output]],
+                                           name='autodiff')
 
         result_autodiff_nodes = autodiff.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
-                                        input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
-                                learning_rate = .01, epochs=3)
+                                                       input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                                               learning_rate=.01,
+                                               epochs=3,
+                                               execution_mode=pnl.ExecutionMode.PyTorch)
 
         # # Composition: PARALLEL PATHWAYS USING SEPARATE INPUT AND OUTPUT PORTS ON hidden_1
         sizes = {HIDDEN_A: (2,3)}
@@ -2467,8 +2456,9 @@ class TestAutodiffMultipleOutput_ports:
                                                    hidden_B,
                                                    output])
         result_comp_ports = comp.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
-                                      input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
-                              learning_rate = .01, epochs=3)
+                                               input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                                       learning_rate=.01,
+                                       epochs=3)
 
         # # Comp: PARALLEL PATHWAYS USING SEPARATE HIDDEN NODES (hidden_1 VS. hidden_2)
         sizes = {HIDDEN_B: 3}
@@ -2489,8 +2479,9 @@ class TestAutodiffMultipleOutput_ports:
                                                    hidden_C,
                                                    output])
         result_comp_nodes = comp.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
-                                      input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
-                              learning_rate = .01, epochs=3)
+                                               input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
+                                       learning_rate=.01,
+                                       epochs=3)
 
         expected = [[-0.14091702170015408, 0.11156579308015635]]
         np.testing.assert_allclose(result_autodiff_ports, expected, rtol=1e-8, atol=1e-8)
@@ -2501,7 +2492,7 @@ class TestAutodiffMultipleOutput_ports:
     def test_single_input_to_multiple_output_ports_converge_internal(self):
 
         # Autodiff: DIVERGENT PATHWAY USING SEPARATE INPUT AND OUTPUT PORTS ON hidden_1
-        sizes = {HIDDEN_A: (2,3)}
+        sizes = {HIDDEN_A: (2, 3)}
         nodes = nodes_for_testing_nested_comps(sizes)
         input = nodes[INPUT_A]
         hidden_A = nodes[HIDDEN_A]
@@ -2521,7 +2512,9 @@ class TestAutodiffMultipleOutput_ports:
                                                       output]],
                                            name='autodiff')
         result_autodiff_ports = autodiff.learn(inputs={input: [[1, 2], [1, 2], [1, 2], [1, 2]]},
-                                               learning_rate = .01, epochs=3)
+                                               learning_rate=.01,
+                                               epochs=3,
+                                               execution_mode=pnl.ExecutionMode.PyTorch)
 
         # # Autodiff: DIVERGENT PATHWAY USING SEPARATE HIDDEN NODES (hidden_1 VS. hidden_2)
         sizes = {HIDDEN_B: 3}
@@ -2535,10 +2528,12 @@ class TestAutodiffMultipleOutput_ports:
                                                      [input, hidden_B, hidden_C, output]],
                                            name='autodiff')
         result_autodiff_nodes = autodiff.learn(inputs={input: [[1, 2], [1, 2], [1, 2], [1, 2]]},
-                                               learning_rate = .01, epochs=3)
+                                               learning_rate=.01,
+                                               epochs=3,
+                                               execution_mode=pnl.ExecutionMode.PyTorch)
 
         # Composition: DIVERGENT PATHWAY USING SEPARATE INPUT AND OUTPUT PORTS ON hidden_1
-        sizes = {HIDDEN_A: (2,3)}
+        sizes = {HIDDEN_A: (2, 3)}
         nodes = nodes_for_testing_nested_comps(sizes)
         input = nodes[INPUT_A]
         hidden_A = nodes[HIDDEN_A]
@@ -2558,7 +2553,8 @@ class TestAutodiffMultipleOutput_ports:
                                                    hidden_B,
                                                    output])
         result_comp_ports = comp.learn(inputs={input: [[1, 2], [1, 2], [1, 2], [1, 2]]},
-                                       learning_rate = .01, epochs=3)
+                                       learning_rate=.01,
+                                       epochs=3)
 
         # Comp: DIVERGENT PATHWAY USING SEPARATE HIDDEN NODES (hidden_1 VS. hidden_2)
         sizes = {HIDDEN_B: 3}
@@ -2572,7 +2568,8 @@ class TestAutodiffMultipleOutput_ports:
         comp.add_backpropagation_learning_pathway([input, hidden_A, hidden_C, output])
         comp.add_backpropagation_learning_pathway([input, hidden_B, hidden_C, output])
         result_comp_nodes = comp.learn(inputs={input: [[1, 2], [1, 2], [1, 2], [1, 2]]},
-                                       learning_rate = .01, epochs=3)
+                                       learning_rate=.01,
+                                       epochs=3)
 
         expected = [[-0.5448706019245989, -0.45743872720005285]]
         np.testing.assert_allclose(result_autodiff_ports, expected, rtol=1e-8, atol=1e-8)
@@ -2600,7 +2597,9 @@ class TestAutodiffMultipleOutput_ports:
                                                   output]                                         ],
                                        name='autodiff')
         result_autodiff_ports = autodiff.learn(inputs={input: [[0, 0], [0, 1], [1, 0], [1, 1]]},
-                                 learning_rate = .01, epochs=3)
+                                               learning_rate=.01,
+                                               epochs=3,
+                                               execution_mode=pnl.ExecutionMode.PyTorch)
 
         # Autodiff: PARALLEL PATHWAYS USE SEPARATE HIDDEN NODES (hidden_1 VS. hidden_2)
         sizes = {HIDDEN_B: 3}
@@ -2609,11 +2608,11 @@ class TestAutodiffMultipleOutput_ports:
         hidden_A = nodes[HIDDEN_A]
         hidden_B = nodes[HIDDEN_B]
         output = nodes[OUTPUT_A]
-        autodiff = pnl.AutodiffComposition(pathways=[[input, hidden_A, output],
-                                                 [input, hidden_B, output]                                         ],
-                                       name='autodiff')
+        autodiff = pnl.AutodiffComposition(pathways=[[input, hidden_A, output], [input, hidden_B, output]], name='autodiff')
         result_autodiff_nodes = autodiff.learn(inputs={input: [[0, 0], [0, 1], [1, 0], [1, 1]]},
-                                                learning_rate = .01, epochs=3)
+                                               learning_rate=.01,
+                                               epochs=3,
+                                               execution_mode=pnl.ExecutionMode.PyTorch)
 
         # Comp: PARALLEL PATHWAYS USE SEPARATE HIDDEN NODES (hidden_1 VS. hidden_2)
         sizes = {HIDDEN_B: 3}
@@ -2626,7 +2625,8 @@ class TestAutodiffMultipleOutput_ports:
         comp.add_backpropagation_learning_pathway([input, hidden_A, output])
         comp.add_backpropagation_learning_pathway([input, hidden_B, output])
         result_comp_nodes = comp.learn(inputs={input: [[0, 0], [0, 1], [1, 0], [1, 1]]},
-                               learning_rate = .01, epochs=3)
+                                       learning_rate=.01,
+                                       epochs=3)
 
         # Comp: PARALLEL PATHWAYS USE SEPARATE INPUT AND OUTPUT PORTS ON hidden_c
         sizes = {HIDDEN_A: (2,3)}
@@ -2646,7 +2646,8 @@ class TestAutodiffMultipleOutput_ports:
                                                    pnl.MappingProjection(hidden.output_ports[1],output),
                                                    output])
         result_comp_ports = comp.learn(inputs={input: [[0, 0], [0, 1], [1, 0], [1, 1]]},
-                                        learning_rate = .01, epochs=3)
+                                       learning_rate=.01,
+                                       epochs=3)
 
         expected = [[3.3178720430554267, 3.3245710462077773]]
         np.testing.assert_allclose(result_autodiff_ports, expected, rtol=1e-8, atol=1e-8)
@@ -2662,20 +2663,17 @@ class TestAutodiffMultipleOutput_ports:
         input_A = nodes[INPUT_A]
         input_B = nodes[INPUT_B]
         output = nodes[OUTPUT_A]
-        autodiff = AutodiffComposition(pathways=[[input_A,
-                                                  MappingProjection(input_A, output.input_ports[0]),
-                                                  output],
-                                                 [input_B,
-                                                  MappingProjection(input_B, output.input_ports[1]),
-                                                  output]],
+        autodiff = AutodiffComposition(pathways=[[input_A, MappingProjection(input_A, output.input_ports[0]), output],
+                                                 [input_B, MappingProjection(input_B, output.input_ports[1]), output]],
                                        name='autodiff')
         result_autodiff_ports = autodiff.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
                                                        input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
-                                               learning_rate = .01, epochs=3)
+                                               learning_rate=.01,
+                                               epochs=3,
+                                               execution_mode=pnl.ExecutionMode.PyTorch)
 
         # Autodiff: SEPARATE INPUT NODES TO SEPARATE OUTPUT NODES WITH ONE OUTPUTPORT EACH
-        sizes = {OUTPUT_A: 2,
-                 OUTPUT_B: 3}
+        sizes = {OUTPUT_A: 2, OUTPUT_B: 3}
         nodes = nodes_for_testing_nested_comps(sizes)
         input_A = nodes[INPUT_A]
         input_B = nodes[INPUT_B]
@@ -2686,7 +2684,9 @@ class TestAutodiffMultipleOutput_ports:
                                        name='autodiff')
         result_autodiff_nodes = autodiff.learn(inputs={input_A: [[0, 0], [0, 1], [1, 0], [1, 1]],
                                                        input_B: [[1, 2], [1, 2], [1, 2], [1, 2]]},
-                                               learning_rate = .01, epochs=3)
+                                               learning_rate=.01,
+                                               epochs=3,
+                                               execution_mode=pnl.ExecutionMode.PyTorch)
         for port, node in zip(result_autodiff_ports, result_autodiff_nodes):
             np.testing.assert_allclose(port, node)
 
@@ -2799,26 +2799,19 @@ class TestMiscTrainingFunctionality:
 
     @pytest.mark.parametrize(
         'loss, expected', [
+            (Loss.CROSS_ENTROPY, [[[0.99330715]], [[0.99933202]], [[0.99933202]], [[0.99985049]]]),
+            (Loss.L1, [[[0.99330641]], [[0.9993319 ]], [[0.9993319 ]], [[0.99985045]]]),
             (Loss.MSE, [[[0.99330509]], [[0.99933169]], [[0.99933169]], [[0.9998504]]]),
-            (Loss.L1, []),
-            (Loss.POISSON_NLL, []),
-            (Loss.CROSS_ENTROPY, [[[0.99330715]], [[0.99933202]], [[0.99933202]], [[0.99985049]]])
+            (Loss.POISSON_NLL, [[[0.99330385]], [[0.99933149]], [[0.99933149]], [[0.99985034]]]),
         ]
     )
     def test_loss_specs(self, loss, expected, autodiff_mode):
-        if autodiff_mode is not pnl.ExecutionMode.Python and loss in [Loss.POISSON_NLL, Loss.L1]:
+        if autodiff_mode is not pnl.ExecutionMode.PyTorch and loss in [Loss.POISSON_NLL, Loss.L1]:
             pytest.skip("Loss spec not yet implemented!")
 
-        xor_in = TransferMechanism(name='xor_in',
-                                   default_variable=np.zeros(2))
-
-        xor_hid = TransferMechanism(name='xor_hid',
-                                    default_variable=np.zeros(10),
-                                    function=Logistic())
-
-        xor_out = TransferMechanism(name='xor_out',
-                                    default_variable=np.zeros(1),
-                                    function=Logistic())
+        xor_in = TransferMechanism(name='xor_in', default_variable=np.zeros(2))
+        xor_hid = TransferMechanism(name='xor_hid', default_variable=np.zeros(10), function=Logistic())
+        xor_out = TransferMechanism(name='xor_out', default_variable=np.zeros(1), function=Logistic())
 
         hid_map = MappingProjection()
         out_map = MappingProjection()
@@ -2833,34 +2826,24 @@ class TestMiscTrainingFunctionality:
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
         xor_inputs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-
         xor_targets = np.array([[0], [1], [1], [0]])
 
-        xor.learn(inputs = {"inputs": {xor_in:xor_inputs},
-                            "targets": {xor_out:xor_targets},
-                            "epochs": 10}, execution_mode=autodiff_mode)
+        xor.learn(inputs={"inputs": {xor_in: xor_inputs}, "targets": {xor_out: xor_targets}, "epochs": 10},
+                  execution_mode=autodiff_mode)
 
-        tol = {'atol': 2e-6, 'rtol': 2e-6} if autodiff_mode != pnl.ExecutionMode.Python and loss == Loss.CROSS_ENTROPY else {}
+        tol = {'atol': 2e-6, 'rtol': 2e-6} if loss == Loss.CROSS_ENTROPY else {}
         np.testing.assert_allclose(xor.learning_results, expected, **tol)
 
     def test_pytorch_loss_spec(self, autodiff_mode):
-
-        if autodiff_mode is not pnl.ExecutionMode.Python:
+        if autodiff_mode is not pnl.ExecutionMode.PyTorch:
             pytest.skip("Loss spec not yet implemented!")
 
         import torch
         ls = torch.nn.SoftMarginLoss(reduction='sum')
 
-        xor_in = TransferMechanism(name='xor_in',
-                                   default_variable=np.zeros(2))
-
-        xor_hid = TransferMechanism(name='xor_hid',
-                                    default_variable=np.zeros(10),
-                                    function=Logistic())
-
-        xor_out = TransferMechanism(name='xor_out',
-                                    default_variable=np.zeros(1),
-                                    function=Logistic())
+        xor_in = TransferMechanism(name='xor_in', default_variable=np.zeros(2))
+        xor_hid = TransferMechanism(name='xor_hid', default_variable=np.zeros(10), function=Logistic())
+        xor_out = TransferMechanism(name='xor_out', default_variable=np.zeros(1), function=Logistic())
 
         hid_map = MappingProjection()
         out_map = MappingProjection()
@@ -2873,18 +2856,14 @@ class TestMiscTrainingFunctionality:
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
-        xor_inputs = np.array(  # the inputs we will provide to the model
-            [[0, 0], [0, 1], [1, 0], [1, 1]])
 
-        xor_targets = np.array(  # the outputs we wish to see from the model
-            [[0], [1], [1], [0]])
+        xor_inputs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+        xor_targets = np.array([[0], [1], [1], [0]])
 
-        xor.learn(inputs={"inputs": {xor_in:xor_inputs},
-                          "targets": {xor_out:xor_targets},
-                          "epochs": 10}, execution_mode=autodiff_mode)
-        xor.learn(inputs={"inputs": {xor_in: xor_inputs},
-                          "targets": {xor_out: xor_targets},
-                          "epochs": 10}, execution_mode=autodiff_mode)
+        xor.learn(inputs={"inputs": {xor_in: xor_inputs}, "targets": {xor_out: xor_targets}, "epochs": 10},
+                  execution_mode=autodiff_mode)
+        xor.learn(inputs={"inputs": {xor_in: xor_inputs}, "targets": {xor_out: xor_targets}, "epochs": 10},
+                  execution_mode=autodiff_mode)
 
 
     @pytest.mark.benchmark(group="Optimizer specs")
@@ -2942,19 +2921,12 @@ class TestMiscTrainingFunctionality:
 
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)
     def test_params_stay_separate(self, autodiff_mode):
-        if autodiff_mode is not pnl.ExecutionMode.Python:
+        if autodiff_mode is not pnl.ExecutionMode.PyTorch:
             pytest.skip("Compiled weights are always copied back!")
 
-        xor_in = TransferMechanism(name='xor_in',
-                                   default_variable=np.zeros(2))
-
-        xor_hid = TransferMechanism(name='xor_hid',
-                                    default_variable=np.zeros(10),
-                                    function=Logistic())
-
-        xor_out = TransferMechanism(name='xor_out',
-                                    default_variable=np.zeros(1),
-                                    function=Logistic())
+        xor_in = TransferMechanism(name='xor_in', default_variable=np.zeros(2))
+        xor_hid = TransferMechanism(name='xor_hid', default_variable=np.zeros(10), function=Logistic())
+        xor_out = TransferMechanism(name='xor_out', default_variable=np.zeros(1), function=Logistic())
 
         hid_m = np.random.rand(2,10)
         out_m = np.random.rand(10,1)
@@ -2979,16 +2951,13 @@ class TestMiscTrainingFunctionality:
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
-        xor_inputs = np.array(  # the inputs we will provide to the model
-            [[0, 0], [0, 1], [1, 0], [1, 1]])
+        xor_inputs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
 
-        xor_targets = np.array(  # the outputs we wish to see from the model
-            [[0], [1], [1], [0]])
+        xor_targets = np.array([[0], [1], [1], [0]])
 
         # train the model for a few epochs
-        result = xor.learn(inputs={"inputs": {xor_in:xor_inputs},
-                                   "targets": {xor_out:xor_targets},
-                                   "epochs": 10}, execution_mode=autodiff_mode)
+        xor.learn(inputs={"inputs": {xor_in:xor_inputs}, "targets": {xor_out:xor_targets},"epochs": 10},
+                  execution_mode=autodiff_mode)
 
         # get weight parameters from pytorch
         pt_weights_hid = xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy().copy()
@@ -3676,20 +3645,11 @@ class TestACLogging:
 class TestBatching:
     def test_call_before_minibatch(self):
         # SET UP MECHANISMS FOR COMPOSITION
-
-        xor_in = TransferMechanism(name='xor_in',
-                                   default_variable=np.zeros(2))
-
-        xor_hid = TransferMechanism(name='xor_hid',
-                                    default_variable=np.zeros(10),
-                                    function=Logistic())
-
-        xor_out = TransferMechanism(name='xor_out',
-                                    default_variable=np.zeros(1),
-                                    function=Logistic())
+        xor_in = TransferMechanism(name='xor_in', default_variable=np.zeros(2))
+        xor_hid = TransferMechanism(name='xor_hid', default_variable=np.zeros(10), function=Logistic())
+        xor_out = TransferMechanism(name='xor_out', default_variable=np.zeros(1), function=Logistic())
 
         # SET UP PROJECTIONS FOR COMPOSITION
-
         hid_map = MappingProjection(name='hid_map',
                                     matrix=np.random.rand(2, 10),
                                     sender=xor_in,
@@ -3701,7 +3661,6 @@ class TestBatching:
                                     receiver=xor_out)
 
         # SET UP COMPOSITION
-
         xor = AutodiffComposition(learning_rate=10)
 
         xor.add_node(xor_in)
@@ -3710,19 +3669,10 @@ class TestBatching:
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+
         # SET UP INPUTS AND TARGETS
-
-        xor_inputs_1 = np.array(  # the inputs we will provide to the model
-            [[0, 0],
-             [0, 1],
-             [1, 0],
-             [1, 1]])
-
-        xor_targets_1 = np.array(  # the outputs we wish to see from the model
-            [[0],
-             [1],
-             [1],
-             [0]])
+        xor_inputs_1 = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+        xor_targets_1 = np.array([[0], [1], [1], [0]])
 
         # TRAIN COMPOSITION
         inputs_dict_1 = {"inputs": {xor_in: xor_inputs_1},
@@ -3731,32 +3681,20 @@ class TestBatching:
 
         a = [0]
 
-        def cbm(a):
+        def cbm():
             a[0] += 1
 
-        xor.learn(
-            inputs=inputs_dict_1,
-            call_before_minibatch=lambda: cbm(a)
-        )
+        xor.learn(inputs=inputs_dict_1, call_before_minibatch=cbm, execution_mode=pnl.ExecutionMode.PyTorch)
 
         assert a[0] == 4
 
     def test_call_after_minibatch(self):
         # SET UP MECHANISMS FOR COMPOSITION
-
-        xor_in = TransferMechanism(name='xor_in',
-                                   default_variable=np.zeros(2))
-
-        xor_hid = TransferMechanism(name='xor_hid',
-                                    default_variable=np.zeros(10),
-                                    function=Logistic())
-
-        xor_out = TransferMechanism(name='xor_out',
-                                    default_variable=np.zeros(1),
-                                    function=Logistic())
+        xor_in = TransferMechanism(name='xor_in', default_variable=np.zeros(2))
+        xor_hid = TransferMechanism(name='xor_hid', default_variable=np.zeros(10), function=Logistic())
+        xor_out = TransferMechanism(name='xor_out', default_variable=np.zeros(1), function=Logistic())
 
         # SET UP PROJECTIONS FOR COMPOSITION
-
         hid_map = MappingProjection(name='hid_map',
                                     matrix=np.random.rand(2, 10),
                                     sender=xor_in,
@@ -3768,7 +3706,6 @@ class TestBatching:
                                     receiver=xor_out)
 
         # SET UP COMPOSITION
-
         xor = AutodiffComposition(learning_rate=10)
 
         xor.add_node(xor_in)
@@ -3779,18 +3716,8 @@ class TestBatching:
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
         # SET UP INPUTS AND TARGETS
-
-        xor_inputs_1 = np.array(  # the inputs we will provide to the model
-            [[0, 0],
-             [0, 1],
-             [1, 0],
-             [1, 1]])
-
-        xor_targets_1 = np.array(  # the outputs we wish to see from the model
-            [[0],
-             [1],
-             [1],
-             [0]])
+        xor_inputs_1 = np.array([[0, 0], [0, 1], [1, 0],[1, 1]])
+        xor_targets_1 = np.array([[0], [1], [1], [0]])
 
         # TRAIN COMPOSITION
         inputs_dict_1 = {"inputs": {xor_in: xor_inputs_1},
@@ -3799,14 +3726,10 @@ class TestBatching:
 
         a = [0]
 
-        def cam(a):
+        def cam():
             a[0] += 1
 
-        xor.learn(
-            inputs=inputs_dict_1,
-            call_after_minibatch=lambda: cam(a)
-        )
-
+        xor.learn(inputs=inputs_dict_1, call_after_minibatch=cam, execution_mode=pnl.ExecutionMode.PyTorch)
         assert a[0] == 4
 
     @pytest.mark.parametrize(
@@ -3814,20 +3737,11 @@ class TestBatching:
     )
     def test_batching_with_epochs_specified(self, eps):
         # SET UP MECHANISMS FOR COMPOSITION
-
-        xor_in = TransferMechanism(name='xor_in',
-                                   default_variable=np.zeros(2))
-
-        xor_hid = TransferMechanism(name='xor_hid',
-                                    default_variable=np.zeros(10),
-                                    function=Logistic())
-
-        xor_out = TransferMechanism(name='xor_out',
-                                    default_variable=np.zeros(1),
-                                    function=Logistic())
+        xor_in = TransferMechanism(name='xor_in', default_variable=np.zeros(2))
+        xor_hid = TransferMechanism(name='xor_hid', default_variable=np.zeros(10), function=Logistic())
+        xor_out = TransferMechanism(name='xor_out', default_variable=np.zeros(1), function=Logistic())
 
         # SET UP PROJECTIONS FOR COMPOSITION
-
         hid_map = MappingProjection(name='hid_map',
                                     matrix=np.random.rand(2, 10),
                                     sender=xor_in,
@@ -3839,7 +3753,6 @@ class TestBatching:
                                     receiver=xor_out)
 
         # SET UP COMPOSITION
-
         xor = AutodiffComposition(learning_rate=10,
                                   # optimizer_type=opt
                                   )
@@ -3850,19 +3763,10 @@ class TestBatching:
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+
         # SET UP INPUTS AND TARGETS
-
-        xor_inputs_1 = np.array(  # the inputs we will provide to the model
-            [[0, 0],
-             [0, 1],
-             [1, 0],
-             [1, 1]])
-
-        xor_targets_1 = np.array(  # the outputs we wish to see from the model
-            [[0],
-             [1],
-             [1],
-             [0]])
+        xor_inputs_1 = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+        xor_targets_1 = np.array([[0], [1], [1], [0]])
 
         c1 = Context(execution_id='context1')
 
@@ -3871,50 +3775,26 @@ class TestBatching:
                          "targets": {xor_out: xor_targets_1},
                          "epochs": eps}
 
-        xor.learn(
-            inputs=inputs_dict_1,
-            context=c1,
-            minibatch_size=2
-        )
+        xor.learn(inputs=inputs_dict_1, context=c1, minibatch_size=2, execution_mode=pnl.ExecutionMode.PyTorch)
 
         c2 = Context(execution_id='context2')
 
-        xor_inputs_2 = np.array(  # the inputs we will provide to the model
-            [[0, 0],
-             [0, 1]])
-
-        xor_targets_2 = np.array(  # the outputs we wish to see from the model
-            [[0],
-             [1]])
+        xor_inputs_2 = np.array([[0, 0], [0, 1]])
+        xor_targets_2 = np.array([[0], [1]])
 
         inputs_dict_2 = {"inputs": {xor_in: xor_inputs_2},
                          "targets": {xor_out: xor_targets_2},
                          "epochs": 1}
 
-        xor_inputs_3 = np.array(
-            [[1, 0],
-             [1, 1]]
-        )
-
-        xor_targets_3 = np.array(
-            [[1],
-             [0]]
-        )
+        xor_inputs_3 = np.array([[1, 0], [1, 1]])
+        xor_targets_3 = np.array([[1],[0]])
 
         inputs_dict_3 = {"inputs": {xor_in: xor_inputs_3},
                          "targets": {xor_out: xor_targets_3},
                          "epochs": 1}
         for _ in range(eps):
-            xor.learn(
-                inputs=inputs_dict_2,
-                context=c2,
-                minibatch_size=TRAINING_SET
-            )
-            xor.learn(
-                inputs=inputs_dict_3,
-                context=c2,
-                minibatch_size=TRAINING_SET
-            )
+            xor.learn(inputs=inputs_dict_2, context=c2, minibatch_size=TRAINING_SET, execution_mode=pnl.ExecutionMode.PyTorch)
+            xor.learn(inputs=inputs_dict_3, context=c2, minibatch_size=TRAINING_SET, execution_mode=pnl.ExecutionMode.PyTorch)
 
         c1_results = xor.parameters.results._get(c1)
         c2_results = xor.parameters.results._get(c2)
