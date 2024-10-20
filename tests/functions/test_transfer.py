@@ -3,7 +3,6 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
-import psyneulink.core.components.functions.nonstateful.transferfunctions as Functions
 import psyneulink.core.globals.keywords as kw
 import psyneulink.core.llvm as pnlvm
 
@@ -48,55 +47,57 @@ def binomial_distort_helper(seed):
 
 
 test_data = [
-    pytest.param(Functions.Linear, test_var, {kw.SLOPE:RAND1, kw.INTERCEPT:RAND2}, test_var * RAND1 + RAND2, id="LINEAR"),
-    pytest.param(Functions.Exponential, test_var, {kw.SCALE:RAND1, kw.RATE:RAND2}, RAND1 * np.exp(RAND2 * test_var), id="EXPONENTIAL"),
-    pytest.param(Functions.Logistic, test_var, {kw.GAIN:RAND1, kw.X_0:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4}, logistic_helper, id="LOGISTIC"),
-    pytest.param(Functions.Tanh, test_var, {kw.GAIN:RAND1, kw.BIAS:RAND2, kw.X_0:RAND3, kw.OFFSET:RAND4}, tanh_helper, id="TANH"),
-    pytest.param(Functions.ReLU, test_var, {kw.GAIN:RAND1, kw.BIAS:RAND2, kw.LEAK:RAND3}, relu_helper, id="RELU"),
+    pytest.param(pnl.Linear, test_var, {kw.SLOPE:RAND1, kw.INTERCEPT:RAND2}, test_var * RAND1 + RAND2, id="LINEAR"),
+    pytest.param(pnl.Exponential, test_var, {kw.SCALE:RAND1, kw.RATE:RAND2}, RAND1 * np.exp(RAND2 * test_var), id="EXPONENTIAL"),
+    pytest.param(pnl.Logistic, test_var, {kw.GAIN:RAND1, kw.X_0:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4}, logistic_helper, id="LOGISTIC"),
+    pytest.param(pnl.Tanh, test_var, {kw.GAIN:RAND1, kw.BIAS:RAND2, kw.X_0:RAND3, kw.OFFSET:RAND4}, tanh_helper, id="TANH"),
+    pytest.param(pnl.ReLU, test_var, {kw.GAIN:RAND1, kw.BIAS:RAND2, kw.LEAK:RAND3}, relu_helper, id="RELU"),
 
-    # Angle doesn't have a helper using 'test_var', hardcode the input as well
-    pytest.param(Functions.Angle, [0.5488135,  0.71518937, 0.60276338, 0.54488318, 0.4236548,
-                                   0.64589411, 0.43758721, 0.891773, 0.96366276, 0.38344152], {},
+    # Angle doesn't have a helper using 'test_var', hardcode bopth the input and output
+    pytest.param(pnl.Angle,
+                 [0.5488135,  0.71518937, 0.60276338, 0.54488318, 0.4236548,
+                  0.64589411, 0.43758721, 0.891773, 0.96366276, 0.38344152],
+                  {},
                  [0.85314409, 0.00556188, 0.01070476, 0.0214405,  0.05559454,
                   0.08091079, 0.21657281, 0.19296643, 0.21343805, 0.92738261, 0.00483101],
                  id="ANGLE"),
 
     # Distort
-    pytest.param(Functions.Gaussian, test_var, {kw.STANDARD_DEVIATION:RAND1, kw.BIAS:RAND2, kw.SCALE:RAND3, kw.OFFSET:RAND4}, gaussian_helper, id="GAUSSIAN"),
-    pytest.param(Functions.GaussianDistort, test_var, {kw.BIAS: RAND1, kw.VARIANCE:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4 }, gaussian_distort_helper(0), id="GAUSSIAN DISTORT GLOBAL SEED"),
-    pytest.param(Functions.GaussianDistort, test_var, {kw.BIAS: RAND1, kw.VARIANCE:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4, 'seed':0 }, gaussian_distort_helper(0), id="GAUSSIAN DISTORT"),
-    pytest.param(Functions.BinomialDistort, test_var, {'seed':0, 'p':RAND1 }, binomial_distort_helper(0), id="BINOMIAL DISTORT"),
+    pytest.param(pnl.Gaussian, test_var, {kw.STANDARD_DEVIATION:RAND1, kw.BIAS:RAND2, kw.SCALE:RAND3, kw.OFFSET:RAND4}, gaussian_helper, id="GAUSSIAN"),
+    pytest.param(pnl.GaussianDistort, test_var, {kw.BIAS: RAND1, kw.VARIANCE:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4 }, gaussian_distort_helper(0), id="GAUSSIAN DISTORT GLOBAL SEED"),
+    pytest.param(pnl.GaussianDistort, test_var, {kw.BIAS: RAND1, kw.VARIANCE:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4, 'seed':0 }, gaussian_distort_helper(0), id="GAUSSIAN DISTORT"),
+    pytest.param(pnl.BinomialDistort, test_var, {'seed':0, 'p':RAND1 }, binomial_distort_helper(0), id="BINOMIAL DISTORT"),
 
     # SoftMax 1D input
-    pytest.param(Functions.SoftMax, test_var, {kw.GAIN:RAND1, kw.PER_ITEM:False}, softmax_helper, id="SOFT_MAX ALL"),
-    pytest.param(Functions.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:False}, np.where(softmax_helper == np.max(softmax_helper), softmax_helper, 0), id="SOFT_MAX MAX_VAL"),
-    pytest.param(Functions.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM:False}, np.where(softmax_helper == np.max(softmax_helper), 1, 0), id="SOFT_MAX MAX_INDICATOR"),
-    pytest.param(Functions.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.PROB, kw.PER_ITEM:False},
+    pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.PER_ITEM:False}, softmax_helper, id="SOFT_MAX ALL"),
+    pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:False}, np.where(softmax_helper == np.max(softmax_helper), softmax_helper, 0), id="SOFT_MAX MAX_VAL"),
+    pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM:False}, np.where(softmax_helper == np.max(softmax_helper), 1, 0), id="SOFT_MAX MAX_INDICATOR"),
+    pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.PROB, kw.PER_ITEM:False},
                  [0.0, 0.0, 0.0, 0.0, test_var[4], 0.0, 0.0, 0.0, 0.0, 0.0], id="SOFT_MAX PROB"),
 
     # SoftMax 2D testing per-item
-    pytest.param(Functions.SoftMax, [test_var], {kw.GAIN:RAND1, kw.PER_ITEM:True}, [softmax_helper], id="SOFT_MAX ALL 2D"),
-    pytest.param(Functions.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:True},
+    pytest.param(pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.PER_ITEM:True}, [softmax_helper], id="SOFT_MAX ALL 2D"),
+    pytest.param(pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:True},
                  [np.where(softmax_helper == np.max(softmax_helper), softmax_helper, 0)], id="SOFT_MAX MAX_VAL 2D"),
-    pytest.param(Functions.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM:True},
+    pytest.param(pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM:True},
                  [np.where(softmax_helper == np.max(softmax_helper), 1, 0)], id="SOFT_MAX MAX_INDICATOR 2D"),
-    pytest.param(Functions.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.PROB, kw.PER_ITEM:True},
+    pytest.param(pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.PROB, kw.PER_ITEM:True},
                  [[0.0, 0.0, 0.0, 0.0, test_var[4], 0.0, 0.0, 0.0, 0.0, 0.0]], id="SOFT_MAX PROB 2D"),
 
     # SoftMax per-item with 2 elements in input
-    pytest.param(Functions.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.PER_ITEM: True}, softmax_helper2, id="SOFT_MAX ALL PER_ITEM"),
-    pytest.param(Functions.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM: True},
+    pytest.param(pnl.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.PER_ITEM: True}, softmax_helper2, id="SOFT_MAX ALL PER_ITEM"),
+    pytest.param(pnl.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM: True},
                  np.where(softmax_helper2 == np.max(softmax_helper2), softmax_helper2, 0), id="SOFT_MAX MAX_VAL PER_ITEM"),
-    pytest.param(Functions.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM: True},
+    pytest.param(pnl.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM: True},
                  np.where(softmax_helper2 == np.max(softmax_helper2), 1, 0), id="SOFT_MAX MAX_INDICATOR PER_ITEM"),
 
     # Linear Matrix
-    pytest.param(Functions.LinearMatrix, test_var, {kw.MATRIX:test_matrix}, np.dot(test_var, test_matrix), id="LINEAR_MATRIX SQUARE"),
-    pytest.param(Functions.LinearMatrix, test_var, {kw.MATRIX:test_matrix_l}, np.dot(test_var, test_matrix_l), id="LINEAR_MATRIX WIDE"),
-    pytest.param(Functions.LinearMatrix, test_var, {kw.MATRIX:test_matrix_s}, np.dot(test_var, test_matrix_s), id="LINEAR_MATRIX TALL"),
+    pytest.param(pnl.LinearMatrix, test_var, {kw.MATRIX:test_matrix}, np.dot(test_var, test_matrix), id="LINEAR_MATRIX SQUARE"),
+    pytest.param(pnl.LinearMatrix, test_var, {kw.MATRIX:test_matrix_l}, np.dot(test_var, test_matrix_l), id="LINEAR_MATRIX WIDE"),
+    pytest.param(pnl.LinearMatrix, test_var, {kw.MATRIX:test_matrix_s}, np.dot(test_var, test_matrix_s), id="LINEAR_MATRIX TALL"),
 
     # Dropout is just identity in non-learning mode
-    pytest.param(Functions.Dropout, test_var, {}, test_var, id="DROPOUT"),
+    pytest.param(pnl.Dropout, test_var, {}, test_var, id="DROPOUT"),
 ]
 
 @pytest.mark.function
@@ -117,20 +118,20 @@ tanh_derivative_helper = (1 - np.tanh(tanh_derivative_helper)**2) * RAND4 * RAND
 
 
 derivative_test_data = [
-    (Functions.Linear, test_var, {kw.SLOPE:RAND1, kw.INTERCEPT:RAND2}, RAND1),
-    (Functions.Exponential, test_var, {kw.SCALE:RAND1, kw.RATE:RAND2}, RAND1 * RAND2 * np.exp(RAND2 * test_var)),
-    (Functions.Logistic, test_var, {kw.GAIN:RAND1, kw.X_0:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4}, RAND1 * RAND4 * logistic_helper * (1 - logistic_helper)),
-    (Functions.ReLU, test_var, {kw.GAIN:RAND1, kw.BIAS:RAND2, kw.LEAK:RAND3}, np.where((test_var - RAND2) > 0, RAND1, RAND1 * RAND3)),
-    (Functions.Tanh, test_var, {kw.GAIN:RAND1, kw.BIAS:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4}, tanh_derivative_helper),
+    (pnl.Linear, test_var, {kw.SLOPE:RAND1, kw.INTERCEPT:RAND2}, RAND1),
+    (pnl.Exponential, test_var, {kw.SCALE:RAND1, kw.RATE:RAND2}, RAND1 * RAND2 * np.exp(RAND2 * test_var)),
+    (pnl.Logistic, test_var, {kw.GAIN:RAND1, kw.X_0:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4}, RAND1 * RAND4 * logistic_helper * (1 - logistic_helper)),
+    (pnl.ReLU, test_var, {kw.GAIN:RAND1, kw.BIAS:RAND2, kw.LEAK:RAND3}, np.where((test_var - RAND2) > 0, RAND1, RAND1 * RAND3)),
+    (pnl.Tanh, test_var, {kw.GAIN:RAND1, kw.BIAS:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4}, tanh_derivative_helper),
 
     # SoftMax per-item=False
-    (Functions.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:False},
+    (pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:False},
      [-0.010680386821751537, -0.011118109698906909, -0.01082040340318878, -0.010670257514724047, -0.010362498859374309,
       -0.010933660158663306, -0.010397412260182806, -0.011602329078808718, 0.09684744183944892, -0.010262384043848513]),
-    (Functions.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM:False},
+    (pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM:False},
      [-0.010680386821751537, -0.011118109698906909, -0.01082040340318878, -0.010670257514724047, -0.010362498859374309,
       -0.010933660158663306, -0.010397412260182806, -0.011602329078808718, 0.09684744183944892, -0.010262384043848513]),
-    (Functions.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.ALL, kw.PER_ITEM:False},
+    (pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.ALL, kw.PER_ITEM:False},
      [[ 0.088635686173821480, -0.010058549286956951, -0.009789214523259433, -0.009653377599514660, -0.009374948470179183,
        -0.009891677863509920, -0.009406534609578588, -0.010496622361458180, -0.010680386821751540, -0.009284374637613039],
       [-0.010058549286956951,  0.091856076128865180, -0.010190413769852785, -0.010049009732287338, -0.009759169518165271,
@@ -151,16 +152,17 @@ derivative_test_data = [
        -0.010933660158663310, -0.010397412260182810, -0.011602329078808723,  0.096847441839448930, -0.010262384043848514],
       [-0.009284374637613039, -0.009664883625423075, -0.009406089929318929, -0.009275569312222474, -0.009008037180482098,
        -0.009504543118853646, -0.009038387119898062, -0.010085811650299970, -0.010262384043848514,  0.08553008061795979]]),
-      # SoftMax per-tem=True
-    (Functions.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:True},
+
+    # SoftMax per-tem=True
+    (pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:True},
      [[-0.010680386821751537, -0.011118109698906909, -0.01082040340318878, -0.010670257514724047, -0.010362498859374309,
        -0.010933660158663306, -0.010397412260182806, -0.011602329078808718, 0.09684744183944892, -0.010262384043848513]]),
-    (Functions.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM:True},
+    (pnl.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM:True},
      [[-0.010680386821751537, -0.011118109698906909, -0.01082040340318878, -0.010670257514724047, -0.010362498859374309,
        -0.010933660158663306, -0.010397412260182806, -0.011602329078808718, 0.09684744183944892, -0.010262384043848513],
       [-0.010680386821751537, -0.011118109698906909, -0.01082040340318878, -0.010670257514724047, -0.010362498859374309,
        -0.010933660158663306, -0.010397412260182806, -0.011602329078808718, 0.09684744183944892, -0.010262384043848513]]),
-    (Functions.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.ALL, kw.PER_ITEM:True},
+    (pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.ALL, kw.PER_ITEM:True},
      [[ 0.088635686173821480, -0.010058549286956951, -0.009789214523259433, -0.009653377599514660, -0.009374948470179183,
         -0.009891677863509920, -0.009406534609578588, -0.010496622361458180, -0.010680386821751540, -0.009284374637613039],
        [-0.010058549286956951,  0.091856076128865180, -0.010190413769852785, -0.010049009732287338, -0.009759169518165271,
@@ -186,26 +188,32 @@ derivative_test_data = [
 @pytest.mark.function
 @pytest.mark.transfer_function
 @pytest.mark.benchmark
-@pytest.mark.parametrize("func, variable, params, expected", derivative_test_data, ids=lambda x: getattr(x, 'name', None) or getattr(x, 'get', lambda p, q: None)(kw.OUTPUT_TYPE, None))
+@pytest.mark.parametrize("func, variable, params, expected",
+                         derivative_test_data,
+                         ids=lambda x: getattr(x, 'name', None) or getattr(x, 'get', lambda p, q: None)(kw.OUTPUT_TYPE, None))
 def test_transfer_derivative(func, variable, params, expected, benchmark, func_mode):
-    if func == Functions.SoftMax and params[kw.OUTPUT_TYPE] == kw.ALL and func_mode != "Python":
+    benchmark.group = "TransferFunction " + func.componentName + " Derivative"
+    if func == pnl.SoftMax and params[kw.OUTPUT_TYPE] == kw.ALL and func_mode != "Python":
         pytest.skip("Compiled derivative using 'ALL' is not implemented")
 
     f = func(default_variable=variable, **params)
-    benchmark.group = "TransferFunction " + func.componentName + " Derivative"
+
     if func_mode == 'Python':
         ex = f.derivative
+
     elif func_mode == 'LLVM':
         ex = pnlvm.execution.FuncExecution(f, tags=frozenset({"derivative"})).execute
+
     elif func_mode == 'PTX':
         ex = pnlvm.execution.FuncExecution(f, tags=frozenset({"derivative"})).cuda_execute
+
     else:
         assert False, "unknown function mode: {}".format(func_mode)
 
     res = benchmark(ex, variable)
 
     # Tanh and Logistic need reduced accuracy in single precision mode
-    if func_mode != 'Python' and func in {Functions.Tanh, Functions.Logistic} and pytest.helpers.llvm_current_fp_precision() == 'fp32':
+    if func_mode != 'Python' and pytest.helpers.llvm_current_fp_precision() == 'fp32' and func in {pnl.Tanh, pnl.Logistic}:
         tolerance = {'rtol': 5e-7, 'atol': 1e-8}
     else:
         tolerance = {}
@@ -214,12 +222,12 @@ def test_transfer_derivative(func, variable, params, expected, benchmark, func_m
 
 
 derivative_out_test_data = [
-    (Functions.Logistic, logistic_helper, {kw.GAIN:RAND1, kw.X_0:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4}, RAND1 * RAND4 * logistic_helper * (1 - logistic_helper)),
-    (Functions.ReLU, relu_helper, {kw.GAIN:RAND1, kw.BIAS:RAND2, kw.LEAK:RAND3}, np.where((test_var - RAND2) > 0, RAND1, RAND1 * RAND3)),
-    (Functions.SoftMax, softmax_helper, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:False},
+    (pnl.Logistic, logistic_helper, {kw.GAIN:RAND1, kw.X_0:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4}, RAND1 * RAND4 * logistic_helper * (1 - logistic_helper)),
+    (pnl.ReLU, relu_helper, {kw.GAIN:RAND1, kw.BIAS:RAND2, kw.LEAK:RAND3}, np.where((test_var - RAND2) > 0, RAND1, RAND1 * RAND3)),
+    (pnl.SoftMax, softmax_helper, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:False},
      [-0.010680386821751537, -0.011118109698906909, -0.01082040340318878, -0.010670257514724047, -0.010362498859374309,
       -0.010933660158663306, -0.010397412260182806, -0.011602329078808718, 0.09684744183944892, -0.010262384043848513]),
-    (Functions.SoftMax, [softmax_helper, softmax_helper], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:True},
+    (pnl.SoftMax, [softmax_helper, softmax_helper], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:True},
      [[-0.010680386821751537, -0.011118109698906909, -0.01082040340318878, -0.010670257514724047, -0.010362498859374309,
        -0.010933660158663306, -0.010397412260182806, -0.011602329078808718, 0.09684744183944892, -0.010262384043848513],
       [-0.010680386821751537, -0.011118109698906909, -0.01082040340318878, -0.010670257514724047, -0.010362498859374309,
@@ -230,25 +238,27 @@ derivative_out_test_data = [
 @pytest.mark.benchmark
 @pytest.mark.parametrize("func, variable, params, expected", derivative_out_test_data, ids=lambda x: getattr(x, 'name', None) or getattr(x, 'get', lambda p, q: None)(kw.OUTPUT_TYPE, None))
 def test_transfer_derivative_out(func, variable, params, expected, benchmark, func_mode):
-    if func == Functions.SoftMax and params[kw.OUTPUT_TYPE] == kw.ALL and func_mode != "Python":
-        pytest.skip("Compiled SoftMax derivative using 'ALL' is not implemented")
+    benchmark.group = "TransferFunction " + func.componentName + " Derivative"
 
     f = func(default_variable=variable, **params)
-    benchmark.group = "TransferFunction " + func.componentName + " Derivative"
+
     if func_mode == 'Python':
         def ex(x):
             return f.derivative(input=None, output=x)
+
     elif func_mode == 'LLVM':
         ex = pnlvm.execution.FuncExecution(f, tags=frozenset({"derivative_out"})).execute
+
     elif func_mode == 'PTX':
         ex = pnlvm.execution.FuncExecution(f, tags=frozenset({"derivative_out"})).cuda_execute
+
     else:
         assert False, "unknown function mode: {}".format(func_mode)
 
     res = benchmark(ex, variable)
 
     # Logistic needs reduced accuracy in single precision mode because it uses exp()
-    if func_mode != 'Python' and func is Functions.Logistic and pytest.helpers.llvm_current_fp_precision() == 'fp32':
+    if func_mode != 'Python' and func is pnl.Logistic and pytest.helpers.llvm_current_fp_precision() == 'fp32' and func is pnl.Logistic:
         tolerance = {'rtol': 1e-7, 'atol': 1e-8}
     else:
         tolerance = {}
@@ -259,12 +269,13 @@ def test_transfer_derivative_out(func, variable, params, expected, benchmark, fu
 def combine_costs(costs):
     return functools.reduce(lambda x, y: x | y, costs, pnl.CostFunctions.NONE)
 
-@pytest.mark.parametrize("cost_functions", map(combine_costs, pytest.helpers.power_set(cf for cf in pnl.CostFunctions if cf != pnl.CostFunctions.NONE and cf != pnl.CostFunctions.ALL)))
+@pytest.mark.parametrize("cost_functions",
+                         map(combine_costs, pytest.helpers.power_set(cf for cf in pnl.CostFunctions if cf != pnl.CostFunctions.NONE and cf != pnl.CostFunctions.ALL)))
 @pytest.mark.benchmark
 @pytest.mark.function
 def test_transfer_with_costs(cost_functions, func_mode, benchmark):
 
-    f = Functions.TransferWithCosts(enabled_cost_functions=cost_functions)
+    f = pnl.TransferWithCosts(enabled_cost_functions=cost_functions)
 
     def check(cost_function, if_enabled, if_disabled, observed):
         if cost_function in cost_functions:
@@ -343,12 +354,12 @@ def test_transfer_with_costs(cost_functions, func_mode, benchmark):
 
 
 def test_transfer_with_costs_toggle():
-    f = Functions.TransferWithCosts()
+    f = pnl.TransferWithCosts()
     result = f(1)
     np.testing.assert_allclose(result, 1)
-    f.toggle_cost(Functions.CostFunctions.INTENSITY)
+    f.toggle_cost(pnl.CostFunctions.INTENSITY)
 
-    f = Functions.TransferWithCosts(enabled_cost_functions=Functions.CostFunctions.INTENSITY)
+    f = pnl.TransferWithCosts(enabled_cost_functions=pnl.CostFunctions.INTENSITY)
     result = f(2)
     np.testing.assert_allclose(result, 2)
     np.testing.assert_allclose(f.intensity_cost, 7.38905609893065)
@@ -356,7 +367,7 @@ def test_transfer_with_costs_toggle():
     assert f.duration_cost is None
     np.testing.assert_allclose(f.combined_costs, 7.38905609893065)
 
-    f.toggle_cost(Functions.CostFunctions.ADJUSTMENT)
+    f.toggle_cost(pnl.CostFunctions.ADJUSTMENT)
     result = f(3)
     np.testing.assert_allclose(result, 3)
     np.testing.assert_allclose(f.intensity_cost, 20.085536923187668)
@@ -364,7 +375,7 @@ def test_transfer_with_costs_toggle():
     assert f.duration_cost is None
     np.testing.assert_allclose(f.combined_costs, 21.085536923187668)
 
-    f.toggle_cost(Functions.CostFunctions.DURATION)
+    f.toggle_cost(pnl.CostFunctions.DURATION)
     result = f(5)
     np.testing.assert_allclose(result, 5)
     np.testing.assert_allclose(f.intensity_cost, 148.413159102576603)
@@ -391,7 +402,7 @@ def test_transfer_with_costs_shapes(
     expected_func_variable,
     expected_func_value
 ):
-    twc = Functions.TransferWithCosts(default_variable=default_variable)
+    twc = pnl.TransferWithCosts(default_variable=default_variable)
 
     np.testing.assert_array_equal(
         getattr(twc.parameters, func_name).get().defaults.variable,
