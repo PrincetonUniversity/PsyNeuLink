@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 import re
 import sys
+import types
 
 import graph_scheduler as gs
 import psyneulink
@@ -45,6 +46,13 @@ def pytest_addoption(parser):
 def pytest_runtest_setup(item):
     # Check that all 'cuda' tests are also marked 'llvm'
     assert 'llvm' in item.keywords or 'cuda' not in item.keywords
+
+    # It the item is a parametrized function. It has a 'callspec' attribute.
+    # Convert any dict arguments to an unmutable MappingProxyType.
+    if hasattr(item, 'callspec'):
+        for k, v in item.callspec.params.items():
+            if isinstance(v, dict):
+                item.callspec.params[k] = types.MappingProxyType(v)
 
     for m in marks_default_skip:
         if m in item.keywords and not item.config.getvalue(m):

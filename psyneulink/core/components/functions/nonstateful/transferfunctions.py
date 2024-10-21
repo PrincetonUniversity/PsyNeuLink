@@ -76,7 +76,7 @@ except ImportError:
     torch = None
 from beartype import beartype
 
-from psyneulink._typing import Optional, Union, Callable
+from psyneulink._typing import Callable, Mapping, Optional, Union
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import parameter_keywords
@@ -3205,7 +3205,7 @@ class SoftMax(TransferFunction):
                  adapt_entropy_weighting: Optional[ValidParamSpecType] = None,
                  output=None,
                  per_item=None,
-                 params: Optional[dict] = None,
+                 params: Optional[Mapping] = None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
 

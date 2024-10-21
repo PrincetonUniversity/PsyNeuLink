@@ -9,9 +9,9 @@
 # ********************************************* AutodiffComposition *************************************************
 
 import numpy as np
-from typing import Optional
 from types import GeneratorType
 
+from psyneulink._typing import Mapping, Optional
 from psyneulink.core.llvm import ExecutionMode
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.compositions.report import Report, ReportProgress, ReportDevices, LEARN_REPORT, PROGRESS_REPORT
@@ -55,8 +55,8 @@ class CompositionRunner():
                       minibatch_size: int = 1,
                       optimizations_per_minibatch: int = 1,
                       randomize: bool = True,
-                      synch_with_pnl_options:Optional[dict] = None,
-                      retain_in_pnl_options:Optional[dict] = None,
+                      synch_with_pnl_options:Optional[Mapping] = None,
+                      retain_in_pnl_options:Optional[Mapping] = None,
                       call_before_minibatch=None,
                       call_after_minibatch=None,
                       early_stopper=None,
@@ -161,8 +161,8 @@ class CompositionRunner():
                                num_trials: int,
                                batch_size: int = 1,
                                optimizations_per_minibatch: int = 1,
-                               synch_with_pnl_options:Optional[dict] = None,
-                               retain_in_pnl_options:Optional[dict] = None,
+                               synch_with_pnl_options:Optional[Mapping] = None,
+                               retain_in_pnl_options:Optional[Mapping] = None,
                                call_before_minibatch=None,
                                call_after_minibatch=None,
                                early_stopper=None,
@@ -223,8 +223,8 @@ class CompositionRunner():
                      patience: int = None,
                      min_delta: int = 0,
                      randomize_minibatches: bool = True,
-                     synch_with_pnl_options:Optional[dict] = None,
-                     retain_in_pnl_options:Optional[dict] = None,
+                     synch_with_pnl_options:Optional[Mapping] = None,
+                     retain_in_pnl_options:Optional[Mapping] = None,
                      call_before_minibatch = None,
                      call_after_minibatch = None,
                      context=None,

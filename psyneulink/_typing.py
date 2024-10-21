@@ -16,4 +16,5 @@ from beartype.typing import (
     Dict as Dict,
     Iterable as Iterable,
     Set as Set,
+    Mapping as Mapping,
 )
