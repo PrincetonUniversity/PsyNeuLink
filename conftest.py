@@ -50,6 +50,9 @@ def pytest_runtest_setup(item):
         if m in item.keywords and not item.config.getvalue(m):
             pytest.skip('{0} tests not requested'.format(m))
 
+    if 'llvm' in item.keywords and 'llvm_not_implemented' in item.keywords:
+        pytest.skip('LLVM implementation not available')
+
     if 'cuda' in item.keywords and not pnlvm.ptx_enabled:
         pytest.skip('PTX engine not enabled/available')
 
