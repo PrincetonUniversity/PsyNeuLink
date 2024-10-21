@@ -207,7 +207,7 @@ def test_execute(func, func_mode, variable, noise, params, benchmark):
         if issubclass(func_class, (pnl.DriftDiffusionIntegrator, pnl.DriftOnASphereIntegrator)):
             pytest.skip("{} doesn't support functional noise".format(func_class.componentName))
 
-    if 'DriftOnASphereIntegrator' in func[0].componentName:
+    if issubclass(func_class, pnl.DriftOnASphereIntegrator):
         params = {**params, 'dimension': len(variable) + 1}
 
     elif issubclass(func_class, pnl.AccumulatorIntegrator):
