@@ -101,7 +101,7 @@ Class Reference
 """
 from beartype import beartype
 
-from psyneulink._typing import Optional
+from psyneulink._typing import Optional, Mapping
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.function import FunctionOutputType
@@ -244,7 +244,7 @@ class GatingProjection(ModulatoryProjection_Base):
                  function=None,
                  weight=None,
                  exponent=None,
-                 gating_signal_params:Optional[dict]=None,
+                 gating_signal_params:Optional[Mapping]=None,
                  params=None,
                  name=None,
                  prefs:   Optional[ValidPrefSet] = None,

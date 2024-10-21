@@ -29,13 +29,10 @@ import numbers
 import warnings
 from collections import deque
 
-from psyneulink._typing import Callable, List, Literal
+from psyneulink._typing import Callable, List, Literal, Mapping, Optional, Union
 
 import numpy as np
 from beartype import beartype
-
-from typing import Optional, Union
-# from psyneulink._typing import
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import (
@@ -253,8 +250,8 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                  history:Optional[int]=None,
                  # history: Optional[int] = None,
                  initializer=None,
-                 params: Optional[dict] = None,
-                 # params: Optional[dict] = None,
+                 params: Optional[Mapping] = None,
+                 # params: Optional[Mapping] = None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None
                  ):

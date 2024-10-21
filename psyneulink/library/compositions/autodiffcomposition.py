@@ -330,7 +330,6 @@ import numpy as np
 import collections
 from packaging import version
 from pathlib import Path, PosixPath
-from typing import Optional
 
 try:
     import torch
@@ -343,6 +342,7 @@ else:
     from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper
     from psyneulink.library.compositions.pytorchshowgraph import PytorchShowGraph
 
+from psyneulink._typing import Mapping, Optional
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
@@ -1456,8 +1456,8 @@ class AutodiffComposition(Composition):
                 runtime_params=None,
                 execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.PyTorch,
                 skip_initialization=False,
-                synch_with_pnl_options:Optional[dict]=None,
-                retain_in_pnl_options:Optional[dict]=None,
+                synch_with_pnl_options:Optional[Mapping]=None,
+                retain_in_pnl_options:Optional[Mapping]=None,
                 report_output:ReportOutput=ReportOutput.OFF,
                 report_params:ReportOutput=ReportParams.OFF,
                 report_progress:ReportProgress=ReportProgress.OFF,
