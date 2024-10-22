@@ -2191,7 +2191,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         delta values : 1d np.array
 
         """
-        gamma = self._get_current_parameter_value(GAMMA, context)
+        gamma = self._get_current_parameter_value(GAMMA, context).item()
         sample = variable[0]
         reward = variable[1]
         delta = np.zeros(sample.shape)

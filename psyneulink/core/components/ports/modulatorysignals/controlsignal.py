@@ -1112,6 +1112,6 @@ class ControlSignal(ModulatorySignal):
         all_costs = [[intensity_cost, adjustment_cost, duration_cost]]
 
         # Combine the costs. Convert to a float because reRedcu
-        combined_cost = float(self.combine_costs_function(all_costs, context=context))
+        combined_cost = float(self.combine_costs_function(all_costs, context=context).item())
 
         return max(0.0, combined_cost)
