@@ -2287,8 +2287,8 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
             retrieval_prob=retrieval_prob,
             storage_prob=storage_prob,
             initializer=initializer,
-            # distance_function=distance_function,
-            # selection_function=selection_function,
+            distance_function=distance_function,
+            selection_function=selection_function,
             duplicate_keys=duplicate_keys,
             equidistant_keys_select=equidistant_keys_select,
             rate=rate,
@@ -2407,12 +2407,11 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
             #  REPLACE XXX_VAL parameters with ARG_XXX until former are implemented in LLVM
             #  (here it is just to get past construction, since behavior of this method is like MIN_VAL anyhow)
             if isinstance(self.selection_function, OneHot):
-                selection_function = self.parameters.selection_function.get(ctx)
-                mode = selection_function.parameters.mode.get(ctx)
+                mode = self.selection_function.mode
                 if mode == MIN_VAL:
-                    selection_function.parameters.mode.set(ARG_MIN,ctx)
+                    self.selection_function.mode = ARG_MIN
                 elif mode == MIN_INDICATOR:
-                    selection_function.parameters.mode.set(ARG_MIN_INDICATOR,ctx)
+                    self.selection_function.mode = ARG_MIN_INDICATOR
             # MODIFIED 10/13/24 END
             selection_f = ctx.import_llvm_function(self.selection_function)
             selection_params, selection_state = ctx.get_param_or_state_ptr(builder, self, "selection_function", param_struct_ptr=params, state_struct_ptr=state)
