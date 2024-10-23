@@ -22,10 +22,7 @@ Functions that selects a subset of elements to maintain or transform, while null
 
 """
 
-__all__ = ['SelectionFunction', 'OneHot',
-           'ARG_MAX', 'ARG_MAX_ABS', 'ARG_MAX_INDICATOR', 'ARG_MAX_ABS_INDICATOR',
-           'ARG_MIN', 'ARG_MIN_ABS', 'ARG_MIN_INDICATOR', 'ARG_MIN_ABS_INDICATOR',
-           'max_vs_avg', 'max_vs_next', 'MAX_VS_NEXT', 'MAX_VS_AVG']
+__all__ = ['SelectionFunction', 'OneHot', 'max_vs_avg', 'max_vs_next']
 
 import numpy as np
 from beartype import beartype
@@ -39,23 +36,16 @@ from psyneulink.core.components.functions.function import (
     _random_state_getter, _seed_setter,
 )
 from psyneulink.core.globals.keywords import \
-    MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR, \
-    MODE, ONE_HOT_FUNCTION, PROB, PROB_INDICATOR, SELECTION_FUNCTION_TYPE, PREFERENCE_SET_NAME
+    (ARG_MAX, ARG_MAX_ABS, ARG_MAX_ABS_INDICATOR, ARG_MAX_INDICATOR,
+     ARG_MIN, ARG_MIN_ABS, ARG_MIN_ABS_INDICATOR, ARG_MIN_INDICATOR,
+     MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL,
+     MIN_ABS_INDICATOR, MIN_ABS_VAL, MIN_INDICATOR, MIN_VAL,
+     MODE, ONE_HOT_FUNCTION, PREFERENCE_SET_NAME, PROB, PROB_INDICATOR,
+     SELECTION_FUNCTION_TYPE)
+
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, ValidPrefSet
-
-
-ARG_MAX = 'arg_max'
-ARG_MAX_ABS = 'arg_max_abs'
-ARG_MAX_INDICATOR = 'arg_max_indicator'
-ARG_MAX_ABS_INDICATOR = 'arg_max_abs_indicator'
-ARG_MIN = 'arg_min'
-ARG_MIN_ABS = 'arg_min_abs'
-ARG_MIN_INDICATOR = 'arg_min_indicator'
-ARG_MIN_ABS_INDICATOR = 'arg_min_abs_indicator'
-MAX_VS_NEXT = 'max_vs_next'
-MAX_VS_AVG = 'max_vs_avg'
 
 options = [ ARG_MAX, ARG_MAX_ABS, ARG_MAX_INDICATOR, ARG_MAX_ABS_INDICATOR,
             MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,

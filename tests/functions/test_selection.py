@@ -3,7 +3,6 @@ import pytest
 
 import psyneulink.core.components.functions.nonstateful.selectionfunctions as Functions
 import psyneulink.core.globals.keywords as kw
-import psyneulink.core.components.functions.nonstateful.selectionfunctions as sf
 import psyneulink.core.llvm as pnlvm
 from psyneulink.core.globals.utilities import _SeededPhilox
 
@@ -25,18 +24,18 @@ llvm_res['fp32'][expected_philox_prob] = (0.09762700647115707, 0.0, 0.0, 0.0, 0.
 llvm_res['fp32'][expected_philox_ind] = (1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
 test_data = [
-    pytest.param(Functions.OneHot, test_var, {'mode':sf.ARG_MAX}, (0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.), id="OneHot ARG_MAX"),
-    pytest.param(Functions.OneHot, test_var, {'mode':sf.ARG_MAX_ABS}, (0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.), id="OneHot ARG MAX_ABS"),
-    pytest.param(Functions.OneHot, -test_var, {'mode':sf.ARG_MAX_ABS}, (0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.), id="OneHot ARG MAX_ABS Neg"),
-    pytest.param(Functions.OneHot, test_var, {'mode':sf.ARG_MAX_INDICATOR}, (0., 0., 0., 0., 0., 0., 0., 0., 1., 0.), id="OneHot ARG_MAX_INDICATOR"),
-    pytest.param(Functions.OneHot, test_var, {'mode':sf.ARG_MAX_ABS_INDICATOR}, (0., 0., 0., 0., 0., 0., 0., 0., 1., 0.), id="OneHot ARG_MAX_ABS_INDICATOR"),
-    pytest.param(Functions.OneHot, -test_var, {'mode':sf.ARG_MAX_ABS_INDICATOR}, (0., 0., 0., 0., 0., 0., 0., 0., 1., 0.), id="OneHot ARG_MAX_ABS_INDICATOR Neg"),
-    pytest.param(Functions.OneHot, test_var, {'mode':sf.ARG_MIN}, (0., 0., 0., 0., 0., 0., 0., 0., 0, -0.23311696), id="OneHot ARG_MIN"),
-    pytest.param(Functions.OneHot, test_var, {'mode':sf.ARG_MIN_ABS}, (0., 0., 0., 0.08976637, 0., 0., 0., 0., 0., 0.), id="OneHot ARG_MIN_ABS"),
-    pytest.param(Functions.OneHot, -test_var, {'mode':sf.ARG_MIN_ABS}, (0., 0., 0., 0.08976637, 0., 0., 0., 0., 0., 0.), id="OneHot ARG_MIN_ABS Neg"),
-    pytest.param(Functions.OneHot, test_var, {'mode':sf.ARG_MIN_INDICATOR}, (0., 0., 0., 0., 0., 0., 0., 0., 0., 1.), id="OneHot ARG_MIN_INDICATOR"),
-    pytest.param(Functions.OneHot, test_var, {'mode':sf.ARG_MIN_ABS_INDICATOR}, (0., 0., 0., 1.,0., 0., 0., 0., 0., 0.), id="OneHot ARG_MIN_ABS_INDICATOR"),
-    pytest.param(Functions.OneHot, -test_var, {'mode':sf.ARG_MIN_ABS_INDICATOR}, (0., 0., 0., 1.,0., 0., 0., 0., 0., 0.), id="OneHot ARG_MIN_ABS_INDICATOR Neg"),
+    pytest.param(Functions.OneHot, test_var, {'mode':kw.ARG_MAX}, (0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.), id="OneHot ARG_MAX"),
+    pytest.param(Functions.OneHot, test_var, {'mode':kw.ARG_MAX_ABS}, (0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.), id="OneHot ARG MAX_ABS"),
+    pytest.param(Functions.OneHot, -test_var, {'mode':kw.ARG_MAX_ABS}, (0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.), id="OneHot ARG MAX_ABS Neg"),
+    pytest.param(Functions.OneHot, test_var, {'mode':kw.ARG_MAX_INDICATOR}, (0., 0., 0., 0., 0., 0., 0., 0., 1., 0.), id="OneHot ARG_MAX_INDICATOR"),
+    pytest.param(Functions.OneHot, test_var, {'mode':kw.ARG_MAX_ABS_INDICATOR}, (0., 0., 0., 0., 0., 0., 0., 0., 1., 0.), id="OneHot ARG_MAX_ABS_INDICATOR"),
+    pytest.param(Functions.OneHot, -test_var, {'mode':kw.ARG_MAX_ABS_INDICATOR}, (0., 0., 0., 0., 0., 0., 0., 0., 1., 0.), id="OneHot ARG_MAX_ABS_INDICATOR Neg"),
+    pytest.param(Functions.OneHot, test_var, {'mode':kw.ARG_MIN}, (0., 0., 0., 0., 0., 0., 0., 0., 0, -0.23311696), id="OneHot ARG_MIN"),
+    pytest.param(Functions.OneHot, test_var, {'mode':kw.ARG_MIN_ABS}, (0., 0., 0., 0.08976637, 0., 0., 0., 0., 0., 0.), id="OneHot ARG_MIN_ABS"),
+    pytest.param(Functions.OneHot, -test_var, {'mode':kw.ARG_MIN_ABS}, (0., 0., 0., 0.08976637, 0., 0., 0., 0., 0., 0.), id="OneHot ARG_MIN_ABS Neg"),
+    pytest.param(Functions.OneHot, test_var, {'mode':kw.ARG_MIN_INDICATOR}, (0., 0., 0., 0., 0., 0., 0., 0., 0., 1.), id="OneHot ARG_MIN_INDICATOR"),
+    pytest.param(Functions.OneHot, test_var, {'mode':kw.ARG_MIN_ABS_INDICATOR}, (0., 0., 0., 1.,0., 0., 0., 0., 0., 0.), id="OneHot ARG_MIN_ABS_INDICATOR"),
+    pytest.param(Functions.OneHot, -test_var, {'mode':kw.ARG_MIN_ABS_INDICATOR}, (0., 0., 0., 1.,0., 0., 0., 0., 0., 0.), id="OneHot ARG_MIN_ABS_INDICATOR Neg"),
     pytest.param(Functions.OneHot, test_var, {'mode':kw.MAX_VAL}, (0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.), marks=pytest.mark.llvm_not_implemented, id="OneHot MAX_VAL"),
     pytest.param(Functions.OneHot, test_var, {'mode':kw.MAX_ABS_VAL}, (0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.), marks=pytest.mark.llvm_not_implemented, id="OneHot MAX_ABS_VAL"),
     pytest.param(Functions.OneHot, -test_var, {'mode':kw.MAX_ABS_VAL}, (0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.), marks=pytest.mark.llvm_not_implemented, id="OneHot MAX_ABS_VAL Neg"),

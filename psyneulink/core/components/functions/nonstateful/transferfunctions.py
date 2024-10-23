@@ -2895,7 +2895,7 @@ class Dropout(TransferFunction):  #
 #                                                   SoftMax
 # **********************************************************************************************************************
 
-softmax_modes =  {ALL, ARG_MAX, ARG_MAX_INDICATOR, MAX_VAL, MAX_INDICATOR, PROB, PROB_INDICATOR}
+softmax_modes = {ALL, ARG_MAX, ARG_MAX_INDICATOR, MAX_VAL, MAX_INDICATOR, PROB, PROB_INDICATOR}
 
 
 class SoftMax(TransferFunction):
