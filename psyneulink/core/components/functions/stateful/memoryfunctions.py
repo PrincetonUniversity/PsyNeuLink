@@ -2401,8 +2401,10 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
             # MODIFIED 10/13/24 NEW:
             # IMPLEMENTATION NOTE:
-            #  REPLACE XXX_VAL parameters with ARG_XXX until former are implemented in LLVM
-            #  (here it is just to get past construction, since behavior of this method is like MIN_VAL anyhow)
+            #  REPLACE MIN_VAL with ARG_MIN and MIN_INDICATOR with ARG_MIN_INDICATOR
+            #    until the MIN_XXX args are implemented in LLVM
+            #  since, at present, the tests don't seem to distinguish between these (i.e., return of multiple values;
+            #  should add tests that do so once MIN_VAL and related args are implemented in LLVM)
             if isinstance(self.selection_function, OneHot):
                 mode = self.selection_function.mode
                 if mode == MIN_VAL:
