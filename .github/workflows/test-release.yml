@@ -55,7 +55,7 @@ jobs:
         # It's not possible to condition steps on env or secrets,
         # We need an explicit check here
         if [ -n "$TWINE_USERNAME" -a -n "$TWINE_PASSWORD" ]; then
-          twine upload dist/*
+          twine upload --verbose dist/*
         else
           echo "::warning::Not uploading to test PyPI, no credentials available!"
         fi
@@ -69,9 +69,60 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7, 3.8, 3.9]
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        dist: [wheel, sdist]
+        python-version: ['3.7', '3.11', '3.12']
+        python-architecture: ['x64']
+        extra-args: ['']
+        os: [ubuntu, macos, windows]
+        version-restrict: ['']
+        include:
+          # code-coverage build on macos python 3.9
+          - python-version: '3.9'
+            os: macos
+            extra-args: '--cov=psyneulink'
+
+          # --forked run of python only tests
+          # Python tests are enough to test potential naming issues
+          - python-version: '3.9'
+            os: ubuntu
+            extra-args: '--forked -m "not llvm"'
+
+          # add 32-bit build on windows
+          - python-version: '3.8'
+            python-architecture: 'x86'
+            os: windows
+
+          # fp32 run on linux python 3.10
+          - python-version: '3.10'
+            os: ubuntu
+            extra-args: '--fp-precision=fp32'
+
+          # --benchmark-enable run on macos python 3.10
+          - python-version: '3.10'
+            os: macos
+            # pytest needs both '--benchmark-only' and '-m benchmark'
+            # The former fails the test if benchmarks cannot be enabled
+            # (e.g. due to --dist setting)
+            # The latter works around a crash in pytest when collecting tests:
+            # https://github.com/ionelmc/pytest-benchmark/issues/243
+            extra-args: '-m benchmark --benchmark-enable --benchmark-only --benchmark-min-rounds=2 --benchmark-max-time=0.001 --benchmark-warmup=off -n0 --dist=no'
+
+          # add python 3.7 with deps restricted to min supported version
+          - python-version: '3.7'
+            python-architecture: 'x64'
+            os: ubuntu
+            version-restrict: 'min'
+
+          # add python 3.8 build on macos since 3.7 is broken
+          # https://github.com/actions/virtual-environments/issues/4230
+          # use default python-architecture
+          - python-version: '3.8'
+            os: macos
+
+        exclude:
+          # 3.7 is broken on macos-11,
+          # https://github.com/actions/virtual-environments/issues/4230
+          - python-version: '3.7'
+            os: macos
 
     runs-on: ${{ matrix.os }}
     needs: [create-python-dist]
@@ -157,7 +208,7 @@ jobs:
         # It's not possible to condition steps on env or secrets,
         # We need an explicit check here
         if [ -n "$TWINE_USERNAME" -a -n "$TWINE_PASSWORD" ]; then
-          twine upload dist/*
+          twine upload --verbose dist/*
         else
           echo "::warning::Not uploading to PyPI, no credentials available!"
         fi
@@ -181,53 +232,9 @@ jobs:
         path: dist/
 
     - name: Upload dist files to release
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const fs = require('fs')
-          tag = context.ref.split('/').pop()
-          console.log('running on:' + context.ref);
-          console.log('Looking for release for tag:' + tag);
-
-          var release
-          try {
-            release = await github.rest.repos.getReleaseByTag({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag: tag
-            });
-            console.log('Release found at: ' + release.data.html_url); // '
-          } catch (err) {
-            if (err.status == 404) {
-              console.log('Release not found, creating a new one');
-              release = await github.rest.repos.createRelease({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  tag_name: tag,
-                  name: 'Release ' + tag,
-                  body: 'New features and fixed bugs'
-              });
-            } else {
-              throw err;
-            }
-          }
-
-          console.log('Using release upload url: ' + release['data']['upload_url']);
-          // Determine content-length for header to upload asset
-          for (asset of ['${{ needs.create-python-dist.outputs.wheel }}', '${{ needs.create-python-dist.outputs.sdist }}']) {
-            const file_path = 'dist/' + asset;
-            const file_size = file_path => fs.statSync(file_path).size;
-            console.log('Uploading: ' + file_path);
-
-            // Setup headers for API call, see Octokit Documentation:
-            // https://octokit.github.io/rest.js/#octokit-routes-repos-upload-release-asset for more information
-            const headers = { 'content-type': 'application/zip', 'content-length': file_size(file_path) };
-
-            // Upload a release asset
-            const uploadAssetResponse = await github.rest.repos.uploadReleaseAsset({
-              url: release.data.upload_url,
-              headers,
-              name: asset,
-              file: fs.readFileSync(file_path)
-            });
-          }
+      shell: bash
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        previous_release=$(gh --repo ${{ github.repository }} release list | head -n 1 | awk '{print $1}')
+        gh --repo ${{ github.repository }} release create --generate-notes --notes-start-tag "$previous_release" ${{ github.ref }} dist/*
