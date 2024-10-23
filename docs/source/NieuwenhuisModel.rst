@@ -65,18 +65,18 @@ associated `ObjectiveMechanism`, as shown in the figure below:
 Behavioral Network Subsystem
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**INPUT LAYER**:  a `TransferMechanism` with **size**=3 (one element for the input to the T1, T2 and distractor units
-of the *DECISION LAYER*, respectively), and assigned a `Linear` function with **slope**=1.0 and **intercept**=0.0.
+**INPUT LAYER**:  a `TransferMechanism` with **size**\ =3 (one element for the input to the T1, T2 and distractor units
+of the *DECISION LAYER*, respectively), and assigned a `Linear` function with **slope**\ =1.0 and **intercept**\ =0.0.
 
-**DECISION LAYER**: an `LCAMechanism` Mechanism of **size**=3 (one element each for the T1, T2 and distractor units),
+**DECISION LAYER**: an `LCAMechanism` Mechanism of **size**\ =3 (one element each for the T1, T2 and distractor units),
 and assigned a `Logistic` Function with a slope=1.0 and intercept=0.0.  Each element has a self-excitatory connection
-with a weight specified by **self_excitation**=2.5, a **leak**=-1.0, and every element is connected to every other
-element by mutually inhibitory connections with a weight specified by **competition**=1.0.  An ordinary differential
+with a weight specified by **self_excitation**\ =2.5, a **leak**\ =-1.0, and every element is connected to every other
+element by mutually inhibitory connections with a weight specified by **competition** =1.0.  An ordinary differential
 equation describes the change in state over time, implemented in the LCAMechanism mechanism by setting
-**integrator_mode**=`True` and **time_step_size**=0.02.
+**integrator_mode** = `True` and **time_step_size**\ =0.02.
 
-**RESPONSE LAYER**: an `LCAMechanism` Mechanism of **size**=2, with one element each for the response to T1 and T2,
-respectively, **self_excitation**=2.0, **leak**=-1.0, and no mutually inhibitory weights (**competition**=0).
+**RESPONSE LAYER**: an `LCAMechanism` Mechanism of **size**\ =2, with one element each for the response to T1 and T2,
+respectively, **self_excitation**\ =2.0, **leak**\ =-1.0, and no mutually inhibitory weights (**competition**\ =0).
 
 **PROJECTIONS**:  The weights of the behavioral network are implemented as `MappingProjections <MappingProjection>`.
 The `matrix <MappingProjection.matrix>` parameter for the one from the *INPUT_LAYER* to the *DECISION_LAYER* uses a

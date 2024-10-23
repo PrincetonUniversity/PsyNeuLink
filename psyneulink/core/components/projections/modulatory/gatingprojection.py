@@ -101,7 +101,7 @@ Class Reference
 """
 from beartype import beartype
 
-from psyneulink._typing import Optional
+from psyneulink._typing import Optional, Mapping
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.function import FunctionOutputType
@@ -222,7 +222,7 @@ class GatingProjection(ModulatoryProjection_Base):
                     :type:
                     :read only: True
         """
-        function = Parameter(Linear(params={FUNCTION_OUTPUT_TYPE: FunctionOutputType.RAW_NUMBER}), stateful=False, loggable=False)
+        function = Parameter(Linear(params={FUNCTION_OUTPUT_TYPE: FunctionOutputType.NP_0D_ARRAY}), stateful=False, loggable=False)
         gating_signal = Parameter(None, read_only=True, getter=_gating_signal_getter, setter=_gating_signal_setter, pnl_internal=True)
 
         gating_signal_params = Parameter(
@@ -244,7 +244,7 @@ class GatingProjection(ModulatoryProjection_Base):
                  function=None,
                  weight=None,
                  exponent=None,
-                 gating_signal_params:Optional[dict]=None,
+                 gating_signal_params:Optional[Mapping]=None,
                  params=None,
                  name=None,
                  prefs:   Optional[ValidPrefSet] = None,

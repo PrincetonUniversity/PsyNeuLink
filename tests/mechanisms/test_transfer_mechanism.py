@@ -793,7 +793,7 @@ class TestTransferMechanismIntegratorFunctionParams:
                     noise=[i / 10 for i in range(VECTOR_SIZE + 1)]
             )
         assert (
-            "Noise parameter ([0.0, 0.1, 0.2, 0.3, 0.4])" in str(error_text.value) and
+            "Noise parameter ([0.  0.1 0.2 0.3 0.4])" in str(error_text.value) and
             "does not match default variable ([[0 0 0 0]]);" in str(error_text.value) and
             "must be specified as a float, a function, or an array of the appropriate shape ((1, 4))."
             in str(error_text.value)
@@ -955,7 +955,7 @@ class TestTransferMechanismSize:
             name='T',
             size=4
         )
-        assert len(T.defaults.variable) == 1 and (T.defaults.variable[0] == [0., 0., 0., 0.]).all()
+        np.testing.assert_array_equal(T.defaults.variable, [[0, 0, 0, 0]])
         assert len(T.size) == 1 and T.size[0] == 4 and isinstance(T.size[0], np.integer)
 
 
@@ -967,7 +967,7 @@ class TestTransferMechanismSize:
             size=4
         )
         val = T.execute([10, 10, 10, 10])
-        np.testing.assert_allclose(val, [[10.0, 10.0, 10.0, 10.0]])
+        np.testing.assert_array_equal(val, [[10.0, 10.0, 10.0, 10.0]])
 
     # ------------------------------------------------------------------------------------------------
     # TEST 3
@@ -981,7 +981,7 @@ class TestTransferMechanismSize:
             size=VECTOR_SIZE
         )
         val = T.execute([10.0 for i in range(VECTOR_SIZE)])
-        np.testing.assert_allclose(val, [[10.0 for i in range(VECTOR_SIZE)]])
+        np.testing.assert_array_equal(val, [[10.0 for i in range(VECTOR_SIZE)]])
 
     # ------------------------------------------------------------------------------------------------
     # TEST 4
@@ -1009,7 +1009,7 @@ class TestTransferMechanismSize:
             name='T',
             size=4.0,
         )
-        assert len(T.defaults.variable) == 1 and (T.defaults.variable[0] == [0., 0., 0., 0.]).all()
+        np.testing.assert_array_equal(T.defaults.variable, [[0, 0, 0, 0]])
         assert len(T.size == 1) and T.size[0] == 4.0 and isinstance(T.size[0], np.integer)
 
     # ------------------------------------------------------------------------------------------------
@@ -1024,7 +1024,7 @@ class TestTransferMechanismSize:
             size=4.0
         )
         val = T.execute([10, 10, 10, 10])
-        np.testing.assert_allclose(val, [[10.0, 10.0, 10.0, 10.0]])
+        np.testing.assert_array_equal(val, [[10.0, 10.0, 10.0, 10.0]])
 
     # ------------------------------------------------------------------------------------------------
     # TEST 7
@@ -1038,7 +1038,7 @@ class TestTransferMechanismSize:
             size=4.0
         )
         val = T.execute([10.0, 10.0, 10.0, 10.0])
-        np.testing.assert_allclose(val, [[10.0, 10.0, 10.0, 10.0]])
+        np.testing.assert_array_equal(val, [[10.0, 10.0, 10.0, 10.0]])
 
     # ------------------------------------------------------------------------------------------------
     # TEST 8
@@ -1092,7 +1092,9 @@ class TestTransferMechanismSize:
             size=[2., 3.],
             default_variable=[[1, 2], [3, 4, 5]]
         )
-        assert len(T.defaults.variable) == 2 and (T.defaults.variable[0] == [1, 2]).all() and (T.defaults.variable[1] == [3, 4, 5]).all()
+        assert len(T.defaults.variable) == 2
+        np.testing.assert_array_equal(T.defaults.variable[0], [1, 2])
+        np.testing.assert_array_equal(T.defaults.variable[1], [3, 4, 5])
 
     # ------------------------------------------------------------------------------------------------
     # TEST 12
@@ -1106,7 +1108,7 @@ class TestTransferMechanismSize:
             size=2,
             default_variable=[[1, 2], [3, 4]]
         )
-        assert len(T.defaults.variable) == 2 and (T.defaults.variable[0] == [1, 2]).all() and (T.defaults.variable[1] == [3, 4]).all()
+        np.testing.assert_array_equal(T.defaults.variable, [[1, 2], [3, 4]])
         assert len(T.size) == 2 and T.size[0] == 2 and T.size[1] == 2
 
     # ------------------------------------------------------------------------------------------------
@@ -1120,7 +1122,7 @@ class TestTransferMechanismSize:
             name='T',
             default_variable=[[1, 2], [3, 4]]
         )
-        assert len(T.defaults.variable) == 2 and (T.defaults.variable[0] == [1, 2]).all() and (T.defaults.variable[1] == [3, 4]).all()
+        np.testing.assert_array_equal(T.defaults.variable, [[1, 2], [3, 4]])
 
     # ------------------------------------------------------------------------------------------------
     # TEST 14
@@ -1134,9 +1136,9 @@ class TestTransferMechanismSize:
             default_variable=[1, 2, 3, 4],
             size=2
         )
-        assert len(T.defaults.variable) == 1 and (T.defaults.variable[0] == [1, 2, 3, 4]).all()
+        np.testing.assert_array_equal(T.defaults.variable, [[1, 2, 3, 4]])
         val = T.execute([10.0, 10.0, 10.0, 10.0])
-        np.testing.assert_allclose(val, [[10.0, 10.0, 10.0, 10.0]])
+        np.testing.assert_array_equal(val, [[10.0, 10.0, 10.0, 10.0]])
 
     # ------------------------------------------------------------------------------------------------
     # TEST 15
@@ -1150,9 +1152,9 @@ class TestTransferMechanismSize:
             default_variable=[1, 2, 3, 4],
             size=[2, 3, 4]
         )
-        assert len(T.defaults.variable) == 1 and (T.defaults.variable[0] == [1, 2, 3, 4]).all()
+        np.testing.assert_array_equal(T.defaults.variable, [[1, 2, 3, 4]])
         val = T.execute([10.0, 10.0, 10.0, 10.0])
-        np.testing.assert_allclose(val, [[10.0, 10.0, 10.0, 10.0]])
+        np.testing.assert_array_equal(val, [[10.0, 10.0, 10.0, 10.0]])
 
     # ------------------------------------------------------------------------------------------------
     # TEST 16
@@ -1166,7 +1168,9 @@ class TestTransferMechanismSize:
             size=2,
             default_variable=[[1, 2], [3, 4, 5]]
         )
-        assert (T.defaults.variable[0] == [1, 2]).all() and (T.defaults.variable[1] == [3, 4, 5]).all() and len(T.defaults.variable) == 2
+        assert len(T.defaults.variable) == 2
+        np.testing.assert_array_equal(T.defaults.variable[0], [1, 2])
+        np.testing.assert_array_equal(T.defaults.variable[1], [3, 4, 5])
 
     # ------------------------------------------------------------------------------------------------
     # TEST 17
@@ -1180,7 +1184,9 @@ class TestTransferMechanismSize:
             size=[2, 2],
             default_variable=[[1, 2], [3, 4, 5]]
         )
-        assert (T.defaults.variable[0] == [1, 2]).all() and (T.defaults.variable[1] == [3, 4, 5]).all() and len(T.defaults.variable) == 2
+        assert len(T.defaults.variable) == 2
+        np.testing.assert_array_equal(T.defaults.variable[0], [1, 2])
+        np.testing.assert_array_equal(T.defaults.variable[1], [3, 4, 5])
 
     # ------------------------------------------------------------------------------------------------
 

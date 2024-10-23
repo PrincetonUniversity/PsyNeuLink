@@ -1,5 +1,6 @@
 import inspect
 import psyneulink as pnl
+import numpy as np
 import pytest
 import re
 
@@ -61,6 +62,32 @@ def test_constructors_have_check_user_specified(class_):
         f"The __init__ method of Component {class_.__name__} must be wrapped by"
         f" check_user_specified in {pnl.core.globals.parameters.check_user_specified.__module__}"
     )
+
+
+def _numeric_parameter_value_check(class_, param_name, value, descriptor):
+    descriptor = f'{class_}.parameters.{param_name}{descriptor}'
+    assert isinstance(value, np.ndarray) or not pnl.is_numeric(value), (
+        f'{descriptor} is a numeric value but is not wrapped in a'
+        f' numpy array:\n\t{value}\n\t{type(value)}'
+    )
+
+
+# could parametrize over each parameter for each class instead of
+# looping, but this would greatly increase the overall number of tests
+# for minimal benefit
+@pytest.mark.parametrize('class_', component_classes)
+def test_numeric_parameter_values_are_numpy_defaults(class_):
+    for parameter in class_.parameters:
+        _numeric_parameter_value_check(
+            class_, parameter.name, parameter.default_value, ' default_value'
+        )
+
+
+@pytest.mark.parametrize('class_', component_classes)
+def test_numeric_parameter_values_are_numpy_values(class_):
+    for parameter in class_.parameters:
+        for eid, v in parameter.values.items():
+            _numeric_parameter_value_check(class_, parameter.name, v, f'.values[{eid}]')
 
 
 @pytest.fixture(scope='module')

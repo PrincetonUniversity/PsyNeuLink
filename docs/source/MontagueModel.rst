@@ -1,5 +1,5 @@
 Dopamine and Temporal Differences Learning (Montague, Dayan & Sejnowski, 1996)
-==================================================================
+==============================================================================
 `"A framework for mesencephalic dopamine systems based on predictive Hebbian learning." <http://www.jneurosci.org/content/jneuro/16/5/1936.full.pdf>`_
 
 Overview

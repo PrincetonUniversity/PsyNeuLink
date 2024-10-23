@@ -75,9 +75,10 @@ from psyneulink.core.components.functions.function import get_matrix
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingError, MappingProjection
 from psyneulink.core.components.projections.projection import projection_keywords
 from psyneulink.core.globals.keywords import MASKED_MAPPING_PROJECTION, MATRIX
-from psyneulink.core.globals.parameters import check_user_specified
+from psyneulink.core.globals.parameters import check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
+from psyneulink.core.globals.utilities import is_numeric_scalar
 
 __all__ = [
     'MaskedMappingProjection', 'MaskedMappingProjectionError',
@@ -108,7 +109,7 @@ class MaskedMappingProjection(MappingProjection):
     Arguments
     ---------
 
-    mask : int, float, list, np.ndarray or np.matrix : default None
+    mask : int, float, list, np.ndarray : default None
         specifies a mask to be applied to the `matrix <MaskedMappingProjection.matrix>` each time the Projection is
         executed, in a manner specified by the **mask_operation** argument.
 
@@ -120,7 +121,7 @@ class MaskedMappingProjection(MappingProjection):
     Attributes
     ----------
 
-    mask : int, float, list, np.ndarray or np.matrix : default None
+    mask : int, float, list, np.ndarray : default None
         mask applied to the `matrix <MaskedMappingProjection.matrix>` each time the Projection is executed,
         in a manner specified by `mask_operation <MaskedMappingProjection.mask_operation>`.
 
@@ -206,12 +207,12 @@ class MaskedMappingProjection(MappingProjection):
                                  target_set=target_set,
                                  context=context)
 
-        if MASK in target_set and target_set[MASK]:
+        if MASK in target_set and target_set[MASK] is not None:
             mask = target_set[MASK]
-            if isinstance(mask, (int, float)):
+            if is_numeric_scalar(mask):
                 return
             mask_shape = np.array(mask).shape
-            matrix = get_matrix(self.defaults.matrix,
+            matrix = get_matrix(copy_parameter_value(self.defaults.matrix),
                                 len(self.sender.defaults.value), len(self.receiver.defaults.value))
             matrix_shape = matrix.shape
             if mask_shape != matrix_shape:
@@ -239,3 +240,6 @@ class MaskedMappingProjection(MappingProjection):
                 matrix **= mask
 
         self.parameters.matrix._set(matrix, context)
+        # must manually update parameter port because super
+        # _update_parameter_ports already happened above
+        self.parameter_ports["matrix"].parameters.value._set(matrix, context)

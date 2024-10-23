@@ -15,10 +15,11 @@
 
 """
 
+from abc import ABCMeta
 from collections.abc import Iterator
 from decimal import Decimal, getcontext
 from inspect import isclass
-from numbers import Number
+from psyneulink.core.globals.utilities import is_numeric_scalar, try_extract_0d_array_item
 
 import numpy as np
 from beartype import beartype
@@ -43,7 +44,7 @@ def _validate_function(source, function):
     if result is None:
         raise SampleIteratorError("Function specified for {} ({}) does not return a result)".
                                   format(source_name, repr(function)))
-    if not isinstance(result, Number):
+    if not is_numeric_scalar(result):
         raise SampleIteratorError("Function specified for {} ({}) does not return a number)".
                                   format(source_name, repr(function)))
 
@@ -53,7 +54,29 @@ class SampleIteratorError(Exception):
         self.error_value = error_value
 
 
-class SampleSpec:
+def make_array_property(name):
+    private_name = f'_{name}'
+
+    def getter(self):
+        return try_extract_0d_array_item(getattr(self, private_name))
+
+    def setter(self, value):
+        if value is not None:
+            value = np.asarray(value)
+        setattr(self, private_name, value)
+
+    return property(getter).setter(setter)
+
+
+class SampleMeta(ABCMeta):
+    def __init__(cls, *args, **kwargs):
+        for n in cls._numeric_attrs:
+            setattr(cls, n, make_array_property(n))
+
+        super().__init__(*args, **kwargs)
+
+
+class SampleSpec(metaclass=SampleMeta):
     """
     SampleSpec(      \
     start=None,      \
@@ -150,6 +173,8 @@ class SampleSpec:
 
     """
 
+    _numeric_attrs = ['start', 'stop', 'step', 'num', '_precision']
+
     @beartype
     def __init__(self,
                  start: Optional[Union[int, float]] = None,
@@ -233,7 +258,7 @@ def is_sample_spec(spec):
     return False
 
 
-class SampleIterator(Iterator):
+class SampleIterator(Iterator, metaclass=SampleMeta):
     """
     SampleIterator(               \
     specification                 \
@@ -270,6 +295,8 @@ class SampleIterator(Iterator):
         samples to be stored and looked up, while the SampleSpec options generate samples as needed.
 
     """
+
+    _numeric_attrs = ['start', 'stop', 'step', 'current_step', 'num', 'head']
 
     def __init__(self,
                  specification):
@@ -333,7 +360,7 @@ class SampleIterator(Iterator):
             self.num = len(specification)
             self.generator = specification                       # the list
 
-            def generate_current_value():                        # index into the list
+            def _generate_current_value(self):                        # index into the list
                 # KDM 12/11/19: for currently unknown and unreplicable
                 # reasons, the checks in __next__ will fail to ensure
                 # that self.current_step is less than the length of
@@ -352,9 +379,10 @@ class SampleIterator(Iterator):
                 # Assumes receiver of SampleIterator will get this and know what to do with it,
                 #   therefore no other attributes are needed and, to avoid confusion, they should not be available;
                 #   so just return.
-                return
+                def _generate_current_value(self):
+                    return
 
-            if specification.function is None:
+            elif specification.function is None:
                 self.start = specification.start
                 self.stop = specification.stop
                 # self.step = Fraction(specification.step)
@@ -362,7 +390,7 @@ class SampleIterator(Iterator):
                 self.num = specification.num
                 self.generator = None                    # ??
 
-                def generate_current_value():   # return next value in range
+                def _generate_current_value(self):   # return next value in range
                     # Save global precision for later restoration
                     _global_precision = getcontext().prec
                     # Set SampleSpec precision
@@ -381,7 +409,7 @@ class SampleIterator(Iterator):
                 self.head = self.start
                 self.generator = specification.function
 
-                def generate_current_value():  # call function
+                def _generate_current_value(self):  # call function
                     return self.generator()
 
             else:
@@ -396,7 +424,10 @@ class SampleIterator(Iterator):
 
         self.current_step = 0
         self.head = self.start
-        self.generate_current_value = generate_current_value
+        self._generate_current_value = _generate_current_value
+
+    def generate_current_value(self):
+        return self._generate_current_value(self)
 
     def __next__(self):
         """

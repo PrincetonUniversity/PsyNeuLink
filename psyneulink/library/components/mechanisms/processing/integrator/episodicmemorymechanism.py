@@ -87,7 +87,7 @@ These can be specified using any of the following arguments:
     .. hint::
        Use **default_variable** rather than **memory** to specify the shape of memory but keep it empty
        until the first entry is stored; note, however, that since retrieval is executed before storage
-       (see `EpisodicMemoryMechanism_Execution ), the first execution will return an entry of zeros.
+       (see `EpisodicMemoryMechanism_Execution`), the first execution will return an entry of zeros.
 
   * **memory** -- specifies a set of entries to be stored in `memory <EpisodicMemoryMechanism.memory>`;  it is passed
     to the constructor for the EpisodicMemoryMechanism's `function <EpisodicMemoryMechanism.function>`) as its
@@ -260,7 +260,7 @@ The following example creates a default EpisodicMemoryMechanism (with no initial
 
     >>> my_em = EpisodicMemoryMechanism()
     >>> my_em.execute([[1,2]])
-    [array([0, 0])]
+    array([[0, 0]])
     >>> my_em.execute([[2,5]])
     array([[1., 2.]])
 
@@ -281,7 +281,7 @@ In this example, the **default_variable** argument is used to format the entries
 
     >>> my_em = EpisodicMemoryMechanism(default_variable=[[0,0],[0,0,0]])
     >>> my_em.execute([[1,2],[3,4,5]])
-    [array([0, 0]), array([0, 0, 0])]
+    array([array([0, 0]), array([0, 0, 0])], dtype=object)
 
 As in the previous example, the first execution returns zeros since `memory <EpisodicMemoryMechanism.memory>` as not
 been initialized;  however, notice that in this case they are formated as specified in **default_variable**.  Note
@@ -297,7 +297,7 @@ The **size** argument can also be used to format entries::
 
     >>> my_em = EpisodicMemoryMechanism(size=[2,3])
     >>> my_em.execute([[1,2],[3,4,5]])
-    [array([0, 0]), array([0, 0, 0])]
+    array([array([0, 0]), array([0, 0, 0])], dtype=object)
 
 Note that each element of **size** specifies the length of a field
 (see `EpisodicMemoryMechanism_Creation_Default_Variable_and_Size` for additional details).
@@ -339,7 +339,7 @@ of different sizes).
 .. _EpisodicMemoryMechanism_Examples_Memory_Init_Function:
 
 *Initialize memory in function*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The contents of `memory <EpisodicMemoryMechanism.memory>` can also be initialized using the **initializer** argument
 in the constructor for the EpisodicMemoryMechanism's `function <EpisodicMemoryMechanism.function>`::
@@ -424,7 +424,7 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.globals.keywords import EPISODIC_MEMORY_MECHANISM,MULTIPLICATIVE_PARAM, NAME, OWNER_VALUE, VARIABLE
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
-from psyneulink.core.globals.utilities import deprecation_warning, convert_to_np_array, convert_all_elements_to_np_array
+from psyneulink.core.globals.utilities import deprecation_warning, convert_all_elements_to_np_array
 
 __all__ = ['EpisodicMemoryMechanism', 'KEY_INPUT', 'VALUE_INPUT', 'KEY_OUTPUT', 'VALUE_OUTPUT']
 
@@ -689,7 +689,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         if self._dictionary_memory:
             # If assoc has not been specified, add empty list to call to function (which expects two items in its variable)
             if len(variable) != 2:
-                return convert_to_np_array([variable[0],[]])
+                return convert_all_elements_to_np_array([variable[0], []])
             else:
                 # Check that both are assigned inputs:
                 missing_inputs = [self.input_ports.names[i] for i,t in enumerate([v for v in variable]) if t is None]

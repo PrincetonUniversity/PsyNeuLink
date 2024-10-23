@@ -111,7 +111,7 @@ import inspect
 
 from beartype import beartype
 
-from psyneulink._typing import Optional
+from psyneulink._typing import Mapping, Optional
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
@@ -243,7 +243,7 @@ class ControlProjection(ModulatoryProjection_Base):
                  weight=None,
                  exponent=None,
                  function=None,
-                 control_signal_params:Optional[dict]=None,
+                 control_signal_params:Optional[Mapping]=None,
                  params=None,
                  name=None,
                  prefs:   Optional[ValidPrefSet] = None,

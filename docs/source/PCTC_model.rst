@@ -1,5 +1,5 @@
 Proactive Control & Task Control: A Stroop Model (Kalanthroff et al., 2018)
-================================================================
+===========================================================================
 `"Task Conflict and Proactive Control: A Computational Theory of the Stroop Task" <https://www.ncbi.nlm.nih.gov/m/pubmed/25257710/>`_
 
 Overview

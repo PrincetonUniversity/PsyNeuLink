@@ -2,9 +2,9 @@
 bistable percepts
 """
 
+import itertools
 import numpy as np
 import psyneulink as pnl
-from itertools import product
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
@@ -51,7 +51,7 @@ bp_comp = pnl.Composition()
 print('Forming connetions: ')
 # within-percept excitation
 for percept in ALL_PERCEPTS:
-    for node_i, node_j in product(node_dict[percept], node_dict[percept]):
+    for node_i, node_j in itertools.product(node_dict[percept], node_dict[percept]):
         if node_i is not node_j:
             print(f'\t{node_i} -> excite -> {node_j}')
             bp_comp.add_linear_processing_pathway(

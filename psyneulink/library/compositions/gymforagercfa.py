@@ -177,7 +177,8 @@ class GymForagerCFA(RegressionCFA):
 
         .. note::
             If this method is assigned as the `objective_funtion of a `GradientOptimization` `Function`,
-            it is differentiated using `autograd <https://github.com/HIPS/autograd>`_\\.grad().
+            it is differentiated using
+            `PyTorch autograd's <https://pytorch.org/docs/stable/generated/torch.func.grad.html>`_ `grad <torch.func.grad>`.
         """
         predicted_outcome=0
 

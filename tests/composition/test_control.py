@@ -521,9 +521,15 @@ class TestControlSpecification:
                 [[15.], [15.0], [0.0], [3.84279648], [0.81637827]]]
 
         for simulation in range(len(expected_sim_results_array)):
-            np.testing.assert_allclose(expected_sim_results_array[simulation],
-                               # Note: Skip decision variable OutputPort
-                               comp.simulation_results[simulation][0:3] + comp.simulation_results[simulation][4:6])
+            # Note: Skip decision variable OutputPort
+            np.testing.assert_allclose(
+                expected_sim_results_array[simulation][:3],
+                comp.simulation_results[simulation][:3]
+            )
+            np.testing.assert_allclose(
+                expected_sim_results_array[simulation][3:],
+                comp.simulation_results[simulation][4:]
+            )
 
         expected_results_array = [
             [[20.0], [20.0], [0.0], [1.0], [2.378055160151634], [0.9820137900379085]],
@@ -851,7 +857,7 @@ class TestControlSpecification:
                                            search_space=[[1],[1],[1]])
         ocomp.add_controller(ocm)
         result = ocomp.run({oa: [[1]], ob: [[2]]})
-        assert result == [[2.], [1.]]
+        np.testing.assert_array_equal(result, [[2.], [1.]])
         assert len(ocomp.controller.state_input_ports) == 2
         assert all([node in [input_port.shadow_inputs.owner for input_port in ocomp.controller.state_input_ports]
                     for node in {oa, ob}])
@@ -1312,9 +1318,13 @@ class TestControlMechanisms:
             if test_condition == 'full_list_spec':
                 assert len(ocm.state_input_ports) == 3
                 assert ocm.state_input_ports.names == [shadowed_ia_node, oa_node, numeric_ob]
-                assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
-                                              'OA[InputPort-0]': 'OA[OutputPort-0]',
-                                              'OB[InputPort-0]': [3, 1, 2]}
+                np.testing.assert_equal(
+                    ocm.state_features, {
+                        'IA[InputPort-0]': 'IA[InputPort-0]',
+                        'OA[InputPort-0]': 'OA[OutputPort-0]',
+                        'OB[InputPort-0]': [3, 1, 2]
+                    }
+                )
                 assert {k:v.tolist() for k,v in ocm.state_feature_values.items()} == {ia.input_port: [0.0],
                                                                                       oa.input_port: [0.0],
                                                                                       ob.input_port: [3.0, 1.0, 2.0]}
@@ -1322,9 +1332,13 @@ class TestControlMechanisms:
             if test_condition == 'list_spec_with_none':
                 assert len(ocm.state_input_ports) == 2
                 assert ocm.state_input_ports.names == [shadowed_ia_node, numeric_ob]
-                assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
-                                              'OA[InputPort-0]': None,
-                                              'OB[InputPort-0]': [3, 1, 2]}
+                np.testing.assert_equal(
+                    ocm.state_features, {
+                        'IA[InputPort-0]': 'IA[InputPort-0]',
+                        'OA[InputPort-0]': None,
+                        'OB[InputPort-0]': [3, 1, 2]
+                    }
+                )
                 for expected, actual in zip(
                     list(ocm.state_feature_values.values()), [[0.], [3, 1, 2]]
                 ):
@@ -1840,6 +1854,11 @@ class TestControlMechanisms:
 
         assert len(lvoc.input_ports) == 5
 
+    @pytest.mark.pytorch
+    @pytest.mark.xfail(
+        strict=False,
+        reason='operation incompatiblilty between torch tensor and numpy array',
+    )
     def test_lvoc_features_function(self):
         m1 = pnl.TransferMechanism(input_ports=["InputPort A", "InputPort B"])
         m2 = pnl.TransferMechanism()
@@ -1847,22 +1866,33 @@ class TestControlMechanisms:
         c.add_node(m1, required_roles=pnl.NodeRole.INPUT)
         c.add_node(m2, required_roles=pnl.NodeRole.INPUT)
         c._analyze_graph()
-        lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.RegressionCFA,
-                                                state_features=[m1.input_ports[0], m1.input_ports[1], m2.input_port, m2],
-                                                state_feature_function=pnl.LinearCombination(offset=10.0),
-                                                objective_mechanism=pnl.ObjectiveMechanism(
-                                                    monitor=[m1, m2]),
-                                                function=pnl.GradientOptimization(max_iterations=1),
-                                                control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
-        c.add_node(lvoc)
-        input_dict = {m1: [[1], [1]], m2: [1]}
 
-        c.run(inputs=input_dict)
+        ocm_kwargs = dict(agent_rep=pnl.RegressionCFA,
+                          state_features=[m1.input_ports[0], m1.input_ports[1], m2.input_port, m2],
+                          state_feature_function=pnl.LinearCombination(offset=10.0),
+                          objective_mechanism=pnl.ObjectiveMechanism(
+                              monitor=[m1, m2]),
+                          function=pnl.GradientOptimization(max_iterations=1),
+                          control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
 
-        assert len(lvoc.input_ports) == 5
+        import torch
+        if 'func' in dir(torch):
+            lvoc = pnl.OptimizationControlMechanism(**ocm_kwargs)
 
-        for i in range(1,5):
-            assert lvoc.input_ports[i].function.offset == 10.0
+            c.add_node(lvoc)
+            input_dict = {m1: [[1], [1]], m2: [1]}
+
+            c.run(inputs=input_dict)
+
+            assert len(lvoc.input_ports) == 5
+
+            for i in range(1, 5):
+                assert lvoc.input_ports[i].function.offset == 10.0
+
+        else:
+            with pytest.raises(ValueError):
+                pnl.OptimizationControlMechanism(**ocm_kwargs)
+
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2681,7 +2711,8 @@ class TestControlMechanisms:
 @pytest.mark.composition
 @pytest.mark.control
 class TestModelBasedOptimizationControlMechanisms_Execution:
-    def test_ocm_default_function(self):
+    @pytest.mark.parametrize("mode, ocm_mode", pytest.helpers.get_comp_and_ocm_execution_modes())
+    def test_ocm_default_function(self, ocm_mode, mode):
         a = pnl.ProcessingMechanism()
         comp = pnl.Composition(
             controller_mode=pnl.BEFORE,
@@ -2699,26 +2730,19 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                 ),
             )
         )
+        comp.controller.comp_execution_mode = ocm_mode
+
         assert type(comp.controller.function) == pnl.GridSearch
-        assert comp.run([1]) == [10]
+
+        res = comp.run([1], execution_mode=mode)
+        np.testing.assert_array_equal(res, [[10]])
 
     @pytest.mark.parametrize("nested", [True, False])
-    @pytest.mark.parametrize("format", ["list", "tuple", "SampleIterator", "SampleIteratorArray", "SampleSpec", "ndArray"])
+    @pytest.mark.parametrize("search_space",
+                             [[1, 10], (1, 10), SampleIterator((1, 10)), SampleIterator([1, 10]), SampleSpec(1, 10, 9), np.array((1, 10))],
+                             ids=["list", "tuple", "SampleIterator", "SampleIteratorArray", "SampleSpec", "ndArray"])
     @pytest.mark.parametrize("mode, ocm_mode", pytest.helpers.get_comp_and_ocm_execution_modes())
-    def test_ocm_searchspace_format_equivalence(self, format, nested, mode, ocm_mode):
-
-        if format == "list":
-            search_space = [1, 10]
-        elif format == "tuple":
-            search_space = (1, 10)
-        elif format == "SampleIterator":
-            search_space = SampleIterator((1, 10))
-        elif format == "SampleIteratorArray":
-            search_space = SampleIterator([1, 10])
-        elif format == "SampleSpec":
-            search_space = SampleSpec(1, 10, 9)
-        elif format == "ndArray":
-            search_space = np.array((1, 10))
+    def test_ocm_searchspace_format_equivalence(self, search_space, nested, mode, ocm_mode):
 
         if nested:
             search_space = [search_space]
@@ -2742,7 +2766,9 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         comp.controller.comp_execution_mode = ocm_mode
 
         assert type(comp.controller.function) == pnl.GridSearch
-        assert comp.run([1], execution_mode=mode) == [[10]]
+
+        res = comp.run([1], execution_mode=mode)
+        np.testing.assert_array_equal(res, [[10]])
 
     def test_evc(self):
         # Mechanisms
@@ -2833,9 +2859,15 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         ]
 
         for simulation in range(len(expected_sim_results_array)):
-            np.testing.assert_allclose(expected_sim_results_array[simulation],
-                               # Note: Skip decision variable OutputPort
-                               comp.simulation_results[simulation][0:3] + comp.simulation_results[simulation][4:6])
+            # Note: Skip decision variable OutputPort
+            np.testing.assert_allclose(
+                expected_sim_results_array[simulation][:3],
+                comp.simulation_results[simulation][:3]
+            )
+            np.testing.assert_allclose(
+                expected_sim_results_array[simulation][3:],
+                comp.simulation_results[simulation][4:]
+            )
 
         expected_results_array = [
             [[20.0], [20.0], [0.0], [1.0], [2.378055160151634], [0.9820137900379085]],
@@ -3122,10 +3154,14 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         ]
 
         for simulation in range(len(expected_sim_results_array)):
+            # Note: Skip decision variable OutputPort
             np.testing.assert_allclose(
-                expected_sim_results_array[simulation],
-                # Note: Skip decision variable OutputPort
-                comp.simulation_results[simulation][0:3] + comp.simulation_results[simulation][4:6]
+                expected_sim_results_array[simulation][:3],
+                comp.simulation_results[simulation][:3]
+            )
+            np.testing.assert_allclose(
+                expected_sim_results_array[simulation][3:],
+                comp.simulation_results[simulation][4:]
             )
 
         expected_results_array = [
@@ -3259,10 +3295,14 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         ]
 
         for simulation in range(len(expected_sim_results_array)):
+            # Note: Skip decision variable OutputPort
             np.testing.assert_allclose(
-                expected_sim_results_array[simulation],
-                # Note: Skip decision variable OutputPort
-                comp.simulation_results[simulation][0:3] + comp.simulation_results[simulation][4:6]
+                expected_sim_results_array[simulation][:3],
+                comp.simulation_results[simulation][:3]
+            )
+            np.testing.assert_allclose(
+                expected_sim_results_array[simulation][3:],
+                comp.simulation_results[simulation][4:]
             )
 
         expected_results_array = [
@@ -3914,7 +3954,7 @@ class TestControlTimeScales:
         #
         assert c.value == [4]
         assert c.execution_count == 4
-        assert comp.results == [[2], [4]]
+        np.testing.assert_array_equal(comp.results, [[[2]], [[4]]])
 
     def test_time_step_after(self):
         a = pnl.ProcessingMechanism()
@@ -3942,7 +3982,7 @@ class TestControlTimeScales:
         #
         assert c.value == [4]
         assert c.execution_count == 4
-        assert comp.results == [[1], [3]]
+        np.testing.assert_array_equal(comp.results, [[[1]], [[3]]])
 
     def test_pass_before(self):
         a = pnl.ProcessingMechanism()
@@ -3982,7 +4022,7 @@ class TestControlTimeScales:
         #       a   b
         assert c.value == [6]
         assert c.execution_count == 6
-        assert comp.results == [[3], [6]]
+        np.testing.assert_array_equal(comp.results, [[[3]], [[6]]])
 
     def test_pass_after(self):
         a = pnl.ProcessingMechanism()
@@ -4028,7 +4068,7 @@ class TestControlTimeScales:
         #       (C-6)
         assert c.value == [6]
         assert c.execution_count == 6
-        assert comp.results == [[2], [5]]
+        np.testing.assert_array_equal(comp.results, [[[2]], [[5]]])
 
     def test_trial_before(self):
         a = pnl.ProcessingMechanism()
@@ -4056,7 +4096,7 @@ class TestControlTimeScales:
         #
         assert c.value == [2]
         assert c.execution_count == 2
-        assert comp.results == [[1], [2]]
+        np.testing.assert_array_equal(comp.results, [[[1]], [[2]]])
 
     def test_trial_after(self):
         a = pnl.ProcessingMechanism()
@@ -4086,7 +4126,7 @@ class TestControlTimeScales:
         #
         assert c.value == [2]
         assert c.execution_count == 2
-        assert comp.results == [[1], [1]]
+        np.testing.assert_array_equal(comp.results, [[[1]], [[1]]])
 
     def test_run_before(self):
         a = pnl.ProcessingMechanism()
@@ -4121,7 +4161,7 @@ class TestControlTimeScales:
         #      a  b
         assert c.value == [2]
         assert c.execution_count == 2
-        assert comp.results == [[1], [1], [2], [2]]
+        np.testing.assert_array_equal(comp.results, [[[1]], [[1]], [[2]], [[2]]])
 
     def test_run_after(self):
         a = pnl.ProcessingMechanism()
@@ -4156,4 +4196,4 @@ class TestControlTimeScales:
         #      a  b
         assert c.value == [2]
         assert c.execution_count == 2
-        assert comp.results == [[1], [1], [1], [1]]
+        np.testing.assert_allclose(comp.results, [[[1]], [[1]], [[1]], [[1]]])

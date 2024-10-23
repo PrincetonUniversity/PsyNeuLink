@@ -595,7 +595,7 @@ from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
-    append_type_to_name, convert_to_np_array, is_numeric, iscompatible, kwCompatibilityLength, convert_to_list, parse_valid_identifier
+    append_type_to_name, is_numeric_scalar, convert_to_np_array, is_numeric, iscompatible, kwCompatibilityLength, convert_to_list, parse_valid_identifier
 
 __all__ = [
     'InputPort', 'InputPortError', 'port_type_keywords', 'SHADOW_INPUTS',
@@ -1004,12 +1004,12 @@ class InputPort(Port_Base):
                                          f"({function}){owner_name}.")
 
         if WEIGHT in target_set and target_set[WEIGHT] is not None:
-            if not isinstance(target_set[WEIGHT], (int, float)):
+            if not is_numeric_scalar(target_set[WEIGHT]):
                 raise InputPortError(f"'{WEIGHT}' parameter of {self.name} for {self.owner.name} "
                                      f"({target_set[WEIGHT]}) must be an int or float.")
 
         if EXPONENT in target_set and target_set[EXPONENT] is not None:
-            if not isinstance(target_set[EXPONENT], (int, float)):
+            if not is_numeric_scalar(target_set[EXPONENT]):
                 raise InputPortError(f"'{EXPONENT}' parameter of {self.name} for {self.owner.name}"
                                      f"({ target_set[EXPONENT]}) must be an int or float.")
 
@@ -1330,7 +1330,7 @@ class InputPort(Port_Base):
                         else:
                             raise AttributeError(DEFER_VARIABLE_SPEC_TO_MECH_MSG)
                     else:
-                        port_dict[VARIABLE] = variable
+                        port_dict[VARIABLE] = np.asarray(variable)
 
                 except InputPortError:
                     raise InputPortError(f"Tuple specification in {InputPort.__name__} specification dictionary for "
@@ -1508,7 +1508,7 @@ class InputPort(Port_Base):
                 )
                 and isinstance(variable, np.matrix)
         ):
-            variable = [variable]
+            variable = np.asarray([variable])
 
         # if function is None, use Port's default function
         function = function or InputPort.defaults.function
@@ -1554,7 +1554,8 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
     # This allows method to be called by Mechanism.add_input_ports() with set of user-specified input_ports,
     #    while calls from init_methods continue to use owner.input_ports (i.e., InputPort specifications
     #    assigned in the **input_ports** argument of the Mechanism's constructor)
-    input_ports = input_ports or owner.input_ports
+    if input_ports is None or len(input_ports) == 0:
+        input_ports = owner.input_ports
 
     # Parse any SHADOW_INPUTS specs into actual InputPorts to be shadowed
     if input_ports is not None:
