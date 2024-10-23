@@ -70,11 +70,11 @@ test_data = [
 
     # SoftMax 1D input
     pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.PER_ITEM:False}, softmax_helper, id="SOFT_MAX ALL"),
-    pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:Functions.ARG_MAX, kw.PER_ITEM:False},
+    pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:pnl.ARG_MAX, kw.PER_ITEM:False},
                  np.where(softmax_helper == np.max(softmax_helper), softmax_helper, 0), id="SOFT_MAX ARG_MAX"),
-    pytest.param(Functions.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:Functions.ARG_MAX_INDICATOR, kw.PER_ITEM:False},
+    pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:pnl.ARG_MAX_INDICATOR, kw.PER_ITEM:False},
                  np.where(softmax_helper == np.max(softmax_helper), 1, 0), id="SOFT_MAX ARG_MAX_INDICATOR"),
-    pytest.param(Functions.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:False},
+    pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:False},
                  np.where(softmax_helper == np.max(softmax_helper), softmax_helper, 0), id="SOFT_MAX MAX_VAL"),
     pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM:False},
                  np.where(softmax_helper == np.max(softmax_helper), 1, 0), id="SOFT_MAX MAX_INDICATOR"),
@@ -83,11 +83,11 @@ test_data = [
 
     # SoftMax 2D testing per-item
     pytest.param(pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.PER_ITEM:True}, [softmax_helper], id="SOFT_MAX ALL 2D"),
-    pytest.param(pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:Functions.ARG_MAX, kw.PER_ITEM:True},
+    pytest.param(pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:pnl.ARG_MAX, kw.PER_ITEM:True},
                  [np.where(softmax_helper == np.max(softmax_helper), softmax_helper, 0)], id="SOFT_MAX ARG_MAX 2D"),
-    pytest.param(Functions.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:Functions.ARG_MAX_INDICATOR, kw.PER_ITEM:True},
+    pytest.param(pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:pnl.ARG_MAX_INDICATOR, kw.PER_ITEM:True},
                  [np.where(softmax_helper == np.max(softmax_helper), 1, 0)], id="SOFT_MAX ARG_MAX_INDICATOR 2D"),
-    pytest.param(Functions.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:True},
+    pytest.param(pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:True},
                  [np.where(softmax_helper == np.max(softmax_helper), softmax_helper, 0)], id="SOFT_MAX MAX_VAL 2D"),
     pytest.param(pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM:True},
                  [np.where(softmax_helper == np.max(softmax_helper), 1, 0)], id="SOFT_MAX MAX_INDICATOR 2D"),
@@ -96,11 +96,11 @@ test_data = [
 
     # SoftMax per-item with 2 elements in input
     pytest.param(pnl.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.PER_ITEM: True}, softmax_helper2, id="SOFT_MAX ALL PER_ITEM"),
-    pytest.param(pnl.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:Functions.ARG_MAX, kw.PER_ITEM: True},
+    pytest.param(pnl.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:pnl.ARG_MAX, kw.PER_ITEM: True},
                  np.where(softmax_helper2 == np.max(softmax_helper2), softmax_helper2, 0), id="SOFT_MAX ARG_MAX PER_ITEM"),
-    pytest.param(Functions.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:Functions.ARG_MAX_INDICATOR, kw.PER_ITEM: True},
+    pytest.param(pnl.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:pnl.ARG_MAX_INDICATOR, kw.PER_ITEM: True},
                  np.where(softmax_helper2 == np.max(softmax_helper2), 1, 0), id="SOFT_MAX ARG_MAX_INDICATOR PER_ITEM"),
-    pytest.param(Functions.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM: True},
+    pytest.param(pnl.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM: True},
                  np.where(softmax_helper2 == np.max(softmax_helper2), softmax_helper2, 0), id="SOFT_MAX MAX_VAL PER_ITEM"),
     pytest.param(pnl.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM: True},
                  np.where(softmax_helper2 == np.max(softmax_helper2), 1, 0), id="SOFT_MAX MAX_INDICATOR PER_ITEM"),
