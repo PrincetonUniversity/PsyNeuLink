@@ -3,6 +3,8 @@ import pytest
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import FunctionError
+from psyneulink.core.components.functions.nonstateful.selectionfunctions import (
+    ARG_MAX, ARG_MAX_ABS_INDICATOR, ARG_MAX_INDICATOR)
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Hebbian, Reinforcement, TDLearning
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import NormalDist, ExponentialDist, \

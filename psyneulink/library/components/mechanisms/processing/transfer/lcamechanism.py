@@ -196,14 +196,15 @@ from beartype import beartype
 from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance, MAX_ABS_DIFF
-from psyneulink.core.components.functions.nonstateful.selectionfunctions import max_vs_avg, max_vs_next, MAX_VS_NEXT, MAX_VS_AVG
+from psyneulink.core.components.functions.nonstateful.selectionfunctions import max_vs_avg, max_vs_next
 from psyneulink.core.components.functions.stateful.integratorfunctions import LeakyCompetingIntegrator
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
 from psyneulink.core.globals.keywords import \
-    CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, LCA_MECHANISM, LESS_THAN_OR_EQUAL, MATRIX, NAME, \
-    RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, VALUE, INVERSE_HOLLOW_MATRIX, AUTO
+    (CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, LCA_MECHANISM, LESS_THAN_OR_EQUAL,
+     MATRIX, MAX_VS_NEXT, MAX_VS_AVG, NAME, RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE,
+     TERMINATION_COMPARISION_OP, VALUE, INVERSE_HOLLOW_MATRIX, AUTO)
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
