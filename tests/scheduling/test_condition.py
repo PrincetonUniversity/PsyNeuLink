@@ -1,5 +1,6 @@
 import logging
 
+import graph_scheduler as gs
 import numpy as np
 import psyneulink as pnl
 import pytest
@@ -20,6 +21,12 @@ from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 
 logger = logging.getLogger(__name__)
+
+
+class TestModule:
+    def test_all_attr_parity(self):
+        missing = set(gs.condition.__all__) - set(pnl.core.scheduling.condition.__all__)
+        assert len(missing) == 0, (f'Conditions in graph_scheduler must be added to psyneulink condition.py: {missing}')
 
 
 class TestCondition:
