@@ -14,7 +14,6 @@
 
 COMMENT:
 * TBI Threshold
-* TBI MaxVal
 * `KWTA`
 COMMENT
 
