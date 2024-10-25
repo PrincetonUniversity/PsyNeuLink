@@ -1298,7 +1298,7 @@ class EMComposition(AutodiffComposition):
         Full list of `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` ordered with query_input_nodes first
         followed by value_input_nodes; used primarily for internal computations
 
-    field_input_nodes : list[TransferMechanism]
+    input_nodes_by_fields : list[TransferMechanism]
         Full list of `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` in the same order specified in the
         **field_names** argument of the constructor and in `self.field_names <EMComposition.field_names>`.
 
@@ -1364,8 +1364,8 @@ class EMComposition(AutodiffComposition):
         <EMComposition.memory>` (see `Retrieve values by field <EMComposition_Processing>` for additional details);
         these are assigned the same names as the `query_input_nodes <EMComposition.query_input_nodes>` and
         `value_input_nodes <EMComposition.value_input_nodes>` to which they correspond appended with the suffix
-        * [RETRIEVED]*, and are in the same order as  `field_input_nodes <EMComposition.field_input_nodes>` to which
-        to which they correspond.
+        * [RETRIEVED]*, and are in the same order as  `input_nodes_by_fields <EMComposition.input_nodes_by_fields>`
+        to which to which they correspond.
 
     storage_node : EMStorageMechanism
         `EMStorageMechanism` that receives inputs from the `query_input_nodes <EMComposition.query_input_nodes>` and
@@ -1909,8 +1909,9 @@ class EMComposition(AutodiffComposition):
         self.num_fields = len(self.entry_template)
         keys_weights = [i for i in parsed_field_weights if i != 0]
         self.num_keys = len(keys_weights)
-        # Get indices of field_weights that specify keys:
-        self.key_indices = np.nonzero(parsed_field_weights)[0]
+        # Get indices of field_weights that specify keys and values:
+        self.key_indices = np.flatnonzero(parsed_field_weights)
+        self.value_indices = np.where(parsed_field_weights==0)[0]
 
         self.num_values = self.num_fields - self.num_keys
         if parsed_field_names:
@@ -1996,10 +1997,12 @@ class EMComposition(AutodiffComposition):
         self.query_input_nodes = self._construct_query_input_nodes(field_weights)
         self.value_input_nodes = self._construct_value_input_nodes(field_weights)
         self.input_nodes = self.query_input_nodes + self.value_input_nodes
-        # Order input_nodes according to self.field_names
-        self.field_input_nodes = [node for name in self.field_names for node in self.input_nodes
-                                  if node in self.input_nodes
-                                  if (node.name in {name + QUERY_AFFIX, name + VALUE_AFFIX})]
+
+        # Get nodes in order of fields
+        self.input_nodes_by_fields = [None] * len(field_weights)
+        ##########
+        assert all(self.input_nodes_by_fields), "PROGRAM ERROR: input_nodes_by_fields not fully populated."
+
         self.concatenate_keys_node = self._construct_concatenate_keys_node(concatenate_keys)
         self.match_nodes = self._construct_match_nodes(memory_template, memory_capacity,
                                                                    concatenate_keys,normalize_memories)
