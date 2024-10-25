@@ -2371,8 +2371,8 @@ class EMComposition(AutodiffComposition):
         retrieved_nodes = self.retrieved_key_nodes + self.retrieved_value_nodes
 
         # Return nodes in order sorted by self.field_names
-        #  (note: use name_without_suffix as reference in case more than one EMComposition is created,
-        #         in which case retrieved_nodes will have "-<int>" appended to their name)
+        # (use name_without_suffix as reference in case more than one EMComposition is created,
+        #  in which case retrieved_nodes will have "-<int>" appended to their name)
         return [node for name in self.field_names for node in retrieved_nodes
                 if node in retrieved_nodes if (name + RETRIEVED_AFFIX) == name_without_suffix(node.name)]
 
