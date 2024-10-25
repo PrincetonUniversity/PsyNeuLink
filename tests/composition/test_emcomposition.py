@@ -34,11 +34,11 @@ logger = logging.getLogger(__name__)
 @pytest.mark.autodiff_constructor
 class TestConstruction:
 
-    # def test_two_calls_no_args(self):
-    #     comp = EMComposition()
-    #     comp_2 = EMComposition()
-    #     assert isinstance(comp, EMComposition)
-    #     assert isinstance(comp_2, EMComposition)
+    def test_two_calls_no_args(self):
+        comp = EMComposition()
+        comp_2 = EMComposition()
+        assert isinstance(comp, EMComposition)
+        assert isinstance(comp_2, EMComposition)
 
     # def test_pytorch_representation(self):
     #     comp = EMComposition()
