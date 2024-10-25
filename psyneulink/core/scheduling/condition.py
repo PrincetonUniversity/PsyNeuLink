@@ -9,7 +9,6 @@
 # ********************************************* Condition **************************************************************
 
 import collections
-import copy
 import inspect
 import numbers
 import warnings
@@ -24,8 +23,31 @@ from psyneulink.core.globals.keywords import MODEL_SPEC_ID_TYPE, comparison_oper
 from psyneulink.core.globals.parameters import parse_context
 from psyneulink.core.globals.utilities import parse_valid_identifier, toposort_key
 
-__all__ = copy.copy(graph_scheduler.condition.__all__)
-__all__.extend(['Threshold'])
+
+__all__ = [  # noqa: F822  (dynamically generated)
+    'AbsoluteCondition', 'AddEdgeTo', 'AfterCall',
+    'AfterConsiderationSetExecution', 'AfterEnvironmentSequence',
+    'AfterEnvironmentStateUpdate', 'AfterNCalls', 'AfterNCallsCombined',
+    'AfterNConsiderationSetExecutions', 'AfterNEnvironmentSequences',
+    'AfterNEnvironmentStateUpdates', 'AfterNPasses', 'AfterNRuns',
+    'AfterNTimeSteps', 'AfterNTrials', 'AfterNode', 'AfterNodes',
+    'AfterPass', 'AfterRun', 'AfterTimeStep', 'AfterTrial', 'All',
+    'AllHaveRun', 'Always', 'And', 'Any', 'AtConsiderationSetExecution',
+    'AtEnvironmentSequence', 'AtEnvironmentSequenceNStart',
+    'AtEnvironmentSequenceStart', 'AtEnvironmentStateUpdate',
+    'AtEnvironmentStateUpdateNStart', 'AtEnvironmentStateUpdateStart',
+    'AtNCalls', 'AtPass', 'AtRun', 'AtRunNStart', 'AtRunStart',
+    'AtTimeStep', 'AtTrial', 'AtTrialNStart', 'AtTrialStart',
+    'BeforeConsiderationSetExecution', 'BeforeEnvironmentStateUpdate',
+    'BeforeNCalls', 'BeforeNode', 'BeforeNodes', 'BeforePass',
+    'BeforeTimeStep', 'BeforeTrial', 'CompositeCondition', 'Condition',
+    'ConditionBase', 'ConditionError', 'ConditionSet',
+    'CustomGraphStructureCondition', 'EveryNCalls', 'EveryNPasses',
+    'GraphStructureCondition', 'JustRan', 'NWhen', 'Never', 'Not',
+    'Operation', 'Or', 'RemoveEdgeFrom', 'Threshold', 'TimeInterval',
+    'TimeTermination', 'WhenFinished', 'WhenFinishedAll',
+    'WhenFinishedAny', 'When', 'While', 'WhileNot', 'WithNode',
+]
 
 
 # avoid restricting graph_scheduler versions for this code
@@ -324,7 +346,7 @@ class Threshold(graph_scheduler.condition._DependencyValidation, Condition):
                 for i in indices:
                     param_value = param_value[i]
 
-            param_value = float(param_value)
+            param_value = float(np.array(param_value).item())
 
             if comparator == '==':
                 return np.isclose(param_value, threshold, atol=atol, rtol=rtol)
@@ -351,3 +373,6 @@ class Threshold(graph_scheduler.condition._DependencyValidation, Condition):
             m.kwargs['parameter'] = f'{self.dependency.name}_OutputPort_0'
 
         return m
+
+
+When = Condition

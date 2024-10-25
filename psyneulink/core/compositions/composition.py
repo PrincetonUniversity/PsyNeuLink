@@ -2897,7 +2897,7 @@ import toposort
 from PIL import Image
 from beartype import beartype
 
-from psyneulink._typing import Optional, Union, Literal, Type, Callable, List, Set
+from psyneulink._typing import Callable, Literal, List, Mapping, Optional, Set, Type, Union
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentError, ComponentsMeta
@@ -10473,7 +10473,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # shapes of entries will be validated in _validate_input_shapes_and_expand_for_all_trials())
 
                 else:
-                    # 3D ragged array or 2d array
+                    # 3d ragged array or 2d array
                     entry = convert_to_np_array(_inputs)
                     ragged_array = entry.dtype == object
                     if ragged_array:
@@ -11514,7 +11514,7 @@ _
     def learn(
             self,
             inputs: dict,
-            targets: Optional[dict] = None,
+            targets: Optional[Mapping] = None,
             num_trials: Optional[int] = None,
             epochs: int = 1,
             learning_rate: Optional[Union[int,float]]=None,

@@ -14,7 +14,6 @@
 
 COMMENT:
 * TBI Threshold
-* TBI MaxVal
 * `KWTA`
 COMMENT
 
@@ -22,7 +21,7 @@ Functions that selects a subset of elements to maintain or transform, while null
 
 """
 
-__all__ = ['SelectionFunction', 'OneHot', 'max_vs_avg', 'max_vs_next', 'MAX_VS_NEXT', 'MAX_VS_AVG']
+__all__ = ['SelectionFunction', 'OneHot', 'max_vs_avg', 'max_vs_next']
 
 import numpy as np
 from beartype import beartype
@@ -36,15 +35,22 @@ from psyneulink.core.components.functions.function import (
     _random_state_getter, _seed_setter,
 )
 from psyneulink.core.globals.keywords import \
-    MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR, \
-    MODE, ONE_HOT_FUNCTION, PROB, PROB_INDICATOR, SELECTION_FUNCTION_TYPE, PREFERENCE_SET_NAME
+    (ARG_MAX, ARG_MAX_ABS, ARG_MAX_ABS_INDICATOR, ARG_MAX_INDICATOR,
+     ARG_MIN, ARG_MIN_ABS, ARG_MIN_ABS_INDICATOR, ARG_MIN_INDICATOR,
+     MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL,
+     MIN_ABS_INDICATOR, MIN_ABS_VAL, MIN_INDICATOR, MIN_VAL,
+     MODE, ONE_HOT_FUNCTION, PREFERENCE_SET_NAME, PROB, PROB_INDICATOR,
+     SELECTION_FUNCTION_TYPE)
+
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, ValidPrefSet
 
-
-MAX_VS_NEXT = 'max_vs_next'
-MAX_VS_AVG = 'max_vs_avg'
+options = [ ARG_MAX, ARG_MAX_ABS, ARG_MAX_INDICATOR, ARG_MAX_ABS_INDICATOR,
+            MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
+            ARG_MIN,  ARG_MIN_ABS, ARG_MIN_INDICATOR, ARG_MIN_ABS_INDICATOR,
+            MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR,
+            PROB, PROB_INDICATOR]
 
 # FIX: IMPLEMENT AS Functions
 def max_vs_next(x):
@@ -79,32 +85,71 @@ class OneHot(SelectionFunction):
          )
 
     Return an array with one non-zero value.
+    COMMENT:
+    TBI:
+         refactor to have four parameters: (can continue to use KEYWORDS INTERNALLY and for LLVM)
+         extremum: max/min
+         value: scalar/indicator
+         ties: lowest/highest/all (re: indices)
+         prob: True/False (if True, ties are resolved probabilistically)
+    COMMENT
 
     .. _OneHot:
 
     `function <Selection.function>` returns an array the same length as the first item in `variable <OneHot.variable>`,
-    with all of its values zeroed except one identified in first item `variable <OneHot.variable>` as specified by
-    `mode <OneHot.mode>`:
+    with all of its values zeroed except one, unless there are ties, which are handled according to the choice of
+    `mode <OneHot.mode>`, as follows:
 
-        * *MAX_VAL*: signed value of the element with the maximum signed value;
+        * *ARG_MAX*: signed value of a single element with the maximum signed value,
+          or the one with lowest index if there are ties.
 
-        * *MAX_ABS_VAL*: absolute value of the element with the maximum absolute value;
+        * *ARG_MAX_ABS*: absolute value of a single element with the maximum absolute value,
+          or the one with lowest index if there are ties.
 
-        * *MAX_INDICATOR*: 1 in place of the element with the maximum signed value;
+        * *ARG_MAX_INDICATOR*: 1 in place of single element with maximum signed value,
+          or the one with lowest index if there are ties.
 
-        * *MAX_ABS_INDICATOR*: 1 in place of the element with the maximum absolute value;
+        * *ARG_MAX_ABS_INDICATOR*: 1 in place of single element with maximum absolute value,
+          or the one with lowest index if there are ties.
 
-        * *MIN_VAL*: signed value of the element with the minimum signed value;
+        * *MAX_VAL*: signed value of the element with the maximum signed value,
+          or all elements with the maximum value if there are ties.
 
-        * *MIN_ABS_VAL*: absolute value of element with the minimum absolute value;
+        * *MAX_ABS_VAL*: absolute value of the element with the maximum absolute value,
+          or all elements with the maximum value if there are ties.
 
-        * *MIN_INDICATOR*: 1 in place of the element with the minimum signed value;
+        * *MAX_INDICATOR*: 1 in place of the element with the maximum signed value,
+          or all elements with the maximum value if there are ties.
 
-        * *MIN_ABS_INDICATOR*: 1 in place of the element with the minimum absolute value;
+        * *MAX_ABS_INDICATOR*: 1 in place of the element(s) with the maximum absolute value,
+          or all elements with the maximum value if there are ties.
+
+        * *ARG_MIN*: signed value of a single element with the minium signed value,
+          or the one with lowest index if there are ties.
+
+        * *ARG_MIN_ABS*: absolute value of a single element with the minium absolute value,
+          or the one with lowest index if there are ties.
+
+        * *ARG_MIN_INDICATOR*: 1 in place of single element with minimum signed value,
+          or the one with lowest index if there are ties.
+
+        * *MIN_VAL*: signed value of the element with the minimum signed value,
+          or all elements with the minimum value if there are ties.
+
+        * *MIN_ABS_VAL*: absolute value of element with the minimum absolute value,
+          or all elements with the minimum value if there are ties.
+
+        * *MIN_INDICATOR*: 1 in place of the element with the minimum signed value,
+          or all elements with the minimum value if there are ties.
+
+        * *MIN_ABS_INDICATOR*: 1 in place of the element with the minimum absolute value,
+          or all elements with the minimum value if there are ties.
 
         * *PROB*: value of probabilistically chosen element based on probabilities passed in second item of variable;
+          if there are ties, a single element is chosen probabilistically.
 
-        * *PROB_INDICATOR*: same as *PROB* but chosen item is assigned a value of 1.
+        * *PROB_INDICATOR*: same as *PROB* but chosen item is assigned a value of 1;
+          if there are ties, a single element is chosen probabilistically.
 
 
     Arguments
@@ -114,9 +159,12 @@ class OneHot(SelectionFunction):
         First (possibly only) item specifies a template for the array to be transformed;  if `mode <OneHot.mode>` is
         *PROB* then a 2nd item must be included that is a probability distribution with same length as 1st item.
 
-    mode : MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR,
-    MIN_ABS_INDICATOR, PROB or PROB_INDICATOR : default MAX_VAL
-        specifies the nature of the single non-zero value in the array returned by `function <OneHot.function>`
+    mode : ARG_MAX, ARG_MAX_ABS, ARG_MAX_INDICATOR, ARG_MAX_ABS_INDICATOR,
+    MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
+    ARG_MIN, ARG_MIN_ABS, ARG_MIN_INDICATOR, ARG_MIN_ABS_INDICATOR,
+    MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR,  MIN_ABS_INDICATOR,
+    PROB or PROB_INDICATOR : default ARG_MAX
+        specifies how the single non-zero value in the array returned by `function <OneHot.function>` is determined
         (see `mode <OneHot.mode>` for details).
 
     params : Dict[param keyword: param value] : default None
@@ -143,9 +191,12 @@ class OneHot(SelectionFunction):
         distribution, each element of which specifies the probability for selecting the corresponding element of the
         1st item.
 
-    mode : MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR,
-    MIN_ABS_INDICATOR, PROB or PROB_INDICATOR
-        determines the nature of the single non-zero value in the array returned by `function <OneHot.function>`
+    mode : ARG_MAX, ARG_MAX_ABS, ARG_MAX_INDICATOR, ARG_MAX_ABS_INDICATOR,
+    MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
+    ARG_MIN, ARG_MIN_ABS, ARG_MIN_INDICATOR, ARG_MIN_ABS_INDICATOR,
+    MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR,  MIN_ABS_INDICATOR,
+    PROB or PROB_INDICATOR
+        determines how the single non-zero value in the array returned by `function <OneHot.function>` is determined
         (see `above <OneHot>` for options).
 
     random_state : numpy.RandomState
@@ -193,13 +244,7 @@ class OneHot(SelectionFunction):
         seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
 
         def _validate_mode(self, mode):
-            options = {MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
-                       MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR,
-                       PROB, PROB_INDICATOR}
-            if mode in options:
-                # returns None indicating no error message (this is a valid assignment)
-                return None
-            else:
+            if mode not in options:
                 # returns error message
                 return 'not one of {0}'.format(options)
 
@@ -207,9 +252,12 @@ class OneHot(SelectionFunction):
     @beartype
     def __init__(self,
                  default_variable=None,
-                 mode: Optional[Literal['MAX_VAL', 'MAX_ABS_VAL', 'MAX_INDICATOR', 'MAX_ABS_INDICATOR',
-                               'MIN_VAL', 'MIN_ABS_VAL', 'MIN_INDICATOR', 'MIN_ABS_INDICATOR',
-                               'PROB', 'PROB_INDICATOR']] = None,
+                 mode: Optional[Literal[
+                     ARG_MAX, ARG_MAX_ABS, ARG_MAX_INDICATOR, ARG_MAX_ABS_INDICATOR,
+                     MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
+                     ARG_MIN, ARG_MIN_ABS, ARG_MIN_INDICATOR, ARG_MIN_ABS_INDICATOR,
+                     MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR,
+                     PROB, PROB_INDICATOR]] = None,
                  seed=None,
                  params=None,
                  owner=None,
@@ -259,99 +307,117 @@ class OneHot(SelectionFunction):
                                     format(MODE, self.__class__.__name__, Function.__name__, PROB, prob_dist))
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        idx_ptr = builder.alloca(ctx.int32_ty)
-        builder.store(ctx.int32_ty(0), idx_ptr)
+        best_idx_ptr = builder.alloca(ctx.int32_ty)
+        builder.store(best_idx_ptr.type.pointee(0), best_idx_ptr)
 
         if self.mode in {PROB, PROB_INDICATOR}:
-            dice_ptr = builder.alloca(ctx.float_ty)
+            sum_ptr = builder.alloca(ctx.float_ty)
+            builder.store(sum_ptr.type.pointee(-0.0), sum_ptr)
+
+            random_draw_ptr = builder.alloca(ctx.float_ty)
             rand_state_ptr = ctx.get_random_state_ptr(builder, self, state, params)
             rng_f = ctx.get_uniform_dist_function_by_state(rand_state_ptr)
-            builder.call(rng_f, [rand_state_ptr, dice_ptr])
-            dice = builder.load(dice_ptr)
-            sum_ptr = builder.alloca(ctx.float_ty)
-            builder.store(ctx.float_ty(-0.0), sum_ptr)
+            builder.call(rng_f, [rand_state_ptr, random_draw_ptr])
+            random_draw = builder.load(random_draw_ptr)
+
             prob_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
             arg_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "search") as (b1, index):
-            idx = b1.load(idx_ptr)
-            prev_ptr = b1.gep(arg_in, [ctx.int32_ty(0), idx])
-            current_ptr = b1.gep(arg_in, [ctx.int32_ty(0), index])
-            prev = b1.load(prev_ptr)
+        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "search") as (b1, idx):
+            best_idx = b1.load(best_idx_ptr)
+            best_ptr = b1.gep(arg_in, [ctx.int32_ty(0), best_idx])
+
+            current_ptr = b1.gep(arg_in, [ctx.int32_ty(0), idx])
             current = b1.load(current_ptr)
 
-            prev_res_ptr = b1.gep(arg_out, [ctx.int32_ty(0), idx])
-            cur_res_ptr = b1.gep(arg_out, [ctx.int32_ty(0), index])
             if self.mode not in {PROB, PROB_INDICATOR}:
                 fabs = ctx.get_builtin("fabs", [current.type])
-            if self.mode == MAX_VAL:
-                cmp_op = ">="
-                cmp_prev = prev
+
+                is_first = b1.icmp_unsigned("==", idx, idx.type(0))
+
+                # Allow the first element to win the comparison
+                prev_best = b1.select(is_first, best_ptr.type.pointee(float("NaN")), b1.load(best_ptr))
+
+            if self.mode == ARG_MAX:
+                cmp_op = ">"
+                cmp_prev = prev_best
                 cmp_curr = current
                 val = current
-            elif self.mode == MAX_ABS_VAL:
-                cmp_op = ">="
-                cmp_prev = b1.call(fabs, [prev])
+
+            elif self.mode == ARG_MAX_ABS:
+                cmp_op = ">"
+                cmp_prev = b1.call(fabs, [prev_best])
                 cmp_curr = b1.call(fabs, [current])
                 val = b1.call(fabs, [current])
-            elif self.mode == MAX_INDICATOR:
-                cmp_op = ">="
-                cmp_prev = prev
+
+            elif self.mode == ARG_MAX_INDICATOR:
+                cmp_op = ">"
+                cmp_prev = prev_best
                 cmp_curr = current
                 val = current.type(1.0)
-            elif self.mode == MAX_ABS_INDICATOR:
-                cmp_op = ">="
-                cmp_prev = b1.call(fabs, [prev])
+
+            elif self.mode == ARG_MAX_ABS_INDICATOR:
+                cmp_op = ">"
+                cmp_prev = b1.call(fabs, [prev_best])
                 cmp_curr = b1.call(fabs, [current])
                 val = current.type(1.0)
-            elif self.mode == MIN_VAL:
-                cmp_op = "<="
-                cmp_prev = prev
+
+            elif self.mode == ARG_MIN:
+                cmp_op = "<"
+                cmp_prev = prev_best
                 cmp_curr = current
                 val = current
-            elif self.mode == MIN_ABS_VAL:
-                cmp_op = "<="
-                cmp_prev = b1.call(fabs, [prev])
+
+            elif self.mode == ARG_MIN_ABS:
+                cmp_op = "<"
+                cmp_prev = b1.call(fabs, [prev_best])
                 cmp_curr = b1.call(fabs, [current])
-                val = current
-            elif self.mode == MIN_INDICATOR:
-                cmp_op = "<="
-                cmp_prev = prev
+                val = b1.call(fabs, [current])
+
+            elif self.mode == ARG_MIN_INDICATOR:
+                cmp_op = "<"
+                cmp_prev = prev_best
                 cmp_curr = current
                 val = current.type(1.0)
-            elif self.mode == MIN_ABS_INDICATOR:
-                cmp_op = "<="
-                cmp_prev = b1.call(fabs, [prev])
+
+            elif self.mode == ARG_MIN_ABS_INDICATOR:
+                cmp_op = "<"
+                cmp_prev = b1.call(fabs, [prev_best])
                 cmp_curr = b1.call(fabs, [current])
                 val = current.type(1.0)
+
             elif self.mode in {PROB, PROB_INDICATOR}:
                 # Update prefix sum
-                current_prob_ptr = b1.gep(prob_in, [ctx.int32_ty(0), index])
+                current_prob_ptr = b1.gep(prob_in, [ctx.int32_ty(0), idx])
                 sum_old = b1.load(sum_ptr)
                 sum_new = b1.fadd(sum_old, b1.load(current_prob_ptr))
                 b1.store(sum_new, sum_ptr)
 
-                old_below = b1.fcmp_ordered("<=", sum_old, dice)
-                new_above = b1.fcmp_ordered("<", dice, sum_new)
+                old_below = b1.fcmp_ordered("<=", sum_old, random_draw)
+                new_above = b1.fcmp_ordered("<", random_draw, sum_new)
                 cond = b1.and_(new_above, old_below)
-                cmp_prev = ctx.float_ty(1.0)
-                cmp_curr = b1.select(cond, cmp_prev, ctx.float_ty(0.0))
+
+                cmp_prev = current.type(1.0)
+                cmp_curr = b1.select(cond, cmp_prev, cmp_prev.type(0.0))
                 cmp_op = "=="
                 if self.mode == PROB:
                     val = current
                 else:
-                    val = ctx.float_ty(1.0)
+                    val = current.type(1.0)
             else:
-                assert False, "Unsupported mode: {}".format(self.mode)
+                assert False, "Unsupported mode in LLVM: {} for OneHot Function".format(self.mode)
+
+            prev_res_ptr = b1.gep(arg_out, [ctx.int32_ty(0), best_idx])
+            cur_res_ptr = b1.gep(arg_out, [ctx.int32_ty(0), idx])
 
             # Make sure other elements are zeroed
             builder.store(cur_res_ptr.type.pointee(0), cur_res_ptr)
 
-            cmp_res = builder.fcmp_ordered(cmp_op, cmp_curr, cmp_prev)
+            cmp_res = builder.fcmp_unordered(cmp_op, cmp_curr, cmp_prev)
             with builder.if_then(cmp_res):
                 builder.store(prev_res_ptr.type.pointee(0), prev_res_ptr)
                 builder.store(val, cur_res_ptr)
-                builder.store(index, idx_ptr)
+                builder.store(idx, best_idx_ptr)
 
         return builder
 
@@ -382,8 +448,27 @@ class OneHot(SelectionFunction):
 
 
         """
+        if self.mode == ARG_MAX:
+            max_idx = np.argmax(variable)
+            result = np.zeros_like(variable)
+            result[max_idx] = variable[max_idx]
 
-        if self.mode == MAX_VAL:
+        elif self.mode == ARG_MAX_ABS:
+            max_idx = np.argmax(np.absolute(variable))
+            result = np.zeros_like(variable)
+            result[max_idx] = np.absolute(variable[max_idx])
+
+        elif self.mode == ARG_MAX_INDICATOR:
+            max_idx = np.argmax(variable)
+            result = np.zeros_like(variable)
+            result[max_idx] = 1
+
+        elif self.mode == ARG_MAX_ABS_INDICATOR:
+            max_idx = np.argmax(np.absolute(variable))
+            result = np.zeros_like(variable)
+            result[max_idx] = 1
+
+        elif self.mode == MAX_VAL:
             max_value = np.max(variable)
             result = np.where(variable == max_value, variable, 0)
 
@@ -399,7 +484,27 @@ class OneHot(SelectionFunction):
             max_value = np.max(np.absolute(variable))
             result = np.where(np.absolute(variable) == max_value, 1, 0)
 
-        if self.mode == MIN_VAL:
+        elif self.mode == ARG_MIN:
+            max_idx = np.argmin(variable)
+            result = np.zeros_like(variable)
+            result[max_idx] = variable[max_idx]
+
+        elif self.mode == ARG_MIN_ABS:
+            max_idx = np.argmin(np.absolute(variable))
+            result = np.zeros_like(variable)
+            result[max_idx] = np.absolute(variable[max_idx])
+
+        elif self.mode == ARG_MIN_INDICATOR:
+            max_idx = np.argmin(variable)
+            result = np.zeros_like(variable)
+            result[max_idx] = 1
+
+        elif self.mode == ARG_MIN_ABS_INDICATOR:
+            max_idx = np.argmin(np.absolute(variable))
+            result = np.zeros_like(variable)
+            result[max_idx] = 1
+
+        elif self.mode == MIN_VAL:
             min_value = np.min(variable)
             result = np.where(variable == min_value, min_value, 0)
 

@@ -551,7 +551,7 @@ def convert_to_2d_input(array_like):
     if isinstance(array_like, (np.ndarray, list)):
         if isinstance(array_like[0], (np.ndarray, list)):
             if isinstance(array_like[0][0], (np.ndarray, list)):
-                print("array_like ({}) is at least 3D, which may cause conversion errors".format(array_like))
+                print("array_like ({}) is at least 3d, which may cause conversion errors".format(array_like))
             out = []
             for a in array_like:
                 out.append(np.array(a))

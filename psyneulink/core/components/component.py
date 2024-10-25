@@ -1704,7 +1704,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                     # CAVEAT: assuming here that object dtype implies there are list objects (i.e. array with
                     # different sized arrays/lists inside like [[0, 1], [2, 3, 4]]), even though putting a None
                     # value in the array will give object dtype. This case doesn't really make sense in our
-                    # context though, so ignoring this case in the interest of quickly fixing 3D variable behavior
+                    # context though, so ignoring this case in the interest of quickly fixing 3d variable behavior
                     variable = np.atleast_1d(variable)
                 else:
                     variable = np.atleast_2d(variable)

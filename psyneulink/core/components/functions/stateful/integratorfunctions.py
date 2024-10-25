@@ -31,7 +31,7 @@ import warnings
 import numpy as np
 from beartype import beartype
 
-from psyneulink._typing import Optional, Union, Callable
+from psyneulink._typing import Callable, Mapping, Optional, Union
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
@@ -230,7 +230,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                  rate=None,
                  noise=None,
                  initializer=None,
-                 params: Optional[dict] = None,
+                 params: Optional[Mapping] = None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None,
                  context=None,
@@ -559,7 +559,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
                  increment=None,
                  noise=None,
                  initializer=None,
-                 params: Optional[dict] = None,
+                 params: Optional[Mapping] = None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
 
@@ -836,7 +836,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
                  noise=None,
                  offset=None,
                  initializer=None,
-                 params: Optional[dict] = None,
+                 params: Optional[Mapping] = None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
         super().__init__(
@@ -1072,7 +1072,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
                  noise=None,
                  offset=None,
                  initializer=None,
-                 params: Optional[dict] = None,
+                 params: Optional[Mapping] = None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
 
@@ -1592,7 +1592,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                  long_term_rate=None,
                  operation=None,
                  offset=None,
-                 params: Optional[dict] = None,
+                 params: Optional[Mapping] = None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
 
@@ -2028,7 +2028,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
                  min_val: Optional[ValidParamSpecType] = None,
                  noise=None,
                  initializer=None,
-                 params: Optional[dict] = None,
+                 params: Optional[Mapping] = None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None,
                  # **kwargs
@@ -2451,7 +2451,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         threshold=None,
         time_step_size=None,
         seed=None,
-        params: Optional[dict] = None,
+        params: Optional[Mapping] = None,
         owner=None,
         prefs:  Optional[ValidPrefSet] = None,
         **kwargs
@@ -3010,7 +3010,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
                  initializer=None,
                  angle_function=None,
                  seed=None,
-                 params: Optional[dict] = None,
+                 params: Optional[Mapping] = None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None,
                  **kwargs):
@@ -3466,7 +3466,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         non_decision_time=None,
         time_step_size=None,
         starting_value=None,
-        params: Optional[dict] = None,
+        params: Optional[Mapping] = None,
         seed=None,
         owner=None,
         prefs:  Optional[ValidPrefSet] = None,
@@ -3761,7 +3761,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
                  offset=None,
                  time_step_size=None,
                  initializer=None,
-                 params: Optional[dict] = None,
+                 params: Optional[Mapping] = None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None,
                  **kwargs):
@@ -4466,7 +4466,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
                  mode=None,
                  uncorrelated_activity=None,
                  integration_method=None,
-                 params: Optional[dict] = None,
+                 params: Optional[Mapping] = None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None,
                  **kwargs):

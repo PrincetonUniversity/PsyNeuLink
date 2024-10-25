@@ -147,7 +147,6 @@ import Environment
 import_module(MODEL_PARAMS)
 model_params = import_module(MODEL_PARAMS).model_params
 
-
 #region  TASK ENVIRONMENT
 # ======================================================================================================================
 #                                                   TASK ENVIRONMENT
@@ -173,7 +172,7 @@ TOTAL_NUM_STIMS = len(INPUTS)
 EMFieldsIndex = IntEnum('EMFields',
                         ['STATE',
                          'CONTEXT',
-                         'PREVIOUS_STATE'],
+                         'PREVIOUS STATE'],
                         start=0)
 state_retrieval_weight = 0
 RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projections
