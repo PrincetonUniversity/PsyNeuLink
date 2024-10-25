@@ -1,5 +1,4 @@
 import numpy as np
-import psyneulink.core.llvm as pnlvm
 import psyneulink.core.components.functions as Functions
 import psyneulink.core.globals.keywords as kw
 import pytest

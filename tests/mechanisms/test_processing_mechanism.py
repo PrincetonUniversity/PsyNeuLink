@@ -1,7 +1,6 @@
 import numpy as np
 import pytest
 
-from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import (
     ARG_MAX, ARG_MAX_ABS_INDICATOR, ARG_MAX_INDICATOR)

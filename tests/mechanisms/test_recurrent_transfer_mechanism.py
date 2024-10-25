@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
-import psyneulink.core.llvm as pnlvm
 
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Reduce

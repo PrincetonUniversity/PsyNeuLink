@@ -1,7 +1,6 @@
 import numpy as np
 import pytest
 
-import psyneulink.core.llvm as pnlvm
 from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.functions.stateful.memoryfunctions import DictionaryMemory, \
     ContentAddressableMemory
