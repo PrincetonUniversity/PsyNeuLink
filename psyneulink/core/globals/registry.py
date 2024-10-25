@@ -50,6 +50,15 @@ RegistryEntry = namedtuple('RegistryTuple', 'subclass, instanceDict, instanceCou
 
 numeric_suffix_pat = re.compile(r'(.*)-\d+$')
 
+def name_without_suffix(name):
+    '''Return name with any numeric suffix removed'''
+    match = numeric_suffix_pat.match(name)
+    if match:
+        name_stripped_of_suffix = match.groups()[0]
+        return name_stripped_of_suffix
+    else:
+        return name
+
 
 class RegistryError(Exception):
     def __init__(self, error_value):

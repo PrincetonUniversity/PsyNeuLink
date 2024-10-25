@@ -1018,7 +1018,7 @@ from psyneulink.core.globals.keywords import \
      GAIN, IDENTITY_MATRIX, MAX_INDICATOR, MULTIPLICATIVE_PARAM, NAME, PARAMS, PROB_INDICATOR, PRODUCT, PROJECTIONS,
      RANDOM, SIZE, VARIABLE)
 from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric_scalar
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.registry import name_without_suffix
 from psyneulink.core.llvm import ExecutionMode
 
 
@@ -1998,9 +1998,12 @@ class EMComposition(AutodiffComposition):
         self.value_input_nodes = self._construct_value_input_nodes(field_weights)
         self.input_nodes = self.query_input_nodes + self.value_input_nodes
 
-        # Get nodes in order of fields
+        # Get list of nodes in order specified in self.field_names
         self.input_nodes_by_fields = [None] * len(field_weights)
-        ##########
+        for i in range(self.num_keys):
+            self.input_nodes_by_fields[self.key_indices[i]] = self.query_input_nodes[i]
+        for i in range(self.num_values):
+            self.input_nodes_by_fields[self.value_indices[i]] = self.value_input_nodes[i]
         assert all(self.input_nodes_by_fields), "PROGRAM ERROR: input_nodes_by_fields not fully populated."
 
         self.concatenate_keys_node = self._construct_concatenate_keys_node(concatenate_keys)
@@ -2366,12 +2369,12 @@ class EMComposition(AutodiffComposition):
              for i in range(self.num_values)]
 
         retrieved_nodes = self.retrieved_key_nodes + self.retrieved_value_nodes
+
         # Return nodes in order sorted by self.field_names
-        # IMPLEMENTATION NOTE:
-        #  "in" is used below instead of "==" in case more than one EMComposition is created,
-        #  in which case retrieved_nodes will have "-<int>" appended to their name
+        #  (use name_without_suffix as reference in case more than one EMComposition is created,
+        #  in which case retrieved_nodes will have "-<int>" appended to their name)
         return [node for name in self.field_names for node in retrieved_nodes
-                               if node in retrieved_nodes if (name + RETRIEVED_AFFIX) in node.name]
+                if node in retrieved_nodes if (name + RETRIEVED_AFFIX) == name_without_suffix(node.name)]
 
     def _construct_storage_node(self,
                                 memory_template,
