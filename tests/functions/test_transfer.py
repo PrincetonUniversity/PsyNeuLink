@@ -70,13 +70,23 @@ test_data = [
 
     # SoftMax 1D input
     pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.PER_ITEM:False}, softmax_helper, id="SOFT_MAX ALL"),
-    pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:False}, np.where(softmax_helper == np.max(softmax_helper), softmax_helper, 0), id="SOFT_MAX MAX_VAL"),
-    pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM:False}, np.where(softmax_helper == np.max(softmax_helper), 1, 0), id="SOFT_MAX MAX_INDICATOR"),
+    pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:pnl.ARG_MAX, kw.PER_ITEM:False},
+                 np.where(softmax_helper == np.max(softmax_helper), softmax_helper, 0), id="SOFT_MAX ARG_MAX"),
+    pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:pnl.ARG_MAX_INDICATOR, kw.PER_ITEM:False},
+                 np.where(softmax_helper == np.max(softmax_helper), 1, 0), id="SOFT_MAX ARG_MAX_INDICATOR"),
+    pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:False},
+                 np.where(softmax_helper == np.max(softmax_helper), softmax_helper, 0), id="SOFT_MAX MAX_VAL"),
+    pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM:False},
+                 np.where(softmax_helper == np.max(softmax_helper), 1, 0), id="SOFT_MAX MAX_INDICATOR"),
     pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.PROB, kw.PER_ITEM:False},
                  [0.0, 0.0, 0.0, 0.0, test_var[4], 0.0, 0.0, 0.0, 0.0, 0.0], id="SOFT_MAX PROB"),
 
     # SoftMax 2D testing per-item
     pytest.param(pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.PER_ITEM:True}, [softmax_helper], id="SOFT_MAX ALL 2D"),
+    pytest.param(pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:pnl.ARG_MAX, kw.PER_ITEM:True},
+                 [np.where(softmax_helper == np.max(softmax_helper), softmax_helper, 0)], id="SOFT_MAX ARG_MAX 2D"),
+    pytest.param(pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:pnl.ARG_MAX_INDICATOR, kw.PER_ITEM:True},
+                 [np.where(softmax_helper == np.max(softmax_helper), 1, 0)], id="SOFT_MAX ARG_MAX_INDICATOR 2D"),
     pytest.param(pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:True},
                  [np.where(softmax_helper == np.max(softmax_helper), softmax_helper, 0)], id="SOFT_MAX MAX_VAL 2D"),
     pytest.param(pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM:True},
@@ -86,6 +96,10 @@ test_data = [
 
     # SoftMax per-item with 2 elements in input
     pytest.param(pnl.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.PER_ITEM: True}, softmax_helper2, id="SOFT_MAX ALL PER_ITEM"),
+    pytest.param(pnl.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:pnl.ARG_MAX, kw.PER_ITEM: True},
+                 np.where(softmax_helper2 == np.max(softmax_helper2), softmax_helper2, 0), id="SOFT_MAX ARG_MAX PER_ITEM"),
+    pytest.param(pnl.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:pnl.ARG_MAX_INDICATOR, kw.PER_ITEM: True},
+                 np.where(softmax_helper2 == np.max(softmax_helper2), 1, 0), id="SOFT_MAX ARG_MAX_INDICATOR PER_ITEM"),
     pytest.param(pnl.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM: True},
                  np.where(softmax_helper2 == np.max(softmax_helper2), softmax_helper2, 0), id="SOFT_MAX MAX_VAL PER_ITEM"),
     pytest.param(pnl.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM: True},
@@ -106,6 +120,13 @@ test_data = [
 @pytest.mark.parametrize("func, variable, params, expected", test_data)
 def test_execute(func, variable, params, expected, benchmark, func_mode):
     benchmark.group = "TransferFunction " + func.componentName
+
+    if func_mode != 'Python':
+        if ('output' in params
+                and params['output'] in {kw.MAX_VAL, kw.MAX_ABS_VAL, kw.MAX_INDICATOR, kw.MAX_ABS_INDICATOR,
+                                         kw.MIN_VAL, kw.MIN_ABS_VAL, kw.MIN_INDICATOR, kw.MIN_ABS_INDICATOR}):
+            pytest.skip("{params['mode']} is not supported in {func_mode}")
+
     f = func(default_variable=variable, **params)
     ex = pytest.helpers.get_func_execution(f, func_mode)
 
