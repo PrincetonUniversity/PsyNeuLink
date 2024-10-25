@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferFunctions &mdash; PsyNeuLink 0.15.1.0+368.g260f9553d documentation</title>
+  <title>TransferFunctions &mdash; PsyNeuLink 0.15.1.0+369.g24f682304 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+368
+                  0.15.1.0+369
                 </div>
               
             
@@ -1892,9 +1892,9 @@ is <em>ALL</em>, returns Jacobian matrix (derivative for each element of the out
 others):</p>
 <div class="math notranslate nohighlight">
 \[D_jS_i = S_i(\delta_{i,j} - S_j),\ where\ \delta_{i,j}=1\ if\ i=j\ and\ \delta_{i,j}=0\ if\ i≠j.\]</div>
-<p>If <em>OUTPUT_TYPE</em> is <em>MAX_VAL</em> or <em>MAX_INDICATOR</em>, returns 1d array of the derivatives of the maximum
-value with respect to the others (calculated as above). If <em>OUTPUT_TYPE</em> is <em>PROB</em>, raises an exception
-(since it is ambiguous as to which element would have been chosen by the SoftMax function)</p>
+<p>If <em>OUTPUT_TYPE</em> is <em>ARG_MAX</em>, <em>ARG_MAX_INDICATOR</em>, <em>MAX_VAL</em>, <em>MAX_INDICATOR</em>, returns 1d array of the
+derivatives of the maximum value(s) with respect to the others (calculated as above). If <em>OUTPUT_TYPE</em> is <em>PROB</em>,
+raises an exception (since it is ambiguous as to which element would have been chosen by the SoftMax function)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1909,7 +1909,7 @@ this only applies if <a class="reference internal" href="#psyneulink.core.compon
 <li><p><strong>adapt_base</strong> (<em>scalar : default 1</em>) – specifies the <em>base</em> parameter using by the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain" title="psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">adapt_gain</span></code></a> method (see method for details).</p></li>
 <li><p><strong>adapt_entropy_weighting</strong> (<em>default .1</em>) – specifies the <em>entropy_weighting</em> parameter using by the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain" title="psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">adapt_gain</span></code></a> method
 (see method for details).</p></li>
-<li><p><strong>output</strong> (<em>ALL</em><em>, </em><em>MAX_VAL</em><em>, </em><em>MAX_INDICATOR</em><em>, or </em><em>PROB : default ALL</em>) – specifies the format of array returned by <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax._function" title="psyneulink.core.components.functions.transferfunctions.SoftMax._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a>
+<li><p><strong>output</strong> (<em>ALL</em><em>, </em><em>ARG_MAX</em><em>, </em><em>ARG_MAX_INDICATOR</em><em>, </em><em>MAX_VAL</em><em>, </em><em>MAX_INDICATOR</em><em>, or </em><em>PROB : default ALL</em>) – specifies the format of array returned by <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax._function" title="psyneulink.core.components.functions.transferfunctions.SoftMax._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a>
 (see <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.output" title="psyneulink.core.components.functions.transferfunctions.SoftMax.output"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output</span></code></a> for details).</p></li>
 <li><p><strong>per_item</strong> (<em>boolean : default True</em>) – for 2d variables, determines whether the SoftMax function will be applied to the entire variable (per_item =
 False), or applied to each item in the variable separately (per_item = True).</p></li>
@@ -2004,8 +2004,12 @@ in the array returned by <a class="reference internal" href="#psyneulink.core.co
 <blockquote>
 <div><ul class="simple">
 <li><p><em>ALL</em>: array of all SoftMax-transformed values (the default);</p></li>
-<li><p><em>MAX_VAL</em>: SoftMax-transformed value for the element with the maximum such value, 0 for all others;</p></li>
-<li><p><em>MAX_INDICATOR</em>: 1 for the element with the maximum SoftMax-transformed value, 0 for all others;</p></li>
+<li><p><em>ARG_MAX</em>: 1 for single element with the maximum SoftMax-transformed value, 0 for all others;
+(one with lowest index of there are multiple maximum values);</p></li>
+<li><p><em>ARG_MAX_INDICATOR</em>: 1 for a single element with the maximum SoftMax-transformed value, 0 for all others;
+(one with lowest index of there are multiple maximum values);</p></li>
+<li><p><em>MAX_VAL</em>: SoftMax-transformed value for the element(s) with the maximum such value, 0 for all others;</p></li>
+<li><p><em>MAX_INDICATOR</em>: 1 for the element(s) with the maximum SoftMax-transformed value, 0 for all others;</p></li>
 <li><p><em>PROB</em>: probabilistically chosen element based on SoftMax-transformed values after setting the
 sum of values to 1 (i.e., their <a class="reference external" href="https://en.wikipedia.org/wiki/Luce%27s_choice_axiom">Luce Ratio</a>),
 0 for all others.</p></li>
@@ -2013,7 +2017,7 @@ sum of values to 1 (i.e., their <a class="reference external" href="https://en.w
 </div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>ALL, MAX_VAL, MAX_INDICATOR, or PROB</p>
+<dd class="field-odd"><p>ALL, ARG_MAX, ARG_MAX_INDICATOR, MAX_VAL, MAX_INDICATOR, or PROB</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2035,7 +2039,7 @@ False), or applied to each item in the variable separately (per_item = True).</p
 <span class="sig-name descname"><span class="pre">bounds</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.bounds" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>None if <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.output" title="psyneulink.core.components.functions.transferfunctions.SoftMax.output"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output</span></code></a> == MAX_VAL, else (0,1) : default (0,1)</p>
+<dd class="field-odd"><p>None if <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.output" title="psyneulink.core.components.functions.transferfunctions.SoftMax.output"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output</span></code></a> in {ARG_MAX, MAX_VAL}, else (0,1) : default (0,1)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2358,7 +2362,7 @@ arguments of the constructor.</p></li>
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.transferfunctions.</span></span><span class="sig-name descname"><span class="pre">TransferFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function that transforms variable but maintains its shape.</p>
 <p>All TransferFunctions MUST have the following attributes:</p>
-<p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Exponential.bounds" title="psyneulink.core.components.functions.transferfunctions.Exponential.bounds"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bounds</span></code></a> – specifies the lower and upper limits of the result;  if there are none, the attribute is set to
+<p><a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.bounds" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.bounds"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bounds</span></code></a> – specifies the lower and upper limits of the result;  if there are none, the attribute is set to
 <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>;  if it has at least one bound, the attribute is set to a tuple specifying the lower and upper bounds,
 respectively, with <code class="xref any docutils literal notranslate"><span class="pre">None</span></code> as the entry for no bound.</p>
 <p><a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a> and <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">additive_param</span></a> – each

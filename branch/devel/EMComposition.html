@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EMComposition &mdash; PsyNeuLink 0.15.1.0+368.g260f9553d documentation</title>
+  <title>EMComposition &mdash; PsyNeuLink 0.15.1.0+369.g24f682304 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+368
+                  0.15.1.0+369
                 </div>
               
             
@@ -392,11 +392,12 @@ that are used to match queries against entries in memory for retrieval (see <a c
 process, but the values of which are retrieved and assigned as the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the
 corresponding <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.retrieved_nodes" title="psyneulink.library.compositions.emcomposition.EMComposition.retrieved_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">retrieved_node</span></code></a>. This distinction between keys and value corresponds
 to the format of a standard “dictionary,” though in that case only a single key and value are allowed, whereas
-here there can be one or more keys and any number of values;  if all fields are keys, this implements a full
-form of content-addressable memory. If <strong>learn_field_weight</strong> is True (and <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.enable_learning" title="psyneulink.library.compositions.emcomposition.EMComposition.enable_learning"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">enable_learning</span></code></a> is either True or a list), then the field_weights can be modified
-during training (this functions similarly to the attention head of a Transformer model, although at present the
-field can only be scalar values rather than vecdtors); if <strong>learn_field_weight</strong> is False, then the field_weights are
-fixed. The following options can be used to specify <strong>field_weights</strong>:</p>
+here there can be one or more keys and any number of values;  if all fields are keys, this implements a full form of
+content-addressable memory. If <strong>learn_field_weight</strong> is True (and <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.enable_learning" title="psyneulink.library.compositions.emcomposition.EMComposition.enable_learning"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">enable_learning</span></code></a>
+is either True or a list with True for at least one entry), then the field_weights can be modified during training
+(this functions similarly to the attention head of a Transformer model, although at present the field can only be
+scalar values rather than vecdtors); if <strong>learn_field_weight</strong> is False, then the field_weights are fixed.
+The following options can be used to specify <strong>field_weights</strong>:</p>
 <blockquote>
 <div><ul class="simple">
 <li><p><em>None</em> (the default): all fields except the last are treated as keys, and are weighted equally for retrieval,
@@ -491,20 +492,22 @@ then any values below the specified threshold are set to 0 before the dot produc
 <li><p><strong>softmax_choice</strong> : specifies how the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.SoftMax" title="psyneulink.core.components.functions.transferfunctions.SoftMax"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SoftMax</span></code></a> Function of each of the EMComposition’s <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.softmax_nodes" title="psyneulink.library.compositions.emcomposition.EMComposition.softmax_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">softmax_nodes</span></code></a> is used, with the dot products of queries and keys, to generate a retrieved item;
 the following are the options that can be used and the retrieved value they produce:</p>
 <ul class="simple">
-<li><p><em>WEIGHTED</em>: softmax-weighted average of entries, based on their dot products with the key(s); this is the default;</p></li>
-<li><p><em>ARG_MAX</em>: entry with the largest dot product.</p></li>
+<li><p><em>WEIGHTED_AVG</em> (default): softmax-weighted average of entries, based on their dot products with the key(s).</p></li>
+<li><p><em>ARG_MAX</em>: entry with the largest dot product (one with lowest index in <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>)               if there are identical ones).</p></li>
 <li><p><em>PROBABISTIC</em>: probabilistically chosen entry based on softmax-transformed distribution of dot products.</p></li>
 </ul>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Use of the <em>ARG_MAX</em> and <em>PROBABILISTIC</em> options is not compatible with learning, as these implement a discrete
 choice and thus are not differentiable. Constructing an EMComposition with <strong>softmax_choice</strong> set to either of
-these options and <strong>enable_learning</strong> set to True will generate a warning, and calling the EMComposition’s
-<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method will generate an error; it must be changed to <em>WEIGHTED</em> to execute learning.</p>
+these options and <strong>enable_learning</strong> set to True (or a list with any True entries) will generate a warning, and
+calling the EMComposition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method will generate an error; it must be changed to
+<em>WEIGHTED_AVG</em> to execute learning.</p>
 </div>
 <div class="technical-note docutils container">
-<p>The <em>WEIGHTED</em> option is passed as <em>ALL</em> to the <strong>output</strong> argument of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.SoftMax" title="psyneulink.core.components.functions.transferfunctions.SoftMax"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SoftMax</span></code></a> Function, <em>ARG_MAX</em> is
-passed as <em>MAX_INDICATOR</em>; <em>PROBALISTIC</em> is passed as <em>PROB_INDICATOR</em>; and <em>MAX_VAL</em> is not currently supported.</p>
+<p>The <em>WEIGHTED_AVG</em> option is passed as <em>ALL</em> to the <strong>output</strong> argument of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.SoftMax" title="psyneulink.core.components.functions.transferfunctions.SoftMax"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SoftMax</span></code></a> Function, <em>ARG_MAX</em> is
+passed as <em>ARG_MAX_INDICATOR</em>; and <em>PROBALISTIC</em> is passed as <em>PROB_INDICATOR</em>; the other SoftMax options are
+not currently supported.</p>
 </div>
 </li>
 </ul>
@@ -653,8 +656,8 @@ memory (i.e., the one with the lowest norm across all fields) is replaced by the
 </section>
 <section id="training">
 <span id="emcomposition-training"></span><h3><em>Training</em><a class="headerlink" href="#training" title="Permalink to this headline">¶</a></h3>
-<p>If <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> is called, <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.enable_learning" title="psyneulink.library.compositions.emcomposition.EMComposition.enable_learning"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">enable_learning</span></code></a> is True or a list with at
-least one True entry, then errors will be computed for each of the <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.retrieved_nodes" title="psyneulink.library.compositions.emcomposition.EMComposition.retrieved_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">retrieved_nodes</span></code></a>
+<p>If <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> is called, <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.enable_learning" title="psyneulink.library.compositions.emcomposition.EMComposition.enable_learning"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">enable_learning</span></code></a> is True or a list with
+any True entries, then errors will be computed for each of the <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.retrieved_nodes" title="psyneulink.library.compositions.emcomposition.EMComposition.retrieved_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">retrieved_nodes</span></code></a>
 that is specified for learning (see <a class="reference internal" href="#emcomposition-learning"><span class="std std-ref">Learning</span></a> for details about specification). These errors
 are derived either from any errors backprpated to the EMComposition from an outer Composition in which it is <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested</span></a>, or locally by the difference between the <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.retrieved_nodes" title="psyneulink.library.compositions.emcomposition.EMComposition.retrieved_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">retrieved_nodes</span></code></a>
 and the <code class="xref any docutils literal notranslate"><span class="pre">target_nodes</span></code> that are created for each of the <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.retrieved_nodes" title="psyneulink.library.compositions.emcomposition.EMComposition.retrieved_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">retrieved_nodes</span></code></a> that do not project to an outer Composition.  These errors are then backpropagated
@@ -855,7 +858,7 @@ see <a class="reference internal" href="#emcomposition-processing"><span class="
 see <a class="reference internal" href="#emcomposition-processing"><span class="std std-ref">Softmax normalize matches over fields</span></a> for additional details.</p></li>
 <li><p><strong>softmax_threshold</strong> (<em>float : default .0001</em>) – specifies the threshold used to mask out small values in the softmax calculation;
 see <em>mask_threshold</em> under <a class="reference internal" href="TransferFunctions.html#softmax-adaptgain"><span class="std std-ref">Thresholding and Adaptive Gain</span></a> for details).</p></li>
-<li><p><strong>softmax_choice</strong> (<em>WEIGHTED</em><em>, </em><em>ARG_MAX</em><em>, </em><em>PROBABILISTIC : default WEIGHTED</em>) – specifies how the softmax over dot products of keys and memories is used for retrieval;
+<li><p><strong>softmax_choice</strong> (<em>WEIGHTED_AVG</em><em>, </em><em>ARG_MAX</em><em>, </em><em>PROBABILISTIC : default WEIGHTED_AVG</em>) – specifies how the softmax over dot products of keys and memories is used for retrieval;
 see <a class="reference internal" href="#emcomposition-softmax-choice"><span class="std std-ref">softmax_choice</span></a> for a description of each option.</p></li>
 <li><p><strong>storage_prob</strong> (<em>float : default 1.0</em>) – specifies the probability that an item will be stored in <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>
 when the EMComposition is executed (see <a class="reference internal" href="#emcomposition-storage"><span class="std std-ref">Retrieval and Storage</span></a> for
@@ -1012,7 +1015,7 @@ see <em>mask_threshold</em> under <a class="reference internal" href="TransferFu
 see <a class="reference internal" href="#emcomposition-softmax-choice"><span class="std std-ref">softmax_choice</span></a> for a description of each option.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>WEIGHTED, ARG_MAX or PROBABILISTIC</p>
+<dd class="field-odd"><p>WEIGHTED_AVG, ARG_MAX or PROBABILISTIC</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1061,8 +1064,8 @@ see <a class="reference internal" href="#emcomposition-learning"><span class="st
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition.learn_field_weights">
 <span class="sig-name descname"><span class="pre">learn_field_weights</span></span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition.learn_field_weights" title="Permalink to this definition">¶</a></dt>
 <dd><p>determines whether <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.field_weights" title="psyneulink.library.compositions.emcomposition.EMComposition.field_weights"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">field_weights</span></code></a> are learnable during training;
-requires <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.enable_learning" title="psyneulink.library.compositions.emcomposition.EMComposition.enable_learning"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">enable_learning</span></code></a> to be True for the corresponding field;
-see <a class="reference internal" href="#emcomposition-learning"><span class="std std-ref">Learning</span></a> for additional details.</p>
+requires <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.enable_learning" title="psyneulink.library.compositions.emcomposition.EMComposition.enable_learning"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">enable_learning</span></code></a> to be True or a list with at least one True
+entry for the corresponding field; see <a class="reference internal" href="#emcomposition-learning"><span class="std std-ref">Learning</span></a> for additional details.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>bool</p>
@@ -1129,8 +1132,8 @@ followed by value_input_nodes; used primarily for internal computations</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition.field_input_nodes">
-<span class="sig-name descname"><span class="pre">field_input_nodes</span></span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition.field_input_nodes" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition.input_nodes_by_fields">
+<span class="sig-name descname"><span class="pre">input_nodes_by_fields</span></span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition.input_nodes_by_fields" title="Permalink to this definition">¶</a></dt>
 <dd><p>Full list of <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> in the same order specified in the
 <strong>field_names</strong> argument of the constructor and in <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.field_names" title="psyneulink.library.compositions.emcomposition.EMComposition.field_names"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">self.field_names</span></code></a>.</p>
 <dl class="field-list simple">
@@ -1260,8 +1263,8 @@ field</span></a> for additional details).</p>
 <dd><p><a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanisms</span></a> that receive the vector retrieved for each field in <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> (see <a class="reference internal" href="#emcomposition-processing"><span class="std std-ref">Retrieve values by field</span></a> for additional details);
 these are assigned the same names as the <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.query_input_nodes" title="psyneulink.library.compositions.emcomposition.EMComposition.query_input_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">query_input_nodes</span></code></a> and
 <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.value_input_nodes" title="psyneulink.library.compositions.emcomposition.EMComposition.value_input_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value_input_nodes</span></code></a> to which they correspond appended with the suffix
-* [RETRIEVED]*, and are in the same order as  <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.field_input_nodes" title="psyneulink.library.compositions.emcomposition.EMComposition.field_input_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">field_input_nodes</span></code></a> to which
-to which they correspond.</p>
+* [RETRIEVED]*, and are in the same order as  <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.input_nodes_by_fields" title="psyneulink.library.compositions.emcomposition.EMComposition.input_nodes_by_fields"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_nodes_by_fields</span></code></a>
+to which to which they correspond.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>list[<a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism">TransferMechanism</a>]</p>
@@ -1558,12 +1561,7 @@ assign its value to afferent weights of corresponding retrieved_node.
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition.learn">
 <span class="sig-name descname"><span class="pre">learn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition.learn" title="Permalink to this definition">¶</a></dt>
-<dd><p>Override to handle synch and retain args
-Note: defaults for synch and retain args are set to NotImplemented, so that the user can specify None if</p>
-<blockquote>
-<div><p>they want to locally override the default values for the AutodiffComposition (see docstrings for run()
-and _parse_synch_and_retain_args() for additonal details).</p>
-</div></blockquote>
+<dd><p>Override to check for inappropriate use of ARG_MAX or PROBABILISTIC options for retrieval with learning</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>

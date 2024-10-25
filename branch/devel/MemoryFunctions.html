@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MemoryFunctions &mdash; PsyNeuLink 0.15.1.0+368.g260f9553d documentation</title>
+  <title>MemoryFunctions &mdash; PsyNeuLink 0.15.1.0+369.g24f682304 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+368
+                  0.15.1.0+369
                 </div>
               
             
@@ -435,7 +435,7 @@ form: [[[key],[value]], [[key],[value]], …], such that each item in the outer 
 is a 2d array or list containing a key and a value pair for that entry. All of the keys must be 1d arrays or
 lists of the same length.</p></li>
 <li><p><strong>distance_function</strong> (<a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.Distance" title="psyneulink.core.components.functions.objectivefunctions.Distance"><em>Distance</em></a><em> or </em><em>function : default Distance</em><em>(</em><em>metric=COSINE</em><em>)</em>) – specifies the function used during retrieval to compare the first item in <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.variable" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> with keys in <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.memory" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.</p></li>
-<li><p><strong>selection_function</strong> (<a class="reference internal" href="SelectionFunctions.html#psyneulink.core.components.functions.selectionfunctions.OneHot" title="psyneulink.core.components.functions.selectionfunctions.OneHot"><em>OneHot</em></a><em> or </em><em>function : default OneHot</em><em>(</em><em>mode=MIN_VAL</em><em>)</em>) – specifies the function used during retrieval to evaluate the distances returned by <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.distance_function" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.distance_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">distance_function</span></code></a> and select the item to return.</p></li>
+<li><p><strong>selection_function</strong> (<a class="reference internal" href="SelectionFunctions.html#psyneulink.core.components.functions.selectionfunctions.OneHot" title="psyneulink.core.components.functions.selectionfunctions.OneHot"><em>OneHot</em></a><em> or </em><em>function : default OneHot</em><em>(</em><em>mode=ARG_MIN_VAL</em><em>)</em>) – specifies the function used during retrieval to evaluate the distances returned by <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.distance_function" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.distance_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">distance_function</span></code></a> and select the item to return.</p></li>
 <li><p><strong>equidistant_keys_select</strong> (<em>RANDOM</em><em> | </em><em>OLDEST</em><em> | </em><em>NEWEST : default RANDOM</em>) – specifies which item is chosen for retrieval if two or more keys have the same distance from the first item of
 <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.variable" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p></li>
 <li><p><strong>duplicate_keys</strong> (<em>bool</em><em> | </em><em>OVERWRITE : default False</em>) – specifies whether entries with duplicate keys are allowed in <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.memory" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>
@@ -572,7 +572,7 @@ with keys in <a class="reference internal" href="#psyneulink.core.components.fun
 <dd><p>function used during retrieval to evaluate the distances returned by <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.distance_function" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.distance_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">distance_function</span></code></a> and select the item(s) to return.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="SelectionFunctions.html#psyneulink.core.components.functions.selectionfunctions.OneHot" title="psyneulink.core.components.functions.selectionfunctions.OneHot">OneHot</a> or function : default OneHot(mode=MIN_VAL)</p>
+<dd class="field-odd"><p><a class="reference internal" href="SelectionFunctions.html#psyneulink.core.components.functions.selectionfunctions.OneHot" title="psyneulink.core.components.functions.selectionfunctions.OneHot">OneHot</a> or function : default OneHot(mode=ARG_MIN_VAL)</p>
 </dd>
 </dl>
 </dd></dl>
