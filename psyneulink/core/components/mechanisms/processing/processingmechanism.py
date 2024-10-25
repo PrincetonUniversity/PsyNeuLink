@@ -188,7 +188,8 @@ from psyneulink._typing import Optional, Union
 import numpy as np
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
-from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
+from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot, ARG_MAX, ARG_MAX_ABS, \
+    ARG_MAX_INDICATOR, ARG_MAX_ABS_INDICATOR
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, Mechanism, MechanismError
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
@@ -254,13 +255,13 @@ class ProcessingMechanism_Base(Mechanism_Base):
                                   {NAME: MAX_ABS_VAL,
                                    FUNCTION:lambda x: np.max(np.absolute(x))},
                                   {NAME: MAX_ONE_HOT,
-                                   FUNCTION: OneHot(mode=MAX_VAL)},
+                                   FUNCTION: OneHot(mode=ARG_MAX)},
                                   {NAME: MAX_ABS_ONE_HOT,
-                                   FUNCTION: OneHot(mode=MAX_ABS_VAL)},
+                                   FUNCTION: OneHot(mode=ARG_MAX_ABS)},
                                   {NAME: MAX_INDICATOR,
-                                   FUNCTION: OneHot(mode=MAX_INDICATOR)},
+                                   FUNCTION: OneHot(mode=ARG_MAX_INDICATOR)},
                                   {NAME: MAX_ABS_INDICATOR,
-                                   FUNCTION: OneHot(mode=MAX_ABS_INDICATOR)},
+                                   FUNCTION: OneHot(mode=ARG_MAX_ABS_INDICATOR)},
                                   {NAME: PROB,
                                    VARIABLE: OWNER_VALUE,
                                    FUNCTION: SoftMax(output=PROB)}])

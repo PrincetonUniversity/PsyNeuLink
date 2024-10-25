@@ -34,7 +34,9 @@ test_data = [
 #    (Functions.Buffer, test_var, {'rate':RAND1}, [[0.0],[0.0]]),
     pytest.param(Functions.Buffer, test_var[0], {'history':512, 'rate':RAND1, 'initializer':[test_var[0]]},
                  # TODO: Why is the first result using rate^2 ?
-                 [test_var[0] * RAND1 * RAND1, test_var[0] * RAND1], id="Buffer"),
+                 [test_var[0] * RAND1 * RAND1, test_var[0] * RAND1],
+                 marks=pytest.mark.llvm_not_implemented,
+                 id="Buffer"),
 
     # Tests using Mersenne-Twister as function PRNG
     pytest.param(Functions.DictionaryMemory, test_var, {'seed': module_seed},
@@ -71,15 +73,19 @@ test_data = [
     # ContentAddressableMemory
     pytest.param(Functions.ContentAddressableMemory, test_var, {'rate':RAND1, 'retrieval_prob':0.1, 'seed': module_seed},
                  np.zeros_like(test_var),
+                 marks=pytest.mark.llvm_not_implemented,
                  id="ContentAddressableMemory Low Retrieval"),
     pytest.param(Functions.ContentAddressableMemory, test_var, {'rate':RAND1, 'storage_prob':0.1, 'seed': module_seed},
                  np.zeros_like(test_var),
+                 marks=pytest.mark.llvm_not_implemented,
                  id="ContentAddressableMemory Low Storage"),
     pytest.param(Functions.ContentAddressableMemory, test_var, {'rate':RAND1, 'retrieval_prob':0.9, 'storage_prob':0.9, 'seed': module_seed},
                  [test_var[0], test_var[1]],
+                 marks=pytest.mark.llvm_not_implemented,
                  id="ContentAddressableMemory High Storage/Retrieval"),
     pytest.param(Functions.ContentAddressableMemory, test_var, {'initializer':test_initializer, 'rate':RAND1, 'seed': module_seed},
                  [test_var[0], test_var[1]],
+                 marks=pytest.mark.llvm_not_implemented,
                  id="ContentAddressableMemory Initializer"),
 
     # Tests using philox var
@@ -117,15 +123,19 @@ test_data = [
     # ContentAddressableMemory
     pytest.param(Functions.ContentAddressableMemory, philox_var, {'rate':RAND1, 'retrieval_prob':0.1, 'seed': module_seed},
                  np.zeros_like(philox_var),
+                 marks=pytest.mark.llvm_not_implemented,
                  id="ContentAddressableMemory Low Retrieval Philox"),
     pytest.param(Functions.ContentAddressableMemory, philox_var, {'rate':RAND1, 'storage_prob':0.01, 'seed': module_seed},
                  np.zeros_like(philox_var),
+                 marks=pytest.mark.llvm_not_implemented,
                  id="ContentAddressableMemory Low Storage Philox"),
     pytest.param(Functions.ContentAddressableMemory, philox_var, {'rate':RAND1, 'retrieval_prob':0.98, 'storage_prob':0.98, 'seed': module_seed},
                  [philox_var[0], philox_var[1]],
+                 marks=pytest.mark.llvm_not_implemented,
                  id="ContentAddressableMemory High Storage/Retrieval Philox"),
     pytest.param(Functions.ContentAddressableMemory, philox_var, {'initializer':philox_initializer, 'rate':RAND1, 'seed': module_seed},
                  [philox_var[0], philox_var[1]],
+                 marks=pytest.mark.llvm_not_implemented,
                  id="ContentAddressableMemory Initializer Philox"),
 ]
 
@@ -134,11 +144,6 @@ test_data = [
 @pytest.mark.benchmark
 @pytest.mark.parametrize("func, variable, params, expected", test_data)
 def test_basic(func, variable, params, expected, benchmark, func_mode):
-    if func is Functions.Buffer and func_mode != 'Python':
-        pytest.skip("Not implemented")
-    if func is Functions.ContentAddressableMemory and func_mode != 'Python':
-        pytest.skip("Not implemented")
-
     benchmark.group = func.componentName
     f = func(default_variable=variable, **params)
     if variable is philox_var:
@@ -153,6 +158,7 @@ def test_basic(func, variable, params, expected, benchmark, func_mode):
     # "duplicate_keys"
     if len(variable) == 2:
         EX([variable[0], variable[1] * 4])
+
     res = benchmark(EX, variable)
 
     # This still needs to use "allclose" as the key gets manipulated before

@@ -29,27 +29,24 @@ import numbers
 import warnings
 from collections import deque
 
-from psyneulink._typing import Callable, List, Literal
+from psyneulink._typing import Callable, List, Literal, Mapping, Optional, Union
 
 import numpy as np
 from beartype import beartype
-
-from typing import Optional, Union
-# from psyneulink._typing import
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, FunctionError, _random_state_getter, _seed_setter, EPSILON, _noise_setter
 )
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance
-from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
+from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot, ARG_MIN, ARG_MIN_INDICATOR
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
 from psyneulink.core.components.functions.stateful.integratorfunctions import StatefulFunction
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, \
     ContentAddressableMemory_FUNCTION, DictionaryMemory_FUNCTION, \
-    MIN_INDICATOR, MULTIPLICATIVE_PARAM, NEWEST, NOISE, OLDEST, OVERWRITE, RATE, RANDOM, SINGLE, WEIGHTED
+    MIN_INDICATOR, MIN_VAL, MULTIPLICATIVE_PARAM, NEWEST, NOISE, OLDEST, OVERWRITE, RATE, RANDOM, SINGLE, WEIGHTED
 from psyneulink.core.globals.parameters import Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import \
@@ -253,8 +250,8 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                  history:Optional[int]=None,
                  # history: Optional[int] = None,
                  initializer=None,
-                 params: Optional[dict] = None,
-                 # params: Optional[dict] = None,
+                 params: Optional[Mapping] = None,
+                 # params: Optional[Mapping] = None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None
                  ):
@@ -2035,7 +2032,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         specifies the function used during retrieval to compare the first item in `variable
         <DictionaryMemory.variable>` with keys in `memory <DictionaryMemory.memory>`.
 
-    selection_function : OneHot or function : default OneHot(mode=MIN_VAL)
+    selection_function : OneHot or function : default OneHot(mode=ARG_MIN_VAL)
         specifies the function used during retrieval to evaluate the distances returned by `distance_function
         <DictionaryMemory.distance_function>` and select the item to return.
 
@@ -2105,7 +2102,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         function used during retrieval to compare the first item in `variable <DictionaryMemory.variable>`
         with keys in `memory <DictionaryMemory.memory>`.
 
-    selection_function : OneHot or function : default OneHot(mode=MIN_VAL)
+    selection_function : OneHot or function : default OneHot(mode=ARG_MIN_VAL)
         function used during retrieval to evaluate the distances returned by `distance_function
         <DictionaryMemory.distance_function>` and select the item(s) to return.
 
@@ -2224,7 +2221,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
                 selection_function
                     see `selection_function <DictionaryMemory.selection_function>`
 
-                    :default value: `OneHot`(mode=MIN_INDICATOR)
+                    :default value: `OneHot`(mode=ARG_MIN_INDICATOR)
                     :type: `Function`
 
                 storage_prob
@@ -2287,6 +2284,8 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
             retrieval_prob=retrieval_prob,
             storage_prob=storage_prob,
             initializer=initializer,
+            distance_function=distance_function,
+            selection_function=selection_function,
             duplicate_keys=duplicate_keys,
             equidistant_keys_select=equidistant_keys_select,
             rate=rate,
@@ -2400,6 +2399,19 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
                 b.call(distance_f, [distance_params, distance_state,
                                     distance_arg_in, distance_arg_out])
 
+            # MODIFIED 10/13/24 NEW:
+            # IMPLEMENTATION NOTE:
+            #  REPLACE MIN_VAL with ARG_MIN and MIN_INDICATOR with ARG_MIN_INDICATOR
+            #    until the MIN_XXX args are implemented in LLVM
+            #  since, at present, the tests don't seem to distinguish between these (i.e., return of multiple values;
+            #  should add tests that do so once MIN_VAL and related args are implemented in LLVM)
+            if isinstance(self.selection_function, OneHot):
+                mode = self.selection_function.mode
+                if mode == MIN_VAL:
+                    self.selection_function.mode = ARG_MIN
+                elif mode == MIN_INDICATOR:
+                    self.selection_function.mode = ARG_MIN_INDICATOR
+            # MODIFIED 10/13/24 END
             selection_f = ctx.import_llvm_function(self.selection_function)
             selection_params, selection_state = ctx.get_param_or_state_ptr(builder, self, "selection_function", param_struct_ptr=params, state_struct_ptr=state)
             selection_arg_out = builder.alloca(selection_f.args[3].type.pointee)

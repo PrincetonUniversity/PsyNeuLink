@@ -2897,7 +2897,7 @@ import toposort
 from PIL import Image
 from beartype import beartype
 
-from psyneulink._typing import Optional, Union, Literal, Type, Callable, List, Set
+from psyneulink._typing import Callable, Literal, List, Mapping, Optional, Set, Type, Union
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentError, ComponentsMeta
@@ -11516,7 +11516,7 @@ _
     def learn(
             self,
             inputs: dict,
-            targets: Optional[dict] = None,
+            targets: Optional[Mapping] = None,
             num_trials: Optional[int] = None,
             epochs: int = 1,
             learning_rate: Optional[Union[int,float]]=None,

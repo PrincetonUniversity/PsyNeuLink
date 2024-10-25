@@ -25,7 +25,7 @@ import warnings
 import numpy as np
 from beartype import beartype
 
-from psyneulink._typing import Optional
+from psyneulink._typing import Mapping, Optional
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility, _has_initializers_setter, ComponentsMeta
@@ -235,7 +235,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                  rate=None,
                  noise=None,
                  initializer=None,
-                 params: Optional[dict] = None,
+                 params: Optional[Mapping] = None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None,
                  context=None,
