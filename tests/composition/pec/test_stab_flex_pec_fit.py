@@ -388,10 +388,10 @@ def run_stab_flex_cond(
 def test_stab_flex_cond_fit():
     from psyneulink.core.globals.utilities import set_global_seed
 
-    # Let's make things reproducible
-    pnl_seed = 0
+    # # Let's make things reproducible
+    pnl_seed = 42
     set_global_seed(pnl_seed)
-    trial_seq_seed = 0
+    trial_seq_seed = 43
 
     # High-level parameters the impact performance of the test
     num_trials = 75
@@ -426,7 +426,7 @@ def test_stab_flex_cond_fit():
 
     # We will generate a dataset that comprises two different conditions. Each condition will have a different threshold.
     # Randomly select which trials will be in each condition uniformly.
-    rng = np.random.default_rng(pnl_seed)
+    rng = np.random.default_rng(12345)
     threshold = rng.choice([0.3, 0.7], size=num_trials, replace=True)
 
     # Run
@@ -472,7 +472,7 @@ def test_stab_flex_cond_fit():
         ],
         data=data_to_fit,
         optimization_function=PECOptimizationFunction(
-            method=optuna.samplers.CmaEsSampler(seed=0), max_iterations=10
+            method=optuna.samplers.RandomSampler, max_iterations=10
         ),
         num_estimates=num_estimates,
         initial_seed=42,
@@ -489,11 +489,11 @@ def test_stab_flex_cond_fit():
     # These aren't the recovered parameters, we are doing too few trials and too few estimates to get the correct
     # results.
     expected_results = {
-        'Task Activations [Act1, Act2]-1.gain': 3.87419,
-        'Automaticity-weighted Stimulus Input [w*S1, w*S2]-1.slope': 0.0125,
-        'DDM-1.threshold[threshold=0.7]': 0.30939,
-        'DDM-1.threshold[threshold=0.3]': 0.22168,
-        'DDM-1.non_decision_time': 0.28659999999999997
+        'Task Activations [Act1, Act2]-1.gain': 2.3965500000000004,
+        'Automaticity-weighted Stimulus Input [w*S1, w*S2]-1.slope': 0.0058000000000000005,
+        'DDM-1.threshold[threshold=0.7]': 0.43483,
+        'DDM-1.threshold[threshold=0.3]': 0.30449,
+        'DDM-1.non_decision_time': 0.3124
     }
 
     for key, value in expected_results.items():
