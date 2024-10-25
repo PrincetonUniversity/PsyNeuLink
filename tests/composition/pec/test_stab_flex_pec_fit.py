@@ -1,7 +1,6 @@
 import psyneulink as pnl
 
 import optuna
-import pytest
 
 from psyneulink.core.components.functions.nonstateful.fitfunctions import (
     PECOptimizationFunction,
