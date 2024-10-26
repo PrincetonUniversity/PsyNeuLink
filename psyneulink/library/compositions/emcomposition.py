@@ -7,6 +7,7 @@
 
 
 # ********************************************* EMComposition *************************************************
+#
 # TODO:
 # - QUESTION:
 #   - SHOULD differential of SoftmaxGainControl Node be included in learning?
