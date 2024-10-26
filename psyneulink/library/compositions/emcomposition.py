@@ -1014,7 +1014,7 @@ from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     (ADAPTIVE, ALL, AUTO, CONTEXT, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, EM_COMPOSITION, FULL_CONNECTIVITY_MATRIX,
-     GAIN, IDENTITY_MATRIX, MAX_INDICATOR, MULTIPLICATIVE_PARAM, NAME, PARAMS, PROB_INDICATOR, PRODUCT, PROJECTIONS,
+     GAIN, IDENTITY_MATRIX, MULTIPLICATIVE_PARAM, NAME, PARAMS, PROB_INDICATOR, PRODUCT, PROJECTIONS,
      RANDOM, SIZE, VARIABLE)
 from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric_scalar
 from psyneulink.core.globals.registry import name_without_suffix
