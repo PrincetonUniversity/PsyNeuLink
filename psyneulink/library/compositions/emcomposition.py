@@ -1279,7 +1279,7 @@ class EMComposition(AutodiffComposition):
 
     .. _EMComposition_Nodes:
 
-    query_input_nodes : list[TransferMechanism]
+    query_input_nodes : list[ProcessingMechanism]
         `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receive keys used to determine the item
         to be retrieved from `memory <EMComposition.memory>`, and then themselves stored in `memory
         <EMComposition.memory>` (see `Match memories by field <EMComposition_Processing>` for additional details).
@@ -1287,29 +1287,29 @@ class EMComposition(AutodiffComposition):
         however, if `field_names <EMComposition.field_names>` is specified, then the name of each query_input_node
         is assigned the corresponding field name appended with * [QUERY]*.
 
-    value_input_nodes : list[TransferMechanism]
+    value_input_nodes : list[ProcessingMechanism]
         `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receive values to be stored in `memory
         <EMComposition.memory>`; these are not used in the matching process used for retrieval.  By default these
         are assigned the name *VALUE_n_INPUT* where n is the field number (starting from 0);  however, if
         `field_names <EMComposition.field_names>` is specified, then the name of each value_input_node is assigned
         the corresponding field name appended with * [VALUE]*.
 
-    input_nodes : list[TransferMechanism]
+    input_nodes : list[ProcessingMechanism]
         Full list of `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` ordered with query_input_nodes first
         followed by value_input_nodes; used primarily for internal computations
 
-    input_nodes_by_fields : list[TransferMechanism]
+    input_nodes_by_fields : list[ProcessingMechanism]
         Full list of `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` in the same order specified in the
         **field_names** argument of the constructor and in `self.field_names <EMComposition.field_names>`.
 
-    concatenate_keys_node : TransferMechanism
-        `TransferMechanism` that concatenates the inputs to `query_input_nodes <EMComposition.query_input_nodes>` into a
+    concatenate_keys_node : ProcessingMechanism
+        `ProcessingMechanism` that concatenates the inputs to `query_input_nodes <EMComposition.query_input_nodes>` into a
         single vector used for the matching processing if `concatenate keys <EMComposition.concatenate_keys>` is True.
         This is not created if the **concatenate_keys** argument to the EMComposition's constructor is False or is
         overridden (see `concatenate_keys <EMComposition_Concatenate_Keys>`), or there is only one query_input_node.
 
-    match_nodes : list[TransferMechanism]
-        `TransferMechanisms <TransferMechanism>` that receive the dot product of each key and those stored in
+    match_nodes : list[ProcessingMechanism]
+        `ProcessingMechanisms <ProcessingMechanism>` that receive the dot product of each key and those stored in
         the corresponding field of `memory <EMComposition.memory>` (see `Match memories by field
         <EMComposition_Processing>` for additional details).  These are assigned names that prepend *MATCH_n* to the
         name of the corresponding `query_input_nodes <EMComposition.query_input_nodes>`.
@@ -1320,8 +1320,8 @@ class EMComposition(AutodiffComposition):
         `softmax_gain <EMComposition.softmax_gain>` is specified as *CONTROL* (see `softmax_gain
         <EMComposition_Softmax_Gain>` for details).
 
-    softmax_nodes : list[TransferMechanism]
-        `TransferMechanisms <TransferMechanism>` that compute the softmax over the vectors received
+    softmax_nodes : list[ProcessingMechanism]
+        `ProcessingMechanisms <ProcessingMechanism>` that compute the softmax over the vectors received
         from the corresponding `match_nodes <EMComposition.match_nodes>` (see `Softmax normalize matches over fields
         <EMComposition_Processing>` for additional details).
 
@@ -1350,8 +1350,8 @@ class EMComposition(AutodiffComposition):
         only if `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` is True and more than one
         `key field <EMComposition_Fields>` is specified (see `Fields <EMComposition_Fields>` for additional details).
 
-    combined_softmax_node : TransferMechanism
-        `TransferMechanism` that receives the softmax normalized dot products of the keys and memories
+    combined_softmax_node : ProcessingMechanism
+        `ProcessingMechanism` that receives the softmax normalized dot products of the keys and memories
         from the `softmax_nodes <EMComposition.softmax_nodes>`, weighted by the `field_weights_nodes
         <EMComposition.field_weights_nodes>` if more than one `key field <EMComposition_Fields>` is specified
         (or `retrieval_gating_nodes <EMComposition.retrieval_gating_nodes>` if `use_gating_for_weighting
@@ -1359,8 +1359,8 @@ class EMComposition(AutodiffComposition):
         retrieve the corresponding memory for each field from `memory <EMComposition.memory>` (see `Retrieve values by
         field <EMComposition_Processing>` for additional details).
 
-    retrieved_nodes : list[TransferMechanism]
-        `TransferMechanisms <TransferMechanism>` that receive the vector retrieved for each field in `memory
+    retrieved_nodes : list[ProcessingMechanism]
+        `ProcessingMechanisms <ProcessingMechanism>` that receive the vector retrieved for each field in `memory
         <EMComposition.memory>` (see `Retrieve values by field <EMComposition_Processing>` for additional details);
         these are assigned the same names as the `query_input_nodes <EMComposition.query_input_nodes>` and
         `value_input_nodes <EMComposition.value_input_nodes>` to which they correspond appended with the suffix
@@ -1701,10 +1701,11 @@ class EMComposition(AutodiffComposition):
 
         # Suppress warnings for no efferent Projections
         for node in self.value_input_nodes:
-            node.output_ports['RESULT'].parameters.require_projection_in_composition.set(False, override=True)
-        for port in self.combined_softmax_node.output_ports:
-            if 'RESULT' in port.name:
-                port.parameters.require_projection_in_composition.set(False, override=True)
+            node.output_port.parameters.require_projection_in_composition.set(False, override=True)
+        # for port in self.combined_softmax_node.output_ports:
+        #     if 'RESULT' in port.name:
+        #         port.parameters.require_projection_in_composition.set(False, override=True)
+        self.combined_softmax_node.output_port.parameters.require_projection_in_composition.set(False, override=True)
 
         # Suppress field_weight_nodes as INPUT nodes of the Composition
         for node in self.field_weight_nodes:
@@ -2122,10 +2123,10 @@ class EMComposition(AutodiffComposition):
             f"PROGRAM ERROR: number of keys ({self.num_keys}) does not match number of " \
             f"non-zero values in field_weights ({len(self.key_indices)})."
 
-        # query_input_nodes = [TransferMechanism(size=len(self.entry_template[self.key_indices[i]]),
+        # query_input_nodes = [ProcessingMechanism(size=len(self.entry_template[self.key_indices[i]]),
         #                                      name=f'{self.key_names[self.key_indices[i]]} [QUERY]')
         #                for i in range(self.num_keys)]
-        query_input_nodes = [TransferMechanism(size=len(self.entry_template[self.key_indices[i]]),
+        query_input_nodes = [ProcessingMechanism(size=len(self.entry_template[self.key_indices[i]]),
                                              name=f'{self.key_names[i]} [QUERY]')
                        for i in range(self.num_keys)]
 
@@ -2144,7 +2145,7 @@ class EMComposition(AutodiffComposition):
             f"PROGRAM ERROR: number of values ({self.num_values}) does not match number of " \
             f"non-zero values in field_weights ({len(value_indices)})."
 
-        value_input_nodes = [TransferMechanism(size=len(self.entry_template[value_indices[i]]),
+        value_input_nodes = [ProcessingMechanism(size=len(self.entry_template[value_indices[i]]),
                                                name= f'{self.value_names[i]} [VALUE]')
                            for i in range(self.num_values)]
 
@@ -2186,7 +2187,7 @@ class EMComposition(AutodiffComposition):
                               for i in range(memory_capacity)]).transpose()
             matrix = np.array(matrix.tolist())
             match_nodes = [
-                TransferMechanism(
+                ProcessingMechanism(
                     input_ports={NAME: 'CONCATENATED_INPUTS',
                                  SIZE: memory_capacity,
                                  PROJECTIONS: MappingProjection(sender=self.concatenate_keys_node,
@@ -2199,7 +2200,7 @@ class EMComposition(AutodiffComposition):
         # One node for each key
         else:
             match_nodes = [
-                TransferMechanism(
+                ProcessingMechanism(
                     input_ports= {
                         SIZE:memory_capacity,
                         PROJECTIONS: MappingProjection(sender=self.query_input_nodes[i].output_port,
@@ -2238,7 +2239,7 @@ class EMComposition(AutodiffComposition):
             # ARG_MAX_INDICATOR returns the entry unmodified
             softmax_choice = ARG_MAX_INDICATOR
 
-        softmax_nodes = [TransferMechanism(input_ports={SIZE:memory_capacity,
+        softmax_nodes = [ProcessingMechanism(input_ports={SIZE:memory_capacity,
                                                         PROJECTIONS: MappingProjection(
                                                             sender=match_node.output_port,
                                                             matrix=IDENTITY_MATRIX,
@@ -2347,7 +2348,7 @@ class EMComposition(AutodiffComposition):
         """Create nodes that report the value field(s) for the item(s) matched in memory.
         """
         self.retrieved_key_nodes = \
-            [TransferMechanism(input_ports={SIZE: len(self.query_input_nodes[i].variable[0]),
+            [ProcessingMechanism(input_ports={SIZE: len(self.query_input_nodes[i].variable[0]),
                                             PROJECTIONS:
                                                 MappingProjection(
                                                     sender=self.combined_softmax_node,
@@ -2358,7 +2359,7 @@ class EMComposition(AutodiffComposition):
              for i in range(self.num_keys)]
 
         self.retrieved_value_nodes = \
-            [TransferMechanism(input_ports={SIZE: len(self.value_input_nodes[i].variable[0]),
+            [ProcessingMechanism(input_ports={SIZE: len(self.value_input_nodes[i].variable[0]),
                                             PROJECTIONS:
                                                 MappingProjection(
                                                     sender=self.combined_softmax_node,
