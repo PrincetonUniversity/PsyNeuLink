@@ -9,8 +9,6 @@ from psyneulink.core.components.mechanisms.processing import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing import TransferMechanism
 from psyneulink.core.compositions.composition import Composition
 
-import psyneulink.core.llvm as pnlvm
-
 
 # default val is same shape as expected output
 # we only use param1 and param2 to avoid automatic shape changes of the variable

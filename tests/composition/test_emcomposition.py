@@ -1,21 +1,12 @@
-import logging
-import timeit as timeit
-import os
 import numpy as np
 
 import pytest
 
 import psyneulink as pnl
 
-from psyneulink.core.globals.keywords import AUTO, CONTROL, ALL, MAX_VAL, MAX_INDICATOR, PROB
+from psyneulink.core.globals.keywords import AUTO, CONTROL
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.library.compositions.emcomposition import EMComposition, EMCompositionError
-
-module_seed = 0
-np.random.seed(0)
-
-logger = logging.getLogger(__name__)
-
 
 # All tests are set to run. If you need to skip certain tests,
 # see http://doc.pytest.org/en/latest/skipping.html
