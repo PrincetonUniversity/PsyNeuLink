@@ -1,7 +1,6 @@
 import numpy as np
 import pytest
 
-import psyneulink.core.llvm as pnlvm
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 
 VECTOR_SIZE=4

@@ -4,7 +4,6 @@ import psyneulink as pnl
 import pytest
 
 import psyneulink.core.components.functions.nonstateful.transferfunctions
-import psyneulink.core.llvm as pnlvm
 
 class TestLCControlMechanism:
 

@@ -1,10 +1,10 @@
-import numpy as np
-import pytest
+#import numpy as np
+#import pytest
 
-from psyneulink.core.compositions.composition import Composition
-from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
-from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.core.globals.keywords import ENABLED, INPUT_LABELS_DICT, OUTPUT_LABELS_DICT
+#from psyneulink.core.compositions.composition import Composition
+#from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
+#from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+#from psyneulink.core.globals.keywords import ENABLED, INPUT_LABELS_DICT, OUTPUT_LABELS_DICT
 
 # FIX 5/8/20 ELIMINATE SYSTEM [JDC] -- CONVERTED TO COMPOSITION, BUT REQUIRE REFACTORING OF LABEL HANDLING
 # class TestMechanismInputLabels:
