@@ -993,11 +993,10 @@ Class Reference
 import numpy as np
 import graph_scheduler as gs
 import warnings
+
 import psyneulink.core.scheduling.condition as conditions
 
 from psyneulink._typing import Optional, Union
-
-# from psyneulink.library.compositions import torch_available
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax, LinearMatrix
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate, LinearCombination
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import ARG_MAX, ARG_MAX_INDICATOR
