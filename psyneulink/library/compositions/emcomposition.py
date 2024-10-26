@@ -1007,7 +1007,6 @@ from psyneulink.core.compositions.composition import CompositionError, NodeRole
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, torch_available
 from psyneulink.library.components.mechanisms.modulatory.learning.EMstoragemechanism import EMStorageMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
-from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
@@ -1702,9 +1701,6 @@ class EMComposition(AutodiffComposition):
         # Suppress warnings for no efferent Projections
         for node in self.value_input_nodes:
             node.output_port.parameters.require_projection_in_composition.set(False, override=True)
-        # for port in self.combined_softmax_node.output_ports:
-        #     if 'RESULT' in port.name:
-        #         port.parameters.require_projection_in_composition.set(False, override=True)
         self.combined_softmax_node.output_port.parameters.require_projection_in_composition.set(False, override=True)
 
         # Suppress field_weight_nodes as INPUT nodes of the Composition
