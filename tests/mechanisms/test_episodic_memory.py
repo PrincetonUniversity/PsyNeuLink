@@ -4,7 +4,6 @@ import pytest
 from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.functions.stateful.memoryfunctions import DictionaryMemory, \
     ContentAddressableMemory
-from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot, ARG_MIN
 from psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism import \
     EpisodicMemoryMechanism, EpisodicMemoryMechanismError
 

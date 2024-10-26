@@ -9,8 +9,7 @@ import pytest
 
 import psyneulink as pnl
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
-from psyneulink.core.components.functions.nonstateful.learningfunctions import \
-    LearningFunction, Reinforcement, BackPropagation, TDLearning
+from psyneulink.core.components.functions.nonstateful.learningfunctions import Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.nonstateful.optimizationfunctions import GridSearch
 from psyneulink.core.components.functions.nonstateful.transferfunctions import \
     Linear, Logistic, INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM
@@ -49,8 +48,6 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, P
 from psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism import LCControlMechanism
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     RecurrentTransferMechanism
-from psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism import \
-    EpisodicMemoryMechanism
 from psyneulink.library.compositions.emcomposition import EMComposition
 
 logger = logging.getLogger(__name__)
