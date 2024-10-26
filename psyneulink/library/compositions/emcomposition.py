@@ -12,7 +12,6 @@
 #   - SHOULD differential of SoftmaxGainControl Node be included in learning?
 #   - SHOULD MEMORY DECAY OCCUR IF STORAGE DOES NOT? CURRENTLY IT DOES NOT (SEE EMStorage Function)
 
-# - FIX: NAMING
 # - FIX: Concatenation:
 # -      LLVM for function and derivative
 # -      Add Concatenate to pytorchcreator_function
