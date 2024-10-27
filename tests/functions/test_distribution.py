@@ -4,7 +4,6 @@ import sys
 
 from packaging import version as pversion
 
-import psyneulink.core.llvm as pnlvm
 import psyneulink.core.components.functions.nonstateful.distributionfunctions as Functions
 from psyneulink.core.globals.utilities import _SeededPhilox
 

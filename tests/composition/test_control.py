@@ -5,7 +5,6 @@ import pytest
 
 import psyneulink as pnl
 from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, CONTROL, PROJECTIONS
-from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleIteratorError, SampleSpec
 from psyneulink.core.globals.utilities import _SeededPhilox
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \

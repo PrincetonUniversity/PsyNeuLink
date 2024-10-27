@@ -1,21 +1,12 @@
-import logging
-import timeit as timeit
-import os
 import numpy as np
 
 import pytest
 
 import psyneulink as pnl
 
-from psyneulink.core.globals.keywords import AUTO, CONTROL, ALL, MAX_VAL, MAX_INDICATOR, PROB
+from psyneulink.core.globals.keywords import AUTO, CONTROL
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.library.compositions.emcomposition import EMComposition, EMCompositionError
-
-module_seed = 0
-np.random.seed(0)
-
-logger = logging.getLogger(__name__)
-
 
 # All tests are set to run. If you need to skip certain tests,
 # see http://doc.pytest.org/en/latest/skipping.html
@@ -84,7 +75,7 @@ class TestConstruction:
                 [[0,2],[0,0,0],[0,0]]],  .1,    [1,1,0],   None,    None,  None,      2,      3,     2,   1,    False,),
         (12.3, [[[0,1],[0,0,0],[0,0]], # two entries specified, fields have same weights, but concatenate is False
                 [[0,2],[0,0,0],[0,0]]],  .1,    [1,1,0],   None,    None,  None,      2,      3,     2,   1,    False),
-        (13,   [[[0,1],[0,0,0],[0,0]], # two entries specified, fields have same weights, and concatenate_keys is True
+        (13,   [[[0,1],[0,0,0],[0,0]], # two entries specified, fields have same weights, and concatenate_queries is True
                 [[0,2],[0,0,0],[0,0]]],  .1,    [1,1,0],   True,    None,  None,      2,      3,     2,   1,    True),
         (14,   [[[0,1],[0,0,0],[0,0]], # two entries specified, all fields are keys
                 [[0,2],[0,0,0],[0,0]]],  .1,    [1,1,1],   None,    None,  None,      2,      3,     3,   0,    False),
@@ -100,7 +91,7 @@ class TestConstruction:
                 [[0,3],[0,0,0],[0,0]],
                 [[0,4],[0,0,0],[0,0]]],  .1,     [1,2,0],   None,    None,  None,      4,      3,     2,   1,    False),
     ]
-    args_names = "test_num, memory_template, memory_fill, field_weights, concatenate_keys, normalize_memories, " \
+    args_names = "test_num, memory_template, memory_fill, field_weights, concatenate_queries, normalize_memories, " \
                  "softmax_gain, repeat, num_fields, num_keys, num_values, concatenate_node"
     @pytest.mark.parametrize(args_names,
                              test_structure_data,
@@ -113,7 +104,7 @@ class TestConstruction:
                        memory_template,
                        memory_fill,
                        field_weights,
-                       concatenate_keys,
+                       concatenate_queries,
                        normalize_memories,
                        softmax_gain,
                        repeat,
@@ -142,8 +133,8 @@ class TestConstruction:
             params.update({'memory_fill': memory_fill})
         if field_weights is not None:
             params.update({'field_weights': field_weights})
-        if concatenate_keys is not None:
-            params.update({'concatenate_keys': concatenate_keys})
+        if concatenate_queries is not None:
+            params.update({'concatenate_queries': concatenate_queries})
             # FIX: DELETE THE FOLLOWING ONCE CONCATENATION IS IMPLEMENTED FOR LEARNING
             params.update({'enable_learning': False})
         if normalize_memories is not None:
@@ -191,8 +182,8 @@ class TestConstruction:
         # Validate node structure
         assert len(em.query_input_nodes) == num_keys
         assert len(em.value_input_nodes) == num_values
-        assert isinstance(em.concatenate_keys_node, Mechanism) == concatenate_node
-        if em.concatenate_keys:
+        assert isinstance(em.concatenate_queries_node, Mechanism) == concatenate_node
+        if em.concatenate_queries:
             assert em.field_weight_nodes == []
             assert bool(softmax_gain == CONTROL) == bool(len(em.softmax_gain_control_nodes))
         else:
@@ -362,7 +353,7 @@ class TestExecution:
 ]
 
     args_names = "test_num, memory_template, memory_fill, memory_capacity, memory_decay_rate, field_weights, " \
-                 "concatenate_keys, normalize_memories, softmax_gain, storage_prob, inputs, expected_retrieval"
+                 "concatenate_queries, normalize_memories, softmax_gain, storage_prob, inputs, expected_retrieval"
     @pytest.mark.parametrize(args_names,
                              test_execution_data,
                              ids=[x[0] for x in test_execution_data])
@@ -378,7 +369,7 @@ class TestExecution:
                                                memory_fill,
                                                memory_decay_rate,
                                                field_weights,
-                                               concatenate_keys,
+                                               concatenate_queries,
                                                normalize_memories,
                                                softmax_gain,
                                                storage_prob,
@@ -404,8 +395,8 @@ class TestExecution:
             params.update({'memory_decay_rate': memory_decay_rate})
         if field_weights is not None:
             params.update({'field_weights': field_weights})
-        if concatenate_keys is not None:
-            params.update({'concatenate_keys': concatenate_keys})
+        if concatenate_queries is not None:
+            params.update({'concatenate_queries': concatenate_queries})
             # FIX: DELETE THE FOLLOWING ONCE CONCATENATION IS IMPLEMENTED FOR LEARNING
             params.update({'enable_learning': False})
         if normalize_memories is not None:
@@ -483,7 +474,7 @@ class TestExecution:
                            memory_capacity=4,
                            softmax_gain=100,
                            memory_fill=(0,.001),
-                           concatenate_keys=concatenate,
+                           concatenate_queries=concatenate,
                            enable_learning=learning,
                            use_storage_node=use_storage_node)
 
@@ -507,7 +498,7 @@ class TestExecution:
             if concatenate:
                 with pytest.raises(EMCompositionError) as error:
                     em.learn(inputs=inputs, execution_mode=exec_mode)
-                assert "EMComposition does not support learning with 'concatenate_keys'=True." in str(error.value)
+                assert "EMComposition does not support learning with 'concatenate_queries'=True." in str(error.value)
 
             else:
                 # if exec_mode == pnl.ExecutionMode.Python:

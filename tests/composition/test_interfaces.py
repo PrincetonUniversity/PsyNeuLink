@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-import psyneulink.core.llvm as pnlvm
+import psyneulink as pnl
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity, Linear
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
@@ -179,7 +179,7 @@ class TestConnectCompositionsViaCIMS:
         # output = 180.0
         comp3.run(inputs={comp1: [[5.]]}, execution_mode=comp_mode)
         np.testing.assert_allclose(comp3.results, [[[180.0]]])
-        if comp_mode is pnlvm.ExecutionMode.Python:
+        if comp_mode is pnl.ExecutionMode.Python:
             np.testing.assert_allclose(comp1.output_port.parameters.value.get(comp3), [30.0])
             np.testing.assert_allclose(comp2.output_port.parameters.value.get(comp3), [180.0])
             np.testing.assert_allclose(comp3.output_port.parameters.value.get(comp3), [180.0])
@@ -242,7 +242,7 @@ class TestConnectCompositionsViaCIMS:
         )
 
         np.testing.assert_allclose(output, [[180.], [1800.]])
-        if comp_mode is pnlvm.ExecutionMode.Python:
+        if comp_mode is pnl.ExecutionMode.Python:
             np.testing.assert_allclose(inner_composition_1.get_output_values(outer_composition), [[30.], [300.]])
             np.testing.assert_allclose(inner_composition_2.get_output_values(outer_composition), [[180.], [1800.]])
             np.testing.assert_allclose(outer_composition.get_output_values(outer_composition), [[180.], [1800.]])
@@ -312,7 +312,7 @@ class TestConnectCompositionsViaCIMS:
         )
         np.testing.assert_allclose(output, [[36.]])
 
-        if comp_mode is pnlvm.ExecutionMode.Python:
+        if comp_mode is pnl.ExecutionMode.Python:
             np.testing.assert_allclose(A.get_output_values(outer_composition), [[1.0]])
             np.testing.assert_allclose(B.get_output_values(outer_composition), [[2.0]])
             np.testing.assert_allclose(C.get_output_values(outer_composition), [[9.0]])

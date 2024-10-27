@@ -5,7 +5,6 @@ import itertools
 import numpy as np
 import pytest
 import re
-import sys
 import types
 
 import graph_scheduler as gs
