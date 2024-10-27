@@ -2024,19 +2024,19 @@ class EMComposition(AutodiffComposition):
                                                              self.concatenate_queries_node,
                                                              memory_decay_rate, storage_prob)
 
-        # Do some validation and get singleton Nodes for concatenated keys
+        # Do some validation and get singleton softmax and match Nodes for concatenated queries
         if self.concatenate_queries:
             softmax_node = self.softmax_nodes.pop()
             assert not self.softmax_nodes, \
-                f"PROGRAM ERROR: Too many softmax_nodes ({len(self.softmax_nodes)}) for concatenated keys."
+                f"PROGRAM ERROR: Too many softmax_nodes ({len(self.softmax_nodes)}) for concatenated queries."
             assert len(self.softmax_gain_control_nodes) <= 1, \
                 (f"PROGRAM ERROR: Too many softmax_gain_control_nodes "
-                 f"{len(self.softmax_gain_control_nodes)}) for concatenated keys.")
+                 f"{len(self.softmax_gain_control_nodes)}) for concatenated queries.")
             match_node = self.match_nodes.pop()
-            assert not self.softmax_nodes, \
-                f"PROGRAM ERROR: Too many match_nodes ({len(self.match_nodes)}) for concatenated keys."
+            assert not self.match_nodes, \
+                f"PROGRAM ERROR: Too many match_nodes ({len(self.match_nodes)}) for concatenated queries."
             assert not self.field_weight_nodes, \
-                f"PROGRAM ERROR: There should be no field_weight_nodes for concatenated keys."
+                f"PROGRAM ERROR: There should be no field_weight_nodes for concatenated queries."
 
         # Construct Pathways --------------------------------------------------------------------------------
 
