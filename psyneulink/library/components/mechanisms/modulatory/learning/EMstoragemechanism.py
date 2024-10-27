@@ -282,7 +282,7 @@ class EMStorageMechanism(LearningMechanism):
 
     concatenation_node : OutputPort or Mechanism : default None
         specifies the `OutputPort` or `Mechanism` in which the `value <OutputPort.value>` of the `key fields
-        <EMStorageMechanism_Fields>` are concatenated (see `concatenate keys <EMComposition_Concatenate_Keys>`
+        <EMStorageMechanism_Fields>` are concatenated (see `concatenate keys <EMComposition_Concatenate_Queries>`
         for additional details).
 
     memory_matrix : List or 2d np.array : default None
@@ -657,12 +657,12 @@ class EMStorageMechanism(LearningMechanism):
                                               f"the same number of items as its 'fields' arg ({len(fields)}).")
 
         num_keys = len([i for i in field_types if i==1])
-        concatenate_keys = 'concatenation_node' in request_set and request_set['concatenation_node'] is not None
+        concatenate_queries = 'concatenation_node' in request_set and request_set['concatenation_node'] is not None
 
         # Ensure the number of learning_signals is equal to the number of fields + number of keys
         if LEARNING_SIGNALS in request_set:
             learning_signals = request_set[LEARNING_SIGNALS]
-            if concatenate_keys:
+            if concatenate_queries:
                 num_match_fields = 1
             else:
                 num_match_fields = num_keys
@@ -674,7 +674,7 @@ class EMStorageMechanism(LearningMechanism):
         # Ensure shape of learning_signals matches shapes of matrices for match nodes (i.e., either keys or concatenate)
         for i, learning_signal in enumerate(learning_signals[:num_match_fields]):
             learning_signal_shape = learning_signal.parameters.matrix._get(context).shape
-            if concatenate_keys:
+            if concatenate_queries:
                 memory_matrix_field_shape = np.array([np.concatenate(row, dtype=object).flatten()
                                                       for row in memory_matrix[:,0:num_keys]]).T.shape
             else:
