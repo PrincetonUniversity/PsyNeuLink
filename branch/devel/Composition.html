@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.15.1.0+376.g04e9a5950 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.15.1.0+377.g529c967cb documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+376
+                  0.15.1.0+377
                 </div>
               
             
@@ -3948,6 +3948,14 @@ unless otherwise noted.</p>
 <dt>ORIGIN:</dt><dd><ul class="simple">
 <li><p>all Nodes that are in first consideration_set (i.e., self.scheduler.consideration_queue[0]).</p></li>
 </ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>this takes account of any Projections designated as feedback by graph_processing
+(i.e., self.graph.comp_to_vertex[efferent].feedback == EdgeType.FEEDBACK)</p></li>
+<li><p>these will all be assigined afferent Projections from Composition.input_CIM</p></li>
+</ul>
+</div>
 </dd>
 <dt>INPUT:</dt><dd><ul class="simple">
 <li><p>all Nodes that have no incoming edges in this composition,
@@ -4071,6 +4079,22 @@ therefore, might be worth allowing TARGET_MECHANISM to be assigned as OUTPUT</p>
 </div></blockquote>
 </li>
 </ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>this insures that for cases in which there are nested CYCLES
+(e.g., LearningMechanisms for a <code class="xref any docutils literal notranslate"><span class="pre">learning</span> <span class="pre">Pathway</span></code>),
+only the Node in the <em>outermost</em> CYCLE that is specified as a FEEDBACK_SENDER
+is assigned as a TERMINAL Node
+(i.e., the LearningMechanism responsible for the <em>first</em> <a class="reference internal" href="#composition-learning-components"><span class="std std-ref">learned Projection;</span></a> in the <code class="xref any docutils literal notranslate"><span class="pre">learning</span> <span class="pre">Pathway</span></code>)</p></li>
+<li><p>an ObjectiveMechanism assigned CONTROLLER_OBJECTIVE is prohibited since it and the Composition’s
+<a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a> are executed outside of (either before or after)
+all of the other Components of the Composition, as managed directly by the scheduler;</p></li>
+<li><p><a class="reference internal" href="#composition-execution"><span class="std std-ref">Execution of a `Composition</span></a> always ends with a <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.TERMINAL" title="psyneulink.core.compositions.composition.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TERMINAL</span></code></a> Node,
+although some <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.TERMINAL" title="psyneulink.core.compositions.composition.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TERMINAL</span></code></a> Nodes may execute earlier (i.e., if they belong to a <a class="reference internal" href="Pathway.html"><span class="doc">Pathway</span></a> that
+is shorter than the longest one in the Composition).</p></li>
+</ul>
+</div>
 </dd>
 </dl>
 </dd></dl>

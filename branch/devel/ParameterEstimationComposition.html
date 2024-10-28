@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ParameterEstimationComposition &mdash; PsyNeuLink 0.15.1.0+376.g04e9a5950 documentation</title>
+  <title>ParameterEstimationComposition &mdash; PsyNeuLink 0.15.1.0+377.g529c967cb documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+376
+                  0.15.1.0+377
                 </div>
               
             
@@ -509,6 +509,15 @@ If it is None (the default), then either the number of <strong>inputs</strong> o
 the ParameterEstimationComposition’s <code class="xref any docutils literal notranslate"><span class="pre">run</span></code> method used to determine the
 number of trials executed (see <a class="reference internal" href="Composition.html#composition-execution-num-trials"><span class="std std-ref">number of trials</span></a> for additional
 information).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <strong>num_trials_per_estimate</strong> is distinct from the <strong>num_trials</strong> argument of the
+ParameterEstimationComposition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method.  The latter determines how many full fits
+of the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a> are carried out (that is, how many times the
+ParameterEstimationComposition <em>itself</em> is run), whereas <strong>num_trials_per_estimate</strong> determines how many
+trials are run for a given combination of <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameter</span></code></a> values
+<em>within</em> each fit.</p>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>int or None</p>
