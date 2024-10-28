@@ -238,7 +238,7 @@ class TestConstruction:
 
         em = EMComposition(memory_template=[[[1,.1,.1]], [[.1,1,.1]], [[.1,.1,1]]])
         for softmax_choice in [pnl.ARG_MAX, pnl.PROBABILISTIC]:
-            with pytest.raises(pnl.EMCompositionError) as error_text:
+            with pytest.raises(EMCompositionError) as error_text:
                 em.parameters.softmax_choice.set(softmax_choice)
                 em.learn()
             assert (f"The ARG_MAX and PROBABILISTIC options for the 'softmax_choice' arg "
@@ -262,7 +262,7 @@ class TestConstruction:
                            f"'loss_spec' used for learning requires values to be between 0 and 1.")
         assert warning_msg in str(warning[0].message)
 
-        with pytest.raises(pnl.EMCompositionError) as error_text:
+        with pytest.raises(EMCompositionError) as error_text:
             em.learn()
         assert (f"The 'loss_spec' arg of 'EM_Composition' is set to 'BINARY_CROSS_ENTROPY' with "
                 f"'normalize_field_weights' set to False; this must be True to use this loss_spec."
