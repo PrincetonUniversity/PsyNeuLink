@@ -256,6 +256,7 @@ class TestConstruction:
         with pytest.warns(UserWarning) as warning:
             em = EMComposition(normalize_field_weights=False,
                                enable_learning=True,
+                               memory_fill=(0,.1),
                                loss_spec=pnl.Loss.BINARY_CROSS_ENTROPY)
             warning_msg = (f"The 'normalize_field_weights' arg of 'EM_Composition' is set to False with "
                            f"'enable_learning' set to True (or a list); this may generate an error if the "
@@ -263,11 +264,8 @@ class TestConstruction:
         assert warning_msg in str(warning[0].message)
 
         with pytest.raises(EMCompositionError) as error_text:
-            em = EMComposition(normalize_field_weights=False,
-                               enable_learning=True,
-                               loss_spec=pnl.Loss.BINARY_CROSS_ENTROPY)
             em.learn()
-        assert (f"The 'loss_spec' arg of 'EM_Composition-1' is set to 'BINARY_CROSS_ENTROPY' with "
+        assert (f"The 'loss_spec' arg of 'EM_Composition' is set to 'BINARY_CROSS_ENTROPY' with "
                 f"'normalize_field_weights' set to False; this must be True to use this loss_spec."
                 in str(error_text.value))
 
