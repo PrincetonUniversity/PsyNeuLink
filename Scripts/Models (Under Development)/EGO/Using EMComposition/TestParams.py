@@ -46,6 +46,7 @@ model_params = dict(
     # learn_field_weights = True,
     learn_field_weights = False,
     loss_spec = Loss.BINARY_CROSS_ENTROPY,
+    # loss_spec = Loss.CROSS_ENTROPY,
     # loss_spec = Loss.MSE,
     learning_rate = .5,
     num_optimization_steps = 10,
