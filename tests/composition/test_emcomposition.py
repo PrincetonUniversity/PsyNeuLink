@@ -263,8 +263,11 @@ class TestConstruction:
         assert warning_msg in str(warning[0].message)
 
         with pytest.raises(EMCompositionError) as error_text:
+            em = EMComposition(normalize_field_weights=False,
+                               enable_learning=True,
+                               loss_spec=pnl.Loss.BINARY_CROSS_ENTROPY)
             em.learn()
-        assert (f"The 'loss_spec' arg of 'EM_Composition' is set to 'BINARY_CROSS_ENTROPY' with "
+        assert (f"The 'loss_spec' arg of 'EM_Composition-1' is set to 'BINARY_CROSS_ENTROPY' with "
                 f"'normalize_field_weights' set to False; this must be True to use this loss_spec."
                 in str(error_text.value))
 
