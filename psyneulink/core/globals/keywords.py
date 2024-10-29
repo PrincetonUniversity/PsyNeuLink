@@ -509,6 +509,8 @@ PARAMETER = 'parameter'
 RANDOM = 'random'
 BEFORE = 'before'
 AFTER = 'after'
+LOW = 'low'
+HIGH = 'high'
 OLDEST = 'oldest'
 NEWEST = 'newest'
 FULL = 'full'
@@ -1078,8 +1080,6 @@ OVERWRITE = 'overwrite'
 RESET = "reset"
 RESET_STATEFUL_FUNCTION_WHEN = "reset_stateful_function_when"
 
-LOW = 'low'
-HIGH = 'high'
 BOUNDS = 'bounds'
 MODE = 'mode'
 REST = "rest"

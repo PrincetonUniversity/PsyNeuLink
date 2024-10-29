@@ -40,17 +40,18 @@ from psyneulink.core.globals.keywords import \
      MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL,
      MIN_ABS_INDICATOR, MIN_ABS_VAL, MIN_INDICATOR, MIN_VAL,
      MODE, ONE_HOT_FUNCTION, PREFERENCE_SET_NAME, PROB, PROB_INDICATOR,
-     SELECTION_FUNCTION_TYPE)
+     ALL, LOW, HIGH, RANDOM, SELECTION_FUNCTION_TYPE)
 
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, ValidPrefSet
 
-options = [ ARG_MAX, ARG_MAX_ABS, ARG_MAX_INDICATOR, ARG_MAX_ABS_INDICATOR,
-            MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
-            ARG_MIN,  ARG_MIN_ABS, ARG_MIN_INDICATOR, ARG_MIN_ABS_INDICATOR,
-            MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR,
-            PROB, PROB_INDICATOR]
+mode_options = [ ARG_MAX, ARG_MAX_ABS, ARG_MAX_INDICATOR, ARG_MAX_ABS_INDICATOR,
+                 MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
+                 ARG_MIN,  ARG_MIN_ABS, ARG_MIN_INDICATOR, ARG_MIN_ABS_INDICATOR,
+                 MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR,
+                 PROB, PROB_INDICATOR]
+tie_options = [ALL, LOW, HIGH, RANDOM]
 
 # FIX: IMPLEMENT AS Functions
 def max_vs_next(x):
@@ -78,6 +79,7 @@ class OneHot(SelectionFunction):
     OneHot(                \
          default_variable, \
          mode=MAX_VAL,     \
+         tie_index=ALL,    \
          params=None,      \
          owner=None,       \
          name=None,        \
@@ -90,7 +92,7 @@ class OneHot(SelectionFunction):
          refactor to have four parameters: (can continue to use KEYWORDS INTERNALLY and for LLVM)
          extremum: max/min
          value: scalar/indicator
-         ties: lowest/highest/all (re: indices)
+         ties: low/high/all/random (re: indices)
          prob: True/False (if True, ties are resolved probabilistically)
     COMMENT
 
@@ -112,17 +114,17 @@ class OneHot(SelectionFunction):
         * *ARG_MAX_ABS_INDICATOR*: 1 in place of single element with maximum absolute value,
           or the one with lowest index if there are ties.
 
-        * *MAX_VAL*: signed value of the element with the maximum signed value,
-          or all elements with the maximum value if there are ties.
+        * *MAX_VAL*: signed value of the element with the maximum signed value;
+          if there is a tie, which elements are returned is determined by `tie_index <OneHot.tie_index>`.
 
-        * *MAX_ABS_VAL*: absolute value of the element with the maximum absolute value,
-          or all elements with the maximum value if there are ties.
+        * *MAX_ABS_VAL*: absolute value of the element with the maximum absolute value;
+          if there is a tie, which elements are returned is determined by `tie_index <OneHot.tie_index>`.
 
-        * *MAX_INDICATOR*: 1 in place of the element with the maximum signed value,
-          or all elements with the maximum value if there are ties.
+        * *MAX_INDICATOR*: 1 in place of the element with the maximum signed value;
+          if there is a tie, which elements are returned is determined by `tie_index <OneHot.tie_index>`.
 
-        * *MAX_ABS_INDICATOR*: 1 in place of the element(s) with the maximum absolute value,
-          or all elements with the maximum value if there are ties.
+        * *MAX_ABS_INDICATOR*: 1 in place of the element(s) with the maximum absolute value;
+          if there is a tie, which elements are returned is determined by `tie_index <OneHot.tie_index>`.
 
         * *ARG_MIN*: signed value of a single element with the minium signed value,
           or the one with lowest index if there are ties.
@@ -136,21 +138,20 @@ class OneHot(SelectionFunction):
         * *MIN_VAL*: signed value of the element with the minimum signed value,
           or all elements with the minimum value if there are ties.
 
-        * *MIN_ABS_VAL*: absolute value of element with the minimum absolute value,
-          or all elements with the minimum value if there are ties.
+        * *MIN_ABS_VAL*: absolute value of element with the minimum absolute value;
+          if there is a tie, which elements are returned is determined by `tie_index <OneHot.tie_index>`.
 
-        * *MIN_INDICATOR*: 1 in place of the element with the minimum signed value,
-          or all elements with the minimum value if there are ties.
+        * *MIN_INDICATOR*: 1 in place of the element with the minimum signed value;
+          if there is a tie, which elements are returned is determined by `tie_index <OneHot.tie_index>`.
 
-        * *MIN_ABS_INDICATOR*: 1 in place of the element with the minimum absolute value,
-          or all elements with the minimum value if there are ties.
+        * *MIN_ABS_INDICATOR*: 1 in place of the element with the minimum absolute value;
+          if there is a tie, which elements are returned is determined by `tie_index <OneHot.tie_index>`.
 
         * *PROB*: value of probabilistically chosen element based on probabilities passed in second item of variable;
           if there are ties, a single element is chosen probabilistically.
 
         * *PROB_INDICATOR*: same as *PROB* but chosen item is assigned a value of 1;
           if there are ties, a single element is chosen probabilistically.
-
 
     Arguments
     ---------
@@ -165,7 +166,11 @@ class OneHot(SelectionFunction):
     MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR,  MIN_ABS_INDICATOR,
     PROB or PROB_INDICATOR : default ARG_MAX
         specifies how the single non-zero value in the array returned by `function <OneHot.function>` is determined
-        (see `mode <OneHot.mode>` for details).
+        (see `above <OneHot>` for details).
+
+    tie : ALL, LOW, HIGH, RANDOM : default ALL
+        specifies how ties are resolved when `mode <OneHot.mode>` is a `MAX_*` or `MIN_*` mode
+        (see `above <OneHot>` for details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -197,7 +202,11 @@ class OneHot(SelectionFunction):
     MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR,  MIN_ABS_INDICATOR,
     PROB or PROB_INDICATOR
         determines how the single non-zero value in the array returned by `function <OneHot.function>` is determined
-        (see `above <OneHot>` for options).
+        (see `above <OneHot>` for details).
+
+    tie : LOW, HIGH, or RANDOM : default LOW
+        determines how ties are resolved when `mode <OneHot.mode>` is a `MAX_*` or `MIN_*` mode
+        (see `above <OneHot>` for details).
 
     random_state : numpy.RandomState
         private pseudorandom number generator
@@ -233,6 +242,12 @@ class OneHot(SelectionFunction):
                     :default value: `MAX_VAL`
                     :type: ``str``
 
+                tie_index
+                    see `tie_index <OneHot.tie_index>`
+
+                    :default value: `ALL`
+                    :type: ``str``
+
                 random_state
                     see `random_state <OneHot.random_state>`
 
@@ -240,13 +255,19 @@ class OneHot(SelectionFunction):
                     :type: ``numpy.random.RandomState``
         """
         mode = Parameter(MAX_VAL, stateful=False)
+        tie_index = Parameter(ALL, stateful=False)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
 
         def _validate_mode(self, mode):
-            if mode not in options:
+            if mode not in mode_options:
                 # returns error message
-                return 'not one of {0}'.format(options)
+                return 'not one of {0}'.format(mode_options)
+
+        def _validate_tie_index(self, tie_index):
+            if tie_index not in tie_options:
+                # returns error message
+                return 'not one of {0}'.format(tie_options)
 
     @check_user_specified
     @beartype
@@ -258,6 +279,7 @@ class OneHot(SelectionFunction):
                      ARG_MIN, ARG_MIN_ABS, ARG_MIN_INDICATOR, ARG_MIN_ABS_INDICATOR,
                      MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR,
                      PROB, PROB_INDICATOR]] = None,
+                 tie_index: Optional[Literal[ALL, LOW, HIGH, RANDOM]]= None,
                  seed=None,
                  params=None,
                  owner=None,
@@ -271,6 +293,7 @@ class OneHot(SelectionFunction):
         super().__init__(
             default_variable=default_variable,
             mode=mode,
+            tie_index=tie_index,
             seed=seed,
             params=params,
             owner=owner,
@@ -470,7 +493,14 @@ class OneHot(SelectionFunction):
 
         elif self.mode == MAX_VAL:
             max_value = np.max(variable)
-            result = np.where(variable == max_value, variable, 0)
+            if self.tie_index == ALL:
+                result = np.where(variable == max_value, variable, 0)
+            elif self.tie_index == LOW:
+                result = self._function(variable, context, {MODE: ARG_MAX})
+            elif self.tie_index == HIGH:
+                pass
+            elif self.tie_index == RANDOM:
+                pass
 
         elif self.mode == MAX_ABS_VAL:
             max_value = np.max(np.absolute(variable))
