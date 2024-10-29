@@ -375,7 +375,7 @@ class ParameterEstimationComposition(Composition):
         number of trials executed (see `number of trials <Composition_Execution_Num_Trials>` for additional
         information).
 
-        .. _note::
+        .. note::
            The **num_trials_per_estimate** is distinct from the **num_trials** argument of the
            ParameterEstimationComposition's `run <Composition.run>` method.  The latter determines how many full fits
            of the `model <ParameterEstimationComposition.model>` are carried out (that is, how many times the

@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
-import psyneulink.core.llvm as pnlvm
 
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import DriftDiffusionAnalytical, NormalDist

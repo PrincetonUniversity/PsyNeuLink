@@ -1,5 +1,4 @@
 import numpy as np
-import psyneulink.core.llvm as pnlvm
 import psyneulink.core.components.functions.function as Function
 import psyneulink.core.components.functions.nonstateful.objectivefunctions as Functions
 import psyneulink.core.components.functions.nonstateful.optimizationfunctions as OPTFunctions
