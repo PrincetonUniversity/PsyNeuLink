@@ -158,6 +158,11 @@ run_input_test_args = [
 @pytest.mark.composition
 @pytest.mark.parametrize("inputs_dict, error_msg", run_input_test_args)
 def test_pec_run_input_formats(inputs_dict, error_msg):
+
+    # Need to convert from mapping proxy
+    # to dict to make the test pass.
+    inputs_dict = {k:v for k,v in inputs_dict.items()}
+
     if error_msg:
         with pytest.raises(pnl.ParameterEstimationCompositionError) as error:
             pec.run(inputs=inputs_dict)
@@ -201,6 +206,10 @@ else:
 )
 def test_parameter_optimization_ddm(func_mode, opt_method, optuna_kwargs, expected_result):
     """Test parameter optimization of a DDM in integrator mode"""
+
+    # Dicts are being converted to mappingproxy objects, need to convert to dict.
+    if optuna_kwargs:
+        optuna_kwargs = {k: v for k, v in optuna_kwargs.items()}
 
     if func_mode == "Python":
         pytest.skip(
