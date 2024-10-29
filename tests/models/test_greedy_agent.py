@@ -9,7 +9,7 @@ from psyneulink.core.components.mechanisms.modulatory.control import Optimizatio
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.core.components.ports.inputport import SHADOW_INPUTS
+#from psyneulink.core.components.ports.inputport import SHADOW_INPUTS
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.core.globals.keywords import VARIANCE, NORMED_L0_SIMILARITY

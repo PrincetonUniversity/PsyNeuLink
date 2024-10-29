@@ -5297,7 +5297,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         ORIGIN:
           - all Nodes that are in first consideration_set (i.e., self.scheduler.consideration_queue[0]).
-          .. _note::
+          .. note::
              - this takes account of any Projections designated as feedback by graph_processing
                (i.e., self.graph.comp_to_vertex[efferent].feedback == EdgeType.FEEDBACK)
              - these will all be assigined afferent Projections from Composition.input_CIM
@@ -5390,7 +5390,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             - or for which any efferent projections are either:
                 - to output_CIM OR
                 - assigned as feedback (i.e., self.graph.comp_to_vertex[efferent].feedback == EdgeType.FEEDBACK
-          .. _note::
+          .. note::
              - this insures that for cases in which there are nested CYCLES
                (e.g., LearningMechanisms for a `learning Pathway <Composition.Learning_Pathway>`),
                only the Node in the *outermost* CYCLE that is specified as a FEEDBACK_SENDER

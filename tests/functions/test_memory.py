@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 
 import psyneulink.core.components.functions.stateful.memoryfunctions as Functions
-import psyneulink.core.llvm as pnlvm
 from psyneulink import *
 from psyneulink.core.globals.utilities import _SeededPhilox, convert_all_elements_to_np_array
 

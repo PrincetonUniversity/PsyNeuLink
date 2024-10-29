@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 
 import psyneulink.core.components.functions.nonstateful.transferfunctions as Functions
-import psyneulink.core.llvm as pnlvm
 
 @pytest.mark.function
 @pytest.mark.identity_function

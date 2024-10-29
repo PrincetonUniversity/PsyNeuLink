@@ -8,7 +8,6 @@ import pytest
 from psyneulink.core.compositions.composition import Composition, CompositionError, RunError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
-import psyneulink.core.llvm as pnlvm
 from psyneulink.core.globals.keywords import Loss
 # from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import SSE, MSE, L0
 
@@ -509,8 +508,9 @@ class TestLearningPathwayMethods:
                     num_trials=2)
         np.testing.assert_allclose(comp2.results, comp1.results)
 
-    @pytest.mark.parametrize('execution_mode',
-                             [pnlvm.ExecutionMode.LLVM, pnlvm.ExecutionMode.PyTorch])
+    # Use explicit parametrize instead of the autodiff_mode fixture to avoid
+    # applying marks. This test doesn't execute pytorch or compiled mode
+    @pytest.mark.parametrize('execution_mode', [pnl.ExecutionMode.LLVM, pnl.ExecutionMode.PyTorch])
     def test_execution_mode_pytorch_and_LLVM_errors(self, execution_mode):
         A = TransferMechanism(name="learning-process-mech-A")
         B = TransferMechanism(name="learning-process-mech-B")
