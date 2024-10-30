@@ -25,6 +25,7 @@ from psyneulink._typing import (
     Union,
     Type,
     Literal,
+    Mapping,
 )
 
 
@@ -308,7 +309,7 @@ class PECOptimizationFunction(OptimizationFunction):
     def __init__(
         self,
         method: Union[Literal["differential_evolution"], optuna.samplers.BaseSampler, Type[optuna.samplers.BaseSampler]],
-        optuna_kwargs: Optional[Dict] = None,
+        optuna_kwargs: Optional[Mapping] = None,
         objective_function: Optional[Callable] = None,
         search_space=None,
         save_samples: Optional[bool] = None,
@@ -318,7 +319,7 @@ class PECOptimizationFunction(OptimizationFunction):
         **kwargs,
     ):
         self.method = method
-        self._optuna_kwargs = {} if optuna_kwargs is None else optuna_kwargs
+        self._optuna_kwargs = {} if optuna_kwargs is None else optuna_kwargs.copy()
 
         self.direction = direction
 

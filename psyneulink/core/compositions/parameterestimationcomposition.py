@@ -915,6 +915,10 @@ class ParameterEstimationComposition(Composition):
             if ContextFlags.PROCESSING not in context.flags:
                 self.controller.check_pec_inputs(inputs)
 
+            # Copy the inputs so we don't modify the original dict, note, we can't copy the keys because they
+            # are object\mechanisms that are in the underlying composition.
+            inputs = {k: v.copy() for k, v in inputs.items()}
+
             # Run parse input dict on the inputs, this will fill in missing input ports with default values. There
             # will be missing input ports because the user doesn't know about the control mechanism's input ports that
             # have been added by the PEC for the fitting parameters.
