@@ -475,20 +475,16 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     node_target = builder.gep(model_input, [ctx.int32_ty(0), ctx.int32_ty(target_idx)])
 
                     # 2) Lookup desired output value
-                    node_output = builder.gep(model_output, [ctx.int32_ty(0), ctx.int32_ty(0),
-                                                             ctx.int32_ty(node._idx),
-                                                             ctx.int32_ty(0)])
+                    node_output = builder.gep(model_output,
+                                              [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(node._idx), ctx.int32_ty(0)])
 
                     tmp_loss = loss.gen_inject_lossfunc_call(
                         ctx, builder, loss_fn, node_output, node_target)
 
-                    pnlvm.helpers.printf_float_array(
-                        builder, node_target, prefix=f"{node}\ttarget:\t")
-                    pnlvm.helpers.printf_float_array(
-                        builder, node_output, prefix=f"{node}\tvalue:\t")
+                    pnlvm.helpers.printf_float_array(ctx, builder, node_target, prefix=f"{node}\ttarget:\t")
+                    pnlvm.helpers.printf_float_array(ctx, builder, node_output, prefix=f"{node}\tvalue:\t")
 
-                    pnlvm.helpers.printf(
-                        builder, f"{node}\tloss:\t%f\n", tmp_loss, override_debug=False)
+                    pnlvm.helpers.printf(ctx, builder, f"{node}\tloss:\t%f\n", tmp_loss, override_debug=False)
                     builder.store(builder.fadd(builder.load(
                         total_loss), tmp_loss), total_loss)
                     loss_derivative = loss._gen_inject_loss_differential(
@@ -519,10 +515,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     gen_inject_vec_hadamard(
                         ctx, builder, activation_func_derivative, error_val, error_val)
 
-                pnlvm.helpers.printf_float_array(
-                    builder, activation_func_derivative, prefix=f"{node}\tdSigma:\t")
-                pnlvm.helpers.printf_float_array(
-                    builder, error_val, prefix=f"{node}\terror:\t")
+                pnlvm.helpers.printf_float_array(ctx, builder, activation_func_derivative, prefix=f"{node}\tdSigma:\t")
+                pnlvm.helpers.printf_float_array(ctx, builder, error_val, prefix=f"{node}\terror:\t")
 
         # 4) compute weight gradients
         for (node, err_val) in error_dict.items():
@@ -537,7 +531,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
                 # get dimensions of weight matrix
                 weights_llvmlite = proj._extract_llvm_matrix(ctx, builder, state, params)
-                pnlvm.helpers.printf_float_matrix(builder, weights_llvmlite,
+                pnlvm.helpers.printf_float_matrix(ctx,
+                                                  builder,
+                                                  weights_llvmlite,
                                                   prefix= f"{proj.sender._mechanism} -> {proj.receiver._mechanism}\n",
                                                   override_debug=False)
                 # update delta_W
@@ -558,8 +554,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         b2.store(new_val, b2.gep(node_delta_w,
                                                  [ctx.int32_ty(0), weight_row, weight_column]))
 
-        pnlvm.helpers.printf(builder, "TOTAL LOSS:\t%.20f\n",
-                             builder.load(total_loss), override_debug=False)
+        pnlvm.helpers.printf(ctx, builder, "TOTAL LOSS:\t%.20f\n", builder.load(total_loss), override_debug=False)
         builder.ret_void()
 
         return builder.function
@@ -1053,7 +1048,8 @@ class PytorchMechanismWrapper():
                                  mech_input,
                                  mech_output])
 
-        pnlvm.helpers.printf_float_array(builder,
+        pnlvm.helpers.printf_float_array(ctx,
+                                         builder,
                                          builder.gep(mech_output, [ctx.int32_ty(0), ctx.int32_ty(0)]),
                                          prefix=f"{self} output:\n",
                                          override_debug=False)
@@ -1222,13 +1218,19 @@ class PytorchProjectionWrapper():
 
         output_vec = gen_inject_vxm(ctx, builder, input_vec, proj_matrix)
 
-        pnlvm.helpers.printf_float_array(builder, input_vec,
+        pnlvm.helpers.printf_float_array(ctx,
+                                         builder,
+                                         input_vec,
                                          prefix=f"{self.sender._mechanism} -> {self.receiver._mechanism} input:\n",
                                          override_debug=False)
-        pnlvm.helpers.printf_float_matrix(builder, proj_matrix,
+        pnlvm.helpers.printf_float_matrix(ctx,
+                                          builder,
+                                          proj_matrix,
                                           prefix=f"{self.sender._mechanism} -> {self.receiver._mechanism} mat:\n",
                                           override_debug=False)
-        pnlvm.helpers.printf_float_array(builder, output_vec,
+        pnlvm.helpers.printf_float_array(ctx,
+                                         builder,
+                                         output_vec,
                                          prefix=f"{self.sender._mechanism} -> {self.receiver._mechanism} output:\n",
                                          override_debug=False)
 
