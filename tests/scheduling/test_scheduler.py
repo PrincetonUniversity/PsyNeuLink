@@ -1595,9 +1595,6 @@ class TestFeedback:
                               (pnl.AtTrial, {"n": 0}, [[0.05, 0.05]]),
                               #(pnl.Never), #TODO: Find a good test case for this!
                             ])
-    # 'LLVM' mode is not supported, because synchronization of compiler and
-    # python values during execution is not implemented.
-    @pytest.mark.usefixtures("comp_mode_no_llvm")
     def test_scheduler_conditions(self, comp_mode, condition, condition_params, expected_result):
         decisionMaker = pnl.DDM(function=pnl.DriftDiffusionIntegrator(starting_value=0,
                                                                       threshold=1,
@@ -1634,16 +1631,12 @@ class TestFeedback:
                              [(pnl.AtTrial, None, [[[1.0]], [[2.0]]]),
                              ])
     def test_run_term_conditions(self, mode, condition, scale, expected_result):
-        incrementing_mechanism = pnl.ProcessingMechanism(
-            function=pnl.SimpleIntegrator
-        )
-        comp = pnl.Composition(
-            pathways=[incrementing_mechanism]
-        )
-        comp.scheduler.termination_conds = {
-            pnl.TimeScale.RUN: condition(2)
-        }
+        incrementing_mechanism = pnl.ProcessingMechanism(function=pnl.SimpleIntegrator)
+        comp = pnl.Composition(pathways=[incrementing_mechanism])
+
+        comp.scheduler.termination_conds = {pnl.TimeScale.RUN: condition(2)}
         r = comp.run(inputs=[1], num_trials=5, execution_mode=mode)
+
         np.testing.assert_allclose(r, expected_result[-1])
         np.testing.assert_allclose(comp.results, expected_result)
 
