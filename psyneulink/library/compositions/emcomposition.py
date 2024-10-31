@@ -1045,8 +1045,8 @@ COMBINED_MATCHES_NODE_NAME = 'COMBINED_MATCHES'
 COMBINED_MATCHES_AFFIX = f' [{COMBINED_MATCHES_NODE_NAME}]'
 SOFTMAX_NODE_NAME = 'RETRIEVE'
 SOFTMAX_AFFIX = f' [{SOFTMAX_NODE_NAME}]'
-RETRIEVED_NODE_NAME = SOFTMAX_NODE_NAME
-RETRIEVED_AFFIX = SOFTMAX_AFFIX
+RETRIEVED_NODE_NAME = 'RETRIEVED'
+RETRIEVED_AFFIX = ' [RETRIEVED]'
 
 COMBINED_SOFTMAX_NODE_NAME = 'RETRIEVE'
 WEIGHTED_SOFTMAX_AFFIX = ' [WEIGHTED SOFTMAX]'
@@ -1724,7 +1724,7 @@ class EMComposition(AutodiffComposition):
         # Suppress warnings for no efferent Projections
         for node in self.value_input_nodes:
             node.output_port.parameters.require_projection_in_composition.set(False, override=True)
-        self.combined_softmax_node.output_port.parameters.require_projection_in_composition.set(False, override=True)
+        self.softmax_node.output_port.parameters.require_projection_in_composition.set(False, override=True)
 
         # Suppress field_weight_nodes as INPUT nodes of the Composition
         for node in self.field_weight_nodes:
@@ -2036,19 +2036,21 @@ class EMComposition(AutodiffComposition):
         self.concatenate_queries_node = self._construct_concatenate_queries_node(concatenate_queries)
         self.match_nodes = self._construct_match_nodes(memory_template, memory_capacity,
                                                        concatenate_queries,normalize_memories)
-        self.softmax_nodes = self._construct_softmax_nodes(memory_capacity,
-                                                           field_weights,
-                                                           softmax_gain,
-                                                           softmax_threshold,
-                                                           softmax_choice)
         self.field_weight_nodes = self._construct_field_weight_nodes(field_weights,
                                                                      concatenate_queries,
                                                                      use_gating_for_weighting)
-        self.weighted_softmax_nodes = self._construct_weighted_softmax_nodes(memory_capacity, use_gating_for_weighting)
-        self.softmax_gain_control_nodes = self._construct_softmax_gain_control_nodes(softmax_gain)
-        self.combined_softmax_node = self._construct_combined_softmax_node(memory_capacity,
+        self.weighted_match_nodes = self._construct_weighted_match_nodes(memory_capacity, field_weights)
+
+        # FIX: CHANGE THIS TO weight_control_nodes
+        self.softmax_gain_control_nodes = []
+
+        self.combined_matches_node = self._construct_combined_matches_node(memory_capacity,
                                                                            field_weighting,
                                                                            use_gating_for_weighting)
+        self.softmax_node = self._construct_softmax_node(memory_capacity,
+                                                         softmax_gain,
+                                                         softmax_threshold,
+                                                         softmax_choice)
         self.retrieved_nodes = self._construct_retrieved_nodes(memory_template)
 
         if use_storage_node:
@@ -2079,11 +2081,11 @@ class EMComposition(AutodiffComposition):
                 self.add_nodes([self.concatenate_queries_node, match_node, softmax_node])
             else:
                 self.add_nodes(self.match_nodes +
-                               self.softmax_nodes +
                                self.field_weight_nodes +
-                               self.weighted_softmax_nodes)
+                               self.weighted_match_nodes)
             self.add_nodes(self.softmax_gain_control_nodes +
-                           [self.combined_softmax_node] +
+                           [self.combined_matches_node] +
+                           [self.softmax_node] +
                            self.retrieved_nodes)
             if use_storage_node:
                 self.add_node(self.storage_node)
@@ -2098,10 +2100,9 @@ class EMComposition(AutodiffComposition):
                 if not self.concatenate_queries:
                     pathway = [self.query_input_nodes[i],
                                self.match_nodes[i],
-                               self.softmax_nodes[i],
-                               self.combined_softmax_node]
-                    if self.weighted_softmax_nodes:
-                        pathway.insert(3, self.weighted_softmax_nodes[i])
+                               self.combined_matches_node]
+                    if self.weighted_match_nodes:
+                        pathway.insert(3, self.weighted_match_nodes[i])
                     # if self.softmax_gain_control_nodes:
                     #     pathway.insert(4, self.softmax_gain_control_nodes[i])
                 # Key-concatenated pathways
@@ -2125,14 +2126,14 @@ class EMComposition(AutodiffComposition):
                 for i in range(self.num_keys):
                     # self.add_backpropagation_learning_pathway([self.field_weight_nodes[i],
                     #                                            self.weighted_softmax_nodes[i]])
-                    self.add_linear_processing_pathway([self.field_weight_nodes[i], self.weighted_softmax_nodes[i]])
+                    self.add_linear_processing_pathway([self.field_weight_nodes[i], self.weighted_match_nodes[i]])
 
             self.add_nodes(self.value_input_nodes)
 
             # Retrieval pathways
             for i in range(len(self.retrieved_nodes)):
                 # self.add_backpropagation_learning_pathway([self.combined_softmax_node, self.retrieved_nodes[i]])
-                self.add_linear_processing_pathway([self.combined_softmax_node, self.retrieved_nodes[i]])
+                self.add_linear_processing_pathway([self.combined_matches_node, self.retrieved_nodes[i]])
 
             # Storage Nodes
             if use_storage_node:
@@ -2454,7 +2455,7 @@ class EMComposition(AutodiffComposition):
             [ProcessingMechanism(input_ports={SIZE: len(self.query_input_nodes[i].variable[0]),
                                             PROJECTIONS:
                                                 MappingProjection(
-                                                    sender=self.combined_softmax_node,
+                                                    sender=self.softmax_node,
                                                     matrix=memory_template[:,i],
                                                     name=f'MEMORY FOR {self.key_names[i]} [RETRIEVE KEY]')
                                             },
@@ -2465,7 +2466,7 @@ class EMComposition(AutodiffComposition):
             [ProcessingMechanism(input_ports={SIZE: len(self.value_input_nodes[i].variable[0]),
                                             PROJECTIONS:
                                                 MappingProjection(
-                                                    sender=self.combined_softmax_node,
+                                                    sender=self.softmax_node,
                                                     matrix=memory_template[:,
                                                            i + self.num_keys],
                                                     name=f'MEMORY FOR {self.value_names[i]} [RETRIEVE VALUE]')},
