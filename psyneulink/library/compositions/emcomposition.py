@@ -1033,7 +1033,11 @@ QUERY_NODE_NAME = 'QUERY'
 QUERY_AFFIX = f' [{QUERY_NODE_NAME}]'
 VALUE_NODE_NAME = 'VALUE'
 VALUE_AFFIX = f' [{VALUE_NODE_NAME}]'
-MATCH_TO_KEYS_NODE_NAME = 'MATCH to KEYS'
+MATCH = 'MATCH'
+MATCH_AFFIX = f' [{MATCH}]'
+MATCH_TO_KEYS_NODE_NAME = f'{MATCH} to KEYS'
+WEIGHT = 'WEIGHT'
+WEIGHT_AFFIX = f' [{WEIGHT}]'
 MATCH_TO_KEYS_AFFIX = f' [{MATCH_TO_KEYS_NODE_NAME}]'
 WEIGHTED_MATCH_NODE_NAME = 'WEIGHTED MATCH'
 WEIGHTED_MATCH_AFFIX = f' [{WEIGHTED_MATCH_NODE_NAME}]'
@@ -2249,7 +2253,7 @@ class EMComposition(AutodiffComposition):
 
 
     def _construct_weighted_match_nodes(self, memory_capacity, field_weights)->list:
-        """Create nodes that, for each key field, weight the output of the match node."""
+        """Create nodes that weight the output of the match node for each key."""
 
         weighted_match_nodes = \
             [ProcessingMechanism(default_variable=[self.match_nodes[i].output_port.value,
@@ -2257,12 +2261,12 @@ class EMComposition(AutodiffComposition):
                                  input_ports=[{PROJECTIONS:
                                                    MappingProjection(sender=match_fw_pair[0],
                                                                      matrix=IDENTITY_MATRIX,
-                                                                     name=f'MATCH to {WEIGHTED_MATCH_NODE_NAME} '
+                                                                     name=f'{MATCH} to {WEIGHTED_MATCH_NODE_NAME} '
                                                                           f'for {self.key_names[i]}')},
                                               {PROJECTIONS:
                                                    MappingProjection(sender=match_fw_pair[1],
                                                                      matrix=FULL_CONNECTIVITY_MATRIX,
-                                                                     name=f'WEIGHT to {WEIGHTED_MATCH_NODE_NAME} '
+                                                                     name=f'{WEIGHT} to {WEIGHTED_MATCH_NODE_NAME} '
                                                                           f'for {self.key_names[i]}')}],
                                  function=LinearCombination(operation=PRODUCT),
                                  name=self.key_names[i] + WEIGHTED_MATCH_AFFIX)
@@ -2299,6 +2303,28 @@ class EMComposition(AutodiffComposition):
             f'({len(combined_matches_node.output_port)}) does not match memory_capacity ({self.memory_capacity})'
 
         return combined_matches_node
+
+    def _construct_softmax_node(self, memory_capacity, softmax_gain, softmax_threshold, softmax_choice)->list:
+        """Create node that applies softmax to output of combined_matches_node."""
+
+        if softmax_choice == ARG_MAX:
+            # ARG_MAX would return entry multiplied by its dot product
+            # ARG_MAX_INDICATOR returns the entry unmodified
+            softmax_choice = ARG_MAX_INDICATOR
+
+        softmax_node = ProcessingMechanism(input_ports={SIZE:memory_capacity,
+                                                        PROJECTIONS: MappingProjection(
+                                                            sender=self.combined_matches_node.output_port,
+                                                            matrix=IDENTITY_MATRIX,
+                                                            name=f'{COMBINED_MATCHES_NODE_NAME} to '
+                                                                 f'{SOFTMAX_NODE_NAME}')},
+                                           function=SoftMax(gain=softmax_gain,
+                                                            mask_threshold=softmax_threshold,
+                                                            output=softmax_choice,
+                                                            adapt_entropy_weighting=.95),
+                                           name=SOFTMAX_NODE_NAME)
+
+        return softmax_node
 
     def _construct_softmax_nodes(self, memory_capacity, field_weights,
                                  softmax_gain, softmax_threshold, softmax_choice)->list:
@@ -2364,8 +2390,8 @@ class EMComposition(AutodiffComposition):
                                                                            np.array(field_weights[self.key_indices[i]]),
                                                                        PARAMS: {DEFAULT_INPUT: DEFAULT_VARIABLE},
                                                                        NAME: 'FIELD_WEIGHT'},
-                                                          name= 'WEIGHT' if self.num_keys == 1
-                                                          else f'{self.key_names[i]} [WEIGHT]')
+                                                          name= WEIGHT if self.num_keys == 1
+                                                          else f'{self.key_names[i]}{WEIGHT_AFFIX}')
                                       for i in range(self.num_keys)]
         return field_weight_nodes
 
@@ -2384,7 +2410,7 @@ class EMComposition(AutodiffComposition):
                                                     name=f'SOFTMAX to WEIGHTED SOFTMAX for {self.key_names[i]}')},
                     {PROJECTIONS: MappingProjection(sender=sm_fw_pair[1],
                                                     matrix=FULL_CONNECTIVITY_MATRIX,
-                                                    name=f'WEIGHT to WEIGHTED SOFTMAX for {self.key_names[i]}')}],
+                                                    name=f'{WEIGHT} to WEIGHTED SOFTMAX for {self.key_names[i]}')}],
                 function=LinearCombination(operation=PRODUCT),
                 name=self.key_names[i] + WEIGHTED_SOFTMAX_AFFIX)
                 for i, sm_fw_pair in enumerate(zip(self.softmax_nodes,
