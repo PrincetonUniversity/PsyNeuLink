@@ -316,12 +316,12 @@ retrieval) and which are treated as values (i.e., retrieved but not used for mat
 
 *Retrieval.*  The values retrieved from `memory <ContentAddressableMemory.memory>` (one for each field) are based
 on the relative similarity of the keys to the entries in memory, computed as the dot product of each key and the
-values in the corresponding field for each entry in memory.  These dot products are then softmaxed, and those
-softmax distributions are weighted by the corresponding `field_weights <EMComposition.field_weights>` for each field
-and then combined, to produce a single softmax distribution over the entries in memory. That is then used to generate
-a weighted average of the retrieved values across all fields, which is returned as the `result <Composition.result>`
-of the EMComposition's `execution <Composition_Execution>` (an EMComposition can also be configured to return the
-entry with the highest dot product weighted by field, however then it is not compatible with learning;
+values in the corresponding field for each entry in memory.  These dot products are then weighted by the corresponding
+`field_weights <EMComposition.field_weights>` for each field and then summed, and the sum is softmaxed to produce a
+softmax distribution over the entries in memory. That is then used to generate a softmax-weighted average of the
+retrieved values across all fields, which is returned as the `result <Composition.result>` of the EMComposition's
+`execution <Composition_Execution>` (an EMComposition can also be configured to return the entry with the highest
+dot product weighted by field, however then it is not compatible with learning;
 see `softmax_choice <EMComposition_Softmax_Choice>`).
 
   COMMENT:
@@ -428,7 +428,7 @@ An EMComposition is created by calling its constructor, that takes the following
   process, but the values of which are retrieved and assigned as the `value <Mechanism_Base.value>` of the
   corresponding `retrieved_node <EMComposition.retrieved_nodes>`. This distinction between keys and value corresponds
   to the format of a standard "dictionary," though in that case only a single key and value are allowed, whereas
-  here there can be one or more keys and any number of values;  if all fields are keys, this implements a full form of
+  here there can be one or more keys and any number of values; if all fields are keys, this implements a full form of
   content-addressable memory. If **learn_field_weight** is True (and `enable_learning<EMComposition.enable_learning>`
   is either True or a list with True for at least one entry), then the field_weights can be modified during training
   (this functions similarly to the attention head of a Transformer model, although at present the field can only be
@@ -457,13 +457,6 @@ An EMComposition is created by calling its constructor, that takes the following
     fields <EMComposition_Processing>`). If False, the raw values of the `field_weights <EMComposition.field_weights>`
     are used to weight the retrieved value of each field. This setting is ignored if **field_weights**
     is None or `concatenate_queries <EMComposition_Concatenate_Queries>` is in effect.
-
-    .. warning::
-       If **normalize_field_weights** is False and **enable_learning** is True, a warning is issued indicating that
-       this may produce an error if the `loss_spec <AutodiffComposition.loss_spec>` for the EMComposition (or an
-       `AutodiffComposition` that contains it) requires all values to be between 0 and 1, and calling the
-       EMComposition's `learn <Composition.learn>` method will generate an error if the loss_spec is specified is
-       one known to be incompatible (e.g., `BINARY_CROSS_ENTROPY <Loss.BINARY_CROSS_ENTROPY>`).
 
 .. _EMComposition_Field_Names:
 
@@ -514,8 +507,8 @@ An EMComposition is created by calling its constructor, that takes the following
 
 .. _EMComposition_Softmax_Gain:
 
-* **softmax_gain** : specifies the gain (inverse temperature) used for softmax normalizing the dot products of
-  queries and keys in memory (see `EMComposition_Execution` below).  The following options can be used:
+* **softmax_gain** : specifies the gain (inverse temperature) used for softmax normalizing the combined dot product
+  used for retrieval (see `EMComposition_Execution` below).  The following options can be used:
 
   * numeric value: the value is used as the gain of the `SoftMax` Function for the EMComposition's
     `softmax_nodes <EMComposition.softmax_nodes>`.
@@ -539,16 +532,16 @@ An EMComposition is created by calling its constructor, that takes the following
 
 .. _EMComposition_Softmax_Choice:
 
-* **softmax_choice** : specifies how the `SoftMax` Function of each of the EMComposition's `softmax_nodes
-  <EMComposition.softmax_nodes>` is used, with the dot products of queries and keys, to generate a retrieved item;
+* **softmax_choice** : specifies how the `SoftMax` Function of the EMComposition's `softmax_node
+  <EMComposition.softmax_node>` is used, with the combined dot product, to generate a retrieved item;
   the following are the options that can be used and the retrieved value they produce:
 
-  * *WEIGHTED_AVG* (default): softmax-weighted average of entries, based on their dot products with the key(s).
+  * *WEIGHTED_AVG* (default): softmax-weighted average based on combined dot products of queries and keys in memory.
 
   * *ARG_MAX*: entry with the largest dot product (one with lowest index in `memory <EMComposition.memory>`)\
                if there are identical ones).
 
-  * *PROBABISTIC*: probabilistically chosen entry based on softmax-transformed distribution of dot products.
+  * *PROBABISTIC*: probabilistically chosen entry based on softmax-transformed distribution of combined dot product.
 
   .. warning::
      Use of the *ARG_MAX* and *PROBABILISTIC* options is not compatible with learning, as these implement a discrete
@@ -691,26 +684,27 @@ When the EMComposition is executed, the following sequence of operations occur
   the dot product of the input with each memory for the corresponding field, the result of which is passed to the
   corresponding `match_node <EMComposition.match_nodes>`.
 
-* **Softmax normalize matches over fields**. The dot product for each key field is passed from the `match_node
-  <EMComposition.match_nodes>` to the corresponding `softmax_node <EMComposition.softmax_nodes>`, which applies
-  the `SoftMax` Function to normalize the dot products for each key field.  If a numerical value is specified for
-  `softmax_gain <EMComposition.softmax_gain>`, that is used as the gain (inverse temperature) for the SoftMax Function;
-  if *ADAPTIVE* is specified, then the `SoftMax.adapt_gain` function is used to adaptively set the gain based on the
-  dot products in each field;  if *CONTROL* is specified, then the dot products are monitored by a `ControlMechanism`
-  that uses the `adapt_gain <Softmax.adapt_gain>` method of the SoftMax Function to modulate its `gain <Softmax.gain>`
-  parameter; if None is specified, the default value of the `Softmax` Function is used as the `gain <Softmax.gain>`
-  parameter (see `Softmax_Gain <EMComposition_Softmax_Gain>` for additional  details).
-
-* **Weight fields**. If `field weights <EMComposition_Field_Weights>` are specified, then the softmax normalized dot
-  product for each key field is passed to the corresponding `field_weight_node <EMComposition.field_weight_nodes>`
-  where it is multiplied by the corresponding `field_weight <EMComposition.field_weights>` (if
-  `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` is True, this is done by using the `field_weight
-  <EMComposition.field_weights>` to output gate the `softmax_node <EMComposition.softmax_nodes>`). The weighted softmax
-  vectors for all key fields are then passed to the `combined_softmax_node <EMComposition.combined_softmax_node>`,
+* **Weight fields**. If `field weights <EMComposition_Field_Weights>` are specified, then the dot product for each
+  key field is passed to the corresponding `weighted_match_node <EMComposition.weighted_match_nodes>` where it is
+  multiplied by the corresponding `field_weight <EMComposition.field_weights>` (if `use_gating_for_weighting
+  <EMComposition.use_gating_for_weighting>` is True, this is done by using the `field_weight
+  <EMComposition.field_weights>` to output gate the `match_node <EMComposition.softmax_nodes>`). The weighted dot
+  products for all key fields are then passed to the `combined_matches_node <EMComposition.combined_matches_node>`,
   where they are haddamard summed to produce a single weighting for each memory.
 
-* **Retrieve values by field**. The vector of softmax weights for each memory generated by the `combined_softmax_node
-  <EMComposition.combined_softmax_node>` is passed through the Projections to the each of the `retrieved_nodes
+* **Softmax over summed dot products**. The sum of the dot products is passed from the `combined_matches_node
+  <EMComposition.combined_matches_node>` to the `softmax_node <EMComposition.softmax_node>`, which applies the `SoftMax`
+  Function, which generates the softmax distribution used to retrieve entries from `memory <EMComposition.memory>`.
+  If a numerical value is specified for `softmax_gain <EMComposition.softmax_gain>`, that is used as the gain (inverse
+  temperature) for the SoftMax Function; if *ADAPTIVE* is specified, then the `SoftMax.adapt_gain` function is used
+  to adaptively set the gain based on the summed dot product (i.e., the output of the `combined_matches_node
+  <EMComposition.combined_matches_node>`;  if *CONTROL* is specified, then the summed dot product is monitored by a
+  `ControlMechanism` that uses the `adapt_gain <Softmax.adapt_gain>` method of the `SoftMax` Function to modulate its
+  `gain <Softmax.gain>` parameter; if None is specified, the default value of the `Softmax` Function is used as the
+  `gain <Softmax.gain>` parameter (see `Softmax_Gain <EMComposition_Softmax_Gain>` for additional  details).
+
+* **Retrieve values by field**. The vector of softmax weights for each memory generated by the `softmax_node
+  <EMComposition.softmax_node>` is passed through the Projections to the each of the `retrieved_nodes
   <EMComposition.retrieved_nodes>` to compute the retrieved value for each field.
 
 * **Decay memories**.  If `memory_decay <EMComposition.memory_decay>` is True, then each of the memories is decayed
@@ -1232,9 +1226,10 @@ class EMComposition(AutodiffComposition):
 
     field_weights : tuple[float]
         determines which fields of the input are treated as "keys" (non-zero values) that are used to match entries in
-        `memory <EMComposition.memory>` for retrieval, and which are used as "values" (zero values), that are stored
-        and retrieved from memory, but not used in the match process (see `Match memories by field
-        <EMComposition_Processing>`. see `field_weights <EMComposition_Field_Weights>` additional details.
+        `memory <EMComposition.memory>` for retrieval, and which are used as "values" (zero values) that are stored
+        and retrieved from memory but not used in the match process (see `Match memories by field
+        <EMComposition_Processing>`; also determines the relative contribution of each key field to the match process;
+        see `field_weights <EMComposition_Field_Weights>` additional details.
 
     normalize_field_weights : bool : default True
         determines whether `fields_weights <EMComposition.field_weights>` are normalized over the number of keys, or
@@ -1254,9 +1249,9 @@ class EMComposition(AutodiffComposition):
         see `Match memories by field <EMComposition_Processing>` for additional details.
 
     softmax_gain : float, ADAPTIVE or CONTROL
-        determines gain (inverse temperature) used for softmax normalizing the dot products of keys and memories
-        by the `softmax` function of the `softmax_nodes <EMComposition.softmax_nodes>`; see `Softmax normalize matches
-        over fields <EMComposition_Processing>` for additional details.
+        determines gain (inverse temperature) used for softmax normalizing the summed dot products of keys and memories
+        by the `SoftMax` Function of the `softmax_node <EMComposition.softmax_node>`; see `Softmax over summed dot
+        products <EMComposition_Processing>` for additional details.
 
     softmax_threshold : float
         determines the threshold used to mask out small values in the softmax calculation;
@@ -1323,11 +1318,11 @@ class EMComposition(AutodiffComposition):
         <EMComposition_Processing>` for additional details). These are named the same as the corresponding
         `query_input_nodes <EMComposition.query_input_nodes>` appended with the suffix *[MATCH to KEYS]*.
 
-    softmax_gain_control_nodes : list[ControlMechanism]
+    softmax_gain_control_node : list[ControlMechanism]
         `ControlMechanisms <ControlMechanism>` that adaptively control the `softmax_gain <EMComposition.softmax_gain>`
-        for the corresponding `softmax_nodes <EMComposition.softmax_nodes>`. These are implemented only if
-        `softmax_gain <EMComposition.softmax_gain>` is specified as *CONTROL* (see `softmax_gain
-        <EMComposition_Softmax_Gain>` for details).
+        of the `softmax_node <EMComposition.softmax_node>`. This is implemented only if `softmax_gain
+        <EMComposition.softmax_gain>` is specified as *CONTROL* (see `softmax_gain <EMComposition_Softmax_Gain>` for
+        details).
 
     softmax_nodes : list[ProcessingMechanism]
         `ProcessingMechanisms <ProcessingMechanism>` that compute the softmax over the vectors received
