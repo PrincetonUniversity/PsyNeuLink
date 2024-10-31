@@ -848,7 +848,6 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
                                                             cond,
                                                             node,
                                                             is_finished_callbacks,
-                                                            num_exec_locs,
                                                             nodes_states)
             with builder.if_then(reinit_cond):
                 node_w = ctx.get_node_assembly(composition, node)
@@ -893,7 +892,6 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
                                                             cond,
                                                             None,
                                                             is_finished_callbacks,
-                                                            num_exec_locs,
                                                             nodes_states)
         trial_cond = builder.not_(trial_term_cond, name="not_trial_term_cond")
 
@@ -916,7 +914,6 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
                                                           cond,
                                                           node,
                                                           is_finished_callbacks,
-                                                          num_exec_locs,
                                                           nodes_states)
             ran = cond_gen.generate_ran_this_pass(builder, cond, node)
             node_cond = builder.and_(node_cond, builder.not_(ran), name="run_cond_" + node.name)
@@ -1112,9 +1109,12 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
     # Generate a while not 'end condition' loop
     builder.position_at_end(loop_condition)
 
-    run_term_cond = cond_gen.generate_sched_condition(
-        builder, composition.termination_processing[TimeScale.RUN],
-        cond, None, None, None, nodes_states)
+    run_term_cond = cond_gen.generate_sched_condition(builder,
+                                                      composition.termination_processing[TimeScale.RUN],
+                                                      cond,
+                                                      None,
+                                                      None,
+                                                      nodes_states)
     run_cond = builder.not_(run_term_cond, name="not_run_term_cond")
 
     # Iter cond

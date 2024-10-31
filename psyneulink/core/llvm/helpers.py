@@ -617,9 +617,15 @@ class ConditionGenerator:
 
         return builder.icmp_signed("==", node_trial, global_trial)
 
-    # TODO: replace num_exec_locs use with equivalent from nodes_states
-    def generate_sched_condition(self, builder, condition, cond_ptr, node, is_finished_callbacks, num_exec_locs, nodes_states):
+    def _node_executions_for_scale(self, builder, node, node_states, time_scale:TimeScale):
+        node_idx = self.composition._get_node_index(node)
+        node_state = builder.gep(node_states, [self._zero, self.ctx.int32_ty(node_idx)])
+        num_exec_ptr = get_state_ptr(builder, node, node_state, "num_executions")
 
+        count_ptr = builder.gep(num_exec_ptr, [self._zero, self.ctx.int32_ty(time_scale.value)])
+        return builder.load(count_ptr)
+
+    def generate_sched_condition(self, builder, condition, cond_ptr, self_node, is_finished_callbacks, nodes_states):
 
         if isinstance(condition, Always):
             return self.ctx.bool_ty(1)
@@ -628,13 +634,13 @@ class ConditionGenerator:
             return self.ctx.bool_ty(0)
 
         elif isinstance(condition, Not):
-            orig_condition = self.generate_sched_condition(builder, condition.condition, cond_ptr, node, is_finished_callbacks, num_exec_locs, nodes_states)
+            orig_condition = self.generate_sched_condition(builder, condition.condition, cond_ptr, self_node, is_finished_callbacks, nodes_states)
             return builder.not_(orig_condition)
 
         elif isinstance(condition, All):
             agg_cond = self.ctx.bool_ty(1)
             for cond in condition.args:
-                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks, num_exec_locs, nodes_states)
+                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, self_node, is_finished_callbacks, nodes_states)
                 agg_cond = builder.and_(agg_cond, cond_res)
             return agg_cond
 
@@ -658,7 +664,7 @@ class ConditionGenerator:
         elif isinstance(condition, Any):
             agg_cond = self.ctx.bool_ty(0)
             for cond in condition.args:
-                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks, num_exec_locs, nodes_states)
+                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, self_node, is_finished_callbacks, nodes_states)
                 agg_cond = builder.or_(agg_cond, cond_res)
             return agg_cond
 
@@ -674,34 +680,30 @@ class ConditionGenerator:
 
         elif isinstance(condition, EveryNCalls):
             target, count = condition.args
-            assert count == 1, "EveryNCalls isonly supprted with count == 1"
+            assert count == 1, "EveryNCalls is only supported with count == 1 (count: {})".format(count)
 
             target_ts = self.__get_node_ts(builder, cond_ptr, target)
-            node_ts = self.__get_node_ts(builder, cond_ptr, node)
+            node_ts = self.__get_node_ts(builder, cond_ptr, self_node)
 
             # If target ran after node did its TS will be greater node's
             return self.ts_compare(builder, node_ts, target_ts, '<')
 
         elif isinstance(condition, BeforeNCalls):
-            target, count = condition.args
-            scale = condition.time_scale.value
-            target_num_execs_in_scale = builder.gep(num_exec_locs[target], [self.ctx.int32_ty(0), self.ctx.int32_ty(scale)])
-            num_execs = builder.load(target_num_execs_in_scale)
+            node, count = condition.args
+            num_execs = self._node_executions_for_scale(builder, node, nodes_states, condition.time_scale)
 
             return builder.icmp_unsigned('<', num_execs, num_execs.type(count))
 
         elif isinstance(condition, AtNCalls):
-            target, count = condition.args
-            scale = condition.time_scale.value
-            target_num_execs_in_scale = builder.gep(num_exec_locs[target], [self.ctx.int32_ty(0), self.ctx.int32_ty(scale)])
-            num_execs = builder.load(target_num_execs_in_scale)
+            node, count = condition.args
+            num_execs = self._node_executions_for_scale(builder, node, nodes_states, condition.time_scale)
+
             return builder.icmp_unsigned('==', num_execs, num_execs.type(count))
 
         elif isinstance(condition, AfterNCalls):
-            target, count = condition.args
-            scale = condition.time_scale.value
-            target_num_execs_in_scale = builder.gep(num_exec_locs[target], [self.ctx.int32_ty(0), self.ctx.int32_ty(scale)])
-            num_execs = builder.load(target_num_execs_in_scale)
+            node, count = condition.args
+            num_execs = self._node_executions_for_scale(builder, node, nodes_states, condition.time_scale)
+
             return builder.icmp_unsigned('>=', num_execs, num_execs.type(count))
 
         elif isinstance(condition, WhenFinished):
