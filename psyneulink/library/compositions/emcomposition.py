@@ -1041,8 +1041,8 @@ WEIGHT_AFFIX = f' [{WEIGHT}]'
 MATCH_TO_KEYS_AFFIX = f' [{MATCH_TO_KEYS_NODE_NAME}]'
 WEIGHTED_MATCH_NODE_NAME = 'WEIGHTED MATCH'
 WEIGHTED_MATCH_AFFIX = f' [{WEIGHTED_MATCH_NODE_NAME}]'
-COMBINED_MATCHES_NODE_NAME = 'COMBINED_MATCHES'
-COMBINED_MATCHES_AFFIX = f' [{COMBINED_MATCHES_NODE_NAME}]'
+COMBINE_MATCHES_NODE_NAME = 'COMBINE MATCHES'
+COMBINE_MATCHES_AFFIX = f' [{COMBINE_MATCHES_NODE_NAME}]'
 SOFTMAX_NODE_NAME = 'RETRIEVE'
 SOFTMAX_AFFIX = f' [{SOFTMAX_NODE_NAME}]'
 RETRIEVED_NODE_NAME = 'RETRIEVED'
@@ -1658,7 +1658,7 @@ class EMComposition(AutodiffComposition):
                          **kwargs
                          )
 
-        self._validate_options_with_learning(softmax_choice, normalize_field_weights, enable_learning)
+        self._validate_softmax_options_with_learning(softmax_choice, normalize_field_weights, enable_learning)
 
         self._construct_pathways(self.memory_template,
                                  self.memory_capacity,
@@ -2074,15 +2074,18 @@ class EMComposition(AutodiffComposition):
 
         # Construct Pathways --------------------------------------------------------------------------------
 
+        # LEARNING NOT ENABLED --------------------------------------------------
         # Set up pathways WITHOUT PsyNeuLink learning pathways
         if not self.enable_learning:
             self.add_nodes(self.query_input_nodes + self.value_input_nodes)
-            if self.concatenate_queries:
-                self.add_nodes([self.concatenate_queries_node, match_node, softmax_node])
-            else:
+            if not self.concatenate_queries:
+                # Regular pathways
                 self.add_nodes(self.match_nodes +
                                self.field_weight_nodes +
                                self.weighted_match_nodes)
+            else:
+                # Key-concatenated pathways
+                self.add_nodes([self.concatenate_queries_node, match_node])
             self.add_nodes(self.softmax_gain_control_nodes +
                            [self.combined_matches_node] +
                            [self.softmax_node] +
@@ -2091,9 +2094,9 @@ class EMComposition(AutodiffComposition):
                 self.add_node(self.storage_node)
                 # self.add_projections(proj for proj in self.storage_node.efferents)
 
+        # LEARNING ENABLED -----------------------------------------------------
         # Set up pathways WITH psyneulink backpropagation learning field weights
         else:
-
             # Key pathways
             for i in range(self.num_keys):
                 # Regular pathways
@@ -2109,13 +2112,13 @@ class EMComposition(AutodiffComposition):
                 else:
                     pathway = [self.query_input_nodes[i],
                                self.concatenate_queries_node,
-                               match_node,
-                               softmax_node,
-                               self.combined_softmax_node]
+                               match_node]
                     # if self.softmax_gain_control_nodes:
                     #     pathway.insert(4, self.softmax_gain_control_nodes[0]) # Only one, ensured above
                 # self.add_backpropagation_learning_pathway(pathway)
                 self.add_linear_processing_pathway(pathway)
+
+            self.add_linear_processing_pathway([self.combined_matches_node, self.softmax_node])
 
             # softmax gain control is specified:
             for gain_control_node in self.softmax_gain_control_nodes:
@@ -2133,7 +2136,7 @@ class EMComposition(AutodiffComposition):
             # Retrieval pathways
             for i in range(len(self.retrieved_nodes)):
                 # self.add_backpropagation_learning_pathway([self.combined_softmax_node, self.retrieved_nodes[i]])
-                self.add_linear_processing_pathway([self.combined_matches_node, self.retrieved_nodes[i]])
+                self.add_linear_processing_pathway([self.softmax_node, self.retrieved_nodes[i]])
 
             # Storage Nodes
             if use_storage_node:
@@ -2241,135 +2244,7 @@ class EMComposition(AutodiffComposition):
 
         return match_nodes
 
-    def _validate_options_with_learning(self, softmax_choice, normalize_field_weights, enable_learning):
-        if softmax_choice in {ARG_MAX, PROBABILISTIC} and enable_learning:
-            warnings.warn(f"The 'softmax_choice' arg of '{self.name}' is set to '{softmax_choice}' with "
-                          f"'enable_learning' set to True (or a list); this will generate an error if its "
-                          f"'learn' method is called. Set 'softmax_choice' to WEIGHTED_AVG before learning.")
-
-        if enable_learning and not normalize_field_weights:
-            warnings.warn(f"The 'normalize_field_weights' arg of '{self.name}' is set to False with "
-                          f"'enable_learning' set to True (or a list); this may generate an error if "
-                          f"the 'loss_spec' used for learning requires values to be between 0 and 1.")
-
-
-    def _construct_weighted_match_nodes(self, memory_capacity, field_weights)->list:
-        """Create nodes that weight the output of the match node for each key."""
-
-        weighted_match_nodes = \
-            [ProcessingMechanism(default_variable=[self.match_nodes[i].output_port.value,
-                                                   self.match_nodes[i].output_port.value],
-                                 input_ports=[{PROJECTIONS:
-                                                   MappingProjection(sender=match_fw_pair[0],
-                                                                     matrix=IDENTITY_MATRIX,
-                                                                     name=f'{MATCH} to {WEIGHTED_MATCH_NODE_NAME} '
-                                                                          f'for {self.key_names[i]}')},
-                                              {PROJECTIONS:
-                                                   MappingProjection(sender=match_fw_pair[1],
-                                                                     matrix=FULL_CONNECTIVITY_MATRIX,
-                                                                     name=f'{WEIGHT} to {WEIGHTED_MATCH_NODE_NAME} '
-                                                                          f'for {self.key_names[i]}')}],
-                                 function=LinearCombination(operation=PRODUCT),
-                                 name=self.key_names[i] + WEIGHTED_MATCH_AFFIX)
-             for i, match_fw_pair in enumerate(zip(self.match_nodes,
-                                                   self.field_weight_nodes))]
-
-        return weighted_match_nodes
-
-    def _construct_combined_matches_node(self,
-                                         memory_capacity,
-                                         field_weighting,
-                                         use_gating_for_weighting
-                                         )->ProcessingMechanism:
-        """Create node that combines weighted matches for all keys into one match vector."""
-
-        if not field_weighting or use_gating_for_weighting:
-            # If use_gating_for_weighting, then softmax_nodes are output gated by gating nodes
-            input_source = self.match_nodes
-        else:
-            input_source = self.weighted_match_nodes
-
-        combined_matches_node = (
-            ProcessingMechanism(input_ports=[{SIZE:memory_capacity,
-                                              PROJECTIONS:[MappingProjection(sender=s,
-                                                                             matrix=IDENTITY_MATRIX,
-                                                                             name=f'{WEIGHTED_MATCH_NODE_NAME} '
-                                                                                  f'for {self.key_names[i]} to '
-                                                                                  f'{COMBINED_MATCHES_NODE_NAME}')
-                                                           for i, s in enumerate(input_source)]}],
-                                name=COMBINED_MATCHES_NODE_NAME))
-
-        assert len(combined_matches_node.output_port.value) == memory_capacity, \
-            'PROGRAM ERROR: number of items in combined_matches_node ' \
-            f'({len(combined_matches_node.output_port)}) does not match memory_capacity ({self.memory_capacity})'
-
-        return combined_matches_node
-
-    def _construct_softmax_node(self, memory_capacity, softmax_gain, softmax_threshold, softmax_choice)->list:
-        """Create node that applies softmax to output of combined_matches_node."""
-
-        if softmax_choice == ARG_MAX:
-            # ARG_MAX would return entry multiplied by its dot product
-            # ARG_MAX_INDICATOR returns the entry unmodified
-            softmax_choice = ARG_MAX_INDICATOR
-
-        softmax_node = ProcessingMechanism(input_ports={SIZE:memory_capacity,
-                                                        PROJECTIONS: MappingProjection(
-                                                            sender=self.combined_matches_node.output_port,
-                                                            matrix=IDENTITY_MATRIX,
-                                                            name=f'{COMBINED_MATCHES_NODE_NAME} to '
-                                                                 f'{SOFTMAX_NODE_NAME}')},
-                                           function=SoftMax(gain=softmax_gain,
-                                                            mask_threshold=softmax_threshold,
-                                                            output=softmax_choice,
-                                                            adapt_entropy_weighting=.95),
-                                           name=SOFTMAX_NODE_NAME)
-
-        return softmax_node
-
-    def _construct_softmax_nodes(self, memory_capacity, field_weights,
-                                 softmax_gain, softmax_threshold, softmax_choice)->list:
-        """Create nodes that, for each key field, compute the softmax over the similarities between the input and the
-        memories in the corresponding match_node.
-        """
-
-        # Get indices of field_weights that specify keys:
-        key_weights = [field_weights[i] for i in self.key_indices]
-
-        if softmax_choice == ARG_MAX:
-            # ARG_MAX would return entry multiplied by its dot product
-            # ARG_MAX_INDICATOR returns the entry unmodified
-            softmax_choice = ARG_MAX_INDICATOR
-
-        softmax_nodes = [ProcessingMechanism(input_ports={SIZE:memory_capacity,
-                                                        PROJECTIONS: MappingProjection(
-                                                            sender=match_node.output_port,
-                                                            matrix=IDENTITY_MATRIX,
-                                                            name=f'MATCH to SOFTMAX for {self.key_names[i]}')},
-                                           function=SoftMax(gain=softmax_gain,
-                                                            mask_threshold=softmax_threshold,
-                                                            output=softmax_choice,
-                                                            adapt_entropy_weighting=.95),
-                                           name='SOFTMAX' if len(self.match_nodes) == 1
-                                           else f'{self.key_names[i]} [SOFTMAX]')
-                         for i, match_node in enumerate(self.match_nodes)]
-
-        return softmax_nodes
-
-    def _construct_softmax_gain_control_nodes(self, softmax_gain)->list:
-        """Create nodes that set the softmax gain (inverse temperature) for each softmax_node."""
-
-        softmax_gain_control_nodes = []
-        if softmax_gain == CONTROL:
-            softmax_gain_control_nodes = [ControlMechanism(monitor_for_control=match_node,
-                                                           control_signals=[(GAIN, self.softmax_nodes[i])],
-                                                           function=get_softmax_gain,
-                                                           name='SOFTMAX GAIN CONTROL' if len(self.softmax_nodes) == 1
-                                                           else f'SOFTMAX GAIN CONTROL {self.key_names[i]}')
-                                          for i, match_node in enumerate(self.match_nodes)]
-
-        return softmax_gain_control_nodes
-
+    # FIX: CONVERT TO _construct_weight_control_nodes
     def _construct_field_weight_nodes(self, field_weights, concatenate_queries, use_gating_for_weighting)->list:
         """Create ProcessingMechanisms that weight each key's softmax contribution to the retrieved values."""
 
@@ -2396,57 +2271,99 @@ class EMComposition(AutodiffComposition):
                                       for i in range(self.num_keys)]
         return field_weight_nodes
 
-    def _construct_weighted_softmax_nodes(self, memory_capacity, use_gating_for_weighting)->list:
+    def _construct_weighted_match_nodes(self, memory_capacity, field_weights)->list:
+        """Create nodes that weight the output of the match node for each key."""
 
-        if use_gating_for_weighting:
-            return []
-
-        weighted_softmax_nodes = \
-            [ProcessingMechanism(
-                default_variable=[self.softmax_nodes[i].output_port.value,
-                                  self.softmax_nodes[i].output_port.value],
-                input_ports=[
-                    {PROJECTIONS: MappingProjection(sender=sm_fw_pair[0],
-                                                    matrix=IDENTITY_MATRIX,
-                                                    name=f'SOFTMAX to WEIGHTED SOFTMAX for {self.key_names[i]}')},
-                    {PROJECTIONS: MappingProjection(sender=sm_fw_pair[1],
-                                                    matrix=FULL_CONNECTIVITY_MATRIX,
-                                                    name=f'{WEIGHT} to WEIGHTED SOFTMAX for {self.key_names[i]}')}],
-                function=LinearCombination(operation=PRODUCT),
-                name=self.key_names[i] + WEIGHTED_SOFTMAX_AFFIX)
-                for i, sm_fw_pair in enumerate(zip(self.softmax_nodes,
+        weighted_match_nodes = \
+            [ProcessingMechanism(default_variable=[self.match_nodes[i].output_port.value,
+                                                   self.match_nodes[i].output_port.value],
+                                 input_ports=[{PROJECTIONS:
+                                                   MappingProjection(sender=match_fw_pair[0],
+                                                                     matrix=IDENTITY_MATRIX,
+                                                                     name=f'{MATCH} to {WEIGHTED_MATCH_NODE_NAME} '
+                                                                          f'for {self.key_names[i]}')},
+                                              {PROJECTIONS:
+                                                   MappingProjection(sender=match_fw_pair[1],
+                                                                     matrix=FULL_CONNECTIVITY_MATRIX,
+                                                                     name=f'{WEIGHT} to {WEIGHTED_MATCH_NODE_NAME} '
+                                                                          f'for {self.key_names[i]}')}],
+                                 function=LinearCombination(operation=PRODUCT),
+                                 name=self.key_names[i] + WEIGHTED_MATCH_AFFIX)
+             for i, match_fw_pair in enumerate(zip(self.match_nodes,
                                                    self.field_weight_nodes))]
-        return weighted_softmax_nodes
 
-    def _construct_combined_softmax_node(self,
+        return weighted_match_nodes
+
+    def _construct_softmax_gain_control_nodes(self, softmax_gain)->list:
+        """Create nodes that set the softmax gain (inverse temperature) for each softmax_node."""
+
+        softmax_gain_control_nodes = []
+        if softmax_gain == CONTROL:
+            softmax_gain_control_nodes = [ControlMechanism(monitor_for_control=match_node,
+                                                           control_signals=[(GAIN, self.softmax_nodes[i])],
+                                                           function=get_softmax_gain,
+                                                           name='SOFTMAX GAIN CONTROL' if len(self.softmax_nodes) == 1
+                                                           else f'SOFTMAX GAIN CONTROL {self.key_names[i]}')
+                                          for i, match_node in enumerate(self.match_nodes)]
+
+        return softmax_gain_control_nodes
+
+    def _construct_combined_matches_node(self,
                                          memory_capacity,
                                          field_weighting,
                                          use_gating_for_weighting
                                          )->ProcessingMechanism:
-        """Create nodes that compute the weighting of each item in memory.
-        """
+        """Create node that combines weighted matches for all keys into one match vector."""
 
         if not field_weighting or use_gating_for_weighting:
             # If use_gating_for_weighting, then softmax_nodes are output gated by gating nodes
-            input_source = self.softmax_nodes
+            input_source = self.match_nodes
         else:
-            input_source = self.weighted_softmax_nodes
+            input_source = self.weighted_match_nodes
 
-        combined_softmax_node = (
+        combined_matches_node = (
             ProcessingMechanism(input_ports=[{SIZE:memory_capacity,
-                                              # PROJECTIONS:[s for s in input_source]}],
                                               PROJECTIONS:[MappingProjection(sender=s,
                                                                              matrix=IDENTITY_MATRIX,
-                                                                             name=f'WEIGHTED SOFTMAX to RETRIEVAL for '
-                                                                                  f'{self.key_names[i]}')
+                                                                             name=f'{WEIGHTED_MATCH_NODE_NAME} '
+                                                                                  f'for {self.key_names[i]} to '
+                                                                                  f'{COMBINE_MATCHES_NODE_NAME}')
                                                            for i, s in enumerate(input_source)]}],
-                                name=COMBINED_SOFTMAX_NODE_NAME))
+                                name=COMBINE_MATCHES_NODE_NAME))
 
-        assert len(combined_softmax_node.output_port.value) == memory_capacity, \
-            'PROGRAM ERROR: number of items in combined_softmax_node ' \
-            '({len(combined_softmax_node.output_port)}) does not match memory_capacity ({self.memory_capacity})'
+        assert len(combined_matches_node.output_port.value) == memory_capacity, \
+            'PROGRAM ERROR: number of items in combined_matches_node ' \
+            f'({len(combined_matches_node.output_port)}) does not match memory_capacity ({self.memory_capacity})'
 
-        return combined_softmax_node
+        return combined_matches_node
+
+    def _construct_softmax_node(self, memory_capacity, softmax_gain, softmax_threshold, softmax_choice)->list:
+        """Create node that applies softmax to output of combined_matches_node."""
+
+        if softmax_choice == ARG_MAX:
+            # ARG_MAX would return entry multiplied by its dot product
+            # ARG_MAX_INDICATOR returns the entry unmodified
+            softmax_choice = ARG_MAX_INDICATOR
+
+        softmax_node = ProcessingMechanism(input_ports={SIZE:memory_capacity,
+                                                        PROJECTIONS: MappingProjection(
+                                                            sender=self.combined_matches_node.output_port,
+                                                            matrix=IDENTITY_MATRIX,
+                                                            name=f'{COMBINE_MATCHES_NODE_NAME} to '
+                                                                 f'{SOFTMAX_NODE_NAME}')},
+                                           function=SoftMax(gain=softmax_gain,
+                                                            mask_threshold=softmax_threshold,
+                                                            output=softmax_choice,
+                                                            adapt_entropy_weighting=.95),
+                                           name=SOFTMAX_NODE_NAME)
+
+        return softmax_node
+
+    def _validate_softmax_options_with_learning(self, softmax_choice, normalize_field_weights, enable_learning):
+        if softmax_choice in {ARG_MAX, PROBABILISTIC} and enable_learning:
+            warnings.warn(f"The 'softmax_choice' arg of '{self.name}' is set to '{softmax_choice}' with "
+                          f"'enable_learning' set to True (or a list); this will generate an error if its "
+                          f"'learn' method is called. Set 'softmax_choice' to WEIGHTED_AVG before learning.")
 
     def _construct_retrieved_nodes(self, memory_template)->list:
         """Create nodes that report the value field(s) for the item(s) matched in memory.
