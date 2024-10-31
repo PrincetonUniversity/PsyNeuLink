@@ -1056,7 +1056,7 @@ STORE_NODE_NAME = 'STORE'
 def _memory_getter(owning_component=None, context=None)->list:
     """Return list of memories in which rows (outer dimension) are memories for each field.
     These are derived from `matrix <MappingProjection.matrix>` parameter of the `afferent
-    <Mechanism_Base.afferents>` MappingProjections to each of the `retrieved_nodes <EMComposition.retrieved_nodes>`.
+    <Mechanism_Base.afferents>` MappingProjections to each of the `2472s <EMComposition.retrieved_nodes>`.
     """
 
     # If storage_node (EMstoragemechanism) is implemented, get memory from that
