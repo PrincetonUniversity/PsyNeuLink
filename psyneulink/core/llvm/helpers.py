@@ -8,6 +8,7 @@
 
 # ********************************************* PNL LLVM helpers **************************************************************
 
+import ast
 from contextlib import contextmanager
 import warnings
 
@@ -398,8 +399,11 @@ def call_elementwise_operation(ctx, builder, x, operation, output_ptr):
     for (inp_ptr, out_ptr) in recursive_iterate_arrays(ctx, builder, x, output_ptr):
         builder.store(operation(ctx, builder, builder.load(inp_ptr)), out_ptr)
 
-def printf(ctx, builder, fmt, *args, override_debug=False):
-    if "print_values" not in debug_env and not override_debug:
+def printf(ctx, builder, fmt, *args, tags:set):
+
+    tags = frozenset(tags)
+    user_tags = frozenset(ast.literal_eval(debug_env.get("printf_tags", "[]")))
+    if "all" not in user_tags and "always" not in tags and not tags.intersection(user_tags):
         return
 
     # Set up the formatting string as global symbol
@@ -428,22 +432,22 @@ def printf(ctx, builder, fmt, *args, override_debug=False):
         builder.call(printf_f, [fmt_ptr] + conv_args)
 
 
-def printf_float_array(ctx, builder, array, prefix="", suffix="\n", override_debug=False):
-    printf(ctx, builder, prefix, override_debug=override_debug)
+def printf_float_array(ctx, builder, array, prefix="", suffix="\n", *, tags:set):
+    printf(ctx, builder, prefix, tags=tags)
 
     with array_ptr_loop(builder, array, "print_array_loop") as (b1, i):
-        printf(ctx, b1, "%lf ", b1.load(b1.gep(array, [i.type(0), i])), override_debug=override_debug)
+        printf(ctx, b1, "%lf ", b1.load(b1.gep(array, [i.type(0), i])), tags=tags)
 
-    printf(ctx, builder, suffix, override_debug=override_debug)
+    printf(ctx, builder, suffix, tags=tags)
 
 
-def printf_float_matrix(ctx, builder, matrix, prefix="", suffix="\n", override_debug=False):
-    printf(ctx, builder, prefix, override_debug=override_debug)
+def printf_float_matrix(ctx, builder, matrix, prefix="", suffix="\n", *, tags:set):
+    printf(ctx, builder, prefix, tags=tags)
     with array_ptr_loop(builder, matrix, "print_row_loop") as (b1, i):
         row = b1.gep(matrix, [i.type(0), i])
-        printf_float_array(ctx, b1, row, suffix="\n", override_debug=override_debug)
+        printf_float_array(ctx, b1, row, suffix="\n", tags=tags)
 
-    printf(ctx, builder, suffix, override_debug=override_debug)
+    printf(ctx, builder, suffix, tags=tags)
 
 
 class ConditionGenerator:

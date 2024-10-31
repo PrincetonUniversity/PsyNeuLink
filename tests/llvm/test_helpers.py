@@ -224,7 +224,7 @@ def test_helper_printf(capfd, ir_argtype, format_spec, values_to_check):
         block = function.append_basic_block(name="entry")
         builder = ir.IRBuilder(block)
 
-        pnlvm.helpers.printf(ctx, builder, format_str, *ir_values_to_check, override_debug=True)
+        pnlvm.helpers.printf(ctx, builder, format_str, *ir_values_to_check, tags={"always"})
         builder.ret_void()
 
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)

@@ -458,9 +458,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
             for node in exec_set:
                 if node._mechanism in input_nodes:
                     continue
+
                 node_z_value = z_values[node]
-                activation_func_derivative = node._gen_llvm_execute_derivative_func(ctx, builder,
-                                                                                    state, params, node_z_value)
+                activation_func_derivative = node._gen_llvm_execute_derivative_func(ctx, builder, state, params, node_z_value)
                 error_val = builder.alloca(z_values[node].type.pointee)
                 error_dict[node] = error_val
 
@@ -470,29 +470,24 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
                     # 1) Lookup desired target value
                     terminal_sequence = self._composition._terminal_backprop_sequences[node._mechanism]
-                    target_idx = self._composition.get_nodes_by_role(
-                        NodeRole.INPUT).index(terminal_sequence[TARGET_MECHANISM])
+                    target_idx = self._composition.get_nodes_by_role(NodeRole.INPUT).index(terminal_sequence[TARGET_MECHANISM])
                     node_target = builder.gep(model_input, [ctx.int32_ty(0), ctx.int32_ty(target_idx)])
 
                     # 2) Lookup desired output value
                     node_output = builder.gep(model_output,
                                               [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(node._idx), ctx.int32_ty(0)])
 
-                    tmp_loss = loss.gen_inject_lossfunc_call(
-                        ctx, builder, loss_fn, node_output, node_target)
+                    tmp_loss = loss.gen_inject_lossfunc_call(ctx, builder, loss_fn, node_output, node_target)
 
-                    pnlvm.helpers.printf_float_array(ctx, builder, node_target, prefix=f"{node}\ttarget:\t")
-                    pnlvm.helpers.printf_float_array(ctx, builder, node_output, prefix=f"{node}\tvalue:\t")
+                    pnlvm.helpers.printf_float_array(ctx, builder, node_target, prefix=f"{node}\ttarget:\t", tags={"torch"})
+                    pnlvm.helpers.printf_float_array(ctx, builder, node_output, prefix=f"{node}\tvalue:\t", tags={"torch"})
 
-                    pnlvm.helpers.printf(ctx, builder, f"{node}\tloss:\t%f\n", tmp_loss, override_debug=False)
-                    builder.store(builder.fadd(builder.load(
-                        total_loss), tmp_loss), total_loss)
-                    loss_derivative = loss._gen_inject_loss_differential(
-                        ctx, builder, node_output, node_target)
+                    pnlvm.helpers.printf(ctx, builder, f"{node}\tloss:\t%f\n", tmp_loss, tags={"torch"})
+                    builder.store(builder.fadd(builder.load(total_loss), tmp_loss), total_loss)
+                    loss_derivative = loss._gen_inject_loss_differential(ctx, builder, node_output, node_target)
+
                     # compute δ_l = dσ/da ⊙ σ'(z)
-
-                    gen_inject_vec_hadamard(
-                        ctx, builder, activation_func_derivative, loss_derivative, error_val)
+                    gen_inject_vec_hadamard(ctx, builder, activation_func_derivative, loss_derivative, error_val)
 
                 else:
                     # We propagate error backwards from next layer
@@ -503,25 +498,22 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         weights_llvmlite = proj._extract_llvm_matrix(ctx, builder, state, params)
 
                         if proj_idx == 0:
-                            gen_inject_vxm_transposed(
-                                ctx, builder, efferent_node_error, weights_llvmlite, error_val)
+                            gen_inject_vxm_transposed(ctx, builder, efferent_node_error, weights_llvmlite, error_val)
                         else:
-                            new_val = gen_inject_vxm_transposed(
-                                ctx, builder, efferent_node_error, weights_llvmlite)
+                            new_val = gen_inject_vxm_transposed(ctx, builder, efferent_node_error, weights_llvmlite)
 
-                            gen_inject_vec_add(
-                                ctx, builder, new_val, error_val, error_val)
+                            gen_inject_vec_add(ctx, builder, new_val, error_val, error_val)
 
-                    gen_inject_vec_hadamard(
-                        ctx, builder, activation_func_derivative, error_val, error_val)
+                    gen_inject_vec_hadamard(ctx, builder, activation_func_derivative, error_val, error_val)
 
-                pnlvm.helpers.printf_float_array(ctx, builder, activation_func_derivative, prefix=f"{node}\tdSigma:\t")
-                pnlvm.helpers.printf_float_array(ctx, builder, error_val, prefix=f"{node}\terror:\t")
+                pnlvm.helpers.printf_float_array(ctx, builder, activation_func_derivative, prefix=f"{node}\tdSigma:\t", tags={"torch"})
+                pnlvm.helpers.printf_float_array(ctx, builder, error_val, prefix=f"{node}\terror:\t", tags={"torch"})
 
         # 4) compute weight gradients
         for (node, err_val) in error_dict.items():
             if node in input_nodes:
                 continue
+
             for proj in node.afferents:
                 # get a_(l-1)
                 afferent_node_activation = builder.gep(model_output, [ctx.int32_ty(0),
@@ -535,7 +527,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                   builder,
                                                   weights_llvmlite,
                                                   prefix= f"{proj.sender._mechanism} -> {proj.receiver._mechanism}\n",
-                                                  override_debug=False)
+                                                  tags={"torch"})
                 # update delta_W
                 node_delta_w = builder.gep(delta_w, [ctx.int32_ty(0), ctx.int32_ty(proj._idx)])
 
@@ -554,7 +546,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         b2.store(new_val, b2.gep(node_delta_w,
                                                  [ctx.int32_ty(0), weight_row, weight_column]))
 
-        pnlvm.helpers.printf(ctx, builder, "TOTAL LOSS:\t%.20f\n", builder.load(total_loss), override_debug=False)
+        pnlvm.helpers.printf(ctx, builder, "TOTAL LOSS:\t%.20f\n", builder.load(total_loss), tags={"torch"})
         builder.ret_void()
 
         return builder.function
@@ -1052,7 +1044,7 @@ class PytorchMechanismWrapper():
                                          builder,
                                          builder.gep(mech_output, [ctx.int32_ty(0), ctx.int32_ty(0)]),
                                          prefix=f"{self} output:\n",
-                                         override_debug=False)
+                                         tags={"torch"})
 
         return mech_output
 
@@ -1222,17 +1214,17 @@ class PytorchProjectionWrapper():
                                          builder,
                                          input_vec,
                                          prefix=f"{self.sender._mechanism} -> {self.receiver._mechanism} input:\n",
-                                         override_debug=False)
+                                         tags={"torch"})
         pnlvm.helpers.printf_float_matrix(ctx,
                                           builder,
                                           proj_matrix,
                                           prefix=f"{self.sender._mechanism} -> {self.receiver._mechanism} mat:\n",
-                                          override_debug=False)
+                                          tags={"torch"})
         pnlvm.helpers.printf_float_array(ctx,
                                          builder,
                                          output_vec,
                                          prefix=f"{self.sender._mechanism} -> {self.receiver._mechanism} output:\n",
-                                         override_debug=False)
+                                         tags={"torch"})
 
         return output_vec
 
