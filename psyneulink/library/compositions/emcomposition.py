@@ -2374,7 +2374,7 @@ class EMComposition(AutodiffComposition):
                                                 MappingProjection(
                                                     sender=self.softmax_node,
                                                     matrix=memory_template[:,i],
-                                                    name=f'MEMORY FOR {self.key_names[i]} [RETRIEVED KEY]')
+                                                    name=f'MEMORY FOR {self.key_names[i]} [RETRIEVE KEY]')
                                             },
                                name= self.key_names[i] + RETRIEVED_AFFIX)
              for i in range(self.num_keys)]
@@ -2386,7 +2386,7 @@ class EMComposition(AutodiffComposition):
                                                     sender=self.softmax_node,
                                                     matrix=memory_template[:,
                                                            i + self.num_keys],
-                                                    name=f'MEMORY FOR {self.value_names[i]} [RETRIEVED VALUE]')},
+                                                    name=f'MEMORY FOR {self.value_names[i]} [RETRIEVE VALUE]')},
                                name= self.value_names[i] + RETRIEVED_AFFIX)
              for i in range(self.num_values)]
 
