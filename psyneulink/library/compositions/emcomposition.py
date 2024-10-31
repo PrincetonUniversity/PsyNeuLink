@@ -2249,7 +2249,7 @@ class EMComposition(AutodiffComposition):
 
 
     def _construct_weighted_match_nodes(self, memory_capacity, field_weights)->list:
-        """Create nodes that, for each key field, weight the output of the match node."""
+        """Create nodes that weight the output of the match node for each key."""
 
         weighted_match_nodes = \
             [ProcessingMechanism(default_variable=[self.match_nodes[i].output_port.value,
