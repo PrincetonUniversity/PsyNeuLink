@@ -974,7 +974,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
                     args.append(cond)
 
                 builder.call(node_f, args)
-                cond_gen.generate_update_after_run(builder, cond, node)
+                cond_gen.generate_update_after_node_execution(builder, cond, node)
 
             builder.block.name = "post_invoke_" + node_f.name
 
