@@ -315,7 +315,6 @@ import logging
 import types
 import typing
 import weakref
-from types import MappingProxyType
 
 import toposort
 
@@ -338,7 +337,6 @@ from psyneulink.core.globals.utilities import (
     update_array_in_place,
 )
 from psyneulink.core.rpc.graph_pb2 import Entry, ndArray
-from types import MappingProxyType
 
 __all__ = [
     'Defaults', 'get_validator_by_function', 'Parameter', 'ParameterAlias', 'ParameterError',
