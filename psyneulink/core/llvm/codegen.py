@@ -801,6 +801,17 @@ def _gen_composition_exec_context(ctx, composition, *, tags:frozenset, suffix=""
     builder.ret_void()
 
 
+def _reset_composition_nodes_exec_counts(ctx, builder, composition, comp_state, time_scales):
+    nodes_states = helpers.get_state_ptr(builder, composition, comp_state, "nodes")
+    for idx, node in enumerate(composition._all_nodes):
+        node_state = builder.gep(nodes_states, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+        num_exec_vec_ptr = helpers.get_state_ptr(builder, node, node_state, "num_executions")
+
+        for scale in time_scales:
+            num_exec_time_ptr = builder.gep(num_exec_vec_ptr, [ctx.int32_ty(0), ctx.int32_ty(scale.value)])
+            builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
+
+
 def gen_composition_exec(ctx, composition, *, tags:frozenset):
     is_simulation = "simulation" in tags
     node_tags = tags.union({"node_assembly"})
@@ -827,19 +838,16 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
             is_finished_callbacks[node] = (wrapper, args)
 
 
-        # Reset internal TRIAL/PASS/TIME_STEP clock for each node
-        # This also resets TIME_STEP counter for input_CIM and parameter_CIM
-        # executed above
-        for time_loc in num_exec_locs.values():
-            for scale in (TimeScale.TRIAL, TimeScale.PASS, TimeScale.TIME_STEP):
-                num_exec_time_ptr = builder.gep(time_loc, [ctx.int32_ty(0), ctx.int32_ty(scale.value)])
-                builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
+        # Resetting internal TRIAL/PASS/TIME_STEP clock for each node
+        # also resets TIME_STEP counter for input_CIM and parameter_CIM
+        # executed when setting up the context
+        _reset_composition_nodes_exec_counts(ctx, builder, composition, state, [TimeScale.TRIAL, TimeScale.PASS, TimeScale.TIME_STEP])
 
-        # Check if there's anything to reset
+        # Check if there's any stateful node to to reset
         for node in composition._all_nodes:
-            # FIXME: This should not be necessary. The code gets DCE'd,
-            # but there are still some problems with generation
-            # 'reset' function
+            # FIXME: This should not be necessary. The code gets DCE'd, but
+            #        there are still some issues with generating the 'reset'
+            #        function.
             if node is composition.controller:
                 continue
 
@@ -1004,10 +1012,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
             # Bumping automatically zeros lower elements
             cond_gen.bump_ts(builder, cond, (0, 1, 0))
 
-            # Reset internal PASS clock for each node
-            for time_loc in num_exec_locs.values():
-                num_exec_time_ptr = builder.gep(time_loc, [zero, ctx.int32_ty(TimeScale.PASS.value)])
-                builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
+            _reset_composition_nodes_exec_counts(ctx, builder, composition, state, [TimeScale.PASS])
 
         builder.branch(loop_condition)
 
@@ -1084,12 +1089,7 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
         builder.store(data_in.type.pointee(input_init), data_in)
         builder.store(inputs_ptr.type.pointee(1), inputs_ptr)
 
-    # Reset internal 'RUN' clocks of each node
-    for idx, node in enumerate(composition._all_nodes):
-        node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
-        num_executions_ptr = helpers.get_state_ptr(builder, node, node_state, "num_executions")
-        num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.RUN.value)])
-        builder.store(num_exec_time_ptr.type.pointee(None), num_exec_time_ptr)
+    _reset_composition_nodes_exec_counts(ctx, builder, composition, state, [TimeScale.RUN])
 
     # Allocate and initialize condition structure
     cond_gen = helpers.ConditionGenerator(ctx, composition)
