@@ -280,12 +280,14 @@ class cpu_jit_engine(jit_engine):
             self._jit_engine.set_object_cache(self._object_cache)
 
 
+# FIXME: Get device side printf pointer
 _ptx_builtin_source = """
 __device__ {type} __pnl_builtin_sin({type} a) {{ return sin(a); }}
 __device__ {type} __pnl_builtin_cos({type} a) {{ return cos(a); }}
 __device__ {type} __pnl_builtin_log({type} a) {{ return log(a); }}
 __device__ {type} __pnl_builtin_exp({type} a) {{ return exp(a); }}
 __device__ {type} __pnl_builtin_pow({type} a, {type} b) {{ return pow(a, b); }}
+__device__ int64_t __pnl_builtin_get_printf_address() {{ return 0; }}
 """
 
 

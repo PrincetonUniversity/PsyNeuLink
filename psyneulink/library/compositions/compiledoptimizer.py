@@ -106,8 +106,8 @@ class AdamOptimizer(Optimizer):
         t = builder.gep(optim_struct, [zero, ctx.int32_ty(self._T_NUM)])
 
         # get methods needed
-        pow = ctx.import_llvm_function("__pnl_builtin_pow")
-        sqrt = ctx.get_builtin("sqrt", [ctx.float_ty])
+        pow_f = ctx.import_llvm_function("__pnl_builtin_pow")
+        sqrt_f = ctx.get_builtin("sqrt", [ctx.float_ty])
 
         lr = ctx.float_ty(self.lr)
         eps = ctx.float_ty(self.eps)
@@ -120,13 +120,12 @@ class AdamOptimizer(Optimizer):
         builder.store(builder.fadd(builder.load(t), one_float), t)
         t_val = builder.load(t)
         # 1.5) calculate values to be used later (based on incremented t)
-        b1_pow = builder.call(pow, [b1, t_val])
-        b2_pow = builder.call(pow, [b2, t_val])
+        b1_pow = builder.call(pow_f, [b1, t_val])
+        b2_pow = builder.call(pow_f, [b2, t_val])
         one_minus_b1_pow = builder.fsub(one_float, b1_pow)
         one_minus_b2_pow = builder.fsub(one_float, b2_pow)
 
-        pnlvm.helpers.printf(
-                builder, f"%f b1_pow_sub %f\nb2 pow sub %f\n",t_val, one_minus_b1_pow, one_minus_b2_pow)
+        pnlvm.helpers.printf(ctx, builder, f"%f b1_pow_sub %f\nb2 pow sub %f\n",t_val, one_minus_b1_pow, one_minus_b2_pow, tags={"torch"})
 
         # 2) update first moments
         for idx, proj in enumerate(self._pytorch_model.projection_wrappers):
@@ -144,7 +143,11 @@ class AdamOptimizer(Optimizer):
             # m_t = m_t + (1-b1)*g_t
             gen_inject_mat_add(ctx, builder, m_t_ptr, tmp_val, m_t_ptr)
 
-            pnlvm.helpers.printf_float_matrix(builder, m_t_ptr, prefix=f"mt val: {proj.sender._mechanism} -> {proj.receiver._mechanism}\n", override_debug=False)
+            pnlvm.helpers.printf_float_matrix(ctx,
+                                              builder,
+                                              m_t_ptr,
+                                              prefix=f"mt val: {proj.sender._mechanism} -> {proj.receiver._mechanism}\n",
+                                              tags={"torch"})
         # 3) update second moments
         for idx, proj in enumerate(self._pytorch_model.projection_wrappers):
             proj_idx_ir = ctx.int32_ty(idx)
@@ -180,24 +183,29 @@ class AdamOptimizer(Optimizer):
             delta_w_ptr = builder.gep(
                 delta_w, [zero, proj_idx_ir])
 
-            pnlvm.helpers.printf_float_matrix(builder, delta_w_ptr, prefix=f"grad val: {proj.sender._mechanism} -> {proj.receiver._mechanism}\n", override_debug=False)
+            pnlvm.helpers.printf_float_matrix(ctx,
+                                              builder,
+                                              delta_w_ptr,
+                                              prefix=f"grad val: {proj.sender._mechanism} -> {proj.receiver._mechanism}\n",
+                                              tags={"torch"})
 
             # this is messy - #TODO - cleanup this
             weights_llvmlite = proj._extract_llvm_matrix(ctx, builder, state, params)
             dim_x, dim_y = proj.matrix.shape
 
             weight_row = None
-            pnlvm.helpers.printf(builder, "biascorr2 %.20f\n", one_minus_b2_pow, override_debug=False)
+            pnlvm.helpers.printf(ctx, builder, "biascorr2 %.20f\n", one_minus_b2_pow, tags={"torch"})
             with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(dim_x), "optimizer_w_upd_outer") as (b1, weight_row):
                 weight_column = None
                 with pnlvm.helpers.for_loop_zero_inc(b1, ctx.int32_ty(dim_y), "optimizer_w_upd_inner") as (b2, weight_column):
                     # sqrt(v_t) + eps
                     v_t_value = b2.load(b2.gep(v_t_ptr, [zero, weight_row, weight_column]))
-                    value = b2.call(sqrt, [v_t_value])
-                    denom = b2.call(sqrt, [one_minus_b2_pow])
+                    value = b2.call(sqrt_f, [v_t_value])
+                    denom = b2.call(sqrt_f, [one_minus_b2_pow])
                     value = b2.fdiv(value, denom)
                     value = b2.fadd(value, eps)
-                    pnlvm.helpers.printf(builder, "val %.20f\n", value, override_debug=False)
+                    pnlvm.helpers.printf(ctx, builder, "val %.20f\n", value, tags={"torch"})
+
                     # alpha_t * m_t
                     m_t_value = b2.load(b2.gep(
                         m_t_ptr, [zero, weight_row, weight_column]))
@@ -213,9 +221,9 @@ class AdamOptimizer(Optimizer):
                     value = b2.fadd(b2.load(old_weight_ptr), value)
                     b2.store(value, old_weight_ptr)
 
-                pnlvm.helpers.printf(b1, "\n", override_debug=False)
+                pnlvm.helpers.printf(ctx, b1, "\n", tags={"torch"})
 
-        pnlvm.helpers.printf(builder, f"\t\t\tOPTIM DONE UPDATE\n",override_debug=False)
+        pnlvm.helpers.printf(ctx, builder, f"\t\t\tOPTIM DONE UPDATE\n", tags={"torch"})
 
         builder.ret_void()
 
