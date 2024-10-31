@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from torch.utils.data import dataset
 from torch import utils
-from numpy.random import randint
+from random import randint
 
 def one_hot_encode(labels, num_classes):
     """
