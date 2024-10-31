@@ -2102,7 +2102,7 @@ class EMComposition(AutodiffComposition):
                                self.match_nodes[i],
                                self.combined_matches_node]
                     if self.weighted_match_nodes:
-                        pathway.insert(3, self.weighted_match_nodes[i])
+                        pathway.insert(2, self.weighted_match_nodes[i])
                     # if self.softmax_gain_control_nodes:
                     #     pathway.insert(4, self.softmax_gain_control_nodes[i])
                 # Key-concatenated pathways
@@ -2293,9 +2293,9 @@ class EMComposition(AutodiffComposition):
             ProcessingMechanism(input_ports=[{SIZE:memory_capacity,
                                               PROJECTIONS:[MappingProjection(sender=s,
                                                                              matrix=IDENTITY_MATRIX,
-                                                                             name=f'{WEIGHTED_MATCH_NODE_NAME} to '
-                                                                                  f'{COMBINED_MATCHES_NODE_NAME} '
-                                                                                  f'for {self.key_names[i]}')
+                                                                             name=f'{WEIGHTED_MATCH_NODE_NAME} '
+                                                                                  f'for {self.key_names[i]} to '
+                                                                                  f'{COMBINED_MATCHES_NODE_NAME}')
                                                            for i, s in enumerate(input_source)]}],
                                 name=COMBINED_MATCHES_NODE_NAME))
 
@@ -2457,7 +2457,7 @@ class EMComposition(AutodiffComposition):
                                                 MappingProjection(
                                                     sender=self.softmax_node,
                                                     matrix=memory_template[:,i],
-                                                    name=f'MEMORY FOR {self.key_names[i]} [RETRIEVE KEY]')
+                                                    name=f'MEMORY FOR {self.key_names[i]} [RETRIEVED KEY]')
                                             },
                                name= self.key_names[i] + RETRIEVED_AFFIX)
              for i in range(self.num_keys)]
@@ -2469,7 +2469,7 @@ class EMComposition(AutodiffComposition):
                                                     sender=self.softmax_node,
                                                     matrix=memory_template[:,
                                                            i + self.num_keys],
-                                                    name=f'MEMORY FOR {self.value_names[i]} [RETRIEVE VALUE]')},
+                                                    name=f'MEMORY FOR {self.value_names[i]} [RETRIEVED VALUE]')},
                                name= self.value_names[i] + RETRIEVED_AFFIX)
              for i in range(self.num_values)]
 
