@@ -9,6 +9,7 @@
 # ********************************************* PNL LLVM helpers **************************************************************
 
 import ast
+from enum import IntEnum
 from contextlib import contextmanager
 import warnings
 
@@ -451,6 +452,11 @@ def printf_float_matrix(ctx, builder, matrix, prefix="", suffix="\n", *, tags:se
 
 
 class ConditionGenerator:
+    class TimeIndex(IntEnum):
+        TRIAL = 0,
+        PASS  = 1,
+        STEP  = 2,
+
     def __init__(self, ctx, composition):
         self.ctx = ctx
         self.composition = composition
@@ -460,6 +466,8 @@ class ConditionGenerator:
         time_stamp_struct = ir.LiteralStructType([self.ctx.int32_ty,   # Trial
                                                   self.ctx.int32_ty,   # Pass
                                                   self.ctx.int32_ty])  # Step
+
+        assert len(time_stamp_struct) == len(self.TimeIndex)
 
         status_struct = ir.LiteralStructType([
                     self.ctx.int32_ty,  # number of executions in this run
@@ -510,6 +518,7 @@ class ConditionGenerator:
         ts = builder.load(ts_ptr)
 
         assert len(ts.type) == len(count)
+
         # Update run, pass, step of ts
         for idx in range(len(ts.type)):
             if all(v == 0 for v in count[:idx]):
@@ -517,6 +526,7 @@ class ConditionGenerator:
                 el = builder.add(el, el.type(count[idx]))
             else:
                 el = self.ctx.int32_ty(0)
+
             ts = builder.insert_value(ts, el, idx)
 
         builder.store(ts, ts_ptr)
@@ -552,19 +562,28 @@ class ConditionGenerator:
 
     def __get_node_ts(self, builder, cond_ptr, node):
         status_ptr = self.__get_node_status_ptr(builder, cond_ptr, node)
-        ts_ptr = builder.gep(status_ptr, [self.ctx.int32_ty(0),
-                                          self.ctx.int32_ty(1)])
+        ts_ptr = builder.gep(status_ptr, [self.ctx.int32_ty(0), self.ctx.int32_ty(1)])
         return builder.load(ts_ptr)
 
     def get_global_ts(self, builder, cond_ptr):
         ts_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
         return builder.load(ts_ptr)
 
+    def _extract_global_time(self, builder, cond_ptr, time_index):
+        global_ts = self.get_global_ts(builder, cond_ptr)
+        return builder.extract_value(global_ts, time_index.value)
+
+    def get_global_trial(self, builder, cond_ptr):
+        return self._extract_global_time(builder, cond_ptr, self.TimeIndex.TRIAL)
+
+    def get_global_pass(self, builder, cond_ptr):
+        return self._extract_global_time(builder, cond_ptr, self.TimeIndex.PASS)
+
     def generate_update_after_run(self, builder, cond_ptr, node):
         status_ptr = self.__get_node_status_ptr(builder, cond_ptr, node)
         status = builder.load(status_ptr)
 
-        # Update number of runs
+        # Update total number of runs
         runs = builder.extract_value(status, 0)
         runs = builder.add(runs, runs.type(1))
         status = builder.insert_value(status, runs, 0)
@@ -576,31 +595,27 @@ class ConditionGenerator:
         builder.store(status, status_ptr)
 
     def generate_ran_this_pass(self, builder, cond_ptr, node):
-        global_ts = self.get_global_ts(builder, cond_ptr)
-        global_trial = builder.extract_value(global_ts, 0)
-        global_pass = builder.extract_value(global_ts, 1)
+        global_trial = self.get_global_trial(builder, cond_ptr)
+        global_pass = self.get_global_pass(builder, cond_ptr)
 
         node_ts = self.__get_node_ts(builder, cond_ptr, node)
-        node_trial = builder.extract_value(node_ts, 0)
-        node_pass = builder.extract_value(node_ts, 1)
+        node_trial = builder.extract_value(node_ts, self.TimeIndex.TRIAL.value)
+        node_pass = builder.extract_value(node_ts, self.TimeIndex.PASS.value)
 
         pass_eq = builder.icmp_signed("==", node_pass, global_pass)
         trial_eq = builder.icmp_signed("==", node_trial, global_trial)
         return builder.and_(pass_eq, trial_eq)
 
     def generate_ran_this_trial(self, builder, cond_ptr, node):
-        global_ts = self.get_global_ts(builder, cond_ptr)
-        global_trial = builder.extract_value(global_ts, 0)
+        global_trial = self.get_global_trial(builder, cond_ptr)
 
         node_ts = self.__get_node_ts(builder, cond_ptr, node)
-        node_trial = builder.extract_value(node_ts, 0)
+        node_trial = builder.extract_value(node_ts, self.TimeIndex.TRIAL.value)
 
         return builder.icmp_signed("==", node_trial, global_trial)
 
     # TODO: replace num_exec_locs use with equivalent from nodes_states
-    def generate_sched_condition(self, builder, condition, cond_ptr, node,
-                                 is_finished_callbacks, num_exec_locs,
-                                 nodes_states):
+    def generate_sched_condition(self, builder, condition, cond_ptr, node, is_finished_callbacks, num_exec_locs, nodes_states):
 
 
         if isinstance(condition, Always):
@@ -646,16 +661,13 @@ class ConditionGenerator:
 
         elif isinstance(condition, AtTrial):
             trial_num = condition.args[0]
-            global_ts = self.get_global_ts(builder, cond_ptr)
-            trial = builder.extract_value(global_ts, 0)
-            return builder.icmp_unsigned("==", trial, trial.type(trial_num))
+            current_trial = self.get_global_trial(builder, cond_ptr)
+            return builder.icmp_unsigned("==", current_trial, current_trial.type(trial_num))
 
         elif isinstance(condition, AtPass):
             pass_num = condition.args[0]
-            global_ts = self.get_global_ts(builder, cond_ptr)
-            current_pass = builder.extract_value(global_ts, 1)
-            return builder.icmp_unsigned("==", current_pass,
-                                         current_pass.type(pass_num))
+            current_pass = self.get_global_pass(builder, cond_ptr)
+            return builder.icmp_unsigned("==", current_pass, current_pass.type(pass_num))
 
         elif isinstance(condition, EveryNCalls):
             target, count = condition.args
@@ -670,9 +682,7 @@ class ConditionGenerator:
         elif isinstance(condition, BeforeNCalls):
             target, count = condition.args
             scale = condition.time_scale.value
-            target_num_execs_in_scale = builder.gep(num_exec_locs[target],
-                                                    [self.ctx.int32_ty(0),
-                                                     self.ctx.int32_ty(scale)])
+            target_num_execs_in_scale = builder.gep(num_exec_locs[target], [self.ctx.int32_ty(0), self.ctx.int32_ty(scale)])
             num_execs = builder.load(target_num_execs_in_scale)
 
             return builder.icmp_unsigned('<', num_execs, num_execs.type(count))
@@ -680,18 +690,14 @@ class ConditionGenerator:
         elif isinstance(condition, AtNCalls):
             target, count = condition.args
             scale = condition.time_scale.value
-            target_num_execs_in_scale = builder.gep(num_exec_locs[target],
-                                                    [self.ctx.int32_ty(0),
-                                                     self.ctx.int32_ty(scale)])
+            target_num_execs_in_scale = builder.gep(num_exec_locs[target], [self.ctx.int32_ty(0), self.ctx.int32_ty(scale)])
             num_execs = builder.load(target_num_execs_in_scale)
             return builder.icmp_unsigned('==', num_execs, num_execs.type(count))
 
         elif isinstance(condition, AfterNCalls):
             target, count = condition.args
             scale = condition.time_scale.value
-            target_num_execs_in_scale = builder.gep(num_exec_locs[target],
-                                                    [self.ctx.int32_ty(0),
-                                                     self.ctx.int32_ty(scale)])
+            target_num_execs_in_scale = builder.gep(num_exec_locs[target], [self.ctx.int32_ty(0), self.ctx.int32_ty(scale)])
             num_execs = builder.load(target_num_execs_in_scale)
             return builder.icmp_unsigned('>=', num_execs, num_execs.type(count))
 
