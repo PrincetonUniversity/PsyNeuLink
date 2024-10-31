@@ -579,6 +579,9 @@ class ConditionGenerator:
     def get_global_pass(self, builder, cond_ptr):
         return self._extract_global_time(builder, cond_ptr, self.TimeIndex.PASS)
 
+    def get_global_step(self, builder, cond_ptr):
+        return self._extract_global_time(builder, cond_ptr, self.TimeIndex.STEP)
+
     def generate_update_after_run(self, builder, cond_ptr, node):
         status_ptr = self.__get_node_status_ptr(builder, cond_ptr, node)
         status = builder.load(status_ptr)

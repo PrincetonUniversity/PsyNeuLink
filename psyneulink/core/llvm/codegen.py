@@ -802,7 +802,7 @@ def _gen_composition_exec_context(ctx, composition, *, tags:frozenset, suffix=""
 
 
 def gen_composition_exec(ctx, composition, *, tags:frozenset):
-    simulation = "simulation" in tags
+    is_simulation = "simulation" in tags
     node_tags = tags.union({"node_assembly"})
 
     with _gen_composition_exec_context(ctx, composition, tags=tags) as (builder, data, params, cond_gen):
@@ -856,8 +856,17 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
                 builder.call(node_reinit_f, [state, params, comp_in, data, data])
 
         # Run controller if it's enabled in 'BEFORE' mode
-        if simulation is False and composition.enable_controller and composition.controller_mode == BEFORE:
+        if is_simulation is False and composition.enable_controller and composition.controller_mode == BEFORE:
             assert composition.controller is not None
+
+            helpers.printf(ctx,
+                           builder,
+                           "<%u/%u/%u> Executing: {}/{}\n".format(composition.name, composition.controller.name),
+                           cond_gen.get_global_trial(builder, cond),
+                           cond_gen.get_global_pass(builder, cond),
+                           cond_gen.get_global_step(builder, cond),
+                           tags={"scheduler"})
+
             controller_w = ctx.get_node_assembly(composition, composition.controller)
             controller_f = ctx.import_llvm_function(controller_w, tags=node_tags)
             builder.call(controller_f, [state, params, comp_in, data, data])
@@ -896,9 +905,9 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
         builder.position_at_end(loop_body)
 
         previous_step = builder.load(run_set_ptr)
-
         zero = ctx.int32_ty(0)
         any_cond = ctx.bool_ty(0)
+
         # Calculate execution set before running the mechanisms
         for idx, node in enumerate(composition.nodes):
             run_set_node_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)], name="run_cond_ptr_" + node.name)
@@ -913,6 +922,17 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
             node_cond = builder.and_(node_cond, builder.not_(ran), name="run_cond_" + node.name)
             any_cond = builder.or_(any_cond, node_cond, name="any_ran_cond")
             builder.store(node_cond, run_set_node_ptr)
+
+            prefix = "[SIMULATION] " if is_simulation else ""
+            helpers.printf(ctx,
+                           builder,
+                           "{}<%u/%u/%u> Considered: {}/{}: %d\n".format(prefix, composition.name, node.name),
+                           cond_gen.get_global_trial(builder, cond),
+                           cond_gen.get_global_pass(builder, cond),
+                           cond_gen.get_global_step(builder, cond),
+                           builder.select(node_cond, zero.type(1), zero),
+                           tags={"scheduler" if not is_simulation else "simulation_scheduler"})
+
 
         # Reset internal TIME_STEP clock for each node
         # NOTE: This is done _after_ condition evaluation, otherwise
@@ -932,14 +952,25 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
                 node_w = ctx.get_node_assembly(composition, node)
                 node_f = ctx.import_llvm_function(node_w, tags=node_tags)
                 builder.block.name = "invoke_" + node_f.name
+
+                prefix = "[SIMULATION] " if is_simulation else ""
+                helpers.printf(ctx,
+                               builder,
+                               "{}<%u/%u/%u> Executing: {}/{}\n".format(prefix, composition.name, node.name),
+                               cond_gen.get_global_trial(builder, cond),
+                               cond_gen.get_global_pass(builder, cond),
+                               cond_gen.get_global_step(builder, cond),
+                               tags={"scheduler" if not is_simulation else "simulation_scheduler"})
+
                 # Wrappers do proper indexing of all structures
                 # Mechanisms have only 5 args
                 args = [state, params, comp_in, data, output_storage]
                 if len(node_f.args) >= 6:  # Composition wrappers have 6 args
                     args.append(cond)
-                builder.call(node_f, args)
 
+                builder.call(node_f, args)
                 cond_gen.generate_update_after_run(builder, cond, node)
+
             builder.block.name = "post_invoke_" + node_f.name
 
         # Writeback results
@@ -959,6 +990,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
             cond_gen.bump_ts(builder, cond)
 
         builder.block.name = "update_iter_count"
+
         # Increment number of iterations
         iters = builder.load(iter_ptr, name="iterw")
         iters = builder.add(iters, iters.type(1), name="iterw_inc")
@@ -966,12 +998,15 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
 
         max_iters = len(composition.scheduler.consideration_queue)
         completed_pass = builder.icmp_unsigned("==", iters, iters.type(max_iters), name="completed_pass")
+
         # Increment pass and reset time step
         with builder.if_then(completed_pass):
             builder.block.name = "inc_pass"
             builder.store(zero, iter_ptr)
+
             # Bumping automatically zeros lower elements
             cond_gen.bump_ts(builder, cond, (0, 1, 0))
+
             # Reset internal PASS clock for each node
             for time_loc in num_exec_locs.values():
                 num_exec_time_ptr = builder.gep(time_loc, [zero, ctx.int32_ty(TimeScale.PASS.value)])
@@ -981,9 +1016,17 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
 
         builder.position_at_end(exit_block)
 
-        if simulation is False and composition.enable_controller and \
-           composition.controller_mode == AFTER:
+        if is_simulation is False and composition.enable_controller and composition.controller_mode == AFTER:
             assert composition.controller is not None
+
+            helpers.printf(ctx,
+                           builder,
+                           "<%u/%u/%u> Executing: {}/{}\n".format(composition.name, composition.controller.name),
+                           cond_gen.get_global_trial(builder, cond),
+                           cond_gen.get_global_pass(builder, cond),
+                           cond_gen.get_global_step(builder, cond),
+                           tags={"scheduler"})
+
             controller_w = ctx.get_node_assembly(composition, composition.controller)
             controller_f = ctx.import_llvm_function(controller_w, tags=node_tags)
             builder.call(controller_f, [state, params, comp_in, data, data])
