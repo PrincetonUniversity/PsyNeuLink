@@ -1029,12 +1029,23 @@ STORAGE_PROB = 'storage_prob'
 WEIGHTED_AVG = ALL
 PROBABILISTIC = PROB_INDICATOR
 
-QUERY_AFFIX = ' [QUERY]'
-VALUE_AFFIX = ' [VALUE]'
-MATCH_TO_KEYS_AFFIX = ' [MATCH to KEYS]'
-RETRIEVED_AFFIX = ' [RETRIEVED]'
-WEIGHTED_SOFTMAX_AFFIX = ' [WEIGHTED SOFTMAX]'
+QUERY_NODE_NAME = 'QUERY'
+QUERY_AFFIX = f' [{QUERY_NODE_NAME}]'
+VALUE_NODE_NAME = 'VALUE'
+VALUE_AFFIX = f' [{VALUE_NODE_NAME}]'
+MATCH_TO_KEYS_NODE_NAME = 'MATCH to KEYS'
+MATCH_TO_KEYS_AFFIX = f' [{MATCH_TO_KEYS_NODE_NAME}]'
+WEIGHTED_MATCH_NODE_NAME = 'WEIGHTED MATCH'
+WEIGHTED_MATCH_AFFIX = f' [{WEIGHTED_MATCH_NODE_NAME}]'
+COMBINED_MATCHES_NODE_NAME = 'COMBINED_MATCHES'
+COMBINED_MATCHES_AFFIX = f' [{COMBINED_MATCHES_NODE_NAME}]'
+SOFTMAX_NODE_NAME = 'RETRIEVE'
+SOFTMAX_AFFIX = f' [{SOFTMAX_NODE_NAME}]'
+RETRIEVED_NODE_NAME = SOFTMAX_NODE_NAME
+RETRIEVED_AFFIX = SOFTMAX_AFFIX
+
 COMBINED_SOFTMAX_NODE_NAME = 'RETRIEVE'
+WEIGHTED_SOFTMAX_AFFIX = ' [WEIGHTED SOFTMAX]'
 STORE_NODE_NAME = 'STORE'
 
 
@@ -2235,6 +2246,59 @@ class EMComposition(AutodiffComposition):
             warnings.warn(f"The 'normalize_field_weights' arg of '{self.name}' is set to False with "
                           f"'enable_learning' set to True (or a list); this may generate an error if "
                           f"the 'loss_spec' used for learning requires values to be between 0 and 1.")
+
+
+    def _construct_weighted_match_nodes(self, memory_capacity, field_weights)->list:
+        """Create nodes that, for each key field, weight the output of the match node."""
+
+        weighted_match_nodes = \
+            [ProcessingMechanism(default_variable=[self.match_nodes[i].output_port.value,
+                                                   self.match_nodes[i].output_port.value],
+                                 input_ports=[{PROJECTIONS:
+                                                   MappingProjection(sender=match_fw_pair[0],
+                                                                     matrix=IDENTITY_MATRIX,
+                                                                     name=f'MATCH to {WEIGHTED_MATCH_NODE_NAME} '
+                                                                          f'for {self.key_names[i]}')},
+                                              {PROJECTIONS:
+                                                   MappingProjection(sender=match_fw_pair[1],
+                                                                     matrix=FULL_CONNECTIVITY_MATRIX,
+                                                                     name=f'WEIGHT to {WEIGHTED_MATCH_NODE_NAME} '
+                                                                          f'for {self.key_names[i]}')}],
+                                 function=LinearCombination(operation=PRODUCT),
+                                 name=self.key_names[i] + WEIGHTED_MATCH_AFFIX)
+             for i, match_fw_pair in enumerate(zip(self.match_nodes,
+                                                   self.field_weight_nodes))]
+
+        return weighted_match_nodes
+
+    def _construct_combined_matches_node(self,
+                                         memory_capacity,
+                                         field_weighting,
+                                         use_gating_for_weighting
+                                         )->ProcessingMechanism:
+        """Create node that combines weighted matches for all keys into one match vector."""
+
+        if not field_weighting or use_gating_for_weighting:
+            # If use_gating_for_weighting, then softmax_nodes are output gated by gating nodes
+            input_source = self.match_nodes
+        else:
+            input_source = self.weighted_match_nodes
+
+        combined_matches_node = (
+            ProcessingMechanism(input_ports=[{SIZE:memory_capacity,
+                                              PROJECTIONS:[MappingProjection(sender=s,
+                                                                             matrix=IDENTITY_MATRIX,
+                                                                             name=f'{WEIGHTED_MATCH_NODE_NAME} to '
+                                                                                  f'{COMBINED_MATCHES_NODE_NAME} '
+                                                                                  f'for {self.key_names[i]}')
+                                                           for i, s in enumerate(input_source)]}],
+                                name=COMBINED_MATCHES_NODE_NAME))
+
+        assert len(combined_matches_node.output_port.value) == memory_capacity, \
+            'PROGRAM ERROR: number of items in combined_matches_node ' \
+            f'({len(combined_matches_node.output_port)}) does not match memory_capacity ({self.memory_capacity})'
+
+        return combined_matches_node
 
     def _construct_softmax_nodes(self, memory_capacity, field_weights,
                                  softmax_gain, softmax_threshold, softmax_choice)->list:
