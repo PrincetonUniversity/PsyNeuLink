@@ -466,12 +466,6 @@ def check_user_specified(func):
         except AttributeError:
             self._prev_constructor = constructor if '__init__' in type(self).__dict__ else None
             self._user_specified_args = copy.copy(kwargs)
-
-            # If any of the kwargs are MappingProxyType, convert them to dict
-            for k, v in self._user_specified_args.items():
-                if isinstance(v, MappingProxyType):
-                    self._user_specified_args[k] = v.copy()
-
         else:
             # add args determined in constructor to user_specifed.
             # since some args are set by the values of other

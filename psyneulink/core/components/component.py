@@ -1269,6 +1269,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         self.compositions = weakref.WeakSet()
 
+        # Delete the _user_specified_args attribute, we don't need it anymore
+        del self._user_specified_args
+
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
         #return '{1}'.format(type(self).__name__, self.name)
