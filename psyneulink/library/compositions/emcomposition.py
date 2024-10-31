@@ -1318,37 +1318,25 @@ class EMComposition(AutodiffComposition):
         <EMComposition_Processing>` for additional details). These are named the same as the corresponding
         `query_input_nodes <EMComposition.query_input_nodes>` appended with the suffix *[MATCH to KEYS]*.
 
-    softmax_gain_control_node : list[ControlMechanism]
-        `ControlMechanisms <ControlMechanism>` that adaptively control the `softmax_gain <EMComposition.softmax_gain>`
-        of the `softmax_node <EMComposition.softmax_node>`. This is implemented only if `softmax_gain
-        <EMComposition.softmax_gain>` is specified as *CONTROL* (see `softmax_gain <EMComposition_Softmax_Gain>` for
-        details).
-
-    softmax_nodes : list[ProcessingMechanism]
-        `ProcessingMechanisms <ProcessingMechanism>` that compute the softmax over the vectors received
-        from the corresponding `match_nodes <EMComposition.match_nodes>` (see `Softmax normalize matches over fields
-        <EMComposition_Processing>` for additional details).  These are named the same as the corresponding
-        `query_input_nodes <EMComposition.query_input_nodes>` appended with the suffix *[SOFTMAX]*.
-
     field_weight_nodes : list[ProcessingMechanism]
         `ProcessingMechanisms <ProcessingMechanism>`, each of which use the `field weight <EMComposition.field_weights>`
         for a given `field <EMComposition_Fields>` as its (fixed) input and provides this to the corresponding
-        `weighted_softmax_node <EMComposition.weighted_softmax_nodes>`. These are implemented only if more than one
+        `weighted_match_nodes <EMComposition.weighted_match_nodes>`. These are implemented only if more than one
         `key field <EMComposition_Fields>` is specified (see `Fields <EMComposition_Fields>` for additional details),
         and are replaced with `retrieval_gating_nodes <EMComposition.retrieval_gating_nodes>` if
         `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` is True.   These are named the same as the
         corresponding `query_input_nodes <EMComposition.query_input_nodes>` appended with the suffix *[WEIGHT]*.
 
-    weighted_softmax_nodes : list[ProcessingMechanism]
+    weighted_match_nodes : list[ProcessingMechanism]
         `ProcessingMechanisms <ProcessingMechanism>`, each of which receives the output of the corresponding
-        `softmax_node <EMComposition.softmax_nodes>` and `field_weight_node <EMComposition.field_weight_nodes>`
-        for a given `field <EMComposition_Fields>`, and multiplies them to produce the weighted softmax for that field;
+        `match_node <EMComposition.match_nodes>` and `field_weight_node <EMComposition.field_weight_nodes>` for a
+        given `field <EMComposition_Fields>`, and multiplies them to produce the weighted dot product for that field;
         these are implemented only if more than one `key field <EMComposition_Fields>` is specified (see `Fields
         <EMComposition_Fields>` for additional details) and `use_gating_for_weighting
         <EMComposition.use_gating_for_weighting>` is False (otherwise, `field_weights <EMComposition.field_weights>`
-        are applied through output gating of the `softmax_nodes <EMComposition.softmax_nodes>` by the
+        are applied through output gating of the `match_nodes <EMComposition.match_nodes>` by the
         `retrieval_gating_nodes <EMComposition.retrieval_gating_nodes>`).  These are named the same as the corresponding
-        `query_input_nodes <EMComposition.query_input_nodes>` appended with the suffix *[WEIGHTED SOFTMAX]*.
+        `query_input_nodes <EMComposition.query_input_nodes>` appended with the suffix *[WEIGHTED MATCH]*.
 
     retrieval_gating_nodes : list[GatingMechanism]
         `GatingMechanisms <GatingMechanism>` that uses the `field weight <EMComposition.field_weights>` for each
@@ -1357,14 +1345,25 @@ class EMComposition(AutodiffComposition):
         only if `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` is True and more than one
         `key field <EMComposition_Fields>` is specified (see `Fields <EMComposition_Fields>` for additional details).
 
-    combined_softmax_node : ProcessingMechanism
-        `ProcessingMechanism` that receives the softmax normalized dot products of the keys and memories from the
-        `softmax_nodes <EMComposition.softmax_nodes>`, weighted by the `field_weights_nodes
-        <EMComposition.field_weights_nodes>` if more than one `key field <EMComposition_Fields>` is specified
+    combined_matches_node : ProcessingMechanism
+        `ProcessingMechanism` that receives the weighted dot products from the `weighted_match_nodes
+        <EMComposition.weighted_match_nodes>` if more than one `key field <EMComposition_Fields>` is specified
         (or by `retrieval_gating_nodes <EMComposition.retrieval_gating_nodes>` if `use_gating_for_weighting
-        <EMComposition.use_gating_for_weighting>` is True), and combines them into a single vector that is used to
-        retrieve the corresponding memory for each field from `memory <EMComposition.memory>` (see `Retrieve values by
-        field <EMComposition_Processing>` for additional details). This node is named *RETRIEVE*.
+        <EMComposition.use_gating_for_weighting>` is True), and combines them into a single vector that then sent
+        to the `softmax_node <EMComposition.softmax_node>` for retrieval. This node is named *COMBINE MATCHES*.
+
+    softmax_node : list[ProcessingMechanism]
+        `ProcessingMechanisms <ProcessingMechanism>` that computes the softmax over the summed dot products of keys
+        and memories (output of the `combined_match_node <EMComposition.combined_match_node>`)
+        from the corresponding `match_nodes <EMComposition.match_nodes>` (see `Softmax over summed dot products
+        <EMComposition_Processing>` for additional details).  This is named *RETRIEVE* (as it yields the
+        softmax-weighted average over the keys in `memory <EMComposition.memory>`).
+
+    softmax_gain_control_node : list[ControlMechanism]
+        `ControlMechanisms <ControlMechanism>` that adaptively control the `softmax_gain <EMComposition.softmax_gain>`
+        of the `softmax_node <EMComposition.softmax_node>`. This is implemented only if `softmax_gain
+        <EMComposition.softmax_gain>` is specified as *CONTROL* (see `softmax_gain <EMComposition_Softmax_Gain>` for
+        details).
 
     retrieved_nodes : list[ProcessingMechanism]
         `ProcessingMechanisms <ProcessingMechanism>` that receive the vector retrieved for each field in `memory
