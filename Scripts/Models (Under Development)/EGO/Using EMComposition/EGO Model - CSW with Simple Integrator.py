@@ -395,7 +395,7 @@ if __name__ == '__main__':
                   #   call_after_minibatch=print('Projections from context to EM: ',
                   #                              model.projections[7].parameters.matrix.get(context)),
                   #                              # model.projections[7].matrix)
-                    call_after_minibatch=print_stuff,
+                  #   call_after_minibatch=print_stuff,
                   #   optimizations_per_minibatch=model_params['num_optimization_steps'],
                     synch_projection_matrices_with_torch=model_params['synch_weights'],
                     synch_node_values_with_torch=model_params['synch_values'],
@@ -450,7 +450,7 @@ if __name__ == '__main__':
             axes[1].set_xlabel('Stimuli')
             axes[1].set_ylabel(model_params['loss_spec'])
             # Logit of loss
-            axes[2].plot( (model.results[1:TOTAL_NUM_STIMS,2]*TARGETS[:TOTAL_NUM_STIMS-1]).sum(-1) )
+            axes[2].plot( (model.results[2:TOTAL_NUM_STIMS,2]*TARGETS[:TOTAL_NUM_STIMS-2]).sum(-1) )
             axes[2].set_xlabel('Stimuli')
             axes[2].set_ylabel('Correct Logit')
             plt.suptitle(f"{model_params['curriculum_type']} Training")
