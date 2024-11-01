@@ -304,11 +304,11 @@ class TestExecution:
         (4, [[[1,2,3],[4,6]],     # Equal field_weights (but not concatenated)
              [[1,2,5],[4,6]],
              [[1,2,10],[4,6]]], (0,.01), 4,  0, [1,1],  None, None,  100,  0, [[[1, 2, 3]],
-                                                                                   [[4, 6]]],   [[0.90323092,
-                                                                                                  1.80586151,
-                                                                                                  4.00008914],
-                                                                                                 [3.61161172,
-                                                                                                  5.41731422]]
+                                                                                   [[4, 6]]],   [[0.99750462,
+                                                                                                  1.99499376,
+                                                                                                  3.51623568],
+                                                                                                 [3.98998465,
+                                                                                                  5.9849743]]
          ),
         (5, [[[1,2,3],[4,6]],     # Equal field_weights with concatenation
              [[1,2,5],[4,8]],
@@ -321,44 +321,44 @@ class TestExecution:
         (6, [[[1,2,3],[4,6]],        # Unequal field_weights
              [[1,2,5],[4,8]],
              [[1,2,10],[4,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  0, [[[1, 2, 3]],
-                                                                                  [[4, 6]]],    [[0.96869477,
-                                                                                                  1.93719534,
-                                                                                                  3.1307577],
-                                                                                                 [3.87435467,
-                                                                                                  6.02081578]]),
+                                                                                  [[4, 6]]],    [[0.99996025,
+                                                                                                  1.99992024,
+                                                                                                  3.19317783],
+                                                                                                 [3.99984044,
+                                                                                                  6.19219795]]),
         (7, [[[1,2,3],[4,6]],        # Store + no decay
              [[1,2,5],[4,8]],
              [[1,2,10],[4,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
-                                                                                  [[4, 6]]],    [[0.96869477,
-                                                                                                  1.93719534,
-                                                                                                  3.1307577],
-                                                                                                 [3.87435467,
-                                                                                                  6.02081578]]),
+                                                                                  [[4, 6]]],    [[0.99996025,
+                                                                                                  1.99992024,
+                                                                                                  3.19317783],
+                                                                                                 [3.99984044,
+                                                                                                  6.19219795]]),
         (8, [[[1,2,3],[4,6]],        # Store + default decay (should be AUTO)
              [[1,2,5],[4,8]],
              [[1,2,10],[4,10]]], (0,.01), 4, None, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
-                                                                                    [[4, 6]]], [[0.96869477,
-                                                                                                  1.93719534,
-                                                                                                  3.1307577 ],
-                                                                                                 [3.87435467,
-                                                                                                  6.02081578]]),
+                                                                                    [[4, 6]]], [[0.99996025,
+                                                                                                 1.99992024,
+                                                                                                 3.19317783],
+                                                                                                 [3.99984044,
+                                                                                                  6.19219795]]),
         (9, [[[1,2,3],[4,6]],        # Store + explicit AUTO decay
              [[1,2,5],[4,8]],
              [[1,2,10],[4,10]]], (0,.01), 4, AUTO, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
-                                                                                  [[4, 6]]],    [[0.96869477,
-                                                                                                  1.93719534,
-                                                                                                  3.1307577 ],
-                                                                                                 [3.87435467,
-                                                                                                  6.02081578]]),
+                                                                                  [[4, 6]]],    [[0.99996025,
+                                                                                                  1.99992024,
+                                                                                                  3.19317783],
+                                                                                                 [3.99984044,
+                                                                                                  6.19219795]]),
         (10, [[[1,2,3],[4,6]],        # Store + numerical decay
               [[1,2,5],[4,8]],
               [[1,2,10],[4,10]]], (0,.01), 4, .1, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
-                                                                                 [[4, 6]]],     [[0.96869477,
-                                                                                                  1.93719534,
-                                                                                                  3.1307577 ],
-                                                                                                 [3.87435467,
-                                                                                                  6.02081578]]),
-        (11, [[[1,2,3],[4,6]],    # Same as 10, but with equal weights and concatenate keysdd
+                                                                                 [[4, 6]]],     [[0.99996025,
+                                                                                                  1.99992024,
+                                                                                                  3.19317783],
+                                                                                                 [3.99984044,
+                                                                                                  6.19219795]]),
+        (11, [[[1,2,3],[4,6]],    # Same as 10, but with equal weights and concatenate keys
               [[1,2,5],[4,8]],
               [[1,2,10],[4,10]]], (0,.01), 4, .1, [1,1],  True, None,  100,  1, [[[1, 2, 3]],
                                                                                  [[4, 6]]],     [[0.99922544,
@@ -441,10 +441,10 @@ class TestExecution:
             np.testing.assert_allclose(retrieved, expected)
 
         # Validate that sum of weighted softmax distributions in field_weight_node itself sums to 1
-        np.testing.assert_allclose(np.sum(em.combined_softmax_node.value), 1.0, atol=1e-15)
+        np.testing.assert_allclose(np.sum(em.softmax_node.value), 1.0, atol=1e-15)
 
         # Validate that sum of its output ports also sums to 1
-        np.testing.assert_allclose(np.sum([port.value for port in em.combined_softmax_node.output_ports]),
+        np.testing.assert_allclose(np.sum([port.value for port in em.softmax_node.output_ports]),
                                    1.0, atol=1e-15)
 
         # Validate storage

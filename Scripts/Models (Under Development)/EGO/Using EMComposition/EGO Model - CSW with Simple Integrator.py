@@ -407,8 +407,8 @@ if __name__ == '__main__':
                   )
         stop_time = timeit.default_timer()
         print(f"Elapsed time: {stop_time - start_time}")
-        if DISPLAY_MODEL is not None:
-            model.show_graph(**DISPLAY_MODEL)
+        # if DISPLAY_MODEL is not None:
+        #     model.show_graph(**DISPLAY_MODEL)
         if PRINT_RESULTS:
             print("MEMORY:")
             print(np.round(model.nodes['EM'].parameters.memory.get(model.name),3))

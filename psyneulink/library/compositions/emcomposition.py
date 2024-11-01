@@ -511,7 +511,7 @@ An EMComposition is created by calling its constructor, that takes the following
   used for retrieval (see `EMComposition_Execution` below).  The following options can be used:
 
   * numeric value: the value is used as the gain of the `SoftMax` Function for the EMComposition's
-    `softmax_nodes <EMComposition.softmax_nodes>`.
+    `softmax_node <EMComposition.softmax_node>`.
 
   * *ADAPTIVE*: the `adapt_gain <SoftMax.adapt_gain>` method of the `SoftMax` Function is used to adaptively set
     the `softmax_gain <EMComposition.softmax_gain>` based on the entropy of the dot products, in order to preserve
@@ -519,8 +519,8 @@ An EMComposition is created by calling its constructor, that takes the following
     (see `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for additional details).
 
   * *CONTROL*: a `ControlMechanism` is created, and its `ControlSignal` is used to modulate the `softmax_gain
-    <EMComposition.softmax_gain>` parameter of the `SoftMax` function of the EMComposition's `softmax_nodes
-    <EMComposition.softmax_nodes>`.
+    <EMComposition.softmax_gain>` parameter of the `SoftMax` function of the EMComposition's `softmax_node
+    <EMComposition.softmax_node>`.
 
   If *None* is specified, the default value for the `SoftMax` function is used.
 
@@ -614,20 +614,19 @@ by the `memory_capacity <EMComposition_Memory_Capacity>` argument.
   .. _EMComposition_Memory_Storage:
   .. technical_note::
      The memories are actually stored in the `matrix <MappingProjection.matrix>` parameters of the`MappingProjections`
-     from the `combined_softmax_node <EMComposition.combined_softmax_node>` to each of the `retrieved_nodes
-     <EMComposition.retrieved_nodes>`. Memories associated with each key are also stored (in inverted form)
-     in the `matrix <MappingProjection.matrix>` parameters of the `MappingProjection <MappingProjection>`
-     from the `query_input_nodes <EMComposition.query_input_nodes>` to each of the corresponding `match_nodes
+     from the `combined_matches_node <EMComposition.combined_matches_node>` to each of the `retrieved_nodes
+     <EMComposition.retrieved_nodes>`. Memories associated with each key are also stored (in inverted form) in the
+     `matrix <MappingProjection.matrix>` parameters of the `MappingProjection <MappingProjection>` from the
+     `query_input_nodes <EMComposition.query_input_nodes>` to each of the corresponding `match_nodes
      <EMComposition.match_nodes>`. This is done so that the match of each query to the keys in memory for the
      corresponding field can be computed simply by passing the input for each query through the Projection (which
-     computes the dot product of the input with the Projection's `matrix <MappingProjection.matrix>` parameter) to
-     the corresponding match_node; and, similarly, retrieivals can be computed by passing the softmax distributions
-     and weighting for each field computed in the `combined_softmax_node <EMComposition.combined_softmax_node>`
-     through its Projection to each `retrieved_node <EMComposition.retrieved_nodes>` (which are inverted versions
-     of the matrices of the `MappingProjections <MappingProjection>` from the `query_input_nodes
-     <EMComposition.query_input_nodes>` to each of the corresponding `match_nodes <EMComposition.match_nodes>`),
-     to compute the dot product of the weighted softmax over entries with the corresponding field of each entry
-     that yields the retreieved value for each field.
+     computes the dot product of the input with the Projection's `matrix <MappingProjection.matrix>` parameter) to the
+     corresponding match_node; and, similarly, retrieivals can be computed by passing the softmax distributions for
+     each field computed in the `combined_matches_node <EMComposition.combined_matches_node>` through its Projection
+     to each `retrieved_node <EMComposition.retrieved_nodes>` (which are inverted versions of the matrices of the
+     `MappingProjections <MappingProjection>` from the `query_input_nodes <EMComposition.query_input_nodes>` to each
+     of the corresponding `match_nodes <EMComposition.match_nodes>`), to compute the dot product of the weighted
+     softmax over entries with the corresponding field of each entry that yields the retreieved value for each field.
 
 .. _EMComposition_Output:
 
@@ -688,7 +687,7 @@ When the EMComposition is executed, the following sequence of operations occur
   key field is passed to the corresponding `weighted_match_node <EMComposition.weighted_match_nodes>` where it is
   multiplied by the corresponding `field_weight <EMComposition.field_weights>` (if `use_gating_for_weighting
   <EMComposition.use_gating_for_weighting>` is True, this is done by using the `field_weight
-  <EMComposition.field_weights>` to output gate the `match_node <EMComposition.softmax_nodes>`). The weighted dot
+  <EMComposition.field_weights>` to output gate the `match_node <EMComposition.match_node>`). The weighted dot
   products for all key fields are then passed to the `combined_matches_node <EMComposition.combined_matches_node>`,
   where they are haddamard summed to produce a single weighting for each memory.
 
@@ -712,7 +711,7 @@ When the EMComposition is executed, the following sequence of operations occur
 
     .. technical_note::
        This is done by multiplying the `matrix <MappingProjection.matrix>` parameter of the `MappingProjection` from
-       the `combined_softmax_node <EMComposition.combined_softmax_node>` to each of the `retrieved_nodes
+       the `combined_matches_node <EMComposition.combined_matches_node>` to each of the `retrieved_nodes
        <EMComposition.retrieved_nodes>`, as well as the `matrix <MappingProjection.matrix>` parameter of the
        `MappingProjection` from each `query_input_node <EMComposition.query_input_nodes>` to the corresponding
        `match_node <EMComposition.match_nodes>` by `memory_decay <EMComposition.memory_decay_rate>`,
@@ -727,7 +726,7 @@ When the EMComposition is executed, the following sequence of operations occur
 
     .. technical_note::
        This is done by adding the input vectors to the the corresponding rows of the `matrix <MappingProjection.matrix>`
-       of the `MappingProjection` from the `retreival_weighting_node <EMComposition.combined_softmax_node>` to each
+       of the `MappingProjection` from the `combined_matches_node <EMComposition.combined_matches_node>` to each
        of the `retrieved_nodes <EMComposition.retrieved_nodes>`, as well as the `matrix <MappingProjection.matrix>`
        parameter of the `MappingProjection` from each `query_input_node <EMComposition.query_input_nodes>` to the
        corresponding `match_node <EMComposition.match_nodes>` (see note `above <EMComposition_Memory_Storage>` for
@@ -977,7 +976,7 @@ COMMENT:
     **Use of field_weights to specify relative contribution of fields to matching process.**
 
 Note that in this case, the `concatenate_queries_node <EMComposition.concatenate_queries_node>` has been replaced by
-a pair of `retreival_weighting_nodes <EMComposition.field_weight_nodes>`, one for each key field.  This is because
+a pair of `weighted_match_node <EMComposition.weighted_match_node>`, one for each key field.  This is because
 the keys were assigned different weights;  when they are assigned equal weights, or if no weights are specified,
 and `normalize_memories <EMComposition.normalize_memories>` is `True`, then the keys are concatenated and are
 concatenated for efficiency of processing.  This can be suppressed by specifying `concatenate_queries` as `False`
@@ -1195,14 +1194,12 @@ class EMComposition(AutodiffComposition):
             the EMComposition into another Composition;  to do so, use_storage_node must be True (default).
 
     use_gating_for_weighting : bool : default False
-        specifies whether to use a `GatingMechanism` to modulate the `combined_softmax_node
-        <EMComposition.combined_softmax_node>` instead of a standard ProcessingMechanism.  If True, then
-        a GatingMechanism is constructed and used to gate the `OutputPort` of each `field_weight_node
-        EMComposition.field_weight_nodes`;  otherwise, the output of each `field_weight_node
-        EMComposition.field_weight_nodes` projects to the `InputPort` of the `combined_softmax_node
-        EMComposition.combined_softmax_node` that receives a Projection from the corresponding
-        `field_weight_node <EMComposition.field_weight_nodes>`, and multiplies its `value
-        <Projection_Base.value>`.
+        specifies whether to use a `GatingMechanism` to modulate the `match_node <EMComposition.match_node>` instead
+        of a standard ProcessingMechanism.  If True, then a GatingMechanism is constructed and used to gate the
+        `OutputPort` of each `match_node EMComposition.match_node`;  otherwise, the output of each `field_weight_node
+        EMComposition.field_weight_nodes` projects to the `InputPort` of the `weighted_match_node
+        EMComposition.weighted_match_node` that receives a Projection from the corresponding `field_weight_node
+        <EMComposition.field_weight_nodes>`, and multiplies its `value <Projection_Base.value>`.
 
     Attributes
     ----------
@@ -1340,8 +1337,8 @@ class EMComposition(AutodiffComposition):
 
     retrieval_gating_nodes : list[GatingMechanism]
         `GatingMechanisms <GatingMechanism>` that uses the `field weight <EMComposition.field_weights>` for each
-        field to modulate the output of the corresponding `softmax_node <EMComposition.softmax_nodes>` before it
-        is passed to the `combined_softmax_node <EMComposition.combined_softmax_node>`. These are implemented
+        field to modulate the output of the corresponding `weighted_match_node <EMComposition.weighted_match_nodes>`
+        before it is passed to the `combined_matches_node <EMComposition.combined_matches_node>`. These are implemented
         only if `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` is True and more than one
         `key field <EMComposition_Fields>` is specified (see `Fields <EMComposition_Fields>` for additional details).
 
@@ -1870,7 +1867,7 @@ class EMComposition(AutodiffComposition):
                     # Get remaining entries populated with memory_fill
                     remaining_entries = _construct_entries(memory_template[0], num_entries_needed, memory_fill)
                     assert bool(num_entries_needed == len(remaining_entries))
-                    # I any remaining entries, concatenate them with the entries that were specified
+                    # If any remaining entries, concatenate them with the entries that were specified
                     if num_entries_needed:
                         memory = np.concatenate((np.array(memory_template, dtype=object),
                                                  np.array(remaining_entries, dtype=object)))
@@ -2054,12 +2051,12 @@ class EMComposition(AutodiffComposition):
 
         # Do some validation and get singleton softmax and match Nodes for concatenated queries
         if self.concatenate_queries:
-            softmax_node = self.softmax_nodes.pop()
-            assert not self.softmax_nodes, \
-                f"PROGRAM ERROR: Too many softmax_nodes ({len(self.softmax_nodes)}) for concatenated queries."
-            assert len(self.softmax_gain_control_nodes) <= 1, \
-                (f"PROGRAM ERROR: Too many softmax_gain_control_nodes "
-                 f"{len(self.softmax_gain_control_nodes)}) for concatenated queries.")
+            # softmax_node = self.softmax_nodes.pop()
+            # assert not self.softmax_nodes, \
+            #     f"PROGRAM ERROR: Too many softmax_nodes ({len(self.softmax_nodes)}) for concatenated queries."
+            # assert len(self.softmax_gain_control_nodes) <= 1, \
+            #     (f"PROGRAM ERROR: Too many softmax_gain_control_nodes "
+            #      f"{len(self.softmax_gain_control_nodes)}) for concatenated queries.")
             match_node = self.match_nodes.pop()
             assert not self.match_nodes, \
                 f"PROGRAM ERROR: Too many match_nodes ({len(self.match_nodes)}) for concatenated queries."
@@ -2121,21 +2118,17 @@ class EMComposition(AutodiffComposition):
             # field_weights -> weighted_softmax pathways
             if self.field_weight_nodes:
                 for i in range(self.num_keys):
-                    # self.add_backpropagation_learning_pathway([self.field_weight_nodes[i],
-                    #                                            self.weighted_softmax_nodes[i]])
                     self.add_linear_processing_pathway([self.field_weight_nodes[i], self.weighted_match_nodes[i]])
 
             self.add_nodes(self.value_input_nodes)
 
             # Retrieval pathways
             for i in range(len(self.retrieved_nodes)):
-                # self.add_backpropagation_learning_pathway([self.combined_softmax_node, self.retrieved_nodes[i]])
                 self.add_linear_processing_pathway([self.softmax_node, self.retrieved_nodes[i]])
 
             # Storage Nodes
             if use_storage_node:
                 self.add_node(self.storage_node)
-                # self.add_projections(proj for proj in self.storage_node.efferents)
 
     def _construct_query_input_nodes(self, field_weights)->list:
         """Create one node for each key to be used as cue for retrieval (and then stored) in memory.
@@ -2158,7 +2151,7 @@ class EMComposition(AutodiffComposition):
 
     def _construct_value_input_nodes(self, field_weights)->list:
         """Create one input node for each value to be stored in memory.
-        Used to assign new set of weights for Projection for combined_softmax_node -> retrieved_node[i]
+        Used to assign new set of weights for Projection for combined_matches_node -> retrieved_node[i]
         where i is selected randomly without replacement from (0->memory_capacity)
         """
 
@@ -2474,7 +2467,7 @@ class EMComposition(AutodiffComposition):
 
     def _store_memory(self, inputs, context):
         """Store inputs to query and value nodes in memory
-        Store memories in weights of Projections to softmax_nodes (queries) and retrieved_nodes (values).
+        Store memories in weights of Projections to match_nodes (queries) and retrieved_nodes (values).
         Note: inputs argument is ignored (included for compatibility with function of MemoryFunctions class;
               storage is handled by call to EMComopsition._encode_memory
         """
