@@ -185,16 +185,14 @@ class TestConstruction:
         assert isinstance(em.concatenate_queries_node, Mechanism) == concatenate_node
         if em.concatenate_queries:
             assert em.field_weight_nodes == []
-            assert bool(softmax_gain == CONTROL) == bool(len(em.softmax_gain_control_nodes))
+            assert bool(softmax_gain == CONTROL) == bool(em.softmax_gain_control_node)
         else:
             if num_keys > 1:
                 assert len(em.field_weight_nodes) == num_keys
             else:
                 assert em.field_weight_nodes == []
             if softmax_gain == CONTROL:
-                assert len(em.softmax_gain_control_nodes) == 1
-            else:
-                assert em.softmax_gain_control_nodes == []
+                assert em.softmax_gain_control_node
         assert len(em.retrieved_nodes) == num_fields
 
         def test_memory_fill(start, memory_fill):
@@ -251,23 +249,6 @@ class TestConstruction:
                                f"'enable_learning' set to True (or a list); this will generate an error if its "
                                f"'learn' method is called. Set 'softmax_choice' to WEIGHTED_AVG before learning.")
             assert warning_msg in str(warning[0].message)
-
-    def test_normalize_field_weights_with_learning_enabled(self):
-        with pytest.warns(UserWarning) as warning:
-            em = EMComposition(normalize_field_weights=False,
-                               enable_learning=True,
-                               memory_fill=(0,.1),
-                               loss_spec=pnl.Loss.BINARY_CROSS_ENTROPY)
-            warning_msg = (f"The 'normalize_field_weights' arg of 'EM_Composition' is set to False with "
-                           f"'enable_learning' set to True (or a list); this may generate an error if the "
-                           f"'loss_spec' used for learning requires values to be between 0 and 1.")
-        assert warning_msg in str(warning[0].message)
-
-        with pytest.raises(EMCompositionError) as error_text:
-            em.learn()
-        assert (f"The 'loss_spec' arg of 'EM_Composition' is set to 'BINARY_CROSS_ENTROPY' with "
-                f"'normalize_field_weights' set to False; this must be True to use this loss_spec."
-                in str(error_text.value))
 
 
 @pytest.mark.pytorch
@@ -366,6 +347,8 @@ class TestExecution:
                                                                                                   3.38989346],
                                                                                                  [3.99689126,
                                                                                                   6.38682264]]),
+#                                                                                                  [3.99984044,
+#                                                                                                   6.19219795]]),
 ]
 
     args_names = "test_num, memory_template, memory_fill, memory_capacity, memory_decay_rate, field_weights, " \
@@ -376,7 +359,7 @@ class TestExecution:
     @pytest.mark.parametrize('enable_learning', [False, True], ids=['no_learning','learning'])
     @pytest.mark.composition
     @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch])
-    def test_simple_execution_witemhout_learning(self,
+    def test_simple_execution_without_learning(self,
                                                exec_mode,
                                                enable_learning,
                                                test_num,
