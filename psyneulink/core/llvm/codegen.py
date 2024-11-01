@@ -865,6 +865,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
         # Run controller if it's enabled in 'BEFORE' mode
         if is_simulation is False and composition.enable_controller and composition.controller_mode == BEFORE:
             assert composition.controller is not None
+            assert composition.controller_time_scale == TimeScale.TRIAL
 
             helpers.printf(ctx,
                            builder,
@@ -1020,6 +1021,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
 
         if is_simulation is False and composition.enable_controller and composition.controller_mode == AFTER:
             assert composition.controller is not None
+            assert composition.controller_time_scale == TimeScale.TRIAL
 
             helpers.printf(ctx,
                            builder,
