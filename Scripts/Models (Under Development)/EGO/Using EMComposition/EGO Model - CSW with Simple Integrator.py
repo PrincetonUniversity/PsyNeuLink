@@ -363,7 +363,7 @@ if __name__ == '__main__':
     if RUN_MODEL:
         import timeit
         def print_stuff(**kwargs):
-            print(f"\n**************\n BATCH: {kwargs['batch']}\n**************\n")
+            print(f"\n**************\n BATCH: {kwargs['minibatch']}\n**************\n")
             print(kwargs)
             print('\nContext internal: \n', model.nodes['CONTEXT'].function.parameters.value.get(kwargs['context']))
             print('\nContext hidden: \n', model.nodes['CONTEXT'].parameters.value.get(kwargs['context']))
@@ -395,7 +395,7 @@ if __name__ == '__main__':
                   #   call_after_minibatch=print('Projections from context to EM: ',
                   #                              model.projections[7].parameters.matrix.get(context)),
                   #                              # model.projections[7].matrix)
-                  #   call_after_minibatch=print_stuff,
+                    call_after_minibatch=print_stuff,
                   #   optimizations_per_minibatch=model_params['num_optimization_steps'],
                     synch_projection_matrices_with_torch=model_params['synch_weights'],
                     synch_node_values_with_torch=model_params['synch_values'],

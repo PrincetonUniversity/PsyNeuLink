@@ -192,7 +192,7 @@ class TestConstruction:
             else:
                 assert em.field_weight_nodes == []
             if softmax_gain == CONTROL:
-                assert len(em.softmax_gain_control_nodes) == num_keys
+                assert len(em.softmax_gain_control_nodes) == 1
             else:
                 assert em.softmax_gain_control_nodes == []
         assert len(em.retrieved_nodes) == num_fields

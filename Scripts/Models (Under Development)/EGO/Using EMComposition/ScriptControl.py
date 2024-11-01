@@ -2,19 +2,19 @@ from psyneulink.core.compositions.report import ReportOutput, ReportProgress
 
 # Settings for running script:
 
-# MODEL_PARAMS = 'TestParams'
-MODEL_PARAMS = 'DeclanParams'
+MODEL_PARAMS = 'TestParams'
+# MODEL_PARAMS = 'DeclanParams'
 
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
 DISPLAY_MODEL =  (                     # Only one of the following can be uncommented:
-    # None                             # suppress display of model
-    {                                  # show simple visual display of model
-        'show_pytorch': True,            # show pytorch graph of model
-        'show_learning': True
-    # 'show_projections_not_in_composition': True,
-    # 'exclude_from_gradient_calc_style': 'dashed'# show target mechanisms for learning
-    # {'show_node_structure': True     # show detailed view of node structures and projections
-    }
+    None                             # suppress display of model
+    # {                                  # show simple visual display of model
+    #     # 'show_pytorch': True,            # show pytorch graph of model
+    #     'show_learning': True
+    # # 'show_projections_not_in_composition': True,
+    # # 'exclude_from_gradient_calc_style': 'dashed'# show target mechanisms for learning
+    # # {'show_node_structure': True     # show detailed view of node structures and projections
+    # }
 )
 # RUN_MODEL = False                      # False => don't run the model
 RUN_MODEL = True,                       # True => run the model
