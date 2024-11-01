@@ -1312,6 +1312,10 @@ class EMComposition(AutodiffComposition):
         <EMComposition_Processing>` for additional details). These are named the same as the corresponding
         `query_input_nodes <EMComposition.query_input_nodes>` appended with the suffix *[MATCH to KEYS]*.
 
+    COMMENT:
+    FIX: MOVE THE FOLLOWING UP TO BODY OF DOCSTRING, AND ADD NOTE ABOUT use_gating_for_weighting FOR COMPACTNESS,
+         BUT CAN'T USE IT WITH LEARNING (NEED REGULAR MAPPING PROJECTIONS FO LEARNING THOSE WEIGHTS
+    COMMENT
     field_weight_nodes : list[ProcessingMechanism or GatingMechanism]
         Nodes used to weight the dot product of each key computed by the `match_nodes <EMComposition.match_nodes>`.
         By default, these are `ProcessingMechanisms <ProcessingMechanism>`, each of which uses the `field weight
