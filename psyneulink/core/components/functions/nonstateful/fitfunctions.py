@@ -319,7 +319,7 @@ class PECOptimizationFunction(OptimizationFunction):
         **kwargs,
     ):
         self.method = method
-        self._optuna_kwargs = {} if optuna_kwargs is None else optuna_kwargs.copy()
+        self._optuna_kwargs = {} if optuna_kwargs is None else {**optuna_kwargs}
 
         self.direction = direction
 

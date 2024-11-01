@@ -165,7 +165,7 @@ import pandas as pd
 
 from beartype import beartype
 
-from psyneulink._typing import Optional, Union, Dict, List, Callable, Literal
+from psyneulink._typing import Optional, Union, Dict, List, Callable, Literal, Mapping
 
 import psyneulink.core.llvm as pnllvm
 from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_np_array
@@ -479,7 +479,7 @@ class ParameterEstimationComposition(Composition):
         num_trials_per_estimate: Optional[int] = None,
         initial_seed: Optional[int] = None,
         same_seed_for_all_parameter_combinations: Optional[bool] = None,
-        depends_on: Optional[Dict] = None,
+        depends_on: Optional[Mapping] = None,
         name: Optional[str] = None,
         context: Optional[Context] = None,
         **kwargs,
@@ -1240,7 +1240,7 @@ class PEC_OCM(OptimizationControlMechanism):
             if in_arr.dtype != object:
                 in_arr = np.atleast_3d(in_arr)
 
-                # If the inputs don't have columns for the fitting parameters, then we need to add them
+            # If the inputs don't have columns for the fitting parameters, then we need to add them
             if in_arr.shape[1] != len(self.composition.input_ports):
                 num_missing = len(self.composition.input_ports) - in_arr.shape[1]
                 if in_arr.ndim == 3:

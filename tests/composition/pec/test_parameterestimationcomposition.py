@@ -3,6 +3,7 @@ import optuna
 import pandas as pd
 import pytest
 import scipy
+import contextlib
 
 from packaging import version as pversion
 
@@ -183,13 +184,15 @@ else:
 
 @pytest.mark.composition
 @pytest.mark.parametrize(
-    "opt_method, optuna_kwargs, expected_result",
+    "opt_method, optuna_kwargs, expected_result, execution_context",
     [
-        ("differential_evolution", None, expected_differential_evolution),
-        (optuna.samplers.RandomSampler(seed=0), None, [0.01]),
-        (optuna.samplers.QMCSampler(seed=0), None, [0.01]),
-        (optuna.samplers.RandomSampler, {'seed': 0}, [0.01]),
-        (optuna.samplers.RandomSampler(), None, None)
+        ("differential_evolution", None, expected_differential_evolution, contextlib.nullcontext()),
+        (optuna.samplers.RandomSampler(seed=0), None, [0.01], contextlib.nullcontext()),
+        (optuna.samplers.QMCSampler(seed=0), None, [0.01], contextlib.nullcontext()),
+        (optuna.samplers.RandomSampler, {'seed': 0}, [0.01],
+         pytest.warns(UserWarning, match="Overriding seed passed to optuna sampler with seed passed to PEC.")),
+        (optuna.samplers.RandomSampler(), None, None,
+         pytest.warns(UserWarning, match="initial_seed on PEC is not None, but instantiated optuna sampler is being used."))
     ],
     ids=[
         "differential_evolution",
@@ -199,7 +202,7 @@ else:
         "optuna_random_sampler_no_seed"
     ],
 )
-def test_parameter_optimization_ddm(func_mode, opt_method, optuna_kwargs, expected_result):
+def test_parameter_optimization_ddm(func_mode, opt_method, optuna_kwargs, expected_result, execution_context):
     """Test parameter optimization of a DDM in integrator mode"""
 
     if func_mode == "Python":
@@ -273,28 +276,14 @@ def test_parameter_optimization_ddm(func_mode, opt_method, optuna_kwargs, expect
     trial_inputs[0] = np.abs(trial_inputs[0])
     trial_inputs[-1] = np.abs(trial_inputs[-1])
 
-    inputs_dict = {decision: trial_inputs}
-
-    # If we are testing an instantiated optuna sampler, make sure the warning is generated about
-    # random seeds
-    if isinstance(opt_method, optuna.samplers.RandomSampler):
-        with pytest.warns(UserWarning, match="initial_seed on PEC is not None, but instantiated optuna sampler is being used."):
-            pec.run(inputs=inputs_dict)
-
-    elif isinstance(opt_method, type) and issubclass(opt_method, optuna.samplers.BaseSampler):
-        with pytest.warns(UserWarning, match="Overriding seed passed to optuna sampler with seed passed to PEC."):
-            pec.run(inputs=inputs_dict)
-
-    else:
+    with execution_context:
         pec.run(inputs={comp: trial_inputs})
 
     if expected_result is not None:
-        if opt_method == "differential_evolution":
-            np.testing.assert_allclose(
-                list(pec.optimized_parameter_values.values()), expected_result, atol=1e-2
-            )
-        else:
-            np.testing.assert_allclose(list(pec.optimized_parameter_values.values()), expected_result)
+        tolerance_args = {"atol": 1e-2} if opt_method == "differential_evolution" else {}
+        np.testing.assert_allclose(
+            list(pec.optimized_parameter_values.values()), expected_result, **tolerance_args
+        )
 
 
 def test_parameter_estimation_ddm_cond(func_mode):
@@ -303,44 +292,6 @@ def test_parameter_estimation_ddm_cond(func_mode):
         pytest.skip(
             "Test not yet implemented for Python. Parameter estimate is too slow."
         )
-
-    def _run_ddm_with_params(
-            starting_value,
-            rate,
-            noise,
-            threshold,
-            non_decision_time,
-            time_step_size,
-            trial_inputs,
-    ):
-        """Create a composition with DDM and run it with the given parameters."""
-
-        # Create a simple one mechanism composition containing a DDM in integrator mode.
-        decision = pnl.DDM(
-            function=pnl.DriftDiffusionIntegrator(
-                starting_value=starting_value,
-                rate=rate,
-                noise=noise,
-                threshold=threshold,
-                non_decision_time=non_decision_time,
-                time_step_size=time_step_size,
-            ),
-            output_ports=[pnl.DECISION_OUTCOME, pnl.RESPONSE_TIME],
-            name="DDM",
-        )
-
-        comp = pnl.Composition(pathways=decision)
-
-        # Run the composition to generate some data to fit
-        comp.run(inputs={decision: trial_inputs})
-        results = comp.results
-
-        data_to_fit = pd.DataFrame(
-            np.squeeze(np.array(results)), columns=["decision", "response_time"]
-        )
-        data_to_fit["decision"] = data_to_fit["decision"].astype("category")
-
-        return comp, data_to_fit
 
     # High-level parameters the impact performance of the test
     num_trials = 50
@@ -365,7 +316,6 @@ def test_parameter_estimation_ddm_cond(func_mode):
         starting_value=0.0,
         rate=0.3,
         noise=1.0,
-        threshold=0.6,
         non_decision_time=0.15,
         time_step_size=time_step_size,
     )
@@ -380,8 +330,8 @@ def test_parameter_estimation_ddm_cond(func_mode):
         threshold=0.3,
     )
 
-    comp, data_cond1 = _run_ddm_with_params(**{**ddm_params, **params_cond1}, trial_inputs=trial_inputs)
-    _, data_cond2 = _run_ddm_with_params(**{**ddm_params, **params_cond2}, trial_inputs=trial_inputs)
+    comp, data_cond1 = _run_ddm_with_params(**ddm_params, **params_cond1, trial_inputs=trial_inputs)
+    _, data_cond2 = _run_ddm_with_params(**ddm_params, **params_cond2, trial_inputs=trial_inputs)
 
     # Combine the data from the two conditions
     data_cond1['condition'] = 'cond_t=0.7'
