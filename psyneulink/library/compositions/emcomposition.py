@@ -1088,7 +1088,7 @@ def _memory_getter(owning_component=None, context=None)->list:
     # If storage_node (EMstoragemechanism) is implemented, get memory from that
     if owning_component.is_initializing:
         return None
-    if owning_component.use_storage_node:
+    if owning_component._use_storage_node:
         return owning_component.storage_node.parameters.memory_matrix.get(context)
 
     # Otherwise, get memory from Projection(s) to each retrieved_node
@@ -1637,7 +1637,8 @@ class EMComposition(AutodiffComposition):
         if memory_decay_rate is AUTO:
             memory_decay_rate = 1 / memory_capacity
 
-        self.use_storage_node = use_storage_node
+        self._use_storage_node = use_storage_node
+        self._use_gating_for_weighting = use_gating_for_weighting
 
         if softmax_gain == CONTROL:
             self.parameters.softmax_gain.modulable = False
@@ -1680,10 +1681,10 @@ class EMComposition(AutodiffComposition):
                                  self.softmax_choice,
                                  self.storage_prob,
                                  self.memory_decay_rate,
-                                 self.use_storage_node,
+                                 self._use_storage_node,
                                  self.enable_learning,
                                  self.learn_field_weights,
-                                 use_gating_for_weighting)
+                                 self._use_gating_for_weighting)
 
         # if torch_available:
         #     from psyneulink.library.compositions.pytorchEMcompositionwrapper import PytorchEMCompositionWrapper
@@ -1694,7 +1695,7 @@ class EMComposition(AutodiffComposition):
         # Assign learning-related attributes
         self._set_learning_attributes()
 
-        if self.use_storage_node:
+        if self._use_storage_node:
             # ---------------------------------------
             #
             # CONDITION:
@@ -2478,7 +2479,7 @@ class EMComposition(AutodiffComposition):
                 **kwargs):
         """Set input to weights of Projections to match_nodes and retrieved_nodes if not use_storage_node."""
         results = super().execute(inputs=inputs, context=context, **kwargs)
-        if not self.use_storage_node:
+        if not self._use_storage_node:
             self._store_memory(inputs, context)
         return results
 
@@ -2562,7 +2563,7 @@ class EMComposition(AutodiffComposition):
     def learn(self, *args, **kwargs)->list:
         """Override to check for inappropriate use of ARG_MAX or PROBABILISTIC options for retrieval with learning"""
         softmax_choice = self.parameters.softmax_choice.get(kwargs[CONTEXT])
-        use_gating_for_weighting = self.parameters.use_gating_for_weighting.get(kwargs[CONTEXT])
+        use_gating_for_weighting = self._use_gating_for_weighting
         learn_field_weights = self.parameters.learn_field_weights.get(kwargs[CONTEXT])
 
         if use_gating_for_weighting  and learn_field_weights:
