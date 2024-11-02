@@ -217,12 +217,14 @@ Class Reference
 
 import inspect
 import pathlib
+import site
 import warnings
 from psyneulink._typing import Union
 
 import numpy as np
 from beartype import beartype
 
+import psyneulink
 from psyneulink._typing import Optional, Union, Literal
 from PIL import Image
 
@@ -291,6 +293,28 @@ COMP_HIERARCHY = 'comp_hierarchy' # dict specifying the enclosing composition at
 
 
 default_showgraph_subdir = 'pnl-show_graph-output'
+
+
+def get_default_showgraph_dir():
+    pnl_module_dir = pathlib.Path(psyneulink.__file__).parent.absolute()
+    try:
+        site_packages_dirs = site.getsitepackages()
+    except AttributeError:
+        # virtualenv <20 overrides site and has no getsitepackages
+        site_packages_dirs = []
+
+    # if psyneulink is installed in site-packages (not local/editable),
+    # don't put show_graph files there
+    for d in site_packages_dirs:
+        if pathlib.Path(d) in pnl_module_dir.parents:
+            default_dir = pathlib.Path('.')
+            break
+    else:
+        default_dir = pnl_module_dir.parent
+
+    default_dir = default_dir.joinpath(default_showgraph_subdir)
+
+    return default_dir
 
 
 class ShowGraphError(Exception):
@@ -2660,7 +2684,7 @@ class ShowGraph():
         try:
             if output_fmt == 'pdf':
                 # G.format = 'svg'
-                G.view(composition.name.replace(" ", "-"), cleanup=True, directory=pathlib.Path(default_showgraph_subdir, 'PDFS'))
+                G.view(composition.name.replace(" ", "-"), cleanup=True, directory=get_default_showgraph_dir().joinpath('PDFS'))
 
             # Generate images for animation
             elif output_fmt == 'gif':
@@ -2818,8 +2842,7 @@ class ShowGraph():
 
         if isinstance(composition._animate, dict):
             # Assign directory for animation files
-            from psyneulink._version import root_dir
-            default_dir = pathlib.Path(root_dir, '..', default_showgraph_subdir, 'GIFs', composition.name)
+            default_dir = get_default_showgraph_dir().joinpath('GIFs', composition.name)
             # try:
             #     rmtree(composition._animate_directory)
             # except:

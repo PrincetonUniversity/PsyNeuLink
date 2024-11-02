@@ -11057,9 +11057,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
               are animated; if it is greater than the number of trials being run, only the number being run are
               animated.
 
-            * *MOVIE_DIR*: str or os.PathLike (default=project root dir) -- specifies the directdory to be used for the movie file;
-              by default a subdirectory of <root_dir>/show_graph_OUTPUT/GIFS is created using the `name
-              <Composition.name>` of the  `Composition`, and the gif files are stored there.
+            * *MOVIE_DIR*: str or os.PathLike (default=PsyNeuLink root
+              dir or current dir) -- specifies the directory to be used
+              for the movie file; by default a subdirectory of
+              <MOVIE_DIR>/pnl-show_graph-output/GIFs is created using
+              the `name <Composition.name>` of the `Composition`, and
+              the gif files are stored there.
 
             * *MOVIE_NAME*: str (default=\\ `name <Composition.name>` + 'movie') -- specifies the name to be used
               for the movie file; it is automatically appended with '.gif'.
