@@ -1312,13 +1312,19 @@ class EMComposition(AutodiffComposition):
         <EMComposition_Processing>` for additional details). These are named the same as the corresponding
         `query_input_nodes <EMComposition.query_input_nodes>` appended with the suffix *[MATCH to KEYS]*.
 
-    COMMENT:
-    FIX: MOVE THE FOLLOWING UP TO BODY OF DOCSTRING, AND ADD NOTE ABOUT use_gating_for_weighting FOR COMPACTNESS,
-         BUT CAN'T USE IT WITH LEARNING (NEED REGULAR MAPPING PROJECTIONS FO LEARNING THOSE WEIGHTS
-    COMMENT
     field_weight_nodes : list[ProcessingMechanism or GatingMechanism]
-        Nodes used to weight the dot product of each key computed by the `match_nodes <EMComposition.match_nodes>`.
-        By default, these are `ProcessingMechanisms <ProcessingMechanism>`, each of which uses the `field weight
+        Nodes used to weight the dot product of each key computed by the `match_nodes <EMComposition.match_nodes>`
+        by the `field weight <EMComposition.field_weights>` for the corresponding `key field <EMComposition_Fields>`.
+        By default, these are `ProcessingMechanisms <ProcessingMechanism>`, that project to the `combined_matches_node
+        <EMComposition.combined_matches_node>` where they are multiplicatively combined with the output of the
+        the output of the corresponding `match_node <EMComposition.match_nodes>` to produce the weighted dot product
+        for that field.  However, if if `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` is True,
+        the `field_weight_nodes <EMComposition.field_weight_nodes>` are implemented as `
+        <GatingMechanism>` that multiplicatively  gate the output of the corresponding `match_node
+        <EMComposition.match_nodes>`.  These are named the same as the corresponding `query_input_nodes <EMComposition.query_input_nodes>`
+        XXXX
+
+        each of which uses the `field weight
         <EMComposition.field_weights>` for a given `field <EMComposition_Fields>` as its (fixed) input, and provides
         this to the corresponding `weighted_match_node <EMComposition.weighted_match_nodes>`, where it is multiplied
         with the input from the corresponding `match_node <EMComposition.match_nodes>` to produce the weighted dot
