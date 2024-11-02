@@ -216,6 +216,7 @@ Class Reference
 """
 
 import inspect
+import pathlib
 import warnings
 from psyneulink._typing import Union
 
@@ -2659,7 +2660,7 @@ class ShowGraph():
         try:
             if output_fmt == 'pdf':
                 # G.format = 'svg'
-                G.view(composition.name.replace(" ", "-"), cleanup=True, directory=f'{default_showgraph_subdir}/PDFS')
+                G.view(composition.name.replace(" ", "-"), cleanup=True, directory=pathlib.Path(default_showgraph_subdir, 'PDFS'))
 
             # Generate images for animation
             elif output_fmt == 'gif':
@@ -2818,7 +2819,7 @@ class ShowGraph():
         if isinstance(composition._animate, dict):
             # Assign directory for animation files
             from psyneulink._version import root_dir
-            default_dir = root_dir + f'/../{default_showgraph_subdir}/GIFs/' + composition.name # + " gifs"
+            default_dir = pathlib.Path(root_dir, '..', default_showgraph_subdir, 'GIFs', composition.name)
             # try:
             #     rmtree(composition._animate_directory)
             # except:
@@ -2850,9 +2851,14 @@ class ShowGraph():
                 raise ShowGraphError(f"{repr(SIMULATIONS)} entry of {repr('animate')} argument for "
                                        f"{repr('show_graph')} method of {composition.name} ({composition._animate_num_trials}) "
                                        f"must a boolean.")
-            if not isinstance(composition._animation_directory, str):
-                raise ShowGraphError(f"{repr(MOVIE_DIR)} entry of {repr('animate')} argument for {repr('run')} "
-                                       f"method of {composition.name} ({composition._animation_directory}) must be a string.")
+            try:
+                composition._animation_directory = pathlib.Path(composition._animation_directory)
+            except TypeError:
+                raise ShowGraphError(
+                    f"{repr(MOVIE_DIR)} entry of 'animate' argument for 'run'"
+                    f" method of {composition.name} ({composition._animation_directory})"
+                    " must be a string or os.PathLike."
+                )
             if not isinstance(composition._movie_filename, str):
                 raise ShowGraphError(f"{repr(MOVIE_NAME)} entry of {repr('animate')} argument for {repr('run')} "
                                        f"method of {composition.name} ({composition._movie_filename}) must be a string.")
@@ -2934,7 +2940,7 @@ class ShowGraph():
         G.attr(fontsize='14')
         index = repr(composition._component_animation_execution_count)
         image_filename = '-'.join([repr(run_num), repr(trial_num), index])
-        image_file = composition._animation_directory + '/' + image_filename + '.gif'
+        image_file = pathlib.Path(composition._animation_directory, image_filename + '.gif')
         G.render(filename=image_filename,
                  directory=composition._animation_directory,
                  cleanup=True,
