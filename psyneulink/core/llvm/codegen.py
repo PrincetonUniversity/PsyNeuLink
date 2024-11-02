@@ -879,15 +879,13 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
             controller_f = ctx.import_llvm_function(controller_w, tags=node_tags)
             builder.call(controller_f, [state, params, comp_in, data, data])
 
-
         # Allocate run set structure
         run_set_type = ir.ArrayType(ctx.bool_ty, len(composition.nodes))
         run_set_ptr = builder.alloca(run_set_type, name="run_set")
         builder.store(run_set_type(None), run_set_ptr)
 
-
-        iter_ptr = builder.alloca(ctx.int32_ty, name="iter_counter")
-        builder.store(iter_ptr.type.pointee(0), iter_ptr)
+        consideration_index_ptr = builder.alloca(ctx.int32_ty, name="consideration_index_loc")
+        builder.store(consideration_index_ptr.type.pointee(0), consideration_index_ptr)
 
         # Start the main loop structure
         loop_condition = builder.append_basic_block(name="scheduling_loop_condition")
@@ -914,18 +912,17 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
         previous_step = builder.load(run_set_ptr)
         zero = ctx.int32_ty(0)
         any_cond = ctx.bool_ty(0)
+        consideration_index = builder.load(consideration_index_ptr)
 
         # Calculate execution set before running the mechanisms
         for idx, node in enumerate(composition.nodes):
             run_set_node_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)], name="run_cond_ptr_" + node.name)
-            node_cond = cond_gen.generate_sched_condition(builder,
-                                                          composition._get_processing_condition_set(node),
-                                                          cond,
-                                                          node,
-                                                          is_finished_callbacks,
-                                                          nodes_states)
-            ran = cond_gen.generate_ran_this_pass(builder, cond, node)
-            node_cond = builder.and_(node_cond, builder.not_(ran), name="run_cond_" + node.name)
+            node_consideration_index, node_condition = composition._get_processing_condition_set(node)
+
+            is_consideration_turn = builder.icmp_unsigned("==", consideration_index, consideration_index.type(node_consideration_index))
+            node_cond = cond_gen.generate_sched_condition(builder, node_condition, cond, node, is_finished_callbacks, nodes_states)
+            node_cond = builder.and_(node_cond, is_consideration_turn, name="run_cond_" + node.name)
+
             any_cond = builder.or_(any_cond, node_cond, name="any_ran_cond")
             builder.store(node_cond, run_set_node_ptr)
 
@@ -998,17 +995,16 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
         builder.block.name = "update_iter_count"
 
         # Increment number of iterations
-        iters = builder.load(iter_ptr, name="iterw")
-        iters = builder.add(iters, iters.type(1), name="iterw_inc")
-        builder.store(iters, iter_ptr)
+        consideration_index = builder.add(consideration_index, consideration_index.type(1), name="consideration_index_inc")
+        builder.store(consideration_index, consideration_index_ptr)
 
-        max_iters = len(composition.scheduler.consideration_queue)
-        completed_pass = builder.icmp_unsigned("==", iters, iters.type(max_iters), name="completed_pass")
+        max_considerations = consideration_index.type(len(composition.scheduler.consideration_queue))
+        completed_pass = builder.icmp_unsigned("==", consideration_index, max_considerations, name="completed_pass")
 
         # Increment pass and reset time step
         with builder.if_then(completed_pass):
             builder.block.name = "inc_pass"
-            builder.store(zero, iter_ptr)
+            builder.store(consideration_index_ptr.type.pointee(0), consideration_index_ptr)
 
             # Bumping automatically zeros lower elements
             cond_gen.bump_ts(builder, cond, (0, 1, 0))
