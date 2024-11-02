@@ -289,7 +289,7 @@ NUM_NESTING_LEVELS = 'num_nesting_levels'
 COMP_HIERARCHY = 'comp_hierarchy' # dict specifying the enclosing composition at each level of nesting
 
 
-default_showgraph_subdir = 'show_graph output'
+default_showgraph_subdir = 'pnl-show_graph-output'
 
 
 class ShowGraphError(Exception):
