@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Condition &mdash; PsyNeuLink 0.15.1.0+381.g817ca2306 documentation</title>
+  <title>Condition &mdash; PsyNeuLink 0.15.1.0+382.g19481241a documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+381
+                  0.15.1.0+382
                 </div>
               
             
@@ -590,80 +590,6 @@ within one unit of time at the <a class="reference internal" href="Time.html#psy
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AfterConsiderationSetExecution">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterConsiderationSetExecution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.ENVIRONMENT_STATE_UPDATE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterConsiderationSetExecution" title="Permalink to this definition">¶</a></dt>
-<dd><p>AfterTimeStep</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> after which the Condition is satisfied</p></li>
-<li><p><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a>s (default: TimeScale.TRIAL)</p></li>
-</ul>
-</dd>
-</dl>
-<p>Satisfied when:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>at least n+1 <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a>s have occurred within one unit of time at the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a> specified by <strong>time_scale</strong>.</p></li>
-</ul>
-</div></blockquote>
-<p class="rubric">Notes</p>
-<ul class="simple">
-<li><p>Counts of TimeScals are zero-indexed (that is, the first <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> is 0, the second <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> is 1, etc.); so,
-<code class="xref any docutils literal notranslate"><span class="pre">AfterTimeStep(1)</span></code> is satisfied after <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> 1 has occurred and thereafter (i.e., in <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a>s 2, 3, 4, etc.).</p></li>
-</ul>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AfterEnvironmentSequence">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterEnvironmentSequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterEnvironmentSequence" title="Permalink to this definition">¶</a></dt>
-<dd><p>AfterRun</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> after which the Condition is satisfied</p>
-</dd>
-</dl>
-<p>Satisfied when:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>at least n+1 <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s have occurred.</p></li>
-</ul>
-</div></blockquote>
-<p class="rubric">Notes</p>
-<ul class="simple">
-<li><p><a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s are managed by the environment         using the Scheduler (e.g.         <code class="xref any docutils literal notranslate"><span class="pre">end_environment_sequence</span></code>        ) and are not automatically updated by this package.</p></li>
-</ul>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AfterEnvironmentStateUpdate">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterEnvironmentStateUpdate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.ENVIRONMENT_SEQUENCE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterEnvironmentStateUpdate" title="Permalink to this definition">¶</a></dt>
-<dd><p>AfterTrial</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> after which the Condition is satisfied</p></li>
-<li><p><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>s.</p></li>
-<li><p><strong>(</strong><strong>default</strong> – TimeScale.RUN)</p></li>
-</ul>
-</dd>
-</dl>
-<p>Satisfied when:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>at least n+1 <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>s have occurred within one unit of time at the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>
-specified by <strong>time_scale</strong>.</p></li>
-</ul>
-</div></blockquote>
-<p class="rubric">Notes</p>
-<ul class="simple">
-<li><p>Counts of TimeScales are zero-indexed (that is, the first <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> is 0, the second</p></li>
-</ul>
-<p><a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> is 1, etc.); so,  <code class="xref any docutils literal notranslate"><span class="pre">AfterPass(1)</span></code> is satisfied after <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> 1
-has occurred and thereafter (i.e., in <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>s 2, 3, 4, etc.).</p>
-</dd></dl>
-
-<dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AfterNCalls">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterNCalls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.ENVIRONMENT_STATE_UPDATE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNCalls" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
@@ -704,148 +630,6 @@ within one unit of time at the <a class="reference internal" href="Time.html#psy
 <div><ul class="simple">
 <li><p>there have been at least n+1 executions among all of the nodes specified in <strong>dependencies</strong>
 within one unit of time at the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a> specified by <strong>time_scale</strong>.</p></li>
-</ul>
-</div></blockquote>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AfterNConsiderationSetExecutions">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterNConsiderationSetExecutions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.ENVIRONMENT_STATE_UPDATE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNConsiderationSetExecutions" title="Permalink to this definition">¶</a></dt>
-<dd><p>AfterNTimeSteps</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>n</strong> (<em>int</em>) – the number of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a>s after which the Condition is satisfied</p></li>
-<li><p><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a>s (default: TimeScale.TRIAL)</p></li>
-</ul>
-</dd>
-</dl>
-<p>Satisfied when:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>at least n <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a>s have occurred within one unit of time at the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a> specified by <strong>time_scale</strong>.</p></li>
-</ul>
-</div></blockquote>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AfterNEnvironmentSequences">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterNEnvironmentSequences</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNEnvironmentSequences" title="Permalink to this definition">¶</a></dt>
-<dd><p>AfterNRuns</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – the number of <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s after which the Condition is satisfied</p>
-</dd>
-</dl>
-<p>Satisfied when:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>at least n <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s have occured.</p></li>
-</ul>
-</div></blockquote>
-<p class="rubric">Notes</p>
-<ul class="simple">
-<li><p><a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s are managed by the environment         using the Scheduler (e.g.         <code class="xref any docutils literal notranslate"><span class="pre">end_environment_sequence</span></code>        ) and are not automatically updated by this package.</p></li>
-</ul>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AfterNEnvironmentStateUpdates">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterNEnvironmentStateUpdates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.ENVIRONMENT_SEQUENCE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNEnvironmentStateUpdates" title="Permalink to this definition">¶</a></dt>
-<dd><p>AfterNTrials</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>n</strong> (<em>int</em>) – the number of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>s after which the Condition is satisfied</p></li>
-<li><p><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>s</p></li>
-<li><p><strong>(</strong><strong>default</strong> – TimeScale.RUN)</p></li>
-</ul>
-</dd>
-</dl>
-<p>Satisfied when:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>at least n <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>s have occured within one unit of time at the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>
-specified by <strong>time_scale</strong>.</p></li>
-</ul>
-</div></blockquote>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AfterNPasses">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterNPasses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.ENVIRONMENT_STATE_UPDATE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNPasses" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>n</strong> (<em>int</em>) – the number of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PASS</span></code></a>es after which the Condition is satisfied</p></li>
-<li><p><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PASS</span></code></a>es (default: TimeScale.TRIAL)</p></li>
-</ul>
-</dd>
-</dl>
-<p>Satisfied when:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>at least n <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PASS</span></code></a>es have occurred within one unit of time at the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a> specified by <strong>time_scale</strong>.</p></li>
-</ul>
-</div></blockquote>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AfterNRuns">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterNRuns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNRuns" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – the number of <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s after which the Condition is satisfied</p>
-</dd>
-</dl>
-<p>Satisfied when:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>at least n <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s have occured.</p></li>
-</ul>
-</div></blockquote>
-<p class="rubric">Notes</p>
-<ul class="simple">
-<li><p><a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s are managed by the environment         using the Scheduler (e.g.         <code class="xref any docutils literal notranslate"><span class="pre">end_environment_sequence</span></code>        ) and are not automatically updated by this package.</p></li>
-</ul>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AfterNTimeSteps">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterNTimeSteps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.ENVIRONMENT_STATE_UPDATE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNTimeSteps" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>n</strong> (<em>int</em>) – the number of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a>s after which the Condition is satisfied</p></li>
-<li><p><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a>s (default: TimeScale.TRIAL)</p></li>
-</ul>
-</dd>
-</dl>
-<p>Satisfied when:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>at least n <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a>s have occurred within one unit of time at the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a> specified by <strong>time_scale</strong>.</p></li>
-</ul>
-</div></blockquote>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AfterNTrials">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterNTrials</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.ENVIRONMENT_SEQUENCE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNTrials" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>n</strong> (<em>int</em>) – the number of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>s after which the Condition is satisfied</p></li>
-<li><p><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>s</p></li>
-<li><p><strong>(</strong><strong>default</strong> – TimeScale.RUN)</p></li>
-</ul>
-</dd>
-</dl>
-<p>Satisfied when:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>at least n <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>s have occured within one unit of time at the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>
-specified by <strong>time_scale</strong>.</p></li>
 </ul>
 </div></blockquote>
 </dd></dl>
@@ -985,6 +769,85 @@ Defaults to False.</p></li>
 <dd><p>the subject nodes</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AfterNPasses">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterNPasses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.ENVIRONMENT_STATE_UPDATE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNPasses" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<em>int</em>) – the number of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PASS</span></code></a>es after which the Condition is satisfied</p></li>
+<li><p><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PASS</span></code></a>es (default: TimeScale.TRIAL)</p></li>
+</ul>
+</dd>
+</dl>
+<p>Satisfied when:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>at least n <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PASS</span></code></a>es have occurred within one unit of time at the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a> specified by <strong>time_scale</strong>.</p></li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AfterNRuns">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterNRuns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNRuns" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – the number of <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s after which the Condition is satisfied</p>
+</dd>
+</dl>
+<p>Satisfied when:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>at least n <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s have occured.</p></li>
+</ul>
+</div></blockquote>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s are managed by the environment         using the Scheduler (e.g.         <code class="xref any docutils literal notranslate"><span class="pre">end_environment_sequence</span></code>        ) and are not automatically updated by this package.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AfterNTimeSteps">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterNTimeSteps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.ENVIRONMENT_STATE_UPDATE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNTimeSteps" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<em>int</em>) – the number of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a>s after which the Condition is satisfied</p></li>
+<li><p><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a>s (default: TimeScale.TRIAL)</p></li>
+</ul>
+</dd>
+</dl>
+<p>Satisfied when:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>at least n <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a>s have occurred within one unit of time at the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a> specified by <strong>time_scale</strong>.</p></li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AfterNTrials">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterNTrials</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.ENVIRONMENT_SEQUENCE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNTrials" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<em>int</em>) – the number of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>s after which the Condition is satisfied</p></li>
+<li><p><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>s</p></li>
+<li><p><strong>(</strong><strong>default</strong> – TimeScale.RUN)</p></li>
+</ul>
+</dd>
+</dl>
+<p>Satisfied when:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>at least n <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>s have occured within one unit of time at the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>
+specified by <strong>time_scale</strong>.</p></li>
+</ul>
+</div></blockquote>
 </dd></dl>
 
 <dl class="py class">
@@ -1204,159 +1067,6 @@ within one unit of time at the <a class="reference internal" href="Time.html#psy
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AtConsiderationSetExecution">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AtConsiderationSetExecution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.ENVIRONMENT_STATE_UPDATE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtConsiderationSetExecution" title="Permalink to this definition">¶</a></dt>
-<dd><p>AtTimeStep</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> at which the Condition is satisfied</p></li>
-<li><p><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a>s (default: TimeScale.TRIAL)</p></li>
-</ul>
-</dd>
-</dl>
-<p>Satisfied when:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>exactly n <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a>s have occurred within one unit of time at the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a> specified by <strong>time_scale</strong>.</p></li>
-</ul>
-</div></blockquote>
-<p class="rubric">Notes</p>
-<ul class="simple">
-<li><p>Counts of TimeScales are zero-indexed (that is, the first ‘TIME_STEP’ is pass 0, the second ‘TIME_STEP’ is 1, etc.);
-so, <code class="xref any docutils literal notranslate"><span class="pre">AtTimeStep(1)</span></code> is satisfied when a single <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> 0) has occurred, and <code class="xref any docutils literal notranslate"><span class="pre">AtTimeStep(2)</span></code> is satisfied
-when two <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a>s have occurred (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> 0 and <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> 1), etc..</p></li>
-</ul>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AtEnvironmentSequence">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AtEnvironmentSequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtEnvironmentSequence" title="Permalink to this definition">¶</a></dt>
-<dd><p>AtRun</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> at which the Condition is satisfied</p>
-</dd>
-</dl>
-<p>Satisfied when:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>exactly n <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s have occurred.</p></li>
-</ul>
-</div></blockquote>
-<p class="rubric">Notes</p>
-<ul class="simple">
-<li><p><a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s are managed by the environment         using the Scheduler (e.g.         <code class="xref any docutils literal notranslate"><span class="pre">end_environment_sequence</span></code>        ) and are not automatically updated by this package.</p></li>
-</ul>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AtEnvironmentSequenceNStart">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AtEnvironmentSequenceNStart</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtEnvironmentSequenceNStart" title="Permalink to this definition">¶</a></dt>
-<dd><p>AtRunNStart</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> on which the Condition is satisfied</p>
-</dd>
-</dl>
-<p>Satisfied when:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>on <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> 0 of the specified <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> counted using ‘TimeScale`</p></li>
-</ul>
-</div></blockquote>
-<p class="rubric">Notes</p>
-<ul class="simple">
-<li><p>identical to <code class="xref any docutils literal notranslate"><span class="pre">All(AtTrial(0),</span> <span class="pre">AtRun(n))</span></code></p></li>
-</ul>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AtEnvironmentSequenceStart">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AtEnvironmentSequenceStart</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtEnvironmentSequenceStart" title="Permalink to this definition">¶</a></dt>
-<dd><p>AtRunStart</p>
-<p>Satisfied when:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>at the beginning of an <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a></p></li>
-</ul>
-</div></blockquote>
-<p class="rubric">Notes</p>
-<ul class="simple">
-<li><p>identical to <a class="reference internal" href="#psyneulink.core.scheduling.condition.AtTrial" title="psyneulink.core.scheduling.condition.AtTrial"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtTrial(0)</span></code></a></p></li>
-</ul>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AtEnvironmentStateUpdate">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AtEnvironmentStateUpdate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.ENVIRONMENT_SEQUENCE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtEnvironmentStateUpdate" title="Permalink to this definition">¶</a></dt>
-<dd><p>AtTrial</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> at which the Condition is satisfied</p></li>
-<li><p><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>s</p></li>
-<li><p><strong>(</strong><strong>default</strong> – TimeScale.RUN)</p></li>
-</ul>
-</dd>
-</dl>
-<p>Satisfied when:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>exactly n <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>s have occurred within one unit of time at the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>
-specified by <strong>time_scale</strong>.</p></li>
-</ul>
-</div></blockquote>
-<p class="rubric">Notes</p>
-<ul class="simple">
-<li><p>Counts of TimeScales are zero-indexed (that is, the first <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> is 0,
-the second <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> is 1, etc.); so, <code class="xref any docutils literal notranslate"><span class="pre">AtTrial(1)</span></code> is satisfied when one
-<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> 0) has already occurred.</p></li>
-</ul>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AtEnvironmentStateUpdateNStart">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AtEnvironmentStateUpdateNStart</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.ENVIRONMENT_SEQUENCE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtEnvironmentStateUpdateNStart" title="Permalink to this definition">¶</a></dt>
-<dd><p>AtTrialNStart</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> on which the Condition is satisfied</p></li>
-<li><p><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>s</p></li>
-<li><p><strong>(</strong><strong>default</strong> – TimeScale.RUN)</p></li>
-</ul>
-</dd>
-</dl>
-<p>Satisfied when:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>on <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PASS</span></code></a> 0 of the specified <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> counted using ‘TimeScale`</p></li>
-</ul>
-</div></blockquote>
-<p class="rubric">Notes</p>
-<ul class="simple">
-<li><p>identical to All(AtPass(0), AtTrial(n, time_scale))</p></li>
-</ul>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AtEnvironmentStateUpdateStart">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AtEnvironmentStateUpdateStart</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtEnvironmentStateUpdateStart" title="Permalink to this definition">¶</a></dt>
-<dd><p>AtTrialStart</p>
-<p>Satisfied when:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>at the beginning of an <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a></p></li>
-</ul>
-</div></blockquote>
-<p class="rubric">Notes</p>
-<ul class="simple">
-<li><p>identical to <a class="reference internal" href="#psyneulink.core.scheduling.condition.AtPass" title="psyneulink.core.scheduling.condition.AtPass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtPass(0)</span></code></a></p></li>
-</ul>
-</dd></dl>
-
-<dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AtNCalls">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AtNCalls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.ENVIRONMENT_STATE_UPDATE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtNCalls" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
@@ -1546,59 +1256,6 @@ the second <a class="reference internal" href="Time.html#psyneulink.core.schedul
 <p class="rubric">Notes</p>
 <ul class="simple">
 <li><p>identical to <a class="reference internal" href="#psyneulink.core.scheduling.condition.AtPass" title="psyneulink.core.scheduling.condition.AtPass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtPass(0)</span></code></a></p></li>
-</ul>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.BeforeConsiderationSetExecution">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">BeforeConsiderationSetExecution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.ENVIRONMENT_STATE_UPDATE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.BeforeConsiderationSetExecution" title="Permalink to this definition">¶</a></dt>
-<dd><p>BeforeTimeStep</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>n</strong> (<em>int</em>) – the ‘TIME_STEP’ before which the Condition is satisfied</p></li>
-<li><p><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a>s (default: TimeScale.TRIAL)</p></li>
-</ul>
-</dd>
-</dl>
-<p>Satisfied when:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>at most n-1 <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a>s have occurred within one unit of time at the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a> specified by <strong>time_scale</strong>.</p></li>
-</ul>
-</div></blockquote>
-<p class="rubric">Notes</p>
-<ul class="simple">
-<li><p>Counts of TimeScales are zero-indexed (that is, the first <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> is 0, the second <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> is 1, etc.);
-so, <code class="xref any docutils literal notranslate"><span class="pre">BeforeTimeStep(2)</span></code> is satisfied at <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> 0 and <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> 1.</p></li>
-</ul>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.BeforeEnvironmentStateUpdate">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">BeforeEnvironmentStateUpdate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.ENVIRONMENT_SEQUENCE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.BeforeEnvironmentStateUpdate" title="Permalink to this definition">¶</a></dt>
-<dd><p>BeforeTrial</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> before which the Condition is satisfied</p></li>
-<li><p><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>s</p></li>
-<li><p><strong>(</strong><strong>default</strong> – TimeScale.RUN)</p></li>
-</ul>
-</dd>
-</dl>
-<p>Satisfied when:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>at most n-1 <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>s have occurred within one unit of time at the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>
-specified by <strong>time_scale</strong>.</p></li>
-</ul>
-</div></blockquote>
-<p class="rubric">Notes</p>
-<ul class="simple">
-<li><p>Counts of TimeScales are zero-indexed (that is, the first <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> is 0, the second
-<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> is 1, etc.); so, <code class="xref any docutils literal notranslate"><span class="pre">BeforeTrial(2)</span></code> is satisfied at <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> 0
-and <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> 1.</p></li>
 </ul>
 </dd></dl>
 
@@ -2162,25 +1819,6 @@ JustRan(A) is satisfied at the beginning of the next <a class="reference interna
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.NWhen">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">NWhen</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">condition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.NWhen" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>condition</strong> (<a class="reference internal" href="#psyneulink.core.scheduling.condition.Condition" title="psyneulink.core.scheduling.condition.Condition"><em>Condition</em></a>) – a <a class="reference internal" href="#"><span class="doc">Condition</span></a></p></li>
-<li><p><strong>n</strong> (<em>int</em>) – the maximum number of times this condition will be satisfied</p></li>
-</ul>
-</dd>
-</dl>
-<p>Satisfied when:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>the first <strong>n</strong> times <strong>condition</strong> is satisfied upon evaluation</p></li>
-</ul>
-</div></blockquote>
-</dd></dl>
-
-<dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.Never">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">Never</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.Never" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
@@ -2208,6 +1846,25 @@ JustRan(A) is satisfied at the beginning of the next <a class="reference interna
 <blockquote>
 <div><ul class="simple">
 <li><p><strong>condition</strong> is not satisfied.</p></li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.NWhen">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">NWhen</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">condition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.NWhen" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>condition</strong> (<a class="reference internal" href="#psyneulink.core.scheduling.condition.Condition" title="psyneulink.core.scheduling.condition.Condition"><em>Condition</em></a>) – a <a class="reference internal" href="#"><span class="doc">Condition</span></a></p></li>
+<li><p><strong>n</strong> (<em>int</em>) – the maximum number of times this condition will be satisfied</p></li>
+</ul>
+</dd>
+</dl>
+<p>Satisfied when:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>the first <strong>n</strong> times <strong>condition</strong> is satisfied upon evaluation</p></li>
 </ul>
 </div></blockquote>
 </dd></dl>
@@ -2477,6 +2134,12 @@ only after <em>t</em></p>
 </div></blockquote>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.When">
+<span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">When</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.When" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#psyneulink.core.scheduling.condition.Condition" title="psyneulink.core.scheduling.condition.Condition"><code class="xref py py-class docutils literal notranslate"><span class="pre">psyneulink.core.scheduling.condition.Condition</span></code></a></p>
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.WhenFinished">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">WhenFinished</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependency</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.WhenFinished" title="Permalink to this definition">¶</a></dt>
@@ -2550,12 +2213,6 @@ own, which can occur independently of the execution of other nodes.  Therefore t
 this Condition) can vary arbitrarily in time.</p></li>
 <li><p>The is_finished method is called with <a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context.execution_id" title="psyneulink.core.globals.context.Context.execution_id"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">execution_id</span></code></a> as its           sole positional argument</p></li>
 </ul>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.When">
-<span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">When</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.When" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference internal" href="#psyneulink.core.scheduling.condition.Condition" title="psyneulink.core.scheduling.condition.Condition"><code class="xref py py-class docutils literal notranslate"><span class="pre">psyneulink.core.scheduling.condition.Condition</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
