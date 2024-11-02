@@ -288,6 +288,10 @@ NESTING_LEVEL = 'nesting_level'
 NUM_NESTING_LEVELS = 'num_nesting_levels'
 COMP_HIERARCHY = 'comp_hierarchy' # dict specifying the enclosing composition at each level of nesting
 
+
+default_showgraph_subdir = 'show_graph output'
+
+
 class ShowGraphError(Exception):
 
     def __init__(self, error_value):
@@ -2655,7 +2659,7 @@ class ShowGraph():
         try:
             if output_fmt == 'pdf':
                 # G.format = 'svg'
-                G.view(composition.name.replace(" ", "-"), cleanup=True, directory='show_graph OUTPUT/PDFS')
+                G.view(composition.name.replace(" ", "-"), cleanup=True, directory=f'{default_showgraph_subdir}/PDFS')
 
             # Generate images for animation
             elif output_fmt == 'gif':
@@ -2814,7 +2818,7 @@ class ShowGraph():
         if isinstance(composition._animate, dict):
             # Assign directory for animation files
             from psyneulink._version import root_dir
-            default_dir = root_dir + '/../show_graph output/GIFs/' + composition.name # + " gifs"
+            default_dir = root_dir + f'/../{default_showgraph_subdir}/GIFs/' + composition.name # + " gifs"
             # try:
             #     rmtree(composition._animate_directory)
             # except:
