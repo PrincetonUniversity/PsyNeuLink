@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Gating Mechanism &mdash; PsyNeuLink 0.15.1.0+384.gb9eb21fd5 documentation</title>
+  <title>Gating Mechanism &mdash; PsyNeuLink 0.15.1.0+385.g538a3242a documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+384
+                  0.15.1.0+385
                 </div>
               
             
@@ -221,7 +221,7 @@
 <section id="overview">
 <span id="gatingmechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A GatingMechanism is a subclass of <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> that is restricted to using only <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignals</span></a>,
-which modulate the <a class="reference internal" href="Mechanism.html#mechanism-inputports"><span class="std std-ref">input</span></a> or <a class="reference internal" href="Mechanism.html#mechanism-inputports"><span class="std std-ref">output</span></a> of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>,
+which modulate the <a class="reference internal" href="Mechanism.html#mechanism-inputports"><span class="std std-ref">input</span></a> or <a class="reference internal" href="Mechanism.html#mechanism-outputports"><span class="std std-ref">output</span></a> of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>,
 but not the paramaters of its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.  Accordingly, its constructor has a <strong>gate</strong>
 argument in place of a <strong>control</strong> argument.  It also lacks several attributes related to control, including those
 related to costs and net_outcome.  In all other respects it is identical to its parent class, ControlMechanism.</p>
@@ -237,7 +237,7 @@ specified, then only the GatingMechanism is constructed, and its inputs and the 
 modulates must be specified in some other way.</p>
 <section id="specifying-gating">
 <span id="gatingmechanism-specifying-gating"></span><h3><em>Specifying gating</em><a class="headerlink" href="#specifying-gating" title="Permalink to this headline">¶</a></h3>
-<p>A GatingMechanism is used to modulate the value of an <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> or <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>. An InputPort or OutputPort can
+<p>A GatingMechanism is used to modulate the value of an <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> or <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>. An InputPort or OutputPort can
 be specified for gating by assigning it a <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a> or <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a> anywhere that the Projections to a Port
 or its <code class="xref any docutils literal notranslate"><span class="pre">ModulatorySignals</span> <span class="pre">can</span> <span class="pre">be</span> <span class="pre">specified</span></code>.  A <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> can also be specified for
 gating, in which case the <a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary InputPort</span></a> of the specified Mechanism is used.  Ports

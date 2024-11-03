@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; PsyNeuLink 0.15.1.0+384.gb9eb21fd5 documentation</title>
+  <title>Index &mdash; PsyNeuLink 0.15.1.0+385.g538a3242a documentation</title>
   
 
   
@@ -98,7 +98,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+384
+                  0.15.1.0+385
                 </div>
               
             
@@ -307,7 +307,7 @@
 </li>
       <li><a href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical._compute_conditional_rt_moments">_compute_conditional_rt_moments() (psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical static method)</a>
 </li>
-      <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition._construct_combined_softmax_node">_construct_combined_softmax_node() (psyneulink.library.compositions.emcomposition.EMComposition method)</a>
+      <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition._construct_combined_matches_node">_construct_combined_matches_node() (psyneulink.library.compositions.emcomposition.EMComposition method)</a>
 </li>
       <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition._construct_concatenate_queries_node">_construct_concatenate_queries_node() (psyneulink.library.compositions.emcomposition.EMComposition method)</a>
 </li>
@@ -321,13 +321,15 @@
 </li>
       <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition._construct_retrieved_nodes">_construct_retrieved_nodes() (psyneulink.library.compositions.emcomposition.EMComposition method)</a>
 </li>
-      <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition._construct_softmax_gain_control_nodes">_construct_softmax_gain_control_nodes() (psyneulink.library.compositions.emcomposition.EMComposition method)</a>
+      <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition._construct_softmax_gain_control_node">_construct_softmax_gain_control_node() (psyneulink.library.compositions.emcomposition.EMComposition method)</a>
 </li>
-      <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition._construct_softmax_nodes">_construct_softmax_nodes() (psyneulink.library.compositions.emcomposition.EMComposition method)</a>
+      <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition._construct_softmax_node">_construct_softmax_node() (psyneulink.library.compositions.emcomposition.EMComposition method)</a>
 </li>
       <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition._construct_storage_node">_construct_storage_node() (psyneulink.library.compositions.emcomposition.EMComposition method)</a>
 </li>
       <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition._construct_value_input_nodes">_construct_value_input_nodes() (psyneulink.library.compositions.emcomposition.EMComposition method)</a>
+</li>
+      <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition._construct_weighted_match_nodes">_construct_weighted_match_nodes() (psyneulink.library.compositions.emcomposition.EMComposition method)</a>
 </li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition._create_CIM_ports">_create_CIM_ports() (psyneulink.core.compositions.composition.Composition method)</a>
 </li>
@@ -1671,7 +1673,7 @@
 </li>
       <li><a href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.combined_costs_fct_mult_param">combined_costs_fct_mult_param (psyneulink.core.components.functions.transferfunctions.TransferWithCosts attribute)</a>
 </li>
-      <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition.combined_softmax_node">combined_softmax_node (psyneulink.library.compositions.emcomposition.EMComposition attribute)</a>
+      <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition.combined_matches_node">combined_matches_node (psyneulink.library.compositions.emcomposition.EMComposition attribute)</a>
 </li>
       <li><a href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.CombineMeans">CombineMeans (class in psyneulink.core.components.functions.combinationfunctions)</a>
 </li>
@@ -5435,8 +5437,6 @@
 </li>
       <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.retained_trained_outputs">retained_trained_outputs (psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper attribute)</a>
 </li>
-      <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition.retrieval_gating_nodes">retrieval_gating_nodes (psyneulink.library.compositions.emcomposition.EMComposition attribute)</a>
-</li>
       <li><a href="MemoryFunctions.html#psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.retrieval_prob">retrieval_prob (psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory attribute)</a>
 
       <ul>
@@ -5697,9 +5697,9 @@
 </li>
       <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition.softmax_gain">softmax_gain (psyneulink.library.compositions.emcomposition.EMComposition attribute)</a>
 </li>
-      <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition.softmax_gain_control_nodes">softmax_gain_control_nodes (psyneulink.library.compositions.emcomposition.EMComposition attribute)</a>
+      <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition.softmax_gain_control_node">softmax_gain_control_node (psyneulink.library.compositions.emcomposition.EMComposition attribute)</a>
 </li>
-      <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition.softmax_nodes">softmax_nodes (psyneulink.library.compositions.emcomposition.EMComposition attribute)</a>
+      <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition.softmax_node">softmax_node (psyneulink.library.compositions.emcomposition.EMComposition attribute)</a>
 </li>
       <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition.softmax_threshold">softmax_threshold (psyneulink.library.compositions.emcomposition.EMComposition attribute)</a>
 </li>
@@ -6249,7 +6249,7 @@
       </ul></li>
       <li><a href="LearningProjection.html#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.weight_change_matrix">weight_change_matrix (psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection attribute)</a>
 </li>
-      <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition.weighted_softmax_nodes">weighted_softmax_nodes (psyneulink.library.compositions.emcomposition.EMComposition attribute)</a>
+      <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition.weighted_match_nodes">weighted_match_nodes (psyneulink.library.compositions.emcomposition.EMComposition attribute)</a>
 </li>
       <li><a href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.CombineMeans.weights">weights (psyneulink.core.components.functions.combinationfunctions.CombineMeans attribute)</a>
 
