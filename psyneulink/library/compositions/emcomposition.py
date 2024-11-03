@@ -1067,17 +1067,14 @@ WEIGHT_AFFIX = f' [{WEIGHT}]'
 MATCH_TO_KEYS_AFFIX = f' [{MATCH_TO_KEYS_NODE_NAME}]'
 WEIGHTED_MATCH_NODE_NAME = 'WEIGHTED MATCH'
 WEIGHTED_MATCH_AFFIX = f' [{WEIGHTED_MATCH_NODE_NAME}]'
+CONCATENATE_QUERIES_NAME = 'CONCATENATE QUERIES'
 COMBINE_MATCHES_NODE_NAME = 'COMBINE MATCHES'
 COMBINE_MATCHES_AFFIX = f' [{COMBINE_MATCHES_NODE_NAME}]'
 SOFTMAX_NODE_NAME = 'RETRIEVE'
 SOFTMAX_AFFIX = f' [{SOFTMAX_NODE_NAME}]'
 RETRIEVED_NODE_NAME = 'RETRIEVED'
 RETRIEVED_AFFIX = ' [RETRIEVED]'
-
-COMBINED_SOFTMAX_NODE_NAME = 'RETRIEVE'
-WEIGHTED_SOFTMAX_AFFIX = ' [WEIGHTED SOFTMAX]'
 STORE_NODE_NAME = 'STORE'
-
 
 def _memory_getter(owning_component=None, context=None)->list:
     """Return list of memories in which rows (outer dimension) are memories for each field.
@@ -1336,7 +1333,7 @@ class EMComposition(AutodiffComposition):
         into a single vector used for the matching processing if `concatenate keys <EMComposition.concatenate_queries>`
         is True. This is not created if the **concatenate_queries** argument to the EMComposition's constructor is
         False or is overridden (see `concatenate_queries <EMComposition_Concatenate_Queries>`), or there is only one
-        query_input_node. This node is named *CONCATENATE_KEYS*
+        query_input_node. This node is named *CONCATENATE_QUERIES*
 
     match_nodes : list[ProcessingMechanism]
         `ProcessingMechanisms <ProcessingMechanism>` that compute the dot product of each query and the key stored in
@@ -1968,23 +1965,23 @@ class EMComposition(AutodiffComposition):
                                     and normalize_memories)
         # if concatenate_queries was forced to be False when user specified it as True, issue warning
         if user_specified_concatenate_queries and not parsed_concatenate_queries:
-            # Issue warning if concatenate_queries is True but either
-            #   field weights are not all equal and/or normalize_memories is False
+            # Issue warning if concatenate_queries is True but:
+            #   field weights are not all equal and/or
+            #   normalize_memories is False and/or
+            #   there is only one key
             fw_error_msg = nm_error_msg = fw_correction_msg = nm_correction_msg = None
-            if not all(np.all(keys_weights[i] == keys_weights[0] for i in range(len(keys_weights)))):
-                fw_error_msg = f" field weights ({field_weights}) are not all equal"
-                fw_correction_msg = f"remove `field_weights` specification or make them all the same."
-            if not normalize_memories:
-                nm_error_msg = f" normalize_memories is False"
-                nm_correction_msg = f" or set normalize_memories to True"
-            if fw_error_msg and nm_error_msg:
-                error_msg = f"{fw_error_msg} and {nm_error_msg}"
-                correction_msg = f"{fw_correction_msg} and/or {nm_correction_msg}"
-            else:
-                error_msg = fw_error_msg or nm_error_msg
-                correction_msg = fw_correction_msg or nm_correction_msg
+            if self.num_keys == 1:
+                error_msg = f"there is only one key"
+                correction_msg = ""
+            elif not all(np.all(keys_weights[i] == keys_weights[0] for i in range(len(keys_weights)))):
+                error_msg = f" field weights ({field_weights}) are not all equal"
+                correction_msg = (f" To use concatenation, remove `field_weights` "
+                                     f"specification or make them all the same.")
+            elif not normalize_memories:
+                error_msg = f" normalize_memories is False"
+                correction_msg = f" To use concatenation, set normalize_memories to True."
             warnings.warn(f"The 'concatenate_queries' arg for '{name}' is True but {error_msg}; "
-                          f"concatenation will be ignored. To use concatenation, {correction_msg}.")
+                          f"concatenation will be ignored.{correction_msg}")
 
         self.learning_rate = learning_rate
         return parsed_field_weights, parsed_field_names, parsed_concatenate_queries
@@ -2071,8 +2068,7 @@ class EMComposition(AutodiffComposition):
 
         # Do some validation and get singleton softmax and match Nodes for concatenated queries
         if self.concatenate_queries:
-            match_node = self.match_nodes.pop()
-            assert not self.match_nodes, \
+            assert len(self.match_nodes) == 1, \
                 f"PROGRAM ERROR: Too many match_nodes ({len(self.match_nodes)}) for concatenated queries."
             assert not self.field_weight_nodes, \
                 f"PROGRAM ERROR: There should be no field_weight_nodes for concatenated queries."
@@ -2082,29 +2078,18 @@ class EMComposition(AutodiffComposition):
         # LEARNING NOT ENABLED --------------------------------------------------
         # Set up pathways WITHOUT PsyNeuLink learning pathways
         if not self.enable_learning:
-            self.add_nodes(self.query_input_nodes + self.value_input_nodes)
-            if not self.concatenate_queries:
-                # Regular pathways
-                self.add_nodes(self.match_nodes +
-                               self.field_weight_nodes +
-                               self.weighted_match_nodes)
-            else:
-                # Key-concatenated pathways
-                # Note: solo nodes are put in lists here for concatenation
-                self.add_nodes([self.concatenate_queries_node, match_node])
-            self.add_nodes([self.combined_matches_node] +
-                           [self.softmax_node] +
-                           self.retrieved_nodes)
-            if self.softmax_gain_control_node:
-                self.add_node(self.softmax_gain_control_node)
-            if use_storage_node:
-                self.add_node(self.storage_node)
-                # self.add_projections(proj for proj in self.storage_node.efferents)
+            optional_nodes = [node for node in
+                              [self.combined_matches_node, self.softmax_gain_control_node, self.storage_node,
+                              self.concatenate_queries_node] if (node and node is not None)]
+            self.add_nodes(self.query_input_nodes + self.value_input_nodes + optional_nodes + self.match_nodes +
+                           self.field_weight_nodes + self.weighted_match_nodes +
+                           optional_nodes +
+                           [self.softmax_node] + self.retrieved_nodes)
 
         # LEARNING ENABLED -----------------------------------------------------
         # Set up pathways WITH psyneulink backpropagation learning field weights
         else:
-            # Key pathways
+            # Key-specific pathways
             for i in range(self.num_keys):
                 # Regular pathways
                 if not self.concatenate_queries:
@@ -2189,14 +2174,14 @@ class EMComposition(AutodiffComposition):
             return None
         else:
             return ProcessingMechanism(function=Concatenate,
-                                       input_ports=[{NAME: 'CONCATENATE_QUERIES',
+                                       input_ports=[{NAME: 'CONCATENATE',
                                                      SIZE: len(self.query_input_nodes[i].output_port.value),
                                                      PROJECTIONS: MappingProjection(
                                                          name=f'{self.key_names[i]} to CONCATENATE',
                                                          sender=self.query_input_nodes[i].output_port,
                                                          matrix=IDENTITY_MATRIX)}
                                                     for i in range(self.num_keys)],
-                                       name='CONCATENATE KEYS')
+                                       name=CONCATENATE_QUERIES_NAME)
 
     def _construct_match_nodes(self, memory_template, memory_capacity, concatenate_queries, normalize_memories)->list:
         """Create nodes that, for each key field, compute the similarity between the input and each item in memory.
@@ -2311,6 +2296,9 @@ class EMComposition(AutodiffComposition):
                                          )->ProcessingMechanism:
         """Create node that combines weighted matches for all keys into one match vector."""
 
+        if self.num_keys == 1 or self.concatenate_queries_node:
+            return
+
         if not field_weighting or use_gating_for_weighting:
             input_source = self.match_nodes
         else:
@@ -2335,6 +2323,16 @@ class EMComposition(AutodiffComposition):
     def _construct_softmax_node(self, memory_capacity, softmax_gain, softmax_threshold, softmax_choice)->list:
         """Create node that applies softmax to output of combined_matches_node."""
 
+        if self.num_keys == 1 or self.concatenate_queries_node:
+            input_source = self.match_nodes[0]
+            proj_name =f'{MATCH} to {SOFTMAX_NODE_NAME}'
+        # elif self.concatenate_queries_node:
+        #     input_source = self.concatenate_queries_node
+        #     proj_name =f'{CONCATENATE_QUERIES_NAME} to {SOFTMAX_NODE_NAME}'
+        else:
+            input_source = self.combined_matches_node
+            proj_name =f'{COMBINE_MATCHES_NODE_NAME} to {SOFTMAX_NODE_NAME}'
+
         if softmax_choice == ARG_MAX:
             # ARG_MAX would return entry multiplied by its dot product
             # ARG_MAX_INDICATOR returns the entry unmodified
@@ -2342,10 +2340,9 @@ class EMComposition(AutodiffComposition):
 
         softmax_node = ProcessingMechanism(input_ports={SIZE:memory_capacity,
                                                         PROJECTIONS: MappingProjection(
-                                                            sender=self.combined_matches_node.output_port,
+                                                            sender=input_source,
                                                             matrix=IDENTITY_MATRIX,
-                                                            name=f'{COMBINE_MATCHES_NODE_NAME} to '
-                                                                 f'{SOFTMAX_NODE_NAME}')},
+                                                            name=proj_name)},
                                            function=SoftMax(gain=softmax_gain,
                                                             mask_threshold=softmax_threshold,
                                                             output=softmax_choice,
