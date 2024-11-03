@@ -264,7 +264,6 @@ Contents
      - `Field Weights <EMComposition_Example_Field_Weights>`
   * `EMComposition_Class_Reference`
 
-
 .. _EMComposition_Overview:
 
 Overview
