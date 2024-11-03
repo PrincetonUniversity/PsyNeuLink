@@ -745,7 +745,7 @@ REDUCE_FUNCTION = "Reduce Function"
 CONCATENATE_FUNCTION = "Concatenate Function"
 REARRANGE_FUNCTION = 'Rearrange Function'
 LINEAR_COMBINATION_FUNCTION = "LinearCombination Function"
-LINEAR_TRANSFORM_FUNCTION = "LinearTransform Function"
+LINEAR_TRANSFORM_FUNCTION = "MatrixTransform Function"
 COMBINE_MEANS_FUNCTION = "CombineMeans Function"
 
 # TransferFunctions:

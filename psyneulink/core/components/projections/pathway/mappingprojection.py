@@ -33,7 +33,7 @@ Overview
 A MappingProjection transmits the `value <OutputPort.value>` of an `OutputPort` of one `ProcessingMechanism
 <ProcessingMechanism>` (its `sender <MappingProjection.sender>`) to the `InputPort` of another (its `receiver
 <MappingProjection.receiver>`). The default `function <Projection_Base.function>` for a MappingProjection is
-`LinearTransform`, which uses the MappingProjection's `matrix <MappingProjection.matrix>` attribute to transform the
+`MatrixTransform`, which uses the MappingProjection's `matrix <MappingProjection.matrix>` attribute to transform the
 value received from its `sender <MappingProjection.sender>` and provide the result to its `receiver
 <MappingProjection.receiver>`.
 
@@ -256,7 +256,7 @@ of one or more `LearningProjections <LearningProjection>` that project to its *M
 This conforms to the general procedures for modulation used by `ModulatoryProjections <ModulatoryProjection>`
 A LearningProjection `modulates <LearningSignal_Modulation>` the `function <ParameterPort.function>` of the
 *MATRIX* ParameterPort, which is responsible for keeping a record of the value of the MappingProjection's matrix,
-and providing it to the MappingProjection's `function <Projection_Base.function>` (usually `LinearTransform`).  By
+and providing it to the MappingProjection's `function <Projection_Base.function>` (usually `MatrixTransform`).  By
 default, the function for the *MATRIX* ParameterPort is an `AccumulatorIntegrator`.  A LearningProjection
 modulates it by assigning the value of its `additive_param <AccumulatorIntegrator.additive_param>` (`increment
 <AccumulatorIntegrator.increment>`), which is added to its `previous_value <AccumulatorIntegrator.previous_value>`
@@ -264,7 +264,7 @@ attribute each time it is executed. The result is that each time the MappingProj
 executes its *MATRIX* ParameterPort, the `weight changes <LearningProjection_Structure>` conveyed to the
 MappingProjection from any LearningProjection(s) are added to the record of the matrix kept by the *MATRIX*
 ParameterPort's `AccumulatorIntegrator` function in its `previous_value <AccumulatorIntegrator.previous_value>`
-attribute. This is then the value of the matrix used  by the MappingProjection's `LinearTransform` function when it is
+attribute. This is then the value of the matrix used  by the MappingProjection's `MatrixTransform` function when it is
 executed.  It is important to note that the accumulated weight changes received by a MappingProjection from its
 LearningProjection(s) are stored by the *MATRIX* ParameterPort's function, and not the MappingProjection's `matrix
 <MappingProjection.matrix>` parameter itself; the latter stores the original value of the matrix before learning (that
@@ -291,7 +291,7 @@ from psyneulink._typing import Optional
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.stateful.integratorfunctions import AccumulatorIntegrator
-from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearTransform
+from psyneulink.core.components.functions.nonstateful.transformfunctions import MatrixTransform
 from psyneulink.core.components.functions.function import get_matrix
 from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.core.components.projections.projection import ProjectionError, projection_keywords
@@ -416,7 +416,7 @@ class MappingProjection(PathwayProjection_Base):
                 function
                     see `function <MappingProjection.function>`
 
-                    :default value: `LinearTransform`
+                    :default value: `MatrixTransform`
                     :type: `Function`
 
                 matrix
@@ -425,7 +425,7 @@ class MappingProjection(PathwayProjection_Base):
                     :default value: `AUTO_ASSIGN_MATRIX`
                     :type: ``str``
         """
-        function = Parameter(LinearTransform, stateful=False, loggable=False)
+        function = Parameter(MatrixTransform, stateful=False, loggable=False)
         matrix = FunctionParameter(
             DEFAULT_MATRIX,
             setter=_mapping_projection_matrix_setter

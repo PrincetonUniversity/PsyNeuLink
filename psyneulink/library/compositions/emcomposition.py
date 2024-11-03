@@ -88,14 +88,14 @@
 #      - COMPILATION:
 #        - Remove CIM projections on import to another composition
 #        - Autodiff support for IdentityFunction
-#        - LinearTransform to add normalization
+#        - MatrixTransform to add normalization
 #        - _store() method to assign weights to memory
 #        - LLVM problem with ComparatorMechanism
 #
 #      - pytorchcreator_function:
 #           SoftMax implementation:  torch.nn.Softmax(dim=0) is not getting passed correctly
 #           Implement LinearCombination
-#        - LinearTransform Function:
+#        - MatrixTransform Function:
 #
 #      - LEARNING - Backpropagation LearningFunction / LearningMechanism
 #        - DOCUMENTATION:
@@ -1029,7 +1029,7 @@ import psyneulink.core.scheduling.condition as conditions
 from psyneulink._typing import Optional, Union
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
 from psyneulink.core.components.functions.nonstateful.transformfunctions import (
-    Concatenate, LinearCombination, LinearTransform)
+    Concatenate, LinearCombination, MatrixTransform)
 from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.compositions.composition import CompositionError, NodeRole
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, torch_available
@@ -2215,7 +2215,7 @@ class EMComposition(AutodiffComposition):
                                  SIZE: memory_capacity,
                                  PROJECTIONS: MappingProjection(sender=self.concatenate_queries_node,
                                                                 matrix=matrix,
-                                                                function=LinearTransform(
+                                                                function=MatrixTransform(
                                                                     normalize=normalize_memories),
                                                                 name=f'MEMORY')},
                     name='MATCH')]
@@ -2229,7 +2229,7 @@ class EMComposition(AutodiffComposition):
                         PROJECTIONS: MappingProjection(sender=self.query_input_nodes[i].output_port,
                                                        matrix = np.array(
                                                            memory_template[:,i].tolist()).transpose().astype(float),
-                                                       function=LinearTransform(normalize=normalize_memories),
+                                                       function=MatrixTransform(normalize=normalize_memories),
                                                        name=f'MEMORY for {self.key_names[i]} [KEY]')},
                     name=self.key_names[i] + MATCH_TO_KEYS_AFFIX)
                 for i in range(self.num_keys)

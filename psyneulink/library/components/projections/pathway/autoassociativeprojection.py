@@ -64,7 +64,7 @@ are `auto <AutoAssociativeProjection.auto>` and `hetero <AutoAssociativeProjecti
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Due to its specialized nature, most parameters of the AutoAssociativeProjection are not configurable: the `variable` is
-determined by the format of the output of the RecurrentTransferMechanism, the `function` is always LinearTransform, and so
+determined by the format of the output of the RecurrentTransferMechanism, the `function` is always MatrixTransform, and so
 on. The only configurable parameter is the matrix, configured through the **matrix**, **auto**, and/or **hetero**
 arguments for a RecurrentTransferMechanism:
 
@@ -105,7 +105,7 @@ from beartype import beartype
 from psyneulink._typing import Optional
 
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearTransform
+from psyneulink.core.components.functions.nonstateful.transformfunctions import MatrixTransform
 from psyneulink.core.components.functions.function import get_matrix
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingError, MappingProjection
 from psyneulink.library.components.projections.pathway.maskedmappingprojection import MaskedMappingProjection
@@ -212,7 +212,7 @@ class AutoAssociativeProjection(MaskedMappingProjection):
                 function
                     see `function <AutoAssociativeProjection.function>`
 
-                    :default value: `LinearTransform`
+                    :default value: `MatrixTransform`
                     :type: `Function`
 
                 hetero
@@ -228,8 +228,8 @@ class AutoAssociativeProjection(MaskedMappingProjection):
                     :type: ``str``
         """
         variable = Parameter(np.array([[0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
-        # function is always LinearTransform that requires 1D input
-        function = Parameter(LinearTransform, stateful=False, loggable=False)
+        # function is always MatrixTransform that requires 1D input
+        function = Parameter(MatrixTransform, stateful=False, loggable=False)
 
         auto = SharedParameter(1, attribute_name=OWNER_MECH)
         hetero = SharedParameter(0, attribute_name=OWNER_MECH)
@@ -271,7 +271,7 @@ class AutoAssociativeProjection(MaskedMappingProjection):
     # temporary override to make sure matrix/auto/hetero parameters
     # get passed properly. should be replaced with a better organization
     # of auto/hetero, in which the base parameters are stored either on
-    # AutoAssociativeProjection or on LinearTransform itself
+    # AutoAssociativeProjection or on MatrixTransform itself
     def _instantiate_parameter_classes(self, context):
         if FUNCTION not in self.initial_shared_parameters:
             try:

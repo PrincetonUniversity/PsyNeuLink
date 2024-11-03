@@ -409,7 +409,7 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import get_matrix, ValidMatrixSpecType
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
-from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearTransform
+from psyneulink.core.components.functions.nonstateful.transformfunctions import MatrixTransform
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.ports.port import PortError
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Projection, Port
@@ -511,7 +511,7 @@ class Projection_Base(Projection):
     """
     Projection_Base(           \
         sender=None,           \
-        function=LinearTransform, \
+        function=MatrixTransform, \
         receiver=None,         \
         feedback=None          \
         )
@@ -546,7 +546,7 @@ class Projection_Base(Projection):
         the context in which the Projection is used, or its initialization will be `deferred
         <Projection_Deferred_Initialization>`.
 
-    function : TransferFunction : default LinearTransform
+    function : TransferFunction : default MatrixTransform
         specifies function used to convey (and potentially convert) `value <Port_Base.value>` of `sender
         <Projection_Base.sender>` `Port` to `variable <Port_Base.variable>` of `receiver <Projection_Base.receiver>`
         Port.
@@ -634,7 +634,7 @@ class Projection_Base(Projection):
                 function
                     see `function <Projection_Base.function>`
 
-                    :default value: `LinearTransform`
+                    :default value: `MatrixTransform`
                     :type: `Function`
 
                 weight
@@ -645,7 +645,7 @@ class Projection_Base(Projection):
         """
         weight = Parameter(None, modulable=True)
         exponent = Parameter(None, modulable=True)
-        function = Parameter(LinearTransform, stateful=False, loggable=False)
+        function = Parameter(MatrixTransform, stateful=False, loggable=False)
 
     registry = ProjectionRegistry
 
@@ -845,7 +845,7 @@ class Projection_Base(Projection):
         # if MATRIX in target_set and target_set[MATRIX] is not None:
         #     matrix = target_set[MATRIX]
         #     # If matrix_spec is keyword and sender and receiver have been instantiated, implement matrix
-        #     #   so that it can be passed to function (e.g., LinearTransform) if needed.
+        #     #   so that it can be passed to function (e.g., MatrixTransform) if needed.
         #     if not is_matrix(matrix):
         #         raise ProjectionError(f"Matrix ('{matrix}') specified for '{self.name}' is not a legal matrix spec.")
         #     if self.sender_instantiated and self.receiver_instantiated:
@@ -1209,7 +1209,7 @@ class Projection_Base(Projection):
             func_model = [f for f in edge_node.functions if f.id == parse_valid_identifier(f'{edge_node.id}_{edge_function.name}')][0]
             var_name = _get_variable_parameter_name(edge_function)
 
-            # 2d variable on LinearTransform will be incorrect on import back to psyneulink
+            # 2d variable on MatrixTransform will be incorrect on import back to psyneulink
             func_model.metadata[var_name] = func_model.metadata[var_name][-1]
 
             pre_edge = mdf.Edge(

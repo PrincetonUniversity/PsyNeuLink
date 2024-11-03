@@ -15,7 +15,7 @@
 * `Reduce`
 * `LinearCombination`
 * `CombineMeans`
-* `LinearTransform`
+* `MatrixTransform`
 * `PredictionErrorDeltaFunction`
 
 Overview
@@ -68,7 +68,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, ValidPrefSet, PreferenceEntry, PreferenceLevel
 
 __all__ = ['CombinationFunction', 'Concatenate', 'CombineMeans', 'Rearrange', 'Reduce',
-           'LinearCombination', 'LinearTransform', 'PredictionErrorDeltaFunction']
+           'LinearCombination', 'MatrixTransform', 'PredictionErrorDeltaFunction']
 
 class CombinationFunction(Function_Base):
     """Function that combines multiple items, yielding a result with the same shape as its operands
@@ -1609,12 +1609,12 @@ class LinearCombination(
 
 
 # **********************************************************************************************************************
-#                                                 LinearTransform
+#                                                 MatrixTransform
 # **********************************************************************************************************************
 
-class LinearTransform(CombinationFunction):  # -------------------------------------------------------------------------------
+class MatrixTransform(CombinationFunction):  # -------------------------------------------------------------------------------
     """
-    LinearTransform(          \
+    MatrixTransform(          \
          default_variable, \
          matrix=None,      \
          normalize=False,  \
@@ -1624,11 +1624,11 @@ class LinearTransform(CombinationFunction):  # ---------------------------------
          prefs=None        \
          )
 
-    .. _LinearTransform:
+    .. _MatrixTransform:
 
-    Matrix transform of `variable <LinearTransform.variable>`.
+    Matrix transform of `variable <MatrixTransform.variable>`.
 
-    `function <LinearTransform._function>` returns dot product of variable with matrix:
+    `function <MatrixTransform._function>` returns dot product of variable with matrix:
 
     .. math::
         variable \\bullet matrix
@@ -1668,31 +1668,31 @@ class LinearTransform(CombinationFunction):  # ---------------------------------
 
     variable : list or 1d array : default class_defaults.variable
         specifies a template for the value to be transformed; length must equal the number of rows of `matrix
-        <LinearTransform.matrix>`.
+        <MatrixTransform.matrix>`.
 
     matrix : number, list, 1d or 2d np.ndarray, function, or matrix keyword : default IDENTITY_MATRIX
-        specifies matrix used to transform `variable <LinearTransform.variable>`
-        (see `matrix <LinearTransform.matrix>` for specification details).
+        specifies matrix used to transform `variable <MatrixTransform.variable>`
+        (see `matrix <MatrixTransform.matrix>` for specification details).
 
-        When LinearTransform is the `function <Projection_Base._function>` of a projection:
+        When MatrixTransform is the `function <Projection_Base._function>` of a projection:
 
             - the matrix specification must be compatible with the variables of the `sender <Projection_Base.sender>`
               and `receiver <Projection_Base.receiver>`
 
             - a matrix keyword specification generates a matrix based on the sender and receiver shapes
 
-        When LinearTransform is instantiated on its own, or as the function of a `Mechanism <Mechanism>` or `Port`:
+        When MatrixTransform is instantiated on its own, or as the function of a `Mechanism <Mechanism>` or `Port`:
 
-            - the matrix specification must be compatible with the function's own `variable <LinearTransform.variable>`
+            - the matrix specification must be compatible with the function's own `variable <MatrixTransform.variable>`
 
             - if matrix is not specified, a square identity matrix is generated based on the number of columns in
-              `variable <LinearTransform.variable>`
+              `variable <MatrixTransform.variable>`
 
             - matrix keywords are not valid matrix specifications
 
     normalize : bool : default False
         specifies whether to normalize the result of `function <LinearCombination.function>` by dividing it by the
-        norm of `variable <LinearTransform.variable>` x the norm of `matrix <LinearTransform.matrix>`.
+        norm of `variable <MatrixTransform.variable>` x the norm of `matrix <MatrixTransform.matrix>`.
 
     bounds : None
 
@@ -1717,7 +1717,7 @@ class LinearTransform(CombinationFunction):  # ---------------------------------
         contains value to be transformed.
 
     matrix : 2d array
-        matrix used to transform `variable <LinearTransform.variable>`.
+        matrix used to transform `variable <MatrixTransform.variable>`.
         Can be specified as any of the following:
             * number - used as the filler value for all elements of the :keyword:`matrix` (call to np.fill);
             * list of arrays, 2d array - assigned as the value of :keyword:`matrix`;
@@ -1727,7 +1727,7 @@ class LinearTransform(CombinationFunction):  # ---------------------------------
 
     normalize : bool
         determines whether the result of `function <LinearCombination.function>` is normalized, by dividing it by the
-        norm of `variable <LinearTransform.variable>` x the norm of `matrix <LinearTransform.matrix>`.
+        norm of `variable <MatrixTransform.variable>` x the norm of `matrix <MatrixTransform.matrix>`.
 
 
     owner : Component
@@ -1755,13 +1755,13 @@ class LinearTransform(CombinationFunction):  # ---------------------------------
             ----------
 
                 matrix
-                    see `matrix <LinearTransform.matrix>`
+                    see `matrix <MatrixTransform.matrix>`
 
                     :default value: None
                     :type:
 
                 normalize
-                    see `normalize <LinearTransform.normalize>`
+                    see `normalize <MatrixTransform.normalize>`
 
                     :default value: False
                     :type: bool
@@ -1792,7 +1792,7 @@ class LinearTransform(CombinationFunction):  # ---------------------------------
 
         # Note: this calls _validate_variable and _validate_params which are overridden below;
         #       the latter implements the matrix if required
-        # super(LinearTransform, self).__init__(default_variable=default_variable,
+        # super(MatrixTransform, self).__init__(default_variable=default_variable,
         super().__init__(
             default_variable=default_variable,
             matrix=matrix,
@@ -1808,7 +1808,7 @@ class LinearTransform(CombinationFunction):  # ---------------------------------
         )
 
     # def _validate_variable(self, variable, context=None):
-    #     """Insure that variable passed to LinearTransform is a max 2D array
+    #     """Insure that variable passed to MatrixTransform is a max 2D array
     #
     #     :param variable: (max 2D array)
     #     :param context:
@@ -2024,7 +2024,7 @@ class LinearTransform(CombinationFunction):  # ---------------------------------
                 elif is_matrix_keyword(param_value):
                     raise FunctionError("{} is not a valid specification for the matrix parameter of {}. Keywords "
                                         "may only be used to specify the matrix parameter of a Projection's "
-                                        "LinearTransform function. When the LinearTransform function is implemented in a "
+                                        "MatrixTransform function. When the MatrixTransform function is implemented in a "
                                         "mechanism, such as {}, the correct matrix cannot be determined from a "
                                         "keyword. Instead, the matrix must be fully specified as a float, list, "
                                         "np.ndarray".
@@ -2139,7 +2139,7 @@ class LinearTransform(CombinationFunction):  # ---------------------------------
         Arguments
         ---------
         variable : list or 1d array
-            array to be transformed;  length must equal the number of rows of `matrix <LinearTransform.matrix>`.
+            array to be transformed;  length must equal the number of rows of `matrix <MatrixTransform.matrix>`.
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -2150,7 +2150,7 @@ class LinearTransform(CombinationFunction):  # ---------------------------------
         ---------
 
         dot product of variable and matrix : 1d array
-            length of the array returned equals the number of columns of `matrix <LinearTransform.matrix>`.
+            length of the array returned equals the number of columns of `matrix <MatrixTransform.matrix>`.
 
         """
         vector = np.array(variable)
