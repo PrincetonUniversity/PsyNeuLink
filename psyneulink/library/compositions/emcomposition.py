@@ -2571,7 +2571,7 @@ class EMComposition(AutodiffComposition):
         use_gating_for_weighting = self._use_gating_for_weighting
         learn_field_weights = self.parameters.learn_field_weights.get(kwargs[CONTEXT])
 
-        if use_gating_for_weighting  and learn_field_weights:
+        if use_gating_for_weighting and learn_field_weights:
             raise EMCompositionError(f"Field weights cannot be learned when 'use_gating_for_weighting' is True; "
                                      f"Construct '{self.name}' with the 'learn_field_weights' arg set to False.")
 
