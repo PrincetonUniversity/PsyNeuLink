@@ -53,9 +53,9 @@ from psyneulink.core.components.functions.function import (
 from psyneulink.core.components.shellclasses import Projection
 from psyneulink.core.globals.keywords import \
     (ADDITIVE_PARAM, ARRANGEMENT, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONCATENATE_FUNCTION, \
-     CROSS_ENTROPY, DEFAULT_VARIABLE, EXPONENTS,
+     CROSS_ENTROPY, DEFAULT_VARIABLE, DOT_PRODUCT, EXPONENTS,
      HAS_INITIALIZERS, HOLLOW_MATRIX, IDENTITY_MATRIX,
-     LINEAR_COMBINATION_FUNCTION, LINEAR_TRANSFORM_FUNCTION, \
+     LINEAR_COMBINATION_FUNCTION, LINEAR_TRANSFORM_FUNCTION, L0, \
      MATRIX_KEYWORD_NAMES, MATRIX, MULTIPLICATIVE_PARAM, NORMALIZE,
      OFFSET, OPERATION, PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT,
      REARRANGE_FUNCTION, RECEIVER, REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, PREFERENCE_SET_NAME)
@@ -1760,6 +1760,12 @@ class MatrixTransform(CombinationFunction):  # ---------------------------------
                     :default value: None
                     :type:
 
+                operation
+                    see `operation <MatrixTransform.operation>`
+
+                    :default value: DOT_PRODUCT
+                    :type: bool
+
                 normalize
                     see `normalize <MatrixTransform.normalize>`
 
@@ -1768,6 +1774,7 @@ class MatrixTransform(CombinationFunction):  # ---------------------------------
         """
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable', mdf_name='A')
         matrix = Parameter(None, modulable=True, mdf_name='B')
+        operation = Parameter(DOT_PRODUCT, stateful=False)
         normalize = Parameter(False)
         bounds = None
 
@@ -1785,6 +1792,7 @@ class MatrixTransform(CombinationFunction):  # ---------------------------------
     def __init__(self,
                  default_variable=None,
                  matrix=None,
+                 operation=None,
                  normalize=None,
                  params=None,
                  owner=None,
@@ -1796,6 +1804,7 @@ class MatrixTransform(CombinationFunction):  # ---------------------------------
         super().__init__(
             default_variable=default_variable,
             matrix=matrix,
+            operation=operation,
             normalize=normalize,
             params=params,
             owner=owner,
@@ -2155,18 +2164,27 @@ class MatrixTransform(CombinationFunction):  # ---------------------------------
         """
         vector = np.array(variable)
         matrix = self._get_current_parameter_value(MATRIX, context)
+        operation = self._get_current_parameter_value(OPERATION, context)
         normalize = self._get_current_parameter_value(NORMALIZE, context)
-        if normalize:
-            if np.any(vector):
-                vector = vector / np.linalg.norm(vector)
-            if np.any(matrix):
-                # FIX: the axis along which norming is carried out should probably be a parameter
-                #      Also need to deal with column- (or row-) wise zeros which cause div by zero
-                #      Replace columns (if norming axis 0) or rows (if norming axis 1) of zeros with 1's
-                # matrix = matrix / np.linalg.norm(matrix,axis=-1,keepdims=True)
-                matrix = matrix / np.linalg.norm(matrix,axis=0,keepdims=True)
 
-        result = np.dot(vector, matrix)
+        if operation == DOT_PRODUCT:
+            if normalize:
+                if np.any(vector):
+                    vector = vector / np.linalg.norm(vector)
+                if np.any(matrix):
+                    # FIX: the axis along which norming is carried out should probably be a parameter
+                    #      Also need to deal with column- (or row-) wise zeros which cause div by zero
+                    #      Replace columns (if norming axis 0) or rows (if norming axis 1) of zeros with 1's
+                    # matrix = matrix / np.linalg.norm(matrix,axis=-1,keepdims=True)
+                    matrix = matrix / np.linalg.norm(matrix,axis=0,keepdims=True)
+            result = np.dot(vector, matrix)
+
+        elif operation == L0:
+            normalization = 1
+            if normalize:
+                normalization = np.sum(vector - matrix)
+            result = np.sum(1 - (vector - matrix) / normalization, axis=1)
+
         return self.convert_output_type(result)
 
     @staticmethod
