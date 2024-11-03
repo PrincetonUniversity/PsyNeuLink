@@ -264,7 +264,6 @@ Contents
      - `Field Weights <EMComposition_Example_Field_Weights>`
   * `EMComposition_Class_Reference`
 
-
 .. _EMComposition_Overview:
 
 Overview
@@ -315,14 +314,15 @@ retrieval) and which are treated as values (i.e., retrieved but not used for mat
 **Operation**
 
 *Retrieval.*  The values retrieved from `memory <ContentAddressableMemory.memory>` (one for each field) are based
-on the relative similarity of the keys to the entries in memory, computed as the dot product of each key and the
-values in the corresponding field for each entry in memory.  These dot products are then softmaxed, and those
-softmax distributions are weighted by the corresponding `field_weights <EMComposition.field_weights>` for each field
-and then combined, to produce a single softmax distribution over the entries in memory. That is then used to generate
-a weighted average of the retrieved values across all fields, which is returned as the `result <Composition.result>`
-of the EMComposition's `execution <Composition_Execution>` (an EMComposition can also be configured to return the
-entry with the highest dot product weighted by field, however then it is not compatible with learning;
-see `softmax_choice <EMComposition_Softmax_Choice>`).
+on the relative similarity of the keys to the entries in memory, computed as the distance of each key and the
+values in the corresponding field for each entry in memory. By default, normalized dot products (comparable to cosine
+similarity) are used to compute the similarity of each query to each key in memory. These distances are then
+weighted by the corresponding `field_weights <EMComposition.field_weights>` for each field (if specified) and then
+summed, and the sum is softmaxed to produce a softmax distribution over the entries in memory. That is then used to
+generate a softmax-weighted average of the retrieved values across all fields, which is returned as the `result
+<Composition.result>` of the EMComposition's `execution <Composition_Execution>` (an EMComposition can also be
+configured to return the entry with the lowest distance weighted by field, however then it is not compatible
+with learning; see `softmax_choice <EMComposition_Softmax_Choice>`).
 
   COMMENT:
   TBD DISTANCE ATTRIBUTES:
@@ -428,11 +428,11 @@ An EMComposition is created by calling its constructor, that takes the following
   process, but the values of which are retrieved and assigned as the `value <Mechanism_Base.value>` of the
   corresponding `retrieved_node <EMComposition.retrieved_nodes>`. This distinction between keys and value corresponds
   to the format of a standard "dictionary," though in that case only a single key and value are allowed, whereas
-  here there can be one or more keys and any number of values;  if all fields are keys, this implements a full form of
-  content-addressable memory. If **learn_field_weight** is True (and `enable_learning<EMComposition.enable_learning>`
+  here there can be one or more keys and any number of values; if all fields are keys, this implements a full form of
+  content-addressable memory. If **learn_field_weights** is True (and `enable_learning<EMComposition.enable_learning>`
   is either True or a list with True for at least one entry), then the field_weights can be modified during training
   (this functions similarly to the attention head of a Transformer model, although at present the field can only be
-  scalar values rather than vecdtors); if **learn_field_weight** is False, then the field_weights are fixed.
+  scalar values rather than vecdtors); if **learn_field_weights** is False, then the field_weights are fixed.
   The following options can be used to specify **field_weights**:
 
     * *None* (the default): all fields except the last are treated as keys, and are weighted equally for retrieval,
@@ -458,13 +458,6 @@ An EMComposition is created by calling its constructor, that takes the following
     are used to weight the retrieved value of each field. This setting is ignored if **field_weights**
     is None or `concatenate_queries <EMComposition_Concatenate_Queries>` is in effect.
 
-    .. warning::
-       If **normalize_field_weights** is False and **enable_learning** is True, a warning is issued indicating that
-       this may produce an error if the `loss_spec <AutodiffComposition.loss_spec>` for the EMComposition (or an
-       `AutodiffComposition` that contains it) requires all values to be between 0 and 1, and calling the
-       EMComposition's `learn <Composition.learn>` method will generate an error if the loss_spec is specified is
-       one known to be incompatible (e.g., `BINARY_CROSS_ENTROPY <Loss.BINARY_CROSS_ENTROPY>`).
-
 .. _EMComposition_Field_Names:
 
 * **field_names**: specifies names that can be assigned to the fields.  The number of names specified must
@@ -485,9 +478,8 @@ An EMComposition is created by calling its constructor, that takes the following
 
       .. note::
          While this is computationally more efficient, it can affect the outcome of the `matching process
-         <EMComposition_Processing>`, since computing the normalized dot product of a single vector comprised of the
-         concatentated inputs is not identical to computing the normalized dot product of each field independently and
-         then combining the results.
+         <EMComposition_Processing>`, since computing the distance of a single vector comprised of the concatentated
+         inputs is not identical to computing the distance of each field independently and then combining the results.
 
       .. note::
          All `query_input_nodes <EMComposition.query_input_nodes>` and `retrieved_nodes <EMComposition.retrieved_nodes>`
@@ -514,41 +506,41 @@ An EMComposition is created by calling its constructor, that takes the following
 
 .. _EMComposition_Softmax_Gain:
 
-* **softmax_gain** : specifies the gain (inverse temperature) used for softmax normalizing the dot products of
-  queries and keys in memory (see `EMComposition_Execution` below).  The following options can be used:
+* **softmax_gain** : specifies the gain (inverse temperature) used for softmax normalizing the combined distances
+  used for retrieval (see `EMComposition_Execution` below).  The following options can be used:
 
   * numeric value: the value is used as the gain of the `SoftMax` Function for the EMComposition's
-    `softmax_nodes <EMComposition.softmax_nodes>`.
+    `softmax_node <EMComposition.softmax_node>`.
 
   * *ADAPTIVE*: the `adapt_gain <SoftMax.adapt_gain>` method of the `SoftMax` Function is used to adaptively set
-    the `softmax_gain <EMComposition.softmax_gain>` based on the entropy of the dot products, in order to preserve
+    the `softmax_gain <EMComposition.softmax_gain>` based on the entropy of the distances, in order to preserve
     the distribution over non- (or near) zero entries irrespective of how many (near) zero entries there are
     (see `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for additional details).
 
   * *CONTROL*: a `ControlMechanism` is created, and its `ControlSignal` is used to modulate the `softmax_gain
-    <EMComposition.softmax_gain>` parameter of the `SoftMax` function of the EMComposition's `softmax_nodes
-    <EMComposition.softmax_nodes>`.
+    <EMComposition.softmax_gain>` parameter of the `SoftMax` function of the EMComposition's `softmax_node
+    <EMComposition.softmax_node>`.
 
   If *None* is specified, the default value for the `SoftMax` function is used.
 
 .. _EMComposition_Softmax_Threshold:
 
 * **softmax_threshold**: if this is specified, and **softmax_gain** is specified with a numeric value,
-  then any values below the specified threshold are set to 0 before the dot products are softmaxed
+  then any values below the specified threshold are set to 0 before the distances are softmaxed
   (see *mask_threhold* under `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for additional details).
 
 .. _EMComposition_Softmax_Choice:
 
-* **softmax_choice** : specifies how the `SoftMax` Function of each of the EMComposition's `softmax_nodes
-  <EMComposition.softmax_nodes>` is used, with the dot products of queries and keys, to generate a retrieved item;
+* **softmax_choice** : specifies how the `SoftMax` Function of the EMComposition's `softmax_node
+  <EMComposition.softmax_node>` is used, with the combined distances, to generate a retrieved item;
   the following are the options that can be used and the retrieved value they produce:
 
-  * *WEIGHTED_AVG* (default): softmax-weighted average of entries, based on their dot products with the key(s).
+  * *WEIGHTED_AVG* (default): softmax-weighted average based on combined distances of queries and keys in memory.
 
-  * *ARG_MAX*: entry with the largest dot product (one with lowest index in `memory <EMComposition.memory>`)\
+  * *ARG_MAX*: entry with the smallest distance (one with lowest index in `memory <EMComposition.memory>`)\
                if there are identical ones).
 
-  * *PROBABISTIC*: probabilistically chosen entry based on softmax-transformed distribution of dot products.
+  * *PROBABISTIC*: probabilistically chosen entry based on softmax-transformed distribution of combined distance.
 
   .. warning::
      Use of the *ARG_MAX* and *PROBABILISTIC* options is not compatible with learning, as these implement a discrete
@@ -585,13 +577,14 @@ EMComposition supports two forms of learning -- error backpropagation and the le
     <EMComposition.retrieved_nodes>`, and each entry must be a boolean that specifies whether the corresponding
     `retrieved_node <EMComposition.retrieved_nodes>` is used for learning.
 
-* **learn_field_weight** : specifies whether `field_weights <EMComposition.field_weights>` are modifiable during
+* **learn_field_weights** : specifies whether `field_weights <EMComposition.field_weights>` are modifiable during
     learning (see `field_weights <EMComposition.field_weights>` and `Learning <EMComposition_Learning>` for additional
     information.  For learning of `field_weights <EMComposition.field_weights>` to occur, **enable_learning** must
-    also be True, or it must be a list with at least one True entry.
+    also be True, or it must be a list with at least one True entry.  If **learn_field_weights** is True,
+    **use_gating_for_weighting** must be False (see `note <EMComposition_Gating_For_Weighting>`).
 
 * **learning_rate** : specifies the rate at which  `field_weights <EMComposition.field_weights>` are learned if
-  **learn_field_weight** is True; see `Learning <EMComposition_Learning>` for additional information.
+  **learn_field_weights** is True; see `Learning <EMComposition_Learning>` for additional information.
 
 .. _EMComposition_Structure:
 
@@ -621,20 +614,19 @@ by the `memory_capacity <EMComposition_Memory_Capacity>` argument.
   .. _EMComposition_Memory_Storage:
   .. technical_note::
      The memories are actually stored in the `matrix <MappingProjection.matrix>` parameters of the`MappingProjections`
-     from the `combined_softmax_node <EMComposition.combined_softmax_node>` to each of the `retrieved_nodes
-     <EMComposition.retrieved_nodes>`. Memories associated with each key are also stored (in inverted form)
-     in the `matrix <MappingProjection.matrix>` parameters of the `MappingProjection <MappingProjection>`
-     from the `query_input_nodes <EMComposition.query_input_nodes>` to each of the corresponding `match_nodes
+     from the `combined_matches_node <EMComposition.combined_matches_node>` to each of the `retrieved_nodes
+     <EMComposition.retrieved_nodes>`. Memories associated with each key are also stored (in inverted form) in the
+     `matrix <MappingProjection.matrix>` parameters of the `MappingProjection <MappingProjection>` from the
+     `query_input_nodes <EMComposition.query_input_nodes>` to each of the corresponding `match_nodes
      <EMComposition.match_nodes>`. This is done so that the match of each query to the keys in memory for the
      corresponding field can be computed simply by passing the input for each query through the Projection (which
-     computes the dot product of the input with the Projection's `matrix <MappingProjection.matrix>` parameter) to
-     the corresponding match_node; and, similarly, retrieivals can be computed by passing the softmax distributions
-     and weighting for each field computed in the `combined_softmax_node <EMComposition.combined_softmax_node>`
-     through its Projection to each `retrieved_node <EMComposition.retrieved_nodes>` (which are inverted versions
-     of the matrices of the `MappingProjections <MappingProjection>` from the `query_input_nodes
-     <EMComposition.query_input_nodes>` to each of the corresponding `match_nodes <EMComposition.match_nodes>`),
-     to compute the dot product of the weighted softmax over entries with the corresponding field of each entry
-     that yields the retreieved value for each field.
+     computes the distance of the input with the Projection's `matrix <MappingProjection.matrix>` parameter) to the
+     corresponding match_node; and, similarly, retrieivals can be computed by passing the softmax distributions for
+     each field computed in the `combined_matches_node <EMComposition.combined_matches_node>` through its Projection
+     to each `retrieved_node <EMComposition.retrieved_nodes>` (which are inverted versions of the matrices of the
+     `MappingProjections <MappingProjection>` from the `query_input_nodes <EMComposition.query_input_nodes>` to each
+     of the corresponding `match_nodes <EMComposition.match_nodes>`), to compute the distance of the weighted
+     softmax over entries with the corresponding field of each entry that yields the retreieved value for each field.
 
 .. _EMComposition_Output:
 
@@ -668,7 +660,7 @@ When the EMComposition is executed, the following sequence of operations occur
 
 * **Concatenation**. By default, the input to every `query_input_node <EMComposition.query_input_nodes>` is passed to a
   to its own `match_node <EMComposition.match_nodes>` through a `MappingProjection` that computes its
-  dot product with the corresponding field of each entry in `memory <EMComposition.memory>`.  In this way, each
+  distance with the corresponding field of each entry in `memory <EMComposition.memory>`.  In this way, each
   match is normalized so that, absent `field_weighting <EMComposition_Field_Weights>`, all keys contribute equally to
   retrieval irrespective of relative differences in the norms of the queries or the keys in memory. However, if the
   `field_weights <EMComposition.field_weights>` are the same for all `keys <EMComposition_Field_Weights>` and
@@ -685,32 +677,65 @@ When the EMComposition is executed, the following sequence of operations occur
   however it will not necessarily produce the same results as passing each query through its own `match_node
   <EMComposition.match_nodes>` (see `concatenate keys <`concatenate_queries_node>` for additional information).
 
-* **Match memories by field**. The values of each `query_input_node <EMComposition.query_input_nodes>` (or the
-  `concatenate_queries_node <EMComposition.concatenate_queries_node>` if `concatenate_queries
-  <EMComposition_Concatenate_Queries>` attribute is True) are passed through a `MappingProjection` that computes
-  the dot product of the input with each memory for the corresponding field, the result of which is passed to the
-  corresponding `match_node <EMComposition.match_nodes>`.
+.. _EMComposition_Distance_Computation:
 
-* **Softmax normalize matches over fields**. The dot product for each key field is passed from the `match_node
-  <EMComposition.match_nodes>` to the corresponding `softmax_node <EMComposition.softmax_nodes>`, which applies
-  the `SoftMax` Function to normalize the dot products for each key field.  If a numerical value is specified for
-  `softmax_gain <EMComposition.softmax_gain>`, that is used as the gain (inverse temperature) for the SoftMax Function;
-  if *ADAPTIVE* is specified, then the `SoftMax.adapt_gain` function is used to adaptively set the gain based on the
-  dot products in each field;  if *CONTROL* is specified, then the dot products are monitored by a `ControlMechanism`
-  that uses the `adapt_gain <Softmax.adapt_gain>` method of the SoftMax Function to modulate its `gain <Softmax.gain>`
-  parameter; if None is specified, the default value of the `Softmax` Function is used as the `gain <Softmax.gain>`
-  parameter (see `Softmax_Gain <EMComposition_Softmax_Gain>` for additional  details).
+* **Match memories by field**. The values of each `query_input_node <EMComposition.query_input_nodes>`
+  (or the `concatenate_queries_node <EMComposition.concatenate_queries_node>` if `concatenate_queries
+  <EMComposition_Concatenate_Queries>` attribute is True) are passed through a `MappingProjection` that
+  computes the distance between the corresponding input (query) and each memory (key) for the corresponding field,
+  the result of which is possed to the corresponding `match_node <EMComposition.match_nodes>`. By default, the
+  distance is computed as the normalized dot product (i.e., between the normalized query vector and the normalized
+  key for the corresponding `field <EMComposition_Fields>`, that is comparable to using cosine similarity). However,
+  if `normalize_memories <EMComposition.normalize_memories>` is set to False, just the raw dot product is computed.
+  The distance can also be customized by specifying a different `function <MappingProjection.function>` for the
+  `MappingProjection` to the `match_node <EMComposition.match_nodes>`. The result is assigned as the `value
+  <Mechanism_Base.value>` of the corresponding `match_node <EMComposition.match_nodes>`.
 
-* **Weight fields**. If `field weights <EMComposition_Field_Weights>` are specified, then the softmax normalized dot
-  product for each key field is passed to the corresponding `field_weight_node <EMComposition.field_weight_nodes>`
-  where it is multiplied by the corresponding `field_weight <EMComposition.field_weights>` (if
-  `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` is True, this is done by using the `field_weight
-  <EMComposition.field_weights>` to output gate the `softmax_node <EMComposition.softmax_nodes>`). The weighted softmax
-  vectors for all key fields are then passed to the `combined_softmax_node <EMComposition.combined_softmax_node>`,
-  where they are haddamard summed to produce a single weighting for each memory.
+.. _EMComposition_Field_Weighting:
 
-* **Retrieve values by field**. The vector of softmax weights for each memory generated by the `combined_softmax_node
-  <EMComposition.combined_softmax_node>` is passed through the Projections to the each of the `retrieved_nodes
+* **Weight distances**. If `field weights <EMComposition_Field_Weights>` are specified, then the distance computed
+  by the `MappingProjection` to each `match_node <EMComposition.match_nodes>` is multiplied by the corresponding
+  `field_weight <EMComposition.field_weights>` using the `field_weight_node <EMComposition.field_weight_nodes>`.
+  By default (if `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` is False), this is done using
+  the `weighted_match_nodes <EMComposition.weighted_match_nodes>`, each of which receives a Projection from a
+  `match_node <EMComposition.match_nodes>` and the corresponding `field_weight_node <EMComposition.field_weight_nodes>`
+  and multiplies them to produce the weighted distance for that field as its output.  However, if
+  `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` is True, the `field_weight_nodes` are implemented
+  as `GatingMechanisms <GatingMechanism>`, each of which uses its `field weight <EMComposition.field_weights>` as a
+  `GatingSignal <GatingSignal>` to output gate (i.e., multiplicatively modulate the output of) the corresponding
+  `match_node <EMComposition.match_nodes>`. In this case, the `weighted_match_nodes` are not implemented,
+  and the output of the `match_node <EMComposition.match_nodes>` is passed directly to the `combined_matches_node
+  <EMComposition.combined_matches_node>`.
+
+
+  .. _EMComposition_Gating_For_Weighting:
+  .. note::
+     Setting `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` to True reduces the size and
+     complexity of the EMComposition, by eliminating the `weighted_match_nodes <EMComposition.weighted_match_nodes>`.
+     However, doing to precludes the ability to learn the `field_weights <EMComposition.field_weights>`,
+     since `GatingSignals <GatingSignal>` are  `ModulatorySignal>` that cannot be learned.  If learning is required,
+     then `use_gating_for_weighting` should be set to False.
+
+* **Combine distances**.  If `field weights <EMComposition_Field_Weights>` are used to specify more than one `key field
+  <EMComposition_Fields>`, then the (weighted) distances computed for each field (see above) are summed across fields
+  by the `combined_matches_node <EMComposition.combined_matches_node>`, before being passed to the `softmax_node
+  <EMComposition.softmax_node>`. If only one key field is specified, then the output of the `match_node
+  <EMComposition.match_nodes>` is passed directly to the `softmax_node <EMComposition.softmax_node>`.
+
+* **Softmax normalize distances**. The distances, passed either from the `combined_matches_node
+  <EMComposition.combined_matches_node>`, or directly from the `match_node <EMComposition.match_nodes>` if there is
+  only one key field, are passed to the `softmax_node <EMComposition.softmax_node>`, which applies the `SoftMax`
+  Function, which generates the softmax distribution used to retrieve entries from `memory <EMComposition.memory>`.
+  If a numerical value is specified for `softmax_gain <EMComposition.softmax_gain>`, that is used as the gain (inverse
+  temperature) for the SoftMax Function; if *ADAPTIVE* is specified, then the `SoftMax.adapt_gain` function is used
+  to adaptively set the gain based on the summed distance (i.e., the output of the `combined_matches_node
+  <EMComposition.combined_matches_node>`;  if *CONTROL* is specified, then the summed distance is monitored by a
+  `ControlMechanism` that uses the `adapt_gain <Softmax.adapt_gain>` method of the `SoftMax` Function to modulate its
+  `gain <Softmax.gain>` parameter; if None is specified, the default value of the `Softmax` Function is used as the
+  `gain <Softmax.gain>` parameter (see `Softmax_Gain <EMComposition_Softmax_Gain>` for additional  details).
+
+* **Retrieve values by field**. The vector of softmax weights for each memory generated by the `softmax_node
+  <EMComposition.softmax_node>` is passed through the Projections to the each of the `retrieved_nodes
   <EMComposition.retrieved_nodes>` to compute the retrieved value for each field.
 
 * **Decay memories**.  If `memory_decay <EMComposition.memory_decay>` is True, then each of the memories is decayed
@@ -718,7 +743,7 @@ When the EMComposition is executed, the following sequence of operations occur
 
     .. technical_note::
        This is done by multiplying the `matrix <MappingProjection.matrix>` parameter of the `MappingProjection` from
-       the `combined_softmax_node <EMComposition.combined_softmax_node>` to each of the `retrieved_nodes
+       the `combined_matches_node <EMComposition.combined_matches_node>` to each of the `retrieved_nodes
        <EMComposition.retrieved_nodes>`, as well as the `matrix <MappingProjection.matrix>` parameter of the
        `MappingProjection` from each `query_input_node <EMComposition.query_input_nodes>` to the corresponding
        `match_node <EMComposition.match_nodes>` by `memory_decay <EMComposition.memory_decay_rate>`,
@@ -733,7 +758,7 @@ When the EMComposition is executed, the following sequence of operations occur
 
     .. technical_note::
        This is done by adding the input vectors to the the corresponding rows of the `matrix <MappingProjection.matrix>`
-       of the `MappingProjection` from the `retreival_weighting_node <EMComposition.combined_softmax_node>` to each
+       of the `MappingProjection` from the `combined_matches_node <EMComposition.combined_matches_node>` to each
        of the `retrieved_nodes <EMComposition.retrieved_nodes>`, as well as the `matrix <MappingProjection.matrix>`
        parameter of the `MappingProjection` from each `query_input_node <EMComposition.query_input_nodes>` to the
        corresponding `match_node <EMComposition.match_nodes>` (see note `above <EMComposition_Memory_Storage>` for
@@ -964,7 +989,7 @@ while the last two should be used as values::
 
     **Use of field_weights to specify keys and values.**
 
-Note that the figure now shows `RETRIEVAL WEIGHTING <EMComposition.field_weight_nodes>` `nodes <Composition_Node>`,
+Note that the figure now shows `<QUERY> [WEIGHT] <EMComposition.field_weight_nodes>` `nodes <Composition_Node>`,
 that are used to implement the relative contribution that each key field makes to the matching process specifed in
 `field_weights <EMComposition.field_weights>` argument.  By default, these are equal (all assigned a value of 1),
 but different values can be used to weight the relative contribution of each key field.  The values are normalized so
@@ -983,7 +1008,7 @@ COMMENT:
     **Use of field_weights to specify relative contribution of fields to matching process.**
 
 Note that in this case, the `concatenate_queries_node <EMComposition.concatenate_queries_node>` has been replaced by
-a pair of `retreival_weighting_nodes <EMComposition.field_weight_nodes>`, one for each key field.  This is because
+a pair of `weighted_match_node <EMComposition.weighted_match_node>`, one for each key field.  This is because
 the keys were assigned different weights;  when they are assigned equal weights, or if no weights are specified,
 and `normalize_memories <EMComposition.normalize_memories>` is `True`, then the keys are concatenated and are
 concatenated for efficiency of processing.  This can be suppressed by specifying `concatenate_queries` as `False`
@@ -1029,25 +1054,37 @@ STORAGE_PROB = 'storage_prob'
 WEIGHTED_AVG = ALL
 PROBABILISTIC = PROB_INDICATOR
 
-QUERY_AFFIX = ' [QUERY]'
-VALUE_AFFIX = ' [VALUE]'
-MATCH_TO_KEYS_AFFIX = ' [MATCH to KEYS]'
+QUERY_NODE_NAME = 'QUERY'
+QUERY_AFFIX = f' [{QUERY_NODE_NAME}]'
+VALUE_NODE_NAME = 'VALUE'
+VALUE_AFFIX = f' [{VALUE_NODE_NAME}]'
+MATCH = 'MATCH'
+MATCH_AFFIX = f' [{MATCH}]'
+MATCH_TO_KEYS_NODE_NAME = f'{MATCH} to KEYS'
+WEIGHT = 'WEIGHT'
+WEIGHT_AFFIX = f' [{WEIGHT}]'
+MATCH_TO_KEYS_AFFIX = f' [{MATCH_TO_KEYS_NODE_NAME}]'
+WEIGHTED_MATCH_NODE_NAME = 'WEIGHTED MATCH'
+WEIGHTED_MATCH_AFFIX = f' [{WEIGHTED_MATCH_NODE_NAME}]'
+CONCATENATE_QUERIES_NAME = 'CONCATENATE QUERIES'
+COMBINE_MATCHES_NODE_NAME = 'COMBINE MATCHES'
+COMBINE_MATCHES_AFFIX = f' [{COMBINE_MATCHES_NODE_NAME}]'
+SOFTMAX_NODE_NAME = 'RETRIEVE'
+SOFTMAX_AFFIX = f' [{SOFTMAX_NODE_NAME}]'
+RETRIEVED_NODE_NAME = 'RETRIEVED'
 RETRIEVED_AFFIX = ' [RETRIEVED]'
-WEIGHTED_SOFTMAX_AFFIX = ' [WEIGHTED SOFTMAX]'
-COMBINED_SOFTMAX_NODE_NAME = 'RETRIEVE'
 STORE_NODE_NAME = 'STORE'
-
 
 def _memory_getter(owning_component=None, context=None)->list:
     """Return list of memories in which rows (outer dimension) are memories for each field.
     These are derived from `matrix <MappingProjection.matrix>` parameter of the `afferent
-    <Mechanism_Base.afferents>` MappingProjections to each of the `retrieved_nodes <EMComposition.retrieved_nodes>`.
+    <Mechanism_Base.afferents>` MappingProjections to each of the `2472s <EMComposition.retrieved_nodes>`.
     """
 
     # If storage_node (EMstoragemechanism) is implemented, get memory from that
     if owning_component.is_initializing:
         return None
-    if owning_component.use_storage_node:
+    if owning_component._use_storage_node:
         return owning_component.storage_node.parameters.memory_matrix.get(context)
 
     # Otherwise, get memory from Projection(s) to each retrieved_node
@@ -1142,7 +1179,7 @@ class EMComposition(AutodiffComposition):
         see `Match memories by field <EMComposition_Processing>` for additional details.
 
     softmax_gain : float, ADAPTIVE or CONTROL : default 1.0
-        specifies the temperature used for softmax normalizing the dot products of keys and memories;
+        specifies the temperature used for softmax normalizing the distance of queries and keys in memory;
         see `Softmax normalize matches over fields <EMComposition_Processing>` for additional details.
 
     softmax_threshold : float : default .0001
@@ -1150,7 +1187,7 @@ class EMComposition(AutodiffComposition):
         see *mask_threshold* under `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for details).
 
     softmax_choice : WEIGHTED_AVG, ARG_MAX, PROBABILISTIC : default WEIGHTED_AVG
-        specifies how the softmax over dot products of keys and memories is used for retrieval;
+        specifies how the softmax over distances of queries and keys in memory is used for retrieval;
         see `softmax_choice <EMComposition_Softmax_Choice>` for a description of each option.
 
     storage_prob : float : default 1.0
@@ -1170,8 +1207,8 @@ class EMComposition(AutodiffComposition):
 
     learn_field_weights : bool : default True
         specifies whether `field_weights <EMComposition.field_weights>` are learnable during training;
-        requires **enable_learning** to be True to have any effect;  see `learn_field_weights
-        <EMComposition_Learning>` for additional details.
+        requires **enable_learning** to be True to have any effect, and **use_gating_for_weighting** must be False;
+        see `learn_field_weights <EMComposition_Learning>` for additional details.
 
     learning_rate : float : default .01
         specifies rate at which `field_weights <EMComposition.field_weights>` are learned
@@ -1186,14 +1223,8 @@ class EMComposition(AutodiffComposition):
             the EMComposition into another Composition;  to do so, use_storage_node must be True (default).
 
     use_gating_for_weighting : bool : default False
-        specifies whether to use a `GatingMechanism` to modulate the `combined_softmax_node
-        <EMComposition.combined_softmax_node>` instead of a standard ProcessingMechanism.  If True, then
-        a GatingMechanism is constructed and used to gate the `OutputPort` of each `field_weight_node
-        EMComposition.field_weight_nodes`;  otherwise, the output of each `field_weight_node
-        EMComposition.field_weight_nodes` projects to the `InputPort` of the `combined_softmax_node
-        EMComposition.combined_softmax_node` that receives a Projection from the corresponding
-        `field_weight_node <EMComposition.field_weight_nodes>`, and multiplies its `value
-        <Projection_Base.value>`.
+        specifies whether to use output gating to weight the `match_nodes <EMComposition.match_node>` instead of
+        a standard input (see `Weight distances <EMComposition_Field_Weighting>` for additional details).
 
     Attributes
     ----------
@@ -1217,9 +1248,10 @@ class EMComposition(AutodiffComposition):
 
     field_weights : tuple[float]
         determines which fields of the input are treated as "keys" (non-zero values) that are used to match entries in
-        `memory <EMComposition.memory>` for retrieval, and which are used as "values" (zero values), that are stored
-        and retrieved from memory, but not used in the match process (see `Match memories by field
-        <EMComposition_Processing>`. see `field_weights <EMComposition_Field_Weights>` additional details.
+        `memory <EMComposition.memory>` for retrieval, and which are used as "values" (zero values) that are stored
+        and retrieved from memory but not used in the match process (see `Match memories by field
+        <EMComposition_Processing>`; also determines the relative contribution of each key field to the match process;
+        see `field_weights <EMComposition_Field_Weights>` additional details.
 
     normalize_field_weights : bool : default True
         determines whether `fields_weights <EMComposition.field_weights>` are normalized over the number of keys, or
@@ -1239,16 +1271,16 @@ class EMComposition(AutodiffComposition):
         see `Match memories by field <EMComposition_Processing>` for additional details.
 
     softmax_gain : float, ADAPTIVE or CONTROL
-        determines gain (inverse temperature) used for softmax normalizing the dot products of keys and memories
-        by the `softmax` function of the `softmax_nodes <EMComposition.softmax_nodes>`; see `Softmax normalize matches
-        over fields <EMComposition_Processing>` for additional details.
+        determines gain (inverse temperature) used for softmax normalizing the summed distances of queries and keys in
+        memory by the `SoftMax` Function of the `softmax_node <EMComposition.softmax_node>`; see `Softmax normalize
+        distances <EMComposition_Processing>` for additional details.
 
     softmax_threshold : float
         determines the threshold used to mask out small values in the softmax calculation;
         see *mask_threshold* under `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for details).
 
     softmax_choice : WEIGHTED_AVG, ARG_MAX or PROBABILISTIC
-        determines how the softmax over dot products of keys and memories is used for retrieval;
+        determines how the softmax over distances of queries and keys in memory is used for retrieval;
         see `softmax_choice <EMComposition_Softmax_Choice>` for a description of each option.
 
     storage_prob : float
@@ -1300,61 +1332,47 @@ class EMComposition(AutodiffComposition):
         into a single vector used for the matching processing if `concatenate keys <EMComposition.concatenate_queries>`
         is True. This is not created if the **concatenate_queries** argument to the EMComposition's constructor is
         False or is overridden (see `concatenate_queries <EMComposition_Concatenate_Queries>`), or there is only one
-        query_input_node. This node is named *CONCATENATE_KEYS*
+        query_input_node. This node is named *CONCATENATE_QUERIES*
 
     match_nodes : list[ProcessingMechanism]
-        `ProcessingMechanisms <ProcessingMechanism>` that receive the dot product of each key and those stored in
+        `ProcessingMechanisms <ProcessingMechanism>` that compute the dot product of each query and the key stored in
         the corresponding field of `memory <EMComposition.memory>` (see `Match memories by field
         <EMComposition_Processing>` for additional details). These are named the same as the corresponding
         `query_input_nodes <EMComposition.query_input_nodes>` appended with the suffix *[MATCH to KEYS]*.
 
-    softmax_gain_control_nodes : list[ControlMechanism]
+    field_weight_nodes : list[ProcessingMechanism or GatingMechanism]
+        Nodes used to weight the distances computed by the `match_nodes <EMComposition.match_nodes>` with the
+        `field weight <EMComposition.field_weights>` for the corresponding `key field <EMComposition_Fields>`
+        (see `Weight distances <EMComposition_Field_Weighting>` for implementation). These are named the same
+        as the corresponding `query_input_nodes <EMComposition.query_input_nodes>`.
+
+    weighted_match_nodes : list[ProcessingMechanism]
+        `ProcessingMechanisms <ProcessingMechanism>` that combine the  `field weight <EMComposition.field_weights>`
+        for each `key field <EMComposition_Fields>` with the dot product computed by the corresponding the
+        `match_node <EMComposition.match_nodes>`. These are only implemented if `use_gating_for_weighting
+        <EMComposition.use_gating_for_weighting>` is False (see `Weight distances <EMComposition_Field_Weighting>`
+        for details), and are named the same as the corresponding `query_input_nodes <EMComposition.query_input_nodes>`
+        appended with the suffix *[WEIGHTED MATCH]*.
+
+    combined_matches_node : ProcessingMechanism
+        `ProcessingMechanism` that receives the weighted distances from the `weighted_match_nodes
+        <EMComposition.weighted_match_nodes>` if more than one `key field <EMComposition_Fields>` is specified
+        (or directly from `match_nodes <EMComposition.match_nodes>` if `use_gating_for_weighting
+        <EMComposition.use_gating_for_weighting>` is True), and combines them into a single vector that is passed
+        to the `softmax_node <EMComposition.softmax_node>` for retrieval. This node is named *COMBINE MATCHES*.
+
+    softmax_node : list[ProcessingMechanism]
+        `ProcessingMechanisms <ProcessingMechanism>` that computes the softmax over the summed distances of keys
+        and memories (output of the `combined_match_node <EMComposition.combined_match_node>`)
+        from the corresponding `match_nodes <EMComposition.match_nodes>` (see `Softmax over summed distances
+        <EMComposition_Processing>` for additional details).  This is named *RETRIEVE* (as it yields the
+        softmax-weighted average over the keys in `memory <EMComposition.memory>`).
+
+    softmax_gain_control_node : list[ControlMechanism]
         `ControlMechanisms <ControlMechanism>` that adaptively control the `softmax_gain <EMComposition.softmax_gain>`
-        for the corresponding `softmax_nodes <EMComposition.softmax_nodes>`. These are implemented only if
-        `softmax_gain <EMComposition.softmax_gain>` is specified as *CONTROL* (see `softmax_gain
-        <EMComposition_Softmax_Gain>` for details).
-
-    softmax_nodes : list[ProcessingMechanism]
-        `ProcessingMechanisms <ProcessingMechanism>` that compute the softmax over the vectors received
-        from the corresponding `match_nodes <EMComposition.match_nodes>` (see `Softmax normalize matches over fields
-        <EMComposition_Processing>` for additional details).  These are named the same as the corresponding
-        `query_input_nodes <EMComposition.query_input_nodes>` appended with the suffix *[SOFTMAX]*.
-
-    field_weight_nodes : list[ProcessingMechanism]
-        `ProcessingMechanisms <ProcessingMechanism>`, each of which use the `field weight <EMComposition.field_weights>`
-        for a given `field <EMComposition_Fields>` as its (fixed) input and provides this to the corresponding
-        `weighted_softmax_node <EMComposition.weighted_softmax_nodes>`. These are implemented only if more than one
-        `key field <EMComposition_Fields>` is specified (see `Fields <EMComposition_Fields>` for additional details),
-        and are replaced with `retrieval_gating_nodes <EMComposition.retrieval_gating_nodes>` if
-        `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` is True.   These are named the same as the
-        corresponding `query_input_nodes <EMComposition.query_input_nodes>` appended with the suffix *[WEIGHT]*.
-
-    weighted_softmax_nodes : list[ProcessingMechanism]
-        `ProcessingMechanisms <ProcessingMechanism>`, each of which receives the output of the corresponding
-        `softmax_node <EMComposition.softmax_nodes>` and `field_weight_node <EMComposition.field_weight_nodes>`
-        for a given `field <EMComposition_Fields>`, and multiplies them to produce the weighted softmax for that field;
-        these are implemented only if more than one `key field <EMComposition_Fields>` is specified (see `Fields
-        <EMComposition_Fields>` for additional details) and `use_gating_for_weighting
-        <EMComposition.use_gating_for_weighting>` is False (otherwise, `field_weights <EMComposition.field_weights>`
-        are applied through output gating of the `softmax_nodes <EMComposition.softmax_nodes>` by the
-        `retrieval_gating_nodes <EMComposition.retrieval_gating_nodes>`).  These are named the same as the corresponding
-        `query_input_nodes <EMComposition.query_input_nodes>` appended with the suffix *[WEIGHTED SOFTMAX]*.
-
-    retrieval_gating_nodes : list[GatingMechanism]
-        `GatingMechanisms <GatingMechanism>` that uses the `field weight <EMComposition.field_weights>` for each
-        field to modulate the output of the corresponding `softmax_node <EMComposition.softmax_nodes>` before it
-        is passed to the `combined_softmax_node <EMComposition.combined_softmax_node>`. These are implemented
-        only if `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` is True and more than one
-        `key field <EMComposition_Fields>` is specified (see `Fields <EMComposition_Fields>` for additional details).
-
-    combined_softmax_node : ProcessingMechanism
-        `ProcessingMechanism` that receives the softmax normalized dot products of the keys and memories from the
-        `softmax_nodes <EMComposition.softmax_nodes>`, weighted by the `field_weights_nodes
-        <EMComposition.field_weights_nodes>` if more than one `key field <EMComposition_Fields>` is specified
-        (or by `retrieval_gating_nodes <EMComposition.retrieval_gating_nodes>` if `use_gating_for_weighting
-        <EMComposition.use_gating_for_weighting>` is True), and combines them into a single vector that is used to
-        retrieve the corresponding memory for each field from `memory <EMComposition.memory>` (see `Retrieve values by
-        field <EMComposition_Processing>` for additional details). This node is named *RETRIEVE*.
+        of the `softmax_node <EMComposition.softmax_node>`. This is implemented only if `softmax_gain
+        <EMComposition.softmax_gain>` is specified as *CONTROL* (see `softmax_gain <EMComposition_Softmax_Gain>` for
+        details).
 
     retrieved_nodes : list[ProcessingMechanism]
         `ProcessingMechanisms <ProcessingMechanism>` that receive the vector retrieved for each field in `memory
@@ -1615,7 +1633,8 @@ class EMComposition(AutodiffComposition):
         if memory_decay_rate is AUTO:
             memory_decay_rate = 1 / memory_capacity
 
-        self.use_storage_node = use_storage_node
+        self._use_storage_node = use_storage_node
+        self._use_gating_for_weighting = use_gating_for_weighting
 
         if softmax_gain == CONTROL:
             self.parameters.softmax_gain.modulable = False
@@ -1643,7 +1662,10 @@ class EMComposition(AutodiffComposition):
                          **kwargs
                          )
 
-        self._validate_options_with_learning(softmax_choice, normalize_field_weights, enable_learning)
+        self._validate_options_with_learning(enable_learning,
+                                             use_gating_for_weighting,
+                                             learn_field_weights,
+                                             softmax_choice)
 
         self._construct_pathways(self.memory_template,
                                  self.memory_capacity,
@@ -1655,10 +1677,10 @@ class EMComposition(AutodiffComposition):
                                  self.softmax_choice,
                                  self.storage_prob,
                                  self.memory_decay_rate,
-                                 self.use_storage_node,
+                                 self._use_storage_node,
                                  self.enable_learning,
                                  self.learn_field_weights,
-                                 use_gating_for_weighting)
+                                 self._use_gating_for_weighting)
 
         # if torch_available:
         #     from psyneulink.library.compositions.pytorchEMcompositionwrapper import PytorchEMCompositionWrapper
@@ -1669,7 +1691,7 @@ class EMComposition(AutodiffComposition):
         # Assign learning-related attributes
         self._set_learning_attributes()
 
-        if self.use_storage_node:
+        if self._use_storage_node:
             # ---------------------------------------
             #
             # CONDITION:
@@ -1709,7 +1731,7 @@ class EMComposition(AutodiffComposition):
         # Suppress warnings for no efferent Projections
         for node in self.value_input_nodes:
             node.output_port.parameters.require_projection_in_composition.set(False, override=True)
-        self.combined_softmax_node.output_port.parameters.require_projection_in_composition.set(False, override=True)
+        self.softmax_node.output_port.parameters.require_projection_in_composition.set(False, override=True)
 
         # Suppress field_weight_nodes as INPUT nodes of the Composition
         for node in self.field_weight_nodes:
@@ -1861,7 +1883,7 @@ class EMComposition(AutodiffComposition):
                     # Get remaining entries populated with memory_fill
                     remaining_entries = _construct_entries(memory_template[0], num_entries_needed, memory_fill)
                     assert bool(num_entries_needed == len(remaining_entries))
-                    # I any remaining entries, concatenate them with the entries that were specified
+                    # If any remaining entries, concatenate them with the entries that were specified
                     if num_entries_needed:
                         memory = np.concatenate((np.array(memory_template, dtype=object),
                                                  np.array(remaining_entries, dtype=object)))
@@ -1942,23 +1964,23 @@ class EMComposition(AutodiffComposition):
                                     and normalize_memories)
         # if concatenate_queries was forced to be False when user specified it as True, issue warning
         if user_specified_concatenate_queries and not parsed_concatenate_queries:
-            # Issue warning if concatenate_queries is True but either
-            #   field weights are not all equal and/or normalize_memories is False
+            # Issue warning if concatenate_queries is True but:
+            #   field weights are not all equal and/or
+            #   normalize_memories is False and/or
+            #   there is only one key
             fw_error_msg = nm_error_msg = fw_correction_msg = nm_correction_msg = None
-            if not all(np.all(keys_weights[i] == keys_weights[0] for i in range(len(keys_weights)))):
-                fw_error_msg = f" field weights ({field_weights}) are not all equal"
-                fw_correction_msg = f"remove `field_weights` specification or make them all the same."
-            if not normalize_memories:
-                nm_error_msg = f" normalize_memories is False"
-                nm_correction_msg = f" or set normalize_memories to True"
-            if fw_error_msg and nm_error_msg:
-                error_msg = f"{fw_error_msg} and {nm_error_msg}"
-                correction_msg = f"{fw_correction_msg} and/or {nm_correction_msg}"
-            else:
-                error_msg = fw_error_msg or nm_error_msg
-                correction_msg = fw_correction_msg or nm_correction_msg
+            if self.num_keys == 1:
+                error_msg = f"there is only one key"
+                correction_msg = ""
+            elif not all(np.all(keys_weights[i] == keys_weights[0] for i in range(len(keys_weights)))):
+                error_msg = f" field weights ({field_weights}) are not all equal"
+                correction_msg = (f" To use concatenation, remove `field_weights` "
+                                     f"specification or make them all the same.")
+            elif not normalize_memories:
+                error_msg = f" normalize_memories is False"
+                correction_msg = f" To use concatenation, set normalize_memories to True."
             warnings.warn(f"The 'concatenate_queries' arg for '{name}' is True but {error_msg}; "
-                          f"concatenation will be ignored. To use concatenation, {correction_msg}.")
+                          f"concatenation will be ignored.{correction_msg}")
 
         self.learning_rate = learning_rate
         return parsed_field_weights, parsed_field_names, parsed_concatenate_queries
@@ -2021,19 +2043,21 @@ class EMComposition(AutodiffComposition):
         self.concatenate_queries_node = self._construct_concatenate_queries_node(concatenate_queries)
         self.match_nodes = self._construct_match_nodes(memory_template, memory_capacity,
                                                        concatenate_queries,normalize_memories)
-        self.softmax_nodes = self._construct_softmax_nodes(memory_capacity,
-                                                           field_weights,
-                                                           softmax_gain,
-                                                           softmax_threshold,
-                                                           softmax_choice)
         self.field_weight_nodes = self._construct_field_weight_nodes(field_weights,
                                                                      concatenate_queries,
                                                                      use_gating_for_weighting)
-        self.weighted_softmax_nodes = self._construct_weighted_softmax_nodes(memory_capacity, use_gating_for_weighting)
-        self.softmax_gain_control_nodes = self._construct_softmax_gain_control_nodes(softmax_gain)
-        self.combined_softmax_node = self._construct_combined_softmax_node(memory_capacity,
+        self.weighted_match_nodes = self._construct_weighted_match_nodes(memory_capacity, field_weights)
+
+        self.combined_matches_node = self._construct_combined_matches_node(memory_capacity,
                                                                            field_weighting,
                                                                            use_gating_for_weighting)
+        self.softmax_node = self._construct_softmax_node(memory_capacity,
+                                                         softmax_gain,
+                                                         softmax_threshold,
+                                                         softmax_choice)
+
+        self.softmax_gain_control_node = self._construct_softmax_gain_control_node(softmax_gain)
+
         self.retrieved_nodes = self._construct_retrieved_nodes(memory_template)
 
         if use_storage_node:
@@ -2043,86 +2067,73 @@ class EMComposition(AutodiffComposition):
 
         # Do some validation and get singleton softmax and match Nodes for concatenated queries
         if self.concatenate_queries:
-            softmax_node = self.softmax_nodes.pop()
-            assert not self.softmax_nodes, \
-                f"PROGRAM ERROR: Too many softmax_nodes ({len(self.softmax_nodes)}) for concatenated queries."
-            assert len(self.softmax_gain_control_nodes) <= 1, \
-                (f"PROGRAM ERROR: Too many softmax_gain_control_nodes "
-                 f"{len(self.softmax_gain_control_nodes)}) for concatenated queries.")
-            match_node = self.match_nodes.pop()
-            assert not self.match_nodes, \
+            assert len(self.match_nodes) == 1, \
                 f"PROGRAM ERROR: Too many match_nodes ({len(self.match_nodes)}) for concatenated queries."
             assert not self.field_weight_nodes, \
                 f"PROGRAM ERROR: There should be no field_weight_nodes for concatenated queries."
 
         # Construct Pathways --------------------------------------------------------------------------------
 
+        # LEARNING NOT ENABLED --------------------------------------------------
         # Set up pathways WITHOUT PsyNeuLink learning pathways
         if not self.enable_learning:
             self.add_nodes(self.query_input_nodes + self.value_input_nodes)
-            if self.concatenate_queries:
-                self.add_nodes([self.concatenate_queries_node, match_node, softmax_node])
-            else:
-                self.add_nodes(self.match_nodes +
-                               self.softmax_nodes +
-                               self.field_weight_nodes +
-                               self.weighted_softmax_nodes)
-            self.add_nodes(self.softmax_gain_control_nodes +
-                           [self.combined_softmax_node] +
-                           self.retrieved_nodes)
             if use_storage_node:
                 self.add_node(self.storage_node)
-                # self.add_projections(proj for proj in self.storage_node.efferents)
+            if self.concatenate_queries_node:
+                self.add_node(self.concatenate_queries_node)
+            self.add_nodes(self.match_nodes + self.field_weight_nodes + self.weighted_match_nodes)
+            if self.combined_matches_node:
+                self.add_node(self.combined_matches_node)
+            self.add_nodes([self.softmax_node] + self.retrieved_nodes)
+            if self.softmax_gain_control_node:
+                self.add_node(self.softmax_gain_control_node)
 
+        # LEARNING ENABLED -----------------------------------------------------
         # Set up pathways WITH psyneulink backpropagation learning field weights
         else:
-
-            # Key pathways
-            for i in range(self.num_keys):
-                # Regular pathways
-                if not self.concatenate_queries:
-                    pathway = [self.query_input_nodes[i],
-                               self.match_nodes[i],
-                               self.softmax_nodes[i],
-                               self.combined_softmax_node]
-                    if self.weighted_softmax_nodes:
-                        pathway.insert(3, self.weighted_softmax_nodes[i])
-                    # if self.softmax_gain_control_nodes:
-                    #     pathway.insert(4, self.softmax_gain_control_nodes[i])
-                # Key-concatenated pathways
+            # Query-specific pathways
+            if not self.concatenate_queries:
+                if self.num_keys == 1:
+                    self.add_linear_processing_pathway([self.query_input_nodes[i],
+                                                        self.match_nodes[i],
+                                                        self.softmax_node])
                 else:
+                    for i in range(self.num_keys):
+                        pathway = [self.query_input_nodes[i],
+                                   self.match_nodes[i],
+                                   self.combined_matches_node]
+                        if self.weighted_match_nodes:
+                            pathway.insert(2, self.weighted_match_nodes[i])
+                        self.add_linear_processing_pathway(pathway)
+                    self.add_linear_processing_pathway([self.combined_matches_node, self.softmax_node])
+            # Query-concatenated pathways
+            else:
+                for i in range(self.num_keys):
                     pathway = [self.query_input_nodes[i],
                                self.concatenate_queries_node,
-                               match_node,
-                               softmax_node,
-                               self.combined_softmax_node]
-                    # if self.softmax_gain_control_nodes:
-                    #     pathway.insert(4, self.softmax_gain_control_nodes[0]) # Only one, ensured above
-                # self.add_backpropagation_learning_pathway(pathway)
-                self.add_linear_processing_pathway(pathway)
+                               self.match_nodes[0]]
+                    self.add_linear_processing_pathway(pathway)
+                self.add_linear_processing_pathway([self.match_nodes[0], self.softmax_node])
 
             # softmax gain control is specified:
-            for gain_control_node in self.softmax_gain_control_nodes:
-                self.add_node(gain_control_node)
+            if self.softmax_gain_control_node:
+                self.add_node(self.softmax_gain_control_node)
 
             # field_weights -> weighted_softmax pathways
             if self.field_weight_nodes:
                 for i in range(self.num_keys):
-                    # self.add_backpropagation_learning_pathway([self.field_weight_nodes[i],
-                    #                                            self.weighted_softmax_nodes[i]])
-                    self.add_linear_processing_pathway([self.field_weight_nodes[i], self.weighted_softmax_nodes[i]])
+                    self.add_linear_processing_pathway([self.field_weight_nodes[i], self.weighted_match_nodes[i]])
 
             self.add_nodes(self.value_input_nodes)
 
             # Retrieval pathways
             for i in range(len(self.retrieved_nodes)):
-                # self.add_backpropagation_learning_pathway([self.combined_softmax_node, self.retrieved_nodes[i]])
-                self.add_linear_processing_pathway([self.combined_softmax_node, self.retrieved_nodes[i]])
+                self.add_linear_processing_pathway([self.softmax_node, self.retrieved_nodes[i]])
 
             # Storage Nodes
             if use_storage_node:
                 self.add_node(self.storage_node)
-                # self.add_projections(proj for proj in self.storage_node.efferents)
 
     def _construct_query_input_nodes(self, field_weights)->list:
         """Create one node for each key to be used as cue for retrieval (and then stored) in memory.
@@ -2145,7 +2156,7 @@ class EMComposition(AutodiffComposition):
 
     def _construct_value_input_nodes(self, field_weights)->list:
         """Create one input node for each value to be stored in memory.
-        Used to assign new set of weights for Projection for combined_softmax_node -> retrieved_node[i]
+        Used to assign new set of weights for Projection for combined_matches_node -> retrieved_node[i]
         where i is selected randomly without replacement from (0->memory_capacity)
         """
 
@@ -2171,14 +2182,14 @@ class EMComposition(AutodiffComposition):
             return None
         else:
             return ProcessingMechanism(function=Concatenate,
-                                       input_ports=[{NAME: 'CONCATENATE_QUERIES',
+                                       input_ports=[{NAME: 'CONCATENATE',
                                                      SIZE: len(self.query_input_nodes[i].output_port.value),
                                                      PROJECTIONS: MappingProjection(
                                                          name=f'{self.key_names[i]} to CONCATENATE',
                                                          sender=self.query_input_nodes[i].output_port,
                                                          matrix=IDENTITY_MATRIX)}
                                                     for i in range(self.num_keys)],
-                                       name='CONCATENATE KEYS')
+                                       name=CONCATENATE_QUERIES_NAME)
 
     def _construct_match_nodes(self, memory_template, memory_capacity, concatenate_queries, normalize_memories)->list:
         """Create nodes that, for each key field, compute the similarity between the input and each item in memory.
@@ -2225,60 +2236,7 @@ class EMComposition(AutodiffComposition):
 
         return match_nodes
 
-    def _validate_options_with_learning(self, softmax_choice, normalize_field_weights, enable_learning):
-        if softmax_choice in {ARG_MAX, PROBABILISTIC} and enable_learning:
-            warnings.warn(f"The 'softmax_choice' arg of '{self.name}' is set to '{softmax_choice}' with "
-                          f"'enable_learning' set to True (or a list); this will generate an error if its "
-                          f"'learn' method is called. Set 'softmax_choice' to WEIGHTED_AVG before learning.")
-
-        if enable_learning and not normalize_field_weights:
-            warnings.warn(f"The 'normalize_field_weights' arg of '{self.name}' is set to False with "
-                          f"'enable_learning' set to True (or a list); this may generate an error if "
-                          f"the 'loss_spec' used for learning requires values to be between 0 and 1.")
-
-    def _construct_softmax_nodes(self, memory_capacity, field_weights,
-                                 softmax_gain, softmax_threshold, softmax_choice)->list:
-        """Create nodes that, for each key field, compute the softmax over the similarities between the input and the
-        memories in the corresponding match_node.
-        """
-
-        # Get indices of field_weights that specify keys:
-        key_weights = [field_weights[i] for i in self.key_indices]
-
-        if softmax_choice == ARG_MAX:
-            # ARG_MAX would return entry multiplied by its dot product
-            # ARG_MAX_INDICATOR returns the entry unmodified
-            softmax_choice = ARG_MAX_INDICATOR
-
-        softmax_nodes = [ProcessingMechanism(input_ports={SIZE:memory_capacity,
-                                                        PROJECTIONS: MappingProjection(
-                                                            sender=match_node.output_port,
-                                                            matrix=IDENTITY_MATRIX,
-                                                            name=f'MATCH to SOFTMAX for {self.key_names[i]}')},
-                                           function=SoftMax(gain=softmax_gain,
-                                                            mask_threshold=softmax_threshold,
-                                                            output=softmax_choice,
-                                                            adapt_entropy_weighting=.95),
-                                           name='SOFTMAX' if len(self.match_nodes) == 1
-                                           else f'{self.key_names[i]} [SOFTMAX]')
-                         for i, match_node in enumerate(self.match_nodes)]
-
-        return softmax_nodes
-
-    def _construct_softmax_gain_control_nodes(self, softmax_gain)->list:
-        """Create nodes that set the softmax gain (inverse temperature) for each softmax_node."""
-
-        softmax_gain_control_nodes = []
-        if softmax_gain == CONTROL:
-            softmax_gain_control_nodes = [ControlMechanism(monitor_for_control=match_node,
-                                                           control_signals=[(GAIN, self.softmax_nodes[i])],
-                                                           function=get_softmax_gain,
-                                                           name='SOFTMAX GAIN CONTROL' if len(self.softmax_nodes) == 1
-                                                           else f'SOFTMAX GAIN CONTROL {self.key_names[i]}')
-                                          for i, match_node in enumerate(self.match_nodes)]
-
-        return softmax_gain_control_nodes
-
+    # FIX: CONVERT TO _construct_weight_control_nodes
     def _construct_field_weight_nodes(self, field_weights, concatenate_queries, use_gating_for_weighting)->list:
         """Create ProcessingMechanisms that weight each key's softmax contribution to the retrieved values."""
 
@@ -2291,71 +2249,131 @@ class EMComposition(AutodiffComposition):
                                                                    PARAMS:{DEFAULT_INPUT: DEFAULT_VARIABLE},
                                                                    NAME: 'OUTCOME'},
                                                       gate=[key_match_pair[1].output_ports[0]],
-                                                      name= 'RETRIEVAL WEIGHTING' if self.num_keys == 1
-                                                      else f'RETRIEVAL WEIGHTING {i}')
+                                                      name= 'WEIGHT' if self.num_keys == 1
+                                                      else f'{self.key_names[i]}{WEIGHT_AFFIX}')
                                       for i, key_match_pair in enumerate(zip(self.query_input_nodes,
-                                                                             self.softmax_nodes))]
+                                                                             self.match_nodes))]
             else:
                 field_weight_nodes = [ProcessingMechanism(input_ports={VARIABLE:
                                                                            np.array(field_weights[self.key_indices[i]]),
                                                                        PARAMS: {DEFAULT_INPUT: DEFAULT_VARIABLE},
                                                                        NAME: 'FIELD_WEIGHT'},
-                                                          name= 'WEIGHT' if self.num_keys == 1
-                                                          else f'{self.key_names[i]} [WEIGHT]')
+                                                          name= WEIGHT if self.num_keys == 1
+                                                          else f'{self.key_names[i]}{WEIGHT_AFFIX}')
                                       for i in range(self.num_keys)]
         return field_weight_nodes
 
-    def _construct_weighted_softmax_nodes(self, memory_capacity, use_gating_for_weighting)->list:
+    def _construct_weighted_match_nodes(self, memory_capacity, field_weights)->list:
+        """Create nodes that weight the output of the match node for each key."""
 
-        if use_gating_for_weighting:
-            return []
-
-        weighted_softmax_nodes = \
-            [ProcessingMechanism(
-                default_variable=[self.softmax_nodes[i].output_port.value,
-                                  self.softmax_nodes[i].output_port.value],
-                input_ports=[
-                    {PROJECTIONS: MappingProjection(sender=sm_fw_pair[0],
-                                                    matrix=IDENTITY_MATRIX,
-                                                    name=f'SOFTMAX to WEIGHTED SOFTMAX for {self.key_names[i]}')},
-                    {PROJECTIONS: MappingProjection(sender=sm_fw_pair[1],
-                                                    matrix=FULL_CONNECTIVITY_MATRIX,
-                                                    name=f'WEIGHT to WEIGHTED SOFTMAX for {self.key_names[i]}')}],
-                function=LinearCombination(operation=PRODUCT),
-                name=self.key_names[i] + WEIGHTED_SOFTMAX_AFFIX)
-                for i, sm_fw_pair in enumerate(zip(self.softmax_nodes,
+        weighted_match_nodes = \
+            [ProcessingMechanism(default_variable=[self.match_nodes[i].output_port.value,
+                                                   self.match_nodes[i].output_port.value],
+                                 input_ports=[{PROJECTIONS:
+                                                   MappingProjection(sender=match_fw_pair[0],
+                                                                     matrix=IDENTITY_MATRIX,
+                                                                     name=f'{MATCH} to {WEIGHTED_MATCH_NODE_NAME} '
+                                                                          f'for {self.key_names[i]}')},
+                                              {PROJECTIONS:
+                                                   MappingProjection(sender=match_fw_pair[1],
+                                                                     matrix=FULL_CONNECTIVITY_MATRIX,
+                                                                     name=f'{WEIGHT} to {WEIGHTED_MATCH_NODE_NAME} '
+                                                                          f'for {self.key_names[i]}')}],
+                                 function=LinearCombination(operation=PRODUCT),
+                                 name=self.key_names[i] + WEIGHTED_MATCH_AFFIX)
+             for i, match_fw_pair in enumerate(zip(self.match_nodes,
                                                    self.field_weight_nodes))]
-        return weighted_softmax_nodes
 
-    def _construct_combined_softmax_node(self,
+        return weighted_match_nodes
+
+    def _construct_softmax_gain_control_node(self, softmax_gain)->Optional[ControlMechanism]:
+        """Create nodes that set the softmax gain (inverse temperature) for each softmax_node."""
+
+        if softmax_gain == CONTROL:
+            return ControlMechanism(monitor_for_control=self.combined_matches_node,
+                                    control_signals=[(GAIN, self.softmax_node)],
+                                    function=get_softmax_gain,
+                                    name='SOFTMAX GAIN CONTROL')
+        else:
+            return None
+
+    def _construct_combined_matches_node(self,
                                          memory_capacity,
                                          field_weighting,
                                          use_gating_for_weighting
                                          )->ProcessingMechanism:
-        """Create nodes that compute the weighting of each item in memory.
-        """
+        """Create node that combines weighted matches for all keys into one match vector."""
+
+        if self.num_keys == 1 or self.concatenate_queries_node:
+            return
 
         if not field_weighting or use_gating_for_weighting:
-            # If use_gating_for_weighting, then softmax_nodes are output gated by gating nodes
-            input_source = self.softmax_nodes
+            input_source = self.match_nodes
         else:
-            input_source = self.weighted_softmax_nodes
+            input_source = self.weighted_match_nodes
 
-        combined_softmax_node = (
+        combined_matches_node = (
             ProcessingMechanism(input_ports=[{SIZE:memory_capacity,
-                                              # PROJECTIONS:[s for s in input_source]}],
                                               PROJECTIONS:[MappingProjection(sender=s,
                                                                              matrix=IDENTITY_MATRIX,
-                                                                             name=f'WEIGHTED SOFTMAX to RETRIEVAL for '
-                                                                                  f'{self.key_names[i]}')
+                                                                             name=f'{WEIGHTED_MATCH_NODE_NAME} '
+                                                                                  f'for {self.key_names[i]} to '
+                                                                                  f'{COMBINE_MATCHES_NODE_NAME}')
                                                            for i, s in enumerate(input_source)]}],
-                                name=COMBINED_SOFTMAX_NODE_NAME))
+                                name=COMBINE_MATCHES_NODE_NAME))
 
-        assert len(combined_softmax_node.output_port.value) == memory_capacity, \
-            'PROGRAM ERROR: number of items in combined_softmax_node ' \
-            '({len(combined_softmax_node.output_port)}) does not match memory_capacity ({self.memory_capacity})'
+        assert len(combined_matches_node.output_port.value) == memory_capacity, \
+            'PROGRAM ERROR: number of items in combined_matches_node ' \
+            f'({len(combined_matches_node.output_port)}) does not match memory_capacity ({self.memory_capacity})'
 
-        return combined_softmax_node
+        return combined_matches_node
+
+    def _construct_softmax_node(self, memory_capacity, softmax_gain, softmax_threshold, softmax_choice)->list:
+        """Create node that applies softmax to output of combined_matches_node."""
+
+        if self.num_keys == 1 or self.concatenate_queries_node:
+            input_source = self.match_nodes[0]
+            proj_name =f'{MATCH} to {SOFTMAX_NODE_NAME}'
+        # elif self.concatenate_queries_node:
+        #     input_source = self.concatenate_queries_node
+        #     proj_name =f'{CONCATENATE_QUERIES_NAME} to {SOFTMAX_NODE_NAME}'
+        else:
+            input_source = self.combined_matches_node
+            proj_name =f'{COMBINE_MATCHES_NODE_NAME} to {SOFTMAX_NODE_NAME}'
+
+        if softmax_choice == ARG_MAX:
+            # ARG_MAX would return entry multiplied by its dot product
+            # ARG_MAX_INDICATOR returns the entry unmodified
+            softmax_choice = ARG_MAX_INDICATOR
+
+        softmax_node = ProcessingMechanism(input_ports={SIZE:memory_capacity,
+                                                        PROJECTIONS: MappingProjection(
+                                                            sender=input_source,
+                                                            matrix=IDENTITY_MATRIX,
+                                                            name=proj_name)},
+                                           function=SoftMax(gain=softmax_gain,
+                                                            mask_threshold=softmax_threshold,
+                                                            output=softmax_choice,
+                                                            adapt_entropy_weighting=.95),
+                                           name=SOFTMAX_NODE_NAME)
+
+        return softmax_node
+
+    def _validate_options_with_learning(self,
+                                        enable_learning,
+                                        use_gating_for_weighting,
+                                        learn_field_weights,
+                                        softmax_choice):
+        if use_gating_for_weighting and learn_field_weights:
+            warnings.warn(f"The 'learn_field_weights' option for '{self.name}' cannot be used with "
+                          f"'use_gating_for_weighting' set to True; this will generate an error if its "
+                          f"'learn' method is called. Set 'use_gating_for_weighting' to True in order "
+                          f"to enable learning of field weights.")
+
+        if softmax_choice in {ARG_MAX, PROBABILISTIC} and enable_learning:
+            warnings.warn(f"The 'softmax_choice' arg of '{self.name}' is set to '{softmax_choice}' with "
+                          f"'enable_learning' set to True (or a list); this will generate an error if its "
+                          f"'learn' method is called. Set 'softmax_choice' to WEIGHTED_AVG before learning.")
 
     def _construct_retrieved_nodes(self, memory_template)->list:
         """Create nodes that report the value field(s) for the item(s) matched in memory.
@@ -2364,7 +2382,7 @@ class EMComposition(AutodiffComposition):
             [ProcessingMechanism(input_ports={SIZE: len(self.query_input_nodes[i].variable[0]),
                                             PROJECTIONS:
                                                 MappingProjection(
-                                                    sender=self.combined_softmax_node,
+                                                    sender=self.softmax_node,
                                                     matrix=memory_template[:,i],
                                                     name=f'MEMORY FOR {self.key_names[i]} [RETRIEVE KEY]')
                                             },
@@ -2375,7 +2393,7 @@ class EMComposition(AutodiffComposition):
             [ProcessingMechanism(input_ports={SIZE: len(self.value_input_nodes[i].variable[0]),
                                             PROJECTIONS:
                                                 MappingProjection(
-                                                    sender=self.combined_softmax_node,
+                                                    sender=self.softmax_node,
                                                     matrix=memory_template[:,
                                                            i + self.num_keys],
                                                     name=f'MEMORY FOR {self.value_names[i]} [RETRIEVE VALUE]')},
@@ -2466,13 +2484,13 @@ class EMComposition(AutodiffComposition):
                 **kwargs):
         """Set input to weights of Projections to match_nodes and retrieved_nodes if not use_storage_node."""
         results = super().execute(inputs=inputs, context=context, **kwargs)
-        if not self.use_storage_node:
+        if not self._use_storage_node:
             self._store_memory(inputs, context)
         return results
 
     def _store_memory(self, inputs, context):
         """Store inputs to query and value nodes in memory
-        Store memories in weights of Projections to softmax_nodes (queries) and retrieved_nodes (values).
+        Store memories in weights of Projections to match_nodes (queries) and retrieved_nodes (values).
         Note: inputs argument is ignored (included for compatibility with function of MemoryFunctions class;
               storage is handled by call to EMComopsition._encode_memory
         """
@@ -2549,13 +2567,18 @@ class EMComposition(AutodiffComposition):
     @handle_external_context()
     def learn(self, *args, **kwargs)->list:
         """Override to check for inappropriate use of ARG_MAX or PROBABILISTIC options for retrieval with learning"""
-        arg = self.parameters.softmax_choice.get(kwargs[CONTEXT])
-        if arg in {ARG_MAX, PROBABILISTIC}:
+        softmax_choice = self.parameters.softmax_choice.get(kwargs[CONTEXT])
+        use_gating_for_weighting = self._use_gating_for_weighting
+        learn_field_weights = self.parameters.learn_field_weights.get(kwargs[CONTEXT])
+
+        if use_gating_for_weighting and learn_field_weights:
+            raise EMCompositionError(f"Field weights cannot be learned when 'use_gating_for_weighting' is True; "
+                                     f"Construct '{self.name}' with the 'learn_field_weights' arg set to False.")
+
+        if softmax_choice in {ARG_MAX, PROBABILISTIC}:
             raise EMCompositionError(f"The ARG_MAX and PROBABILISTIC options for the 'softmax_choice' arg "
                                      f"of '{self.name}' cannot be used during learning; change to WEIGHTED_AVG.")
-        if self.loss_spec in {Loss.BINARY_CROSS_ENTROPY} and not self.normalize_field_weights:
-            raise EMCompositionError(f"The 'loss_spec' arg of '{self.name}' is set to '{self.loss_spec.name}' with "
-                          f"'normalize_field_weights' set to False; this must be True to use this loss_spec.")
+
         return super().learn(*args, **kwargs)
 
     def _get_execution_mode(self, execution_mode):
