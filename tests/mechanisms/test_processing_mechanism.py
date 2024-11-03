@@ -9,8 +9,9 @@ from psyneulink.core.components.functions.nonstateful.distributionfunctions impo
 from psyneulink.core.components.functions.stateful.integratorfunctions import SimpleIntegrator, \
     AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator, FitzHughNagumoIntegrator, \
     AccumulatorIntegrator, DualAdaptiveIntegrator
-from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear, Exponential, Logistic, SoftMax, LinearTransform
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import Reduce, LinearCombination, CombineMeans
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear, Exponential, Logistic, SoftMax
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import \
+    CombineMeans, LinearCombination, LinearTransform, Reduce
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import \

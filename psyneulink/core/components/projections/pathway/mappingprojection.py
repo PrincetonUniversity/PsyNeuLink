@@ -291,7 +291,7 @@ from psyneulink._typing import Optional
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.stateful.integratorfunctions import AccumulatorIntegrator
-from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearTransform
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearTransform
 from psyneulink.core.components.functions.function import get_matrix
 from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.core.components.projections.projection import ProjectionError, projection_keywords

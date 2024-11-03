@@ -1027,8 +1027,9 @@ import warnings
 import psyneulink.core.scheduling.condition as conditions
 
 from psyneulink._typing import Optional, Union
-from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax, LinearTransform
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate, LinearCombination
+from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import (
+    Concatenate, LinearCombination, LinearTransform)
 from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.compositions.composition import CompositionError, NodeRole
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, torch_available

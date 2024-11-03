@@ -409,7 +409,7 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import get_matrix, ValidMatrixSpecType
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
-from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearTransform
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearTransform
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.ports.port import PortError
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Projection, Port
