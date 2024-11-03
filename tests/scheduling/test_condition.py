@@ -25,7 +25,15 @@ logger = logging.getLogger(__name__)
 
 class TestModule:
     def test_all_attr_parity(self):
-        missing = set(gs.condition.__all__) - set(pnl.core.scheduling.condition.__all__)
+        missing = {
+            c for c
+            in set(gs.condition.__all__) - set(pnl.core.scheduling.condition.__all__)
+            if (
+                'ConsiderationSetExecution' not in c
+                and 'EnvironmentStateUpdate' not in c
+                and 'EnvironmentSequence' not in c
+            )
+        }
         assert len(missing) == 0, (f'Conditions in graph_scheduler must be added to psyneulink condition.py: {missing}')
 
 

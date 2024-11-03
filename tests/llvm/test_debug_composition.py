@@ -26,7 +26,7 @@ def preserve_env():
 
 
 debug_options = ["const_input=[[[7]]]", "const_input", "const_params", "const_data", "const_state",
-                 "stat", "time_stat", "unaligned_copy"]
+                 "stat", "time_stat", "unaligned_copy", "printf_tags={'always'}"]
 options_combinations = (";".join(c) for c in pytest.helpers.power_set(debug_options))
 
 @pytest.mark.composition
@@ -62,7 +62,6 @@ def test_debug_comp(mode, debug_env):
 
     if "const_state" in debug_env:
         expected2 = expected1
-
 
     np.testing.assert_allclose(expected1, output1[0][0])
     np.testing.assert_allclose(expected2, output2[0][0])

@@ -8,13 +8,11 @@
 
 # ********************************************* PNL LLVM helpers **************************************************************
 
+import ast
 from contextlib import contextmanager
-from ctypes import util
 import warnings
-import sys
 
 from llvmlite import ir
-import llvmlite.binding as llvm
 
 
 from .debug import debug_env
@@ -401,55 +399,55 @@ def call_elementwise_operation(ctx, builder, x, operation, output_ptr):
     for (inp_ptr, out_ptr) in recursive_iterate_arrays(ctx, builder, x, output_ptr):
         builder.store(operation(ctx, builder, builder.load(inp_ptr)), out_ptr)
 
-def printf(builder, fmt, *args, override_debug=False):
-    if "print_values" not in debug_env and not override_debug:
+def printf(ctx, builder, fmt, *args, tags:set):
+
+    tags = frozenset(tags)
+    user_tags = frozenset(ast.literal_eval(debug_env.get("printf_tags", "[]")))
+    if "all" not in user_tags and "always" not in tags and not tags.intersection(user_tags):
         return
 
-    #FIXME: Fix builtin printf and use that instead of this
-    libc_name = "msvcrt" if sys.platform == "win32" else "c"
-    libc = util.find_library(libc_name)
-    assert libc is not None, "Standard libc library not found"
-
-    llvm.load_library_permanently(libc)
-    # Address will be none if the symbol is not found
-    printf_address = llvm.address_of_symbol("printf")
-    assert printf_address is not None, "'printf' symbol not found in {}".format(libc)
-
-    # Direct pointer constants don't work
-    printf_ty = ir.FunctionType(ir.IntType(32), [ir.IntType(8).as_pointer()], var_arg=True)
-    printf = builder.inttoptr(ir.IntType(64)(printf_address), printf_ty.as_pointer())
-    ir_module = builder.function.module
-    fmt += "\0"
-
+    # Set up the formatting string as global symbol
     int8 = ir.IntType(8)
-    fmt_data = bytearray(fmt.encode("utf8"))
+    fmt_data = bytearray((fmt + "\0").encode("utf8"))
     fmt_ty = ir.ArrayType(int8, len(fmt_data))
-    global_fmt = ir.GlobalVariable(ir_module, fmt_ty,
+
+    ir_module = builder.function.module
+    global_fmt = ir.GlobalVariable(ir_module,
+                                   fmt_ty,
                                    name="printf_fmt_" + str(len(ir_module.globals)))
     global_fmt.linkage = "internal"
     global_fmt.global_constant = True
     global_fmt.initializer = fmt_ty(fmt_data)
 
-    fmt_ptr = builder.gep(global_fmt, [ir.IntType(32)(0), ir.IntType(32)(0)])
-    conv_args = [builder.fpext(a, ir.DoubleType()) if is_floating_point(a) else a for a in args]
-    builder.call(printf, [fmt_ptr] + conv_args)
+    printf_ty = ir.FunctionType(ir.IntType(32), [ir.IntType(8).as_pointer()], var_arg=True)
+    get_printf_addr_f = ctx.get_builtin("get_printf_address", [])
+    printf_address = builder.call(get_printf_addr_f, [])
+
+    printf_is_not_null = builder.icmp_unsigned("!=", printf_address, printf_address.type(0))
+    with builder.if_then(printf_is_not_null, likely=True):
+        printf_f = builder.inttoptr(printf_address, printf_ty.as_pointer())
+
+        fmt_ptr = builder.gep(global_fmt, [ir.IntType(32)(0), ir.IntType(32)(0)])
+        conv_args = [builder.fpext(a, ir.DoubleType()) if is_floating_point(a) else a for a in args]
+        builder.call(printf_f, [fmt_ptr] + conv_args)
 
 
-def printf_float_array(builder, array, prefix="", suffix="\n", override_debug=False):
-    printf(builder, prefix, override_debug=override_debug)
+def printf_float_array(ctx, builder, array, prefix="", suffix="\n", *, tags:set):
+    printf(ctx, builder, prefix, tags=tags)
 
     with array_ptr_loop(builder, array, "print_array_loop") as (b1, i):
-        printf(b1, "%lf ", b1.load(b1.gep(array, [i.type(0), i])), override_debug=override_debug)
+        printf(ctx, b1, "%lf ", b1.load(b1.gep(array, [i.type(0), i])), tags=tags)
 
-    printf(builder, suffix, override_debug=override_debug)
+    printf(ctx, builder, suffix, tags=tags)
 
 
-def printf_float_matrix(builder, matrix, prefix="", suffix="\n", override_debug=False):
-    printf(builder, prefix, override_debug=override_debug)
+def printf_float_matrix(ctx, builder, matrix, prefix="", suffix="\n", *, tags:set):
+    printf(ctx, builder, prefix, tags=tags)
     with array_ptr_loop(builder, matrix, "print_row_loop") as (b1, i):
         row = b1.gep(matrix, [i.type(0), i])
-        printf_float_array(b1, row, suffix="\n", override_debug=override_debug)
-    printf(builder, suffix, override_debug=override_debug)
+        printf_float_array(ctx, b1, row, suffix="\n", tags=tags)
+
+    printf(ctx, builder, suffix, tags=tags)
 
 
 class ConditionGenerator:
