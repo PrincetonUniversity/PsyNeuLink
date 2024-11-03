@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
-import psyneulink.core.components.functions.nonstateful.combinationfunctions
+import psyneulink.core.components.functions.nonstateful.transformfunctions
 import psyneulink.core.components.functions.nonstateful.transferfunctions
 
 
@@ -25,7 +25,7 @@ class TestInputPorts:
         t2 = pnl.TransferMechanism(size=2)
         t3 = pnl.TransferMechanism(
                 size=2,
-                input_ports=pnl.InputPort(function=psyneulink.core.components.functions.nonstateful.combinationfunctions
+                input_ports=pnl.InputPort(function=psyneulink.core.components.functions.nonstateful.transformfunctions
                                            .LinearCombination,
                                            combine=pnl.PRODUCT))
         c = pnl.Composition(pathways=[[t1, t3],[t2, t3]])
@@ -38,7 +38,7 @@ class TestInputPorts:
         t2 = pnl.TransferMechanism(size=2)
         t3 = pnl.TransferMechanism(
                 size=2,
-                input_ports=pnl.InputPort(function=psyneulink.core.components.functions.nonstateful.combinationfunctions.LinearCombination(operation=pnl.PRODUCT),
+                input_ports=pnl.InputPort(function=psyneulink.core.components.functions.nonstateful.transformfunctions.LinearCombination(operation=pnl.PRODUCT),
                                           combine=pnl.PRODUCT))
         c = pnl.Composition(pathways=[[t1, t3],[t2, t3]])
         input_dict = {t1:[1,2],t2:[3,4]}
@@ -47,7 +47,7 @@ class TestInputPorts:
 
     def test_combine_param_conflicting_fct_operation_spec(self):
         with pytest.raises(pnl.InputPortError) as error_text:
-            t = pnl.TransferMechanism(input_ports=pnl.InputPort(function=psyneulink.core.components.functions.nonstateful.combinationfunctions.LinearCombination(operation=pnl.SUM),
+            t = pnl.TransferMechanism(input_ports=pnl.InputPort(function=psyneulink.core.components.functions.nonstateful.transformfunctions.LinearCombination(operation=pnl.SUM),
                                                                 combine=pnl.PRODUCT))
         assert "Specification of 'combine' argument (PRODUCT) conflicts with specification of 'operation' (SUM) " \
                "for LinearCombination in 'function' argument for InputPort" in str(error_text.value)

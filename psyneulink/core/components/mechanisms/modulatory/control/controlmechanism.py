@@ -615,8 +615,8 @@ from beartype import beartype
 from psyneulink._typing import Optional, Union, Callable, Literal, Iterable
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
+from psyneulink.core.components.functions.nonstateful.transformfunctions import Concatenate
+from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base, MechanismError
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort

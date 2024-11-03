@@ -740,7 +740,7 @@ PROCESSING_MECHANISM = "ProcessingMechanism"
 ARGUMENT_THERAPY_FUNCTION = "Contradiction Function"
 USER_DEFINED_FUNCTION = "USER DEFINED FUNCTION"
 
-# CombinationFunctions:
+# Transformfunctions:
 REDUCE_FUNCTION = "Reduce Function"
 CONCATENATE_FUNCTION = "Concatenate Function"
 REARRANGE_FUNCTION = 'Rearrange Function'

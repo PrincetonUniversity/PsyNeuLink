@@ -2902,7 +2902,7 @@ from psyneulink._typing import Callable, Literal, List, Mapping, Optional, Set, 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentError, ComponentsMeta
 from psyneulink.core.components.functions.function import is_function_type, Function, RandomMatrix
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import \
+from psyneulink.core.components.functions.nonstateful.transformfunctions import \
         LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.nonstateful.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning

@@ -581,7 +581,7 @@ from psyneulink._typing import Optional, Literal
 
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import CombinationFunction, LinearCombination
+from psyneulink.core.components.functions.nonstateful.transformfunctions import CombinationFunction, LinearCombination
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.port import PortError, Port_Base, _instantiate_port_list, port_type_keywords
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
@@ -727,7 +727,7 @@ class InputPort(Port_Base):
         expected for any `path_afferent Projections <Port_Base.path_afferents>`.
 
     function : Function
-        if it is a `CombinationFunction <CombinationFunctions>`, it combines the `values <Projection_Base.value>` of
+        if it is a `CombinationFunction <Transformfunctions>`, it combines the `values <Projection_Base.value>` of
         the `PathwayProjections <PathwayProjection>` (e.g., `MappingProjections <MappingProjection>`) received by the
         InputPort  (listed in its `path_afferents <Port_Base.path_afferents>` attribute), under the possible
         influence of `GatingProjections <GatingProjection>` received by the InputPort (listed in its `mod_afferents

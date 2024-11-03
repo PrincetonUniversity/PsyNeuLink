@@ -828,7 +828,7 @@ from beartype import beartype
 from psyneulink._typing import Optional, Union, Literal
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, SUM
+from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination, SUM
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import DistributionFunction
 from psyneulink.core.components.functions.function import Function, is_function_type
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance

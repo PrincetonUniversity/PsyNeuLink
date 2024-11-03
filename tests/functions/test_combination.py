@@ -63,8 +63,8 @@ class TestRearrange:
     # @pytest.mark.function
     # @pytest.mark.combination_function
     # def test_column_vector(self):
-    #     R_function = pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM)
-    #     R_mechanism = pnl.ProcessingMechanism(function=pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM),
+    #     R_function = pnl.core.components.functions.transformfunctions.Reduce(operation=pnl.SUM)
+    #     R_mechanism = pnl.ProcessingMechanism(function=pnl.core.components.functions.transformfunctions.Reduce(operation=pnl.SUM),
     #                                           default_variable=[[1], [2], [3], [4], [5]],
     #                                           name="R_mechanism")
     #
@@ -78,8 +78,8 @@ class TestRearrange:
     # @pytest.mark.function
     # @pytest.mark.combination_function
     # def test_matrix(self):
-    #     R_function = pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM)
-    #     R_mechanism = pnl.ProcessingMechanism(function=pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM),
+    #     R_function = pnl.core.components.functions.transformfunctions.Reduce(operation=pnl.SUM)
+    #     R_mechanism = pnl.ProcessingMechanism(function=pnl.core.components.functions.transformfunctions.Reduce(operation=pnl.SUM),
     #                                           default_variable=[[1, 2, 3], [4, 5, 6], [7, 8, 9]],
     #                                           name="R_mechanism")
     #

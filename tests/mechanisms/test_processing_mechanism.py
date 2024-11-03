@@ -10,7 +10,7 @@ from psyneulink.core.components.functions.stateful.integratorfunctions import Si
     AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator, FitzHughNagumoIntegrator, \
     AccumulatorIntegrator, DualAdaptiveIntegrator
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear, Exponential, Logistic, SoftMax
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import \
+from psyneulink.core.components.functions.nonstateful.transformfunctions import \
     CombineMeans, LinearCombination, LinearTransform, Reduce
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.ports.outputport import OutputPort

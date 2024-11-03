@@ -24,7 +24,7 @@ Overview
 Functions that combine multiple items with the same shape, yielding a result with a single item that has the same
 shape as the individual items.
 
-All CombinationFunctions must have two attributes - **multiplicative_param** and **additive_param** -
+All Transformfunctions must have two attributes - **multiplicative_param** and **additive_param** -
 each of which is assigned the name of one of the function's parameters;
 this is for use by ModulatoryProjections (and, in particular, GatingProjections,
 when the CombinationFunction is used as the function of an InputPort or OutputPort).
@@ -73,7 +73,7 @@ __all__ = ['CombinationFunction', 'Concatenate', 'CombineMeans', 'Rearrange', 'R
 class CombinationFunction(Function_Base):
     """Function that combines multiple items, yielding a result with the same shape as its operands
 
-    All CombinationFunctions must have two attributes - multiplicative_param and additive_param -
+    All Transformfunctions must have two attributes - multiplicative_param and additive_param -
         each of which is assigned the name of one of the function's parameters;
         this is for use by ModulatoryProjections (and, in particular, GatingProjections,
         when the CombinationFunction is used as the function of an InputPort or OutputPort).

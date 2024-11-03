@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
+from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.nonstateful.optimizationfunctions import GridSearch
 from psyneulink.core.components.functions.nonstateful.transferfunctions import \

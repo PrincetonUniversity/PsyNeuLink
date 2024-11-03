@@ -4024,7 +4024,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         from psyneulink.core.compositions.composition import Composition
         from psyneulink.core.components.ports.port import Port
         from psyneulink.core.components.ports.outputport import OutputPort
-        from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearTransform
+        from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearTransform
 
         def parse_parameter_value(value, no_expand_components=False, functions_as_dill=False):
             if isinstance(value, (list, tuple)):
