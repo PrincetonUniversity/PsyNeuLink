@@ -185,16 +185,14 @@ class TestConstruction:
         assert isinstance(em.concatenate_queries_node, Mechanism) == concatenate_node
         if em.concatenate_queries:
             assert em.field_weight_nodes == []
-            assert bool(softmax_gain == CONTROL) == bool(len(em.softmax_gain_control_nodes))
+            assert bool(softmax_gain == CONTROL) == bool(em.softmax_gain_control_node)
         else:
             if num_keys > 1:
                 assert len(em.field_weight_nodes) == num_keys
             else:
                 assert em.field_weight_nodes == []
             if softmax_gain == CONTROL:
-                assert len(em.softmax_gain_control_nodes) == num_keys
-            else:
-                assert em.softmax_gain_control_nodes == []
+                assert em.softmax_gain_control_node
         assert len(em.retrieved_nodes) == num_fields
 
         def test_memory_fill(start, memory_fill):
@@ -252,23 +250,6 @@ class TestConstruction:
                                f"'learn' method is called. Set 'softmax_choice' to WEIGHTED_AVG before learning.")
             assert warning_msg in str(warning[0].message)
 
-    def test_normalize_field_weights_with_learning_enabled(self):
-        with pytest.warns(UserWarning) as warning:
-            em = EMComposition(normalize_field_weights=False,
-                               enable_learning=True,
-                               memory_fill=(0,.1),
-                               loss_spec=pnl.Loss.BINARY_CROSS_ENTROPY)
-            warning_msg = (f"The 'normalize_field_weights' arg of 'EM_Composition' is set to False with "
-                           f"'enable_learning' set to True (or a list); this may generate an error if the "
-                           f"'loss_spec' used for learning requires values to be between 0 and 1.")
-        assert warning_msg in str(warning[0].message)
-
-        with pytest.raises(EMCompositionError) as error_text:
-            em.learn()
-        assert (f"The 'loss_spec' arg of 'EM_Composition' is set to 'BINARY_CROSS_ENTROPY' with "
-                f"'normalize_field_weights' set to False; this must be True to use this loss_spec."
-                in str(error_text.value))
-
 
 @pytest.mark.pytorch
 class TestExecution:
@@ -304,11 +285,11 @@ class TestExecution:
         (4, [[[1,2,3],[4,6]],     # Equal field_weights (but not concatenated)
              [[1,2,5],[4,6]],
              [[1,2,10],[4,6]]], (0,.01), 4,  0, [1,1],  None, None,  100,  0, [[[1, 2, 3]],
-                                                                                   [[4, 6]]],   [[0.90323092,
-                                                                                                  1.80586151,
-                                                                                                  4.00008914],
-                                                                                                 [3.61161172,
-                                                                                                  5.41731422]]
+                                                                                   [[4, 6]]],   [[0.99750462,
+                                                                                                  1.99499376,
+                                                                                                  3.51623568],
+                                                                                                 [3.98998465,
+                                                                                                  5.9849743]]
          ),
         (5, [[[1,2,3],[4,6]],     # Equal field_weights with concatenation
              [[1,2,5],[4,8]],
@@ -321,44 +302,44 @@ class TestExecution:
         (6, [[[1,2,3],[4,6]],        # Unequal field_weights
              [[1,2,5],[4,8]],
              [[1,2,10],[4,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  0, [[[1, 2, 3]],
-                                                                                  [[4, 6]]],    [[0.96869477,
-                                                                                                  1.93719534,
-                                                                                                  3.1307577],
-                                                                                                 [3.87435467,
-                                                                                                  6.02081578]]),
+                                                                                  [[4, 6]]],    [[0.99996025,
+                                                                                                  1.99992024,
+                                                                                                  3.19317783],
+                                                                                                 [3.99984044,
+                                                                                                  6.19219795]]),
         (7, [[[1,2,3],[4,6]],        # Store + no decay
              [[1,2,5],[4,8]],
              [[1,2,10],[4,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
-                                                                                  [[4, 6]]],    [[0.96869477,
-                                                                                                  1.93719534,
-                                                                                                  3.1307577],
-                                                                                                 [3.87435467,
-                                                                                                  6.02081578]]),
+                                                                                  [[4, 6]]],    [[0.99996025,
+                                                                                                  1.99992024,
+                                                                                                  3.19317783],
+                                                                                                 [3.99984044,
+                                                                                                  6.19219795]]),
         (8, [[[1,2,3],[4,6]],        # Store + default decay (should be AUTO)
              [[1,2,5],[4,8]],
              [[1,2,10],[4,10]]], (0,.01), 4, None, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
-                                                                                    [[4, 6]]], [[0.96869477,
-                                                                                                  1.93719534,
-                                                                                                  3.1307577 ],
-                                                                                                 [3.87435467,
-                                                                                                  6.02081578]]),
+                                                                                    [[4, 6]]], [[0.99996025,
+                                                                                                 1.99992024,
+                                                                                                 3.19317783],
+                                                                                                 [3.99984044,
+                                                                                                  6.19219795]]),
         (9, [[[1,2,3],[4,6]],        # Store + explicit AUTO decay
              [[1,2,5],[4,8]],
              [[1,2,10],[4,10]]], (0,.01), 4, AUTO, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
-                                                                                  [[4, 6]]],    [[0.96869477,
-                                                                                                  1.93719534,
-                                                                                                  3.1307577 ],
-                                                                                                 [3.87435467,
-                                                                                                  6.02081578]]),
+                                                                                  [[4, 6]]],    [[0.99996025,
+                                                                                                  1.99992024,
+                                                                                                  3.19317783],
+                                                                                                 [3.99984044,
+                                                                                                  6.19219795]]),
         (10, [[[1,2,3],[4,6]],        # Store + numerical decay
               [[1,2,5],[4,8]],
               [[1,2,10],[4,10]]], (0,.01), 4, .1, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
-                                                                                 [[4, 6]]],     [[0.96869477,
-                                                                                                  1.93719534,
-                                                                                                  3.1307577 ],
-                                                                                                 [3.87435467,
-                                                                                                  6.02081578]]),
-        (11, [[[1,2,3],[4,6]],    # Same as 10, but with equal weights and concatenate keysdd
+                                                                                 [[4, 6]]],     [[0.99996025,
+                                                                                                  1.99992024,
+                                                                                                  3.19317783],
+                                                                                                 [3.99984044,
+                                                                                                  6.19219795]]),
+        (11, [[[1,2,3],[4,6]],    # Same as 10, but with equal weights and concatenate keys
               [[1,2,5],[4,8]],
               [[1,2,10],[4,10]]], (0,.01), 4, .1, [1,1],  True, None,  100,  1, [[[1, 2, 3]],
                                                                                  [[4, 6]]],     [[0.99922544,
@@ -366,6 +347,8 @@ class TestExecution:
                                                                                                   3.38989346],
                                                                                                  [3.99689126,
                                                                                                   6.38682264]]),
+#                                                                                                  [3.99984044,
+#                                                                                                   6.19219795]]),
 ]
 
     args_names = "test_num, memory_template, memory_fill, memory_capacity, memory_decay_rate, field_weights, " \
@@ -376,7 +359,7 @@ class TestExecution:
     @pytest.mark.parametrize('enable_learning', [False, True], ids=['no_learning','learning'])
     @pytest.mark.composition
     @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch])
-    def test_simple_execution_witemhout_learning(self,
+    def test_simple_execution_without_learning(self,
                                                exec_mode,
                                                enable_learning,
                                                test_num,
@@ -441,10 +424,10 @@ class TestExecution:
             np.testing.assert_allclose(retrieved, expected)
 
         # Validate that sum of weighted softmax distributions in field_weight_node itself sums to 1
-        np.testing.assert_allclose(np.sum(em.combined_softmax_node.value), 1.0, atol=1e-15)
+        np.testing.assert_allclose(np.sum(em.softmax_node.value), 1.0, atol=1e-15)
 
         # Validate that sum of its output ports also sums to 1
-        np.testing.assert_allclose(np.sum([port.value for port in em.combined_softmax_node.output_ports]),
+        np.testing.assert_allclose(np.sum([port.value for port in em.softmax_node.output_ports]),
                                    1.0, atol=1e-15)
 
         # Validate storage
