@@ -2078,35 +2078,44 @@ class EMComposition(AutodiffComposition):
         # LEARNING NOT ENABLED --------------------------------------------------
         # Set up pathways WITHOUT PsyNeuLink learning pathways
         if not self.enable_learning:
-            optional_nodes = [node for node in
-                              [self.combined_matches_node, self.softmax_gain_control_node, self.storage_node,
-                              self.concatenate_queries_node] if (node and node is not None)]
-            self.add_nodes(self.query_input_nodes + self.value_input_nodes + optional_nodes + self.match_nodes +
-                           self.field_weight_nodes + self.weighted_match_nodes +
-                           optional_nodes +
-                           [self.softmax_node] + self.retrieved_nodes)
+            self.add_nodes(self.query_input_nodes + self.value_input_nodes)
+            if use_storage_node:
+                self.add_node(self.storage_node)
+            if self.concatenate_queries_node:
+                self.add_node(self.concatenate_queries_node)
+            self.add_nodes(self.match_nodes + self.field_weight_nodes + self.weighted_match_nodes)
+            if self.combined_matches_node:
+                self.add_node(self.combined_matches_node)
+            self.add_nodes([self.softmax_node] + self.retrieved_nodes)
+            if self.softmax_gain_control_node:
+                self.add_node(self.softmax_gain_control_node)
 
         # LEARNING ENABLED -----------------------------------------------------
         # Set up pathways WITH psyneulink backpropagation learning field weights
         else:
-            # Key-specific pathways
-            for i in range(self.num_keys):
-                # Regular pathways
-                if not self.concatenate_queries:
-                    pathway = [self.query_input_nodes[i],
-                               self.match_nodes[i],
-                               self.combined_matches_node]
-                    if self.weighted_match_nodes:
-                        pathway.insert(2, self.weighted_match_nodes[i])
-                # Key-concatenated pathways
+            # Query-specific pathways
+            if not self.concatenate_queries:
+                if self.num_keys == 1:
+                    self.add_linear_processing_pathway([self.query_input_nodes[i],
+                                                        self.match_nodes[i],
+                                                        self.softmax_node])
                 else:
+                    for i in range(self.num_keys):
+                        pathway = [self.query_input_nodes[i],
+                                   self.match_nodes[i],
+                                   self.combined_matches_node]
+                        if self.weighted_match_nodes:
+                            pathway.insert(2, self.weighted_match_nodes[i])
+                        self.add_linear_processing_pathway(pathway)
+                    self.add_linear_processing_pathway([self.combined_matches_node, self.softmax_node])
+            # Query-concatenated pathways
+            else:
+                for i in range(self.num_keys):
                     pathway = [self.query_input_nodes[i],
                                self.concatenate_queries_node,
-                               match_node]
-                # self.add_backpropagation_learning_pathway(pathway)
-                self.add_linear_processing_pathway(pathway)
-
-            self.add_linear_processing_pathway([self.combined_matches_node, self.softmax_node])
+                               self.match_nodes[0]]
+                    self.add_linear_processing_pathway(pathway)
+                self.add_linear_processing_pathway([self.match_nodes[0], self.softmax_node])
 
             # softmax gain control is specified:
             if self.softmax_gain_control_node:
