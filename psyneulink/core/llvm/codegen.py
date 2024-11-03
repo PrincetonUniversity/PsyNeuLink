@@ -18,7 +18,7 @@ from contextlib import contextmanager
 from psyneulink.core.globals.keywords import AFTER, BEFORE
 from psyneulink.core.scheduling.condition import Never
 from psyneulink.core.scheduling.time import TimeScale
-from . import helpers
+from . import helpers, scheduler
 from .debug import debug_env
 from .warnings import PNLCompilerWarning
 
@@ -604,7 +604,7 @@ def gen_node_assembly(ctx, composition, node, *, tags:frozenset):
     if not is_mech and "reset" not in tags:
         # Add condition struct of the parent composition
         # This includes structures of all nested compositions
-        cond_gen = helpers.ConditionGenerator(ctx, composition)
+        cond_gen = scheduler.ConditionGenerator(ctx, composition)
         cond_ty = cond_gen.get_condition_struct_type().as_pointer()
         args.append(cond_ty)
 
@@ -762,7 +762,7 @@ def gen_node_assembly(ctx, composition, node, *, tags:frozenset):
 
 @contextmanager
 def _gen_composition_exec_context(ctx, composition, *, tags:frozenset, suffix="", extra_args=[]):
-    cond_gen = helpers.ConditionGenerator(ctx, composition)
+    cond_gen = scheduler.ConditionGenerator(ctx, composition)
 
     name = "_".join(("wrap_exec", *tags, composition.name + suffix))
     args = [ctx.get_state_struct_type(composition).as_pointer(),
@@ -1098,7 +1098,7 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
     _reset_composition_nodes_exec_counts(ctx, builder, composition, state, [TimeScale.RUN])
 
     # Allocate and initialize condition structure
-    cond_gen = helpers.ConditionGenerator(ctx, composition)
+    cond_gen = scheduler.ConditionGenerator(ctx, composition)
     cond_type = cond_gen.get_condition_struct_type()
     cond = builder.alloca(cond_type, name="scheduler_metadata")
     cond_init = cond_type(cond_gen.get_condition_initializer())

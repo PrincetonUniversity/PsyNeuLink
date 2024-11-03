@@ -23,7 +23,7 @@ import weakref
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import Context
 
-from . import helpers, jit_engine, builder_context
+from . import builder_context, helpers, jit_engine, scheduler
 from .debug import debug_env
 
 __all__ = ['CompExecution', 'FuncExecution', 'MechExecution']
@@ -347,7 +347,7 @@ class CompExecution(CUDAExecution):
     @property
     def _conditions(self):
         if self.__conditions is None:
-            gen = helpers.ConditionGenerator(None, self._composition)
+            gen = scheduler.ConditionGenerator(None, self._composition)
 
             conditions_ctype = self._bin_func.byref_arg_types[4]
             conditions_initializer = gen.get_condition_initializer()
