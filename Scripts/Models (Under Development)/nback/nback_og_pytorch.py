@@ -74,7 +74,7 @@ FFWMGraph.add_projection(
 FFWMGraph.add_projection(
     projection=pnl.MappingProjection(
         name="MatMul_6_as_edge",
-        function=pnl.LinearMatrix(
+        function=pnl.LinearTransform(
             default_variable=np.zeros((90,), dtype="float32"), matrix=hid1_layer_weight
         ),
     ),
@@ -84,7 +84,7 @@ FFWMGraph.add_projection(
 FFWMGraph.add_projection(
     projection=pnl.MappingProjection(
         name="MatMul_16_as_edge",
-        function=pnl.LinearMatrix(
+        function=pnl.LinearTransform(
             default_variable=np.zeros((90,), dtype="float32"), matrix=hid2_layer_weight
         ),
     ),
@@ -94,7 +94,7 @@ FFWMGraph.add_projection(
 FFWMGraph.add_projection(
     projection=pnl.MappingProjection(
         name="MatMul_19_as_edge",
-        function=pnl.LinearMatrix(
+        function=pnl.LinearTransform(
             default_variable=np.zeros((80,), dtype="float32"), matrix=out_layer_weight
         ),
     ),

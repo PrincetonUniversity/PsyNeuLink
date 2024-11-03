@@ -761,7 +761,7 @@ GAUSSIAN_DISTORT_FUNCTION = "GaussianDistort Function"
 BINOMIAL_DISTORT_FUNCTION = 'BinomialDistort Function'
 DROPOUT_FUNCTION = 'Dropout Function'
 SOFTMAX_FUNCTION = 'SoftMax Function'
-LINEAR_MATRIX_FUNCTION = "LinearMatrix Function"
+LINEAR_MATRIX_FUNCTION = "LinearTransform Function"
 TRANSFER_WITH_COSTS_FUNCTION = "TransferWithCosts Function"
 
 # SelectionFunctions:

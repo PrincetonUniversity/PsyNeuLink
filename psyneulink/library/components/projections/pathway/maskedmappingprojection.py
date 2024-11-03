@@ -158,7 +158,7 @@ class MaskedMappingProjection(MappingProjection):
                     :default value: `MULTIPLY`
                     :type: ``str``
         """
-        variable = np.array([[0]])    # function is always LinearMatrix that requires 1D input
+        variable = np.array([[0]])    # function is always LinearTransform that requires 1D input
         mask = None
         mask_operation = MULTIPLY
 

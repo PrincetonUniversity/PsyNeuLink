@@ -2063,7 +2063,7 @@ class Port_Base(Port):
                 if projection_variable is None:
                     projection_variable = projection.sender.parameters.value._get(context)
                     # KDM 8/14/19: this fallback seems to always happen on the first execution
-                    # of the Projection's function (LinearMatrix). Unsure if this is intended or not
+                    # of the Projection's function (LinearTransform). Unsure if this is intended or not
                     if projection_variable is None:
                         projection_variable = projection.function.defaults.value
                 projection.parameters.variable._set(projection_variable, context)

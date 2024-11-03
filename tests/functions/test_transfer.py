@@ -106,9 +106,9 @@ test_data = [
                  np.where(softmax_helper2 == np.max(softmax_helper2), 1, 0), id="SOFT_MAX MAX_INDICATOR PER_ITEM"),
 
     # Linear Matrix
-    pytest.param(pnl.LinearMatrix, test_var, {kw.MATRIX:test_matrix}, np.dot(test_var, test_matrix), id="LINEAR_MATRIX SQUARE"),
-    pytest.param(pnl.LinearMatrix, test_var, {kw.MATRIX:test_matrix_l}, np.dot(test_var, test_matrix_l), id="LINEAR_MATRIX WIDE"),
-    pytest.param(pnl.LinearMatrix, test_var, {kw.MATRIX:test_matrix_s}, np.dot(test_var, test_matrix_s), id="LINEAR_MATRIX TALL"),
+    pytest.param(pnl.LinearTransform, test_var, {kw.MATRIX:test_matrix}, np.dot(test_var, test_matrix), id="LINEAR_MATRIX SQUARE"),
+    pytest.param(pnl.LinearTransform, test_var, {kw.MATRIX:test_matrix_l}, np.dot(test_var, test_matrix_l), id="LINEAR_MATRIX WIDE"),
+    pytest.param(pnl.LinearTransform, test_var, {kw.MATRIX:test_matrix_s}, np.dot(test_var, test_matrix_s), id="LINEAR_MATRIX TALL"),
 
     # Dropout is just identity in non-learning mode
     pytest.param(pnl.Dropout, test_var, {}, test_var, id="DROPOUT"),
