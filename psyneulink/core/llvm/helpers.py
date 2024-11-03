@@ -590,26 +590,6 @@ class ConditionGenerator:
         node_ts_ptr = self.__get_node_ts_ptr(builder, cond_ptr, node)
         builder.store(global_ts, node_ts_ptr)
 
-    def generate_ran_this_pass(self, builder, cond_ptr, node):
-        global_trial = self.get_global_trial(builder, cond_ptr)
-        global_pass = self.get_global_pass(builder, cond_ptr)
-
-        node_ts = self.__get_node_ts(builder, cond_ptr, node)
-        node_trial = builder.extract_value(node_ts, self.TimeIndex.TRIAL.value)
-        node_pass = builder.extract_value(node_ts, self.TimeIndex.PASS.value)
-
-        pass_eq = builder.icmp_signed("==", node_pass, global_pass)
-        trial_eq = builder.icmp_signed("==", node_trial, global_trial)
-        return builder.and_(pass_eq, trial_eq)
-
-    def generate_ran_this_trial(self, builder, cond_ptr, node):
-        global_trial = self.get_global_trial(builder, cond_ptr)
-
-        node_ts = self.__get_node_ts(builder, cond_ptr, node)
-        node_trial = builder.extract_value(node_ts, self.TimeIndex.TRIAL.value)
-
-        return builder.icmp_signed("==", node_trial, global_trial)
-
     def _node_executions_for_scale(self, builder, node, node_states, time_scale:TimeScale):
         node_idx = self.composition._get_node_index(node)
         node_state = builder.gep(node_states, [self._zero, self.ctx.int32_ty(node_idx)])
@@ -645,13 +625,11 @@ class ConditionGenerator:
 
             run_cond = self.ctx.bool_ty(1)
             for node in dependencies:
-                if condition.time_scale == TimeScale.TRIAL:
-                    node_ran = self.generate_ran_this_trial(builder, cond_ptr, node)
-                elif condition.time_scale == TimeScale.PASS:
-                    node_ran = self.generate_ran_this_pass(builder, cond_ptr, node)
-                else:
-                    assert False, "Unsupported 'AllHaveRun' time scale: {}".format(condition.time_scale)
+                count = self._node_executions_for_scale(builder, node, nodes_states, condition.time_scale)
+
+                node_ran = builder.icmp_unsigned(">", count, count.type(0))
                 run_cond = builder.and_(run_cond, node_ran)
+
             return run_cond
 
         elif isinstance(condition, Any):

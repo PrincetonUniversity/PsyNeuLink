@@ -782,7 +782,15 @@ def _gen_composition_exec_context(ctx, composition, *, tags:frozenset, suffix=""
         params = builder.alloca(const_params.type, name="const_params_loc")
         builder.store(const_params, params)
 
+    for scale in TimeScale:
+        num_executions_ptr = helpers.get_state_ptr(builder, composition, state, "num_executions")
+        num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(scale.value)])
+        num_exec = builder.load(num_exec_time_ptr)
+        num_exec = builder.add(num_exec, num_exec.type(1))
+        builder.store(num_exec, num_exec_time_ptr)
+
     node_tags = tags.union({"node_assembly"})
+
     # Call input CIM
     input_cim_w = ctx.get_node_assembly(composition, composition.input_CIM)
     input_cim_f = ctx.import_llvm_function(input_cim_w, tags=node_tags)
