@@ -1123,7 +1123,8 @@ class PytorchProjectionWrapper():
 
     """
 
-    def __init__(self, projection,
+    def __init__(self,
+                 projection,
                  pnl_proj,
                  component_idx,
                  port_idx, device,
@@ -1131,7 +1132,7 @@ class PytorchProjectionWrapper():
                  receiver=None,
                  context=None):
         self._projection = projection # Projection being wrapped (may *not* be the one being learned; see note above)
-        self._pnl_proj = pnl_proj # Projection that directly projects to/from sender/receiver (see above)
+        self._pnl_proj = pnl_proj     # Projection that directly projects to/from sender/receiver (see above)
         self._idx = component_idx     # Index of Projection in Composition's list of projections
         self._port_idx = port_idx     # Index of sender's port (used by LLVM)
         self._value_idx = 0           # Index of value in sender's value (used in aggregate_afferents)

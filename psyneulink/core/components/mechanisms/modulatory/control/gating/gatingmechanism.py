@@ -28,7 +28,7 @@ Overview
 --------
 
 A GatingMechanism is a subclass of `ControlMechanism` that is restricted to using only `GatingSignals <GatingSignal>`,
-which modulate the `input <Mechanism_InputPorts>` or `output <Mechanism_InputPorts>` of a `Mechanism <Mechanism>`,
+which modulate the `input <Mechanism_InputPorts>` or `output <Mechanism_OutputPorts>` of a `Mechanism <Mechanism>`,
 but not the paramaters of its `function <Mechanism_Base.function>`.  Accordingly, its constructor has a **gate**
 argument in place of a **control** argument.  It also lacks several attributes related to control, including those
 related to costs and net_outcome.  In all other respects it is identical to its parent class, ControlMechanism.
@@ -58,7 +58,7 @@ COMMENT
 *Specifying gating*
 ~~~~~~~~~~~~~~~~~~~
 
-A GatingMechanism is used to modulate the value of an `InputPort` or `OutputPort`. An InputPort or OutputPort can
+A GatingMechanism is used to modulate the value of an `InputPort` or `InputPort`. An InputPort or OutputPort can
 be specified for gating by assigning it a `GatingProjection` or `GatingSignal` anywhere that the Projections to a Port
 or its `ModulatorySignals can be specified <State_Creation>`.  A `Mechanism <Mechanism>` can also be specified for
 gating, in which case the `primary InputPort <InputPort_Primary>` of the specified Mechanism is used.  Ports
