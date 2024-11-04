@@ -2201,7 +2201,9 @@ class EMComposition(AutodiffComposition):
             from each query_input_node[i] to each match_node[i].
         - Each element of the output represents the similarity between the query_input and one key in memory.
         """
-        operations = [L0 if len(key) == 1 else DOT_PRODUCT for key in memory_template[0]]
+        OPERATION = 0
+        NORMALIZE = 1
+        args = [(L0,False) if len(key) == 1 else (DOT_PRODUCT,normalize_memories) for key in memory_template[0]]
 
         if concatenate_queries:
             # Get fields of memory structure corresponding to the keys
@@ -2217,9 +2219,9 @@ class EMComposition(AutodiffComposition):
                                  PROJECTIONS: MappingProjection(sender=self.concatenate_queries_node,
                                                                 matrix=matrix,
                                                                 function=MatrixTransform(
-                                                                    operation=operations[0],
-                                                                    normalize=normalize_memories,
-                                                                    name=f'MEMORY'))},
+                                                                    operation=args[0][OPERATION],
+                                                                    normalize=args[0][NORMALIZE]),
+                                                                name=f'MEMORY')},
                     name='MATCH')]
 
         # One node for each key
@@ -2231,12 +2233,13 @@ class EMComposition(AutodiffComposition):
                         PROJECTIONS: MappingProjection(sender=self.query_input_nodes[i].output_port,
                                                        matrix = np.array(
                                                            memory_template[:,i].tolist()).transpose().astype(float),
-                                                       function=MatrixTransform(operation=operations[i],
-                                                                                normalize=normalize_memories),
+                                                       function=MatrixTransform(operation=args[i][OPERATION],
+                                                                                normalize=args[i][NORMALIZE]),
                                                        name=f'MEMORY for {self.key_names[i]} [KEY]')},
                     name=self.key_names[i] + MATCH_TO_KEYS_AFFIX)
                 for i in range(self.num_keys)
             ]
+
 
         return match_nodes
 

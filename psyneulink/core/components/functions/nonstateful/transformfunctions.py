@@ -2183,7 +2183,7 @@ class MatrixTransform(CombinationFunction):  # ---------------------------------
             normalization = 1
             if normalize:
                 normalization = np.sum(np.abs(vector - matrix))
-            result = (1 - np.abs(vector - matrix)) / normalization
+            result = np.sum(((1 - np.abs(vector - matrix)) / normalization),axis=0)
 
         return self.convert_output_type(result)
 
