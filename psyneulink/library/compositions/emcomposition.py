@@ -1622,8 +1622,7 @@ class EMComposition(AutodiffComposition):
         self._validate_memory_specs(memory_template, memory_capacity, memory_fill, field_weights, field_names, name)
         memory_template, memory_capacity = self._parse_memory_template(memory_template,
                                                                        memory_capacity,
-                                                                       memory_fill,
-                                                                       field_weights)
+                                                                       memory_fill)
         field_weights, field_names, concatenate_queries = self._parse_fields(field_weights,
                                                                              normalize_field_weights,
                                                                              field_names,
@@ -1811,7 +1810,7 @@ class EMComposition(AutodiffComposition):
                                      f"in the 'field_names' arg for {name} must match "
                                      f"the number of fields ({field_weights_len}).")
 
-    def _parse_memory_template(self, memory_template, memory_capacity, memory_fill, field_weights)->(np.ndarray,int):
+    def _parse_memory_template(self, memory_template, memory_capacity, memory_fill)->(np.ndarray,int):
         """Construct memory from memory_template and memory_fill
         Assign self.memory_template and self.entry_template attributes
         """
