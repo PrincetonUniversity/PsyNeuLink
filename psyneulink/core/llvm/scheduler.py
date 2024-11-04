@@ -1,4 +1,4 @@
-from enum import IntEnum
+from enum import Enum
 from llvmlite import ir
 
 from . import helpers
@@ -7,7 +7,7 @@ from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, A
     EveryNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll, Threshold
 
 class ConditionGenerator:
-    class TimeIndex(IntEnum):
+    class TimeIndex(Enum):
         TRIAL = 0,
         PASS  = 1,
         STEP  = 2,
@@ -18,18 +18,16 @@ class ConditionGenerator:
         self._zero = ctx.int32_ty(0) if ctx is not None else None
 
     def get_private_condition_struct_type(self, composition):
-        time_stamp_struct = ir.LiteralStructType([self.ctx.int32_ty,   # Trial
-                                                  self.ctx.int32_ty,   # Pass
-                                                  self.ctx.int32_ty])  # Step
-
-        assert len(time_stamp_struct) == len(self.TimeIndex)
-
+        time_stamp_struct = ir.LiteralStructType([self.ctx.int32_ty for _ in self.TimeIndex])
         nodes_time_stamps_array = ir.ArrayType(time_stamp_struct, len(composition.nodes))
 
         return ir.LiteralStructType((time_stamp_struct, nodes_time_stamps_array))
 
     def get_private_condition_initializer(self, composition):
-        return ((0, 0, 0), tuple((-1, -1, -1) for _ in composition.nodes))
+        init_global = tuple(0 for _ in self.TimeIndex)
+        init_node = tuple(-1 for _ in self.TimeIndex)
+
+        return (init_global, tuple(init_node for _ in composition.nodes))
 
     def get_condition_struct_type(self, node=None):
         node = self.composition if node is None else node
@@ -140,9 +138,9 @@ class ConditionGenerator:
     def generate_update_after_node_execution(self, builder, cond_ptr, node):
         # Update time stamp of the last execution
         global_ts_ptr = self.__get_global_ts_ptr(builder, cond_ptr)
-        global_ts = builder.load(global_ts_ptr)
-
         node_ts_ptr = self.__get_node_ts_ptr(builder, cond_ptr, node)
+
+        global_ts = builder.load(global_ts_ptr)
         builder.store(global_ts, node_ts_ptr)
 
     def _node_executions_for_scale(self, builder, node, node_states, time_scale:TimeScale):
