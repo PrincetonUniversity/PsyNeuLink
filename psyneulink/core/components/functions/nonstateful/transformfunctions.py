@@ -2182,8 +2182,8 @@ class MatrixTransform(CombinationFunction):  # ---------------------------------
         elif operation == L0:
             normalization = 1
             if normalize:
-                normalization = np.sum(vector - matrix)
-            result = np.sum(1 - (vector - matrix) / normalization, axis=1)
+                normalization = np.sum(np.abs(vector - matrix))
+            result = (1 - np.abs(vector - matrix)) / normalization
 
         return self.convert_output_type(result)
 

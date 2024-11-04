@@ -1041,9 +1041,9 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
-    (ADAPTIVE, ALL, ARG_MAX, ARG_MAX_INDICATOR, AUTO, CONTEXT, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE,
-     EM_COMPOSITION, FULL_CONNECTIVITY_MATRIX, GAIN, IDENTITY_MATRIX, MULTIPLICATIVE_PARAM, NAME,
-     PARAMS, PROB_INDICATOR, PRODUCT, PROJECTIONS, RANDOM, SIZE, VARIABLE, Loss)
+    (ADAPTIVE, ALL, ARG_MAX, ARG_MAX_INDICATOR, AUTO, CONTEXT, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, DOT_PRODUCT,
+     EM_COMPOSITION, FULL_CONNECTIVITY_MATRIX, GAIN, IDENTITY_MATRIX, L0,
+     MULTIPLICATIVE_PARAM, NAME, PARAMS, PROB_INDICATOR, PRODUCT, PROJECTIONS, RANDOM, SIZE, VARIABLE)
 from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric_scalar
 from psyneulink.core.globals.registry import name_without_suffix
 from psyneulink.core.llvm import ExecutionMode
@@ -2201,6 +2201,7 @@ class EMComposition(AutodiffComposition):
             from each query_input_node[i] to each match_node[i].
         - Each element of the output represents the similarity between the query_input and one key in memory.
         """
+        operations = [L0 if len(key) == 1 else DOT_PRODUCT for key in memory_template[0]]
 
         if concatenate_queries:
             # Get fields of memory structure corresponding to the keys
@@ -2216,8 +2217,9 @@ class EMComposition(AutodiffComposition):
                                  PROJECTIONS: MappingProjection(sender=self.concatenate_queries_node,
                                                                 matrix=matrix,
                                                                 function=MatrixTransform(
-                                                                    normalize=normalize_memories),
-                                                                name=f'MEMORY')},
+                                                                    operation=operations[0],
+                                                                    normalize=normalize_memories,
+                                                                    name=f'MEMORY'))},
                     name='MATCH')]
 
         # One node for each key
@@ -2229,7 +2231,8 @@ class EMComposition(AutodiffComposition):
                         PROJECTIONS: MappingProjection(sender=self.query_input_nodes[i].output_port,
                                                        matrix = np.array(
                                                            memory_template[:,i].tolist()).transpose().astype(float),
-                                                       function=MatrixTransform(normalize=normalize_memories),
+                                                       function=MatrixTransform(operation=operations[i],
+                                                                                normalize=normalize_memories),
                                                        name=f'MEMORY for {self.key_names[i]} [KEY]')},
                     name=self.key_names[i] + MATCH_TO_KEYS_AFFIX)
                 for i in range(self.num_keys)
