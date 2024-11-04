@@ -23,7 +23,7 @@ import weakref
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import Context
 
-from . import builder_context, helpers, jit_engine, scheduler
+from . import builder_context, jit_engine, scheduler
 from .debug import debug_env
 
 __all__ = ['CompExecution', 'FuncExecution', 'MechExecution']
