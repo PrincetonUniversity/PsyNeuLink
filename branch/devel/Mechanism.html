@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanism &mdash; PsyNeuLink 0.15.1.0+495.gaddc1bed1 documentation</title>
+  <title>Mechanism &mdash; PsyNeuLink 0.15.1.0+498.g8554c16ec documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+495
+                  0.15.1.0+498
                 </div>
               
             
@@ -482,7 +482,7 @@ convenient way of accessing the value of its individual items.  Because there is
 a Mechanism’s InputPorts and the items of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>, their size along their outermost
 dimension (axis 0) must be equal; that is, the number of items in the Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>
 attribute must equal the number of InputPorts in its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a> attribute. A
-Mechanism’s constructor does its best to insure this:  if its <strong>default_variable</strong> and/or its <strong>size</strong> argument is
+Mechanism’s constructor does its best to insure this:  if its <strong>default_variable</strong> and/or its <strong>input_shapes</strong> argument is
 specified, it constructs a number of InputPorts (and each with a <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>) corresponding to the
 items specified for the Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>, as in the examples below:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_mech_A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">default_variable</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]])</span>
@@ -507,7 +507,7 @@ the Mechanism’s variable:</p>
 <span class="o">&gt;</span> <span class="p">[</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span> <span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">])]</span>
 </pre></div>
 </div>
-<p>If both the <strong>default_variable</strong> (or <strong>size</strong>) and <strong>input_ports</strong> arguments are specified, then the number and format
+<p>If both the <strong>default_variable</strong> (or <strong>input_shapes</strong>) and <strong>input_ports</strong> arguments are specified, then the number and format
 of their respective items must be the same (see <a class="reference internal" href="Port.html#port-examples"><span class="std std-ref">Port</span></a> for additional examples of specifying Ports).</p>
 <p>If InputPorts are added using the Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_ports"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_ports</span></code></a> method, then its
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is extended to accommodate the number of InputPorts added (note that this must
@@ -533,9 +533,9 @@ must match the number of items in <strong>default_variable</strong>, or an error
 <strong>input_ports</strong> argument or <em>INPUT_PORTS</em> entry (see below).</p></li>
 </ul>
 <ul>
-<li><p><strong>size</strong> (int, list or ndarray) – specifies the number and length of items in the Mechanism’s variable,
+<li><p><strong>input_shapes</strong> (int, list or ndarray) – specifies the number and length of items in the Mechanism’s variable,
 if <strong>default_variable</strong> is not specified. For example, the following mechanisms are equivalent:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">T1</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">T1</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">input_shapes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
 <span class="n">T2</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">default_variable</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
 </pre></div>
 </div>
@@ -547,7 +547,7 @@ with the latter taking precedence (see above).</p>
 <ul class="simple">
 <li><p><strong>input_ports</strong> (list) – this can be used to explicitly <a class="reference internal" href="InputPort.html#inputport-specification"><span class="std std-ref">specify the InputPorts</span></a>
 created for the Mechanism. Each item must be an <a class="reference internal" href="InputPort.html#inputport-specification"><span class="std std-ref">InputPort specification</span></a>, and the number
-of items must match the number of items in the <strong>default_variable</strong> argument or <strong>size</strong> argument
+of items must match the number of items in the <strong>default_variable</strong> argument or <strong>input_shapes</strong> argument
 if either of those is specified.  If the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> and/or <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>
 is <a class="reference internal" href="InputPort.html#inputport-variable-and-value"><span class="std std-ref">explicitly specified for an InputPort</span></a> in the <strong>input_ports</strong> argument or
 <em>INPUT_PORTS</em> entry of a <strong>params</strong> dictionary, it must be compatible with the value of the corresponding
@@ -1009,7 +1009,7 @@ supersedes any specification of <a class="reference internal" href="Port.html#ps
 <span id="mechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.mechanisms.mechanism.</span></span><span class="sig-name descname"><span class="pre">Mechanism_Base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">default_variable=None</span></em>, <em class="sig-param"><span class="pre">size=None</span></em>, <em class="sig-param"><span class="pre">input_ports</span></em>, <em class="sig-param"><span class="pre">function</span></em>, <em class="sig-param"><span class="pre">output_ports</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.mechanisms.mechanism.</span></span><span class="sig-name descname"><span class="pre">Mechanism_Base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">default_variable=None</span></em>, <em class="sig-param"><span class="pre">input_shapes=None</span></em>, <em class="sig-param"><span class="pre">input_ports</span></em>, <em class="sig-param"><span class="pre">function</span></em>, <em class="sig-param"><span class="pre">output_ports</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for Mechanism.</p>
 <p>The arguments below can be used in the constructor for any subclass of Mechanism.
 See <a class="reference internal" href="Component.html#component-class-reference"><span class="std std-ref">Component</span></a> and subclasses for additional arguments and attributes.</p>
@@ -1025,18 +1025,21 @@ for specifying a Mechanism in context (see <a class="reference internal" href="#
 <li><p><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray : default None</em>) – specifies the input to the Mechanism to use if none is provided in a call to its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method; also serves as a template to specify the shape of the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> for its <a class="reference internal" href="#mechanism-inputports"><span class="std std-ref">InputPorts</span></a> and the <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>
 of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> if those are not specified.  If it is not specified, then a
 subclass-specific default is assigned (usually [[0]]).</p></li>
-<li><p><strong>size</strong> (<em>int</em><em>, </em><em>list</em><em> or </em><em>np.ndarray of ints : default None</em>) – <p>specifies default_variable as array(s) of zeros if <strong>default_variable</strong> is not passed as an argument;
-if <strong>default_variable</strong> is specified, it takes precedence over the specification of <strong>size</strong>.
+<li><p><strong>input_shapes</strong> (<em>int</em><em>, or </em><em>Iterable of tuples</em><em> or </em><em>ints : default None</em>) – <p>specifies default_variable as array(s) of zeros if <strong>default_variable</strong> is not passed as an argument;
+if <strong>default_variable</strong> is specified, it must be equivalent to
+<strong>input_shapes</strong>.
 For example, the following Mechanisms are equivalent:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">input_shapes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
 <span class="n">my_mech</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">default_variable</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
 </pre></div>
 </div>
+<p>When specified as an iterable, each element of <strong>input_shapes</strong> is used
+as the size of the corresponding InputPort.</p>
 </p></li>
 <li><p><strong>input_ports</strong> (<em>str</em><em>, </em><em>list</em><em>, </em><em>dict</em><em>, or </em><em>np.ndarray : default None</em>) – specifies the InputPorts for the Mechanism; if it is not specified, a single InputPort is created
 using the value of default_variable as its <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>;  if more than one is specified,
 the number and, if specified, their values must be compatible with any specifications made for
-<strong>default_variable</strong> or <strong>size</strong> (see <a class="reference internal" href="#mechanism-inputports"><span class="std std-ref">InputPorts</span></a> for additional details).</p></li>
+<strong>default_variable</strong> or <strong>input_shapes</strong> (see <a class="reference internal" href="#mechanism-inputports"><span class="std std-ref">InputPorts</span></a> for additional details).</p></li>
 <li><p><strong>input_labels</strong> (<em>dict</em>) – specifies labels (strings) that can be used to specify numeric values as input to the Mechanism;
 entries must be either label:value pairs, or sub-dictionaries containing label:value pairs,
 in which each label (key) specifies a string associated with a value for the corresponding InputPort(s)
@@ -1532,8 +1535,8 @@ for input ports is expected</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._handle_default_variable">
-<span class="sig-name descname"><span class="pre">_handle_default_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._handle_default_variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds whether default_variable can be determined using <strong>default_variable</strong> and <strong>size</strong>
+<span class="sig-name descname"><span class="pre">_handle_default_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._handle_default_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds whether default_variable can be determined using <strong>default_variable</strong> and <strong>input_shapes</strong>
 arguments.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>

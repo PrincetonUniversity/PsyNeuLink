@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Locus Coeruleus and Attentional Blink (Nieuwenhuis, et al, 2005) &mdash; PsyNeuLink 0.15.1.0+495.gaddc1bed1 documentation</title>
+  <title>Locus Coeruleus and Attentional Blink (Nieuwenhuis, et al, 2005) &mdash; PsyNeuLink 0.15.1.0+498.g8554c16ec documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+495
+                  0.15.1.0+498
                 </div>
               
             
@@ -247,15 +247,15 @@ associated <a class="reference internal" href="ObjectiveMechanism.html"><span cl
 <img alt="Nieuwenhuis System Graph" src="_images/Nieuwenhuis2005_System_Graph.svg" /></figure>
 <section id="behavioral-network-subsystem">
 <h3>Behavioral Network Subsystem<a class="headerlink" href="#behavioral-network-subsystem" title="Permalink to this headline">¶</a></h3>
-<p><strong>INPUT LAYER</strong>:  a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> with <strong>size</strong>=3 (one element for the input to the T1, T2 and distractor units
+<p><strong>INPUT LAYER</strong>:  a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> with <strong>input_shapes</strong>=3 (one element for the input to the T1, T2 and distractor units
 of the <em>DECISION LAYER</em>, respectively), and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> function with <strong>slope</strong>=1.0 and <strong>intercept</strong>=0.0.</p>
-<p><strong>DECISION LAYER</strong>: an <a class="reference internal" href="LCAMechanism.html"><span class="doc">LCAMechanism</span></a> Mechanism of <strong>size</strong>=3 (one element each for the T1, T2 and distractor units),
+<p><strong>DECISION LAYER</strong>: an <a class="reference internal" href="LCAMechanism.html"><span class="doc">LCAMechanism</span></a> Mechanism of <strong>input_shapes</strong>=3 (one element each for the T1, T2 and distractor units),
 and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> Function with a slope=1.0 and intercept=0.0.  Each element has a self-excitatory connection
 with a weight specified by <strong>self_excitation</strong>=2.5, a <strong>leak</strong>=-1.0, and every element is connected to every other
 element by mutually inhibitory connections with a weight specified by <strong>competition</strong> =1.0.  An ordinary differential
 equation describes the change in state over time, implemented in the LCAMechanism mechanism by setting
 <strong>integrator_mode</strong> = <code class="xref any docutils literal notranslate"><span class="pre">True</span></code> and <strong>time_step_size</strong>=0.02.</p>
-<p><strong>RESPONSE LAYER</strong>: an <a class="reference internal" href="LCAMechanism.html"><span class="doc">LCAMechanism</span></a> Mechanism of <strong>size</strong>=2, with one element each for the response to T1 and T2,
+<p><strong>RESPONSE LAYER</strong>: an <a class="reference internal" href="LCAMechanism.html"><span class="doc">LCAMechanism</span></a> Mechanism of <strong>input_shapes</strong>=2, with one element each for the response to T1 and T2,
 respectively, <strong>self_excitation</strong>=2.0, <strong>leak</strong>=-1.0, and no mutually inhibitory weights (<strong>competition</strong>=0).</p>
 <p><strong>PROJECTIONS</strong>:  The weights of the behavioral network are implemented as <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>.
 The <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter for the one from the <em>INPUT_LAYER</em> to the <em>DECISION_LAYER</em> uses a

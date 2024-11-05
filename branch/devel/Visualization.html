@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Visualization &mdash; PsyNeuLink 0.15.1.0+495.gaddc1bed1 documentation</title>
+  <title>Visualization &mdash; PsyNeuLink 0.15.1.0+498.g8554c16ec documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+495
+                  0.15.1.0+498
                 </div>
               
             
@@ -314,49 +314,6 @@ to execute.</p>
 </section>
 <section id="examples">
 <span id="showgraph-examples-visualization"></span><h2><em>Examples</em><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
-<table class="docutils align-default" id="composition-show-graph-basic-figure">
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">psyneulink</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span>
-<span class="go">              name=&#39;A&#39;,</span>
-<span class="go">...           size=3,</span>
-<span class="go">...           output_ports=[RESULT, MEAN]</span>
-<span class="go">...           )</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span>
-<span class="gp">... </span>          <span class="n">name</span><span class="o">=</span><span class="s1">&#39;B&#39;</span><span class="p">,</span>
-<span class="gp">... </span>          <span class="n">size</span><span class="o">=</span><span class="mi">5</span>
-<span class="gp">... </span>          <span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span>
-<span class="gp">... </span>          <span class="n">name</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">,</span>
-<span class="gp">... </span>          <span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-<span class="gp">... </span>          <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">(</span><span class="n">gain</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">CONTROL</span><span class="p">)</span>
-<span class="gp">... </span>          <span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">(</span>
-<span class="gp">... </span>          <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Comp&#39;</span><span class="p">,</span>
-<span class="gp">... </span>          <span class="n">enable_controller</span><span class="o">=</span><span class="kc">True</span>
-<span class="gp">... </span>          <span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">a</span><span class="p">,</span><span class="n">c</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">b</span><span class="p">,</span><span class="n">c</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ctlr</span> <span class="o">=</span> <span class="n">OptimizationControlMechanism</span><span class="p">(</span>
-<span class="gp">... </span>           <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Controller&#39;</span><span class="p">,</span>
-<span class="gp">... </span>           <span class="n">monitor_for_control</span><span class="o">=</span><span class="p">[(</span><span class="n">pnl</span><span class="o">.</span><span class="n">MEAN</span><span class="p">,</span> <span class="n">a</span><span class="p">)],</span>
-<span class="gp">... </span>           <span class="n">control_signals</span><span class="o">=</span><span class="p">(</span><span class="n">GAIN</span><span class="p">,</span> <span class="n">c</span><span class="p">),</span>
-<span class="gp">... </span>           <span class="n">agent_rep</span><span class="o">=</span><span class="n">comp</span>
-<span class="gp">... </span>           <span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">add_controller</span><span class="p">(</span><span class="n">ctlr</span><span class="p">)</span>
-</pre></div>
-</div>
-</td>
-<td><figure class="align-default">
-<img alt="_images/Composition_show_graph_basic_fig.svg" src="_images/Composition_show_graph_basic_fig.svg" /></figure>
-</td>
-</tr>
-</tbody>
-</table>
 <p>Note that the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a> is not shown by default.  However this
 can be shown, along with other information, using options in the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a>
 method.  The figure below shows several examples.</p>

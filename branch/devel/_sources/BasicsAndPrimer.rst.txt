@@ -95,9 +95,9 @@ encoder network, the first layer of which takes an an array of length 5 as its i
 `Logistic` function::
 
     # Construct the Mechanisms:
-    input_layer = ProcessingMechanism(size=5, name='Input')
-    hidden_layer = ProcessingMechanism(size=2, function=Logistic, name='hidden')
-    output_layer = ProcessingMechanism(size=5, function=Logistic, name='output')
+    input_layer = ProcessingMechanism(input_shapes=5, name='Input')
+    hidden_layer = ProcessingMechanism(input_shapes=2, function=Logistic, name='hidden')
+    output_layer = ProcessingMechanism(input_shapes=5, function=Logistic, name='output')
 
     # Construct the Composition:
     my_encoder = Composition(pathways=[[input_layer, hidden_layer, output_layer]])
@@ -189,22 +189,22 @@ of those to perform based on a task instruction. These all converge on a common 
 drift diffusion (DDM) decision mechanism responsible for determining the response::
 
     # Construct the color naming pathway:
-    color_input = ProcessingMechanism(name='COLOR INPUT', size=2) # note: default function is Linear
+    color_input = ProcessingMechanism(name='COLOR INPUT', input_shapes=2) # note: default function is Linear
     color_input_to_hidden_wts = np.array([[2, -2], [-2, 2]])
-    color_hidden = ProcessingMechanism(name='COLOR HIDDEN', size=2, function=Logistic(bias=-4))
+    color_hidden = ProcessingMechanism(name='COLOR HIDDEN', input_shapes=2, function=Logistic(bias=-4))
     color_hidden_to_output_wts = np.array([[2, -2], [-2, 2]])
-    output = ProcessingMechanism(name='OUTPUT', size=2 , function=Logistic)
+    output = ProcessingMechanism(name='OUTPUT', input_shapes=2 , function=Logistic)
     color_pathway = [color_input, color_input_to_hidden_wts, color_hidden, color_hidden_to_output_wts, output]
 
     # Construct the word reading pathway (using the same output_layer)
-    word_input = ProcessingMechanism(name='WORD INPUT', size=2)
+    word_input = ProcessingMechanism(name='WORD INPUT', input_shapes=2)
     word_input_to_hidden_wts = np.array([[3, -3], [-3, 3]])
-    word_hidden = ProcessingMechanism(name='WORD HIDDEN', size=2, function=Logistic(bias=-4))
+    word_hidden = ProcessingMechanism(name='WORD HIDDEN', input_shapes=2, function=Logistic(bias=-4))
     word_hidden_to_output_wts = np.array([[3, -3], [-3, 3]])
     word_pathway = [word_input, word_input_to_hidden_wts, word_hidden, word_hidden_to_output_wts, output]
 
     # Construct the task specification pathways
-    task_input = ProcessingMechanism(name='TASK INPUT', size=2)
+    task_input = ProcessingMechanism(name='TASK INPUT', input_shapes=2)
     task_color_wts = np.array([[4,4],[0,0]])
     task_word_wts = np.array([[0,0],[4,4]])
     task_color_pathway = [task_input, task_color_wts, color_hidden]
@@ -325,7 +325,7 @@ that uses a `leaky competing accumulator <https://www.ncbi.nlm.nih.gov/pubmed/11
 execute, simulating a situation in which the task instruction is processed before processing the color or word stimuli::
 
     # Modify consruction of task Mechanism:
-    task = LCAMechanism(name='TASK', size=2)
+    task = LCAMechanism(name='TASK', input_shapes=2)
 
     # Assign conditions to scheduler:
     Stroop_model.scheduler.add_condition(color_hidden, EveryNExecutions(task, 10))
@@ -374,7 +374,7 @@ conflict in the ``output`` Mechanism on each `trial <TimeScale.TRIAL>`, and use 
     control = ControlMechanism(name='CONTROL',
                                objective_mechanism=ObjectiveMechanism(name='Conflict Monitor',
                                                                       monitor=output,
-                                                                      function=Energy(size=2,
+                                                                      function=Energy(input_shapes=2,
                                                                                       matrix=[[0,-2.5],[-2.5,0]])),
                                default_allocation=[0.5],
                                control_signals=[(GAIN, task)])
@@ -937,14 +937,14 @@ For example, the following implements a network for learning semantic representa
     #   Representation_Input
 
     # Construct Mechanisms
-    rep_in = pnl.ProcessingMechanism(size=10, name='REP_IN')
-    rel_in = pnl.ProcessingMechanism(size=11, name='REL_IN')
-    rep_hidden = pnl.ProcessingMechanism(size=4, function=Logistic, name='REP_HIDDEN')
-    rel_hidden = pnl.ProcessingMechanism(size=5, function=Logistic, name='REL_HIDDEN')
-    rep_out = pnl.ProcessingMechanism(size=10, function=Logistic, name='REP_OUT')
-    prop_out = pnl.ProcessingMechanism(size=12, function=Logistic, name='PROP_OUT')
-    qual_out = pnl.ProcessingMechanism(size=13, function=Logistic, name='QUAL_OUT')
-    act_out = pnl.ProcessingMechanism(size=14, function=Logistic, name='ACT_OUT')
+    rep_in = pnl.ProcessingMechanism(input_shapes=10, name='REP_IN')
+    rel_in = pnl.ProcessingMechanism(input_shapes=11, name='REL_IN')
+    rep_hidden = pnl.ProcessingMechanism(input_shapes=4, function=Logistic, name='REP_HIDDEN')
+    rel_hidden = pnl.ProcessingMechanism(input_shapes=5, function=Logistic, name='REL_HIDDEN')
+    rep_out = pnl.ProcessingMechanism(input_shapes=10, function=Logistic, name='REP_OUT')
+    prop_out = pnl.ProcessingMechanism(input_shapes=12, function=Logistic, name='PROP_OUT')
+    qual_out = pnl.ProcessingMechanism(input_shapes=13, function=Logistic, name='QUAL_OUT')
+    act_out = pnl.ProcessingMechanism(input_shapes=14, function=Logistic, name='ACT_OUT')
 
     # Construct Composition
     comp = Composition(name='Rumelhart Semantic Network')

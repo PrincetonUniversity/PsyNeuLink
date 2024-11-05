@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameters &mdash; PsyNeuLink 0.15.1.0+495.gaddc1bed1 documentation</title>
+  <title>Parameters &mdash; PsyNeuLink 0.15.1.0+498.g8554c16ec documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+495
+                  0.15.1.0+498
                 </div>
               
             
@@ -337,7 +337,7 @@ which updates its <code class="xref any docutils literal notranslate"><span clas
 <blockquote>
 <div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">_recurrent_transfer_mechanism_matrix_setter</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">owning_component</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="n">get_matrix</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">owning_component</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">owning_component</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">get_matrix</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">owning_component</span><span class="o">.</span><span class="n">input_shapes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">owning_component</span><span class="o">.</span><span class="n">input_shapes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
         <span class="k">pass</span>
 

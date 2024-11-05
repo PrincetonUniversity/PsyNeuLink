@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Conflict Monitoring and Cognitive Control (Botvinick et al., 2001) &mdash; PsyNeuLink 0.15.1.0+495.gaddc1bed1 documentation</title>
+  <title>Conflict Monitoring and Cognitive Control (Botvinick et al., 2001) &mdash; PsyNeuLink 0.15.1.0+498.g8554c16ec documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+495
+                  0.15.1.0+498
                 </div>
               
             
@@ -227,24 +227,24 @@ bidirectional way. The response layer receives inputs from both hidden layers. A
 <img alt="Botvinick System Graph" src="_images/conflict_monitoring.svg" /></figure>
 <section id="network-system">
 <h3>Network System<a class="headerlink" href="#network-system" title="Permalink to this headline">¶</a></h3>
-<p><strong>COLOR INPUT LAYER</strong>:  a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> with <strong>size</strong> = 3 (one unit for the input of one color, respectively
+<p><strong>COLOR INPUT LAYER</strong>:  a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> with <strong>input_shapes</strong> = 3 (one unit for the input of one color, respectively
 here blue &amp; green), and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> function with <strong>slope</strong> = 1.0 and <strong>intercept</strong> = 0.0.</p>
-<p><strong>WORD INPUT LAYER</strong>:  a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> with <strong>size</strong> = 3 (one unit for the input of one word, respectively,
+<p><strong>WORD INPUT LAYER</strong>:  a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> with <strong>input_shapes</strong> = 3 (one unit for the input of one word, respectively,
 here blue &amp; green), and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> function with <strong>slope</strong> = 1.0 and <strong>intercept</strong> = 0.0.</p>
-<p><strong>TASK INPUT LAYER</strong>:  a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> with <strong>size</strong> = 2 (one unit specified with a task
+<p><strong>TASK INPUT LAYER</strong>:  a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> with <strong>input_shapes</strong> = 2 (one unit specified with a task
 value of one, the other element set to zero), and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> function with <strong>slope</strong> = 1.0 and <strong>intercept</strong> = 0.0.</p>
-<p><strong>COLOR HIDDEN LAYER</strong>: a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> with <strong>size</strong> = 3 (one element for each of the two colors, one
+<p><strong>COLOR HIDDEN LAYER</strong>: a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> with <strong>input_shapes</strong> = 3 (one element for each of the two colors, one
 element for the neutral color and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> function with <strong>gain</strong> = 4.0 and <strong>bias</strong> = 1.0.
 The <strong>integrator_mode</strong> = <code class="xref any docutils literal notranslate"><span class="pre">True</span></code> and <strong>smoothing_factor</strong> = 0.01. Both units receive mutually inhibitory weights
 (<strong>hetero</strong> = -2).</p>
-<p><strong>WORD HIDDEN LAYER</strong>: a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> with <strong>size</strong> = 3 (one element for each of the two colors, one
+<p><strong>WORD HIDDEN LAYER</strong>: a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> with <strong>input_shapes</strong> = 3 (one element for each of the two colors, one
 element for the neutral color and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> function with <strong>gain</strong> = 4.0 and <strong>bias</strong> = 1.0.
 The <strong>integrator_mode</strong> = <code class="xref any docutils literal notranslate"><span class="pre">True</span></code> and <strong>smoothing_factor</strong> = 0.01. Both units receive mutually inhibitory weights
 (<strong>hetero</strong> = -2).</p>
-<p><strong>TASK DEMAND LAYER</strong>: a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> with <strong>size</strong> = 2 (one element for each of the two tasks, and
+<p><strong>TASK DEMAND LAYER</strong>: a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> with <strong>input_shapes</strong> = 2 (one element for each of the two tasks, and
 assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> function with <strong>gain</strong> = 1.0 and <strong>bias</strong> = 0.0. The <strong>integrator_mode</strong> = <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>
 and <strong>smoothing_factor</strong> = 0.01. Both units receive mutually inhibitory weights (<strong>hetero</strong> = -2).</p>
-<p><strong>RESPONSE LAYER</strong>: a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> with <strong>size</strong> = 2 (one element for each of the two responses, and
+<p><strong>RESPONSE LAYER</strong>: a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> with <strong>input_shapes</strong> = 2 (one element for each of the two responses, and
 assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> function with <strong>gain</strong> = 1.0 and <strong>bias</strong> = 0.0. The <strong>integrator_mode</strong> = <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>
 and <strong>smoothing_factor</strong> = 0.01. Both units receive mutually inhibitory weights (<strong>hetero</strong> = -2).</p>
 <p><strong>PROJECTIONS</strong>:  The weights of the  network are implemented as <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>.
