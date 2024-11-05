@@ -134,16 +134,16 @@ any of the options described above to customize the display, as well as several 
 | >>> from psyneulink import *                              | .. figure:: _static/Composition_show_graph_basic_fig.svg |
 | >>> a = ProcessingMechanism(                              |                                                          |
 |               name='A',                                   |                                                          |
-| ...           size=3,                                     |                                                          |
+| ...           input_shapes=3,                                     |                                                          |
 | ...           output_ports=[RESULT, MEAN]                 |                                                          |
 | ...           )                                           |                                                          |
 | >>> b = ProcessingMechanism(                              |                                                          |
 | ...           name='B',                                   |                                                          |
-| ...           size=5                                      |                                                          |
+| ...           input_shapes=5                                      |                                                          |
 | ...           )                                           |                                                          |
 | >>> c = ProcessingMechanism(                              |                                                          |
 | ...           name='C',                                   |                                                          |
-| ...           size=2,                                     |                                                          |
+| ...           input_shapes=2,                                     |                                                          |
 | ...           function=Logistic(gain=pnl.CONTROL)         |                                                          |
 | ...           )                                           |                                                          |
 | >>> comp = Composition(                                   |                                                          |

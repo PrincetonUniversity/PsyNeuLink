@@ -18,11 +18,11 @@ prey_value_idx = 8
 
 player_len = prey_len = predator_len = obs_len
 
-player = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PLAYER OBS")
-prey = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PREY OBS")
+player = ProcessingMechanism(input_shapes=prey_len, function=GaussianDistort, name="PLAYER OBS")
+prey = ProcessingMechanism(input_shapes=prey_len, function=GaussianDistort, name="PREY OBS")
 
 # For future use:
-values = TransferMechanism(size=3, name="AGENT VALUES")
+values = TransferMechanism(input_shapes=3, name="AGENT VALUES")
 reward = TransferMechanism(name="REWARD")
 
 # Use ComparatorMechanism to compute direction of action as difference of coordinates between player and prey:

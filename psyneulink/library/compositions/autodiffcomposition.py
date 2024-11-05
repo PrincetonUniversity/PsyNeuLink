@@ -279,8 +279,8 @@ and run it with learning enabled and disabled:
 
     >>> import psyneulink as pnl
     >>> # Set up PsyNeuLink Components
-    >>> my_mech_1 = pnl.TransferMechanism(function=pnl.Linear, size = 3)
-    >>> my_mech_2 = pnl.TransferMechanism(function=pnl.Linear, size = 2)
+    >>> my_mech_1 = pnl.TransferMechanism(function=pnl.Linear, input_shapes = 3)
+    >>> my_mech_2 = pnl.TransferMechanism(function=pnl.Linear, input_shapes = 2)
     >>> my_projection = pnl.MappingProjection(matrix=np.random.randn(3,2),
     ...                     sender=my_mech_1,
     ...                     receiver=my_mech_2)

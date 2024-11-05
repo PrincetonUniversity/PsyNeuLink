@@ -46,8 +46,8 @@ class TestMechanism:
         [pnl.GaussianDistort, pnl.NormalDist]
     )
     def test_noise_assignment_equivalence(self, noise):
-        t1 = pnl.TransferMechanism(name='t1', size=2, noise=noise())
-        t2 = pnl.TransferMechanism(name='t2', size=2)
+        t1 = pnl.TransferMechanism(name='t1', input_shapes=2, noise=noise())
+        t2 = pnl.TransferMechanism(name='t2', input_shapes=2)
         t2.integrator_function.parameters.noise.set(noise())
 
         t1.integrator_function.noise.seed.base = 0
@@ -79,7 +79,7 @@ class TestMechanism:
         except TypeError:
             size = 1
 
-        t = pnl.TransferMechanism(size=size, noise=noise)
+        t = pnl.TransferMechanism(input_shapes=size, noise=noise)
 
         assert all(p in t.parameter_ports for p in included_parameter_ports)
         assert all(p not in t.parameter_ports for p in excluded_parameter_ports)
@@ -100,7 +100,7 @@ class TestMechanism:
         except TypeError:
             size = 1
 
-        t = pnl.TransferMechanism(size=size, noise=noise)
+        t = pnl.TransferMechanism(input_shapes=size, noise=noise)
 
         with pytest.warns(
             UserWarning,
@@ -122,7 +122,7 @@ class TestMechanism:
         except TypeError:
             size = 1
 
-        t = pnl.TransferMechanism(size=size, noise=noise)
+        t = pnl.TransferMechanism(input_shapes=size, noise=noise)
 
         with pytest.warns(
             UserWarning,

@@ -9,10 +9,10 @@ import psyneulink.core.components.functions.nonstateful.transferfunctions
 class TestInputPorts:
 
     def test_combine_param_alone(self):
-        t1 = pnl.TransferMechanism(size=2)
-        t2 = pnl.TransferMechanism(size=2)
+        t1 = pnl.TransferMechanism(input_shapes=2)
+        t2 = pnl.TransferMechanism(input_shapes=2)
         t3 = pnl.TransferMechanism(
-                size=2,
+                input_shapes=2,
                 input_ports=pnl.InputPort(
                         combine=pnl.PRODUCT))
         c = pnl.Composition(pathways=[[t1, t3], [t2, t3]])
@@ -21,10 +21,10 @@ class TestInputPorts:
         np.testing.assert_allclose(val, [[3, 8]])
 
     def test_combine_param_redundant_fct_class_spec(self):
-        t1 = pnl.TransferMechanism(size=2)
-        t2 = pnl.TransferMechanism(size=2)
+        t1 = pnl.TransferMechanism(input_shapes=2)
+        t2 = pnl.TransferMechanism(input_shapes=2)
         t3 = pnl.TransferMechanism(
-                size=2,
+                input_shapes=2,
                 input_ports=pnl.InputPort(function=psyneulink.core.components.functions.nonstateful.combinationfunctions
                                            .LinearCombination,
                                            combine=pnl.PRODUCT))
@@ -34,10 +34,10 @@ class TestInputPorts:
         np.testing.assert_allclose(val, [[3, 8]])
 
     def test_combine_param_redundant_fct_constructor_spec(self):
-        t1 = pnl.TransferMechanism(size=2)
-        t2 = pnl.TransferMechanism(size=2)
+        t1 = pnl.TransferMechanism(input_shapes=2)
+        t2 = pnl.TransferMechanism(input_shapes=2)
         t3 = pnl.TransferMechanism(
-                size=2,
+                input_shapes=2,
                 input_ports=pnl.InputPort(function=psyneulink.core.components.functions.nonstateful.combinationfunctions.LinearCombination(operation=pnl.PRODUCT),
                                           combine=pnl.PRODUCT))
         c = pnl.Composition(pathways=[[t1, t3],[t2, t3]])

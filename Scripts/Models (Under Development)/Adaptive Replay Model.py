@@ -14,35 +14,35 @@ rpe_size = 1
 #                          PERCEPTUAL AND ACTION MECHANISMS
 # *********************************************************************************************
 stim_in = ProcessingMechanism(name='Stimulus',
-                              size=stim_size)
+                              input_shapes=stim_size)
 
 context_in = ProcessingMechanism(name='Context',
-                                 size=context_size)
+                                 input_shapes=context_size)
 
 reward_in = ProcessingMechanism(name='Reward',
-                                size=1)
+                                input_shapes=1)
 
 perceptual_state = ProcessingMechanism(name='Current Port',
                             function=Concatenate,
                             input_ports=[{NAME:'STIM',
-                                           SIZE:stim_size,
-                                           PROJECTIONS:stim_in},
+                                          INPUT_SHAPES:stim_size,
+                                          PROJECTIONS:stim_in},
                                           {NAME:'CONTEXT',
-                                           SIZE:context_size,
+                                           INPUT_SHAPES:context_size,
                                            PROJECTIONS:context_in}])
 
 # action = ProcessingMechanism(name='Action',
-#                              size=num_actions,
+#                              input_shapes=num_actions,
 #                              input_ports={NAME: 'Q values',
 #                                            PROJECTIONS:perceptual_state})
 action = ProcessingMechanism(name='Action',
-                             size=num_actions)
+                             input_shapes=num_actions)
 
 # *********************************************************************************************
 #                             RL AGENT NESTED COMPOSITION
 # *********************************************************************************************
-rl_agent_state = ProcessingMechanism(name='RL Agent Port', size=5)
-rl_agent_action = ProcessingMechanism(name='RL Agent Action', size=5)
+rl_agent_state = ProcessingMechanism(name='RL Agent Port', input_shapes=5)
+rl_agent_action = ProcessingMechanism(name='RL Agent Action', input_shapes=5)
 rl_agent = Composition(name='RL Agent')
 rl_learning_components = rl_agent.add_reinforcement_learning_pathway([rl_agent_state, rl_agent_action])
 # rl_agent.add_required_node_role(rl_agent_action, NodeRole.OUTPUT)
@@ -52,7 +52,7 @@ rl_agent._analyze_graph()
 #                          MEMORY AND CONTROL MECHANISMS
 # *********************************************************************************************
 # q_rep = ProcessingMechanism(name='Q rep',
-#                             size=num_actions*stim_size,
+#                             input_shapes=num_actions*stim_size,
 #                             function=SoftMax(output=PROB, gain=1.0))
 #
 # em = EpisodicMemoryMechanism(name='Episodic Memory',

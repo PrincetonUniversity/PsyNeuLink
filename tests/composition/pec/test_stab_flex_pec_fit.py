@@ -111,7 +111,7 @@ def make_stab_flex(
     # Task Layer: [Color, Motion] {0, 1} Mutually Exclusive
     # Origin Node
     taskLayer = pnl.TransferMechanism(
-        size=2,
+        input_shapes=2,
         function=pnl.Linear(slope=1, intercept=0),
         output_ports=[pnl.RESULT],
         name="Task Input [I1, I2]",
@@ -120,7 +120,7 @@ def make_stab_flex(
     # Stimulus Layer: [Color Stimulus, Motion Stimulus]
     # Origin Node
     stimulusInfo = pnl.TransferMechanism(
-        size=2,
+        input_shapes=2,
         function=pnl.Linear(slope=1, intercept=0),
         output_ports=[pnl.RESULT],
         name="Stimulus Input [S1, S2]",
@@ -129,7 +129,7 @@ def make_stab_flex(
     # Cue-To-Stimulus Interval Layer
     # Origin Node
     cueInterval = pnl.TransferMechanism(
-        size=1,
+        input_shapes=1,
         function=pnl.Linear(slope=1, intercept=0),
         output_ports=[pnl.RESULT],
         name="Cue-Stimulus Interval",
@@ -138,7 +138,7 @@ def make_stab_flex(
     # Correct Response Info
     # Origin Node
     correctResponseInfo = pnl.TransferMechanism(
-        size=1,
+        input_shapes=1,
         function=pnl.Linear(slope=1, intercept=0),
         output_ports=[pnl.RESULT],
         name="Correct Response Info",
@@ -146,7 +146,7 @@ def make_stab_flex(
 
     # Control Module Layer: [Color Activation, Motion Activation]
     controlModule = pnl.LCAMechanism(
-        size=2,
+        input_shapes=2,
         function=pnl.Logistic(gain=GAIN),
         leak=LEAK,
         competition=COMP,
@@ -167,7 +167,7 @@ def make_stab_flex(
 
     # Hadamard product of controlModule and Stimulus Information
     nonAutomaticComponent = pnl.TransferMechanism(
-        size=2,
+        input_shapes=2,
         function=pnl.Linear(slope=1, intercept=0),
         input_ports=pnl.InputPort(combine=pnl.PRODUCT),
         output_ports=[pnl.RESULT],
@@ -176,7 +176,7 @@ def make_stab_flex(
 
     # Multiply Stimulus Input by the automaticity weight
     congruenceWeighting = pnl.TransferMechanism(
-        size=2,
+        input_shapes=2,
         function=pnl.Linear(slope=AUTOMATICITY, intercept=0),
         output_ports=[pnl.RESULT],
         name="Automaticity-weighted Stimulus Input [w*S1, w*S2]",
@@ -184,7 +184,7 @@ def make_stab_flex(
 
     # Summation of nonAutomatic and Automatic Components
     ddmCombination = pnl.TransferMechanism(
-        size=1,
+        input_shapes=1,
         function=pnl.Linear(slope=1, intercept=0),
         input_ports=pnl.InputPort(combine=pnl.SUM),
         output_ports=[pnl.RESULT],
@@ -193,7 +193,7 @@ def make_stab_flex(
 
     # Ensure upper boundary of DDM is always correct response by multiplying DDM input by correctResponseInfo
     ddmRecodeDrift = pnl.TransferMechanism(
-        size=1,
+        input_shapes=1,
         function=pnl.Linear(slope=1, intercept=0),
         input_ports=pnl.InputPort(combine=pnl.PRODUCT),
         output_ports=[pnl.RESULT],
@@ -202,7 +202,7 @@ def make_stab_flex(
 
     # Scale DDM inputs
     ddmInputScale = pnl.TransferMechanism(
-        size=1,
+        input_shapes=1,
         function=pnl.Linear(slope=SCALE, intercept=0),
         output_ports=[pnl.RESULT],
         name="Scaled DDM Input",
@@ -277,10 +277,10 @@ def make_stab_flex(
 
     # Hot-fix currently necessary to allow control module and DDM to execute in parallel in compiled mode
     # We need two gates in order to output both values (decision and response) from the ddm
-    decisionGate = pnl.ProcessingMechanism(size=1, name="DECISION_GATE")
+    decisionGate = pnl.ProcessingMechanism(input_shapes=1, name="DECISION_GATE")
     stabilityFlexibility.add_node(decisionGate)
 
-    responseGate = pnl.ProcessingMechanism(size=1, name="RESPONSE_GATE")
+    responseGate = pnl.ProcessingMechanism(input_shapes=1, name="RESPONSE_GATE")
     stabilityFlexibility.add_node(responseGate)
 
     stabilityFlexibility.add_projection(
