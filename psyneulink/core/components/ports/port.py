@@ -783,7 +783,7 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import ComponentError, DefaultsFlexibility, component_keywords
 from psyneulink.core.components.functions.function import \
     Function, get_param_value_for_keyword, is_function_type, RandomMatrix
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import CombinationFunction, LinearCombination
+from psyneulink.core.components.functions.nonstateful.transformfunctions import CombinationFunction, LinearCombination
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
@@ -2011,7 +2011,7 @@ class Port_Base(Port):
                 if projection_variable is None:
                     projection_variable = projection.sender.parameters.value._get(context)
                     # KDM 8/14/19: this fallback seems to always happen on the first execution
-                    # of the Projection's function (LinearMatrix). Unsure if this is intended or not
+                    # of the Projection's function (MatrixTransform). Unsure if this is intended or not
                     if projection_variable is None:
                         projection_variable = projection.function.defaults.value
                 projection.parameters.variable._set(projection_variable, context)

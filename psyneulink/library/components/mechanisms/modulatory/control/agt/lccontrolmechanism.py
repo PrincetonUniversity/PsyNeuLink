@@ -327,11 +327,32 @@ from psyneulink.core.globals.utilities import convert_to_list
 
 __all__ = [
     'CONTROL_SIGNAL_NAME', 'LCControlMechanism', 'LCControlMechanismError',
-    'MODULATED_MECHANISMS',
+    'MODULATED_MECHANISMS', 'MODE_FITZHUGHNAGUMO', 'TIME_STEP_SIZE_FITZHUGHNAGUMO', 'T_0_FITZHUGHNAGUMO',
+    'TIME_CONSTANT_V_FITZHUGHNAGUMO', 'TIME_CONSTANT_W_FITZHUGHNAGUMO',
+    'A_V_FITZHUGHNAGUMO', 'B_V_FITZHUGHNAGUMO', 'C_V_FITZHUGHNAGUMO', 'D_V_FITZHUGHNAGUMO', 'E_V_FITZHUGHNAGUMO',
+    'F_V_FITZHUGHNAGUMO', 'A_W_FITZHUGHNAGUMO', 'B_W_FITZHUGHNAGUMO', 'C_W_FITZHUGHNAGUMO',
+    'THRESHOLD_FITZHUGHNAGUMO', 'MODE_FITZHUGHNAGUMO', 'UNCORRELATED_ACTIVITY_FITZHUGHNAGUMO'
 ]
 
 MODULATED_MECHANISMS = 'modulated_mechanisms'
 CONTROL_SIGNAL_NAME = 'LCControlMechanism_ControlSignal'
+MODE_FITZHUGHNAGUMO = 'mode_FitzHughNagumo'
+TIME_STEP_SIZE_FITZHUGHNAGUMO = 'time_step_size_FitzHughNagumo'
+T_0_FITZHUGHNAGUMO = 't_0_FitzHughNagumo'
+A_V_FITZHUGHNAGUMO = 'a_v_FitzHughNagumo'
+B_V_FITZHUGHNAGUMO = 'b_v_FitzHughNagumo'
+C_V_FITZHUGHNAGUMO = 'c_v_FitzHughNagumo'
+D_V_FITZHUGHNAGUMO = 'd_v_FitzHughNagumo'
+E_V_FITZHUGHNAGUMO = 'e_v_FitzHughNagumo'
+F_V_FITZHUGHNAGUMO = 'f_v_FitzHughNagumo'
+TIME_CONSTANT_V_FITZHUGHNAGUMO = 'time_constant_v_FitzHughNagumo'
+A_W_FITZHUGHNAGUMO = 'a_w_FitzHughNagumo'
+B_W_FITZHUGHNAGUMO = 'b_w_FitzHughNagumo'
+C_W_FITZHUGHNAGUMO = 'c_w_FitzHughNagumo'
+THRESHOLD_FITZHUGHNAGUMO = 'threshold_FitzHughNagumo'
+UNCORRELATED_ACTIVITY_FITZHUGHNAGUMO = 'uncorrelated_activity_FitzHughNagumo'
+TIME_CONSTANT_W_FITZHUGHNAGUMO = 'time_constant_w_FitzHughNagumo'
+
 
 class LCControlMechanismError(ControlMechanismError):
     pass

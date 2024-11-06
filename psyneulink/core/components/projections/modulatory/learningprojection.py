@@ -207,7 +207,7 @@ from beartype import beartype
 from psyneulink._typing import Callable, Literal, Mapping, Optional, Union
 
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
+from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation, Reinforcement
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism

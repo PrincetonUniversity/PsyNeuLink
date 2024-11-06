@@ -216,12 +216,15 @@ Class Reference
 """
 
 import inspect
+import pathlib
+import site
 import warnings
 from psyneulink._typing import Union
 
 import numpy as np
 from beartype import beartype
 
+import psyneulink
 from psyneulink._typing import Optional, Union, Literal
 from PIL import Image
 
@@ -287,6 +290,32 @@ ENCLOSING_COMP = 'enclosing_comp' # enclosing composition
 NESTING_LEVEL = 'nesting_level'
 NUM_NESTING_LEVELS = 'num_nesting_levels'
 COMP_HIERARCHY = 'comp_hierarchy' # dict specifying the enclosing composition at each level of nesting
+
+
+default_showgraph_subdir = 'pnl-show_graph-output'
+
+
+def get_default_showgraph_dir():
+    pnl_module_dir = pathlib.Path(psyneulink.__file__).parent.absolute()
+    try:
+        site_packages_dirs = site.getsitepackages()
+    except AttributeError:
+        # virtualenv <20 overrides site and has no getsitepackages
+        site_packages_dirs = []
+
+    # if psyneulink is installed in site-packages (not local/editable),
+    # don't put show_graph files there
+    for d in site_packages_dirs:
+        if pathlib.Path(d) in pnl_module_dir.parents:
+            default_dir = pathlib.Path('.')
+            break
+    else:
+        default_dir = pnl_module_dir.parent
+
+    default_dir = default_dir.joinpath(default_showgraph_subdir)
+
+    return default_dir
+
 
 class ShowGraphError(Exception):
 
@@ -2655,7 +2684,7 @@ class ShowGraph():
         try:
             if output_fmt == 'pdf':
                 # G.format = 'svg'
-                G.view(composition.name.replace(" ", "-"), cleanup=True, directory='show_graph OUTPUT/PDFS')
+                G.view(composition.name.replace(" ", "-"), cleanup=True, directory=get_default_showgraph_dir().joinpath('PDFS'))
 
             # Generate images for animation
             elif output_fmt == 'gif':
@@ -2813,8 +2842,7 @@ class ShowGraph():
 
         if isinstance(composition._animate, dict):
             # Assign directory for animation files
-            from psyneulink._version import root_dir
-            default_dir = root_dir + '/../show_graph output/GIFs/' + composition.name # + " gifs"
+            default_dir = get_default_showgraph_dir().joinpath('GIFs', composition.name)
             # try:
             #     rmtree(composition._animate_directory)
             # except:
@@ -2846,9 +2874,14 @@ class ShowGraph():
                 raise ShowGraphError(f"{repr(SIMULATIONS)} entry of {repr('animate')} argument for "
                                        f"{repr('show_graph')} method of {composition.name} ({composition._animate_num_trials}) "
                                        f"must a boolean.")
-            if not isinstance(composition._animation_directory, str):
-                raise ShowGraphError(f"{repr(MOVIE_DIR)} entry of {repr('animate')} argument for {repr('run')} "
-                                       f"method of {composition.name} ({composition._animation_directory}) must be a string.")
+            try:
+                composition._animation_directory = pathlib.Path(composition._animation_directory)
+            except TypeError:
+                raise ShowGraphError(
+                    f"{repr(MOVIE_DIR)} entry of 'animate' argument for 'run'"
+                    f" method of {composition.name} ({composition._animation_directory})"
+                    " must be a string or os.PathLike."
+                )
             if not isinstance(composition._movie_filename, str):
                 raise ShowGraphError(f"{repr(MOVIE_NAME)} entry of {repr('animate')} argument for {repr('run')} "
                                        f"method of {composition.name} ({composition._movie_filename}) must be a string.")
@@ -2930,7 +2963,7 @@ class ShowGraph():
         G.attr(fontsize='14')
         index = repr(composition._component_animation_execution_count)
         image_filename = '-'.join([repr(run_num), repr(trial_num), index])
-        image_file = composition._animation_directory + '/' + image_filename + '.gif'
+        image_file = pathlib.Path(composition._animation_directory, image_filename + '.gif')
         G.render(filename=image_filename,
                  directory=composition._animation_directory,
                  cleanup=True,

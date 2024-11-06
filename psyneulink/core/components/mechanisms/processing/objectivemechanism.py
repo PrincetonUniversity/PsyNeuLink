@@ -180,7 +180,7 @@ the items in its `variable <Mechanism_Base.variable>`. However, by assigning val
 <InputPort.weight>` and/or 'exponent <InputPort.exponent>` attributes of the corresponding InputPorts,
 it can be configured to calculate differences, ratios,  etc. (see `example
 <ObjectiveMechanism_Weights_and_Exponents_Example>` below).  The `function <ObjectiveMechanism.function>`  can also
-be replaced with any `CombinationFunction <CombinationFunctions>`, or any python function that takes an 2d array as
+be replaced with any `CombinationFunction <Transformfunctions>`, or any python function that takes an 2d array as
 its input (with a number of items in axis 0 equal to the number of the ObjectiveMechanism's InputPorts), and generates
 a 1d array as its result. If it implements :keyword:`weight` and/or :keyword:`exponent` attributes, those are assigned
 from `weight <InputPort.weight>` and `exponent <InputPort.exponent>` attributes of its `input_ports
@@ -372,7 +372,7 @@ from beartype import beartype
 
 from psyneulink._typing import Optional, Union
 
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
+from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort, INPUT_PORT
@@ -465,7 +465,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
     function : CombinationFunction, ObjectiveFunction, function, or method
         the function used to evaluate the values monitored by the ObjectiveMechanism.  The function can be any
-        `CombinationFunction <CombinationFunctions>` or a Python function that takes a 2d array with an arbitrary
+        `CombinationFunction <Transformfunctions>` or a Python function that takes a 2d array with an arbitrary
         number of items or a number equal to the number of items in the ObjectiveMechanism's variable (i.e.,
         its number of input_ports) and returns a 1d array.
 

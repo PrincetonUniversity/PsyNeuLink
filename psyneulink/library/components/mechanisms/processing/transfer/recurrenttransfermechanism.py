@@ -193,7 +193,7 @@ from psyneulink._typing import Optional, Union, Callable, Literal
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import _get_parametervalue_attr
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
+from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination
 from psyneulink.core.components.functions.function import Function, get_matrix
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Hebbian
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Stability
@@ -239,8 +239,8 @@ COMBINATION_FUNCTION = 'combination_function'
 # Used to specify learning_condition
 UPDATE = 'UPDATE'
 CONVERGENCE = 'CONVERGENCE'
-ENERGY_OUTPUT_PORT_NAME='ENERGY'
-ENTROPY_OUTPUT_PORT_NAME='ENTROPY'
+ENERGY_OUTPUT_PORT_NAME=ENERGY
+ENTROPY_OUTPUT_PORT_NAME=ENTROPY
 
 
 

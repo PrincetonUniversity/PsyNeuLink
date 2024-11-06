@@ -4015,7 +4015,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         from psyneulink.core.compositions.composition import Composition
         from psyneulink.core.components.ports.port import Port
         from psyneulink.core.components.ports.outputport import OutputPort
-        from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
+        from psyneulink.core.components.functions.nonstateful.transformfunctions import MatrixTransform
 
         def parse_parameter_value(value, no_expand_components=False, functions_as_dill=False):
             if isinstance(value, (list, tuple)):
@@ -4156,11 +4156,11 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                         # class default
                         val = p.default_value
                 else:
-                    # special handling because LinearMatrix default values
+                    # special handling because MatrixTransform default values
                     # can be PNL-specific keywords. In future, generalize
                     # this workaround
                     if (
-                        isinstance(self, LinearMatrix)
+                        isinstance(self, MatrixTransform)
                         and p.name == 'matrix'
                     ):
                         val = self.parameters.matrix.values[None]
