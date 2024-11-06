@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.15.1.0+503.g13128b50f documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.15.1.0+504.g23e0ee142 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+503
+                  0.15.1.0+504
                 </div>
               
             
@@ -4435,7 +4435,7 @@ see <a class="reference internal" href="MappingProjection.html#mappingprojection
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition.add_linear_learning_pathway">
-<span class="sig-name descname"><span class="pre">add_linear_learning_pathway</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">pathway</span></em>, <em class="sig-param"><span class="pre">learning_function=None</span></em>, <em class="sig-param"><span class="pre">loss_spec=Loss.MSE</span></em>, <em class="sig-param"><span class="pre">learning_rate=None</span></em>, <em class="sig-param"><span class="pre">error_function=&lt;class</span> <span class="pre">'psyneulink.core.components.functions.nonstateful.combinationfunctions.LinearCombination'&gt;</span></em>, <em class="sig-param"><span class="pre">learning_update='after'</span></em>, <em class="sig-param"><span class="pre">default_projection_matrix=None</span></em>, <em class="sig-param"><span class="pre">name=None</span></em>, <em class="sig-param"><span class="pre">context=None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_linear_learning_pathway" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_linear_learning_pathway</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">pathway</span></em>, <em class="sig-param"><span class="pre">learning_function=None</span></em>, <em class="sig-param"><span class="pre">loss_spec=Loss.MSE</span></em>, <em class="sig-param"><span class="pre">learning_rate=None</span></em>, <em class="sig-param"><span class="pre">error_function=&lt;class</span> <span class="pre">'psyneulink.core.components.functions.nonstateful.transformfunctions.LinearCombination'&gt;</span></em>, <em class="sig-param"><span class="pre">learning_update='after'</span></em>, <em class="sig-param"><span class="pre">default_projection_matrix=None</span></em>, <em class="sig-param"><span class="pre">name=None</span></em>, <em class="sig-param"><span class="pre">context=None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_linear_learning_pathway" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implement learning pathway (including necessary <a class="reference internal" href="#composition-learning-components"><span class="std std-ref">learning components</span></a>.</p>
 <p>Generic method for implementing a learning pathway.  Calls <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway" title="psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_linear_processing_pathway</span></code></a> to implement
 the processing components including, if necessary, the MappingProjections between Mechanisms.  All of the
@@ -4481,7 +4481,7 @@ additional details).</p></li>
 <p class="admonition-title">Note</p>
 <p>For most learning algorithms (and by default), a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> is used to compute the error.
 However, some learning algorithms may use a different Mechanism (e.g., for <code class="xref any docutils literal notranslate"><span class="pre">TDlearning</span></code> a
-<a class="reference internal" href="PredictionErrorMechanism.html"><span class="doc">PredictionErrorMechanism</span></a> is used, which uses as its fuction <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction" title="psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PredictionErrorDeltaFunction</span></code></a>.</p>
+<a class="reference internal" href="PredictionErrorMechanism.html"><span class="doc">PredictionErrorMechanism</span></a> is used, which uses as its fuction <code class="xref any docutils literal notranslate"><span class="pre">PredictionErrorDeltaFunction</span></code>.</p>
 </div>
 </p></li>
 <li><p><strong>learning_update</strong> (<em>Optional</em><em>[</em><em>bool</em><em>|</em><em>ONLINE</em><em>|</em><em>AFTER</em><em>] </em><em>: default AFTER</em>) – specifies when the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter of the <a class="reference internal" href="KohonenMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learned_projection" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learned_projection"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learned_projection</span></code></a> is updated

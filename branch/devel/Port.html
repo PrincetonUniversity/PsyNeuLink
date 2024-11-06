@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Port &mdash; PsyNeuLink 0.15.1.0+503.g13128b50f documentation</title>
+  <title>Port &mdash; PsyNeuLink 0.15.1.0+504.g23e0ee142 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+503
+                  0.15.1.0+504
                 </div>
               
             
@@ -576,7 +576,7 @@ Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core
 </ul>
 <ul class="simple">
 <li><p><a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>:  for an <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> this combines the values of the Projections that the
-Port receives (the default is <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearCombination</span></code></a> that sums the values), under the potential influence of a
+Port receives (the default is <code class="xref any docutils literal notranslate"><span class="pre">LinearCombination</span></code> that sums the values), under the potential influence of a
 <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a>;  for a <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a>, it determines the value of the associated parameter, under the potential
 influence of a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> (for a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>) or a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> (for a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>);
 for an OutputPort, it conveys the result  of the Mechanism’s function to its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_values</span></code></a> attribute, under the potential influence of a <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a>.  See
@@ -613,7 +613,7 @@ or to disable modulation, using either the keyword <em>OVERRIDE</em> or <em>DSIA
 ParameterPorts belonging to a Mechanism are updated before the Mechanism’s function is called.  OutputPorts are
 updated after the Mechanism’s function is called.  When a Port is updated, it executes any Projections that project
 to it (listed in its <a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.all_afferents" title="psyneulink.core.components.ports.port.Port_Base.all_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">all_afferents</span></code></a> attribute.  It uses the values it receives from any
-<code class="xref any docutils literal notranslate"><span class="pre">PathWayProjections</span></code> (listed in its <a class="reference internal" href="Mechanism.html#id6" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.path_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">path_afferents</span></code></a> attribute) as the variable for its
+<code class="xref any docutils literal notranslate"><span class="pre">PathWayProjections</span></code> (listed in its <a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.path_afferents" title="psyneulink.core.components.ports.port.Port_Base.path_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">path_afferents</span></code></a> attribute) as the variable for its
 <a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>. It then executes all of the ModulatoryProjections it receives.  Different
 ModulatorySignals may call for different forms of modulation (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a>).  Accordingly,
 it separately sums the values specified by any ModulatorySignals for the <em>MULTIPLICATIVE_PARAM</em> of its

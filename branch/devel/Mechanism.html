@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanism &mdash; PsyNeuLink 0.15.1.0+503.g13128b50f documentation</title>
+  <title>Mechanism &mdash; PsyNeuLink 0.15.1.0+504.g23e0ee142 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+503
+                  0.15.1.0+504
                 </div>
               
             
@@ -374,7 +374,7 @@ default, can be specified to be the <a class="reference internal" href="Transfer
 <p>Notice that the parameters of the <code class="xref std std-keyword docutils literal notranslate"><span class="pre">function</span></code> (in this case, <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a> and <a class="reference internal" href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.bias" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.bias"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bias</span></code></a>) can be specified by including
 them in its constructor.  Some Mechanisms support only a single function.  In that case, the <code class="xref std std-keyword docutils literal notranslate"><span class="pre">function</span></code>
 argument is not available in the Mechanism’s constructor, but it does include arguments for the function’s
-parameters.  For example, the <code class="xref std std-keyword docutils literal notranslate"><span class="pre">function</span></code> of a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> is always the <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearCombination</span></code></a> function,
+parameters.  For example, the <code class="xref std std-keyword docutils literal notranslate"><span class="pre">function</span></code> of a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> is always the <code class="xref any docutils literal notranslate"><span class="pre">LinearCombination</span></code> function,
 so the Mechanisms’ constructor does not have a <code class="xref std std-keyword docutils literal notranslate"><span class="pre">function</span></code> argument.  However, it does have a
 <strong>comparison_operation</strong> argument, that is used to set the LinearCombination function’s <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.DualAdaptiveIntegrator.operation" title="psyneulink.core.components.functions.stateful.integratorfunctions.DualAdaptiveIntegrator.operation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">operation</span></code></a> parameter.</p>
 <p>The parameters for a Mechanism’s primary function can also be specified as entries in a <em>FUNCTION_PARAMS</em> entry of a
