@@ -2145,9 +2145,6 @@ class EMComposition(AutodiffComposition):
             f"PROGRAM ERROR: number of keys ({self.num_keys}) does not match number of " \
             f"non-zero values in field_weights ({len(self.key_indices)})."
 
-        # query_input_nodes = [ProcessingMechanism(input_shapes=len(self.entry_template[self.key_indices[i]]),
-        #                                      name=f'{self.key_names[self.key_indices[i]]} [QUERY]')
-        #                for i in range(self.num_keys)]
         query_input_nodes = [ProcessingMechanism(
             input_shapes=len(self.entry_template[self.key_indices[i]]),
                                              name=f'{self.key_names[i]} [QUERY]')
