@@ -23,6 +23,8 @@ Functions that selects a subset of elements to maintain or transform, while null
 
 __all__ = ['SelectionFunction', 'OneHot', 'max_vs_avg', 'max_vs_next']
 
+import warnings
+
 import numpy as np
 from beartype import beartype
 
@@ -535,7 +537,8 @@ class OneHot(SelectionFunction):
 
     def _parse_mode(self, mode):
         """Convert mode spec to corresponding options.
-        Here for convenience, but mostly for backward compatibility with old mode spec."""
+        Here for convenience, but mostly for backward compatibility with old mode spec.
+        """
 
         direction = None
         abs_val = None
@@ -711,24 +714,27 @@ class OneHot(SelectionFunction):
         max = None
         min = None
 
-        if abs_val == True:
+        if abs_val is True:
             array = np.absolute(array)
 
         if direction == MAX:
             max = np.max(array)
+            if max == -np.inf:
+                warnings.warn(f"Array passed to {self.name} of {self.owner.name} "
+                              f"is all -inf.")
         else:
             min = np.min(array)
+            if min == np.inf:
+                warnings.warn(f"Array passed to {self.name} of {self.owner.name} "
+                              f"is all inf.")
+
         extreme_val = max if direction == MAX else min
 
         if tie == ALL:
-            # # MODIFIED 11/5/24 OLD:
-            # result = np.where(array == extreme_val, extreme_val, 0)
-            # # MODIFIED 11/5/24 NEW:
             if direction == MAX:
                 result = np.where(array == max, max, -np.inf)
             else:
                 result = np.where(array == min, min, np.inf)
-            # MODIFIED 11/5/24 END
         else:
             if tie == FIRST:
                 index = np.min(np.where(array == extreme_val))
@@ -741,7 +747,7 @@ class OneHot(SelectionFunction):
             result = np.zeros_like(array)
             result[index] = extreme_val
 
-        if indicator == True:
+        if indicator is True:
             result = np.where(result == extreme_val, 1, result)
         if max is not None:
             result = np.where(result == -np.inf, 0, result)

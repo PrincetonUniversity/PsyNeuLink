@@ -231,7 +231,7 @@ class AdamOptimizer(Optimizer):
 
 
 class SGDOptimizer(Optimizer):
-    """Implements compiled Stocastic Gradient Descent optimizer (without momentum)"""
+    """Implements compiled Stochastic Gradient Descent optimizer (without momentum)"""
     # sets up parameters of model & the information required for forward computation
     def __init__(self, pytorch_model, lr=1e-3):
         super().__init__(pytorch_model)
