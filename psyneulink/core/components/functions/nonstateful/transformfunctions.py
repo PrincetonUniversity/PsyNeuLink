@@ -51,8 +51,8 @@ from psyneulink.core.components.functions import function
 from psyneulink.core.components.functions.function import (
     Function_Base, FunctionError, FunctionOutputType, function_keywords, get_matrix)
 from psyneulink.core.components.shellclasses import Projection
-from psyneulink.core.globals.keywords import \
-    (ADDITIVE_PARAM, ARRANGEMENT, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONCATENATE_FUNCTION,
+from psyneulink.core.globals.keywords import (
+    ADDITIVE_PARAM, ARRANGEMENT, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONCATENATE_FUNCTION,
      CROSS_ENTROPY, DEFAULT_VARIABLE, DOT_PRODUCT, EXPONENTS,
      HAS_INITIALIZERS, HOLLOW_MATRIX, IDENTITY_MATRIX,
      LINEAR_COMBINATION_FUNCTION, LINEAR_TRANSFORM_FUNCTION, L0,
