@@ -616,7 +616,7 @@ class OneHot(SelectionFunction):
 
         elif mode == MIN_VAL:
             direction = MIN
-            abs_val = True
+            abs_val = False
             indicator = False
             tie = ALL
 
