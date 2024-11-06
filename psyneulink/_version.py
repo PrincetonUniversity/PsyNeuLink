@@ -19,7 +19,6 @@ import sys
 from typing import Any, Callable, Dict, List, Optional, Tuple
 import functools
 
-root_dir = os.path.abspath(os.path.dirname(__file__))
 
 def get_keywords() -> Dict[str, str]:
     """Get the keywords needed to look up the version information."""
