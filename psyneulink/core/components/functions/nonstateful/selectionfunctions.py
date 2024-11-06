@@ -708,19 +708,26 @@ class OneHot(SelectionFunction):
 
         array = variable
 
+        max = None
+        min = None
+
         if abs_val == True:
             array = np.absolute(array)
 
         if direction == MAX:
-            extreme_val = np.max(array)
+            max = np.max(array)
         else:
-            extreme_val = np.min(array)
+            min = np.min(array)
+        extreme_val = max if direction == MAX else min
 
         if tie == ALL:
-            # MODIFIED 11/5/24 OLD:
-            result = np.where(array == extreme_val, extreme_val, 0)
+            # # MODIFIED 11/5/24 OLD:
+            # result = np.where(array == extreme_val, extreme_val, 0)
             # # MODIFIED 11/5/24 NEW:
-            # result = np.where(array == extreme_val, extreme_val, array)
+            if direction == MAX:
+                result = np.where(array == max, max, -np.inf)
+            else:
+                result = np.where(array == min, min, np.inf)
             # MODIFIED 11/5/24 END
         else:
             if tie == FIRST:
@@ -735,6 +742,10 @@ class OneHot(SelectionFunction):
             result[index] = extreme_val
 
         if indicator == True:
-            result = np.where(result == extreme_val, 1, 0)
+            result = np.where(result == extreme_val, 1, result)
+        if max:
+            result = np.where(result == -np.inf, 0, result)
+        if min:
+            result = np.where(result == np.inf, 0, result)
 
         return self.convert_output_type(result)
