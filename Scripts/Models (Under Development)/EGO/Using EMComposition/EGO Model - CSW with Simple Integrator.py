@@ -232,11 +232,11 @@ def construct_model(model_name:str=model_params['name'],
     # -------------------------------------------------  Nodes  ------------------------------------------------------
     # ----------------------------------------------------------------------------------------------------------------
 
-    state_input_layer = ProcessingMechanism(name=state_input_name, size=state_size)
-    previous_state_layer = ProcessingMechanism(name=previous_state_input_name, size=state_size)
-    # context_layer = ProcessingMechanism(name=context_name, size=context_size)
+    state_input_layer = ProcessingMechanism(name=state_input_name, input_shapes=state_size)
+    previous_state_layer = ProcessingMechanism(name=previous_state_input_name, input_shapes=state_size)
+    # context_layer = ProcessingMechanism(name=context_name, input_shapes=context_size)
     context_layer = TransferMechanism(name=context_name,
-                                      size=context_size,
+                                      input_shapes=context_size,
                                       function=Tanh,
                                       integrator_mode=True,
                                       integration_rate=integration_rate)
@@ -251,13 +251,21 @@ def construct_model(model_name:str=model_params['name'],
                        softmax_gain=retrieval_softmax_gain,
                        softmax_threshold=retrieval_softmax_threshold,
                        # Input Nodes:
-                       field_names=[state_input_name,
-                                    previous_state_input_name,
+                       # field_names=[state_input_name,
+                       #              previous_state_input_name,
+                       #              context_name,
+                       #              ],
+                       # field_weights=(state_retrieval_weight,
+                       #                previous_state_retrieval_weight,
+                       #                context_retrieval_weight
+                       #                ),
+                       field_names=[previous_state_input_name,
                                     context_name,
+                                    state_input_name,
                                     ],
-                       field_weights=(state_retrieval_weight,
-                                      previous_state_retrieval_weight,
-                                      context_retrieval_weight
+                       field_weights=(previous_state_retrieval_weight,
+                                      context_retrieval_weight,
+                                      state_retrieval_weight,
                                       ),
                        normalize_field_weights=normalize_field_weights,
                        concatenate_queries=concatenate_queries,
@@ -267,7 +275,7 @@ def construct_model(model_name:str=model_params['name'],
                        device=device
                        )
 
-    prediction_layer = ProcessingMechanism(name=prediction_layer_name, size=state_size)
+    prediction_layer = ProcessingMechanism(name=prediction_layer_name, input_shapes=state_size)
 
     
     # ----------------------------------------------------------------------------------------------------------------
@@ -363,7 +371,7 @@ if __name__ == '__main__':
     if RUN_MODEL:
         import timeit
         def print_stuff(**kwargs):
-            print(f"\n**************\n BATCH: {kwargs['batch']}\n**************\n")
+            print(f"\n**************\n BATCH: {kwargs['minibatch']}\n**************\n")
             print(kwargs)
             print('\nContext internal: \n', model.nodes['CONTEXT'].function.parameters.value.get(kwargs['context']))
             print('\nContext hidden: \n', model.nodes['CONTEXT'].parameters.value.get(kwargs['context']))
@@ -407,8 +415,8 @@ if __name__ == '__main__':
                   )
         stop_time = timeit.default_timer()
         print(f"Elapsed time: {stop_time - start_time}")
-        if DISPLAY_MODEL is not None:
-            model.show_graph(**DISPLAY_MODEL)
+        # if DISPLAY_MODEL is not None:
+        #     model.show_graph(**DISPLAY_MODEL)
         if PRINT_RESULTS:
             print("MEMORY:")
             print(np.round(model.nodes['EM'].parameters.memory.get(model.name),3))

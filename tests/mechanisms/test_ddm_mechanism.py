@@ -173,7 +173,7 @@ class TestThreshold:
 class TestInputPorts:
 
     def test_regular_input_mode(self):
-        input_mech = ProcessingMechanism(size=2)
+        input_mech = ProcessingMechanism(input_shapes=2)
         ddm = DDM(
             function=DriftDiffusionAnalytical(),
             output_ports=[SELECTED_INPUT_ARRAY, DECISION_VARIABLE_ARRAY],
@@ -191,7 +191,7 @@ class TestInputPorts:
         np.testing.assert_allclose(result, [[1.0], [1.0]])
 
     def test_array_mode(self):
-        input_mech = ProcessingMechanism(size=2)
+        input_mech = ProcessingMechanism(input_shapes=2)
         ddm = DDM(
             input_format=ARRAY,
             function=DriftDiffusionAnalytical(),
@@ -486,13 +486,13 @@ def test_DDM_rate_fn():
 
 # ------------------------------------------------------------------------------------------------
 # TEST 1
-# size = int, check if variable is an array of zeros
+# input_shapes = int, check if variable is an array of zeros
 
 
 def test_DDM_size_int_check_var():
     T = DDM(
         name='DDM',
-        size=1,
+        input_shapes=1,
         function=DriftDiffusionIntegrator(
             noise=0.0,
             rate=-5.0,
@@ -504,13 +504,13 @@ def test_DDM_size_int_check_var():
 
 # ------------------------------------------------------------------------------------------------
 # TEST 2
-# size = float, variable = [.4], check output after execution
+# input_shapes = float, variable = [.4], check output after execution
 
 def test_DDM_size_int_inputs():
 
     T = DDM(
         name='DDM',
-        size=1,
+        input_shapes=1,
         function=DriftDiffusionIntegrator(
             noise=0.0,
             rate=-5.0,
@@ -529,34 +529,15 @@ def test_DDM_size_int_inputs():
 # INVALID INPUTS
 
 # ------------------------------------------------------------------------------------------------
-# TEST 1
-# size = 0, check less-than-one error
-
-
-def test_DDM_mech_size_zero():
-    with pytest.raises(ComponentError) as error_text:
-        T = DDM(
-            name='DDM',
-            size=0,
-            function=DriftDiffusionIntegrator(
-                noise=0.0,
-                rate=-5.0,
-                time_step_size=1.0
-            ),
-            execute_until_finished=False,
-        )
-    assert "is not a positive number" in str(error_text.value)
-
-# ------------------------------------------------------------------------------------------------
 # TEST 2
-# size = -1.0, check less-than-one error
+# input_shapes = -1.0, check less-than-one error
 
 
 def test_DDM_mech_size_negative_one():
     with pytest.raises(ComponentError) as error_text:
         T = DDM(
             name='DDM',
-            size=-1.0,
+            input_shapes=-1,
             function=DriftDiffusionIntegrator(
                 noise=0.0,
                 rate=-5.0,
@@ -564,18 +545,18 @@ def test_DDM_mech_size_negative_one():
             ),
             execute_until_finished=False,
         )
-    assert "is not a positive number" in str(error_text.value)
+    assert "negative dimensions" in str(error_text.value)
 
 # ------------------------------------------------------------------------------------------------
 # TEST 3
-# size = 3.0, check size-too-large error
+# input_shapes = 3.0, check input_shapes-too-large error
 
 
 def test_DDM_size_too_large():
     with pytest.raises(DDMError) as error_text:
         T = DDM(
             name='DDM',
-            size=3.0,
+            input_shapes=3,
             function=DriftDiffusionIntegrator(
                 noise=0.0,
                 rate=-5.0,
@@ -587,14 +568,14 @@ def test_DDM_size_too_large():
 
 # ------------------------------------------------------------------------------------------------
 # TEST 4
-# size = [1,1], check too-many-input-ports error
+# input_shapes = [1,1], check too-many-input-ports error
 
 
 def test_DDM_size_too_long():
     with pytest.raises(DDMError) as error_text:
         T = DDM(
             name='DDM',
-            size=[1, 1],
+            input_shapes=[1, 1],
             function=DriftDiffusionIntegrator(
                 noise=0.0,
                 rate=-5.0,

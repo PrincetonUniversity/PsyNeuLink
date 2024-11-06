@@ -275,7 +275,7 @@ class KohonenMechanism(TransferMechanism):
     @beartype
     def __init__(self,
                  default_variable=None,
-                 size=None,
+                 input_shapes=None,
                  function=None,
                  # selection_function=OneHot(mode=MAX_INDICATOR),  # RE-INSTATE WHEN IMPLEMENT NHot function
                  integrator_function=None,
@@ -311,7 +311,7 @@ class KohonenMechanism(TransferMechanism):
 
         super().__init__(
             default_variable=default_variable,
-            size=size,
+            input_shapes=input_shapes,
             function=function,
             integrator_function=integrator_function,
             integrator_mode=integrator_mode,

@@ -36,9 +36,9 @@ FEATURE_FUNCTION = AdaptiveIntegrator(rate=0.5)
 # **************************************  PROCESSING MECHANISMS ********************************************************
 
 # Perceptual Mechanisms
-player_percept = ProcessingMechanism(size=2, function=GaussianDistort(), name="PLAYER PERCEPT")
-predator_percept = ProcessingMechanism(size=2, function=GaussianDistort(), name="PREDATOR PERCEPT")
-prey_percept = ProcessingMechanism(size=2, function=GaussianDistort(), name="PREY PERCEPT")
+player_percept = ProcessingMechanism(input_shapes=2, function=GaussianDistort(), name="PLAYER PERCEPT")
+predator_percept = ProcessingMechanism(input_shapes=2, function=GaussianDistort(), name="PREDATOR PERCEPT")
+prey_percept = ProcessingMechanism(input_shapes=2, function=GaussianDistort(), name="PREY PERCEPT")
 
 # Mechanism used to encode trialtype from environment
 trial_type_input_mech = ProcessingMechanism(name="TRIAL TYPE INPUT")

@@ -1204,7 +1204,7 @@ class TestControlMechanisms:
         ib = pnl.ProcessingMechanism(name='IB')
         ic = pnl.ProcessingMechanism(name='IC')
         oa = pnl.ProcessingMechanism(name='OA')
-        ob = pnl.ProcessingMechanism(name='OB', size=3)
+        ob = pnl.ProcessingMechanism(name='OB', input_shapes=3)
         oc = pnl.ProcessingMechanism(name='OC')
         ext = pnl.ProcessingMechanism(name='EXT')
         icomp = pnl.Composition(pathways=[ia,ib,ic], name='INNER COMP')
@@ -1447,7 +1447,7 @@ class TestControlMechanisms:
         icomp = pnl.Composition(nodes=[I1,I2], name='INNER COMP')
         A = pnl.ComparatorMechanism(name='A')
         B = pnl.ProcessingMechanism(name='B')
-        C = pnl.ProcessingMechanism(name='C', size=3)
+        C = pnl.ProcessingMechanism(name='C', input_shapes=3)
         D = pnl.ProcessingMechanism(name='D')
         mcomp = pnl.Composition(pathways=[[A,B,C], icomp], name='MIDDLE COMP')
         ocomp = pnl.Composition(nodes=[mcomp], name='OUTER COMP')
@@ -1700,7 +1700,7 @@ class TestControlMechanisms:
         ib = pnl.ProcessingMechanism(name='IB')
         ic = pnl.ProcessingMechanism(name='IC')
         oa = pnl.ProcessingMechanism(name='OA')
-        ob = pnl.ProcessingMechanism(name='OB', size=3)
+        ob = pnl.ProcessingMechanism(name='OB', input_shapes=3)
         oc = pnl.ProcessingMechanism(name='OC')
         icomp = pnl.Composition(pathways=[ia,ib,ic], name='INNER COMP')
         ocomp = pnl.Composition(pathways=[icomp], name='OUTER COMP')
@@ -2092,20 +2092,20 @@ class TestControlMechanisms:
 
         # Task Layer: [Color, Motion] {0, 1} Mutually Exclusive
         taskLayer = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
-                                          # size=2,
+                                          # input_shapes=2,
                                           function=pnl.Linear(slope=1, intercept=0),
                                           output_ports=[pnl.RESULT],
                                           name='Task Input [I1, I2]')
 
         # Stimulus Layer: [Color Stimulus, Motion Stimulus]
         stimulusInfo = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
-                                             # size=2,
+                                             # input_shapes=2,
                                              function=pnl.Linear(slope=1, intercept=0),
                                              output_ports=[pnl.RESULT],
                                              name="Stimulus Input [S1, S2]")
 
         congruenceWeighting = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
-                                                    size=2,
+                                                    input_shapes=2,
                                                     function=pnl.Linear(slope=congruentWeight, intercept=0),
                                                     name='Congruence * Automatic Component')
 
@@ -2125,14 +2125,15 @@ class TestControlMechanisms:
 
         # Hadamard product of Activation and Stimulus Information
         nonAutomaticComponent = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
-                                                      size=2,
+                                                      input_shapes=2,
                                                       function=pnl.Linear(slope=1, intercept=0),
                                                       input_ports=pnl.InputPort(combine=pnl.PRODUCT),
                                                       output_ports=[pnl.RESULT],
                                                       name='Non-Automatic Component')
 
         # Summation of nonAutomatic and Automatic Components
-        ddmCombination = pnl.TransferMechanism(size=1,
+        ddmCombination = pnl.TransferMechanism(
+            input_shapes=1,
                                                function=pnl.Linear(slope=1, intercept=0),
                                                input_ports=pnl.InputPort(combine=pnl.SUM),
                                                output_ports=[pnl.RESULT],
@@ -2149,13 +2150,14 @@ class TestControlMechanisms:
                                 name='DDM')
 
         weightingFunction = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
-                                                  size=2,
+                                                  input_shapes=2,
                                                   function=pnl.Linear(slope=1, intercept=0),
                                                   input_ports=pnl.InputPort(combine=pnl.PRODUCT),
                                                   output_ports=[pnl.RESULT],
                                                   name='Bias')
 
-        topCorrect = pnl.TransferMechanism(size=1,
+        topCorrect = pnl.TransferMechanism(
+            input_shapes=1,
                                            function=pnl.Linear(slope=1, intercept=0),
                                            input_ports=pnl.InputPort(combine=pnl.PRODUCT),
                                            output_ports=[pnl.RESULT],
@@ -2309,7 +2311,7 @@ class TestControlMechanisms:
     @pytest.mark.composition
     def test_recurrent_control(self, comp_mode):
         monitor = pnl.TransferMechanism(default_variable=[[0.0]],
-                                    size=1,
+                                    input_shapes=1,
                                     function=pnl.Linear(slope=1, intercept=0),
                                     output_ports=[pnl.RESULT],
                                     name='monitor')
@@ -3478,7 +3480,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         # Task Layer: [Color, Motion] {0, 1} Mutually Exclusive
         # Origin Node
         taskLayer = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
-                                          size=2,
+                                          input_shapes=2,
                                           function=pnl.Linear(slope=1, intercept=0),
                                           output_ports=[pnl.RESULT],
                                           name='Task Input [I1, I2]')
@@ -3486,7 +3488,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         # Stimulus Layer: [Color Stimulus, Motion Stimulus]
         # Origin Node
         stimulusInfo = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
-                                             size=2,
+                                             input_shapes=2,
                                              function=pnl.Linear(slope=1, intercept=0),
                                              output_ports=[pnl.RESULT],
                                              name="Stimulus Input [S1, S2]")
@@ -3506,14 +3508,15 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
 
         # Hadamard product of Activation and Stimulus Information
         nonAutomaticComponent = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
-                                                      size=2,
+                                                      input_shapes=2,
                                                       function=pnl.Linear(slope=1, intercept=0),
                                                       input_ports=pnl.InputPort(combine=pnl.PRODUCT),
                                                       output_ports=[pnl.RESULT],
                                                       name='Non-Automatic Component [S1*Activity1, S2*Activity2]')
 
         # Summation of nonAutomatic and Automatic Components
-        ddmCombination = pnl.TransferMechanism(size=1,
+        ddmCombination = pnl.TransferMechanism(
+            input_shapes=1,
                                                function=pnl.Linear(slope=1, intercept=0),
                                                input_ports=pnl.InputPort(combine=pnl.SUM),
                                                output_ports=[pnl.RESULT],

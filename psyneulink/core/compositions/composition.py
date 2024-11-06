@@ -1383,11 +1383,11 @@ COMMENT:
     >>> B = ProcessingMechanism(name='B', default_variable=[0,0,0])
     >>> inner_nested_comp = Composition(nodes=[A, B])
 
-    >>> C = ComparatorMechanism(name='C', size=3)
+    >>> C = ComparatorMechanism(name='C', input_shapes=3)
     >>> nested_comp_1 = Composition(nodes=[C, inner_nested_comp])
 
-    >>> D = ComparatorMechanism(name='D', size=3)
-    >>> E = ComparatorMechanism(name='E', size=3)
+    >>> D = ComparatorMechanism(name='D', input_shapes=3)
+    >>> E = ComparatorMechanism(name='E', input_shapes=3)
     >>> nested_comp_2 = Composition([D, E])
 
     >>> F = ComparatorMechanism(name='F')
@@ -2882,6 +2882,7 @@ import types
 import numbers
 import itertools
 import logging
+import pathlib
 import sys
 import typing
 import warnings
@@ -2902,7 +2903,7 @@ from psyneulink._typing import Callable, Literal, List, Mapping, Optional, Set, 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentError, ComponentsMeta
 from psyneulink.core.components.functions.function import is_function_type, Function, RandomMatrix
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import \
+from psyneulink.core.components.functions.nonstateful.transformfunctions import \
         LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.nonstateful.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
@@ -9461,7 +9462,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 and not (isinstance(self.controller.input_ports, ContentAddressableList)
                          and self.controller.input_ports
                          and self.controller.afferents)):
-            warnings.warn(f"{self.controller.name} for {self.name} is enabled but has no inputs.")
+            from psyneulink.core.compositions.parameterestimationcomposition import ParameterEstimationComposition
+            if not isinstance(self, ParameterEstimationComposition):
+                warnings.warn(f"{self.controller.name} for {self.name} is enabled but has no inputs.")
 
         # ADD MODULATORY COMPONENTS -----------------------------------------------------
 
@@ -11054,9 +11057,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
               are animated; if it is greater than the number of trials being run, only the number being run are
               animated.
 
-            * *MOVIE_DIR*: str (default=project root dir) -- specifies the directdory to be used for the movie file;
-              by default a subdirectory of <root_dir>/show_graph_OUTPUT/GIFS is created using the `name
-              <Composition.name>` of the  `Composition`, and the gif files are stored there.
+            * *MOVIE_DIR*: str or os.PathLike (default=PsyNeuLink root
+              dir or current dir) -- specifies the directory to be used
+              for the movie file; by default a subdirectory of
+              <MOVIE_DIR>/pnl-show_graph-output/GIFs is created using
+              the `name <Composition.name>` of the `Composition`, and
+              the gif files are stored there.
 
             * *MOVIE_NAME*: str (default=\\ `name <Composition.name>` + 'movie') -- specifies the name to be used
               for the movie file; it is automatically appended with '.gif'.
@@ -11488,7 +11494,7 @@ _
 
             if self._animate is not False:
                 # Save list of gifs in self._animation as movie file
-                movie_path = self._animation_directory + '/' + self._movie_filename
+                movie_path = pathlib.Path(self._animation_directory, self._movie_filename)
                 self._animation[0].save(fp=movie_path,
                                         format='GIF',
                                         save_all=True,
@@ -12946,22 +12952,16 @@ _
         self._set_all_parameter_properties_recursively(history_max_length=0)
 
     def _get_processing_condition_set(self, node):
-        dep_group = []
-        for group in self.scheduler.consideration_queue:
+        for index, group in enumerate(self.scheduler.consideration_queue):
             if node in group:
                 break
-            dep_group = group
 
-        # This condition is used to check of the step has passed.
-        # Not all nodes in the previous step need to execute
-        # (they might have other conditions), but if any one does we're good
-        # FIXME: This will fail if none of the previously considered
-        # nodes executes in this pass, but that is unlikely.
-        conds = [Any(*(AllHaveRun(dep, time_scale=TimeScale.PASS) for dep in dep_group))] if len(dep_group) else []
+        assert index is not None
+
         if node in self.scheduler.conditions:
-            conds.append(self.scheduler.conditions[node])
+            return index, self.scheduler.conditions[node]
 
-        return All(*conds)
+        return index, Always()
 
     def _input_matches_variable(self, input_value, var):
         var_shape = convert_to_np_array(var).shape

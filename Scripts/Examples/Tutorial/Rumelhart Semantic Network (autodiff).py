@@ -96,32 +96,32 @@ rels_in = pnl.TransferMechanism(name="rels_in",
 #For the hidden layers, we will be using logistic functions
 
 hn = pnl.TransferMechanism(name="hidden_nouns",
-                           size=9,
+                           input_shapes=9,
                            function=pnl.Logistic()
                             )
 
 hm = pnl.TransferMechanism(name="hidden_mixed",
-                           size=n_units,
+                           input_shapes=n_units,
                            function=pnl.Logistic()
                             )
 
 out_sig_I = pnl.TransferMechanism(name="sig_outs_I",
-                                  size=len(nouns),
+                                  input_shapes=len(nouns),
                                   function=pnl.Logistic()
                                     )
 
 out_sig_is = pnl.TransferMechanism(name="sig_outs_is",
-                                   size=len(is_list),
+                                   input_shapes=len(is_list),
                                    function=pnl.Logistic()
                                     )
 
 out_sig_has = pnl.TransferMechanism(name="sig_outs_has",
-                                    size=len(has_list),
+                                    input_shapes=len(has_list),
                                     function=pnl.Logistic()
                                     )
 
 out_sig_can = pnl.TransferMechanism(name="sig_outs_can",
-                                    size=len(can_list),
+                                    input_shapes=len(can_list),
                                     function=pnl.Logistic()
                                     )
 

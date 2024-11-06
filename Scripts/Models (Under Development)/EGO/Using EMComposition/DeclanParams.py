@@ -50,8 +50,8 @@ model_params = dict(
     previous_state_d = 11, # length of state vector
     context_d = 11, # length of context vector
     memory_capacity = ALL, # number of entries in EM memory; ALL=> match to number of stims
-    memory_init = (0,.0001),  # Initialize memory with random values in interval
-    # memory_init = None,  # Initialize with zeros
+    # memory_init = (0,.0001),  # Initialize memory with random values in interval
+    memory_init = None,  # Initialize with zeros
     concatenate_queries = False,
     # concatenate_queries = True,
 
@@ -75,7 +75,7 @@ model_params = dict(
     # softmax_temperature = CONTROL, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
     # softmax_threshold = None, # threshold used to mask out small values in softmax
     softmax_threshold = .001, # threshold used to mask out small values in softmax
-    enable_learning=[True, False, False], # Enable learning for PREDICTION (STATE) but not CONTEXT or PREVIOUS STATE
+    enable_learning=[False, False, True], # Enable learning for PREDICTION (STATE) but not CONTEXT or PREVIOUS STATE
     learn_field_weights = False,
     loss_spec = Loss.BINARY_CROSS_ENTROPY,
     # loss_spec = Loss.MSE,

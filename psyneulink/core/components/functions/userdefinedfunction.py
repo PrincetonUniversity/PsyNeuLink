@@ -144,8 +144,8 @@ class UserDefinedFunction(Function_Base):
         array([[6]])
 
     Note that the function treats its argument, x, as a 2d array, and accesses its first item for the calculation.
-    This is because  the `variable <Mechanism_Base.variable>` of ``my_mech`` is defined in the **size** argument of
-    its constructor as having a single item (a 1d array of length 3;  (see `size <Component.size>`).  In the
+    This is because  the `variable <Mechanism_Base.variable>` of ``my_mech`` is defined in the **input_shapes** argument of
+    its constructor as having a single item (a 1d array of length 3;  (see `input_shapes <Component.input_shapes>`).  In the
     following example, a function is defined for a Mechanism in which the variable has two items, that are summed by
     the function::
 
@@ -267,7 +267,7 @@ class UserDefinedFunction(Function_Base):
         >>> L = pnl.Logistic(gain = 2)
         >>> def my_fct(variable):
         ...     return L(variable) + 2
-        >>> my_mech = pnl.ProcessingMechanism(size = 3, function = my_fct)
+        >>> my_mech = pnl.ProcessingMechanism(input_shapes = 3, function = my_fct)
         >>> my_mech.execute(input = [1, 2, 3])  #doctest: +SKIP
         array([[2.88079708, 2.98201379, 2.99752738]])
 
@@ -280,7 +280,7 @@ class UserDefinedFunction(Function_Base):
     For example, the following assigns ``my_sinusoidal_fct`` to the `function <OutputPort.function>` of an OutputPort
     of ``my_mech``, rather the Mechanism's `function <Mechanism_Base.function>`::
 
-        >>> my_wave_mech = pnl.ProcessingMechanism(size=1,
+        >>> my_wave_mech = pnl.ProcessingMechanism(input_shapes=1,
         ...                                        function=pnl.Linear,
         ...                                        output_ports=[{pnl.NAME: 'SINUSOIDAL OUTPUT',
         ...                                                       pnl.VARIABLE: [(pnl.OWNER_VALUE, 0),pnl.EXECUTION_COUNT],

@@ -8,19 +8,13 @@
 
 # ********************************************* PNL LLVM helpers **************************************************************
 
+import ast
 from contextlib import contextmanager
-from ctypes import util
 import warnings
-import sys
 
 from llvmlite import ir
-import llvmlite.binding as llvm
-
 
 from .debug import debug_env
-from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, AtNCalls, AfterNCalls, \
-    EveryNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll, Threshold
-from psyneulink.core.scheduling.time import TimeScale
 
 
 @contextmanager
@@ -401,378 +395,52 @@ def call_elementwise_operation(ctx, builder, x, operation, output_ptr):
     for (inp_ptr, out_ptr) in recursive_iterate_arrays(ctx, builder, x, output_ptr):
         builder.store(operation(ctx, builder, builder.load(inp_ptr)), out_ptr)
 
-def printf(builder, fmt, *args, override_debug=False):
-    if "print_values" not in debug_env and not override_debug:
+def printf(ctx, builder, fmt, *args, tags:set):
+
+    tags = frozenset(tags)
+    user_tags = frozenset(ast.literal_eval(debug_env.get("printf_tags", "[]")))
+    if "all" not in user_tags and "always" not in tags and not tags.intersection(user_tags):
         return
 
-    #FIXME: Fix builtin printf and use that instead of this
-    libc_name = "msvcrt" if sys.platform == "win32" else "c"
-    libc = util.find_library(libc_name)
-    assert libc is not None, "Standard libc library not found"
-
-    llvm.load_library_permanently(libc)
-    # Address will be none if the symbol is not found
-    printf_address = llvm.address_of_symbol("printf")
-    assert printf_address is not None, "'printf' symbol not found in {}".format(libc)
-
-    # Direct pointer constants don't work
-    printf_ty = ir.FunctionType(ir.IntType(32), [ir.IntType(8).as_pointer()], var_arg=True)
-    printf = builder.inttoptr(ir.IntType(64)(printf_address), printf_ty.as_pointer())
-    ir_module = builder.function.module
-    fmt += "\0"
-
+    # Set up the formatting string as global symbol
     int8 = ir.IntType(8)
-    fmt_data = bytearray(fmt.encode("utf8"))
+    fmt_data = bytearray((fmt + "\0").encode("utf8"))
     fmt_ty = ir.ArrayType(int8, len(fmt_data))
-    global_fmt = ir.GlobalVariable(ir_module, fmt_ty,
+
+    ir_module = builder.function.module
+    global_fmt = ir.GlobalVariable(ir_module,
+                                   fmt_ty,
                                    name="printf_fmt_" + str(len(ir_module.globals)))
     global_fmt.linkage = "internal"
     global_fmt.global_constant = True
     global_fmt.initializer = fmt_ty(fmt_data)
 
-    fmt_ptr = builder.gep(global_fmt, [ir.IntType(32)(0), ir.IntType(32)(0)])
-    conv_args = [builder.fpext(a, ir.DoubleType()) if is_floating_point(a) else a for a in args]
-    builder.call(printf, [fmt_ptr] + conv_args)
+    printf_ty = ir.FunctionType(ir.IntType(32), [ir.IntType(8).as_pointer()], var_arg=True)
+    get_printf_addr_f = ctx.get_builtin("get_printf_address", [])
+    printf_address = builder.call(get_printf_addr_f, [])
+
+    printf_is_not_null = builder.icmp_unsigned("!=", printf_address, printf_address.type(0))
+    with builder.if_then(printf_is_not_null, likely=True):
+        printf_f = builder.inttoptr(printf_address, printf_ty.as_pointer())
+
+        fmt_ptr = builder.gep(global_fmt, [ir.IntType(32)(0), ir.IntType(32)(0)])
+        conv_args = [builder.fpext(a, ir.DoubleType()) if is_floating_point(a) else a for a in args]
+        builder.call(printf_f, [fmt_ptr] + conv_args)
 
 
-def printf_float_array(builder, array, prefix="", suffix="\n", override_debug=False):
-    printf(builder, prefix, override_debug=override_debug)
+def printf_float_array(ctx, builder, array, prefix="", suffix="\n", *, tags:set):
+    printf(ctx, builder, prefix, tags=tags)
 
     with array_ptr_loop(builder, array, "print_array_loop") as (b1, i):
-        printf(b1, "%lf ", b1.load(b1.gep(array, [i.type(0), i])), override_debug=override_debug)
+        printf(ctx, b1, "%lf ", b1.load(b1.gep(array, [i.type(0), i])), tags=tags)
 
-    printf(builder, suffix, override_debug=override_debug)
+    printf(ctx, builder, suffix, tags=tags)
 
 
-def printf_float_matrix(builder, matrix, prefix="", suffix="\n", override_debug=False):
-    printf(builder, prefix, override_debug=override_debug)
+def printf_float_matrix(ctx, builder, matrix, prefix="", suffix="\n", *, tags:set):
+    printf(ctx, builder, prefix, tags=tags)
     with array_ptr_loop(builder, matrix, "print_row_loop") as (b1, i):
         row = b1.gep(matrix, [i.type(0), i])
-        printf_float_array(b1, row, suffix="\n", override_debug=override_debug)
-    printf(builder, suffix, override_debug=override_debug)
+        printf_float_array(ctx, b1, row, suffix="\n", tags=tags)
 
-
-class ConditionGenerator:
-    def __init__(self, ctx, composition):
-        self.ctx = ctx
-        self.composition = composition
-        self._zero = ctx.int32_ty(0) if ctx is not None else None
-
-    def get_private_condition_struct_type(self, composition):
-        time_stamp_struct = ir.LiteralStructType([self.ctx.int32_ty,   # Trial
-                                                  self.ctx.int32_ty,   # Pass
-                                                  self.ctx.int32_ty])  # Step
-
-        status_struct = ir.LiteralStructType([
-                    self.ctx.int32_ty,  # number of executions in this run
-                    time_stamp_struct   # time stamp of last execution
-                ])
-        structure = ir.LiteralStructType([
-            time_stamp_struct,  # current time stamp
-            ir.ArrayType(status_struct, len(composition.nodes))  # for each node
-        ])
-        return structure
-
-    def get_private_condition_initializer(self, composition):
-        return ((0, 0, 0),
-                tuple((0, (-1, -1, -1)) for _ in composition.nodes))
-
-    def get_condition_struct_type(self, node=None):
-        node = self.composition if node is None else node
-
-        subnodes = getattr(node, 'nodes', [])
-        structs = [self.get_condition_struct_type(n) for n in subnodes]
-        if len(structs) != 0:
-            structs.insert(0, self.get_private_condition_struct_type(node))
-
-        return ir.LiteralStructType(structs)
-
-    def get_condition_initializer(self, node=None):
-        node = self.composition if node is None else node
-
-        subnodes = getattr(node, 'nodes', [])
-        data = [self.get_condition_initializer(n) for n in subnodes]
-        if len(data) != 0:
-            data.insert(0, self.get_private_condition_initializer(node))
-
-        return tuple(data)
-
-    def bump_ts(self, builder, cond_ptr, count=(0, 0, 1)):
-        """
-        Increments the time structure of the composition.
-        Count should be a tuple where there is a number in only one spot, and zeroes elsewhere.
-        Indices greater than that of the one are zeroed.
-        """
-
-        # Only one element should be non-zero
-        assert count.count(0) == len(count) - 1
-
-        # Get timestruct pointer
-        ts_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
-        ts = builder.load(ts_ptr)
-
-        assert len(ts.type) == len(count)
-        # Update run, pass, step of ts
-        for idx in range(len(ts.type)):
-            if all(v == 0 for v in count[:idx]):
-                el = builder.extract_value(ts, idx)
-                el = builder.add(el, el.type(count[idx]))
-            else:
-                el = self.ctx.int32_ty(0)
-            ts = builder.insert_value(ts, el, idx)
-
-        builder.store(ts, ts_ptr)
-        return builder
-
-    def ts_compare(self, builder, ts1, ts2, comp):
-        assert comp == '<'
-
-        # True if all elements to the left of the current one are equal
-        prefix_eq = self.ctx.bool_ty(1)
-        result = self.ctx.bool_ty(0)
-
-        assert ts1.type == ts2.type
-        for element in range(len(ts1.type)):
-            a = builder.extract_value(ts1, element)
-            b = builder.extract_value(ts2, element)
-
-            # Use existing prefix_eq to construct expression
-            # for the current element
-            element_comp = builder.icmp_signed(comp, a, b)
-            current_comp = builder.and_(prefix_eq, element_comp)
-            result = builder.or_(result, current_comp)
-
-            # Update prefix_eq
-            element_eq = builder.icmp_signed('==', a, b)
-            prefix_eq = builder.and_(prefix_eq, element_eq)
-
-        return result
-
-    def __get_node_status_ptr(self, builder, cond_ptr, node):
-        node_idx = self.ctx.int32_ty(self.composition.nodes.index(node))
-        return builder.gep(cond_ptr, [self._zero, self._zero, self.ctx.int32_ty(1), node_idx])
-
-    def __get_node_ts(self, builder, cond_ptr, node):
-        status_ptr = self.__get_node_status_ptr(builder, cond_ptr, node)
-        ts_ptr = builder.gep(status_ptr, [self.ctx.int32_ty(0),
-                                          self.ctx.int32_ty(1)])
-        return builder.load(ts_ptr)
-
-    def get_global_ts(self, builder, cond_ptr):
-        ts_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
-        return builder.load(ts_ptr)
-
-    def generate_update_after_run(self, builder, cond_ptr, node):
-        status_ptr = self.__get_node_status_ptr(builder, cond_ptr, node)
-        status = builder.load(status_ptr)
-
-        # Update number of runs
-        runs = builder.extract_value(status, 0)
-        runs = builder.add(runs, runs.type(1))
-        status = builder.insert_value(status, runs, 0)
-
-        # Update time stamp
-        ts = self.get_global_ts(builder, cond_ptr)
-        status = builder.insert_value(status, ts, 1)
-
-        builder.store(status, status_ptr)
-
-    def generate_ran_this_pass(self, builder, cond_ptr, node):
-        global_ts = self.get_global_ts(builder, cond_ptr)
-        global_trial = builder.extract_value(global_ts, 0)
-        global_pass = builder.extract_value(global_ts, 1)
-
-        node_ts = self.__get_node_ts(builder, cond_ptr, node)
-        node_trial = builder.extract_value(node_ts, 0)
-        node_pass = builder.extract_value(node_ts, 1)
-
-        pass_eq = builder.icmp_signed("==", node_pass, global_pass)
-        trial_eq = builder.icmp_signed("==", node_trial, global_trial)
-        return builder.and_(pass_eq, trial_eq)
-
-    def generate_ran_this_trial(self, builder, cond_ptr, node):
-        global_ts = self.get_global_ts(builder, cond_ptr)
-        global_trial = builder.extract_value(global_ts, 0)
-
-        node_ts = self.__get_node_ts(builder, cond_ptr, node)
-        node_trial = builder.extract_value(node_ts, 0)
-
-        return builder.icmp_signed("==", node_trial, global_trial)
-
-    # TODO: replace num_exec_locs use with equivalent from nodes_states
-    def generate_sched_condition(self, builder, condition, cond_ptr, node,
-                                 is_finished_callbacks, num_exec_locs,
-                                 nodes_states):
-
-
-        if isinstance(condition, Always):
-            return self.ctx.bool_ty(1)
-
-        if isinstance(condition, Never):
-            return self.ctx.bool_ty(0)
-
-        elif isinstance(condition, Not):
-            orig_condition = self.generate_sched_condition(builder, condition.condition, cond_ptr, node, is_finished_callbacks, num_exec_locs, nodes_states)
-            return builder.not_(orig_condition)
-
-        elif isinstance(condition, All):
-            agg_cond = self.ctx.bool_ty(1)
-            for cond in condition.args:
-                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks, num_exec_locs, nodes_states)
-                agg_cond = builder.and_(agg_cond, cond_res)
-            return agg_cond
-
-        elif isinstance(condition, AllHaveRun):
-            # Extract dependencies
-            dependencies = self.composition.nodes
-            if len(condition.args) > 0:
-                dependencies = condition.args
-
-            run_cond = self.ctx.bool_ty(1)
-            for node in dependencies:
-                if condition.time_scale == TimeScale.TRIAL:
-                    node_ran = self.generate_ran_this_trial(builder, cond_ptr, node)
-                elif condition.time_scale == TimeScale.PASS:
-                    node_ran = self.generate_ran_this_pass(builder, cond_ptr, node)
-                else:
-                    assert False, "Unsupported 'AllHaveRun' time scale: {}".format(condition.time_scale)
-                run_cond = builder.and_(run_cond, node_ran)
-            return run_cond
-
-        elif isinstance(condition, Any):
-            agg_cond = self.ctx.bool_ty(0)
-            for cond in condition.args:
-                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks, num_exec_locs, nodes_states)
-                agg_cond = builder.or_(agg_cond, cond_res)
-            return agg_cond
-
-        elif isinstance(condition, AtTrial):
-            trial_num = condition.args[0]
-            global_ts = self.get_global_ts(builder, cond_ptr)
-            trial = builder.extract_value(global_ts, 0)
-            return builder.icmp_unsigned("==", trial, trial.type(trial_num))
-
-        elif isinstance(condition, AtPass):
-            pass_num = condition.args[0]
-            global_ts = self.get_global_ts(builder, cond_ptr)
-            current_pass = builder.extract_value(global_ts, 1)
-            return builder.icmp_unsigned("==", current_pass,
-                                         current_pass.type(pass_num))
-
-        elif isinstance(condition, EveryNCalls):
-            target, count = condition.args
-            assert count == 1, "EveryNCalls isonly supprted with count == 1"
-
-            target_ts = self.__get_node_ts(builder, cond_ptr, target)
-            node_ts = self.__get_node_ts(builder, cond_ptr, node)
-
-            # If target ran after node did its TS will be greater node's
-            return self.ts_compare(builder, node_ts, target_ts, '<')
-
-        elif isinstance(condition, BeforeNCalls):
-            target, count = condition.args
-            scale = condition.time_scale.value
-            target_num_execs_in_scale = builder.gep(num_exec_locs[target],
-                                                    [self.ctx.int32_ty(0),
-                                                     self.ctx.int32_ty(scale)])
-            num_execs = builder.load(target_num_execs_in_scale)
-
-            return builder.icmp_unsigned('<', num_execs, num_execs.type(count))
-
-        elif isinstance(condition, AtNCalls):
-            target, count = condition.args
-            scale = condition.time_scale.value
-            target_num_execs_in_scale = builder.gep(num_exec_locs[target],
-                                                    [self.ctx.int32_ty(0),
-                                                     self.ctx.int32_ty(scale)])
-            num_execs = builder.load(target_num_execs_in_scale)
-            return builder.icmp_unsigned('==', num_execs, num_execs.type(count))
-
-        elif isinstance(condition, AfterNCalls):
-            target, count = condition.args
-            scale = condition.time_scale.value
-            target_num_execs_in_scale = builder.gep(num_exec_locs[target],
-                                                    [self.ctx.int32_ty(0),
-                                                     self.ctx.int32_ty(scale)])
-            num_execs = builder.load(target_num_execs_in_scale)
-            return builder.icmp_unsigned('>=', num_execs, num_execs.type(count))
-
-        elif isinstance(condition, WhenFinished):
-            # The first argument is the target node
-            assert len(condition.args) == 1
-            target = is_finished_callbacks[condition.args[0]]
-            is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_assembly"}))
-            return builder.call(is_finished_f, target[1])
-
-        elif isinstance(condition, WhenFinishedAny):
-            assert len(condition.args) > 0
-
-            run_cond = self.ctx.bool_ty(0)
-            for node in condition.args:
-                target = is_finished_callbacks[node]
-                is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_assembly"}))
-                node_is_finished = builder.call(is_finished_f, target[1])
-
-                run_cond = builder.or_(run_cond, node_is_finished)
-
-            return run_cond
-
-        elif isinstance(condition, WhenFinishedAll):
-            assert len(condition.args) > 0
-
-            run_cond = self.ctx.bool_ty(1)
-            for node in condition.args:
-                target = is_finished_callbacks[node]
-                is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_assembly"}))
-                node_is_finished = builder.call(is_finished_f, target[1])
-
-                run_cond = builder.and_(run_cond, node_is_finished)
-
-            return run_cond
-
-        elif isinstance(condition, Threshold):
-            target = condition.dependency
-            param = condition.parameter
-            threshold = condition.threshold
-            comparator = condition.comparator
-            indices = condition.indices
-
-            # Convert execution_count to  ('num_executions', TimeScale.LIFE).
-            # These two are identical in compiled semantics.
-            if param == 'execution_count':
-                assert indices is None
-                param = 'num_executions'
-                indices = TimeScale.LIFE
-
-            assert param in target.llvm_state_ids, (
-                f"Threshold for {target} only supports items in llvm_state_ids"
-                f" ({target.llvm_state_ids})"
-            )
-
-            node_idx = self.composition._get_node_index(target)
-            node_state = builder.gep(nodes_states, [self.ctx.int32_ty(0), self.ctx.int32_ty(node_idx)])
-            param_ptr = get_state_ptr(builder, target, node_state, param)
-
-            # parameters in state include history of at least one element
-            # so they are always arrays.
-            assert isinstance(param_ptr.type.pointee, ir.ArrayType)
-
-            if indices is None:
-                indices = [0, 0]
-            elif isinstance(indices, TimeScale):
-                indices = [indices.value]
-
-            param_ptr = builder.gep(param_ptr, [self.ctx.int32_ty(x) for x in [0] + list(indices)])
-
-            val = builder.load(param_ptr)
-            val = convert_type(builder, val, ir.DoubleType())
-            threshold = val.type(threshold)
-
-            if comparator == '==':
-                return is_close(self.ctx, builder, val, threshold, condition.rtol, condition.atol)
-            elif comparator == '!=':
-                return builder.not_(is_close(self.ctx, builder, val, threshold, condition.rtol, condition.atol))
-            else:
-                return builder.fcmp_ordered(comparator, val, threshold)
-
-        assert False, "Unsupported scheduling condition: {}".format(condition)
+    printf(ctx, builder, suffix, tags=tags)

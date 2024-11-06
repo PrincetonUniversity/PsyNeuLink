@@ -20,7 +20,7 @@ Increased debug output:
  * "stat" -- prints code generation and compilation statistics
  * "time_stat" -- print compilation and code generation times
  * "comp_node_debug" -- print intermediate results after execution composition node wrapper.
- * "print_values" -- Enabled printfs in llvm code (from ctx printf helper)
+ * "printf_tags" -- Enabledprintfs in compiled caode with the specififed tags
 
 Compilation modifiers:
  * "const_data" -- hardcode initial output values into generated code,

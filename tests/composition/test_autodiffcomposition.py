@@ -618,11 +618,13 @@ class TestTrainingCorrectness:
         min_delt = 0.00001
         learning_rate = 100
 
-        il = TransferMechanism(size=D_i, name='input')
-        cl = TransferMechanism(size=D_c, name='task')
-        hl = TransferMechanism(size=D_h, name='hidden',
+        il = TransferMechanism(input_shapes=D_i, name='input')
+        cl = TransferMechanism(input_shapes=D_c, name='task')
+        hl = TransferMechanism(
+            input_shapes=D_h, name='hidden',
                                function=Logistic(bias=-2))
-        ol = TransferMechanism(size=D_o, name='output',
+        ol = TransferMechanism(
+            input_shapes=D_o, name='output',
                                function=Logistic(bias=-2))
 
         input_set = {
@@ -832,11 +834,13 @@ class TestTrainingCorrectness:
         min_delt = 0.00001
         learning_rate = 100
 
-        il = TransferMechanism(size=D_i, name='input')
-        cl = TransferMechanism(size=D_c, name='task')
-        hl = TransferMechanism(size=D_h, name='hidden',
+        il = TransferMechanism(input_shapes=D_i, name='input')
+        cl = TransferMechanism(input_shapes=D_c, name='task')
+        hl = TransferMechanism(
+            input_shapes=D_h, name='hidden',
                                function=Logistic(bias=-2))
-        ol = TransferMechanism(size=D_o, name='output',
+        ol = TransferMechanism(
+            input_shapes=D_o, name='output',
                                function=Logistic(bias=-2))
 
         input_set = {
@@ -1444,7 +1448,7 @@ class TestNestedNoLearning:
     #
     #     input_dict = {'inputs': {xor_in: xor_inputs}, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}
     #     xor_autodiff.run(inputs = input_dict)
-    #     myTransfer = pnl.TransferMechanism(size = 2)
+    #     myTransfer = pnl.TransferMechanism(input_shapes = 2)
     #     myMappingProj = pnl.MappingProjection(sender = myTransfer, receiver = xor_autodiff)
     #
     #     no_training_input_dict = {xor_in: xor_inputs}
@@ -1722,15 +1726,15 @@ class TestNestedLearning:
 
     @pytest.fixture
     def nodes_for_testing_nested_comps(self):
-        input_nodes = [pnl.ProcessingMechanism(name='input_1', size=2),
-                       pnl.ProcessingMechanism(name='input_2', size=3),
-                       pnl.ProcessingMechanism(name='input_3', size=3)]
-        hidden_nodes = [pnl.ProcessingMechanism(name='hidden_1', size=3),
-                        pnl.ProcessingMechanism(name='hidden_2', size=4),
-                        pnl.ProcessingMechanism(name='hidden_3', size=5),
-                        pnl.ProcessingMechanism(name='hidden_4', size=6)]
-        output_nodes = [pnl.ProcessingMechanism(name='output_1', size=3),
-                        pnl.ProcessingMechanism(name='output_2', size=5)]
+        input_nodes = [pnl.ProcessingMechanism(name='input_1', input_shapes=2),
+                       pnl.ProcessingMechanism(name='input_2', input_shapes=3),
+                       pnl.ProcessingMechanism(name='input_3', input_shapes=3)]
+        hidden_nodes = [pnl.ProcessingMechanism(name='hidden_1', input_shapes=3),
+                        pnl.ProcessingMechanism(name='hidden_2', input_shapes=4),
+                        pnl.ProcessingMechanism(name='hidden_3', input_shapes=5),
+                        pnl.ProcessingMechanism(name='hidden_4', input_shapes=6)]
+        output_nodes = [pnl.ProcessingMechanism(name='output_1', input_shapes=3),
+                        pnl.ProcessingMechanism(name='output_2', input_shapes=5)]
         def _get_nodes(num_input_nodes, num_hidden_nodes, num_output_nodes):
             return (input_nodes[0:num_input_nodes],
                     hidden_nodes[0:num_hidden_nodes],
@@ -1833,7 +1837,7 @@ class TestNestedLearning:
         nodes = nodes_for_testing_nested_comps(1, 1, 2)
         input_nodes, hidden_nodes, output_nodes = nodes
         inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
-        hidden_with_two_output_ports = pnl.ProcessingMechanism(size=3, output_ports=['FIRST','SECOND'])
+        hidden_with_two_output_ports = pnl.ProcessingMechanism(input_shapes=3, output_ports=['FIRST', 'SECOND'])
 
         nested = AutodiffComposition([hidden_nodes[0], hidden_with_two_output_ports], name='nested')
         pathway_a = [input_nodes[0],
@@ -1937,7 +1941,7 @@ class TestNestedLearning:
 
         nodes = nodes_for_testing_nested_comps(2, 0, 1)
         input_nodes, hidden_nodes, output_nodes = nodes
-        hidden_with_2_inputs = pnl.ProcessingMechanism(name='hidden_x', size=(3,3), function=pnl.LinearCombination)
+        hidden_with_2_inputs = pnl.ProcessingMechanism(name='hidden_x', input_shapes=(3, 3), function=pnl.LinearCombination)
 
         inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
 
@@ -2174,7 +2178,7 @@ class TestNestedLearning:
     #     input_nodes, hidden_nodes, output_nodes = nodes
     #     inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
     #
-    #     hidden_2d = pnl.ProcessingMechanism(name='hidden 2d', size=(2,2))
+    #     hidden_2d = pnl.ProcessingMechanism(name='hidden 2d', input_shapes=(2,2))
     #     nested = AutodiffComposition(nodes = [hidden_nodes[0], hidden_2d], name='nested')
     #     pathway_a = [input_nodes[0],
     #                  MappingProjection(input_nodes[0], hidden_2d),
@@ -2313,14 +2317,14 @@ class TestNestedLearning:
     #     input_nodes, hidden_nodes, output_nodes = nodes
     #     inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
     #
-    #     hidden_1 = pnl.ProcessingMechanism(name='hidden_1', size=3)
+    #     hidden_1 = pnl.ProcessingMechanism(name='hidden_1', input_shapes=3)
     #     nested_01 = AutodiffComposition(name='nested_01', nodes=[hidden_1], learning_rate=.01)
     #     autodiff_01_results = execute_learning(comp_type='autodiff',
     #                                           execution_mode=pnl.ExecutionMode.PyTorch,
     #                                           pathways=[input_nodes[0], nested_01, output_nodes[0]],
     #                                           inputs=inputs)
     #
-    #     hidden_2 = pnl.ProcessingMechanism(name='hidden_2', size=3)
+    #     hidden_2 = pnl.ProcessingMechanism(name='hidden_2', input_shapes=3)
     #     nested_1 = AutodiffComposition(name='nested_2', nodes=[hidden_2], learning_rate=.1)
     #     autodiff_1_results = execute_learning(comp_type='autodiff',
     #                                           execution_mode=pnl.ExecutionMode.PyTorch,
@@ -2331,9 +2335,9 @@ class TestNestedLearning:
     #     np.testing.assert_allclose(autodiff_01_results, autodiff_1_results)
 
     def test_error_for_running_nested_learning_in_Python_mode(self):
-        input_mech = pnl.ProcessingMechanism(name='input_mech', size=2)
-        hidden_mech = pnl.ProcessingMechanism(name='hidden_mech', size=2)
-        output_mech = pnl.ProcessingMechanism(name='output_mech', size=2)
+        input_mech = pnl.ProcessingMechanism(name='input_mech', input_shapes=2)
+        hidden_mech = pnl.ProcessingMechanism(name='hidden_mech', input_shapes=2)
+        output_mech = pnl.ProcessingMechanism(name='output_mech', input_shapes=2)
 
         # Test for error on learning if nested is Composition
         nested = pnl.Composition(name='nested', nodes=[hidden_mech])
@@ -2370,14 +2374,14 @@ HIDDEN_C = 'hidden_C'
 OUTPUT_A = 'output_A'
 OUTPUT_B = 'output_B'
 def nodes_for_testing_nested_comps(sizes):
-    return {INPUT_A: pnl.ProcessingMechanism(name=INPUT_A, size=sizes.pop(INPUT_A, 2)),
-            INPUT_B: pnl.ProcessingMechanism(name=INPUT_B, size=sizes.pop(INPUT_B, 2)),
-            INPUT_C: pnl.ProcessingMechanism(name=INPUT_C, size=sizes.pop(INPUT_C, 2)),
-            HIDDEN_A: pnl.ProcessingMechanism(name=HIDDEN_A, size=sizes.pop(HIDDEN_A, 2)),
-            HIDDEN_B: pnl.ProcessingMechanism(name=HIDDEN_B, size=sizes.pop(HIDDEN_B, 2)),
-            HIDDEN_C: pnl.ProcessingMechanism(name=HIDDEN_C, size=sizes.pop(HIDDEN_C, 2)),
-            OUTPUT_A: pnl.ProcessingMechanism(name=OUTPUT_A, size=sizes.pop(OUTPUT_A, 2)),
-            OUTPUT_B: pnl.ProcessingMechanism(name=OUTPUT_B, size=sizes.pop(OUTPUT_B, 2))}
+    return {INPUT_A: pnl.ProcessingMechanism(name=INPUT_A, input_shapes=sizes.pop(INPUT_A, 2)),
+            INPUT_B: pnl.ProcessingMechanism(name=INPUT_B, input_shapes=sizes.pop(INPUT_B, 2)),
+            INPUT_C: pnl.ProcessingMechanism(name=INPUT_C, input_shapes=sizes.pop(INPUT_C, 2)),
+            HIDDEN_A: pnl.ProcessingMechanism(name=HIDDEN_A, input_shapes=sizes.pop(HIDDEN_A, 2)),
+            HIDDEN_B: pnl.ProcessingMechanism(name=HIDDEN_B, input_shapes=sizes.pop(HIDDEN_B, 2)),
+            HIDDEN_C: pnl.ProcessingMechanism(name=HIDDEN_C, input_shapes=sizes.pop(HIDDEN_C, 2)),
+            OUTPUT_A: pnl.ProcessingMechanism(name=OUTPUT_A, input_shapes=sizes.pop(OUTPUT_A, 2)),
+            OUTPUT_B: pnl.ProcessingMechanism(name=OUTPUT_B, input_shapes=sizes.pop(OUTPUT_B, 2))}
 
 
 @pytest.mark.pytorch
@@ -3565,17 +3569,17 @@ class TestACLogging:
 
         np.testing.assert_equal(in_np_dict_vals[0:4], xor_inputs)
         np.testing.assert_equal(in_np_vals, in_np_dict_vals)
-        assert in_np_dict_vals.shape == (expected_length, 1, xor_in.size)
+        assert in_np_dict_vals.shape == (expected_length, 1, xor_in.input_shapes)
 
-        assert hid_map_np_dict_mats.shape == (expected_length, xor_in.size, xor_hid.size)
+        assert hid_map_np_dict_mats.shape == (expected_length, xor_in.input_shapes, xor_hid.input_shapes)
         np.testing.assert_equal(hid_map_np_mats, hid_map_np_dict_mats)
 
-        assert hid_np_dict_vals.shape == (expected_length, 1, xor_hid.size)
+        assert hid_np_dict_vals.shape == (expected_length, 1, xor_hid.input_shapes)
 
-        assert out_map_np_dict_mats.shape == (expected_length, xor_hid.size, xor_out.size)
+        assert out_map_np_dict_mats.shape == (expected_length, xor_hid.input_shapes, xor_out.input_shapes)
         np.testing.assert_equal(out_map_np_mats, out_map_np_dict_mats)
 
-        assert out_np_dict_vals.shape == (expected_length, 1, xor_out.size)
+        assert out_np_dict_vals.shape == (expected_length, 1, xor_out.input_shapes)
 
         xor_out.log.print_entries()
 

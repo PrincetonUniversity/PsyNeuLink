@@ -134,9 +134,11 @@ class PredatorPreySimulator:
         # **************************************  PROCESSING MECHANISMS ********************************************************
 
         # Perceptual Mechanisms
-        self.player_percept = ProcessingMechanism(size=prey_len, function=GaussianDistort(), name="PLAYER PERCEPT")
-        self.predator_percept = ProcessingMechanism(size=predator_len, function=GaussianDistort(), name="PREDATOR PERCEPT")
-        self.prey_percept = ProcessingMechanism(size=prey_len, function=GaussianDistort(), name="PREY PERCEPT")
+        self.player_percept = ProcessingMechanism(
+            input_shapes=prey_len, function=GaussianDistort(), name="PLAYER PERCEPT")
+        self.predator_percept = ProcessingMechanism(
+            input_shapes=predator_len, function=GaussianDistort(), name="PREDATOR PERCEPT")
+        self.prey_percept = ProcessingMechanism(input_shapes=prey_len, function=GaussianDistort(), name="PREY PERCEPT")
 
         # Mechanism used to encode trialtype from environment
         self.prey_pred_trial_input_mech = ProcessingMechanism(name="PREY PREDATOR TRIAL")
