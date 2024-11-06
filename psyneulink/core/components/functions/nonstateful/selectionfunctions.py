@@ -743,9 +743,9 @@ class OneHot(SelectionFunction):
 
         if indicator == True:
             result = np.where(result == extreme_val, 1, result)
-        if max:
+        if max is not None:
             result = np.where(result == -np.inf, 0, result)
-        if min:
+        if min is not None:
             result = np.where(result == np.inf, 0, result)
 
         return self.convert_output_type(result)
