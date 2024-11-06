@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.15.1.0+498.g8554c16ec documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.15.1.0+503.g13128b50f documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+498
+                  0.15.1.0+503
                 </div>
               
             
@@ -5129,8 +5129,12 @@ animated.</p></li>
 If the number specified is less than the total number of trials being run, only the number specified
 are animated; if it is greater than the number of trials being run, only the number being run are
 animated.</p></li>
-<li><p><em>MOVIE_DIR</em>: str (default=project root dir) – specifies the directdory to be used for the movie file;
-by default a subdirectory of &lt;root_dir&gt;/show_graph_OUTPUT/GIFS is created using the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.name" title="psyneulink.core.compositions.composition.Composition.name"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">name</span></code></a> of the  <a class="reference internal" href="#"><span class="doc">Composition</span></a>, and the gif files are stored there.</p></li>
+<li><p><em>MOVIE_DIR</em>: str or os.PathLike (default=PsyNeuLink root
+dir or current dir) – specifies the directory to be used
+for the movie file; by default a subdirectory of
+&lt;MOVIE_DIR&gt;/pnl-show_graph-output/GIFs is created using
+the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.name" title="psyneulink.core.compositions.composition.Composition.name"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">name</span></code></a> of the <a class="reference internal" href="#"><span class="doc">Composition</span></a>, and
+the gif files are stored there.</p></li>
 <li><p><em>MOVIE_NAME</em>: str (default=<a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.name" title="psyneulink.core.compositions.composition.Composition.name"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">name</span></code></a> + ‘movie’) – specifies the name to be used
 for the movie file; it is automatically appended with ‘.gif’.</p></li>
 </ul>
