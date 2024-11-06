@@ -25,7 +25,7 @@ def test_gating(benchmark, comp_mode):
     )
 
     Gating_Mechanism = pnl.GatingMechanism(
-        size=[1],
+        input_shapes=[1],
         gating_signals=[Output_Layer.output_port]
     )
 
@@ -73,7 +73,7 @@ def test_gating(benchmark, comp_mode):
 #     )
 #
 #     Gating_Mechanism = pnl.ControlMechanism(
-#         size=[1],
+#         input_shapes=[1],
 #         control_signals=[Output_Layer.output_port]
 #     )
 #

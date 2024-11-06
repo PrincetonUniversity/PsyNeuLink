@@ -64,7 +64,7 @@ However, it can be configured otherwise, for various forms of processing, as des
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 As with any `Mechanism`, the number of InputPorts can be specified using the **input_ports**, **default_variable** or
-**size** arguments of the constructor (see `Mechanism_InputPorts`), and OutputPorts can be specified using the
+**input_shapes** arguments of the constructor (see `Mechanism_InputPorts`), and OutputPorts can be specified using the
 **output_ports** argument (see `Mechanism_OutputPorts`).  These can be used to configure processing in a variety of
 ways. Some common ones are described below (also see `ProcessingMechanism_Examples`).
 
@@ -270,7 +270,7 @@ class ProcessingMechanism_Base(Mechanism_Base):
     @check_user_specified
     def __init__(self,
                  default_variable=None,
-                 size=None,
+                 input_shapes=None,
                  input_ports=None,
                  function=None,
                  output_ports=None,
@@ -283,7 +283,7 @@ class ProcessingMechanism_Base(Mechanism_Base):
         """Abstract class for processing mechanisms
 
         :param variable: (value)
-        :param size: (int or list/array of ints)
+        :param input_shapes: (int or list/array of ints)
         :param params: (dict)
         :param name: (str)
         :param prefs: (PreferenceSet)
@@ -291,7 +291,7 @@ class ProcessingMechanism_Base(Mechanism_Base):
         """
 
         super().__init__(default_variable=default_variable,
-                         size=size,
+                         input_shapes=input_shapes,
                          input_ports=input_ports,
                          function=function,
                          output_ports=output_ports,
@@ -379,7 +379,7 @@ class ProcessingMechanism(ProcessingMechanism_Base):
     @beartype
     def __init__(self,
                  default_variable=None,
-                 size=None,
+                 input_shapes=None,
                  input_ports:Optional[Union[Iterable, Mechanism, OutputPort, InputPort]]=None,
                  output_ports:Optional[Union[str, Iterable]]=None,
                  function=None,
@@ -388,7 +388,7 @@ class ProcessingMechanism(ProcessingMechanism_Base):
                  prefs:   Optional[ValidPrefSet] = None,
                  **kwargs):
         super(ProcessingMechanism, self).__init__(default_variable=default_variable,
-                                                  size=size,
+                                                  input_shapes=input_shapes,
                                                   input_ports=input_ports,
                                                   function=function,
                                                   output_ports=output_ports,

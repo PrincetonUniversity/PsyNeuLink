@@ -47,7 +47,7 @@ names = [
 @pytest.mark.parametrize('variable, func, params, expected', test_data, ids=names)
 def test_with_dictionary_memory(variable, func, params, expected, benchmark, mech_mode):
     f = func(seed=0, **params)
-    m = EpisodicMemoryMechanism(size=len(variable[0]), assoc_size=len(variable[1]), function=f)
+    m = EpisodicMemoryMechanism(input_shapes=len(variable[0]), assoc_size=len(variable[1]), function=f)
     EX = pytest.helpers.get_mech_execution(m, mech_mode)
 
     EX(variable)
@@ -85,7 +85,7 @@ test_data = [
         # func_params
         {'default_variable': [[0,0],[0,0],[0,0,0]]},
         # mech_params
-        {'size':[2,2,3]},
+        {'input_shapes':[2,2,3]},
         # test_var
         [[10.,10.],[20., 30.],[40., 50., 60.]],
         # expected input_port names
@@ -111,7 +111,7 @@ test_data = [
         {'initializer':np.array([[np.array([1]), np.array([2, 3]), np.array([4, 5, 6])],
                                  [list([10]), list([20, 30]), list([40, 50, 60])],
                                  [np.array([11]), np.array([22, 33]), np.array([44, 55, 66])]], dtype=object)},
-        {'size':[1,2,3]},
+        {'input_shapes':[1,2,3]},
         [[10.],[20., 30.],[40., 50., 60.]],
         ['FIELD_0_INPUT', 'FIELD_1_INPUT', 'FIELD_2_INPUT'],
         ['RETRIEVED_FIELD_0', 'RETRIEVED_FIELD_1', 'RETRIEVED_FIELD_2'],
@@ -136,7 +136,7 @@ test_data = [
         {'initializer':np.array([[np.array([1,2]), np.array([3,4]), np.array([5, 6])],
                                  [[10,20], [30,40], [50,60]],
                                  [np.array([11,12]), np.array([22, 23]), np.array([34, 35])]])},
-        {'size':[2,2,2]},
+        {'input_shapes':[2,2,2]},
         [[11,13], [22,23], [34, 35]],
         ['FIELD_0_INPUT', 'FIELD_1_INPUT', 'FIELD_2_INPUT'],
         ['RETRIEVED_FIELD_0', 'RETRIEVED_FIELD_1', 'RETRIEVED_FIELD_2'],
@@ -249,7 +249,7 @@ def test_contentaddressable_memory_warnings_and_errors():
     with pytest.raises(FunctionError) as error_text:
         f = ContentAddressableMemory(initializer=[[[[1],[0],[1]], [[1],[0],[0]], [[0],[1],[1]]],
                                                   [[[0],[1],[0]], [[0],[1],[1]], [[1],[1],[0]]]])
-        em = EpisodicMemoryMechanism(size = [1,1,1], function=f)
+        em = EpisodicMemoryMechanism(input_shapes= [1, 1, 1], function=f)
         em.execute([[[0],[1],[0]], [[0],[1],[1]], [[1],[1],[0]]])
     assert 'Attempt to store and/or retrieve an entry in ContentAddressableMemory ' \
            '([[[1]\n  [0]\n  [1]]\n\n [[1]\n  [0]\n  [0]]\n\n [[0]\n  [1]\n  [1]]]) ' \

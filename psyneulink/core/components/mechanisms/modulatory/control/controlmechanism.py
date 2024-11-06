@@ -630,7 +630,7 @@ from psyneulink.core.globals.keywords import \
     EID_SIMULATION, FEEDBACK, FUNCTION, GATING_SIGNAL, INIT_EXECUTE_METHOD_ONLY, INTERNAL_ONLY, NAME, \
     MECHANISM, MULTIPLICATIVE, MODULATORY_SIGNALS, MONITOR_FOR_CONTROL, MONITOR_FOR_MODULATION, \
     OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PARAMS, PORT_TYPE, PRODUCT, PROJECTION_TYPE, PROJECTIONS, \
-    REFERENCE_VALUE, SEPARATE, SIZE, VALUE
+    REFERENCE_VALUE, SEPARATE, INPUT_SHAPES, VALUE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
@@ -1276,7 +1276,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
     @beartype
     def __init__(self,
                  default_variable=None,
-                 size=None,
+                 input_shapes=None,
                  monitor_for_control: Optional[Union[Iterable, Mechanism, OutputPort]] = None,
                  objective_mechanism=None,
                  allow_probes: bool = False,
@@ -1341,7 +1341,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         super(ControlMechanism, self).__init__(
             default_variable=default_variable,
-            size=size,
+            input_shapes=input_shapes,
             modulation=modulation,
             params=params,
             name=name,
@@ -1498,9 +1498,9 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         # Get size of ObjectiveMechanism's OUTCOME OutputPort, and then append sizes of other any InputPorts passed in
         outcome_input_port_size = self.objective_mechanism.output_ports[OUTCOME].value.size
-        outcome_input_port = {SIZE:outcome_input_port_size,
-                               NAME:OUTCOME,
-                               PARAMS:{INTERNAL_ONLY:True}}
+        outcome_input_port = {INPUT_SHAPES:outcome_input_port_size,
+                              NAME:OUTCOME,
+                              PARAMS:{INTERNAL_ONLY:True}}
         other_input_port_value_sizes, _  = self._handle_arg_input_ports(other_input_ports)
         input_port_value_sizes = [outcome_input_port_size] + other_input_port_value_sizes
         input_ports = [outcome_input_port] + other_input_ports

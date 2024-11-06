@@ -54,12 +54,12 @@ max_alloc = 500
 # **************************************  PROCESSING MECHANISMS ********************************************************
 
 # Perceptual Mechanisms
-player_percept = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PLAYER PERCEPT")
-predator_percept = ProcessingMechanism(size=predator_len, function=GaussianDistort, name="PREDATOR PERCEPT")
-prey_percept = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PREY PERCEPT")
+player_percept = ProcessingMechanism(input_shapes=prey_len, function=GaussianDistort, name="PLAYER PERCEPT")
+predator_percept = ProcessingMechanism(input_shapes=predator_len, function=GaussianDistort, name="PREDATOR PERCEPT")
+prey_percept = ProcessingMechanism(input_shapes=prey_len, function=GaussianDistort, name="PREY PERCEPT")
 
 # Value and Reward Mechanisms (not yet used;  for future use)
-values = TransferMechanism(size=3, name="AGENT VALUES")
+values = TransferMechanism(input_shapes=3, name="AGENT VALUES")
 reward = TransferMechanism(name="REWARD")
 
 # env = ForagerEnv()

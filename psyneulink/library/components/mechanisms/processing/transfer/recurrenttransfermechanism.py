@@ -646,7 +646,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     @beartype
     def __init__(self,
                  default_variable=None,
-                 size=None,
+                 input_shapes=None,
                  input_ports: Optional[Union[list, dict]] = None,
                  has_recurrent_input_port=None,
                  combination_function: Optional[Callable] = None,
@@ -688,7 +688,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         super().__init__(
             default_variable=default_variable,
-            size=size,
+            input_shapes=input_shapes,
             input_ports=input_ports,
             function=function,
             integrator_function=integrator_function,
@@ -766,7 +766,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                 if isinstance(matrix_param, AutoAssociativeProjection):
                     err_msg = ("Number of rows in {} param for {} ({}) must be same as the size of variable for "
                                "{} {} (whose size is {} and whose variable is {})".
-                               format(MATRIX, self.name, rows, self.__class__.__name__, self.name, self.size,
+                               format(MATRIX, self.name, rows, self.__class__.__name__, self.name, self.input_shapes,
                                       self.defaults.variable))
                 else:
                     err_msg = ("Size of {} param for {} ({}) must be the same as its variable ({})".
@@ -779,9 +779,9 @@ class RecurrentTransferMechanism(TransferMechanism):
             if (auto_param is not None) and not isinstance(auto_param, (np.ndarray, list, numbers.Number)):
                 raise RecurrentTransferError("auto parameter ({}) of {} is of incompatible type: it should be a "
                                              "number, None, or a 1D numeric array".format(auto_param, self))
-            if isinstance(auto_param, (np.ndarray, list)) and safe_len(auto_param) != 1 and safe_len(auto_param) != self.size[0]:
+            if isinstance(auto_param, (np.ndarray, list)) and safe_len(auto_param) != 1 and safe_len(auto_param) != self.input_shapes[0]:
                 raise RecurrentTransferError("auto parameter ({0}) for {1} is of incompatible length with the size "
-                                             "({2}) of its owner, {1}.".format(auto_param, self, self.size[0]))
+                                             "({2}) of its owner, {1}.".format(auto_param, self, self.input_shapes[0]))
 
         if HETERO in target_set:
             hetero_param = target_set[HETERO]
@@ -790,9 +790,9 @@ class RecurrentTransferMechanism(TransferMechanism):
                                              "number, None, or a 2D numeric array".format(hetero_param, self))
             hetero_shape = np.array(hetero_param).shape
             if hetero_shape != (1,) and hetero_shape != (1, 1):
-                if isinstance(hetero_param, (np.ndarray, list, np.matrix)) and (hetero_param.ndim > 0 and hetero_shape[0] != self.size[0]):
+                if isinstance(hetero_param, (np.ndarray, list, np.matrix)) and (hetero_param.ndim > 0 and hetero_shape[0] != self.input_shapes[0]):
                     raise RecurrentTransferError("hetero parameter ({0}) for {1} is of incompatible size with the size "
-                                                 "({2}) of its owner, {1}.".format(hetero_param, self, self.size[0]))
+                                                 "({2}) of its owner, {1}.".format(hetero_param, self, self.input_shapes[0]))
                 if isinstance(hetero_param, (np.ndarray, list, np.matrix)) and (hetero_param.ndim > 0 and hetero_shape[0] != hetero_shape[1]):
                     raise RecurrentTransferError("hetero parameter ({}) for {} must be square.".format(hetero_param, self))
 

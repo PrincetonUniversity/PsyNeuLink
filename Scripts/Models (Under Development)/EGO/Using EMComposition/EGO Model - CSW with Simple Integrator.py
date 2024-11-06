@@ -232,11 +232,11 @@ def construct_model(model_name:str=model_params['name'],
     # -------------------------------------------------  Nodes  ------------------------------------------------------
     # ----------------------------------------------------------------------------------------------------------------
 
-    state_input_layer = ProcessingMechanism(name=state_input_name, size=state_size)
-    previous_state_layer = ProcessingMechanism(name=previous_state_input_name, size=state_size)
-    # context_layer = ProcessingMechanism(name=context_name, size=context_size)
+    state_input_layer = ProcessingMechanism(name=state_input_name, input_shapes=state_size)
+    previous_state_layer = ProcessingMechanism(name=previous_state_input_name, input_shapes=state_size)
+    # context_layer = ProcessingMechanism(name=context_name, input_shapes=context_size)
     context_layer = TransferMechanism(name=context_name,
-                                      size=context_size,
+                                      input_shapes=context_size,
                                       function=Tanh,
                                       integrator_mode=True,
                                       integration_rate=integration_rate)
@@ -275,7 +275,7 @@ def construct_model(model_name:str=model_params['name'],
                        device=device
                        )
 
-    prediction_layer = ProcessingMechanism(name=prediction_layer_name, size=state_size)
+    prediction_layer = ProcessingMechanism(name=prediction_layer_name, input_shapes=state_size)
 
     
     # ----------------------------------------------------------------------------------------------------------------
