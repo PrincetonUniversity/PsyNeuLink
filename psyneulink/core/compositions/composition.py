@@ -1383,11 +1383,11 @@ COMMENT:
     >>> B = ProcessingMechanism(name='B', default_variable=[0,0,0])
     >>> inner_nested_comp = Composition(nodes=[A, B])
 
-    >>> C = ComparatorMechanism(name='C', size=3)
+    >>> C = ComparatorMechanism(name='C', input_shapes=3)
     >>> nested_comp_1 = Composition(nodes=[C, inner_nested_comp])
 
-    >>> D = ComparatorMechanism(name='D', size=3)
-    >>> E = ComparatorMechanism(name='E', size=3)
+    >>> D = ComparatorMechanism(name='D', input_shapes=3)
+    >>> E = ComparatorMechanism(name='E', input_shapes=3)
     >>> nested_comp_2 = Composition([D, E])
 
     >>> F = ComparatorMechanism(name='F')
@@ -9461,7 +9461,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 and not (isinstance(self.controller.input_ports, ContentAddressableList)
                          and self.controller.input_ports
                          and self.controller.afferents)):
-            warnings.warn(f"{self.controller.name} for {self.name} is enabled but has no inputs.")
+            from psyneulink.core.compositions.parameterestimationcomposition import ParameterEstimationComposition
+            if not isinstance(self, ParameterEstimationComposition):
+                warnings.warn(f"{self.controller.name} for {self.name} is enabled but has no inputs.")
 
         # ADD MODULATORY COMPONENTS -----------------------------------------------------
 
@@ -12946,22 +12948,16 @@ _
         self._set_all_parameter_properties_recursively(history_max_length=0)
 
     def _get_processing_condition_set(self, node):
-        dep_group = []
-        for group in self.scheduler.consideration_queue:
+        for index, group in enumerate(self.scheduler.consideration_queue):
             if node in group:
                 break
-            dep_group = group
 
-        # This condition is used to check of the step has passed.
-        # Not all nodes in the previous step need to execute
-        # (they might have other conditions), but if any one does we're good
-        # FIXME: This will fail if none of the previously considered
-        # nodes executes in this pass, but that is unlikely.
-        conds = [Any(*(AllHaveRun(dep, time_scale=TimeScale.PASS) for dep in dep_group))] if len(dep_group) else []
+        assert index is not None
+
         if node in self.scheduler.conditions:
-            conds.append(self.scheduler.conditions[node])
+            return index, self.scheduler.conditions[node]
 
-        return All(*conds)
+        return index, Always()
 
     def _input_matches_variable(self, input_value, var):
         var_shape = convert_to_np_array(var).shape

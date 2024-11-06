@@ -1091,7 +1091,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
     def __init__(self,
                  # default_variable:Union[list, np.ndarray],
                  default_variable=None,
-                 size=None,
+                 input_shapes=None,
                  covariates_sources: Optional[Union[InputPort, list]] = None,
                  error_sources: Optional[Union[Mechanism, list]] = None,
                  function=None,
@@ -1121,7 +1121,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
         super().__init__(
             default_variable=default_variable,
-            size=size,
+            input_shapes=input_shapes,
             covariates_sources=covariates_sources,
             error_sources=error_sources,
             function=function,

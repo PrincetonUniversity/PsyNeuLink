@@ -15,12 +15,12 @@ from psyneulink.core.globals.keywords import \
 def test_gating_with_composition():
     """Tests same configuration as control of InputPort in tests/mechansims/test_identicalness_of_control_and_gating
     """
-    Input_Layer = TransferMechanism(name='Input Layer', function=Logistic, size=2)
-    Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1', function=Logistic, size=5)
-    Hidden_Layer_2 = TransferMechanism(name='Hidden Layer_2', function=Logistic, size=4)
-    Output_Layer = TransferMechanism(name='Output Layer', function=Logistic, size=3)
+    Input_Layer = TransferMechanism(name='Input Layer', function=Logistic, input_shapes=2)
+    Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1', function=Logistic, input_shapes=5)
+    Hidden_Layer_2 = TransferMechanism(name='Hidden Layer_2', function=Logistic, input_shapes=4)
+    Output_Layer = TransferMechanism(name='Output Layer', function=Logistic, input_shapes=3)
 
-    Gating_Mechanism = GatingMechanism(size=[1], gate=[Hidden_Layer_1, Hidden_Layer_2, Output_Layer])
+    Gating_Mechanism = GatingMechanism(input_shapes=[1], gate=[Hidden_Layer_1, Hidden_Layer_2, Output_Layer])
 
     Input_Weights_matrix = (np.arange(2 * 5).reshape((2, 5)) + 1) / (2 * 5)
     Middle_Weights_matrix = (np.arange(5 * 4).reshape((5, 4)) + 1) / (5 * 4)
@@ -137,7 +137,7 @@ def test_gating_with_UDF_with_composition():
     )
 
     Gating_Mechanism = pnl.GatingMechanism(
-        size=[1],
+        input_shapes=[1],
         gating_signals=[
             # Output_Layer
             Output_Layer.output_port,

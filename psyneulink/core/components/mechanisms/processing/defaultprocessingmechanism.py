@@ -59,7 +59,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
     @beartype
     def __init__(self,
                  default_variable=None,
-                 size=None,
+                 input_shapes=None,
                  params=None,
                  name=None,
                  prefs:   Optional[ValidPrefSet] = None,
@@ -69,14 +69,14 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
         """Add Linear as default function, assign default name, and call super.__init__
 
         :param default_variable: (value)
-        :param size: (int or list/array of ints)
+        :param input_shapes: (int or list/array of ints)
         :param params: (dict)
         :param name: (str)
         :param prefs: (PreferenceSet)
         """
 
         super(DefaultProcessingMechanism_Base, self).__init__(default_variable=default_variable,
-                                                              size=size,
+                                                              input_shapes=input_shapes,
                                                               function=function,
                                                               params=params,
                                                               name=name,

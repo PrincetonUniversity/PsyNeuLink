@@ -73,14 +73,14 @@ class Mechanism(ShellClass):
     @check_user_specified
     def __init__(self,
                  default_variable=None,
-                 size=None,
+                 input_shapes=None,
                  function=None,
                  param_defaults=None,
                  name=None,
                  prefs=None,
                  **kwargs):
         super().__init__(default_variable=default_variable,
-                         size=size,
+                         input_shapes=input_shapes,
                          function=function,
                          param_defaults=param_defaults,
                          name=name,

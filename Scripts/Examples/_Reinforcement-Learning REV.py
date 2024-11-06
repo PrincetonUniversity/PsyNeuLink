@@ -4,12 +4,12 @@ import psyneulink as pnl
 import psyneulink.core.components.functions.nonstateful.transferfunctions
 
 input_layer = pnl.TransferMechanism(
-    size=3,
+    input_shapes=3,
     name='Input Layer'
 )
 
 action_selection = pnl.TransferMechanism(
-        size=3,
+        input_shapes=3,
         function=psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax(
                 output=pnl.ALL,
                 gain=1.0),

@@ -7,16 +7,19 @@ import psyneulink.core.components.functions.nonstateful.distributionfunctions
 import psyneulink.core.components.functions.stateful.integratorfunctions
 import psyneulink.core.components.functions.nonstateful.transferfunctions
 
-colors_input_layer = pnl.TransferMechanism(size=2,
+colors_input_layer = pnl.TransferMechanism(
+    input_shapes=2,
                                            function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear,
                                            name='COLORS_INPUT')
 
-words_input_layer = pnl.TransferMechanism(size=2,
+words_input_layer = pnl.TransferMechanism(
+    input_shapes=2,
                                           function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear,
                                           name='WORDS_INPUT')
 
 #   Task layer, tasks: ('name the color', 'read the word')
-task_layer = pnl.TransferMechanism(size=2,
+task_layer = pnl.TransferMechanism(
+    input_shapes=2,
                                    function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear,
                                    name='TASK')
 
@@ -26,14 +29,16 @@ task_layer = pnl.TransferMechanism(size=2,
 #   randomly distributed noise to the net input
 #   time averaging = integration_rate = 0.1
 unit_noise = 0.001
-colors_hidden_layer = pnl.TransferMechanism(size=2,
+colors_hidden_layer = pnl.TransferMechanism(
+    input_shapes=2,
                                             function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic(gain=1.0, x_0=4.0),  #should be able to get same result with offset = -4.0
                                             integrator_mode=True,
                                             noise=psyneulink.core.components.functions.nonstateful.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function,
                                             integration_rate=0.1,
                                             name='COLORS HIDDEN')
 #    words_hidden: ('RED','GREEN')
-words_hidden_layer = pnl.TransferMechanism(size=2,
+words_hidden_layer = pnl.TransferMechanism(
+    input_shapes=2,
                                            function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic(gain=1.0, x_0=4.0),
                                            integrator_mode=True,
                                            noise=psyneulink.core.components.functions.nonstateful.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function,
@@ -43,7 +48,8 @@ words_hidden_layer = pnl.TransferMechanism(size=2,
 #    OUTPUT UNITS
 
 #   Response layer, provide input to accumulator, responses: ('red', 'green')
-response_layer = pnl.TransferMechanism(size=2,
+response_layer = pnl.TransferMechanism(
+    input_shapes=2,
                                        function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic,
                                        integrator_mode=True,
                                        noise=psyneulink.core.components.functions.nonstateful.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function,

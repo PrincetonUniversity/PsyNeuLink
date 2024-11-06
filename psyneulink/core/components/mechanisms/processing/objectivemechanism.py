@@ -73,7 +73,7 @@ used to specify attributes of the InputPort and/or MappingProjection(s) to it, t
 monitor the specified OutputPort.  In general, the `value <OutputPort.value>` of each specified OutputPort determines
 the format of the `variable <InputPort.variable>` of the InputPort that is created for it by the ObjectiveMechanism.
 However, this can be overridden using the ObjectiveMechanism's `default_variable <Component_Variable>`
-or `size <Mechanism_Base.size>` attributes (see `Mechanism InputPort specification
+or `input_shapes <Mechanism_Base.input_shapes>` attributes (see `Mechanism InputPort specification
 <Mechanism_InputPort_Specification>`), or by specifying a Projection from the OutputPort to the InputPort (see
 `Input Source Specification <InputPort_Projection_Source_Specification>`). If an item in the
 **monitor** argument specifies an InputPort for the ObjectiveMechanism, but not the OutputPort to
@@ -154,7 +154,7 @@ COMMENT
 
 By default, the format of the `variable <InputPort.variable>` for each InputPort is determined by the `value
 <OutputPort.value>` of the monitored OutputPort(s) to which it corresponds.  However, if either the
-**default_variable** or **size** argument is specified in an Objective Mechanism's constructor, or a `variable
+**default_variable** or **input_shapes** argument is specified in an Objective Mechanism's constructor, or a `variable
 <InputPort.variable>` is `specified for an InputPort <InputPort_Specification>` for one or more of the items in
 its **monitor** argument, then that is used as the format for the corresponding InputPort(s).  This can be used to
 transform the `value <OutputPort.value>` of a monitored OutputPort into different form for the `variable
@@ -567,7 +567,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  monitor=None,
                  default_variable=None,
-                 size=None,
+                 input_shapes=None,
                  function=None,
                  output_ports: Optional[Union[str, Iterable]] = None,
                  params=None,
@@ -590,7 +590,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         super().__init__(
             default_variable=default_variable,
-            size=size,
+            input_shapes=input_shapes,
                          monitor=monitor,
                          output_ports=output_ports,
                          function=function,
