@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>SelectionFunctions &mdash; PsyNeuLink 0.15.1.0+504.g23e0ee142 documentation</title>
+  <title>SelectionFunctions &mdash; PsyNeuLink 0.15.1.0+505.g8059f06a7 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+504
+                  0.15.1.0+505
                 </div>
               
             
@@ -213,59 +213,91 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.selectionfunctions.OneHot">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.selectionfunctions.</span></span><span class="sig-name descname"><span class="pre">OneHot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.selectionfunctions.</span></span><span class="sig-name descname"><span class="pre">OneHot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abs_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indicator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tie</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return an array with one non-zero value.</p>
 <p id="onehot"><code class="xref any docutils literal notranslate"><span class="pre">function</span></code> returns an array the same length as the first item in <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.variable" title="psyneulink.core.components.functions.selectionfunctions.OneHot.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>,
-with all of its values zeroed except one, unless there are ties, which are handled according to the choice of
-<a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a>, as follows:</p>
+with all of its values zeroed except one (unless there is a tie, which is handled as specified by <strong>tie</strong>); the
+following options can be used in any combination:</p>
+<blockquote>
+<div><ul>
+<li><p><strong>mode</strong>: determines how the non-zero value(s) in the array is (are) selected</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><em>STANDARD</em>: value (or 1) for the element(s) with the maximum or minimum value(s) in the array,
+as specified by the options below; all other elements are zeroed;  this is the default.</p></li>
+<li><p><em>PROB</em>: value of probabilistically chosen element based on probabilities passed in second item
+of variable; if there is a tie, a single element is chosen probabilistically.</p></li>
+<li><p><em>PROB_INDICATOR</em>: same as <em>PROB</em> but chosen item is assigned a value of 1;
+if there is a tie, a single element is chosen probabilistically.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<blockquote>
+<div><ul>
+<li><p><strong>direction</strong>: <em>MAX</em> (default) or <em>MIN</em>
+determines whether the maximum or minimum value(s) in the array are selected.</p></li>
+<li><p><strong>abs_val</strong>: <em>False</em> (default) or <em>True</em>
+determines whether the absolute values of the elements in the array are used to
+select the maximum or minimum value(s).</p></li>
+<li><p><strong>indicator</strong>:  <em>False</em> (default) or <em>True</em>
+determines whether the selected values(s) is (are) replace with a value of 1.</p></li>
+<li><p><strong>tie</strong>: <em>ALL</em> (default), <em>FIRST</em>, <em>LAST</em> or <em>RANDOM</em>
+determines how a tie is handled when there is more than one element with the maximum or minimum value;</p>
+<p><em>ALL</em>: selects all elements in the tie;</p>
+<p><em>FIRST</em>: selects the value of the element with the lowest index;</p>
+<p><em>LAST</em>: selects the value of the element with the lowest index;</p>
+<p><em>RANDOM</em>: randomly selects one of the tied elements;</p>
+</li>
+</ul>
+</div></blockquote>
+<p>The following convenience keywords can be used to specify particular combinations of options for the <strong>mode</strong>
+argument together with the <strong>tie</strong> argument (these are included mainly for backward compatibility):</p>
 <blockquote>
 <div><ul class="simple">
 <li><p><em>ARG_MAX</em>: signed value of a single element with the maximum signed value,
-or the one with lowest index if there are ties.</p></li>
+or the one with lowest index if there is a tie.</p></li>
 <li><p><em>ARG_MAX_ABS</em>: absolute value of a single element with the maximum absolute value,
-or the one with lowest index if there are ties.</p></li>
+or the one with lowest index if there is a tie.</p></li>
 <li><p><em>ARG_MAX_INDICATOR</em>: 1 in place of single element with maximum signed value,
-or the one with lowest index if there are ties.</p></li>
+or the one with lowest index if there is a tie.</p></li>
 <li><p><em>ARG_MAX_ABS_INDICATOR</em>: 1 in place of single element with maximum absolute value,
-or the one with lowest index if there are ties.</p></li>
-<li><p><em>MAX_VAL</em>: signed value of the element with the maximum signed value,
-or all elements with the maximum value if there are ties.</p></li>
-<li><p><em>MAX_ABS_VAL</em>: absolute value of the element with the maximum absolute value,
-or all elements with the maximum value if there are ties.</p></li>
-<li><p><em>MAX_INDICATOR</em>: 1 in place of the element with the maximum signed value,
-or all elements with the maximum value if there are ties.</p></li>
-<li><p><em>MAX_ABS_INDICATOR</em>: 1 in place of the element(s) with the maximum absolute value,
-or all elements with the maximum value if there are ties.</p></li>
+or the one with lowest index if there is a tie.</p></li>
+<li><p><em>MAX_VAL</em>: signed value of the element with the maximum signed value;
+if there is a tie, which elements are returned is determined by <code class="xref any docutils literal notranslate"><span class="pre">tie_index</span></code>.</p></li>
+<li><p><em>MAX_ABS_VAL</em>: absolute value of the element with the maximum absolute value;
+if there is a tie, which elements are returned is determined by <code class="xref any docutils literal notranslate"><span class="pre">tie_index</span></code>.</p></li>
+<li><p><em>MAX_INDICATOR</em>: 1 in place of the element with the maximum signed value;
+if there is a tie, which elements are returned is determined by <code class="xref any docutils literal notranslate"><span class="pre">tie_index</span></code>.</p></li>
+<li><p><em>MAX_ABS_INDICATOR</em>: 1 in place of the element(s) with the maximum absolute value;
+if there is a tie, which elements are returned is determined by <code class="xref any docutils literal notranslate"><span class="pre">tie_index</span></code>.</p></li>
 <li><p><em>ARG_MIN</em>: signed value of a single element with the minium signed value,
-or the one with lowest index if there are ties.</p></li>
+or the one with lowest index if there is a tie.</p></li>
 <li><p><em>ARG_MIN_ABS</em>: absolute value of a single element with the minium absolute value,
-or the one with lowest index if there are ties.</p></li>
+or the one with lowest index if there is a tie.</p></li>
 <li><p><em>ARG_MIN_INDICATOR</em>: 1 in place of single element with minimum signed value,
-or the one with lowest index if there are ties.</p></li>
+or the one with lowest index if there is a tie.</p></li>
 <li><p><em>MIN_VAL</em>: signed value of the element with the minimum signed value,
-or all elements with the minimum value if there are ties.</p></li>
-<li><p><em>MIN_ABS_VAL</em>: absolute value of element with the minimum absolute value,
-or all elements with the minimum value if there are ties.</p></li>
-<li><p><em>MIN_INDICATOR</em>: 1 in place of the element with the minimum signed value,
-or all elements with the minimum value if there are ties.</p></li>
-<li><p><em>MIN_ABS_INDICATOR</em>: 1 in place of the element with the minimum absolute value,
-or all elements with the minimum value if there are ties.</p></li>
-<li><p><em>PROB</em>: value of probabilistically chosen element based on probabilities passed in second item of variable;
-if there are ties, a single element is chosen probabilistically.</p></li>
-<li><p><em>PROB_INDICATOR</em>: same as <em>PROB</em> but chosen item is assigned a value of 1;
-if there are ties, a single element is chosen probabilistically.</p></li>
+or all elements with the minimum value if there is a tie.</p></li>
+<li><p><em>MIN_ABS_VAL</em>: absolute value of element with the minimum absolute value;
+if there is a tie, which elements are returned is determined by <code class="xref any docutils literal notranslate"><span class="pre">tie_index</span></code>.</p></li>
+<li><p><em>MIN_INDICATOR</em>: 1 in place of the element with the minimum signed value;
+if there is a tie, which elements are returned is determined by <code class="xref any docutils literal notranslate"><span class="pre">tie_index</span></code>.</p></li>
+<li><p><em>MIN_ABS_INDICATOR</em>: 1 in place of the element with the minimum absolute value;
+if there is a tie, which elements are returned is determined by <code class="xref any docutils literal notranslate"><span class="pre">tie_index</span></code>.</p></li>
 </ul>
+</div></blockquote>
 </div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>variable</strong> (<em>2d np.array : default class_defaults.variable</em>) – First (possibly only) item specifies a template for the array to be transformed;  if <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a> is
 <em>PROB</em> then a 2nd item must be included that is a probability distribution with same length as 1st item.</p></li>
-<li><p><strong>mode</strong> (<em>ARG_MAX</em><em>, </em><em>ARG_MAX_ABS</em><em>, </em><em>ARG_MAX_INDICATOR</em><em>, </em><em>ARG_MAX_ABS_INDICATOR</em><em>,</em>) – </p></li>
-<li><p><strong>MAX_VAL</strong> – </p></li>
-<li><p><strong>MAX_ABS_VAL</strong> – </p></li>
-<li><p><strong>MAX_INDICATOR</strong> – </p></li>
-<li><p><strong>MAX_ABS_INDICATOR</strong> – </p></li>
+<li><p><strong>mode</strong> (<em>DETERMINISITC</em><em>, </em><em>PROB</em><em>, </em><em>PROB_INDICATOR</em><em>,</em>) – </p></li>
+<li><p><strong>ARG_MAX</strong> – </p></li>
+<li><p><strong>ARG_MAX_ABS</strong> – </p></li>
+<li><p><strong>ARG_MAX_INDICATOR</strong> – </p></li>
+<li><p><strong>ARG_MAX_ABS_INDICATOR</strong> – </p></li>
 </ul>
 </dd>
 </dl>
@@ -275,18 +307,36 @@ if there are ties, a single element is chosen probabilistically.</p></li>
 :param ARG_MIN_INDICATOR:
 :param ARG_MIN_ABS_INDICATOR:
 :param :
+:param MAX_VAL:
+:param MAX_ABS_VAL:
+:param MAX_INDICATOR:
+:param MAX_ABS_INDICATOR:
+:param :
 :param MIN_VAL:
 :param MIN_ABS_VAL:
 :param MIN_INDICATOR:
 :param MIN_ABS_INDICATOR:
 :param :
-:param PROB or PROB_INDICATOR: specifies how the single non-zero value in the array returned by <code class="xref any docutils literal notranslate"><span class="pre">function</span></code> is determined</p>
+:param : specifies how non-zero value(s) in the array returned by <code class="xref any docutils literal notranslate"><span class="pre">function</span></code> are determined</p>
 <blockquote>
-<div><p>(see <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a> for details).</p>
+<div><p>(see <a class="reference internal" href="#onehot"><span class="std std-ref">above</span></a> for details).</p>
+</div></blockquote>
+<p>:type : default ARG_MAX
+:type direction: <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[‘max’, ‘min’]]
+:param direction: specifies whether the maximum or minimum value(s) in the array are selected.</p>
+<blockquote>
+<div><p>(see <a class="reference internal" href="#onehot"><span class="std std-ref">above</span></a> for details).</p>
 </div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>abs_val</strong> (<em>bool : default False</em>) – specifies whether the absolute values of the elements in the array are used to
+select the maximum or minimum value(s).
+(see <a class="reference internal" href="#onehot"><span class="std std-ref">above</span></a> for details).</p></li>
+<li><p><strong>indicator</strong> (<em>bool : default False</em>) – specifies whether the selected values(s) is (are) replace with a value of 1.
+(see <a class="reference internal" href="#onehot"><span class="std std-ref">above</span></a> for details).</p></li>
+<li><p><strong>tie</strong> (<em>ALL</em><em>, </em><em>FIRST</em><em>, </em><em>LAST</em><em>, </em><em>RANDOM : default ALL</em>) – specifies how a tie is handled when there is more than one element with the maximum or minimum value;
+(see <a class="reference internal" href="#onehot"><span class="std std-ref">above</span></a> for details).</p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</p></li>
@@ -315,14 +365,14 @@ distribution, each element of which specifies the probability for selecting the 
 <span class="sig-name descname"><span class="pre">mode</span></span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>ARG_MAX, ARG_MAX_ABS, ARG_MAX_INDICATOR, ARG_MAX_ABS_INDICATOR,</p>
+<dd class="field-odd"><p>DETERMINISITC, PROB, PROB_INDICATOR,</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">MAX_VAL,</span> <span class="pre">MAX_ABS_VAL,</span> <span class="pre">MAX_INDICATOR,</span> <span class="pre">MAX_ABS_INDICATOR,</span></span></dt>
+<span class="sig-name descname"><span class="pre">ARG_MAX,</span> <span class="pre">ARG_MAX_ABS,</span> <span class="pre">ARG_MAX_INDICATOR,</span> <span class="pre">ARG_MAX_ABS_INDICATOR,</span></span></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -332,14 +382,61 @@ distribution, each element of which specifies the probability for selecting the 
 
 <dl class="py attribute">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">MIN_VAL,</span> <span class="pre">MIN_ABS_VAL,</span> <span class="pre">MIN_INDICATOR,</span>&#160; <span class="pre">MIN_ABS_INDICATOR,</span></span></dt>
+<span class="sig-name descname"><span class="pre">MAX_VAL,</span> <span class="pre">MAX_ABS_VAL,</span> <span class="pre">MAX_INDICATOR,</span> <span class="pre">MAX_ABS_INDICATOR,</span></span></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">PROB</span> <span class="pre">or</span> <span class="pre">PROB_INDICATOR</span></span></dt>
-<dd><p>determines how the single non-zero value in the array returned by <code class="xref any docutils literal notranslate"><span class="pre">function</span></code> is determined
-(see <a class="reference internal" href="#onehot"><span class="std std-ref">above</span></a> for options).</p>
+<span class="sig-name descname"><span class="pre">MIN_VAL,</span> <span class="pre">MIN_ABS_VAL,</span> <span class="pre">MIN_INDICATOR,</span>&#160; <span class="pre">MIN_ABS_INDICATOR,</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.selectionfunctions.OneHot.direction">
+<span class="sig-name descname"><span class="pre">direction</span></span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.direction" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines whether the maximum or minimum value(s) in the array are selected.
+(see <a class="reference internal" href="#onehot"><span class="std std-ref">above</span></a> for details).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>MAX or MIN</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.selectionfunctions.OneHot.abs_val">
+<span class="sig-name descname"><span class="pre">abs_val</span></span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.abs_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines whether the absolute values of the elements in the array are used to
+select the maximum or minimum value(s).
+(see <a class="reference internal" href="#onehot"><span class="std std-ref">above</span></a> for details).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.selectionfunctions.OneHot.indicator">
+<span class="sig-name descname"><span class="pre">indicator</span></span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.indicator" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines whether the selected values(s) is (are) replace with a value of 1.
+(see <a class="reference internal" href="#onehot"><span class="std std-ref">above</span></a> for details).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.selectionfunctions.OneHot.tie">
+<span class="sig-name descname"><span class="pre">tie</span></span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.tie" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines how a tie is handled when there is more than one element with the maximum or minimum value;
+(see <a class="reference internal" href="#onehot"><span class="std std-ref">above</span></a> for details).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>ALL, FIRST, LAST, RANDOM</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
@@ -416,20 +513,28 @@ It is called only if the parameter_validation attribute is <code class="xref any
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.selectionfunctions.OneHot._parse_mode">
+<span class="sig-name descname"><span class="pre">_parse_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot._parse_mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert mode spec to corresponding options.
+Here for convenience, but mostly for backward compatibility with old mode spec.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.selectionfunctions.OneHot._function">
 <span class="sig-name descname"><span class="pre">_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot._function" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>variable</strong> (<em>2d np.array : default class_defaults.variable</em>) – 1st item is an array to be transformed;  if <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a> is <em>PROB</em>, 2nd item must be an array of
-probabilities (i.e., elements between 0 and 1) of equal length to the 1st item.</p></li>
+probabilities (i.e., elements between 0 and 1) of equal length as the 1st item.</p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>array with single non-zero value</strong> – specified by <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a>.</p>
+<dd class="field-even"><p><strong>array with selected elements having non-zero values and all others having zeroes</strong> – specified by <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.direction" title="psyneulink.core.components.functions.selectionfunctions.OneHot.direction"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">direction</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.abs_val" title="psyneulink.core.components.functions.selectionfunctions.OneHot.abs_val"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">abs_val</span></code></a>,
+<a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.indicator" title="psyneulink.core.components.functions.selectionfunctions.OneHot.indicator"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">indicator</span></code></a>, and <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.tie" title="psyneulink.core.components.functions.selectionfunctions.OneHot.tie"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">tie</span></code></a>.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>np.array</p>
