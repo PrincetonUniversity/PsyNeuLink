@@ -717,7 +717,11 @@ class OneHot(SelectionFunction):
             extreme_val = np.min(array)
 
         if tie == ALL:
+            # MODIFIED 11/5/24 OLD:
             result = np.where(array == extreme_val, extreme_val, 0)
+            # # MODIFIED 11/5/24 NEW:
+            # result = np.where(array == extreme_val, extreme_val, array)
+            # MODIFIED 11/5/24 END
         else:
             if tie == FIRST:
                 index = np.min(np.where(array == extreme_val))
