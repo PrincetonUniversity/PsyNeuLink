@@ -17,7 +17,7 @@ import numpy as np
 
 from enum import Enum, auto
 
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, PRODUCT, SUM
+from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination, PRODUCT, SUM
 from psyneulink.core.components.functions.stateful.integratorfunctions import IntegratorFunction
 from psyneulink.core.components.functions.stateful import StatefulFunction
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
@@ -1015,7 +1015,7 @@ class PytorchMechanismWrapper():
         self.input = variable
 
         # Compute main function of mechanism and return result
-        from psyneulink.core.components.functions.nonstateful.combinationfunctions import CombinationFunction
+        from psyneulink.core.components.functions.nonstateful.transformfunctions import CombinationFunction
         self.output = execute_function(self.function, variable,
                                       is_combination_fct=isinstance(self._mechanism.function, CombinationFunction))
         return self.output

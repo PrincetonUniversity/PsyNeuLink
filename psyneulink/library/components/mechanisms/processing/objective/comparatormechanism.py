@@ -146,7 +146,7 @@ from beartype import beartype
 
 from psyneulink._typing import Optional, Union
 
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
+from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Mechanism
@@ -220,7 +220,7 @@ class ComparatorMechanism(ObjectiveMechanism):
         (see `ComparatorMechanism_Structure` for additional details).
 
     function : CombinationFunction, function or method
-        used to compare the `sample` with the `target`.  It can be any `CombinationFunction <CombinationFunctions>`,
+        used to compare the `sample` with the `target`.  It can be any `CombinationFunction <Transformfunctions>`,
         or a python function that takes a 2d array with two items and returns a 1d array of the same length as the
         two input items.
 

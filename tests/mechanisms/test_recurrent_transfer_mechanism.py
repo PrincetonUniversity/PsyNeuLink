@@ -4,7 +4,7 @@ import pytest
 import psyneulink as pnl
 
 from psyneulink.core.compositions.composition import Composition
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import Reduce
+from psyneulink.core.components.functions.nonstateful.transformfunctions import Reduce
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import NormalDist
 from psyneulink.core.components.functions.function import FunctionError, get_matrix
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Reinforcement

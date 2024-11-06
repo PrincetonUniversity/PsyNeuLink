@@ -6,7 +6,7 @@ from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Reinforcement
 from psyneulink.core.components.functions.stateful.integratorfunctions import AccumulatorIntegrator, AdaptiveIntegrator
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear, Exponential, Logistic, ReLU, SoftMax
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import Reduce
+from psyneulink.core.components.functions.nonstateful.transformfunctions import Reduce
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import NormalDist, UniformToNormalDist, \
     ExponentialDist, \

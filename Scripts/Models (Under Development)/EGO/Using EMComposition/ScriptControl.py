@@ -9,7 +9,7 @@ CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the scr
 DISPLAY_MODEL =  (                     # Only one of the following can be uncommented:
     None                             # suppress display of model
     # {                                  # show simple visual display of model
-    #     # 'show_pytorch': True,            # show pytorch graph of model
+    #     'show_pytorch': True,            # show pytorch graph of model
     #     'show_learning': True
     # # 'show_projections_not_in_composition': True,
     # # 'exclude_from_gradient_calc_style': 'dashed'# show target mechanisms for learning
