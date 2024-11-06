@@ -1852,22 +1852,11 @@ class MatrixTransform(CombinationFunction):  # ---------------------------------
 
         param_set = target_set
         # proxy for checking whether the owner is a projection
-        if hasattr(self.owner, "receiver"):
+        if hasattr(self.owner, 'receiver'):
             sender = self.defaults.variable
             sender_len = np.size(np.atleast_2d(self.defaults.variable), 1)
 
-            # FIX: RELABEL sender -> input AND receiver -> output
-            # FIX: THIS NEEDS TO BE CLEANED UP:
-            #      - AT LEAST CHANGE THE NAME FROM kwReceiver TO output_template OR SOMETHING LIKE THAT
-            #      - MAKE ARG?  OR ADD OTHER PARAMS:  E.G., FILLER?
-            #      - OR REFACTOR TO INCLUDE AS MATRIX SPEC:
-            #          IF MATRIX IS 1D, USE AS OUTPUT TEMPLATE
-            #          IF ALL ITS VALUES ARE 1'S => FULL CONNECTIVITY MATRIX
-            #          IF ALL ITS VALUES ARE 0'S => RANDOM CONNECTIVITY MATRIX
-            #          NOTE:  NO NEED FOR IDENTITY MATRIX, AS THAT WOULD BE SQUARE SO NO NEED FOR OUTPUT TEMPLATE
-            #      - DOCUMENT WHEN DONE
-            # MODIFIED 3/26/17 OLD:
-            # Check for and validate kwReceiver first, since it may be needed to validate and/or construct the matrix
+            # Check for and validate receiver first, since it may be needed to validate and/or construct the matrix
             # First try to get receiver from specification in params
             if RECEIVER in param_set:
                 self.receiver = param_set[RECEIVER]
@@ -1879,10 +1868,10 @@ class MatrixTransform(CombinationFunction):  # ---------------------------------
                 else:
                     raise FunctionError("receiver param ({0}) for {1} must be a list of numbers or an np.array".
                                         format(self.receiver, self.name))
-            # No receiver, so use sender as template (assuming square -- e.g., identity -- matrix)
+            # No receiver, so use sender as template (assuming square -- e.g., IDENTITY -- matrix)
             else:
                 if (self.owner and self.owner.prefs.verbosePref) or self.prefs.verbosePref:
-                    print("Identity matrix requested but kwReceiver not specified; sender length ({0}) will be used".
+                    print("Identity matrix requested but 'receiver' not specified; sender length ({0}) will be used".
                           format(sender_len))
                 self.receiver = param_set[RECEIVER] = sender
 
@@ -1892,7 +1881,7 @@ class MatrixTransform(CombinationFunction):  # ---------------------------------
             message = ""
             for param_name, param_value in param_set.items():
 
-                # Receiver param already checked above
+                # receiver param already checked above
                 if param_name == RECEIVER:
                     continue
 
@@ -1903,7 +1892,7 @@ class MatrixTransform(CombinationFunction):  # ---------------------------------
                 if param_name == HAS_INITIALIZERS:
                     continue
 
-                # Matrix specification param
+                # matrix specification param
                 elif param_name == MATRIX:
 
                     # A number (to be used as a filler), so OK
@@ -2007,10 +1996,17 @@ class MatrixTransform(CombinationFunction):  # ---------------------------------
                                                    self.name,
                                                    self.owner_name,
                                                    MATRIX_KEYWORD_NAMES))
+
+                # operation param
+                elif param_name == OPERATION:
+                    if param_value == L0 and NORMALIZE in param_set and param_set[NORMALIZE]:
+                        raise FunctionError(f"The 'operation' parameter for the {self.name} function of "
+                                            f"{self.owner_name} is set to 'L0', so the 'normalize' parameter "
+                                            f"should not be set to True "
+                                            f"(normalization is not needed, and can cause a divide by zero error). "
+                                            f"Set 'normalize' to False or change 'operation' to 'DOT_PRODUCT'.")
                 else:
                     continue
-            if message:
-                raise FunctionError(message)
 
         # owner is a mechanism, state
         # OR function was defined on its own (no owner)
