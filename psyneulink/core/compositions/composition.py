@@ -2882,6 +2882,7 @@ import types
 import numbers
 import itertools
 import logging
+import pathlib
 import sys
 import typing
 import warnings
@@ -11056,9 +11057,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
               are animated; if it is greater than the number of trials being run, only the number being run are
               animated.
 
-            * *MOVIE_DIR*: str (default=project root dir) -- specifies the directdory to be used for the movie file;
-              by default a subdirectory of <root_dir>/show_graph_OUTPUT/GIFS is created using the `name
-              <Composition.name>` of the  `Composition`, and the gif files are stored there.
+            * *MOVIE_DIR*: str or os.PathLike (default=PsyNeuLink root
+              dir or current dir) -- specifies the directory to be used
+              for the movie file; by default a subdirectory of
+              <MOVIE_DIR>/pnl-show_graph-output/GIFs is created using
+              the `name <Composition.name>` of the `Composition`, and
+              the gif files are stored there.
 
             * *MOVIE_NAME*: str (default=\\ `name <Composition.name>` + 'movie') -- specifies the name to be used
               for the movie file; it is automatically appended with '.gif'.
@@ -11490,7 +11494,7 @@ _
 
             if self._animate is not False:
                 # Save list of gifs in self._animation as movie file
-                movie_path = self._animation_directory + '/' + self._movie_filename
+                movie_path = pathlib.Path(self._animation_directory, self._movie_filename)
                 self._animation[0].save(fp=movie_path,
                                         format='GIF',
                                         save_all=True,
