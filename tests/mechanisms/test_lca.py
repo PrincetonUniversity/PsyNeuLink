@@ -10,6 +10,11 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.scheduling.condition import Never, WhenFinished
 from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism import \
     LCAMechanism, MAX_VS_AVG, MAX_VS_NEXT, CONVERGENCE
+from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import (
+    ENERGY_OUTPUT_PORT_NAME,
+    ENTROPY_OUTPUT_PORT_NAME,
+)
+
 
 class TestLCA:
 
@@ -270,6 +275,22 @@ class TestLCA:
         comp1.add_node(lca)
         result1 = comp1.run(inputs={lca:[1, -1]}, execution_mode=comp_mode)
         np.testing.assert_allclose(result1, [[0.52497918747894, 0.47502081252106]])
+
+    def test_lca_standard_output_ports(self):
+        lca = pnl.LCAMechanism(
+            input_shapes=3,
+            output_ports=[pnl.RESULT, pnl.ENERGY, pnl.ENTROPY]
+        )
+        assert len(lca.output_ports) == 3
+        assert lca.output_ports[1].name == pnl.ENERGY == ENERGY_OUTPUT_PORT_NAME
+        assert lca.output_ports[2].name == pnl.ENTROPY == ENTROPY_OUTPUT_PORT_NAME
+
+        # TODO: uncomment or replace these checks when the relevant
+        # output ports are implemented
+        # for ip in lca.output_ports[1:]:
+        #     assert isinstance(ip.function, pnl.Stability)
+        #     assert ip.function.defaults.variable.shape == lca.defaults.variable.shape
+        #     assert ip.function.defaults.matrix == lca.recurrent_projection.defaults.matrix
 
 
 class TestLCAReset:
