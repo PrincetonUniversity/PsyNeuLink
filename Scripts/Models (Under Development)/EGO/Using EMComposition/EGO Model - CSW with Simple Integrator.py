@@ -232,11 +232,11 @@ def construct_model(model_name:str=model_params['name'],
     # -------------------------------------------------  Nodes  ------------------------------------------------------
     # ----------------------------------------------------------------------------------------------------------------
 
-    state_input_layer = ProcessingMechanism(name=state_input_name, size=state_size)
-    previous_state_layer = ProcessingMechanism(name=previous_state_input_name, size=state_size)
-    # context_layer = ProcessingMechanism(name=context_name, size=context_size)
+    state_input_layer = ProcessingMechanism(name=state_input_name, input_shapes=state_size)
+    previous_state_layer = ProcessingMechanism(name=previous_state_input_name, input_shapes=state_size)
+    # context_layer = ProcessingMechanism(name=context_name, input_shapes=context_size)
     context_layer = TransferMechanism(name=context_name,
-                                      size=context_size,
+                                      input_shapes=context_size,
                                       function=Tanh,
                                       integrator_mode=True,
                                       integration_rate=integration_rate)
@@ -251,13 +251,21 @@ def construct_model(model_name:str=model_params['name'],
                        softmax_gain=retrieval_softmax_gain,
                        softmax_threshold=retrieval_softmax_threshold,
                        # Input Nodes:
-                       field_names=[state_input_name,
-                                    previous_state_input_name,
+                       # field_names=[state_input_name,
+                       #              previous_state_input_name,
+                       #              context_name,
+                       #              ],
+                       # field_weights=(state_retrieval_weight,
+                       #                previous_state_retrieval_weight,
+                       #                context_retrieval_weight
+                       #                ),
+                       field_names=[previous_state_input_name,
                                     context_name,
+                                    state_input_name,
                                     ],
-                       field_weights=(state_retrieval_weight,
-                                      previous_state_retrieval_weight,
-                                      context_retrieval_weight
+                       field_weights=(previous_state_retrieval_weight,
+                                      context_retrieval_weight,
+                                      state_retrieval_weight,
                                       ),
                        normalize_field_weights=normalize_field_weights,
                        concatenate_queries=concatenate_queries,
@@ -267,7 +275,7 @@ def construct_model(model_name:str=model_params['name'],
                        device=device
                        )
 
-    prediction_layer = ProcessingMechanism(name=prediction_layer_name, size=state_size)
+    prediction_layer = ProcessingMechanism(name=prediction_layer_name, input_shapes=state_size)
 
     
     # ----------------------------------------------------------------------------------------------------------------
@@ -450,7 +458,7 @@ if __name__ == '__main__':
             axes[1].set_xlabel('Stimuli')
             axes[1].set_ylabel(model_params['loss_spec'])
             # Logit of loss
-            axes[2].plot( (model.results[2:TOTAL_NUM_STIMS,2]*TARGETS[:TOTAL_NUM_STIMS-2]).sum(-1) )
+            axes[2].plot( (model.results[1:TOTAL_NUM_STIMS,2]*TARGETS[:TOTAL_NUM_STIMS-1]).sum(-1) )
             axes[2].set_xlabel('Stimuli')
             axes[2].set_ylabel('Correct Logit')
             plt.suptitle(f"{model_params['curriculum_type']} Training")

@@ -44,7 +44,7 @@ argument, which can be parametrized by calling its constructor with parameter va
     >>> my_time_averaging_mechanism = pnl.IntegratorMechanism(function=pnl.AdaptiveIntegrator(rate=0.5))
 
 The **default_variable** argument specifies the format of its input (i.e., whether it is a single scalar or an
-array), as well as the value to use if none is provided when Mechanism is executed.  Alternatively, the **size**
+array), as well as the value to use if none is provided when Mechanism is executed.  Alternatively, the **input_shapes**
 argument can be used to specify the length of the array, in which case it will be initialized with all zeros.
 
 .. _IntegratorMechanism_Structure:
@@ -67,11 +67,11 @@ Execution
 
 When an IntegratorMechanism is executed, it carries out the specified integration, and assigns the result to the
 `value <Mechanism_Base.value>` of its `primary OutputPort <OutputPort_Primary>`.  For the default function
-(`IntegratorFunction`), if the value specified for **default_variable** is a list or array, or **size** is greater
+(`IntegratorFunction`), if the value specified for **default_variable** is a list or array, or **input_shapes** is greater
 than 1, each element of the array is independently integrated.  If its `rate <IntegratorFunction.rate>` parameter is a
 single value, that rate is used for integrating each element. If the `rate <IntegratorFunction.rate>` parameter is a
 list or array, then each element is used as the rate for the corresponding element of the input (in this case, `rate
-<IntegratorFunction.rate>` must be the same length as the value specified for **default_variable** or **size**).
+<IntegratorFunction.rate>` must be the same length as the value specified for **default_variable** or **input_shapes**).
 Integration can be reset to the value of its `function <IntegratorMechanism.function>`\\s `initializer by setting
 its `reset <IntegratorMechanism.reset>` parameter to a non-zero value, as described below.
 
@@ -204,7 +204,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     @beartype
     def __init__(self,
                  default_variable=None,
-                 size=None,
+                 input_shapes=None,
                  input_ports:Optional[Union[list, dict]]=None,
                  function=None,
                  reset_default=0,
@@ -217,7 +217,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         """
 
         super(IntegratorMechanism, self).__init__(default_variable=default_variable,
-                                                  size=size,
+                                                  input_shapes=input_shapes,
                                                   function=function,
                                                   reset_default=reset_default,
                                                   params=params,
@@ -232,7 +232,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     # def _parse_function_variable(self, variable, context=None, context=None):
     #     super()._parse_function_variable(variable, context, context)
 
-    def _handle_default_variable(self, default_variable=None, size=None, input_ports=None, function=None, params=None):
+    def _handle_default_variable(self, default_variable=None, input_shapes=None, input_ports=None, function=None, params=None):
         """If any parameters with len>1 have been specified for the Mechanism's function, and Mechanism's
         default_variable has not been specified, reshape Mechanism's variable to match function's,
         but make sure function's has the same outer dimensionality as the Mechanism's
@@ -281,7 +281,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
             #    as the reshaping of the function's variable will be taken care of in _instantiate_function
 
         return super()._handle_default_variable(default_variable=variable,
-                                                size=size,
+                                                input_shapes=input_shapes,
                                                 input_ports=input_ports,
                                                 function=function,
                                                 params=params)

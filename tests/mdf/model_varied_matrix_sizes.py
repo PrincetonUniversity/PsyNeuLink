@@ -1,10 +1,10 @@
 import psyneulink as pnl
 
 comp = pnl.Composition(name='comp')
-A = pnl.TransferMechanism(name='A', size=2)
-B = pnl.TransferMechanism(name='B', size=3)
-C = pnl.TransferMechanism(name='C', size=4)
-D = pnl.TransferMechanism(name='D', size=5)
+A = pnl.TransferMechanism(name='A', input_shapes=2)
+B = pnl.TransferMechanism(name='B', input_shapes=3)
+C = pnl.TransferMechanism(name='C', input_shapes=4)
+D = pnl.TransferMechanism(name='D', input_shapes=5)
 
 for n in [A, B, C, D]:
     comp.add_node(n)

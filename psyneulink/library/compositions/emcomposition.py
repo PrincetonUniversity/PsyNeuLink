@@ -88,14 +88,14 @@
 #      - COMPILATION:
 #        - Remove CIM projections on import to another composition
 #        - Autodiff support for IdentityFunction
-#        - LinearMatrix to add normalization
+#        - MatrixTransform to add normalization
 #        - _store() method to assign weights to memory
 #        - LLVM problem with ComparatorMechanism
 #
 #      - pytorchcreator_function:
 #           SoftMax implementation:  torch.nn.Softmax(dim=0) is not getting passed correctly
 #           Implement LinearCombination
-#        - LinearMatrix Function:
+#        - MatrixTransform Function:
 #
 #      - LEARNING - Backpropagation LearningFunction / LearningMechanism
 #        - DOCUMENTATION:
@@ -1027,8 +1027,9 @@ import warnings
 import psyneulink.core.scheduling.condition as conditions
 
 from psyneulink._typing import Optional, Union
-from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax, LinearMatrix
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate, LinearCombination
+from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
+from psyneulink.core.components.functions.nonstateful.transformfunctions import (
+    Concatenate, LinearCombination, MatrixTransform)
 from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.compositions.composition import CompositionError, NodeRole
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, torch_available
@@ -1040,9 +1041,9 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
-    (ADAPTIVE, ALL, ARG_MAX, ARG_MAX_INDICATOR, AUTO, CONTEXT, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE,
-     EM_COMPOSITION, FULL_CONNECTIVITY_MATRIX, GAIN, IDENTITY_MATRIX, MULTIPLICATIVE_PARAM, NAME,
-     PARAMS, PROB_INDICATOR, PRODUCT, PROJECTIONS, RANDOM, SIZE, VARIABLE, Loss)
+    (ADAPTIVE, ALL, ARG_MAX, ARG_MAX_INDICATOR, AUTO, CONTEXT, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, DOT_PRODUCT,
+     EM_COMPOSITION, FULL_CONNECTIVITY_MATRIX, GAIN, IDENTITY_MATRIX, INPUT_SHAPES, L0,
+     MULTIPLICATIVE_PARAM, NAME, PARAMS, PROB_INDICATOR, PRODUCT, PROJECTIONS, RANDOM, VARIABLE)
 from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric_scalar
 from psyneulink.core.globals.registry import name_without_suffix
 from psyneulink.core.llvm import ExecutionMode
@@ -1621,8 +1622,7 @@ class EMComposition(AutodiffComposition):
         self._validate_memory_specs(memory_template, memory_capacity, memory_fill, field_weights, field_names, name)
         memory_template, memory_capacity = self._parse_memory_template(memory_template,
                                                                        memory_capacity,
-                                                                       memory_fill,
-                                                                       field_weights)
+                                                                       memory_fill)
         field_weights, field_names, concatenate_queries = self._parse_fields(field_weights,
                                                                              normalize_field_weights,
                                                                              field_names,
@@ -1810,7 +1810,7 @@ class EMComposition(AutodiffComposition):
                                      f"in the 'field_names' arg for {name} must match "
                                      f"the number of fields ({field_weights_len}).")
 
-    def _parse_memory_template(self, memory_template, memory_capacity, memory_fill, field_weights)->(np.ndarray,int):
+    def _parse_memory_template(self, memory_template, memory_capacity, memory_fill)->(np.ndarray,int):
         """Construct memory from memory_template and memory_fill
         Assign self.memory_template and self.entry_template attributes
         """
@@ -2145,10 +2145,8 @@ class EMComposition(AutodiffComposition):
             f"PROGRAM ERROR: number of keys ({self.num_keys}) does not match number of " \
             f"non-zero values in field_weights ({len(self.key_indices)})."
 
-        # query_input_nodes = [ProcessingMechanism(size=len(self.entry_template[self.key_indices[i]]),
-        #                                      name=f'{self.key_names[self.key_indices[i]]} [QUERY]')
-        #                for i in range(self.num_keys)]
-        query_input_nodes = [ProcessingMechanism(size=len(self.entry_template[self.key_indices[i]]),
+        query_input_nodes = [ProcessingMechanism(
+            input_shapes=len(self.entry_template[self.key_indices[i]]),
                                              name=f'{self.key_names[i]} [QUERY]')
                        for i in range(self.num_keys)]
 
@@ -2167,7 +2165,8 @@ class EMComposition(AutodiffComposition):
             f"PROGRAM ERROR: number of values ({self.num_values}) does not match number of " \
             f"non-zero values in field_weights ({len(value_indices)})."
 
-        value_input_nodes = [ProcessingMechanism(size=len(self.entry_template[value_indices[i]]),
+        value_input_nodes = [ProcessingMechanism(
+            input_shapes=len(self.entry_template[value_indices[i]]),
                                                name= f'{self.value_names[i]} [VALUE]')
                            for i in range(self.num_values)]
 
@@ -2183,7 +2182,7 @@ class EMComposition(AutodiffComposition):
         else:
             return ProcessingMechanism(function=Concatenate,
                                        input_ports=[{NAME: 'CONCATENATE',
-                                                     SIZE: len(self.query_input_nodes[i].output_port.value),
+                                                     INPUT_SHAPES: len(self.query_input_nodes[i].output_port.value),
                                                      PROJECTIONS: MappingProjection(
                                                          name=f'{self.key_names[i]} to CONCATENATE',
                                                          sender=self.query_input_nodes[i].output_port,
@@ -2200,6 +2199,9 @@ class EMComposition(AutodiffComposition):
             from each query_input_node[i] to each match_node[i].
         - Each element of the output represents the similarity between the query_input and one key in memory.
         """
+        OPERATION = 0
+        NORMALIZE = 1
+        args = [(L0,False) if len(key) == 1 else (DOT_PRODUCT,normalize_memories) for key in memory_template[0]]
 
         if concatenate_queries:
             # Get fields of memory structure corresponding to the keys
@@ -2211,11 +2213,12 @@ class EMComposition(AutodiffComposition):
             match_nodes = [
                 ProcessingMechanism(
                     input_ports={NAME: 'CONCATENATED_INPUTS',
-                                 SIZE: memory_capacity,
+                                 INPUT_SHAPES: memory_capacity,
                                  PROJECTIONS: MappingProjection(sender=self.concatenate_queries_node,
                                                                 matrix=matrix,
-                                                                function=LinearMatrix(
-                                                                    normalize=normalize_memories),
+                                                                function=MatrixTransform(
+                                                                    operation=args[0][OPERATION],
+                                                                    normalize=args[0][NORMALIZE]),
                                                                 name=f'MEMORY')},
                     name='MATCH')]
 
@@ -2224,15 +2227,17 @@ class EMComposition(AutodiffComposition):
             match_nodes = [
                 ProcessingMechanism(
                     input_ports= {
-                        SIZE:memory_capacity,
+                        INPUT_SHAPES:memory_capacity,
                         PROJECTIONS: MappingProjection(sender=self.query_input_nodes[i].output_port,
                                                        matrix = np.array(
                                                            memory_template[:,i].tolist()).transpose().astype(float),
-                                                       function=LinearMatrix(normalize=normalize_memories),
+                                                       function=MatrixTransform(operation=args[i][OPERATION],
+                                                                                normalize=args[i][NORMALIZE]),
                                                        name=f'MEMORY for {self.key_names[i]} [KEY]')},
                     name=self.key_names[i] + MATCH_TO_KEYS_AFFIX)
                 for i in range(self.num_keys)
             ]
+
 
         return match_nodes
 
@@ -2313,7 +2318,7 @@ class EMComposition(AutodiffComposition):
             input_source = self.weighted_match_nodes
 
         combined_matches_node = (
-            ProcessingMechanism(input_ports=[{SIZE:memory_capacity,
+            ProcessingMechanism(input_ports=[{INPUT_SHAPES:memory_capacity,
                                               PROJECTIONS:[MappingProjection(sender=s,
                                                                              matrix=IDENTITY_MATRIX,
                                                                              name=f'{WEIGHTED_MATCH_NODE_NAME} '
@@ -2346,7 +2351,7 @@ class EMComposition(AutodiffComposition):
             # ARG_MAX_INDICATOR returns the entry unmodified
             softmax_choice = ARG_MAX_INDICATOR
 
-        softmax_node = ProcessingMechanism(input_ports={SIZE:memory_capacity,
+        softmax_node = ProcessingMechanism(input_ports={INPUT_SHAPES: memory_capacity,
                                                         PROJECTIONS: MappingProjection(
                                                             sender=input_source,
                                                             matrix=IDENTITY_MATRIX,
@@ -2379,7 +2384,7 @@ class EMComposition(AutodiffComposition):
         """Create nodes that report the value field(s) for the item(s) matched in memory.
         """
         self.retrieved_key_nodes = \
-            [ProcessingMechanism(input_ports={SIZE: len(self.query_input_nodes[i].variable[0]),
+            [ProcessingMechanism(input_ports={INPUT_SHAPES: len(self.query_input_nodes[i].variable[0]),
                                             PROJECTIONS:
                                                 MappingProjection(
                                                     sender=self.softmax_node,
@@ -2390,7 +2395,7 @@ class EMComposition(AutodiffComposition):
              for i in range(self.num_keys)]
 
         self.retrieved_value_nodes = \
-            [ProcessingMechanism(input_ports={SIZE: len(self.value_input_nodes[i].variable[0]),
+            [ProcessingMechanism(input_ports={INPUT_SHAPES: len(self.value_input_nodes[i].variable[0]),
                                             PROJECTIONS:
                                                 MappingProjection(
                                                     sender=self.softmax_node,

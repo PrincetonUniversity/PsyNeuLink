@@ -275,7 +275,7 @@ def make_pnl_lca(
 
     lca = pnl.LCAMechanism(
         default_variable=[[0.0 for _ in range(num_lca_dim)]],
-        size=num_lca_dim,
+        input_shapes=num_lca_dim,
         threshold=threshold,
         function=activation_function,
         leak=leak,

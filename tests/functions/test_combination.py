@@ -63,8 +63,8 @@ class TestRearrange:
     # @pytest.mark.function
     # @pytest.mark.combination_function
     # def test_column_vector(self):
-    #     R_function = pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM)
-    #     R_mechanism = pnl.ProcessingMechanism(function=pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM),
+    #     R_function = pnl.core.components.functions.transformfunctions.Reduce(operation=pnl.SUM)
+    #     R_mechanism = pnl.ProcessingMechanism(function=pnl.core.components.functions.transformfunctions.Reduce(operation=pnl.SUM),
     #                                           default_variable=[[1], [2], [3], [4], [5]],
     #                                           name="R_mechanism")
     #
@@ -78,8 +78,8 @@ class TestRearrange:
     # @pytest.mark.function
     # @pytest.mark.combination_function
     # def test_matrix(self):
-    #     R_function = pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM)
-    #     R_mechanism = pnl.ProcessingMechanism(function=pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM),
+    #     R_function = pnl.core.components.functions.transformfunctions.Reduce(operation=pnl.SUM)
+    #     R_mechanism = pnl.ProcessingMechanism(function=pnl.core.components.functions.transformfunctions.Reduce(operation=pnl.SUM),
     #                                           default_variable=[[1, 2, 3], [4, 5, 6], [7, 8, 9]],
     #                                           name="R_mechanism")
     #
@@ -279,7 +279,7 @@ def test_linear_combination_function(variable, operation, exponents, weights, sc
 @pytest.mark.parametrize("offset", [None, 1.5, [1,2.5,0,0]], ids=["O_NONE", "O_SCALAR", "O_VECTOR"])
 def test_linear_combination_function_in_mechanism(operation, input, input_ports, scale, offset, benchmark, mech_mode):
     f = pnl.LinearCombination(default_variable=input, operation=operation, scale=scale, offset=offset)
-    p = pnl.ProcessingMechanism(size=[len(input[0])] * len(input), function=f, input_ports=input_ports)
+    p = pnl.ProcessingMechanism(input_shapes=[len(input[0])] * len(input), function=f, input_ports=input_ports)
 
     EX = pytest.helpers.get_mech_execution(p, mech_mode)
 

@@ -446,7 +446,7 @@ class TestConnectCompositionsViaCIMS:
         level_2 = Composition(name="level_2")
 
         A2 = TransferMechanism(name="A2",
-                               size=2,
+                               input_shapes=2,
                                function=Linear(slope=1.))
         B2 = TransferMechanism(name="B2",
                                function=Linear(slope=2.))
@@ -500,8 +500,8 @@ class TestConnectCompositionsViaCIMS:
         mech = ProcessingMechanism()
         comp.add_node(mech)
         # instantiate custom input and output ports
-        inp = InputPort(size=2)
-        out = OutputPort(size=2)
+        inp = InputPort()
+        out = OutputPort()
 
         # NOTE: Adding ports to CIM from command line is currenlty disallowed
         # # add custom input and output ports to CIM

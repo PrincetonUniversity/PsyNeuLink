@@ -6,7 +6,7 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 # NOTES:
-#  * NOW THAT NOISE AND BETA ARE PROPRETIES THAT DIRECTLY REFERERNCE integrator_function,
+#  * NOW THAT NOISE AND BETA ARE PROPERTIES THAT DIRECTLY REFERERNCE integrator_function,
 #      SHOULD THEY NOW BE VALIDATED ONLY THERE (AND NOT IN TransferMechanism)??
 #  * ARE THOSE THE ONLY TWO integrator PARAMS THAT SHOULD BE PROPERTIES??
 
@@ -443,7 +443,7 @@ class LCAMechanism(RecurrentTransferMechanism):
     @beartype
     def __init__(self,
                  default_variable=None,
-                 size: Optional[Union[int, list, np.ndarray]] = None,
+                 input_shapes: Optional[Union[int, list, np.ndarray]] = None,
                  input_ports: Optional[Union[list, dict]] = None,
                  function=None,
                  initial_value=None,
@@ -515,7 +515,7 @@ class LCAMechanism(RecurrentTransferMechanism):
 
         super().__init__(
             default_variable=default_variable,
-            size=size,
+            input_shapes=input_shapes,
             input_ports=input_ports,
             # matrix=matrix,
             auto=self_excitation,

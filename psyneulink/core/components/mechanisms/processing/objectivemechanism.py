@@ -73,7 +73,7 @@ used to specify attributes of the InputPort and/or MappingProjection(s) to it, t
 monitor the specified OutputPort.  In general, the `value <OutputPort.value>` of each specified OutputPort determines
 the format of the `variable <InputPort.variable>` of the InputPort that is created for it by the ObjectiveMechanism.
 However, this can be overridden using the ObjectiveMechanism's `default_variable <Component_Variable>`
-or `size <Mechanism_Base.size>` attributes (see `Mechanism InputPort specification
+or `input_shapes <Mechanism_Base.input_shapes>` attributes (see `Mechanism InputPort specification
 <Mechanism_InputPort_Specification>`), or by specifying a Projection from the OutputPort to the InputPort (see
 `Input Source Specification <InputPort_Projection_Source_Specification>`). If an item in the
 **monitor** argument specifies an InputPort for the ObjectiveMechanism, but not the OutputPort to
@@ -154,7 +154,7 @@ COMMENT
 
 By default, the format of the `variable <InputPort.variable>` for each InputPort is determined by the `value
 <OutputPort.value>` of the monitored OutputPort(s) to which it corresponds.  However, if either the
-**default_variable** or **size** argument is specified in an Objective Mechanism's constructor, or a `variable
+**default_variable** or **input_shapes** argument is specified in an Objective Mechanism's constructor, or a `variable
 <InputPort.variable>` is `specified for an InputPort <InputPort_Specification>` for one or more of the items in
 its **monitor** argument, then that is used as the format for the corresponding InputPort(s).  This can be used to
 transform the `value <OutputPort.value>` of a monitored OutputPort into different form for the `variable
@@ -180,7 +180,7 @@ the items in its `variable <Mechanism_Base.variable>`. However, by assigning val
 <InputPort.weight>` and/or 'exponent <InputPort.exponent>` attributes of the corresponding InputPorts,
 it can be configured to calculate differences, ratios,  etc. (see `example
 <ObjectiveMechanism_Weights_and_Exponents_Example>` below).  The `function <ObjectiveMechanism.function>`  can also
-be replaced with any `CombinationFunction <CombinationFunctions>`, or any python function that takes an 2d array as
+be replaced with any `CombinationFunction <Transformfunctions>`, or any python function that takes an 2d array as
 its input (with a number of items in axis 0 equal to the number of the ObjectiveMechanism's InputPorts), and generates
 a 1d array as its result. If it implements :keyword:`weight` and/or :keyword:`exponent` attributes, those are assigned
 from `weight <InputPort.weight>` and `exponent <InputPort.exponent>` attributes of its `input_ports
@@ -372,7 +372,7 @@ from beartype import beartype
 
 from psyneulink._typing import Optional, Union
 
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
+from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort, INPUT_PORT
@@ -465,7 +465,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
     function : CombinationFunction, ObjectiveFunction, function, or method
         the function used to evaluate the values monitored by the ObjectiveMechanism.  The function can be any
-        `CombinationFunction <CombinationFunctions>` or a Python function that takes a 2d array with an arbitrary
+        `CombinationFunction <Transformfunctions>` or a Python function that takes a 2d array with an arbitrary
         number of items or a number equal to the number of items in the ObjectiveMechanism's variable (i.e.,
         its number of input_ports) and returns a 1d array.
 
@@ -567,7 +567,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  monitor=None,
                  default_variable=None,
-                 size=None,
+                 input_shapes=None,
                  function=None,
                  output_ports: Optional[Union[str, Iterable]] = None,
                  params=None,
@@ -590,7 +590,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         super().__init__(
             default_variable=default_variable,
-            size=size,
+            input_shapes=input_shapes,
                          monitor=monitor,
                          output_ports=output_ports,
                          function=function,

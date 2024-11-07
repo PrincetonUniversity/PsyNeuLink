@@ -140,9 +140,9 @@ signal specified in the PredictionErrorMechanism's **target** argument, the
 value of which is a vector of the same length as the output of sample.
 
     >>> import psyneulink as pnl
-    >>> sample_mech = pnl.TransferMechanism(size=5,
+    >>> sample_mech = pnl.TransferMechanism(input_shapes=5,
     ...                                     function=pnl.Linear())
-    >>> reward_mech = pnl.TransferMechanism(size=5)
+    >>> reward_mech = pnl.TransferMechanism(input_shapes=5)
     >>> prediction_error_mech = pnl.PredictionErrorMechanism(sample=sample_mech,
     ...                                                      target=reward_mech)
 
@@ -170,7 +170,7 @@ from beartype import beartype
 
 from psyneulink._typing import Optional, Union
 
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import PredictionErrorDeltaFunction
+from psyneulink.core.components.functions.nonstateful.transformfunctions import PredictionErrorDeltaFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import PREDICTION_ERROR_MECHANISM, SAMPLE, TARGET

@@ -179,8 +179,8 @@ class TestAccumulator():
         # Test that accumulator is function of parameter_port of mapping project,
         # and that its increment param works properly (used as modulatory param by LearningProjetion)
 
-        T1 = TransferMechanism(size=3)
-        T2 = TransferMechanism(size=3)
+        T1 = TransferMechanism(input_shapes=3)
+        T2 = TransferMechanism(input_shapes=3)
         M = MappingProjection(sender=T1, receiver=T2)
         C = Composition()
         C.add_linear_processing_pathway([T1, M, T2])

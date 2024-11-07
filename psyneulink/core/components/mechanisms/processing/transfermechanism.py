@@ -110,7 +110,7 @@ Structure
 ~~~~~~~~~~~~~
 
 By default, a TransferMechanism has a single `InputPort`;  however, more than one can be specified
-using the **default_variable** or **size** arguments of its constructor (see `Mechanism`).  The `value
+using the **default_variable** or **input_shapes** arguments of its constructor (see `Mechanism`).  The `value
 <InputPort.value>` of each InputPort is used as a separate item of the Mechanism's `variable
 <Mechanism_Base.variable>`, and transformed independently by its `function <Mechanism_Base.function>`.
 
@@ -417,12 +417,12 @@ If `integrator_mode <TransferMechanism.integrator_mode>` is False (the default),
 `value <Mechanism_Base.value>` and the `value <OutputPort.value>` of its `output_ports <Mechanism_Base.output_ports>`
 without using its `integrator_function <TransferMechanism.integrator_function>`, as in the following example::
 
-    # >>> my_mech = pnl.TransferMechanism(size=2)
+    # >>> my_mech = pnl.TransferMechanism(input_shapes=2)
     # >>> my_mech.execute([0.5, 1])
     # array([[0.5, 1. ]])
 
     >>> my_logistic_tm = pnl.TransferMechanism(function=pnl.Logistic,
-    ...                                        size=3)
+    ...                                        input_shapes=3)
     >>> my_logistic_tm.execute([-2.0, 0, 2.0])
     array([[0.11920292, 0.5       , 0.88079708]])
 
@@ -431,7 +431,7 @@ added to the result. It can be specified as a float, and array, or function. If 
 the value is simply added to the result, as shown in the example below, that uses the TransferMechanism's default
 `function <Mechanism_Base>`, `Linear`::
 
-    >>> my_linear_tm = pnl.TransferMechanism(size=3,
+    >>> my_linear_tm = pnl.TransferMechanism(input_shapes=3,
     ...                                      noise=2.0)
     >>> my_linear_tm.execute([1.0, 1.0, 1.0])
     array([[3., 3., 3.]])
@@ -452,7 +452,7 @@ function that specifies a float, for example a `DistributionFunction`.  As with 
 is specified, it is applied to all elements; however, on each execution, the function is executed indpendently for
 each element.  This is shown below using the `NormalDist` function::
 
-    >>> my_linear_tm = pnl.TransferMechanism(size=3,
+    >>> my_linear_tm = pnl.TransferMechanism(input_shapes=3,
     ...                                      noise=pnl.NormalDist)
     >>> my_linear_tm.execute([1.0, 1.0, 1.0])
     array([[2.1576537 , 1.60782117, 0.75840058]])
@@ -466,7 +466,7 @@ executions.  Notice that since only a single function was specified, it could be
 can also be used in a list to specify **noise**, together with other functions or with numeric values;  however,
 when used in a list, functions must be instances, as shown below::
 
-    >>> my_linear_tm = pnl.TransferMechanism(size=3,
+    >>> my_linear_tm = pnl.TransferMechanism(input_shapes=3,
     ...                                      noise=[pnl.NormalDist(), pnl.UniformDist(), 3.0])
     >>> my_linear_tm.execute([1.0, 1.0, 1.0])
     array([[-0.22503678,  1.36995517,  4.        ]])
@@ -509,7 +509,7 @@ the default for a TransferMechanism is used, which is `AdaptiveIntegrator`.  Thi
 results that begin close to its `initializer <AdaptiveIntegrator.initializer>` and asymptotically approach the value
 of the current input, which in this example is [1.0, 1.0, 1,0] for each execution::
 
-    >>> my_linear_tm = pnl.TransferMechanism(size=3,
+    >>> my_linear_tm = pnl.TransferMechanism(input_shapes=3,
     ...                                      function=pnl.Linear,
     ...                                      integrator_mode=True,
     ...                                      initial_value=np.array([[0.1, 0.5, 0.9]]),
@@ -662,7 +662,7 @@ is ignored). After each execution, the function is passed the Mechanism's curren
 and the scalar returned is compared to **termination_threshold** using the comparison operator specified by
 **termination_comparison_op**. Execution continues until this returns True, as in the following example::
 
-    >>> my_mech = pnl.TransferMechanism(size=2,
+    >>> my_mech = pnl.TransferMechanism(input_shapes=2,
     ...                                 integrator_mode=True,
     ...                                 termination_measure=max,
     ...                                 termination_threshold=0.9,
@@ -687,7 +687,7 @@ the **termination_comparison_op** argument is ignored (the `termination_comparis
 <TransferMechanism.termination_comparison_op>` is automatically set to *GREATER_THAN_OR_EQUAL*).  For example,
 ``my_mech`` is configured below to execute at least twice per trial::
 
-    >>> my_mech = pnl.TransferMechanism(size=2,
+    >>> my_mech = pnl.TransferMechanism(input_shapes=2,
     ...                                 integrator_mode=True,
     ...                                 termination_measure=TimeScale.TRIAL,
     ...                                 termination_threshold=2)
@@ -713,20 +713,20 @@ to integrate for a fixed number of steps (e.g., to simulate the time taken to en
 which feature of the stimulus should be attended) before a stimulus is presented, and then allowing that
 Mechanism to continue to integrate the instruction and impact stimulus processing once the stimulus is presented::
 
-    >>> stim_input = pnl.ProcessingMechanism(size=2)
-    >>> stim_percept = pnl.TransferMechanism(size=2, function=pnl.Logistic)
-    >>> decision = pnl.TransferMechanism(name='Decision', size=2,
+    >>> stim_input = pnl.ProcessingMechanism(input_shapes=2)
+    >>> stim_percept = pnl.TransferMechanism(input_shapes=2, function=pnl.Logistic)
+    >>> decision = pnl.TransferMechanism(name='Decision', input_shapes=2,
     ...                                  integrator_mode=True,
     ...                                  execute_until_finished=False,
     ...                                  termination_threshold=0.65,
     ...                                  termination_measure=max,
     ...                                  termination_comparison_op=pnl.GREATER_THAN)
-    >>> instruction_input = pnl.ProcessingMechanism(size=2, function=pnl.Linear(slope=10))
-    >>> attention = pnl.LCAMechanism(name='Attention', size=2, function=pnl.Logistic,
+    >>> instruction_input = pnl.ProcessingMechanism(input_shapes=2, function=pnl.Linear(slope=10))
+    >>> attention = pnl.LCAMechanism(name='Attention', input_shapes=2, function=pnl.Logistic,
     ...                              leak=8, competition=8, self_excitation=0, time_step_size=.1,
     ...                              termination_threshold=3,
     ...                              termination_measure = pnl.TimeScale.TRIAL)
-    >>> response = pnl.ProcessingMechanism(name='Response', size=2)
+    >>> response = pnl.ProcessingMechanism(name='Response', input_shapes=2)
     ...
     >>> comp = pnl.Composition()
     >>> comp.add_linear_processing_pathway([stim_input, [[1,-1],[-1,1]], stim_percept, decision, response]) #doctest: +SKIP
@@ -828,7 +828,7 @@ from beartype import beartype
 from psyneulink._typing import Optional, Union, Literal
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, SUM
+from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination, SUM
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import DistributionFunction
 from psyneulink.core.components.functions.function import Function, is_function_type
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance
@@ -1287,7 +1287,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     @beartype
     def __init__(self,
                  default_variable=None,
-                 size=None,
+                 input_shapes=None,
                  input_ports: Optional[Union[Iterable, Mechanism, OutputPort, InputPort]] = None,
                  function=None,
                  noise=None,
@@ -1320,7 +1320,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         super(TransferMechanism, self).__init__(
             default_variable=default_variable,
-            size=size,
+            input_shapes=input_shapes,
             input_ports=input_ports,
             output_ports=output_ports,
             initial_value=initial_value,

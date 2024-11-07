@@ -9,8 +9,8 @@ class TestRPC:
 
     def test_transfer_mech(self):
 
-        T_1 = pnl.TransferMechanism(name='log_test_T_1', size=2)
-        T_2 = pnl.TransferMechanism(name='log_test_T_2', size=2)
+        T_1 = pnl.TransferMechanism(name='log_test_T_1', input_shapes=2)
+        T_2 = pnl.TransferMechanism(name='log_test_T_2', input_shapes=2)
         PS = pnl.Composition(name='log_test_PS', pathways=[T_1, T_2])
         con_with_rpc_pipeline = pnl.Context(rpc_pipeline=Queue(), execution_id=PS)
 
@@ -77,9 +77,9 @@ class TestRPC:
 
     def test_run_resets(self):
         T1 = pnl.TransferMechanism(name='log_test_T1',
-                                   size=2)
+                                   input_shapes=2)
         T2 = pnl.TransferMechanism(name='log_test_T2',
-                                   size=2)
+                                   input_shapes=2)
         COMP = pnl.Composition(name='COMP', pathways=[T1, T2])
         con_with_rpc_pipeline = pnl.Context(rpc_pipeline=Queue(), execution_id=COMP)
         pipeline = con_with_rpc_pipeline.rpc_pipeline
@@ -111,10 +111,10 @@ class TestRPC:
 
     def test_log_dictionary_with_time(self):
         T1 = pnl.TransferMechanism(name='log_test_T1',
-                                   size=2)
+                                   input_shapes=2)
         T2 = pnl.TransferMechanism(name='log_test_T2',
                                    function=pnl.Linear(slope=2.0),
-                                   size=2)
+                                   input_shapes=2)
         COMP = pnl.Composition(name='log_test_COMP', pathways=[T1, T2])
         con_with_rpc_pipeline = pnl.Context(rpc_pipeline=Queue(), execution_id=COMP)
         pipeline = con_with_rpc_pipeline.rpc_pipeline
@@ -390,14 +390,14 @@ class TestRPC:
     )
     def test_log_multi_calls_single_timestep(self, scheduler_conditions, multi_run):
         lca = pnl.LCAMechanism(
-            size=2,
+            input_shapes=2,
             leak=0.5,
             threshold=0.515,
             reset_stateful_function_when=pnl.AtTrialStart()
         )
         lca.set_delivery_conditions(pnl.VALUE)
         m0 = pnl.ProcessingMechanism(
-            size=2
+            input_shapes=2
         )
         comp = pnl.Composition()
         comp.add_linear_processing_pathway([m0, lca])
@@ -438,19 +438,19 @@ class TestFullModels:
     def test_multilayer(self):
         input_layer = pnl.TransferMechanism(name='input_layer',
                                             function=pnl.Logistic,
-                                            size=2)
+                                            input_shapes=2)
 
         hidden_layer_1 = pnl.TransferMechanism(name='hidden_layer_1',
                                                function=pnl.Logistic,
-                                               size=5)
+                                               input_shapes=5)
 
         hidden_layer_2 = pnl.TransferMechanism(name='hidden_layer_2',
                                                function=pnl.Logistic,
-                                               size=4)
+                                               input_shapes=4)
 
         output_layer = pnl.TransferMechanism(name='output_layer',
                                              function=pnl.Logistic,
-                                             size=3)
+                                             input_shapes=3)
 
         input_weights_matrix = (np.arange(2 * 5).reshape((2, 5)) + 1) / (2 * 5)
         middle_weights_matrix = (np.arange(5 * 4).reshape((5, 4)) + 1) / (5 * 4)

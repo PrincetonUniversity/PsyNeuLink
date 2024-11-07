@@ -94,8 +94,8 @@ with the one exception of `prefs <Component_Prefs>`.
 * **variable** - used as the input to its `function <Component_Function>`.  Specification of the **default_variable**
   argument in the constructor for a Component determines both its format (e.g., whether its value is numeric, its
   dimensionality and shape if it is an array, etc.) as well as its `default_value <Component.defaults>` (the value
-  used when the Component is executed and no input is provided), and takes precedence over the specification of `size
-  <Component_Size>`.
+  used when the Component is executed and no input is provided).
+  It may alternatively be specified by `input_shapes <Component_Input_Shapes>`.
 
   .. technical_note::
     Internally, the attribute **variable** is not directly used as input to functions, to allow for parallelization.
@@ -103,18 +103,25 @@ with the one exception of `prefs <Component_Prefs>`.
     During parallelization however, the attribute may not accurately represent the most current value of variable
     being used, due to asynchrony inherent to parallelization.
 
-.. _Component_Size:
+.. _Component_Input_Shapes:
 
-* **size** - the dimension of the `variable <Component.variable>` attribute.  The **size** argument of the
+* **input_shapes** - the numpy shape or iterable of shapes matching the
+  `variable <Component.variable>` attribute. The **input_shapes** argument of
+  the
   constructor for a Component can be used as a convenient method for specifying the `variable <Component_Variable>`,
-  attribute in which case it will be assigned as an array of zeros of the specified size.  For example,
-  setting  **size** = 3 is equivalent to setting **variable** = [0, 0, 0] and setting **size** = [4, 3] is equivalent
+  attribute in which case it will be assigned as an array of zeros of
+  the specified shape. When **input_shapes** is an iterable, each item in the
+  iterable is treated as a single shape, and the entire iterable is then
+  assigned as an array. When **input_shapes** is an integer, it is treated the
+  same as a one-item iterable containing that integer. For example,
+  setting  **input_shapes** = 3 is equivalent to setting
+  **variable** = [[0, 0, 0]] and setting **input_shapes** = [4, 3] is equivalent
   to setting **variable** = [[0, 0, 0, 0], [0, 0, 0]].
 
   .. note::
-     The size attribute serves a role similar to
+     The input_shapes attribute serves a role similar to
      `shape in Numpy <https://numpy.org/doc/stable/reference/generated/numpy.shape.html>`_, with the difference that
-     size permits the specification of `ragged arrays <https://en.wikipedia.org/wiki/Jagged_array>`_ -- that is, ones
+     input_shapes permits the specification of `ragged arrays <https://en.wikipedia.org/wiki/Jagged_array>`_ -- that is, ones
      that have elements of varying lengths, such as [[1,2],[3,4,5]].
 
 .. _Component_Function:
@@ -324,11 +331,10 @@ COMMENT:
       _instantiate_function method checks that the input of the Component's `function <Comonent.function>` is compatible
       with its `variable <Component.variable>`).
 
-      * `_handle_size <Component._handle_size>` converts the `variable <Component.variable>` and `size <Component.size>`
-        arguments to the correct dimensions (for `Mechanism <Mechanism>`, this is a 2D array and 1D
-        array, respectively). If **variable** is not passed as an argument, this method attempts to infer `variable
-        <Component.variable>` from the **size** argument, and vice versa if the **size** argument is missing.
-        The _handle_size method then checks that the **size** and **variable** arguments are compatible.
+      * `_handle_input_shapes <Component._handle_input_shapes>` attempts to infer
+        `variable <Component.variable>` from the **input_shapes** argument if
+        **variable** is not passed as an argument.
+        The _handle_input_shapes method then checks that the **input_shapes** and **variable** arguments are compatible.
 
       * `_instantiate_defaults <Component._instantiate_defaults>` first calls the validation methods, and then
         assigns the default values for all of the attributes of the instance of the Component being created.
@@ -516,6 +522,7 @@ import dill
 import graph_scheduler
 import numpy as np
 
+from psyneulink._typing import Iterable, Union
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import \
     Context, ContextError, ContextFlags, INITIALIZATION_STATUS_FLAGS, _get_time, handle_external_context
@@ -528,7 +535,7 @@ from psyneulink.core.globals.keywords import \
     MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
     MODEL_SPEC_ID_MDF_VARIABLE, \
     MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, OWNER, PARAMS, PREFS_ARG, \
-    RESET_STATEFUL_FUNCTION_WHEN, SIZE, VALUE, VARIABLE, SHARED_COMPONENT_TYPES
+    RESET_STATEFUL_FUNCTION_WHEN, INPUT_SHAPES, VALUE, VARIABLE, SHARED_COMPONENT_TYPES
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.parameters import \
     Defaults, SharedParameter, Parameter, ParameterAlias, ParameterError, ParametersBase, check_user_specified, copy_parameter_value, is_array_like
@@ -540,7 +547,7 @@ from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared, \
     is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, \
-    get_all_explicit_arguments, is_numeric, call_with_pruned_args, safe_equals, safe_len, parse_valid_identifier, try_extract_0d_array_item, contains_type
+    get_all_explicit_arguments, is_numeric, call_with_pruned_args, safe_equals, safe_len, parse_valid_identifier, try_extract_0d_array_item, contains_type, is_iterable
 from psyneulink.core.scheduling.condition import Never
 from psyneulink.core.scheduling.time import Time, TimeScale
 
@@ -743,7 +750,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     """
     Component(                 \
         default_variable=None, \
-        size=None,             \
+        input_shapes=None,             \
         params=None,           \
         name=None,             \
         prefs=None,            \
@@ -765,7 +772,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         The variable(s) can be a function reference, in which case the function is called to resolve the value;
             however:  it must be "wrapped" as an item in a list, so that it is not called before being passed
                       it must of course return a variable of the type expected for the variable
-        The size argument is an int or array of ints, which specify the size of variable and set variable to be array(s)
+        The input_shapes argument is an int or array of ints, which specify the input_shapes of variable and set variable to be array(s)
             of zeros.
         The default variableList is a list of default values, one for each of the variables defined in the child class
         The params argument is a dictionary; the key for each entry is the parameter name, associated with its value.
@@ -808,10 +815,11 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         specifies template for the input to the Component's `function <Component.function>`, and the value used as the
         input to the Component if none is provided on execution (see `Component_Variable` for additional information).
 
-    size : int, list or np.ndarray of ints : default None
+    input_shapes : int, or Iterable of tuple or int : default None
         specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
-        if **default_variable** is specified, it takes precedence over the specification of **size** (see
-        `size <Component_Size>` for additonal details).
+        if **default_variable** is specified, it is checked for
+        compatibility against **input_shapes** (see
+        `input_shapes <Component_Input_Shapes>` for additonal details).
 
     COMMENT:
     param_defaults :   :  default None,
@@ -839,8 +847,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     variable : 2d np.array
         see `variable <Component_Variable>`
 
-    size : int or array of ints
-        see `size <Component_Size>`
+    input_shapes : Union[int, Iterable[Union[int, tuple]]]
+        see `input_shapes <Component_Input_Shapes>`
 
     function : Function, function or method
         see `function <Component_Function>`
@@ -922,7 +930,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     componentCategory = None
     componentType = None
 
-    standard_constructor_args = {EXECUTE_UNTIL_FINISHED, FUNCTION_PARAMS, MAX_EXECUTIONS_BEFORE_FINISHED, RESET_STATEFUL_FUNCTION_WHEN, SIZE}
+    standard_constructor_args = {EXECUTE_UNTIL_FINISHED, FUNCTION_PARAMS, MAX_EXECUTIONS_BEFORE_FINISHED, RESET_STATEFUL_FUNCTION_WHEN, INPUT_SHAPES}
 
     # helper attributes for MDF model spec
     _model_spec_id_parameters = 'parameters'
@@ -1105,7 +1113,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     def __init__(self,
                  default_variable,
                  param_defaults,
-                 size=NotImplemented,  # 7/5/17 CW: this is a hack to check whether the user has passed in a size arg
+                 input_shapes=None,
                  function=None,
                  name=None,
                  reset_stateful_function_when=None,
@@ -1116,7 +1124,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         Initialization arguments:
         - default_variable (anything): establishes type for the variable, used for validation
-        - size (int or list/array of ints): if specified, establishes variable if variable was not already specified
+        - input_shapes (int or list/array of ints): if specified, establishes variable if variable was not already specified
         - params_default (dict): assigned as default
         Note: if parameter_validation is off, validation is suppressed (for efficiency) (Component class default = on)
 
@@ -1133,7 +1141,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             self.reset_stateful_function_when = Never()
 
         parameter_values, function_params = self._parse_arguments(
-            default_variable, param_defaults, size, function, function_params, kwargs
+            default_variable, param_defaults, input_shapes, function, function_params, kwargs
         )
 
         self._initialize_parameters(
@@ -1268,6 +1276,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         self._update_parameter_components(context)
 
         self.compositions = weakref.WeakSet()
+
+        # Delete the _user_specified_args attribute, we don't need it anymore
+        del self._user_specified_args
 
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
@@ -1494,6 +1505,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "retain_torch_trained_outputs", "retain_torch_targets", "retain_torch_losses"
                      "torch_trained_outputs", "torch_targets", "torch_losses",
                      # should be added to relevant _gen_llvm_function... when aug:
+                     # OneHot:
+                     'abs_val', 'indicator',
                      # SoftMax:
                      'mask_threshold', 'adapt_scale', 'adapt_base', 'adapt_entropy_weighting',
                      # LCAMechanism
@@ -1635,9 +1648,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     # Handlers
     # ------------------------------------------------------------------------------------------------------------------
 
-    def _handle_default_variable(self, default_variable=None, size=None):
+    def _handle_default_variable(self, default_variable=None, input_shapes=None):
         """
-            Finds whether default_variable can be determined using **default_variable** and **size**
+            Finds whether default_variable can be determined using **default_variable** and **input_shapes**
             arguments.
 
             Returns
@@ -1646,143 +1659,121 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 None otherwise
         """
         default_variable = self._parse_arg_variable(default_variable)
+        default_variable = self._handle_input_shapes(input_shapes, default_variable)
 
-        if default_variable is None:
-            default_variable = self._handle_size(size, default_variable)
-
-            if default_variable is None or default_variable is NotImplemented:
-                return None
-            else:
-                self._variable_shape_flexibility = self._specified_variable_shape_flexibility
+        if default_variable is None or default_variable is NotImplemented:
+            return None
         else:
             self._variable_shape_flexibility = self._specified_variable_shape_flexibility
 
         return convert_to_np_array(default_variable, dimension=1)
 
-    # ELIMINATE SYSTEM
-    # IMPLEMENTATION NOTE: (7/7/17 CW) Due to System and Process being initialized with size at the moment (which will
-    # be removed later), I’m keeping _handle_size in Component.py. I’ll move the bulk of the function to Mechanism
-    # through an override, when Composition is done. For now, only Port.py overwrites _handle_size().
-    def _handle_size(self, size, variable):
-        """If variable is None, _handle_size tries to infer variable based on the **size** argument to the
-            __init__() function. This method is overwritten in subclasses like Mechanism and Port.
-            If self is a Mechanism, it converts variable to a 2D array, (for a Mechanism, variable[i] represents
-            the input from the i-th InputPort). If self is a Port, variable is a 1D array and size is a length-1 1D
-            array. It performs some validations on size and variable as well. This function is overridden in Port.py.
-            If size is NotImplemented (usually in the case of Projections/Functions), then this function passes without
-            doing anything. Be aware that if size is NotImplemented, then variable is never cast to a particular shape.
+    def _parse_input_shapes(
+        self, input_shapes: Union[int, Iterable[Union[int, tuple]]]
+    ) -> np.ndarray:
         """
-        if size is not NotImplemented:
+        Returns the equivalent 'variable' array specified by **input_shapes**
+
+        Args:
+            input_shapes (Union[int, Iterable[Union[int, tuple]]])
+
+        Returns:
+            np.ndarray
+        """
+        def get_input_shapes_elem(s, idx=None):
+            try:
+                return np.zeros(s)
+            except (TypeError, ValueError) as e:
+                if idx is not None:
+                    idx_str = f' at index {idx}'
+                else:
+                    idx_str = ''
+
+                raise ComponentError(
+                    f'Invalid input_shapes argument of {self}{idx_str}. input_shapes must be a'
+                    ' valid numpy shape or a list of shapes for use with'
+                    f' numpy.zeros: {e}'
+                ) from e
+
+        if not is_iterable(input_shapes, exclude_str=True):
+            variable_from_input_shapes = np.asarray([get_input_shapes_elem(input_shapes)])
+        else:
+            if len(input_shapes) == 0:
+                raise ComponentError(
+                    f'Invalid input_shapes argument of {self}. input_shapes must not be an empty list'
+                )
+            variable_from_input_shapes = []
+            for i, s in enumerate(input_shapes):
+                variable_from_input_shapes.append(get_input_shapes_elem(s, i))
+            variable_from_input_shapes = convert_all_elements_to_np_array(variable_from_input_shapes)
+
+        return variable_from_input_shapes
+
+    # ELIMINATE SYSTEM
+    # IMPLEMENTATION NOTE: (7/7/17 CW) Due to System and Process being initialized with input_shapes at the moment (which will
+    # be removed later), I’m keeping _handle_input_shapes in Component.py. I’ll move the bulk of the function to Mechanism
+    # through an override, when Composition is done. For now, only Port.py overwrites _handle_input_shapes().
+    def _handle_input_shapes(self, input_shapes, variable):
+        """If variable is None, _handle_input_shapes tries to infer variable based on the **input_shapes** argument to the
+            __init__() function. If input_shapes is None (usually in the case of
+            Projections/Functions), then this function passes without
+            doing anything. If both input_shapes and variable are not None, a
+            ComponentError is thrown if they are not compatible.
+        """
+        if input_shapes is not None:
             self._variable_shape_flexibility = self._specified_variable_shape_flexibility
-            # region Fill in and infer variable and size if they aren't specified in args
-            # if variable is None and size is None:
+            # region Fill in and infer variable and input_shapes if they aren't specified in args
+            # if variable is None and input_shapes is None:
             #     variable = self.class_defaults.variable
             # 6/30/17 now handled in the individual subclasses' __init__() methods because each subclass has different
-            # expected behavior when variable is None and size is None.
-
-            def checkAndCastInt(x):
-                if not isinstance(x, numbers.Number):
-                    raise ComponentError("An element ({}) in size is not a number.".format(x))
-                if x < 1:
-                    raise ComponentError("An element ({}) in size is not a positive number.".format(x))
-                try:
-                    int_x = int(x)
-                except:
-                    raise ComponentError(
-                        "Failed to convert an element ({}) in size argument for {} {} to an integer. size "
-                        "should be a number, or iterable of numbers, which are integers or "
-                        "can be converted to integers.".format(x, type(self), self.name))
-                if int_x != x:
-                    if hasattr(self, 'prefs') and hasattr(self.prefs, VERBOSE_PREF) and self.prefs.verbosePref:
-                        warnings.warn("When an element ({}) in the size argument was cast to "
-                                      "integer, its value changed to {}.".format(x, int_x))
-                return int_x
-
-            if variable is not None:
-                variable = np.array(variable)
-                if variable.dtype == object:
-                    # CAVEAT: assuming here that object dtype implies there are list objects (i.e. array with
-                    # different sized arrays/lists inside like [[0, 1], [2, 3, 4]]), even though putting a None
-                    # value in the array will give object dtype. This case doesn't really make sense in our
-                    # context though, so ignoring this case in the interest of quickly fixing 3d variable behavior
-                    variable = np.atleast_1d(variable)
-                else:
-                    variable = np.atleast_2d(variable)
-
-                variable = convert_all_elements_to_np_array(variable)
-
-            try:
-                if size is not None:
-                    size = np.atleast_1d(size)
-                    if len(np.shape(size)) > 1:  # number of dimensions of size > 1
-                        if hasattr(self, 'prefs') and hasattr(self.prefs, VERBOSE_PREF) and self.prefs.verbosePref:
-                            warnings.warn(
-                                "size had more than one dimension (size had {} dimensions), so only the first "
-                                "element of its highest-numbered axis will be used".format(len(np.shape(size))))
-                        while len(np.shape(size)) > 1:  # reduce the dimensions of size
-                            size = size[0]
-            except:
-                raise ComponentError("Failed to convert size (of type {}) to a 1D array.".format(type(size)))
-
-            if size is not None:
-                size = np.array(list(map(checkAndCastInt, size)))  # convert all elements of size to int
+            # expected behavior when variable is None and input_shapes is None.
 
             # implementation note: for good coding practices, perhaps add setting to enable easy change of the default
             # value of variable (though it's an unlikely use case), which is an array of zeros at the moment
-            if variable is None and size is not None:
-                try:
-                    variable = []
-                    for s in size:
-                        variable.append(np.zeros(s))
-                    variable = convert_to_np_array(variable)
-                # TODO: fix bare except
-                except:
-                    raise ComponentError("variable (possibly default_variable) was not specified, but PsyNeuLink "
-                                         "was unable to infer variable from the size argument, {}. size should be"
-                                         " an integer or an array or list of integers. Either size or "
-                                         "variable must be specified.".format(size))
 
-            # the two regions below (creating size if it's None and/or expanding it) are probably obsolete (7/7/17 CW)
-
-            if size is None and variable is not None:
-                size = []
-                try:
-                    for input_vector in variable:
-                        size.append(len(input_vector))
-                    size = np.array(size)
-                except:
-                    raise ComponentError(
-                            "{}: size was not specified, and unable to infer it from the variable argument ({}) "
-                            "-- it can be an array, list, a 2D array, a list of arrays, array of lists, etc. ".
-                                format(self.name, variable))
-            # endregion
-
-            if size is not None and variable is not None:
-                if len(size) == 1 and len(variable) > 1:
-                    new_size = np.empty(len(variable))
-                    new_size.fill(size[0])
-                    size = new_size
-
-            # the two lines below were used when size was a param and are likely obsolete (7/7/17 CW)
-            # param_defaults['size'] = size  # 7/5/17 potentially buggy? Not sure (CW)
-            # self.user_params_for_instantiation['size'] = None  # 7/5/17 VERY HACKY: See Changyan's Notes on this.
-
-            # Both variable and size are specified
-            if variable is not None and size is not None:
-                # If they conflict, give warning
-                if len(size) != len(variable):
-                    if hasattr(self, 'prefs') and hasattr(self.prefs, VERBOSE_PREF) and self.prefs.verbosePref:
-                        warnings.warn("The size arg of {} conflicts with the length "
-                                      "of its variable arg ({}) at element {}: variable takes precedence".
-                                      format(self.name, size, variable))
+            def conflict_error(reason=None):
+                if reason is not None:
+                    reason_str = f': {reason}'
                 else:
-                    for i in range(len(size)):
-                        if size[i] != len(variable[i]):
-                            if hasattr(self, 'prefs') and hasattr(self.prefs, VERBOSE_PREF) and self.prefs.verbosePref:
-                                warnings.warn("The size arg of {} ({}) conflicts with the length "
-                                              "of its variable arg ({}) at element {}: variable takes precedence".
-                                              format(self.name, size[i], variable[i], i))
+                    reason_str = ''
 
+                return ComponentError(
+                    f'input_shapes and default_variable arguments of {self} conflict{reason_str}'
+                )
+
+            variable_from_input_shapes = self._parse_input_shapes(input_shapes)
+
+            if variable is None:
+                return variable_from_input_shapes
+
+            if is_iterable(input_shapes, exclude_str=True):
+                assert len(input_shapes) == len(variable_from_input_shapes)
+
+                if variable.ndim == 0:
+                    raise conflict_error(
+                        'input_shapes gives a list of items but default_variable is 0d'
+                    )
+                elif len(input_shapes) != len(variable):
+                    raise conflict_error(
+                        f'len(input_shapes) is {len(input_shapes)};'
+                        f' len(default_variable) is {len(variable)}'
+                    )
+                else:
+                    for i in range(len(input_shapes)):
+                        if variable_from_input_shapes[i].shape != variable[i].shape:
+                            raise conflict_error(
+                                f'input_shapes[{i}].shape: {variable_from_input_shapes[i].shape};'
+                                f' default_variable[{i}].shape: {variable[i].shape}'
+                            )
+            else:
+                if variable_from_input_shapes.shape != variable.shape:
+                    raise conflict_error(
+                        f'input_shapes.shape: {variable_from_input_shapes.shape};'
+                        f' default_variable.shape: {variable.shape}'
+                    )
+
+        # if variable_from_input_shapes is created an error has not been thrown
+        # so far, variable is equal
         return variable
 
     def _get_allowed_arguments(self) -> set:
@@ -2199,7 +2190,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             )
 
     def _parse_arguments(
-        self, default_variable, param_defaults, size, function, function_params, kwargs
+        self, default_variable, param_defaults, input_shapes, function, function_params, kwargs
     ):
         if function_params is None:
             function_params = {}
@@ -2212,7 +2203,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         parameter_values = {
             **{
                 'function': function,
-                'size': size,
+                'input_shapes': input_shapes,
                 'default_variable': default_variable,
                 'function_params': function_params
             },
@@ -3736,7 +3727,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         self._name = value
 
     @property
-    def size(self):
+    def input_shapes(self):
         s = []
 
         try:
@@ -4024,7 +4015,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         from psyneulink.core.compositions.composition import Composition
         from psyneulink.core.components.ports.port import Port
         from psyneulink.core.components.ports.outputport import OutputPort
-        from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
+        from psyneulink.core.components.functions.nonstateful.transformfunctions import MatrixTransform
 
         def parse_parameter_value(value, no_expand_components=False, functions_as_dill=False):
             if isinstance(value, (list, tuple)):
@@ -4165,11 +4156,11 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                         # class default
                         val = p.default_value
                 else:
-                    # special handling because LinearMatrix default values
+                    # special handling because MatrixTransform default values
                     # can be PNL-specific keywords. In future, generalize
                     # this workaround
                     if (
-                        isinstance(self, LinearMatrix)
+                        isinstance(self, MatrixTransform)
                         and p.name == 'matrix'
                     ):
                         val = self.parameters.matrix.values[None]
