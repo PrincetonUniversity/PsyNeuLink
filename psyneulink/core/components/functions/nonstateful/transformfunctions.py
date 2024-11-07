@@ -2175,13 +2175,14 @@ class MatrixTransform(CombinationFunction):  # ---------------------------------
             if normalize:
                 return matmul_with_normalization
             else:
-                return lambda x, y : torch.matmul(torch.tensor(x, device=device).double(), y)
+                # return lambda x, y : torch.matmul(torch.tensor(x, device=device).double(), y)
+                return lambda x, y : torch.matmul(x.clone().double().detach(), y)
 
         elif operation is L0:
             if normalize:
                 return diff_with_normalization
             else:
-                return lambda x, y: torch.sum((1 - torch.abs(torch.tensor(x, device=device).double() - y)),axis=0)
+                return lambda x, y: torch.sum((1 - torch.abs(x.clone().double().detach() - y)),axis=0)
 
         else:
             from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
