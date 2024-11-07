@@ -2168,7 +2168,8 @@ class MatrixTransform(CombinationFunction):  # ---------------------------------
         def diff_with_normalization(vector, matrix):
             vector = torch.tensor(vector, device=device).double()
             normalize = torch.sum(torch.abs(torch.tensor(vector - matrix)))
-            return torch.sum(((1 - torch.abs(torch.tensor(vector - matrix)) / normalize)), axis=0)
+            # return torch.sum(((1 - torch.abs(torch.tensor(vector - matrix)) / normalize)), axis=0)
+            return torch.sum((1 - torch.abs(vector - matrix) / normalize), axis=0)
 
         if operation is DOT_PRODUCT:
             if normalize:
@@ -2180,7 +2181,7 @@ class MatrixTransform(CombinationFunction):  # ---------------------------------
             if normalize:
                 return diff_with_normalization
             else:
-                return lambda x, y: torch.sum((1 - torch.abs(torch.tensor(x, device=device).double() - y)))
+                return lambda x, y: torch.sum((1 - torch.abs(torch.tensor(x, device=device).double() - y)),axis=0)
 
         else:
             from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
