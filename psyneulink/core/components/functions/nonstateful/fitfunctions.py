@@ -189,7 +189,8 @@ def simulation_likelihood(
                 continue
 
             # Do KDE
-            fKDE = fastKDE.fastKDE(dsub, doSaveMarginals=False)
+            fKDE = fastKDE.fastKDE(dsub, do_save_marginals=False)
+
             pdf = fKDE.pdf
             axes = fKDE.axes
 
