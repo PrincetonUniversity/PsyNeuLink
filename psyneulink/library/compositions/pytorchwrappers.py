@@ -860,11 +860,11 @@ class PytorchMechanismWrapper():
         most recent input to the PytorchMechanismWrapper.
 
     function : _gen_pytorch_fct
-        Pytorch version of the Mechanism's function assigned in __init__.
+        Pytorch version of the Mechanism's function assigned in its __init__.
 
     integrator_function : _gen_pytorch_fct
-        Pytorch version of the Mechanism's integrator_function assigned in __init__ if mechanism
-        has an integrator_function;  this assumes the mechanism also has an integrator_mode attribute
+        Pytorch version of the Mechanism's integrator_function assigned in its __init__ if Mechanism
+        has an integrator_function;  this assumes the Mechanism also has an integrator_mode attribute
         that is used to determine whether to execute the integrator_function first, and use its result
         as the input to its function.
 
@@ -1121,6 +1121,9 @@ class PytorchProjectionWrapper():
     receiver : PytorchMechanismWrapper
         the PytorchMechanismWrapper node from which the PytorchProjectionWrapper sends it value.
 
+    function : _gen_pytorch_fct
+        Pytorch version of the Projection's function assigned in its __init__.
+
     """
 
     def __init__(self,
@@ -1169,8 +1172,12 @@ class PytorchProjectionWrapper():
         if projection.learnable is False:
             self.matrix.requires_grad = False
 
+        self.function = projection.function._gen_pytorch_fct(device, context)
+
+
     def execute(self, variable):
-        return torch.matmul(variable, self.matrix)
+        # return torch.matmul(variable, self.matrix)
+        return self.function(variable, self.matrix)
 
     def log_matrix(self):
         if self._projection.parameters.matrix.log_condition != LogCondition.OFF:

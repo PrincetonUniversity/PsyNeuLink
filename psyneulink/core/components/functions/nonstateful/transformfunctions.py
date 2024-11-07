@@ -1614,14 +1614,15 @@ class LinearCombination(
 
 class MatrixTransform(CombinationFunction):  # -------------------------------------------------------------------------------
     """
-    MatrixTransform(          \
-         default_variable, \
-         matrix=None,      \
-         normalize=False,  \
-         params=None,      \
-         owner=None,       \
-         name=None,        \
-         prefs=None        \
+    MatrixTransform(            \
+         default_variable,      \
+         matrix=None,           \
+         operation=DOT_PRODUCT, \
+         normalize=False,       \
+         params=None,           \
+         owner=None,            \
+         name=None,             \
+         prefs=None             \
          )
 
     .. _MatrixTransform:
@@ -1632,6 +1633,11 @@ class MatrixTransform(CombinationFunction):  # ---------------------------------
 
     .. math::
         variable \\bullet matrix
+
+    If *DOT_PRODUCT* is specified as the **operation*, the result is the dot product of `variable
+    <MatrixTransform.variable>` and `matrix <MatrixTransform.matrix>`;  if *L0* is specified, the result is the
+    difference between `variable <MatrixTransform.variable>` and `matrix <MatrixTransform.matrix>` (see
+    `operation <MatrixTransform.operation>` for additional details).
 
     If **normalize** is True, the result is normalized by the product of the norms of the variable and matrix:
 
@@ -1690,9 +1696,15 @@ class MatrixTransform(CombinationFunction):  # ---------------------------------
 
             - matrix keywords are not valid matrix specifications
 
+    operation : DOT_PRODUCT or L0 : default DOT_PRODUCT
+        specifies whether to take the dot product or difference of `variable <MatrixTransform.variable>`
+        and `matrix <MatrixTransform.matrix>`.
+
     normalize : bool : default False
         specifies whether to normalize the result of `function <LinearCombination.function>` by dividing it by the
-        norm of `variable <MatrixTransform.variable>` x the norm of `matrix <MatrixTransform.matrix>`.
+        norm of `variable <MatrixTransform.variable>` x the norm of `matrix <MatrixTransform.matrix>`;  this cannot
+        be used if `variable <MatrixTransform.variable>` is a scalar (i.e., has only one element), and **operation**
+        is set to *L0* (since it is not needed, and can produce a divide by zero error).
 
     bounds : None
 
@@ -1725,10 +1737,16 @@ class MatrixTransform(CombinationFunction):  # ---------------------------------
         Rows correspond to elements of the input array (outer index), and
         columns correspond to elements of the output array (inner index).
 
+    operation : DOT_PRODUCT or L0 : default DOT_PRODUCT
+        determines whether dot product or difference of `variable <MatrixTransform.variable>` and `matrix
+        <MatrixTransform.matrix>` is taken.  If the length of `variable <MatrixTransform.variable>` is greater  
+        than 1 and L0 is specified, the `variable <MatrixTransform.variable>` array is subtracted from each
+        array of `matrix <MatrixTransform.matrix>` and the resulting array is summed, to produce the corresponding
+        element of the array returned by the function.
+
     normalize : bool
         determines whether the result of `function <LinearCombination.function>` is normalized, by dividing it by the
         norm of `variable <MatrixTransform.variable>` x the norm of `matrix <MatrixTransform.matrix>`.
-
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -2134,11 +2152,45 @@ class MatrixTransform(CombinationFunction):  # ---------------------------------
         builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
         return builder
 
+    def _gen_pytorch_fct(self, device, context=None):
+        operation = self._get_pytorch_fct_param_value('operation', device, context)
+        normalize = self._get_pytorch_fct_param_value('normalize', device, context)
+
+
+        def matmul_with_normalization(vector, matrix):
+            vector = torch.tensor(vector, device=device).double()
+            if torch.any(vector):
+                vector = vector / torch.norm(vector)
+            if np.any(matrix):
+                matrix = matrix / torch.norm(matrix, axis=0)
+            return torch.matmul(vector, matrix)
+
+        def diff_with_normalization(vector, matrix):
+            vector = torch.tensor(vector, device=device).double()
+            normalize = torch.sum(torch.abs(torch.tensor(vector - matrix)))
+            return torch.sum(((1 - torch.abs(torch.tensor(vector - matrix)) / normalize)), axis=0)
+
+        if operation is DOT_PRODUCT:
+            if normalize:
+                return matmul_with_normalization
+            else:
+                return lambda x, y : torch.matmul(torch.tensor(x, device=device).double(), y)
+
+        elif operation is L0:
+            if normalize:
+                return diff_with_normalization
+            else:
+                return lambda x, y: torch.sum((1 - torch.abs(torch.tensor(x, device=device).double() - y)))
+
+        else:
+            from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
+            raise AutodiffCompositionError(f"The 'operation' parameter of {function.componentName} is not supported "
+                                           f"by AutodiffComposition; use 'DOT_PRODUCT' or 'L0'.")
+
     def _function(self,
                  variable=None,
                  context=None,
-                 params=None,
-                 ):
+                 params=None):
         """
 
         Arguments
@@ -2154,7 +2206,7 @@ class MatrixTransform(CombinationFunction):  # ---------------------------------
         Returns
         ---------
 
-        dot product of variable and matrix : 1d array
+        dot product of or difference between variable and matrix : 1d array
             length of the array returned equals the number of columns of `matrix <MatrixTransform.matrix>`.
 
         """
