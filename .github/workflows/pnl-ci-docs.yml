@@ -100,7 +100,7 @@ jobs:
         restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels-${{ hashFiles('requirements.txt', 'doc_requirements.txt') }}
 
     # We need to install all PNL deps since docs config imports psyneulink module
-    - name: Install local, editable PNL package
+    - name: Install PNL package
       uses: ./.github/actions/install-pnl
       with:
         features: 'doc'
