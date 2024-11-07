@@ -107,15 +107,17 @@ def _ptx_jit_constructor():
 
     # PassManagerBuilder is used only for inlining simple functions
     __pass_manager_builder = binding.PassManagerBuilder()
-    __pass_manager_builder.opt_level = 0
+    __pass_manager_builder.opt_level = 2
     __pass_manager_builder.size_level = 1
-    # The threshold of '7' is empirically selected.
-    __pass_manager_builder.inlining_threshold = 7
+
+    # The threshold of '64' is empirically selected on GF 3050
+    __pass_manager_builder.inlining_threshold = 64
 
     # Use default device
     # TODO: Add support for multiple devices
     __compute_capability = pycuda_default.device.compute_capability()
     __ptx_sm = "sm_{}{}".format(__compute_capability[0], __compute_capability[1])
+
     # Create compilation target, use 64bit triple
     __ptx_target = binding.Target.from_triple("nvptx64-nvidia-cuda")
     __ptx_target_machine = __ptx_target.create_target_machine(cpu=__ptx_sm, opt=opt_level)
