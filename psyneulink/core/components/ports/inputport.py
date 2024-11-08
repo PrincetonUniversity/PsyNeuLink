@@ -581,7 +581,7 @@ from psyneulink._typing import Optional, Literal
 
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function
-from psyneulink.core.components.functions.nonstateful.transformfunctions import CombinationFunction, LinearCombination
+from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction, LinearCombination
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.port import PortError, Port_Base, _instantiate_port_list, port_type_keywords
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
@@ -666,7 +666,7 @@ class InputPort(Port_Base):
         <Projection_Base.value>` of the `Projections <Projection>` received by the InputPort.  Any function
         can be assigned, however:  a) it must produce a result that has the same format (number and type of elements)
         as the item of its owner Mechanism's `variable <Mechanism_Base.variable>` to which the InputPort has been
-        assigned;  b) if it is not a CombinationFunction, it may produce unpredictable results if the InputPort
+        assigned;  b) if it is not a TransformFunction, it may produce unpredictable results if the InputPort
         receives more than one Projection (see `function <InputPort.function>`.
 
     combine : SUM or PRODUCT : default None
@@ -727,7 +727,7 @@ class InputPort(Port_Base):
         expected for any `path_afferent Projections <Port_Base.path_afferents>`.
 
     function : Function
-        if it is a `CombinationFunction <Transformfunctions>`, it combines the `values <Projection_Base.value>` of
+        if it is a `TransformFunction <Transformfunctions>`, it combines the `values <Projection_Base.value>` of
         the `PathwayProjections <PathwayProjection>` (e.g., `MappingProjections <MappingProjection>`) received by the
         InputPort  (listed in its `path_afferents <Port_Base.path_afferents>` attribute), under the possible
         influence of `GatingProjections <GatingProjection>` received by the InputPort (listed in its `mod_afferents
@@ -738,7 +738,7 @@ class InputPort(Port_Base):
         <Projection_Base.value>`.  If the InputPort receives only one Projection, then any other function can be
         applied and it will generate a value that is the same length as the Projection's `value
         <Projection_Base.value>`. However, if the InputPort receives more than one Projection and
-        uses a function other than a CombinationFunction, a warning is generated and only the `value
+        uses a function other than a TransformFunction, a warning is generated and only the `value
         <Projection_Base.value>` of the first Projection listed in `path_afferents <Port_Base.path_afferents>`
         is used by the function, which may generate unexpected results when executing the Mechanism or Composition
         to which it belongs.
@@ -1032,7 +1032,7 @@ class InputPort(Port_Base):
             del self.combine_function_args
         super()._instantiate_function(function=function, context=context)
         self._use_1d_variable = False
-        if not isinstance(self.function, CombinationFunction):
+        if not isinstance(self.function, TransformFunction):
             self._use_1d_variable = True
             self.function._variable_shape_flexibility = DefaultsFlexibility.RIGID
         else:
