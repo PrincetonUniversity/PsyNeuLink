@@ -5,6 +5,13 @@ inputs:
     description: 'PsyNeuLink features to install'
     required: true
     default: ''
+outputs:
+  wheel:
+    description: 'Returns path to the built .whl package'
+    value: ${{ steps.dist.outputs.wheel }}
+  sdist:
+    description: 'Returns path to the built .sdist package'
+    value: ${{ steps.dist.outputs.sdist }}
 
 runs:
   using: "composite"
@@ -83,12 +90,21 @@ runs:
           echo "new_package=''" >> $GITHUB_OUTPUT
         fi
 
+    - name: Build dist
+      id: dist
+      shell: bash
+      run: |
+        pip install setuptools wheel
+        python setup.py sdist bdist_wheel
+        echo "wheel=$(ls dist/*.whl)" | tee -a "$GITHUB_OUTPUT"
+        echo "sdist=$(ls dist/*.sdist)" | tee -a "$GITHUB_OUTPUT"
+
     - name: Python dependencies
       shell: bash
       run: |
-        pip install -e .[${{ inputs.features }}] -c env_constraints.txt -c broken_trans_deps.txt
+        pip install ${{ steps.dist.outputs.wheel }}[${{ inputs.features }}] -c env_constraints.txt -c broken_trans_deps.txt
 
-    - name: "Cleanup old wheels"
+    - name: Cleanup old wheels
       shell: bash
       run: |
         pip cache info
