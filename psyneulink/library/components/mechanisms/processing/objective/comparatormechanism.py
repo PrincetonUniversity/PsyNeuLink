@@ -219,8 +219,8 @@ class ComparatorMechanism(ObjectiveMechanism):
         `MappingProjection` from the OutputPorts referenced by the `sample` and `target` attributes
         (see `ComparatorMechanism_Structure` for additional details).
 
-    function : CombinationFunction, function or method
-        used to compare the `sample` with the `target`.  It can be any `CombinationFunction <Transformfunctions>`,
+    function : TransformFunction, function or method
+        used to compare the `sample` with the `target`.  It can be any `TransformFunction <Transformfunctions>`,
         or a python function that takes a 2d array with two items and returns a 1d array of the same length as the
         two input items.
 

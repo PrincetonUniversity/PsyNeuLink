@@ -783,7 +783,7 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import ComponentError, DefaultsFlexibility, component_keywords
 from psyneulink.core.components.functions.function import \
     Function, get_param_value_for_keyword, is_function_type, RandomMatrix
-from psyneulink.core.components.functions.nonstateful.transformfunctions import CombinationFunction, LinearCombination
+from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction, LinearCombination
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
@@ -1466,12 +1466,12 @@ class Port_Base(Port):
                                   'Projections, but does not use a {}; unexpected results may occur when the {} '
                                   'or {} to which it belongs is executed.'.
                                   format(Projection.__name__, projection.sender.owner.name, self.__class__.__name__,
-                                         self.owner.name, self.name, CombinationFunction.__name__, Mechanism.__name__,
+                                         self.owner.name, self.name, TransformFunction.__name__, Mechanism.__name__,
                                          Composition.__name__))
                             # f'A {Projection.__name__} from {projection.sender.owner.name} is being added ' \
                             #     f'to an {self.__class__.__name__} of {self.owner.name} ({self.name}) ' \
                             #     f'that already receives other Projections, ' \
-                            #     f'but does not use a {CombinationFunction.__name__}; ' \
+                            #     f'but does not use a {TransformFunction.__name__}; ' \
                             #     f'unexpected results may occur when the {Mechanism.__name__} ' \
                             #     f'or {Composition.__name__} to which it belongs is executed.')
 
