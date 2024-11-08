@@ -6,110 +6,110 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# **************************************  CollapsingBoundMechanism *************************************************
+# **************************************  IntegratorMechanism *************************************************
 
 """
 
 Contents
 --------
 
-  * `CollapsingBoundMechanism_Overview`
-  * `CollapsingBoundMechanism_Creation`
-  * `CollapsingBoundMechanism_Structure`
-  * `CollapsingBoundMechanism_Execution`
-  * `CollapsingBoundMechanism_Class_Reference`
+  * `IntegratorMechanism_Overview`
+  * `IntegratorMechanism_Creation`
+  * `IntegratorMechanism_Structure`
+  * `IntegratorMechanism_Execution`
+  * `IntegratorMechanism_Class_Reference`
 
 
-.. _CollapsingBoundMechanism_Overview:
+.. _IntegratorMechanism_Overview:
 
 Overview
 --------
 
-A CollapsingBoundMechanism integrates its input, possibly based on its prior values.  The input can be a single
+An IntegratorMechanism integrates its input, possibly based on its prior values.  The input can be a single
 scalar value or an array of scalars (list or 1d np.array).  If it is a list or array, then each value is
 independently integrated.  The default function (`IntegratorFunction`) can be parametrized to implement either a simple
 increment rate, additive accumulator, or an (exponentially weighted) time-averaging of its input.  It can also be
 assigned a custom function.
 
-.. _CollapsingBoundMechanism_Creation:
+.. _IntegratorMechanism_Creation:
 
-Creating an CollapsingBoundMechanism
+Creating an IntegratorMechanism
 -------------------------------
 
-An CollapsingBoundMechanism can be created directly by calling its constructor, or using the `mechanism` command and
+An IntegratorMechanism can be created directly by calling its constructor, or using the `mechanism` command and
 specifying *INTEGRATOR_MECHANISM* as its **mech_spec** argument.  Its function is specified in the **function**
 argument, which can be parametrized by calling its constructor with parameter values::
 
     >>> import psyneulink as pnl
-    >>> my_time_averaging_mechanism = pnl.CollapsingBoundMechanism(function=pnl.AdaptiveIntegrator(rate=0.5))
+    >>> my_time_averaging_mechanism = pnl.IntegratorMechanism(function=pnl.AdaptiveIntegrator(rate=0.5))
 
 The **default_variable** argument specifies the format of its input (i.e., whether it is a single scalar or an
 array), as well as the value to use if none is provided when Mechanism is executed.  Alternatively, the **input_shapes**
 argument can be used to specify the length of the array, in which case it will be initialized with all zeros.
 
-.. _CollapsingBoundMechanism_Structure:
+.. _IntegratorMechanism_Structure:
 
 Structure
 ---------
 
-An CollapsingBoundMechanism has a single `InputPort`, the `value <InputPort.InputPort.value>` of which is
-used as the  `variable <Mechanism_Base.variable>` for its `function <CollapsingBoundMechanism.function>`.
-The default for `function <CollapsingBoundMechanism.function>` is `AdaptiveIntegrator(rate=0.5)`. However,
+An IntegratorMechanism has a single `InputPort`, the `value <InputPort.InputPort.value>` of which is
+used as the  `variable <Mechanism_Base.variable>` for its `function <IntegratorMechanism.function>`.
+The default for `function <IntegratorMechanism.function>` is `AdaptiveIntegrator(rate=0.5)`. However,
 a custom function can also be specified,  so long as it takes a numeric value, or a list or np.ndarray of numeric
 values as its input, and returns a value of the same type and format.  The Mechanism has a single `OutputPort`,
 the `value <OutputPort.OutputPort.value>` of which is assigned the result of  the call to the Mechanism's
-`function  <CollapsingBoundMechanism.function>`.
+`function  <IntegratorMechanism.function>`.
 
-.. _CollapsingBoundMechanism_Execution:
+.. _IntegratorMechanism_Execution:
 
 Execution
 ---------
 
-When an CollapsingBoundMechanism is executed, it carries out the specified integration, and assigns the result to the
+When an IntegratorMechanism is executed, it carries out the specified integration, and assigns the result to the
 `value <Mechanism_Base.value>` of its `primary OutputPort <OutputPort_Primary>`.  For the default function
 (`IntegratorFunction`), if the value specified for **default_variable** is a list or array, or **input_shapes** is greater
 than 1, each element of the array is independently integrated.  If its `rate <IntegratorFunction.rate>` parameter is a
 single value, that rate is used for integrating each element. If the `rate <IntegratorFunction.rate>` parameter is a
 list or array, then each element is used as the rate for the corresponding element of the input (in this case, `rate
 <IntegratorFunction.rate>` must be the same length as the value specified for **default_variable** or **input_shapes**).
-Integration can be reset to the value of its `function <CollapsingBoundMechanism.function>`\\s `initializer by setting
-its `reset <CollapsingBoundMechanism.reset>` parameter to a non-zero value, as described below.
+Integration can be reset to the value of its `function <IntegratorMechanism.function>`\\s `initializer by setting
+its `reset <IntegratorMechanism.reset>` parameter to a non-zero value, as described below.
 
-.. _CollapsingBoundMechanism_Reset:
+.. _IntegratorMechanism_Reset:
 
-*Resetting the CollapsingBoundMechanism*
+*Resetting the IntegratorMechanism*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An IntegatorMechanism has a `modulable <ModulatorySignal_Modulation>` `reset <IntergatorMechanism.reset>` parameter
-that can be used to reset its value to the value of its `function <CollapsingBoundMechanism.function>`\\s `initializer
+that can be used to reset its value to the value of its `function <IntegratorMechanism.function>`\\s `initializer
 <IntegratorFunction.initializer>`. This also clears the `value <Mechanism_Base.value>` `history <Parameter.history>`,
 thus effectively setting the `previous_value <IntegratorFunction.previous_value>`  of its `function
-<CollapsingBoundMechanism.function>` to None.
+<IntegratorMechanism.function>` to None.
 
-The `reset <CollapsingBoundMechanism.reset>` parameter can be used to reset the CollapsingBoundMechanism under the control of a
-`ControlMechanism`.  This simplest way to do this is to specify the `reset <CollapsingBoundMechanism.reset>` parameter of
+The `reset <IntegratorMechanism.reset>` parameter can be used to reset the IntegratorMechanism under the control of a
+`ControlMechanism`.  This simplest way to do this is to specify the `reset <IntegratorMechanism.reset>` parameter of
 the IntgeratorMechanism in the **control** argument of the ControlMechanism's constructor, and to specify *OVERRIDE*
 in its **modulation** argument, as in the following example::
 
-    >>> my_integrator = CollapsingBoundMechanism()
+    >>> my_integrator = IntegratorMechanism()
     >>> ctl_mech = pnl.ControlMechanism(modulation=pnl.OVERRIDE, control=(pnl.RESET, my_integrator))
 
-In this case, any non-zero value of the ControlMechanism's `ControlSignal` will reset the CollapsingBoundMechanism.
+In this case, any non-zero value of the ControlMechanism's `ControlSignal` will reset the IntegratorMechanism.
 *OVERRIDE* must be used as its `modulation <ControlMechanism.modulation>` parameter (instead of its default value
 of *MULTIPLICATIVE*), so that the value of the ControlMechanism's `ControlSignal` is assigned directly to the
-CollapsingBoundMechanism's `reset <CollapsingBoundMechanism.reset>` parameter (otherwise, since the default of the `reset
-<CollapsingBoundMechanism.reset>` parameter is 0, the ControlSignal's value has no effect). An alternative is to specify
-the **reset_default** agument in the CollapsingBoundMechanism constructor with a non-zero value, and while allowing the
+IntegratorMechanism's `reset <IntegratorMechanism.reset>` parameter (otherwise, since the default of the `reset
+<IntegratorMechanism.reset>` parameter is 0, the ControlSignal's value has no effect). An alternative is to specify
+the **reset_default** agument in the IntegratorMechanism constructor with a non-zero value, and while allowing the
 ControlMechanism to use its default value for `modulation <ControlMechanism.modulation>` (i.e., *MULTIPLICATIVE*)::
 
-    >>> my_integrator = CollapsingBoundMechanism(reset_default=1)
+    >>> my_integrator = IntegratorMechanism(reset_default=1)
     >>> ctl_mech = pnl.ControlMechanism(control=(pnl.RESET, my_integrator))
 
 In this case, a ControlSignal with a zero value suppresses a reset by multiplying the `reset
-<CollapsingBoundMechanism.reset>` parameter by 0, whereas a ControlSignal with a non-zero value multiples the `reset
-<CollapsingBoundMechanism.reset>` parameter's non-zero default value, resulting in a non-zero value that elicits a reset.
+<IntegratorMechanism.reset>` parameter by 0, whereas a ControlSignal with a non-zero value multiples the `reset
+<IntegratorMechanism.reset>` parameter's non-zero default value, resulting in a non-zero value that elicits a reset.
 
-.. _CollapsingBoundMechanism_Class_Reference:
+.. _IntegratorMechanism_Class_Reference:
 
 Class Reference
 ---------------
@@ -127,25 +127,25 @@ from psyneulink.core.components.functions.stateful.integratorfunctions import Ad
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.core.globals.keywords import \
-    COLLAPSING_BOUND_MECHANISM, DEFAULT_VARIABLE, VARIABLE, PREFERENCE_SET_NAME, RESET
+    DEFAULT_VARIABLE, INTEGRATOR_MECHANISM, VARIABLE, PREFERENCE_SET_NAME, RESET
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
 __all__ = [
-    'DEFAULT_RATE', 'CollapsingBoundMechanism', 'CollapsingBoundMechanismError'
+    'DEFAULT_RATE', 'IntegratorMechanism', 'IntegratorMechanismError'
 ]
 
-# CollapsingBoundMechanism parameter keywords:
+# IntegratorMechanism parameter keywords:
 DEFAULT_RATE = 0.5
 
-class CollapsingBoundMechanismError(MechanismError):
+class IntegratorMechanismError(MechanismError):
     pass
 
 
-class CollapsingBoundMechanism(ProcessingMechanism_Base):
+class IntegratorMechanism(ProcessingMechanism_Base):
     """
-    CollapsingBoundMechanism( \
+    IntegratorMechanism( \
         function=AdaptiveIntegrator(rate=0.5))
 
     Subclass of `ProcessingMechanism <ProcessingMechanism>` that integrates its input.
@@ -159,24 +159,24 @@ class CollapsingBoundMechanism(ProcessingMechanism_Base):
         of values, and return one of the same form.
 
     reset_default : number, list or np.ndarray : default 0
-        specifies the default value used for the `reset <CollapsingBoundMechanism.reset>` parameter.
+        specifies the default value used for the `reset <IntegratorMechanism.reset>` parameter.
 
     Attributes
     ----------
 
     reset : int, float or 1d array of length 1 : default 0
-        if non-zero, the CollapsingBoundMechanism's `reset <Mechanism_Base.reset>` method is called, which resets the
-        `value <CollapsingBoundMechanism.value>` of the CollapsingBoundMechanism to its initial value (see
-        `CollapsingBoundMechanism_Reset` for additional details).
+        if non-zero, the IntegratorMechanism's `reset <Mechanism_Base.reset>` method is called, which resets the
+        `value <IntegratorMechanism.value>` of the IntegratorMechanism to its initial value (see
+        `IntegratorMechanism_Reset` for additional details).
 
     """
 
-    componentType = COLLAPSING_BOUND_MECHANISM
+    componentType = INTEGRATOR_MECHANISM
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # These will override those specified in TYPE_DEFAULT_PREFERENCES
     classPreferences = {
-        PREFERENCE_SET_NAME: 'CollapsingBoundMechanismCustomClassPreferences',
+        PREFERENCE_SET_NAME: 'IntegratorMechanismCustomClassPreferences',
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     class Parameters(ProcessingMechanism_Base.Parameters):
@@ -185,13 +185,13 @@ class CollapsingBoundMechanism(ProcessingMechanism_Base):
             ----------
 
                 function
-                    see `function <CollapsingBoundMechanism.function>`
+                    see `function <IntegratorMechanism.function>`
 
                     :default value: `AdaptiveIntegrator`(initializer=numpy.array([0]), rate=0.5)
                     :type: `Function`
 
                 reset
-                    see `reset <CollapsingBoundMechanism.reset>`
+                    see `reset <IntegratorMechanism.reset>`
 
                     :default value: None
                     :type: 'list or np.ndarray'
@@ -216,7 +216,7 @@ class CollapsingBoundMechanism(ProcessingMechanism_Base):
         """Assign type-level preferences, default input value (SigmoidLayer_DEFAULT_BIAS) and call super.__init__
         """
 
-        super(CollapsingBoundMechanism, self).__init__(default_variable=default_variable,
+        super(IntegratorMechanism, self).__init__(default_variable=default_variable,
                                                   input_shapes=input_shapes,
                                                   function=function,
                                                   reset_default=reset_default,
@@ -259,7 +259,7 @@ class CollapsingBoundMechanism(ProcessingMechanism_Base):
             #   shape of function's variable to that of Mechanism) but Mechanism's variable is user-specified.
             if ((variable_len>1 and function_variable_len>1 and variable_len!=function_variable_len) or
                 (function_variable_len>1 and variable_len==1 and user_specified)):
-                raise CollapsingBoundMechanismError(f"Shape of {repr(VARIABLE)} for function specified for {self.name} "
+                raise IntegratorMechanismError(f"Shape of {repr(VARIABLE)} for function specified for {self.name} "
                                                f"({function.name}: {function.variable.shape}) does not match "
                                                f"the shape of the {repr(DEFAULT_VARIABLE)} specified for the "
                                                f"{repr(Mechanism.__name__)}.")

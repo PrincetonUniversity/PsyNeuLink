@@ -132,8 +132,9 @@ jobs:
         key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt') }}-${{ github.sha }}
         restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt') }}
 
-    - name: Install local, editable PNL package
+    - name: Install PNL package
       uses: ./.github/actions/install-pnl
+      id: install
       with:
         features: 'dev'
 
@@ -185,15 +186,10 @@ jobs:
           echo "::warning::Not uploading to coveralls.io, token not available!"
         fi
 
-    - name: Build dist
-      run: |
-        pip install setuptools wheel
-        python setup.py sdist bdist_wheel
-
     - name: Upload dist packages
       uses: actions/upload-artifact@v4
       if: matrix.version-restrict == ''
       with:
         name: dist-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
-        path: dist/
+        path: ${{ steps.install.outputs.wheel }} ${{ steps.install.outputs.sdist }}
         retention-days: 2
