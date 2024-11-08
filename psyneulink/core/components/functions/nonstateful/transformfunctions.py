@@ -1738,7 +1738,7 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
 
     operation : DOT_PRODUCT or L0 : default DOT_PRODUCT
         determines whether dot product or difference of `variable <MatrixTransform.variable>` and `matrix
-        <MatrixTransform.matrix>` is taken.  If the length of `variable <MatrixTransform.variable>` is greater  
+        <MatrixTransform.matrix>` is taken.  If the length of `variable <MatrixTransform.variable>` is greater
         than 1 and L0 is specified, the `variable <MatrixTransform.variable>` array is subtracted from each
         array of `matrix <MatrixTransform.matrix>` and the resulting array is summed, to produce the corresponding
         element of the array returned by the function.
