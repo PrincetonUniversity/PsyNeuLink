@@ -192,14 +192,16 @@ else:
         (optuna.samplers.RandomSampler, {'seed': 0}, [0.01],
          pytest.warns(UserWarning, match="Overriding seed passed to optuna sampler with seed passed to PEC.")),
         (optuna.samplers.RandomSampler(), None, None,
-         pytest.warns(UserWarning, match="initial_seed on PEC is not None, but instantiated optuna sampler is being used."))
+         pytest.warns(UserWarning, match="initial_seed on PEC is not None, but instantiated optuna sampler is being used.")),
+        (optuna.create_study(sampler=optuna.samplers.RandomSampler(seed=0), direction="maximize"), None, [0.01], contextlib.nullcontext()),
     ],
     ids=[
         "differential_evolution",
         "optuna_random_sampler",
         "optuna_qmc_sampler",
         "optuna_random_sampler_with_kwargs",
-        "optuna_random_sampler_no_seed"
+        "optuna_random_sampler_no_seed",
+        "optuna_study",
     ],
 )
 def test_parameter_optimization_ddm(func_mode, opt_method, optuna_kwargs, expected_result, execution_context):
