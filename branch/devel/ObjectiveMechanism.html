@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ObjectiveMechanism &mdash; PsyNeuLink 0.15.1.0+510.g41b254d28 documentation</title>
+  <title>ObjectiveMechanism &mdash; PsyNeuLink 0.15.1.0+511.g9f59a874c documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+510
+                  0.15.1.0+511
                 </div>
               
             
@@ -291,7 +291,7 @@ with that of the other InputPorts to generate the ObjectiveMechanism’s <a clas
 the items in its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>. However, by assigning values to the ‘weight
 &lt;InputPort.weight&gt;` and/or ‘exponent &lt;InputPort.exponent&gt;` attributes of the corresponding InputPorts,
 it can be configured to calculate differences, ratios,  etc. (see <a class="reference internal" href="#objectivemechanism-weights-and-exponents-example"><span class="std std-ref">example</span></a> below).  The <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>  can also
-be replaced with any <code class="xref any docutils literal notranslate"><span class="pre">CombinationFunction</span></code>, or any python function that takes an 2d array as
+be replaced with any <code class="xref any docutils literal notranslate"><span class="pre">TransformFunction</span></code>, or any python function that takes an 2d array as
 its input (with a number of items in axis 0 equal to the number of the ObjectiveMechanism’s InputPorts), and generates
 a 1d array as its result. If it implements <code class="xref std std-keyword docutils literal notranslate"><span class="pre">weight</span></code> and/or <code class="xref std std-keyword docutils literal notranslate"><span class="pre">exponent</span></code> attributes, those are assigned
 from <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.weight" title="psyneulink.core.components.ports.inputport.InputPort.weight"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">weight</span></code></a> and <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.exponent" title="psyneulink.core.components.ports.inputport.InputPort.exponent"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">exponent</span></code></a> attributes of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_ports" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a> (also listed in the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor_weights_and_exponents" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor_weights_and_exponents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">monitor_weights_and_exponents</span></code></a> attribute);  otherwise, they are ignored.</p>
@@ -438,7 +438,7 @@ specified, as it is not used.  However it, and the <code class="xref any docutil
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>monitor</strong> (List[<a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>, ‘InputPort`, <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, str, value, dict, <code class="xref any docutils literal notranslate"><span class="pre">MonitoredOutputPortsOption</span></code>] or dict) – specifies the OutputPorts, the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">values</span></code></a> of which will be monitored, and evaluated by
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> (see <a class="reference internal" href="#objectivemechanism-monitor"><span class="std std-ref">Monitor</span></a> for details of specification).</p></li>
-<li><p><strong>function</strong> (<em>CombinationFunction</em><em>, </em><a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction" title="psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction"><em>ObjectiveFunction</em></a><em>, </em><em>function</em><em> or </em><em>method : default LinearCombination</em>) – specifies the function used to evaluate the values listed in <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">monitor</span></code></a> &lt;ObjectiveMechanism.monitor&gt;`
+<li><p><strong>function</strong> (<em>TransformFunction</em><em>, </em><a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction" title="psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction"><em>ObjectiveFunction</em></a><em>, </em><em>function</em><em> or </em><em>method : default LinearCombination</em>) – specifies the function used to evaluate the values listed in <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">monitor</span></code></a> &lt;ObjectiveMechanism.monitor&gt;`
 (see <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> for details).</p></li>
 <li><p><strong>output_ports</strong> (<em>list</em><em>[</em><a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort"><em>OutputPort</em></a><em>, </em><em>value</em><em>, </em><em>str</em><em> or </em><em>dict</em><em>] or </em><em>dict</em><em>[</em><em>] </em><em>: default</em><em> [</em><em>OUTCOME</em><em>]</em>) – specifies the OutputPorts for the Mechanism;</p></li>
 </ul>
@@ -495,12 +495,12 @@ OutputPorts specified in its <a class="reference internal" href="#psyneulink.cor
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function">
 <span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="Permalink to this definition">¶</a></dt>
 <dd><p>the function used to evaluate the values monitored by the ObjectiveMechanism.  The function can be any
-<code class="xref any docutils literal notranslate"><span class="pre">CombinationFunction</span></code> or a Python function that takes a 2d array with an arbitrary
+<code class="xref any docutils literal notranslate"><span class="pre">TransformFunction</span></code> or a Python function that takes a 2d array with an arbitrary
 number of items or a number equal to the number of items in the ObjectiveMechanism’s variable (i.e.,
 its number of input_ports) and returns a 1d array.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>CombinationFunction, <a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction" title="psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction">ObjectiveFunction</a>, function, or method</p>
+<dd class="field-odd"><p>TransformFunction, <a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction" title="psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction">ObjectiveFunction</a>, function, or method</p>
 </dd>
 </dl>
 </dd></dl>
