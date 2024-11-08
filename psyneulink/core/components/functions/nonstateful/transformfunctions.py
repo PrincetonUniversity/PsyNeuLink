@@ -27,7 +27,7 @@ shape as the individual items.
 All Transformfunctions must have two attributes - **multiplicative_param** and **additive_param** -
 each of which is assigned the name of one of the function's parameters;
 this is for use by ModulatoryProjections (and, in particular, GatingProjections,
-when the CombinationFunction is used as the function of an InputPort or OutputPort).
+when the TransformFunction is used as the function of an InputPort or OutputPort).
 
 
 """
@@ -54,9 +54,8 @@ from psyneulink.core.components.shellclasses import Projection
 from psyneulink.core.globals.keywords import (
     ADDITIVE_PARAM, ARRANGEMENT, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONCATENATE_FUNCTION,
      CROSS_ENTROPY, DEFAULT_VARIABLE, DOT_PRODUCT, EXPONENTS,
-     HAS_INITIALIZERS, HOLLOW_MATRIX, IDENTITY_MATRIX,
-     LINEAR_COMBINATION_FUNCTION, LINEAR_TRANSFORM_FUNCTION, L0,
-     MATRIX_KEYWORD_NAMES, MATRIX, MULTIPLICATIVE_PARAM, NORMALIZE,
+     HAS_INITIALIZERS, HOLLOW_MATRIX, IDENTITY_MATRIX, LINEAR_COMBINATION_FUNCTION, L0,
+     MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_TRANSFORM_FUNCTION,  MULTIPLICATIVE_PARAM, NORMALIZE,
      OFFSET, OPERATION, PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT,
      REARRANGE_FUNCTION, RECEIVER, REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, PREFERENCE_SET_NAME)
 from psyneulink.core.globals.utilities import (
@@ -67,16 +66,16 @@ from psyneulink.core.globals.parameters import Parameter, check_user_specified, 
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, ValidPrefSet, PreferenceEntry, PreferenceLevel
 
-__all__ = ['CombinationFunction', 'Concatenate', 'CombineMeans', 'Rearrange', 'Reduce',
+__all__ = ['TransformFunction', 'Concatenate', 'CombineMeans', 'Rearrange', 'Reduce',
            'LinearCombination', 'MatrixTransform', 'PredictionErrorDeltaFunction']
 
-class CombinationFunction(Function_Base):
+class TransformFunction(Function_Base):
     """Function that combines multiple items, yielding a result with the same shape as its operands
 
     All Transformfunctions must have two attributes - multiplicative_param and additive_param -
         each of which is assigned the name of one of the function's parameters;
         this is for use by ModulatoryProjections (and, in particular, GatingProjections,
-        when the CombinationFunction is used as the function of an InputPort or OutputPort).
+        when the TransformFunction is used as the function of an InputPort or OutputPort).
 
     """
     componentType = COMBINATION_FUNCTION_TYPE
@@ -87,7 +86,7 @@ class CombinationFunction(Function_Base):
             ----------
 
                 variable
-                    see `variable <CombinationFunction.variable>`
+                    see `variable <TransformFunction.variable>`
 
                     :default value: numpy.array([0])
                     :type: ``numpy.ndarray``
@@ -116,7 +115,7 @@ class CombinationFunction(Function_Base):
         return builder
 
 
-class Concatenate(CombinationFunction):  # ------------------------------------------------------------------------
+class Concatenate(TransformFunction):  # ------------------------------------------------------------------------
     """
     Concatenate(                                   \
          default_variable=class_defaults.variable, \
@@ -195,7 +194,7 @@ class Concatenate(CombinationFunction):  # -------------------------------------
     componentName = CONCATENATE_FUNCTION
 
 
-    class Parameters(CombinationFunction.Parameters):
+    class Parameters(TransformFunction.Parameters):
         """
             Attributes
             ----------
@@ -340,7 +339,7 @@ class Concatenate(CombinationFunction):  # -------------------------------------
         return lambda x: torch.hstack(tuple(x)) * scale + offset
 
 
-class Rearrange(CombinationFunction):  # ------------------------------------------------------------------------
+class Rearrange(TransformFunction):  # ------------------------------------------------------------------------
     """
     Rearrange(                                     \
          default_variable=class_defaults.variable, \
@@ -447,7 +446,7 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
     """
     componentName = REARRANGE_FUNCTION
 
-    class Parameters(CombinationFunction.Parameters):
+    class Parameters(TransformFunction.Parameters):
         """
             Attributes
             ----------
@@ -622,7 +621,7 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
         return self.convert_output_type(result, FunctionOutputType.NP_2D_ARRAY)
 
 
-class Reduce(CombinationFunction):  # ------------------------------------------------------------------------
+class Reduce(TransformFunction):  # ------------------------------------------------------------------------
     # FIX: CONFIRM THAT 1D KWEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE
     # FIX  CONFIRM THAT LINEAR TRANSFORMATION (OFFSET, SCALE) APPLY TO THE RESULTING ARRAY
     # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
@@ -730,7 +729,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     componentName = REDUCE_FUNCTION
 
 
-    class Parameters(CombinationFunction.Parameters):
+    class Parameters(TransformFunction.Parameters):
         """
             Attributes
             ----------
@@ -1006,7 +1005,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
 
 class LinearCombination(
-    CombinationFunction):  # ------------------------------------------------------------------------
+    TransformFunction):  # ------------------------------------------------------------------------
     """
     LinearCombination(     \
          default_variable, \
@@ -1188,7 +1187,7 @@ class LinearCombination(
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
-    class Parameters(CombinationFunction.Parameters):
+    class Parameters(TransformFunction.Parameters):
         """
             Attributes
             ----------
@@ -1612,7 +1611,7 @@ class LinearCombination(
 #                                                 MatrixTransform
 # **********************************************************************************************************************
 
-class MatrixTransform(CombinationFunction):  # -------------------------------------------------------------------------------
+class MatrixTransform(TransformFunction):  # -------------------------------------------------------------------------------
     """
     MatrixTransform(            \
          default_variable,      \
@@ -1761,13 +1760,13 @@ class MatrixTransform(CombinationFunction):  # ---------------------------------
         for details).
     """
 
-    componentName = LINEAR_TRANSFORM_FUNCTION
+    componentName = MATRIX_TRANSFORM_FUNCTION
 
     DEFAULT_FILLER_VALUE = 0
 
     _model_spec_generic_type_name = 'onnx::MatMul'
 
-    class Parameters(CombinationFunction.Parameters):
+    class Parameters(TransformFunction.Parameters):
         """
             Attributes
             ----------
@@ -2156,33 +2155,28 @@ class MatrixTransform(CombinationFunction):  # ---------------------------------
         operation = self._get_pytorch_fct_param_value('operation', device, context)
         normalize = self._get_pytorch_fct_param_value('normalize', device, context)
 
-
-        def matmul_with_normalization(vector, matrix):
-            vector = torch.tensor(vector, device=device).double()
+        def dot_product_with_normalization(vector, matrix):
             if torch.any(vector):
                 vector = vector / torch.norm(vector)
-            if np.any(matrix):
-                matrix = matrix / torch.norm(matrix, axis=0)
+            if torch.any(matrix):
+                matrix = matrix / torch.norm(matrix)
             return torch.matmul(vector, matrix)
 
         def diff_with_normalization(vector, matrix):
-            vector = torch.tensor(vector, device=device).double()
-            normalize = torch.sum(torch.abs(torch.tensor(vector - matrix)))
-            # return torch.sum(((1 - torch.abs(torch.tensor(vector - matrix)) / normalize)), axis=0)
+            normalize = torch.sum(torch.abs(vector - matrix))
             return torch.sum((1 - torch.abs(vector - matrix) / normalize), axis=0)
 
         if operation is DOT_PRODUCT:
             if normalize:
-                return matmul_with_normalization
+                return dot_product_with_normalization
             else:
-                # return lambda x, y : torch.matmul(torch.tensor(x, device=device).double(), y)
-                return lambda x, y : torch.matmul(x.clone().double().detach(), y)
+                return lambda x, y : torch.matmul(x, y)
 
         elif operation is L0:
             if normalize:
                 return diff_with_normalization
             else:
-                return lambda x, y: torch.sum((1 - torch.abs(x.clone().double().detach() - y)),axis=0)
+                return lambda x, y: torch.sum((1 - torch.abs(x - y)),axis=0)
 
         else:
             from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
@@ -2300,7 +2294,7 @@ class MatrixTransform(CombinationFunction):  # ---------------------------------
 
 
 
-class CombineMeans(CombinationFunction):  # ------------------------------------------------------------------------
+class CombineMeans(TransformFunction):  # ------------------------------------------------------------------------
     # FIX: CONFIRM THAT 1D KWEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE
     # FIX  CONFIRM THAT LINEAR TRANSFORMATION (OFFSET, SCALE) APPLY TO THE RESULTING ARRAY
     # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
@@ -2479,7 +2473,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
-    class Parameters(CombinationFunction.Parameters):
+    class Parameters(TransformFunction.Parameters):
         """
             Attributes
             ----------
@@ -2740,7 +2734,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 GAMMA = 'gamma'
 
 
-class PredictionErrorDeltaFunction(CombinationFunction):
+class PredictionErrorDeltaFunction(TransformFunction):
     """
     Calculate temporal difference prediction error.
 
@@ -2758,7 +2752,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
-    class Parameters(CombinationFunction.Parameters):
+    class Parameters(TransformFunction.Parameters):
         """
             Attributes
             ----------

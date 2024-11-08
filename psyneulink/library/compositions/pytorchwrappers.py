@@ -987,7 +987,7 @@ class PytorchMechanismWrapper():
                 or (isinstance(variable, torch.Tensor) and len(variable.squeeze(0).shape) == 1)
                     or isinstance(self._mechanism.function, LinearCombination)):
                 # Enforce 2d on value of MechanismWrapper (using unsqueeze) for single InputPort
-                # or if CombinationFunction (which reduces output to single item from multi-item input)
+                # or if TransformFunction (which reduces output to single item from multi-item input)
                 if isinstance(variable, torch.Tensor):
                     variable = variable.squeeze(0)
                 return function(variable).unsqueeze(0)
@@ -1015,9 +1015,9 @@ class PytorchMechanismWrapper():
         self.input = variable
 
         # Compute main function of mechanism and return result
-        from psyneulink.core.components.functions.nonstateful.transformfunctions import CombinationFunction
+        from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction
         self.output = execute_function(self.function, variable,
-                                      is_combination_fct=isinstance(self._mechanism.function, CombinationFunction))
+                                       is_combination_fct=isinstance(self._mechanism.function, TransformFunction))
         return self.output
 
     def _gen_llvm_execute(self, ctx, builder, state, params, mech_input, data):
