@@ -135,12 +135,10 @@ MORE HERE
 """
 
 import numpy as np
-import graph_scheduler as gs
 from enum import IntEnum
 
 from psyneulink import *
-from psyneulink._typing import Union, Literal
-from psyneulink.core.scheduling.condition import Any, And, AllHaveRun, AtRunStart
+from psyneulink._typing import Union
 
 # Settings for running script:
 
