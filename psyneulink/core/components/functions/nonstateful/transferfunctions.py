@@ -3366,8 +3366,12 @@ class SoftMax(TransferFunction):
 
         if output is None:
             output = self.function(input, params={OUTPUT_TYPE: ALL}, context=context)
+        elif np.any(np.equal(0, output)) and context.source == ContextFlags.CONSTRUCTOR:
+            # Allow derivative to be computed when output is 0 during initialization
+            output = np.where(output, output==0, 1)
         else:
-            assert not np.any(np.equal(0, output))
+            assert not np.any(np.equal(0, output)), \
+                f"Derivative of SoftMax function for '{self.owner.name}' is not defined when output is 0."
 
         per_item = self._get_current_parameter_value(PER_ITEM, context)
         if not per_item:
