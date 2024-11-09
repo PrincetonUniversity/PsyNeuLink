@@ -69,17 +69,34 @@ Execution
 
 SHOW MATH FOR FUNCTIONAL FORMS
 
-ACCELERATING GROWTH: **form** = EXPONENTIAL;  **direction** = *INCREASING*
+rate = how much x changes in each execution (= step_size)
+
+EXPONENTIAL GROWTH: **form** = EXPONENTIAL;  **direction** = *INCREASING*
 :math: EXP
+start = offset (y value at which growth begins)
+end = scale (contingent on threshold; i.e., scale should cause y=threshold at x=end)
 
-DECCELERATING GROWTH: **form** = EXPONENTIAL;  **direction** = *INCREASING*
+LOGARITHMIC GROWTH: **form** = EXPONENTIAL;  **direction** = *INCREASING*
 :math: LOG
+start = offset (y value at which growth begins)
+end = scale (contingent on threshold; i.e., scale should cause y=threshold at x=end)
 
-ACCELERATING DECAY:  **form** = EXPONENTIAL; **direction** = *INCREASING*
-:math: start - e^{\frac{e}{end}*variable-e}
+LOGARITHMIC DECAY:  **form** = EXPONENTIAL; **direction** = *INCREASING*
+LogarithmicDecay Function
+:math: start + e^{-e}(1-e^x)\frac{n}{e^{end-e-0.4^{end}}}
+start + np.exp(-e)*(1-np.exp(x))*n/np.exp(end-e-0.4**end)
+start = offset (y value at which decay begins)
+end = scale (x value at which y=0)
+.. technical_note::
+   This is an empirically-derived function;  the value of 0.4 is used to ensure that the function reaches 0 at the
+    specified end value. If anyone has an analytic solution, please add it here.
 
-DECCELERATING DECAY:   **form** = EXPONENTIAL; **direction** = *DECREASING*
+
+
+EXPONENTIAL DECAY:   **form** = EXPONENTIAL; **direction** = *DECREASING*
 :math:  EXP
+start = offset (should cause y = start at x = 0)
+end = scale (should cause y=epsilon or % of start at x=end)
 
 RESET()
 
