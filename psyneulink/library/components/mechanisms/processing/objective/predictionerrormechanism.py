@@ -217,7 +217,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
     target : OutputPort, Mechanism_Base, dict, number, or str
         specifies the *TARGET* InputPort used by the function to evaluate `sample<PredictionErrorMechanism.sample>`.
 
-    function : CombinationFunction, ObjectiveFunction, function, or method : default PredictionErrorDeltaFunction
+    function : TransformFunction, ObjectiveFunction, function, or method : default PredictionErrorDeltaFunction
         the function used to evaluate the SAMPLE and TARGET inputs.
 
     learning_rate : Number : default 0.3
@@ -234,7 +234,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
         the *TARGET* `InputPort`, the `value <InputPort.value>` of which will be used to evaluate `sample
         <PredictionErrorMechanism.sample>`.
 
-    function : CombinationFunction, ObjectiveFunction, Function, or method : default PredictionErrorDeltaFunction
+    function : TransformFunction, ObjectiveFunction, Function, or method : default PredictionErrorDeltaFunction
         the function used to evaluate the sample and target inputs.
 
     output_ports : str, Iterable : default OUTCOME

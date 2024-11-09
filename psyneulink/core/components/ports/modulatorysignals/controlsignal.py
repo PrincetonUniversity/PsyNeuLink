@@ -900,13 +900,13 @@ class ControlSignal(ModulatorySignal):
         #         cost_function = cost_function()
         #
         #     # cost_function is Function object:
-        #     #     COMBINE_COSTS_FUNCTION must be CombinationFunction
+        #     #     COMBINE_COSTS_FUNCTION must be TransformFunction
         #     #     DURATION_COST_FUNCTION must be an IntegratorFunction
         #     #     others must be TransferFunction
         #     if isinstance(cost_function, Function):
         #         if cost_function_name == COMBINE_COSTS_FUNCTION:
-        #             if not isinstance(cost_function, CombinationFunction):
-        #                 raise ControlSignalError("Assignment of Function to {} ({}) must be a CombinationFunction".
+        #             if not isinstance(cost_function, TransformFunction):
+        #                 raise ControlSignalError("Assignment of Function to {} ({}) must be a TransformFunction".
         #                                          format(COMBINE_COSTS_FUNCTION, cost_function))
         #         elif cost_function_name == DURATION_COST_FUNCTION:
         #             if not isinstance(cost_function, IntegratorFunction):
