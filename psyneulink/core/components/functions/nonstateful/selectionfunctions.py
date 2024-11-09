@@ -641,6 +641,9 @@ class OneHot(SelectionFunction):
             indicator = True
             tie = ALL
 
+        else:
+            assert False, f"Unknown mode: {mode}"
+
         return direction, abs_val, indicator, tie
 
     def _function(self,
@@ -693,65 +696,62 @@ class OneHot(SelectionFunction):
             random_value = random_state.uniform()
             chosen_item = next(element for element in cum_sum if element > random_value)
             chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)
-            if mode is PROB:
+            if mode == PROB:
                 result = v * chosen_in_cum_sum
             else:
                 result = np.ones_like(v) * chosen_in_cum_sum
+
             # chosen_item = np.random.choice(v, 1, p=prob_dist)
             # one_hot_indicator = np.where(v == chosen_item, 1, 0)
             # return v * one_hot_indicator
             return result
 
-        elif mode is not DETERMINISTIC:
+        elif mode != DETERMINISTIC:
             direction, abs_val, indicator, tie = self._parse_mode(mode)
-
-        # if np.array(variable).ndim != 1:
-        #     raise FunctionError(f"If {MODE} for {self.__class__.__name__} {Function.__name__} is not set to "
-        #                         f"'PROB' or 'PROB_INDICATOR', variable must be a 1d array: {variable}.")
 
         array = variable
 
-        max = None
-        min = None
-
         if abs_val is True:
-            array = np.absolute(array)
+            array = np.absolute(variable)
 
         if direction == MAX:
-            max = np.max(array)
-            if max == -np.inf:
-                warnings.warn(f"Array passed to {self.name} of {self.owner.name} "
-                              f"is all -inf.")
+            extreme_val = np.max(array)
+            if extreme_val == -np.inf:
+                warnings.warn(f"Array passed to {self.name} of {self.owner.name} is all -inf.")
+
+        elif direction == MIN:
+            extreme_val = np.min(array)
+            if extreme_val == np.inf:
+                warnings.warn(f"Array passed to {self.name} of {self.owner.name} is all inf.")
+
         else:
-            min = np.min(array)
-            if min == np.inf:
-                warnings.warn(f"Array passed to {self.name} of {self.owner.name} "
-                              f"is all inf.")
+            assert False, f"Unknown direction: '{direction}'."
 
-        extreme_val = max if direction == MAX else min
+        extreme_indices = np.where(array == extreme_val)
 
-        if tie == ALL:
-            if direction == MAX:
-                result = np.where(array == max, max, -np.inf)
-            else:
-                result = np.where(array == min, min, np.inf)
+        num_indices = len(extreme_indices[0])
+        assert all(len(idx) == num_indices for idx in extreme_indices)
+
+        if tie == FIRST:
+            selected_idx = 0
+
+        elif tie == LAST:
+            selected_idx = -1
+
+        elif tie == RANDOM:
+            random_state = self._get_current_parameter_value("random_state", context)
+            selected_idx = random_state.randint(num_indices)
+
+        elif tie == ALL:
+            selected_idx = slice(num_indices)
+
         else:
-            if tie == FIRST:
-                index = np.min(np.where(array == extreme_val))
-            elif tie == LAST:
-                index = np.max(np.where(array == extreme_val))
-            elif tie == RANDOM:
-                index = np.random.choice(np.where(array == extreme_val))
-            else:
-                assert False, f"PROGRAM ERROR: Unrecognized value for 'tie' in OneHot function: '{tie}'."
-            result = np.zeros_like(array)
-            result[index] = extreme_val
+            assert False, f"PROGRAM ERROR: Unrecognized value for 'tie' in OneHot function: '{tie}'."
 
-        if indicator is True:
-            result = np.where(result == extreme_val, 1, result)
-        if max is not None:
-            result = np.where(result == -np.inf, 0, result)
-        if min is not None:
-            result = np.where(result == np.inf, 0, result)
+
+        set_indices = tuple(index[selected_idx] for index in extreme_indices)
+
+        result = np.zeros_like(variable)
+        result[set_indices] = 1 if indicator else extreme_val
 
         return self.convert_output_type(result)
