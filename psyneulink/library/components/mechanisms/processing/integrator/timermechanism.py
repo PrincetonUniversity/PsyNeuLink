@@ -76,7 +76,7 @@ DECCELERATING GROWTH: **form** = EXPONENTIAL;  **direction** = *INCREASING*
 :math: LOG
 
 ACCELERATING DECAY:  **form** = EXPONENTIAL; **direction** = *INCREASING*
-:math: start - e^{\frac{e}{end}*variable-e}
+:math: start + e^{-e} - e^{\frac{e}{end}*variable-e}
 
 DECCELERATING DECAY:   **form** = EXPONENTIAL; **direction** = *DECREASING*
 :math:  EXP
