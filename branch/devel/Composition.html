@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.15.1.0+513.g5d16e23ac documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.15.1.0+516.gf0a2e3b97 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.1.0+513
+                  0.15.1.0+516
                 </div>
               
             
@@ -1943,21 +1943,17 @@ executing its <a class="reference internal" href="#psyneulink.core.compositions.
 </li>
 <li><p><code class="xref any docutils literal notranslate"><span class="pre">ExecutionMode.PTXrun</span></code> – compile multiple <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>s  for execution on GPU
 (see <a class="reference internal" href="#composition-compilation-ptx"><span class="std std-ref">below</span></a> for additional details).</p></li>
-<li><p><a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PTXExec" title="psyneulink.core.llvm.__init__.ExecutionMode.PTXExec"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.PTXExec</span></code></a> – compile individual <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>s  for execution on GPU
-(see <a class="reference internal" href="#composition-compilation-ptx"><span class="std std-ref">below</span></a> for additional details).</p></li>
 </ul>
 </div></blockquote>
 <p id="composition-compilation-pytorch"><em>PyTorch support.</em>  When using an <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a>, <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="psyneulink.core.llvm.__init__.ExecutionMode.PyTorch"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.PyTorch</span></code></a> can be used to execute its
 <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method using Pytorch; however, its <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.run" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method
 will execute using the Python interpreter.  See <a class="reference internal" href="#composition-learning-autodiffcomposition"><span class="std std-ref">Learning Using AutodiffCompositon</span></a> for additional details.</p>
 <p id="composition-compilation-ptx"><em>GPU support.</em>  In addition to compilation for CPUs, support is being developed for <a class="reference external" href="https://developer.nvidia.com/about-cuda">CUDA</a> capable <a class="reference external" href="https://en.wikipedia.org/wiki/List_of_Nvidia_graphics_processing_units">Invidia GPUs</a>.  This can be invoked by
-specifying either <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PTXRun" title="psyneulink.core.llvm.__init__.ExecutionMode.PTXRun"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.PTXRun</span></code></a> or <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PTXExec" title="psyneulink.core.llvm.__init__.ExecutionMode.PTXExec"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.PTXExec</span></code></a> oin the <strong>execution_mode</strong> argument
-of a <a class="reference internal" href="#composition-execution-methods"><span class="std std-ref">Composition execution method</span></a>, which are equivalent to the LLVM
-counterparts but run in a single thread of a CUDA capable GPU. This requires that a working <a class="reference external" href="https://documen.tician.de/pycuda/">pycuda package</a> is <a class="reference external" href="https://wiki.tiker.net/PyCuda/Installation">installed</a>, and that
-CUDA execution is explicitly enabled by setting the <code class="docutils literal notranslate"><span class="pre">PNL_LLVM_DEBUG</span></code> environment variable to <code class="docutils literal notranslate"><span class="pre">cuda</span></code>.  At present
-compilation using these modes runs on a single GPU thread, and therefore does not produce any performance benefits
-over running in compiled mode on a CPU;  (see <a class="reference external" href="https://github.com/PrincetonUniversity/PsyNeuLink/projects/1">this</a>
-for progress extending support of parallization in compiled modes).</p>
+specifying <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PTXRun" title="psyneulink.core.llvm.__init__.ExecutionMode.PTXRun"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.PTXRun</span></code></a> in the <strong>execution_mode</strong> argument of a <a class="reference internal" href="#composition-execution-methods"><span class="std std-ref">Composition execution
+method</span></a>, which are equivalent to the LLVM counterparts but run in a single
+thread of a CUDA capable GPU. This requires that a working <a class="reference external" href="https://documen.tician.de/pycuda/">pycuda package</a> is
+<a class="reference external" href="https://wiki.tiker.net/PyCuda/Installation">installed</a>, and that CUDA execution is not explicitly disabled by
+setting the <code class="docutils literal notranslate"><span class="pre">PNL_LLVM_DEBUG</span></code> environment variable to <code class="docutils literal notranslate"><span class="pre">nocuda</span></code>.</p>
 </section>
 </section>
 <section id="results-reporting-and-logging">
@@ -5313,7 +5309,7 @@ passed the current <em>context</em> (but it is not necessary for your callable t
 passed the current <em>context</em> (but it is not necessary for your callable to take).</p></li>
 <li><p><strong>call_after_pass</strong> (<em>callable : default None</em>) – called after each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PASS</span></code></a> is executed
 passed the current <em>context</em> (but it is not necessary for your callable to take).</p></li>
-<li><p><strong>execution_mode</strong> (<em>enum.Enum</em><em>[</em><em>Auto</em><em>|</em><em>LLVM</em><em>|</em><em>LLVMexec</em><em>|</em><em>Python</em><em>|</em><em>PTXExec</em><em>] </em><em>: default Python</em>) – specifies whether to run using the Python interpreter or a <a class="reference internal" href="#composition-compilation"><span class="std std-ref">compiled mode</span></a>.
+<li><p><strong>execution_mode</strong> (<em>enum.Enum</em><em>[</em><em>Auto</em><em>|</em><em>LLVM</em><em>|</em><em>LLVMexec</em><em>|</em><em>Python</em><em>] </em><em>: default Python</em>) – specifies whether to run using the Python interpreter or a <a class="reference internal" href="#composition-compilation"><span class="std std-ref">compiled mode</span></a>.
 see <strong>execution_mode</strong> argument of <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method for additional details.</p></li>
 <li><p><strong>report_output</strong> (<em>ReportOutput : default ReportOutput.OFF</em>) – specifies whether to show output of the Composition and its <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a> for the
 execution; see <a class="reference internal" href="Report.html#report-output"><span class="std std-ref">Output Reporting</span></a> for additional details and <a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput" title="psyneulink.core.compositions.report.ReportOutput"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ReportOutput</span></code></a> for options.</p></li>
