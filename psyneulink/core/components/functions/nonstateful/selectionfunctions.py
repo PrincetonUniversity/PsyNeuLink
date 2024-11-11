@@ -187,7 +187,7 @@ class OneHot(SelectionFunction):
         First (possibly only) item specifies a template for the array to be transformed;  if `mode <OneHot.mode>` is
         *PROB* then a 2nd item must be included that is a probability distribution with same length as 1st item.
 
-    mode : DETERMINISITC, PROB, PROB_INDICATOR,
+    mode : DETERMINISTiC, PROB, PROB_INDICATOR,
     ARG_MAX, ARG_MAX_ABS, ARG_MAX_INDICATOR, ARG_MAX_ABS_INDICATOR,
     ARG_MIN, ARG_MIN_ABS, ARG_MIN_INDICATOR, ARG_MIN_ABS_INDICATOR,
     MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
@@ -237,7 +237,7 @@ class OneHot(SelectionFunction):
         distribution, each element of which specifies the probability for selecting the corresponding element of the
         1st item.
 
-    mode : DETERMINISITC, PROB, PROB_INDICATOR,
+    mode : DETERMINISTIC, PROB, PROB_INDICATOR,
     ARG_MAX, ARG_MAX_ABS, ARG_MAX_INDICATOR, ARG_MAX_ABS_INDICATOR,
     ARG_MIN, ARG_MIN_ABS, ARG_MIN_INDICATOR, ARG_MIN_ABS_INDICATOR,
     MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
