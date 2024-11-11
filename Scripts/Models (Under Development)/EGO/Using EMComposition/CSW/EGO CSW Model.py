@@ -275,6 +275,14 @@ def construct_model(model_name:str=model_params['name'],
                        device=device
                        )
 
+    # # TO GET SHOW_GRAPH FOR PNL LEARNING:
+    # inputs = {em.nodes['CONTEXT [QUERY]']: [[[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]],
+    #           em.nodes['PREVIOUS STATE [QUERY]']: [[[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]],
+    #           em.nodes['STATE [VALUE]']: [[[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]]}
+    # em.learn(inputs=inputs, execution_mode=ExecutionMode.Python)
+    # em.show_graph(show_learning=True)
+
+
     prediction_layer = ProcessingMechanism(name=prediction_layer_name, input_shapes=state_size)
 
     

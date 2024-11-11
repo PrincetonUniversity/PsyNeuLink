@@ -67,19 +67,48 @@ the `value <OutputPort.OutputPort.value>` of which is assigned the result of the
 Execution
 ---------
 
-SHOW MATH FOR FUNCTIONAL FORMS
+rate = how much x increments in each execution (= step_size)
 
-ACCELERATING GROWTH: **form** = EXPONENTIAL;  **direction** = *INCREASING*
-:math: EXP
+EXPONENTIAL GROWTH: **form** = EXPONENTIAL;  **direction** = *INCREASING*
+:math: s-1\ +\ e^{\frac{-\ln\left(1-\frac{d}{s}\right)}{f}x}
+python: start -1 np.exp(-np.ln(1-threhold/start)/end)
+start = offset (y value at which growth begins)
+threshold = distance above starting y at end
+end = scale (x value at which end should occur
 
-DECCELERATING GROWTH: **form** = EXPONENTIAL;  **direction** = *INCREASING*
-:math: LOG
+DECELLERATING GROWTH: **form** = EXPONENTIAL;  **direction** = *INCREASING*
+# :math: s+r\left(1-e^{\frac{\ln\left(1-\frac{d}{r}\right)}{f}x}\right)
+# python: start + rate * (1 - np.exp(np.ln(1 - threshold / rate) / end) * x))
+# start = offset (y value at which growth begins)
+# end = scale (contingent on threshold; i.e., scale should cause y=threshold at x=end)
+----------------
+:math: s+r\left(1-e^{\frac{\ln\left(1-t\right)}{f}x}\right)
+python: start + threshold * (1 - np.exp(np.ln(1 - threshold) / end) * x))
+start = offset (y value at which growth begins)
+end = scale (y = tolerance * start at x = end)
+threshold = distance above starting y at end
+tolerance = 0.01 (default) (i.e., y = within 1% of threshold at x = end)
+
+EXPONENTIAL DECAY:   **form** = EXPONENTIAL; **direction** = *DECREASING*
+:math:   offset\ + bias e^{-\left(\frac{variable\ln\left(\frac{1}{tolerance}\right)}{scale}\right)}
+[DESMOS: o\ +se^{-\left(\frac{x\ln\left(\frac{1}{t}\right)}{f}\right)}]
+python: offset + bias * np.exp(-variable * np.ln(1/tolerance) / scale)
+
+FOR TIMER:
+offset = offset (y offset for entire function)
+start = bias (starting y value relative to offset: s + o = y for x = 0)
+end = scale (y = (tolerance * start + offset) at x = end)
+tolerance = 0.01 (default) (i.e., y = (1% of start) + offset at x = end)
 
 ACCELERATING DECAY:  **form** = EXPONENTIAL; **direction** = *INCREASING*
-:math: start + e^{-e} - e^{\frac{e}{end}*variable-e}
-
-DECCELERATING DECAY:   **form** = EXPONENTIAL; **direction** = *DECREASING*
-:math:  EXP
+AcceleratingDecay Function
+:math: start + e^{-e}(1-e^x)\frac{n}{e^{end-e-0.4^{end}}}
+python: start + np.exp(-e)*(1-np.exp(x))*n/np.exp(end-e-0.4**end)
+start = offset (y value at which decay begins)
+end = scale (x value at which y=0)
+.. technical_note::
+   This is an empirically-derived function;  the value of 0.4 is used to ensure that the function reaches 0 at the
+    specified end value. If anyone has an analytic solution, please add it here.
 
 RESET()
 

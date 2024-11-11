@@ -766,6 +766,7 @@ IDENTITY_FUNCTION = 'Identity Function'
 LINEAR_FUNCTION = "Linear Function"
 LEABRA_FUNCTION = "Leabra Function"
 EXPONENTIAL_FUNCTION = "Exponential Function"
+EXPONENTIAL_DECAY_FUNCTION = "ExponentialDecay Function"
 LOGISTIC_FUNCTION = "Logistic Function"
 TANH_FUNCTION = "Tanh Function"
 RELU_FUNCTION = "ReLU Function"

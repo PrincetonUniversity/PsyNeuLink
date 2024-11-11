@@ -50,11 +50,11 @@ model_params = dict(
     # loss_spec = Loss.MSE,
     learning_rate = .5,
     num_optimization_steps = 10,
-    # execution_mode = ExecutionMode.Python,
     synch_weights = RUN,
     synch_values = RUN,
     synch_results = RUN,
-    execution_mode = ExecutionMode.PyTorch,
+    execution_mode = ExecutionMode.Python,
+    # execution_mode = ExecutionMode.PyTorch,
     device = CPU,
     # device = MPS,
 )

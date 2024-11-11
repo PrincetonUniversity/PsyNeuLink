@@ -10,18 +10,27 @@
 # *******************************************  TRANSFER FUNCTIONS  *****************************************************
 """
 
+**Monotonic**
 * `Identity`
 * `Linear`
 * `Exponential`
+* `ExponentialDecay`
+* `Logarithmic`
+* `LogarithmicDecay`
+
+**Sigmoid**
 * `Logistic`
 * `Tanh`
 * `ReLU`
+
+**Probability**
 * `Angle`
 * `Gaussian`
 * `GaussianDistort`
 * `BinomialDistort`
 * `Dropout`
 * `SoftMax`
+
 * `TransferWithCosts`
 
 Overview
@@ -91,7 +100,7 @@ from psyneulink.core.globals.context import ContextFlags, handle_external_contex
 from psyneulink.core.globals.utilities import is_numeric_scalar
 from psyneulink.core.globals.keywords import \
     (ADAPTIVE, ADDITIVE_PARAM, ALL, ANGLE_FUNCTION, BIAS, BINOMIAL_DISTORT_FUNCTION, DROPOUT_FUNCTION,
-     EXPONENTIAL_FUNCTION, GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION,
+     EXPONENTIAL_FUNCTION, EXPONENTIAL_DECAY_FUNCTION, GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION,
      IDENTITY_FUNCTION, INTERCEPT, LEAK, LINEAR_FUNCTION, LOGISTIC_FUNCTION,
      TANH_FUNCTION, MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE_PARAM,
      OFF, OFFSET, ON, OUTPUT_TYPE, PER_ITEM, PROB, PRODUCT, PROB_INDICATOR,
@@ -788,6 +797,317 @@ class Exponential(TransferFunction):  # ----------------------------------------
         return rate * scale * torch.exp(rate * input + bias)
 
 
+
+# **********************************************************************************************************************
+#                                                    ExponentialDecay
+# **********************************************************************************************************************
+
+class ExponentialDecay(TransferFunction):  # ---------------------------------------------------------------------------
+    """
+    ExponentialDecay(      \
+         default_variable, \
+         bias=1.0,         \
+         offset=0.0,       \
+         rate=1.0,         \
+         scale=0.01,       \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
+         )
+
+    .. _ExponentialDecay:
+
+    `function <ExponentialDecay._function>` returns exponentially decaying transform of `variable
+    <ExponentialDecay.variable>`, that has a value of `bias <ExponentialDecay.bias>` + `offset
+    <ExponentialDecay.offset>` at `variable <ExponentialDecay.variable>` = 0, and a value of `offset
+    <ExponentialDecay.offset>` * `scale <ExponentialDecay.scale>` at `variable <ExponentialDecay.variable>`
+    = `rate <ExponentialDecay.rate>`:
+
+    .. math::
+        offset\ + bias e^{-\left(\frac{variable\ln\left(\frac{1}{scale}\right)}{rate}\right)}
+
+    where:
+
+    **bias** determines, together with `offset <ExponentialDecay.offset>`, the value of the function when `variable
+    the `value <ExponentialDecay.value>` of the function when `variable <ExponentialDecay.variable>` = 0 and is used
+    together with `scale <ExponentialDecay.scale>` to determine the `value <ExponentialDecay.value>` of the
+    function when `variable <ExponentialDecay.variable>` = `rate <ExponentialDecay.rate>` (can also be referenced
+    as *start**).
+
+    **offset** determines, together with `bias <ExponentialDecay.bias>`, the value of the function when `variable
+    <ExponentialDecay.variable>` = 0, and its linear offset for all other values;
+
+    **rate** determines the value of `variable <ExponentialDecay.variable>` at which `value <ExponentialDecay.value>`
+    should equal :math:`bias * scale) + offset` (can also be referenced as **end**).
+
+    **scale** is the fraction of `bias <ExponentialDecay.bias>` when, added to `offset <ExponentialDecay.offset>`,
+    is used to determine the value of the function when `variable <ExponentialDecay.variable>`should equal `rate
+    <ExponentialDecay.rate>` (can also be referenced as **tolerance**).
+
+    `derivative <ExponentialDecay.derivative>` returns the derivative of the ExponentialDecay:
+    .. math::
+        \frac{bias\ln\left(\frac{1}{scale}\right)e^{-\left(\frac{variable\ln
+        \left(\frac{1}{scale}\right)}{rate}\right)}}{rate}
+
+    COMMENT:
+    FOR TIMER VERSION:
+    `function <ExponentialDecay._function>` returns exponentially decaying transform of `variable
+    <ExponentialDecay.variable>`, that has a value of `start <ExponentialDecay.start>` + `offset
+    <ExponentialDecay.offset>` at `variable <ExponentialDecay.variable>` = 0, and a value of `threshold
+    <ExponentialDecay.end>` * `start <ExponentialDecay.start>` + `offset <ExponentialDecay.offset>` at `variable
+     at `variable <ExponentialDecay.variable>` = `end <ExponentialDecay.end>`:
+    COMMENT
+
+    Arguments
+    ---------
+
+    default_variable : number or array : default class_defaults.variable
+        specifies a template for the value to be transformed.
+
+    bias : float : default 1.0
+        specifies, together with `offset <ExponentialDecay.offset>`, the value of the function when `variable
+        <ExponentialDecay.variable>` = 0; must be greater than 0.
+
+    offset : float : default 0.0
+        specifies, together with `bias <ExponentialDecay.bias>`, the value of the function when `variable
+        <ExponentialDecay.variable>` = 0, and its linear offset for all other values.
+
+    rate : float : default 1.0
+        specifies the value of `variable <ExponentialDecay.variable>` at which the `value <ExponentialDecay.value>`
+        of the function should equal `bias <ExponentialDecay.bias>` * `scale <ExponentialDecay.scale>` + `offset
+        <ExponentialDecay.offset>`; must be greater than 0.
+
+    scale : float : default 0.01
+        specifies the fraction of `bias <ExponentialDecay.bias>` when added to `offset <ExponentialDecay.offset>`,
+        that determines the value of the function when `variable <ExponentialDecay.variable>` = `rate
+        <ExponentialDecay.rate>`; must be between 0 and 1.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : number or array
+        contains value to be transformed.
+
+    bias : float (>0)
+        determines, together with `offset <ExponentialDecay.offset>`, the value of the function when `variable
+        <ExponentialDecay.variable>` = 0.
+
+    offset : float
+        determines, together with `bias <ExponentialDecay.bias>`, the value of the function when `variable
+        <ExponentialDecay.variable>` = 0, and its linear offset for all other values.
+
+    rate : float (>0)
+        determines the value of `variable <ExponentialDecay.variable>` at which the `value <ExponentialDecay.value>`
+        of the function should equal `bias <ExponentialDecay.bias>` * `scale <ExponentialDecay.scale>` + `offset
+        <ExponentialDecay.offset>`.
+
+    scale : float (0,1)
+        determines the fraction of `bias <ExponentialDecay.bias>` when added to `offset <ExponentialDecay.offset>`,
+        that determines the value of the function when `variable <ExponentialDecay.variable>` = `rate
+        <ExponentialDecay.rate>`.
+
+    bounds : (None, None)
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
+    """
+
+    componentName = EXPONENTIAL_DECAY_FUNCTION
+
+    class Parameters(TransferFunction.Parameters):
+        """
+            Attributes
+            ----------
+
+                bias
+                    see `bias <ExponentialDecay.bias>`
+
+                    :default value: 1.0
+                    :type: ``float``
+
+                offset
+                    see `offset <ExponentialDecay.offset>`
+
+                    :default value: 0.0
+                    :type: ``float``
+
+                rate
+                    see `rate <ExponentialDecay.rate>`
+
+                    :default value: 1.0
+                    :type: ``float``
+
+                scale
+                    see `scale <ExponentialDecay.scale>`
+
+                    :default value: 0.01
+                    :type: ``float``
+        """
+        bias = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        offset = Parameter(0.0, modulable=True)
+        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        scale = Parameter(0.01, modulable=True)
+        bounds = (None, None)
+
+        def _validate_bias(self, bias):
+            if bias < 0:
+                return f"must be greater than 0."
+
+        def _validate_rate(self, rate):
+            if rate < 0:
+                return f"must be greater than 0."
+
+        def _validate_scale(self, scale):
+            if scale < 0:
+                return f"must be between 0 and 1."
+
+    @check_user_specified
+    @beartype
+    def __init__(self,
+                 default_variable=None,
+                 bias: Optional[ValidParamSpecType] = None,
+                 offset: Optional[ValidParamSpecType] = None,
+                 rate: Optional[ValidParamSpecType] = None,
+                 scale: Optional[ValidParamSpecType] = None,
+                 params=None,
+                 owner=None,
+                 prefs:  Optional[ValidPrefSet] = None):
+        super().__init__(
+            default_variable=default_variable,
+            bias=bias,
+            offset=offset,
+            rate=rate,
+            scale=scale,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
+
+    def _function(self,
+                 variable=None,
+                 context=None,
+                 params=None,
+                 ):
+        """
+
+        Arguments
+        ---------
+
+        variable : number or array : default class_defaults.variable
+           a single value or array to be exponentiated.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        Returns
+        -------
+
+        Exponentially decayed transformation of variable : number or array
+
+        """
+        bias = self._get_current_parameter_value(BIAS, context)
+        offset = self._get_current_parameter_value(OFFSET, context)
+        rate = self._get_current_parameter_value(RATE, context)
+        scale = self._get_current_parameter_value(SCALE, context)
+
+        result = offset + bias * np.exp(-variable * np.log(1 / scale) / rate)
+
+        return self.convert_output_type(result)
+
+    @handle_external_context()
+    def derivative(self, input, output=None, context=None):
+        """
+        derivative(input)
+        .. math::
+            \frac{bias\ln\left(\frac{1}{scale}\right)e^{-\left(\frac{variable\ln
+            \left(\frac{1}{scale}\right)}{rate}\right)}}{rate}
+
+        Arguments
+        ---------
+
+        input : number
+            value of the input to the ExponentialDecay transform at which derivative is to be taken.
+
+        Derivative of `function <ExponentialDecay._function>` at **input**.
+
+        Returns
+        -------
+        derivative :  number or array
+        """
+
+        bias = self._get_current_parameter_value(BIAS, context)
+        rate = self._get_current_parameter_value(RATE, context)
+        scale = self._get_current_parameter_value(SCALE, context)
+
+        return (bias * np.log(1/scale) / rate) * np.exp(-input * np.log(scale) / rate)
+
+    # FIX:
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        rate_ptr = ctx.get_param_or_state_ptr(builder, self, RATE, param_struct_ptr=params)
+        bias_ptr = ctx.get_param_or_state_ptr(builder, self, BIAS, param_struct_ptr=params)
+        scale_ptr = ctx.get_param_or_state_ptr(builder, self, SCALE, param_struct_ptr=params)
+        offset_ptr = ctx.get_param_or_state_ptr(builder, self, OFFSET, param_struct_ptr=params)
+
+        rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_ptr)
+        bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
+        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
+        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
+
+        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
+        val = builder.load(ptri)
+        val = builder.fmul(val, rate)
+        val = builder.fadd(val, bias)
+        val = builder.call(exp_f, [val])
+
+        if "derivative" in tags:
+            # f'(x) = s*r*e^(r*x + b)
+            val = builder.fmul(val, scale)
+            val = builder.fmul(val, rate)
+        else:
+            # f(x) = s*e^(r*x + b) + o
+            val = builder.fmul(val, scale)
+            val = builder.fadd(val, offset)
+
+        builder.store(val, ptro)
+
+    # FIX:
+    def _gen_pytorch_fct(self, device, context=None):
+        rate = self._get_pytorch_fct_param_value('rate', device, context)
+        scale = self._get_pytorch_fct_param_value('scale', device, context)
+        bias = self._get_pytorch_fct_param_value('bias', device, context)
+
+        return rate * scale * torch.exp(rate * input + bias)
+
+
 # **********************************************************************************************************************
 #                                                   Logistic
 # **********************************************************************************************************************
@@ -1029,7 +1349,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         """
         derivative(input=None, output=None)
 
-        Derivative of `function <Exponential._function>` at either **input** or **output**.
+        Derivative of `function <ExponentialDecay._function>` at either **input** or **output**.
 
         COMMENT:  RESTORE WHEN TEST IN DERIVATIVE IS RESTORED
         Either **input** or **output** must be specified.
@@ -3366,8 +3686,12 @@ class SoftMax(TransferFunction):
 
         if output is None:
             output = self.function(input, params={OUTPUT_TYPE: ALL}, context=context)
+        elif np.any(np.equal(0, output)) and context.source == ContextFlags.CONSTRUCTOR:
+            # Allow derivative to be computed when output is 0 during initialization
+            output = np.where(output, output==0, 1)
         else:
-            assert not np.any(np.equal(0, output))
+            assert not np.any(np.equal(0, output)), \
+                f"Derivative of SoftMax function for '{self.owner.name}' is not defined when output is 0."
 
         per_item = self._get_current_parameter_value(PER_ITEM, context)
         if not per_item:
