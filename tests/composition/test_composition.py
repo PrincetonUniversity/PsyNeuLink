@@ -3737,7 +3737,6 @@ class TestRun:
     @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python,
                                       pytest.param(pnl.ExecutionMode.LLVM, marks=pytest.mark.llvm),
                                       pytest.param(pnl.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
-                                      pytest.param(pnl.ExecutionMode.PTXExec, marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                      ])
     def test_execute_composition(self, mode):
         comp = Composition()
@@ -3841,7 +3840,6 @@ class TestRun:
     @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python,
                                       pytest.param(pnl.ExecutionMode.LLVM, marks=pytest.mark.llvm),
                                       pytest.param(pnl.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
-                                      pytest.param(pnl.ExecutionMode.PTXExec, marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                      ])
     def test_execute_no_inputs(self, mode):
         m_inner = ProcessingMechanism(input_shapes=2)
@@ -6606,7 +6604,6 @@ class TestProperties:
                                       pytest.param(pnl.ExecutionMode.LLVM, marks=[_fallback_xfail, pytest.mark.llvm]),
                                       pytest.param(pnl.ExecutionMode.LLVMExec, marks=[_fallback_xfail, pytest.mark.llvm]),
                                       pytest.param(pnl.ExecutionMode.LLVMRun, marks=[_fallback_xfail, pytest.mark.llvm]),
-                                      pytest.param(pnl.ExecutionMode.PTXExec, marks=[_fallback_xfail, pytest.mark.llvm, pytest.mark.cuda]),
                                       pytest.param(pnl.ExecutionMode.PTXRun, marks=[_fallback_xfail, pytest.mark.llvm, pytest.mark.cuda]),
                                      ])
     def test_llvm_fallback(self, mode):
