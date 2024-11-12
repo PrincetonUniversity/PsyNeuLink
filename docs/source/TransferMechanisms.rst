@@ -17,3 +17,4 @@ Transfer Mechanisms
    KWTAMechanism
    KohonenMechanism
    ContrastiveHebbianMechanism
+   TimerMechanism

@@ -420,7 +420,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
     .. _AccumulatorIntegrator:
 
     Accumulates at a constant rate, that is either linear or exponential, depending on `rate
-    <AccumulatorIntegrator.rate>`.  `function <AccumulatorIntegrator._function>` ignores `variable
+    <AccumulatorIntegrator.rate>`;  `function <AccumulatorIntegrator._function>` ignores `variable
     <AccumulatorIntegrator.variable>` and returns:
 
     .. math::
@@ -710,6 +710,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
 
     .. _SimpleIntegrator:
 
+    Acculuates at a rate determined by its `variable <SimpleIntegrator.variable>` and `rate <SimpleIntegrator.rate>`;
     `function <SimpleIntegrator._function>` returns:
 
     .. math::

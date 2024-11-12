@@ -179,7 +179,7 @@ import numpy as np
 
 from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.functions.stateful.integratorfunctions import AdaptiveIntegrator
-from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
+from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, TIMER_MECHANISM, VARIABLE, PREFERENCE_SET_NAME, RESET
@@ -198,7 +198,7 @@ class TimerMechanismError(MechanismError):
     pass
 
 
-class TimerMechanism(ProcessingMechanism_Base):
+class TimerMechanism(TransferMechanism):
     """
     TimerMechanism( \
         function=AdaptiveIntegrator(rate=0.5))

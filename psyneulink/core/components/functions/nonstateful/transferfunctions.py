@@ -805,10 +805,10 @@ class ExponentialDecay(TransferFunction):  # -----------------------------------
     """
     ExponentialDecay(      \
          default_variable, \
-         bias=1.0,         \
+         start=1.0,        \
          offset=0.0,       \
-         rate=1.0,         \
-         scale=0.01,       \
+         end=1.0,          \
+         tolerance=0.01,   \
          params=None,      \
          owner=None,       \
          name=None,        \
@@ -816,38 +816,41 @@ class ExponentialDecay(TransferFunction):  # -----------------------------------
          )
 
     .. _ExponentialDecay:
-
+    |
     `function <ExponentialDecay._function>` returns exponentially decaying transform of `variable
     <ExponentialDecay.variable>`
 
     .. math::
-        offset + bias*e^{-\left(\frac{variable\ln\left(\frac{1}{scale}\right)}{rate}\right)}
+       offset + start*e^{-\\frac{variable * \\ln\\left(\\frac{1}{tolerance}\\right)}{end}}
 
-    such that :math:`value = bias + offset` when :math:`variable = 0`,
-    and :math:`value = offset * scale` when :math:`variable = rate`:
+    such that:
+
+    .. math::
+        value = start + offset\ for\ variable=0
+
+        value = (start * tolerance) + offset\ for\ variable=end
 
     where:
 
-    **bias** determines, together with `offset <ExponentialDecay.offset>`, the value of the function when `variable
-    the `value <ExponentialDecay.value>` of the function when `variable <ExponentialDecay.variable>` = 0 and is used
-    together with `scale <ExponentialDecay.scale>` to determine the `value <ExponentialDecay.value>` of the
-    function when `variable <ExponentialDecay.variable>` = `rate <ExponentialDecay.rate>` (can also be referenced
-    as *start**).
+    **start**, together with `offset <ExponentialDecay.offset>`, determines the value of the function when
+    `variable <ExponentialDecay.variable>` = 0, and is used together with `tolerance <ExponentialDecay.tolerance>`
+    to determine the value of the function when `variable <ExponentialDecay.variable>` = `end <ExponentialDecay.end>`.
 
-    **offset** determines, together with `bias <ExponentialDecay.bias>`, the value of the function when `variable
-    <ExponentialDecay.variable>` = 0, and its linear offset for all other values;
+    **offset**, together with `start <ExponentialDecay.start>`, determines the value of the function
+    when `variable <ExponentialDecay.variable>` = 0, and its linear offset from 0 for all other values;
 
-    **rate** determines the value of `variable <ExponentialDecay.variable>` at which `value <ExponentialDecay.value>`
-    should equal :math:`bias * scale + offset` (can also be referenced as **end**).
+    **end** determines the value of `variable <ExponentialDecay.variable>` at which
+    the value of the function should equal :math:`start * tolerance + offset`.
 
-    **scale** is the fraction of `bias <ExponentialDecay.bias>` when, added to `offset <ExponentialDecay.offset>`,
-    is used to determine the value of the function when `variable <ExponentialDecay.variable>`should equal `rate
-    <ExponentialDecay.rate>` (can also be referenced as **tolerance**).
+    **tolerance** is the fraction of `start <ExponentialDecay.start>` when, added to `offset
+    <ExponentialDecay.offset>`, is used to determine the value of the function when `variable
+    <ExponentialDecay.variable>` should equal `end <ExponentialDecay.end>`.
 
-    `derivative <ExponentialDecay.derivative>` returns the derivative of the ExponentialDecay:
-    .. math::
-        \frac{bias\ln\left(\frac{1}{scale}\right)e^{-\left(\frac{variable\ln
-        \left(\frac{1}{scale}\right)}{rate}\right)}}{rate}
+    `derivative <ExponentialDecay.derivative>` returns the derivative of the ExponentialDecay Function:
+
+      .. math::
+        \\frac{start * \\ln\\left(\\frac{1}{tolerance}\\right) *
+        e^{-\\frac{variable * \\ln\\left(\\frac{1}{tolerance}\\right)}{end}}}{end}
 
     COMMENT:
     FOR TIMER VERSION:
@@ -864,23 +867,23 @@ class ExponentialDecay(TransferFunction):  # -----------------------------------
     default_variable : number or array : default class_defaults.variable
         specifies a template for the value to be transformed.
 
-    bias : float : default 1.0
+    start : float : default 1.0
         specifies, together with `offset <ExponentialDecay.offset>`, the value of the function when `variable
         <ExponentialDecay.variable>` = 0; must be greater than 0.
 
     offset : float : default 0.0
-        specifies, together with `bias <ExponentialDecay.bias>`, the value of the function when `variable
+        specifies, together with `start <ExponentialDecay.start>`, the value of the function when `variable
         <ExponentialDecay.variable>` = 0, and its linear offset for all other values.
 
-    rate : float : default 1.0
-        specifies the value of `variable <ExponentialDecay.variable>` at which the `value <ExponentialDecay.value>`
-        of the function should equal `bias <ExponentialDecay.bias>` * `scale <ExponentialDecay.scale>` + `offset
-        <ExponentialDecay.offset>`; must be greater than 0.
+    end : float : default 1.0
+        specifies the value of `variable <ExponentialDecay.variable>` at which the `value of the function should
+        equal `start <ExponentialDecay.start>` * `tolerance <ExponentialDecay.tolerance>` + `offset <ExponentialDecay.offset>`;
+        must be greater than 0.
 
-    scale : float : default 0.01
-        specifies the fraction of `bias <ExponentialDecay.bias>` when added to `offset <ExponentialDecay.offset>`,
-        that determines the value of the function when `variable <ExponentialDecay.variable>` = `rate
-        <ExponentialDecay.rate>`; must be between 0 and 1.
+    tolerance : float : default 0.01
+        specifies the fraction of `start <ExponentialDecay.start>` when added to `offset <ExponentialDecay.offset>`,
+        that determines the value of the function when `variable <ExponentialDecay.variable>` = `end
+        <ExponentialDecay.end>`; must be between 0 and 1.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -902,23 +905,22 @@ class ExponentialDecay(TransferFunction):  # -----------------------------------
     variable : number or array
         contains value to be transformed.
 
-    bias : float (>0)
+    start : float (>0)
         determines, together with `offset <ExponentialDecay.offset>`, the value of the function when `variable
         <ExponentialDecay.variable>` = 0.
 
     offset : float
-        determines, together with `bias <ExponentialDecay.bias>`, the value of the function when `variable
+        determines, together with `start <ExponentialDecay.start>`, the value of the function when `variable
         <ExponentialDecay.variable>` = 0, and its linear offset for all other values.
 
-    rate : float (>0)
-        determines the value of `variable <ExponentialDecay.variable>` at which the `value <ExponentialDecay.value>`
-        of the function should equal `bias <ExponentialDecay.bias>` * `scale <ExponentialDecay.scale>` + `offset
-        <ExponentialDecay.offset>`.
+    end : float (>0)
+        determines the value of `variable <ExponentialDecay.variable>` at which the value of the function should
+        equal `start <ExponentialDecay.start>` * `tolerance <ExponentialDecay.tolerance>` + `offset <ExponentialDecay.offset>`.
 
-    scale : float (0,1)
-        determines the fraction of `bias <ExponentialDecay.bias>` when added to `offset <ExponentialDecay.offset>`,
-        that determines the value of the function when `variable <ExponentialDecay.variable>` = `rate
-        <ExponentialDecay.rate>`.
+    tolerance : float (0,1)
+        determines the fraction of `start <ExponentialDecay.start>` when added to `offset <ExponentialDecay.offset>`,
+        that determines the value of the function when `variable <ExponentialDecay.variable>` = `end
+        <ExponentialDecay.end>`.
 
     bounds : (None, None)
 
@@ -942,8 +944,8 @@ class ExponentialDecay(TransferFunction):  # -----------------------------------
             Attributes
             ----------
 
-                bias
-                    see `bias <ExponentialDecay.bias>`
+                start
+                    see `start <ExponentialDecay.start>`
 
                     :default value: 1.0
                     :type: ``float``
@@ -954,53 +956,53 @@ class ExponentialDecay(TransferFunction):  # -----------------------------------
                     :default value: 0.0
                     :type: ``float``
 
-                rate
-                    see `rate <ExponentialDecay.rate>`
+                end
+                    see `end <ExponentialDecay.end>`
 
                     :default value: 1.0
                     :type: ``float``
 
-                scale
-                    see `scale <ExponentialDecay.scale>`
+                tolerance
+                    see `tolerance <ExponentialDecay.tolerance>`
 
                     :default value: 0.01
                     :type: ``float``
         """
-        bias = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        start = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
         offset = Parameter(0.0, modulable=True)
-        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        scale = Parameter(0.01, modulable=True)
+        end = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        tolerance = Parameter(0.01, modulable=True)
         bounds = (None, None)
 
-        def _validate_bias(self, bias):
-            if bias < 0:
+        def _validate_start(self, start):
+            if start < 0:
                 return f"must be greater than 0."
 
-        def _validate_rate(self, rate):
-            if rate < 0:
+        def _validate_end(self, end):
+            if end < 0:
                 return f"must be greater than 0."
 
-        def _validate_scale(self, scale):
-            if scale < 0:
+        def _validate_tolerance(self, tolerance):
+            if tolerance < 0:
                 return f"must be between 0 and 1."
 
     @check_user_specified
     @beartype
     def __init__(self,
                  default_variable=None,
-                 bias: Optional[ValidParamSpecType] = None,
+                 start: Optional[ValidParamSpecType] = None,
                  offset: Optional[ValidParamSpecType] = None,
-                 rate: Optional[ValidParamSpecType] = None,
-                 scale: Optional[ValidParamSpecType] = None,
+                 end: Optional[ValidParamSpecType] = None,
+                 tolerance: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
-            bias=bias,
+            start=start,
             offset=offset,
-            rate=rate,
-            scale=scale,
+            end=end,
+            tolerance=tolerance,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -1030,12 +1032,12 @@ class ExponentialDecay(TransferFunction):  # -----------------------------------
         Exponentially decayed transformation of variable : number or array
 
         """
-        bias = self._get_current_parameter_value(BIAS, context)
-        offset = self._get_current_parameter_value(OFFSET, context)
-        rate = self._get_current_parameter_value(RATE, context)
-        scale = self._get_current_parameter_value(SCALE, context)
+        start = self._get_current_parameter_value('start', context)
+        offset = self._get_current_parameter_value('offset', context)
+        end = self._get_current_parameter_value('end', context)
+        tolerance = self._get_current_parameter_value('tolerance', context)
 
-        result = offset + bias * np.exp(-variable * np.log(1 / scale) / rate)
+        result = offset + start * np.exp(-variable * np.log(1 / tolerance) / end)
 
         return self.convert_output_type(result)
 
@@ -1044,8 +1046,8 @@ class ExponentialDecay(TransferFunction):  # -----------------------------------
         """
         derivative(input)
         .. math::
-            \frac{bias\ln\left(\frac{1}{scale}\right)e^{-\left(\frac{variable\ln
-            \left(\frac{1}{scale}\right)}{rate}\right)}}{rate}
+            \frac{start\ln\left(\frac{1}{tolerance}\right)e^{-\left(\frac{variable\ln
+            \left(\frac{1}{tolerance}\right)}{end}\right)}}{end}
 
         Arguments
         ---------
@@ -1060,51 +1062,51 @@ class ExponentialDecay(TransferFunction):  # -----------------------------------
         derivative :  number or array
         """
 
-        bias = self._get_current_parameter_value(BIAS, context)
-        rate = self._get_current_parameter_value(RATE, context)
-        scale = self._get_current_parameter_value(SCALE, context)
+        start = self._get_current_parameter_value(START, context)
+        end = self._get_current_parameter_value(END, context)
+        tolerance = self._get_current_parameter_value(TOLERANCE, context)
 
-        return (bias * np.log(1/scale) / rate) * np.exp(-input * np.log(scale) / rate)
+        return (start * np.log(1/tolerance) / end) * np.exp(-input * np.log(tolerance) / end)
 
     # FIX:
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        rate_ptr = ctx.get_param_or_state_ptr(builder, self, RATE, param_struct_ptr=params)
-        bias_ptr = ctx.get_param_or_state_ptr(builder, self, BIAS, param_struct_ptr=params)
-        scale_ptr = ctx.get_param_or_state_ptr(builder, self, SCALE, param_struct_ptr=params)
+        end_ptr = ctx.get_param_or_state_ptr(builder, self, END, param_struct_ptr=params)
+        start_ptr = ctx.get_param_or_state_ptr(builder, self, START, param_struct_ptr=params)
+        tolerance_ptr = ctx.get_param_or_state_ptr(builder, self, TOLERANCE, param_struct_ptr=params)
         offset_ptr = ctx.get_param_or_state_ptr(builder, self, OFFSET, param_struct_ptr=params)
 
-        rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_ptr)
-        bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
-        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
+        end = pnlvm.helpers.load_extract_scalar_array_one(builder, end_ptr)
+        start = pnlvm.helpers.load_extract_scalar_array_one(builder, start_ptr)
+        tolerance = pnlvm.helpers.load_extract_scalar_array_one(builder, tolerance_ptr)
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
         val = builder.load(ptri)
-        val = builder.fmul(val, rate)
-        val = builder.fadd(val, bias)
+        val = builder.fmul(val, end)
+        val = builder.fadd(val, start)
         val = builder.call(exp_f, [val])
 
         if "derivative" in tags:
             # f'(x) = s*r*e^(r*x + b)
-            val = builder.fmul(val, scale)
-            val = builder.fmul(val, rate)
+            val = builder.fmul(val, tolerance)
+            val = builder.fmul(val, end)
         else:
             # f(x) = s*e^(r*x + b) + o
-            val = builder.fmul(val, scale)
+            val = builder.fmul(val, tolerance)
             val = builder.fadd(val, offset)
 
         builder.store(val, ptro)
 
-    # FIX:
     def _gen_pytorch_fct(self, device, context=None):
-        rate = self._get_pytorch_fct_param_value('rate', device, context)
-        scale = self._get_pytorch_fct_param_value('scale', device, context)
-        bias = self._get_pytorch_fct_param_value('bias', device, context)
+        offset = self._get_pytorch_fct_param_value('offset', device, context)
+        end = self._get_pytorch_fct_param_value('end', device, context)
+        tolerance = self._get_pytorch_fct_param_value('tolerance', device, context)
+        start = self._get_pytorch_fct_param_value('start', device, context)
 
-        return rate * scale * torch.exp(rate * input + bias)
+        return lambda x : offset + start * torch.exp(-x * torch.log(1 / tolerance) / end)
 
 
 # **********************************************************************************************************************
