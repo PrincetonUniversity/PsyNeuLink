@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Pathway &mdash; PsyNeuLink 0.15.1.0 documentation</title>
+  <title>Pathway &mdash; PsyNeuLink 0.15.2.0 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.1.0
+                  0.15.2.0
                 </div>
               
             
@@ -364,7 +364,7 @@ sender and receiver entries, using the <a class="reference internal" href="Outpu
 <div class="line"><br /></div>
 </div>
 <blockquote>
-<div><figure class="align-default" id="id6">
+<div><figure class="align-default" id="id4">
 <span id="pathway-figure"></span><a class="reference internal image-reference" href="_images/Pathways_fig.svg"><img alt="_images/Pathways_fig.svg" src="_images/Pathways_fig.svg" /></a>
 <figcaption>
 <p><span class="caption-text"><strong>Examples of Pathway specifications</strong> (including in the <strong>pathways</strong> argument of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>. <em>i)</em> Set
@@ -380,7 +380,7 @@ then a set:  many to one to many mapping. <em>ix)</em> Node followed by one that
 then another set: since the list of Projections contains a default Projection specification (<code class="docutils literal notranslate"><span class="pre">matrix</span></code>)
 Projections are created between all pairings of nodes in the sets that precede and follow the list (compare with
 <em>vii</em>); note that the Projections must be specified in a list because the matrix is a list (or array), which
-cannot be included in a set (see <a class="reference internal" href="#pathway-projection-matrix-note"><span class="std std-ref">note</span></a> above).</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
+cannot be included in a set (see <a class="reference internal" href="#pathway-projection-matrix-note"><span class="std std-ref">note</span></a> above).</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
 <div class="legend">
 <div class="technical-note docutils container">
 <p>The full code for the examples above can be found in <code class="xref any docutils literal notranslate"><span class="pre">test_pathways_examples</span></code>,
@@ -476,7 +476,7 @@ in the specification of any of these.  In contrast, when a Pathway is created by
 that comprise <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a>, and the <a class="reference internal" href="Projection.html"><span class="doc">Projection(s)</span></a> between them, are listed in the
 Pathway’s <a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.pathway" title="psyneulink.core.compositions.pathway.Pathway.pathway"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">pathway</span></code></a> attribute.</p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.composition" title="psyneulink.core.compositions.pathway.Pathway.composition"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">composition</span></code></a> - contains the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> that created the Pathway and to which it belongs,
-or None if it is a <a href="#id4"><span class="problematic" id="id5">``</span></a>template &lt;Pathway_Template&gt;` (i.e., was constructed on its own).</p></li>
+or None if it is a <a class="reference internal" href="#pathway-template"><span class="std std-ref">template</span></a> (i.e., was constructed on its own).</p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.roles" title="psyneulink.core.compositions.pathway.Pathway.roles"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">roles</span></code></a> and <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> attributes - if the Pathway was created by a Composition,
 the <a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.roles" title="psyneulink.core.compositions.pathway.Pathway.roles"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">roles</span></code></a> attribute <a class="reference internal" href="#psyneulink.core.compositions.pathway.PathwayRole" title="psyneulink.core.compositions.pathway.PathwayRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">this</span> <span class="pre">lists</span> <span class="pre">the</span> <span class="pre">`PathwayRoles</span></code></a> assigned to it by the Composition
 that correspond to the <code class="xref any docutils literal notranslate"><span class="pre">NodeRoles</span> <span class="pre">&lt;NodeRole</span></code>&gt; of its Components, and the <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> with each of

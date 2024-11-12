@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Port &mdash; PsyNeuLink 0.15.1.0 documentation</title>
+  <title>Port &mdash; PsyNeuLink 0.15.2.0 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.1.0
+                  0.15.2.0
                 </div>
               
             
@@ -246,8 +246,8 @@
 provided by them.  The value of a Port can be modulated by a <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a>. There are
 three primary types of Ports (InputPorts, ParameterPorts and OutputPorts) as well as one subtype (ModulatorySignal,
 used to send ModulatoryProjections), as summarized in the table below:</p>
-<span id="port-types-table"></span><table class="docutils align-left" id="id4">
-<caption><span class="caption-text"><strong>Port Types and Associated Projection Types</strong></span><a class="headerlink" href="#id4" title="Permalink to this table">¶</a></caption>
+<span id="port-types-table"></span><table class="docutils align-left" id="id2">
+<caption><span class="caption-text"><strong>Port Types and Associated Projection Types</strong></span><a class="headerlink" href="#id2" title="Permalink to this table">¶</a></caption>
 <colgroup>
 <col style="width: 17%" />
 <col style="width: 20%" />
@@ -459,8 +459,8 @@ details and compatibility requirements.</p></li>
 argument of its constructor, or a <em>PROJECTIONS</em> entry of a <a class="reference internal" href="#port-specification-dictionary"><span class="std std-ref">Port specification dictionary</span></a> (or a dictionary assigned to the <strong>params</strong> argument of the Port’s constructor).
 The following types of Projections can be specified for each type of Port:</p>
 <blockquote>
-<div><span id="port-projections-table"></span><table class="docutils align-left" id="id5">
-<caption><span class="caption-text"><strong>Specifiable Projections for Port Types</strong></span><a class="headerlink" href="#id5" title="Permalink to this table">¶</a></caption>
+<div><span id="port-projections-table"></span><table class="docutils align-left" id="id3">
+<caption><span class="caption-text"><strong>Specifiable Projections for Port Types</strong></span><a class="headerlink" href="#id3" title="Permalink to this table">¶</a></caption>
 <colgroup>
 <col style="width: 21%" />
 <col style="width: 36%" />
@@ -538,6 +538,29 @@ assigned to the specified Mechanism).  If the <strong>owner</strong> argument is
 <span id="id1"></span><h3><em>Projections</em><a class="headerlink" href="#port-structure-projections" title="Permalink to this headline">¶</a></h3>
 <p>Every Port has attributes that lists the <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> it sends and/or receives.  These depend on the
 type of Port, listed below (and shown in the <a class="reference internal" href="#port-projections-table"><span class="std std-ref">table</span></a>):</p>
+<table class="docutils align-left" id="id4">
+<caption><span class="caption-text">Port Projection Attributes</span><a class="headerlink" href="#id4" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 42%" />
+<col style="width: 58%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><em>Attribute</em></p></th>
+<th class="head"><p><em>Projection Type and Port(s)</em></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.path_afferents" title="psyneulink.core.components.ports.port.Port_Base.path_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">path_afferents</span></code></a></p></td>
+<td><p><a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> to <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.mod_afferents" title="psyneulink.core.components.ports.port.Port_Base.mod_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mod_afferents</span></code></a></p></td>
+<td><p><a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> to any Port</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.efferents" title="psyneulink.core.components.ports.port.Port_Base.efferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">efferents</span></code></a></p></td>
+<td><p><a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> from <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a></p></td>
+</tr>
+</tbody>
+</table>
 <p>In addition to these attributes, all of the Projections sent and received by a Port are listed in its <a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.projections" title="psyneulink.core.components.ports.port.Port_Base.projections"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">projections</span></code></a> attribute.</p>
 </section>
 <section id="variable-function-and-value">
@@ -553,7 +576,7 @@ Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core
 </ul>
 <ul class="simple">
 <li><p><a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>:  for an <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> this combines the values of the Projections that the
-Port receives (the default is <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearCombination</span></code></a> that sums the values), under the potential influence of a
+Port receives (the default is <code class="xref any docutils literal notranslate"><span class="pre">LinearCombination</span></code> that sums the values), under the potential influence of a
 <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a>;  for a <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a>, it determines the value of the associated parameter, under the potential
 influence of a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> (for a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>) or a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> (for a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>);
 for an OutputPort, it conveys the result  of the Mechanism’s function to its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_values</span></code></a> attribute, under the potential influence of a <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a>.  See
@@ -590,7 +613,7 @@ or to disable modulation, using either the keyword <em>OVERRIDE</em> or <em>DSIA
 ParameterPorts belonging to a Mechanism are updated before the Mechanism’s function is called.  OutputPorts are
 updated after the Mechanism’s function is called.  When a Port is updated, it executes any Projections that project
 to it (listed in its <a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.all_afferents" title="psyneulink.core.components.ports.port.Port_Base.all_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">all_afferents</span></code></a> attribute.  It uses the values it receives from any
-<code class="xref any docutils literal notranslate"><span class="pre">PathWayProjections</span></code> (listed in its <a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.path_afferents" title="psyneulink.core.components.ports.port.Port_Base.path_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">path_afferents</span></code></a> attribute) as the variable for its
+<code class="xref any docutils literal notranslate"><span class="pre">PathWayProjections</span></code> (listed in its <a class="reference internal" href="Mechanism.html#id6" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.path_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">path_afferents</span></code></a> attribute) as the variable for its
 <a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>. It then executes all of the ModulatoryProjections it receives.  Different
 ModulatorySignals may call for different forms of modulation (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a>).  Accordingly,
 it separately sums the values specified by any ModulatorySignals for the <em>MULTIPLICATIVE_PARAM</em> of its
@@ -848,7 +871,7 @@ as in the first example above (see <a class="reference internal" href="Mechanism
 <span id="port-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.ports.port.Port_Base">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.ports.port.</span></span><span class="sig-name descname"><span class="pre">Port_Base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projections</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.ports.port.</span></span><span class="sig-name descname"><span class="pre">Port_Base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projections</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for Port.</p>
 <p>The arguments below can be used in the constructor for any subclass of Port.
 See <a class="reference internal" href="Component.html#component-class-reference"><span class="std std-ref">Component</span></a> for additional arguments and attributes.</p>
@@ -964,7 +987,7 @@ empty for other types of Ports).</p>
 <span class="sig-name descname"><span class="pre">efferents</span></span><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base.efferents" title="Permalink to this definition">¶</a></dt>
 <dd><p>list of outgoing Projections from the Port (i.e., for which is a <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a>;
 note:  only <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>, and members of its <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a>
-subclass (<a href="#id2"><span class="problematic" id="id3">`</span></a>LearningProjection, ControlProjection and GatingProjection) have efferents;  the list is empty for
+subclass (<a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>, <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> and <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a>) have efferents;  the list is empty for
 InputPorts and ParameterPorts.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1042,13 +1065,6 @@ a default is assigned using <code class="xref any docutils literal notranslate">
 <dd class="field-odd"><p>PreferenceSet or specification dict</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.components.ports.port.Port_Base._handle_size">
-<span class="sig-name descname"><span class="pre">_handle_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base._handle_size" title="Permalink to this definition">¶</a></dt>
-<dd><p>Overwrites the parent method in Component.py, because the variable of a Port
-is generally 1D, rather than 2D as in the case of Mechanisms</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1358,6 +1374,18 @@ this Component</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>Return name relative to owner as</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.port.Port_Base.has_modulation">
+<span class="sig-name descname"><span class="pre">has_modulation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">composition</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base.has_modulation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if this Port has an active incoming modulatory
+projection in <strong>composition</strong> or False if it does not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
 </dd>
 </dl>
 </dd></dl>

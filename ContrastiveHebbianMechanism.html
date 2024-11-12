@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ContrastiveHebbianMechanism &mdash; PsyNeuLink 0.15.1.0 documentation</title>
+  <title>ContrastiveHebbianMechanism &mdash; PsyNeuLink 0.15.2.0 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.1.0
+                  0.15.2.0
                 </div>
               
             
@@ -271,7 +271,7 @@ described below.</p>
 <section id="size">
 <span id="contrastivehebbian-size"></span><h3><em>Size</em><a class="headerlink" href="#size" title="Permalink to this headline">¶</a></h3>
 <p>The <strong>input_size</strong> argument of the constructor must always be specified (this is comparable to specifying the
-<strong>size</strong> or <em>default_variable*</em> arguments of other types of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>).  If it is specified on its own,
+<strong>input_shapes</strong> or <em>default_variable*</em> arguments of other types of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>).  If it is specified on its own,
 it determines the total number of processing units.  If either the <strong>hidden_size</strong> and/or <strong>target_size</strong> arguments
 are specified, then those units are treated as distinct from the input units (see <a class="reference internal" href="#contrastivehebbian-execution"><span class="std std-ref">Execution</span></a> for
 details).</p>
@@ -327,7 +327,7 @@ are ignored.</p>
 <li><p><em>RECURRENT:</em> receives the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the Mechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.recurrent_projection" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">recurrent_projection</span></code></a>;</p></li>
 </ul>
 <ul class="simple">
-<li><p><em>TARGET:</em> only implemented if <strong>target_size</strong> is specified, <a href="#id1"><span class="problematic" id="id2">**</span></a>separated = <code class="xref any docutils literal notranslate"><span class="pre">True</span></code> (default), and
+<li><p><em>TARGET:</em> only implemented if <strong>target_size</strong> is specified, <strong>separated</strong> = <code class="xref any docutils literal notranslate"><span class="pre">True</span></code> (default), and
 mode is not <a class="reference internal" href="#contrastivehebbian-simple-hebbian"><span class="std std-ref">SIMPLE_HEBBIAN</span></a>;  receives the <code class="xref any docutils literal notranslate"><span class="pre">target</span></code>
 specified in the <code class="xref any docutils literal notranslate"><span class="pre">run</span></code> method of any <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> to which the Mechanism belongs.</p></li>
 </ul>
@@ -469,7 +469,7 @@ it is assigned the value of the <a class="reference internal" href="#contrastive
 </ul>
 </section>
 <section id="contrastivehebbian-learning-execution">
-<span id="id3"></span><h3><em>Learning</em><a class="headerlink" href="#contrastivehebbian-learning-execution" title="Permalink to this headline">¶</a></h3>
+<span id="id1"></span><h3><em>Learning</em><a class="headerlink" href="#contrastivehebbian-learning-execution" title="Permalink to this headline">¶</a></h3>
 <p>If a ContrastiveHebbianMechanism is <a class="reference internal" href="#contrastivehebbian-learning"><span class="std std-ref">configured for learning</span></a>, at the end of each
 <a class="reference internal" href="#contrastivehebbian-processing"><span class="std std-ref">trial of execution</span></a> the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of its <em>ACTIVITY_DIFFERENCE</em>
 <a class="reference internal" href="#contrastivehebbian-output"><span class="std std-ref">OutputPort</span></a> is passed to its <code class="xref any docutils literal notranslate"><span class="pre">learning_mechanism</span></code>.  If the Mechanism is part of a <code class="xref any docutils literal notranslate"><span class="pre">System</span></code>, then the
@@ -786,8 +786,7 @@ than or equal to the termination_threshold speified for the corresponding phase.
 <dd><p>determines when a <a class="reference internal" href="#contrastivehebbian-execution"><span class="std std-ref">phase of execution</span></a> is complete if the termination
 condition for that phase is specified as <em>CONVERGENCE</em>.  Compares the value of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">current_activity</span></code></a> with the
 previous <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>; result is
-assigned as the value of <a href="#id4"><span class="problematic" id="id5">`</span></a>delta
-&lt;ContrastiveHebbianMechanism.delta&gt;.</p>
+assigned as the value of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.delta" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.delta"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">delta</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>function</p>

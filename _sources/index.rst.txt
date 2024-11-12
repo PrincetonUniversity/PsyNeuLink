@@ -55,6 +55,8 @@ combine these components to implement published models.  As an open source proje
 to be enhanced and extended, and its library is meant to provide an expanding repository of models, written in a
 concise, executable, and easy to interpret form, that can be shared, compared, and extended by the scientific community.
 
+*(Note: the PsyNeuLink development effort was initiated and named in 2016, entirely independently and without
+awareness of Neuralink, with which it bears no association nor any intentional relationsip.)*
 
 .. _What_PsyNeuLink_IS:
 
@@ -102,11 +104,12 @@ The longterm goal of PsyNeuLink is to provide an environment that integrates com
 and behavior at all levels of analysis.  While it is designed to be fully general, and can in principle be used to
 implement models at any level, it is still under development, and current efficiency considerations make it more
 suitable for some of forms of modeling than others. In its present form, it is well suited to the creation of
-simple to moderately complex models, and for the integration of disparate models into a single environment, while in
+simple to moderately complex models, and for the integration of disparate models into a single environment, and the
+creation of systems-level neuroscientific models, as well as cognitive neuroscientific and modestly scaled machine
+learning-style models, while in
 it is presently less well suited to efforts involving massively large computations, such as:
 
- - extensive model fitting
- - large scale simulations
+ - large scale machine learning simulations
  - highly detailed biophysical models of neurons or neuronal populations
 
 Other packages currently better suited to such applications are:
@@ -178,7 +181,6 @@ Dependencies that are automatically installed (except those noted as optional) i
    * pillow
    * llvmlite
    * mpi4py (optional)
-   * autograd (optional)
 
 Lists of required packages for PsyNeuLink, developing PsyNeuLink, and running the PsyNeuLink tutorial are also
 stored in pip-style `requirements.txt`, `dev_requirements.txt`, and `tutorial_requirements.txt` in the source code.
@@ -212,13 +214,13 @@ To run the tutorial locally, you must run python 3.6 and install additional pack
 
 ::
 
-    pip install psyneulink[tutorial]
+    pip install "psyneulink[tutorial]"
 
 or if you downloaded the source:
 
 ::
 
-    pip install .[tutorial]
+    pip install ".[tutorial]"
 
 
 To access the tutorial, make sure you fulfill the requirements

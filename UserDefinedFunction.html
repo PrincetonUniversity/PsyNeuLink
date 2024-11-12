@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>UserDefinedFunction &mdash; PsyNeuLink 0.15.1.0 documentation</title>
+  <title>UserDefinedFunction &mdash; PsyNeuLink 0.15.2.0 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.1.0
+                  0.15.2.0
                 </div>
               
             
@@ -268,8 +268,8 @@ OutputPort that receives one more more <a class="reference internal" href="Gatin
 </pre></div>
 </div>
 <p>Note that the function treats its argument, x, as a 2d array, and accesses its first item for the calculation.
-This is because  the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> of <code class="docutils literal notranslate"><span class="pre">my_mech</span></code> is defined in the <strong>size</strong> argument of
-its constructor as having a single item (a 1d array of length 3;  (see <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.size" title="psyneulink.core.components.component.Component.size"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">size</span></code></a>).  In the
+This is because  the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> of <code class="docutils literal notranslate"><span class="pre">my_mech</span></code> is defined in the <strong>input_shapes</strong> argument of
+its constructor as having a single item (a 1d array of length 3;  (see <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.input_shapes" title="psyneulink.core.components.component.Component.input_shapes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_shapes</span></code></a>).  In the
 following example, a function is defined for a Mechanism in which the variable has two items, that are summed by
 the function:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">default_variable</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]],</span>
@@ -355,7 +355,7 @@ indirectly, such as:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">L</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Logistic</span><span class="p">(</span><span class="n">gain</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">my_fct</span><span class="p">(</span><span class="n">variable</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="k">return</span> <span class="n">L</span><span class="p">(</span><span class="n">variable</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">function</span> <span class="o">=</span> <span class="n">my_fct</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">input_shapes</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">function</span> <span class="o">=</span> <span class="n">my_fct</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="nb">input</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>  
 <span class="go">array([[2.88079708, 2.98201379, 2.99752738]])</span>
 </pre></div>
@@ -364,7 +364,7 @@ indirectly, such as:</p>
 <p>A custom function can also be assigned as the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of an <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> or <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>.
 For example, the following assigns <code class="docutils literal notranslate"><span class="pre">my_sinusoidal_fct</span></code> to the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.function" title="psyneulink.core.components.ports.outputport.OutputPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of an OutputPort
 of <code class="docutils literal notranslate"><span class="pre">my_mech</span></code>, rather the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_wave_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_wave_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">input_shapes</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
 <span class="gp">... </span>                                       <span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">,</span>
 <span class="gp">... </span>                                       <span class="n">output_ports</span><span class="o">=</span><span class="p">[{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;SINUSOIDAL OUTPUT&#39;</span><span class="p">,</span>
 <span class="gp">... </span>                                                      <span class="n">pnl</span><span class="o">.</span><span class="n">VARIABLE</span><span class="p">:</span> <span class="p">[(</span><span class="n">pnl</span><span class="o">.</span><span class="n">OWNER_VALUE</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span><span class="n">pnl</span><span class="o">.</span><span class="n">EXECUTION_COUNT</span><span class="p">],</span>
@@ -512,6 +512,20 @@ It is called only if the parameter_validation attribute is <code class="xref any
 </dd>
 <dt class="field-even">Return none</dt>
 <dd class="field-even"><p></p></dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.userdefinedfunction.UserDefinedFunction._initialize_parameters">
+<span class="sig-name descname"><span class="pre">_initialize_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">param_defaults</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.userdefinedfunction.UserDefinedFunction._initialize_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>**param_defaults</strong> – maps Parameter names to their default</p></li>
+<li><p><strong>any</strong> (<em>values. Sets instance-level Parameters dynamically for</em>) – </p></li>
+<li><p><strong>object.</strong> (<em>name that maps to a Parameter</em>) – </p></li>
+</ul>
+</dd>
 </dl>
 </dd></dl>
 
