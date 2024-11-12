@@ -31,6 +31,13 @@ import warnings
 from numbers import Number
 
 import numpy as np
+
+# Conditionally import torch
+try:
+    import torch
+except ImportError:
+    torch = None
+
 from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Callable, Literal
@@ -47,7 +54,7 @@ from psyneulink.core.globals.keywords import \
     OPTIMIZATION_FUNCTION_TYPE, OWNER, VALUE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.sampleiterator import SampleIterator
-from psyneulink.core.globals.utilities import call_with_pruned_args
+from psyneulink.core.globals.utilities import call_with_pruned_args, convert_to_np_array
 
 __all__ = ['OptimizationFunction', 'GradientOptimization', 'GridSearch', 'GaussianProcess',
            'ASCENT', 'DESCENT', 'DIRECTION', 'MAXIMIZE', 'MINIMIZE', 'OBJECTIVE_FUNCTION', 'SEARCH_FUNCTION',
@@ -69,9 +76,11 @@ class OptimizationFunctionError(FunctionError):
 
 def _num_estimates_getter(owning_component, context):
     if owning_component.parameters.randomization_dimension._get(context) is None:
-        return 1
+        return np.array(1)
     else:
-        return owning_component.parameters.search_space._get(context)[owning_component.randomization_dimension].num
+        return np.array(
+            owning_component.parameters.search_space._get(context)[owning_component.randomization_dimension].num
+        )
 
 
 class OptimizationFunction(Function_Base):
@@ -161,12 +170,12 @@ class OptimizationFunction(Function_Base):
         relevant argument(s) as `NotImplemented`.
 
     .. technical_note::
-       - Constructors of subclasses should include **kwargs in their constructor method, to accommodate arguments
+       - Constructors of subclasses should include ``**kwargs`` in their constructor method, to accommodate arguments
          required by some subclasses but not others (e.g., search_space needed by `GridSearch` but not
          `GradientOptimization`) so that subclasses can be used interchangeably by OptimizationControlMechanism.
 
        - Subclasses with attributes that depend on one of the OptimizationFunction's parameters should implement the
-         `reset <OptimizationFunction.reset>` method, that calls super().reset(*args) and then
+         `reset <OptimizationFunction.reset>` method, that calls ``super().reset(*args)`` and then
          reassigns the values of the dependent attributes accordingly.  If an argument is not needed for the subclass,
          `NotImplemented` should be passed as the argument's value in the call to super (i.e.,
          the OptimizationFunction's
@@ -404,6 +413,8 @@ class OptimizationFunction(Function_Base):
         saved_samples = Parameter([], read_only=True, pnl_internal=True)
         saved_values = Parameter([], read_only=True, pnl_internal=True)
 
+        grid = Parameter(None)
+
     @check_user_specified
     @beartype
     def __init__(
@@ -569,7 +580,7 @@ class OptimizationFunction(Function_Base):
             if SEARCH_SPACE in self._unspecified_args:
                 del self._unspecified_args[self._unspecified_args.index(SEARCH_SPACE)]
         if randomization_dimension is not None:
-            self.parameters.randomization_dimension._set(randomization_dimension, context)
+            self.parameters.randomization_dimension._set(np.asarray(randomization_dimension), context)
 
     def _function(self,
                  variable=None,
@@ -670,7 +681,7 @@ class OptimizationFunction(Function_Base):
             try:
                 initial_value = self.owner.objective_mechanism.parameters.value._get(context)
             except AttributeError:
-                initial_value = 0
+                initial_value = np.array(0)
 
             last_sample, last_value, all_samples, all_values = self._sequential_evaluate(initial_sample,
                                                                                          initial_value,
@@ -684,7 +695,7 @@ class OptimizationFunction(Function_Base):
                 self.parameters.num_estimates._get(context) is not None:
 
             # Reshape all_values so that aggregation can be performed over randomization dimension
-            num_estimates = int(self.parameters.num_estimates._get(context))
+            num_estimates = np.array(int(self.parameters.num_estimates._get(context)))
             num_evals = np.prod([d.num for d in self.search_space])
             num_param_combs = num_evals // num_estimates
 
@@ -817,10 +828,10 @@ class OptimizationFunction(Function_Base):
         state_features = ocm.parameters.state_feature_values._get(context)
         inputs, num_inputs_sets = ocm.agent_rep._parse_run_inputs(state_features, context)
 
-        num_evals = np.prod([d.num for d in self.search_space])
+        num_evals = np.prod([d._num for d in self.search_space])
 
         # Map allocations to values
-        comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, [context.execution_id])
+        comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, context)
         execution_mode = ocm.parameters.comp_execution_mode._get(context)
         if execution_mode == "PTX":
             outcomes = comp_exec.cuda_evaluate(inputs, num_inputs_sets, num_evals, get_results)
@@ -831,20 +842,20 @@ class OptimizationFunction(Function_Base):
 
         return outcomes, num_evals
 
-    def reset_grid(self):
-        """Reset iterators in `search_space <GridSearch.search_space>"""
+    def reset_grid(self, context):
+        """Reset iterators in `search_space <GridSearch.search_space>`"""
         for s in self.search_space:
             s.reset()
-        self.grid = itertools.product(*[s for s in self.search_space])
+        self.parameters.grid._set(itertools.product(*[s for s in self.search_space]), context)
 
     def _traverse_grid(self, variable, sample_num, context=None):
         """Get next sample from grid.
         This is assigned as the `search_function <OptimizationFunction.search_function>` of the `OptimizationFunction`.
         """
         if self.is_initializing:
-            return [signal.start for signal in self.search_space]
+            return convert_to_np_array([signal._start for signal in self.search_space])
         try:
-            sample = next(self.grid)
+            sample = np.asarray(next(self.parameters.grid._get(context)))
         except StopIteration:
             raise OptimizationFunctionError("Expired grid in {} run from {} "
                                             "(execution_count: {}; num_iterations: {})".
@@ -900,7 +911,7 @@ class GradientOptimization(OptimizationFunction):
 
     Sample variable by following gradient with respect to the value of `objective_function
     <GradientOptimization.objective_function>` it generates, and return the sample that generates either the
-    highest (**direction=*ASCENT*) or lowest (**direction=*DESCENT*) value.
+    highest (**direction** = *ASCENT*) or lowest (**direction** = *DESCENT*) value.
 
     .. _GradientOptimization_Procedure:
 
@@ -942,8 +953,9 @@ class GradientOptimization(OptimizationFunction):
     which should be the derivative of the `objective_function <GradientOptimization.objective_function>`
     with respect to `variable <GradientOptimization.variable>` at its current value:
     :math:`\\frac{d(objective\\_function(variable))}{d(variable)}`.  If the **gradient_function* argument of the
-    constructor is not specified, then an attempt is made to use `Autograd's <https://github.com/HIPS/autograd>`_ `grad
-    <autograd.grad>` method to generate `gradient_function <GradientOptimization.gradient_function>`.  If that fails,
+    constructor is not specified, then an attempt is made to use PyTorch functional
+    `autograd's <https://pytorch.org/docs/stable/generated/torch.func.grad.html>`_ `grad <torch.func.grad>`
+    method to generate `gradient_function <GradientOptimization.gradient_function>`.  If that fails,
     an error occurs.  The **search_space** argument can be used to specify lower and/or upper bounds for each dimension
     of the sample; if the gradient causes a value of the sample to exceed a bound along a dimenson, the value of the
     bound is used for that dimension, unless/until the gradient shifts and causes it to return back within the bound.
@@ -963,7 +975,7 @@ class GradientOptimization(OptimizationFunction):
     gradient_function : function
         specifies function used to compute the gradient in each iteration of the `optimization process
         <GradientOptimization_Procedure>`;  if it is not specified, an attempt is made to compute it using
-        `autograd.grad <https://github.com/HIPS/autograd>`_.
+        `PyTorch autograd's <https://pytorch.org/docs/stable/generated/torch.func.grad.html>`_ `grad <torch.func.grad>`.
 
     direction : ASCENT or DESCENT : default ASCENT
         specifies the direction of gradient optimization: if *ASCENT*, movement is attempted in the positive direction
@@ -1172,9 +1184,9 @@ class GradientOptimization(OptimizationFunction):
 
         def _parse_direction(self, direction):
             if direction == ASCENT:
-                return 1
+                return np.array(1)
             else:
-                return -1
+                return np.array(-1)
 
     @check_user_specified
     @beartype
@@ -1247,15 +1259,37 @@ class GradientOptimization(OptimizationFunction):
             **kwargs
         )
 
-        # Differentiate objective_function using autograd.grad()
+        # Differentiate objective_function using torch.func.grad()
         if objective_function is not None and not self.gradient_function:
+
+            if torch is None:
+                raise ValueError("PyTorch is not installed. Please install PyTorch to use GradientOptimization without "
+                                 "specifying a gradient_function.")
+
+            if 'func' not in dir(torch):
+                raise ValueError("torch.func.grad not found. PyTorch version is probably too old. Please upgrade "
+                                 "PyTorch to >= 2.0 to use GradientOptimization without specifying a "
+                                 "gradient_function.")
+
             try:
-                from autograd import grad
-                self.parameters.gradient_function._set(grad(self.objective_function), context)
-            except:
-                raise OptimizationFunctionError("Unable to use autograd with {} specified for {} Function: {}.".
+                # Need to wrap objective_function in a lambda to pass to grad because it needs to return a torch tensor
+                def func_wrapper(x, context):
+                    return torch.tensor(self.objective_function(x, context))
+
+                # Get the gradient of the objective function with pytorch autograd
+                gradient_func = torch.func.grad(func_wrapper)
+
+                # We need to wrap the gradient function in a lambda as well because we need to convert back to numpy
+                def gradient_func_wrapper(x, context):
+                    return gradient_func(torch.from_numpy(x), context).detach().numpy()
+
+                self.parameters.gradient_function._set(gradient_func_wrapper, context)
+
+            except Exception as ex:
+
+                raise OptimizationFunctionError("Unable to use PyTorch autograd with {} specified for {} Function: {}.".
                                                 format(repr(OBJECTIVE_FUNCTION), self.__class__.__name__,
-                                                       objective_function.__name__))
+                                                       objective_function.__name__)) from ex
         search_space = self.search_space
         bounds = None
 
@@ -1570,11 +1604,10 @@ class GridSearch(OptimizationFunction):
                     :default value: True
                     :type: ``bool``
         """
-        grid = Parameter(None)
         save_samples = Parameter(False, pnl_internal=True)
         save_values = Parameter(False, pnl_internal=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
         select_randomly_from_optimal_values = Parameter(False)
 
         direction = MAXIMIZE
@@ -1607,7 +1640,7 @@ class GridSearch(OptimizationFunction):
         except TypeError:
             pass
 
-        self.num_iterations = 1 if search_space is None else np.product([i.num for i in search_space])
+        self.num_iterations = 1 if search_space is None else np.prod([i.num for i in search_space])
         # self.tolerance = tolerance
 
         super().__init__(
@@ -1650,7 +1683,7 @@ class GridSearch(OptimizationFunction):
 
     @handle_external_context(fallback_most_recent=True)
     def reset(self, search_space, context=None, **kwargs):
-        """Assign size of `search_space <GridSearch.search_space>"""
+        """Assign size of `search_space <GridSearch.search_space>`"""
         super(GridSearch, self).reset(search_space=search_space, context=context, **kwargs)
         sample_iterators = search_space
         owner_str = ''
@@ -1664,7 +1697,7 @@ class GridSearch(OptimizationFunction):
                 raise OptimizationFunctionError(f"Invalid {repr(SEARCH_SPACE)} arg for {self.name}{owner_str}; each "
                                                 f"{SampleIterator.__name__} must have a value for its 'num' attribute.")
 
-        self.num_iterations = np.product([i.num for i in sample_iterators])
+        self.num_iterations = np.prod([i.num for i in sample_iterators])
 
     def _get_optimized_controller(self):
         # self.objective_function may be a bound method of
@@ -1952,7 +1985,7 @@ class GridSearch(OptimizationFunction):
             in the order they were evaluated; otherwise it is empty.
         """
 
-        self.reset_grid()
+        self.reset_grid(context)
         return_all_samples = return_all_values = []
 
         direction = self.parameters.direction._get(context)
@@ -2063,44 +2096,27 @@ class GridSearch(OptimizationFunction):
             # if ocm is not None and ocm.parameters.comp_execution_mode._get(context) in {"PTX", "LLVM"}:
             if ocm is not None and ocm.parameters.comp_execution_mode._get(context) in {"PTX", "LLVM"}:
 
-                # If we have a numpy array, convert back to ctypes
-                if isinstance(all_values, np.ndarray):
-                    ct_values = all_values.flatten().ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-                    num_values = len(all_values.flatten())
-                else:
-                    ct_values = all_values
-                    num_values = len(ct_values)
-
                 # Reduce array of values to min/max
                 # select_min params are:
-                # params, state, min_sample_ptr, sample_ptr, min_value_ptr, value_ptr, opt_count_ptr, count
+                # params, state, min_sample_ptr, sample_ptr, min_value_ptr, value_ptr, opt_count_ptr, start, stop
                 min_tags = frozenset({"select_min", "evaluate_type_objective"})
-                bin_func = pnlvm.LLVMBinaryFunction.from_obj(self, tags=min_tags)
+                bin_func = pnlvm.LLVMBinaryFunction.from_obj(self, tags=min_tags, ctype_ptr_args=(0, 1, 3), dynamic_size_args=(5,))
+
                 ct_param = bin_func.byref_arg_types[0](*self._get_param_initializer(context))
                 ct_state = bin_func.byref_arg_types[1](*self._get_state_initializer(context))
-                ct_opt_sample = bin_func.byref_arg_types[2](float("NaN"))
-                ct_alloc = None # NULL for samples
-                ct_opt_value = bin_func.byref_arg_types[4]()
-                ct_opt_count = bin_func.byref_arg_types[6](0)
-                ct_start = bin_func.c_func.argtypes[7](0)
-                ct_stop = bin_func.c_func.argtypes[8](num_values)
+                optimal_sample = bin_func.np_buffer_for_arg(2)
+                optimal_value = bin_func.np_buffer_for_arg(4)
+                number_of_optimal_values = bin_func.np_buffer_for_arg(6, fill_value=0)
 
-                bin_func(ct_param, ct_state, ct_opt_sample, ct_alloc, ct_opt_value,
-                         ct_values, ct_opt_count, ct_start, ct_stop)
-
-                optimal_value = ct_opt_value.value
-                optimal_sample = np.ctypeslib.as_array(ct_opt_sample)
-
-                if not isinstance(all_values, np.ndarray):
-                    all_values = np.ctypeslib.as_array(ct_values)
-
-                # These are normally stored in the parent function (OptimizationFunction).
-                # Since we didn't  call super()._function like the python path,
-                # save the values here
-                if self.parameters.save_samples._get(context):
-                    self.parameters.saved_samples._set(all_samples, context)
-                if self.parameters.save_values._get(context):
-                    self.parameters.saved_values._set(all_values, context)
+                bin_func(ct_param,
+                         ct_state,
+                         optimal_sample,
+                         None,                      # samples. NULL, it's generated by the function.
+                         optimal_value,
+                         all_values,
+                         number_of_optimal_values,
+                         0,                         # start
+                         len(all_values))           # stop
 
             # Python version
             else:
@@ -2120,6 +2136,12 @@ class GridSearch(OptimizationFunction):
                                          [all_samples[:,i] for i in range(all_samples.shape[1])])
                 optimal_value, optimal_sample = next(value_sample_pairs)
 
+                # The algorithm below implements "Reservoir sampling"[0]. This
+                # matches the compiled implementation of "select_min". The
+                # advantage of reservoir sampling is constant memory requirements
+                # and a single pass over the evaluated values.
+                # The disadvantage is multiple calls to the PRNG.
+                # https://en.wikipedia.org/wiki/Reservoir_sampling
                 select_randomly = self.parameters.select_randomly_from_optimal_values._get(context)
                 for value, sample in value_sample_pairs:
                     if select_randomly and np.allclose(value, optimal_value):

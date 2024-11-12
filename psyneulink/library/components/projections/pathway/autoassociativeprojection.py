@@ -64,7 +64,7 @@ are `auto <AutoAssociativeProjection.auto>` and `hetero <AutoAssociativeProjecti
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Due to its specialized nature, most parameters of the AutoAssociativeProjection are not configurable: the `variable` is
-determined by the format of the output of the RecurrentTransferMechanism, the `function` is always LinearMatrix, and so
+determined by the format of the output of the RecurrentTransferMechanism, the `function` is always MatrixTransform, and so
 on. The only configurable parameter is the matrix, configured through the **matrix**, **auto**, and/or **hetero**
 arguments for a RecurrentTransferMechanism:
 
@@ -99,17 +99,16 @@ Class Reference
 ---------------
 
 """
-import numbers
-
 import numpy as np
 from beartype import beartype
 
 from psyneulink._typing import Optional
 
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
+from psyneulink.core.components.functions.nonstateful.transformfunctions import MatrixTransform
 from psyneulink.core.components.functions.function import get_matrix
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingError, MappingProjection
+from psyneulink.library.components.projections.pathway.maskedmappingprojection import MaskedMappingProjection
 from psyneulink.core.components.projections.projection import projection_keywords
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.ports.outputport import OutputPort
@@ -117,6 +116,7 @@ from psyneulink.core.globals.keywords import AUTO_ASSOCIATIVE_PROJECTION, DEFAUL
 from psyneulink.core.globals.parameters import SharedParameter, Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
+from psyneulink.core.globals.utilities import is_numeric_scalar
 
 __all__ = [
     'AutoAssociativeError', 'AutoAssociativeProjection', 'get_auto_matrix', 'get_hetero_matrix',
@@ -130,7 +130,7 @@ class AutoAssociativeError(MappingError):
     pass
 
 
-class AutoAssociativeProjection(MappingProjection):
+class AutoAssociativeProjection(MaskedMappingProjection):
     """
     AutoAssociativeProjection(
         )
@@ -161,7 +161,7 @@ class AutoAssociativeProjection(MappingProjection):
         specifies the destination of the Projection's output; must be (or belong to) the same Mechanism as **sender**,
         and the length of its `variable <InputPort.variable>` must match the `value <OutputPort.value>` of **sender**.
 
-    matrix : list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX
+    matrix : list, np.ndarray, function or keyword : default DEFAULT_MATRIX
         specifies the matrix used by `function <Projection_Base.function>` (default: `LinearCombination`) to
         transform the `value <Projection_Base.value>` of the `sender <MappingProjection.sender>` into a value
         provided to the `variable <InputPort.variable>` of the `receiver <MappingProjection.receiver>` `InputPort`;
@@ -212,7 +212,7 @@ class AutoAssociativeProjection(MappingProjection):
                 function
                     see `function <AutoAssociativeProjection.function>`
 
-                    :default value: `LinearMatrix`
+                    :default value: `MatrixTransform`
                     :type: `Function`
 
                 hetero
@@ -228,8 +228,8 @@ class AutoAssociativeProjection(MappingProjection):
                     :type: ``str``
         """
         variable = Parameter(np.array([[0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
-        # function is always LinearMatrix that requires 1D input
-        function = Parameter(LinearMatrix, stateful=False, loggable=False)
+        # function is always MatrixTransform that requires 1D input
+        function = Parameter(MatrixTransform, stateful=False, loggable=False)
 
         auto = SharedParameter(1, attribute_name=OWNER_MECH)
         hetero = SharedParameter(0, attribute_name=OWNER_MECH)
@@ -271,7 +271,7 @@ class AutoAssociativeProjection(MappingProjection):
     # temporary override to make sure matrix/auto/hetero parameters
     # get passed properly. should be replaced with a better organization
     # of auto/hetero, in which the base parameters are stored either on
-    # AutoAssociativeProjection or on LinearMatrix itself
+    # AutoAssociativeProjection or on MatrixTransform itself
     def _instantiate_parameter_classes(self, context):
         if FUNCTION not in self.initial_shared_parameters:
             try:
@@ -366,7 +366,7 @@ class AutoAssociativeProjection(MappingProjection):
 
 # a helper function that takes a specification of `hetero` and returns a hollow matrix with the right values
 def get_hetero_matrix(raw_hetero, size):
-    if isinstance(raw_hetero, numbers.Number):
+    if is_numeric_scalar(raw_hetero):
         return get_matrix(HOLLOW_MATRIX, size, size) * raw_hetero
     elif ((isinstance(raw_hetero, np.ndarray) and raw_hetero.ndim == 1) or
               (isinstance(raw_hetero, list) and np.array(raw_hetero).ndim == 1)):
@@ -384,7 +384,7 @@ def get_hetero_matrix(raw_hetero, size):
 
 # similar to get_hetero_matrix() above
 def get_auto_matrix(raw_auto, size):
-    if isinstance(raw_auto, numbers.Number):
+    if is_numeric_scalar(raw_auto):
         return np.diag(np.full(size, raw_auto, dtype=float))
     elif ((isinstance(raw_auto, np.ndarray) and raw_auto.ndim == 1) or
               (isinstance(raw_auto, list) and np.array(raw_auto).ndim == 1)):

@@ -86,7 +86,7 @@ Umemoto_comp = pnl.Composition(name="Umemoto_System")
 
 #weights
 
-Distractor_weight = pnl.MappingProjection(matrix=np.matrix([[-1]]),
+Distractor_weight = pnl.MappingProjection(matrix=np.array([[-1]]),
                                      name='DISTRACTOR_WEIGHTS')
 # ADD pathways
 TargetControl_pathway = [Target_Stim, Target_Rep, Decision]

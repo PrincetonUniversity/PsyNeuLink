@@ -73,8 +73,8 @@ target for the LeabraMechanism. The input to the *MAIN_INPUT* InputPort should h
     LeabraMechanism. Here is an example of how to do this. In the example, T2 passes the training_data to the
     *LEARNING_TARGET* InputPort of L (L.input_ports[1])::
         L = LeabraMechanism(input_size=input_size, output_size=output_size)
-        T1 = TransferMechanism(name='T1', size=input_size, function=Linear)
-        T2 = TransferMechanism(name='T2', size=output_size, function=Linear)
+        T1 = TransferMechanism(name='T1', input_shapes=input_size, function=Linear)
+        T2 = TransferMechanism(name='T2', input_shapes=output_size, function=Linear)
         p1 = Process(pathway=[T1, L])
         proj = MappingProjection(sender=T2, receiver=L.input_ports[1])
         p2 = Process(pathway=[T2, proj, L])
@@ -110,6 +110,7 @@ from psyneulink.core.globals.keywords import LEABRA_FUNCTION, LEABRA_FUNCTION_TY
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
+from psyneulink.core.globals.utilities import convert_all_elements_to_np_array
 from psyneulink.core.scheduling.time import TimeScale
 
 __all__ = [
@@ -511,7 +512,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
         ]
 
         super().__init__(
-            size=size,
+            input_shapes=size,
             network=network,
             input_size=input_size,
             output_size=output_size,
@@ -550,7 +551,7 @@ def convert_to_2d_input(array_like):
     if isinstance(array_like, (np.ndarray, list)):
         if isinstance(array_like[0], (np.ndarray, list)):
             if isinstance(array_like[0][0], (np.ndarray, list)):
-                print("array_like ({}) is at least 3D, which may cause conversion errors".format(array_like))
+                print("array_like ({}) is at least 3d, which may cause conversion errors".format(array_like))
             out = []
             for a in array_like:
                 out.append(np.array(a))
@@ -614,7 +615,9 @@ def run_leabra_network(network, input_pattern):
         network.set_inputs({'input_layer': input_pattern})
         network.set_outputs({})  # clear network._outputs
         network.trial()
-    return [unit.act_m for unit in network.layers[-1].units]
+    return convert_all_elements_to_np_array(
+        [unit.act_m for unit in network.layers[-1].units]
+    )
 
 
 def train_leabra_network(network, input_pattern, output_pattern):
@@ -635,7 +638,9 @@ def train_leabra_network(network, input_pattern, output_pattern):
         network.set_outputs({'output_layer': output_pattern})
         network.trial()
 
-    return [unit.act_m for unit in network.layers[-1].units]
+    return convert_all_elements_to_np_array(
+        [unit.act_m for unit in network.layers[-1].units]
+    )
 
 
 # infer whether the network is using the None or 'leabra' training rule

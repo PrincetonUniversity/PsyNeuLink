@@ -94,8 +94,8 @@ with the one exception of `prefs <Component_Prefs>`.
 * **variable** - used as the input to its `function <Component_Function>`.  Specification of the **default_variable**
   argument in the constructor for a Component determines both its format (e.g., whether its value is numeric, its
   dimensionality and shape if it is an array, etc.) as well as its `default_value <Component.defaults>` (the value
-  used when the Component is executed and no input is provided), and takes precedence over the specification of `size
-  <Component_Size>`.
+  used when the Component is executed and no input is provided).
+  It may alternatively be specified by `input_shapes <Component_Input_Shapes>`.
 
   .. technical_note::
     Internally, the attribute **variable** is not directly used as input to functions, to allow for parallelization.
@@ -103,18 +103,25 @@ with the one exception of `prefs <Component_Prefs>`.
     During parallelization however, the attribute may not accurately represent the most current value of variable
     being used, due to asynchrony inherent to parallelization.
 
-.. _Component_Size:
+.. _Component_Input_Shapes:
 
-* **size** - the dimension of the `variable <Component.variable>` attribute.  The **size** argument of the
+* **input_shapes** - the numpy shape or iterable of shapes matching the
+  `variable <Component.variable>` attribute. The **input_shapes** argument of
+  the
   constructor for a Component can be used as a convenient method for specifying the `variable <Component_Variable>`,
-  attribute in which case it will be assigned as an array of zeros of the specified size.  For example,
-  setting  **size** = 3 is equivalent to setting **variable** = [0, 0, 0] and setting **size** = [4, 3] is equivalent
+  attribute in which case it will be assigned as an array of zeros of
+  the specified shape. When **input_shapes** is an iterable, each item in the
+  iterable is treated as a single shape, and the entire iterable is then
+  assigned as an array. When **input_shapes** is an integer, it is treated the
+  same as a one-item iterable containing that integer. For example,
+  setting  **input_shapes** = 3 is equivalent to setting
+  **variable** = [[0, 0, 0]] and setting **input_shapes** = [4, 3] is equivalent
   to setting **variable** = [[0, 0, 0, 0], [0, 0, 0]].
 
   .. note::
-     The size attribute serves a role similar to
-     `shape <https://numpy.org/doc/stable/reference/generated/numpy.shape.html> in Numpy`_, with the difference that
-     size permits the specification of `ragged arrays <https://en.wikipedia.org/wiki/Jagged_array>`_ -- that is, ones
+     The input_shapes attribute serves a role similar to
+     `shape in Numpy <https://numpy.org/doc/stable/reference/generated/numpy.shape.html>`_, with the difference that
+     input_shapes permits the specification of `ragged arrays <https://en.wikipedia.org/wiki/Jagged_array>`_ -- that is, ones
      that have elements of varying lengths, such as [[1,2],[3,4,5]].
 
 .. _Component_Function:
@@ -324,11 +331,10 @@ COMMENT:
       _instantiate_function method checks that the input of the Component's `function <Comonent.function>` is compatible
       with its `variable <Component.variable>`).
 
-      * `_handle_size <Component._handle_size>` converts the `variable <Component.variable>` and `size <Component.size>`
-        arguments to the correct dimensions (for `Mechanism <Mechanism>`, this is a 2D array and 1D
-        array, respectively). If **variable** is not passed as an argument, this method attempts to infer `variable
-        <Component.variable>` from the **size** argument, and vice versa if the **size** argument is missing.
-        The _handle_size method then checks that the **size** and **variable** arguments are compatible.
+      * `_handle_input_shapes <Component._handle_input_shapes>` attempts to infer
+        `variable <Component.variable>` from the **input_shapes** argument if
+        **variable** is not passed as an argument.
+        The _handle_input_shapes method then checks that the **input_shapes** and **variable** arguments are compatible.
 
       * `_instantiate_defaults <Component._instantiate_defaults>` first calls the validation methods, and then
         assigns the default values for all of the attributes of the instance of the Component being created.
@@ -507,6 +513,7 @@ import re
 import types
 import typing
 import warnings
+import weakref
 from abc import ABCMeta
 from collections.abc import Iterable
 from enum import Enum, IntEnum
@@ -515,6 +522,7 @@ import dill
 import graph_scheduler
 import numpy as np
 
+from psyneulink._typing import Iterable, Union
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import \
     Context, ContextError, ContextFlags, INITIALIZATION_STATUS_FLAGS, _get_time, handle_external_context
@@ -527,10 +535,10 @@ from psyneulink.core.globals.keywords import \
     MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
     MODEL_SPEC_ID_MDF_VARIABLE, \
     MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, OWNER, PARAMS, PREFS_ARG, \
-    RESET_STATEFUL_FUNCTION_WHEN, SIZE, VALUE, VARIABLE
+    RESET_STATEFUL_FUNCTION_WHEN, INPUT_SHAPES, VALUE, VARIABLE, SHARED_COMPONENT_TYPES
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.parameters import \
-    Defaults, SharedParameter, Parameter, ParameterAlias, ParameterError, ParametersBase, check_user_specified, copy_parameter_value
+    Defaults, SharedParameter, Parameter, ParameterAlias, ParameterError, ParametersBase, check_user_specified, copy_parameter_value, is_array_like
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import \
     PreferenceLevel, PreferenceSet, _assign_prefs
@@ -539,7 +547,7 @@ from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared, \
     is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, \
-    get_all_explicit_arguments, call_with_pruned_args, safe_equals, safe_len, parse_valid_identifier
+    get_all_explicit_arguments, is_numeric, call_with_pruned_args, safe_equals, safe_len, parse_valid_identifier, try_extract_0d_array_item, contains_type, is_iterable
 from psyneulink.core.scheduling.condition import Never
 from psyneulink.core.scheduling.time import Time, TimeScale
 
@@ -660,7 +668,16 @@ def make_parameter_property(param):
             assert p.modulable
             return getattr(self, _get_parametervalue_attr(p))
         else:
-            return p._get(self.most_recent_context)
+            # _get does handle stateful case, but checking here avoids
+            # extra overhead for most_recent_context and external get.
+            # external get is being used so that dot-notation returns a
+            # copy of stored numpy arrays. dot-notation is also often
+            # used internally for non-stateful parameters, like
+            # function, input_ports, output_ports, etc.
+            if not p.stateful:
+                return p._get()
+            else:
+                return p.get(self.most_recent_context)
 
     def setter(self, value):
         p = getattr(self.parameters, param.name)
@@ -684,11 +701,11 @@ def make_parameter_property(param):
     return property(getter).setter(setter)
 
 
-def _has_initializers_setter(value, owning_component=None, context=None):
+def _has_initializers_setter(value, owning_component=None, context=None, *, compilation_sync=False):
     """
     Assign has_initializers status to Component and any of its owners up the hierarchy.
     """
-    if value:
+    if value and not compilation_sync:
         # only update owner's attribute if setting to True, because there may be
         # other children that have initializers
         try:
@@ -733,7 +750,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     """
     Component(                 \
         default_variable=None, \
-        size=None,             \
+        input_shapes=None,             \
         params=None,           \
         name=None,             \
         prefs=None,            \
@@ -755,7 +772,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         The variable(s) can be a function reference, in which case the function is called to resolve the value;
             however:  it must be "wrapped" as an item in a list, so that it is not called before being passed
                       it must of course return a variable of the type expected for the variable
-        The size argument is an int or array of ints, which specify the size of variable and set variable to be array(s)
+        The input_shapes argument is an int or array of ints, which specify the input_shapes of variable and set variable to be array(s)
             of zeros.
         The default variableList is a list of default values, one for each of the variables defined in the child class
         The params argument is a dictionary; the key for each entry is the parameter name, associated with its value.
@@ -798,10 +815,11 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         specifies template for the input to the Component's `function <Component.function>`, and the value used as the
         input to the Component if none is provided on execution (see `Component_Variable` for additional information).
 
-    size : int, list or np.ndarray of ints : default None
+    input_shapes : int, or Iterable of tuple or int : default None
         specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
-        if **default_variable** is specified, it takes precedence over the specification of **size** (see
-        `size <Component_Size>` for additonal details).
+        if **default_variable** is specified, it is checked for
+        compatibility against **input_shapes** (see
+        `input_shapes <Component_Input_Shapes>` for additonal details).
 
     COMMENT:
     param_defaults :   :  default None,
@@ -829,8 +847,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     variable : 2d np.array
         see `variable <Component_Variable>`
 
-    size : int or array of ints
-        see `size <Component_Size>`
+    input_shapes : Union[int, Iterable[Union[int, tuple]]]
+        see `input_shapes <Component_Input_Shapes>`
 
     function : Function, function or method
         see `function <Component_Function>`
@@ -912,7 +930,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     componentCategory = None
     componentType = None
 
-    standard_constructor_args = {EXECUTE_UNTIL_FINISHED, FUNCTION_PARAMS, MAX_EXECUTIONS_BEFORE_FINISHED, RESET_STATEFUL_FUNCTION_WHEN, SIZE}
+    standard_constructor_args = {EXECUTE_UNTIL_FINISHED, FUNCTION_PARAMS, MAX_EXECUTIONS_BEFORE_FINISHED, RESET_STATEFUL_FUNCTION_WHEN, INPUT_SHAPES}
 
     # helper attributes for MDF model spec
     _model_spec_id_parameters = 'parameters'
@@ -1089,13 +1107,13 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     #                      insuring that assignment by one instance will not affect the value of others.
     name = None
 
-    _deepcopy_shared_keys = frozenset([])
+    _deepcopy_shared_keys = frozenset(['owner'])
 
     @check_user_specified
     def __init__(self,
                  default_variable,
                  param_defaults,
-                 size=NotImplemented,  # 7/5/17 CW: this is a hack to check whether the user has passed in a size arg
+                 input_shapes=None,
                  function=None,
                  name=None,
                  reset_stateful_function_when=None,
@@ -1106,7 +1124,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         Initialization arguments:
         - default_variable (anything): establishes type for the variable, used for validation
-        - size (int or list/array of ints): if specified, establishes variable if variable was not already specified
+        - input_shapes (int or list/array of ints): if specified, establishes variable if variable was not already specified
         - params_default (dict): assigned as default
         Note: if parameter_validation is off, validation is suppressed (for efficiency) (Component class default = on)
 
@@ -1123,7 +1141,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             self.reset_stateful_function_when = Never()
 
         parameter_values, function_params = self._parse_arguments(
-            default_variable, param_defaults, size, function, function_params, kwargs
+            default_variable, param_defaults, input_shapes, function, function_params, kwargs
         )
 
         self._initialize_parameters(
@@ -1139,8 +1157,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             default_variable = self.defaults.variable
         else:
             default_variable = var
-            self.defaults.variable = copy.deepcopy(default_variable)
             self.parameters.variable._user_specified = True
+
+        self.defaults.variable = copy.deepcopy(default_variable)
 
         self.parameters.variable._set(
             copy_parameter_value(default_variable),
@@ -1161,7 +1180,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         # Validate the set passed in
         self._instantiate_defaults(variable=default_variable,
-               request_set=parameter_values,  # requested set
+                                   request_set={k: v for (k, v) in self.defaults.values().items() if k in parameter_values},  # requested set
                assign_missing=True,                   # assign missing params from classPreferences to instanceDefaults
                target_set=self.defaults.values(), # destination set to which params are being assigned
                default_set=self.class_defaults.values(),   # source set from which missing params are assigned
@@ -1256,6 +1275,11 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         self._update_parameter_components(context)
 
+        self.compositions = weakref.WeakSet()
+
+        # Delete the _user_specified_args attribute, we don't need it anymore
+        del self._user_specified_args
+
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
         #return '{1}'.format(type(self).__name__, self.name)
@@ -1264,16 +1288,18 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         return self.name < other.name
 
     def __deepcopy__(self, memo):
-        if 'no_shared' in memo and memo['no_shared']:
-            shared_types = tuple()
+        if SHARED_COMPONENT_TYPES in memo:
+            if (
+                memo[SHARED_COMPONENT_TYPES]
+                and isinstance(self, memo[SHARED_COMPONENT_TYPES])
+            ):
+                return self
         else:
-            shared_types = (Component, ComponentsMeta)
+            memo[SHARED_COMPONENT_TYPES] = (Component,)
 
-        fun = get_deepcopy_with_shared(
-            self._deepcopy_shared_keys,
-            shared_types
-        )
+        fun = get_deepcopy_with_shared(self._deepcopy_shared_keys)
         newone = fun(self, memo)
+        memo[id(self)] = newone
 
         if newone.parameters is not newone.class_parameters:
             # may be in DEFERRED INIT, so parameters/defaults belongs to class
@@ -1292,6 +1318,27 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     # ------------------------------------------------------------------------------------------------------------------
     # Compilation support
     # ------------------------------------------------------------------------------------------------------------------
+    def _is_compilable_param(self, p):
+
+        # User only parameters are not compiled.
+        if p.read_only and p.getter is not None:
+            return False
+
+        # Shared and aliased parameters are for user conveniecne and not compiled.
+        if isinstance(p, (ParameterAlias, SharedParameter)):
+            return False
+
+        # TODO this should use default value
+        val = p.get()
+
+        # Strings, builtins, functions, and methods are not compilable
+        return not isinstance(val, (str,
+                                    type(max),
+                                    type(np.sum),
+                                    type(make_parameter_property),
+                                    type(self._get_compilation_params)))
+
+
     def _get_compilation_state(self):
         # FIXME: MAGIC LIST, Use stateful tag for this
         whitelist = {"previous_time", "previous_value", "previous_v",
@@ -1299,23 +1346,27 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "input_ports", "output_ports",
                      "adjustment_cost", "intensity_cost", "duration_cost",
                      "intensity"}
+
         # Prune subcomponents (which are enabled by type rather than a list)
         # that should be omitted
         blacklist = { "objective_mechanism", "agent_rep", "projections", "shadow_inputs"}
 
-        # Only mechanisms use "value" state, can execute 'until finished',
-        # and need to track executions
+        # Mechanisms;
+        # * use "value" state
+        # * can execute 'until finished'
+        # * need to track number of executions
         if hasattr(self, 'ports'):
             whitelist.update({"value", "num_executions_before_finished",
                               "num_executions", "is_finished_flag"})
 
-            # If both the mechanism and its functoin use random_state it's DDM
-            # with integrator function. The mechanism's random_state is not used.
+            # If both the mechanism and its function use random_state.
+            # it's DDM with integrator function.
+            # The mechanism's random_state is not used.
             if hasattr(self.parameters, 'random_state') and hasattr(self.function.parameters, 'random_state'):
                 whitelist.remove('random_state')
 
 
-        # Only mechanisms and compositions need 'num_executions'
+        # Compositions need to track number of executions
         if hasattr(self, 'nodes'):
             whitelist.add("num_executions")
 
@@ -1341,11 +1392,15 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         if hasattr(self.parameters, 'duplicate_keys'):
             blacklist.add("previous_value")
 
+        # Matrices of learnable projections are stateful
+        if getattr(self, 'owner', None) and getattr(self.owner, 'learnable', False):
+            whitelist.add('matrix')
+
         def _is_compilation_state(p):
             # FIXME: This should use defaults instead of 'p.get'
             return p.name not in blacklist and \
-                   not isinstance(p, (ParameterAlias, SharedParameter)) and \
-                   (p.name in whitelist or isinstance(p.get(), Component))
+                   (p.name in whitelist or isinstance(p.get(), Component)) and \
+                   self._is_compilable_param(p)
 
         return filter(_is_compilation_state, self.parameters)
 
@@ -1362,16 +1417,29 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
     def _get_state_initializer(self, context):
         def _convert(p):
-            # FIXME: This should use defaults instead of 'p.get'
             x = p.get(context)
-            if isinstance(x, np.random.RandomState):
-                # Skip first element of random state (id string)
-                val = pnlvm._tupleize((*x.get_state()[1:], x.used_seed[0]))
+            if p.name == 'matrix': # Flatten matrix
+                val = tuple(np.asfarray(x).flatten())
+            elif isinstance(x, np.random.RandomState):
+                state = x.get_state(legacy=False)
+
+                # Keep the indices in sync with bultins.py:get_mersenne_twister_state_struct
+                val = pnlvm._tupleize((state['state']['key'],
+                                       state['gauss'],
+                                       state['state']['pos'],
+                                       state['has_gauss'],
+                                       x.used_seed[0]))
             elif isinstance(x, np.random.Generator):
                 state = x.bit_generator.state
-                val = pnlvm._tupleize((state['state']['counter'], state['state']['key'],
-                                       state['buffer'], state['uinteger'], state['buffer_pos'],
-                                       state['has_uint32'], x.used_seed[0]))
+
+                # Keep the indices in sync with bultins.py:get_philox_state_struct
+                val = pnlvm._tupleize((state['state']['counter'],
+                                       state['state']['key'],
+                                       state['buffer'],
+                                       state['uinteger'],
+                                       state['buffer_pos'],
+                                       state['has_uint32'],
+                                       x.used_seed[0]))
             elif isinstance(x, Time):
                 val = tuple(x._get_by_time_scale(t) for t in TimeScale)
             elif isinstance(x, Component):
@@ -1406,7 +1474,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "objective_mechanism", "agent_rep", "projections",
                      "outcome_input_ports", "state_input_ports",
                      # autodiff specific types
-                     "pytorch_representation", "optimizer",
+                     "pytorch_representation", "optimizer", "synch_projection_matrices_with_torch",
                      # duplicate
                      "allocation_samples", "control_allocation_search_space",
                      # not used in computation
@@ -1432,11 +1500,21 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "learning_results", "learning_signal", "learning_signals",
                      "error_matrix", "error_signal", "activation_input",
                      "activation_output", "error_sources", "covariates_sources",
-                     "target", "sample",
+                     "target", "sample", "learning_function",
+                     "minibatch_size", "optimizations_per_minibatch", "device",
+                     "retain_torch_trained_outputs", "retain_torch_targets", "retain_torch_losses"
+                     "torch_trained_outputs", "torch_targets", "torch_losses",
+                     # should be added to relevant _gen_llvm_function... when aug:
+                     # OneHot:
+                     'abs_val', 'indicator',
+                     # SoftMax:
+                     'mask_threshold', 'adapt_scale', 'adapt_base', 'adapt_entropy_weighting',
+                     # LCAMechanism
+                     "mask"
                      }
         # Mechanism's need few extra entries:
         # * matrix -- is never used directly, and is flatened below
-        # * integration rate -- shape mismatch with param port input
+        # * integration_rate -- shape mismatch with param port input
         # * initializer -- only present on DDM and never used
         # * search_space -- duplicated between OCM and its function
         if hasattr(self, 'ports'):
@@ -1466,25 +1544,12 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             if cost_functions.DURATION not in cost_functions:
                 blacklist.add('duration_cost_fct')
 
+        # Matrices of learnable projections are stateful
+        if getattr(self, 'owner', None) and getattr(self.owner, 'learnable', False):
+            blacklist.add('matrix')
+
         def _is_compilation_param(p):
-            def _is_user_only_param(p):
-                if p.read_only and p.getter is not None:
-                    return True
-                if isinstance(p, (ParameterAlias, SharedParameter)):
-                    return True
-
-                return False
-
-
-            if p.name not in blacklist and not _is_user_only_param(p):
-                # FIXME: this should use defaults
-                val = p.get()
-                # Check if the value type is valid for compilation
-                return not isinstance(val, (str, ComponentsMeta,
-                                            type(max),
-                                            type(_is_compilation_param),
-                                            type(self._get_compilation_params)))
-            return False
+            return p.name not in blacklist and self._is_compilable_param(p)
 
         return filter(_is_compilation_param, self.parameters)
 
@@ -1583,9 +1648,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     # Handlers
     # ------------------------------------------------------------------------------------------------------------------
 
-    def _handle_default_variable(self, default_variable=None, size=None):
+    def _handle_default_variable(self, default_variable=None, input_shapes=None):
         """
-            Finds whether default_variable can be determined using **default_variable** and **size**
+            Finds whether default_variable can be determined using **default_variable** and **input_shapes**
             arguments.
 
             Returns
@@ -1594,143 +1659,121 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 None otherwise
         """
         default_variable = self._parse_arg_variable(default_variable)
+        default_variable = self._handle_input_shapes(input_shapes, default_variable)
 
-        if default_variable is None:
-            default_variable = self._handle_size(size, default_variable)
-
-            if default_variable is None or default_variable is NotImplemented:
-                return None
-            else:
-                self._variable_shape_flexibility = self._specified_variable_shape_flexibility
+        if default_variable is None or default_variable is NotImplemented:
+            return None
         else:
             self._variable_shape_flexibility = self._specified_variable_shape_flexibility
 
         return convert_to_np_array(default_variable, dimension=1)
 
-    # ELIMINATE SYSTEM
-    # IMPLEMENTATION NOTE: (7/7/17 CW) Due to System and Process being initialized with size at the moment (which will
-    # be removed later), I’m keeping _handle_size in Component.py. I’ll move the bulk of the function to Mechanism
-    # through an override, when Composition is done. For now, only Port.py overwrites _handle_size().
-    def _handle_size(self, size, variable):
-        """If variable is None, _handle_size tries to infer variable based on the **size** argument to the
-            __init__() function. This method is overwritten in subclasses like Mechanism and Port.
-            If self is a Mechanism, it converts variable to a 2D array, (for a Mechanism, variable[i] represents
-            the input from the i-th InputPort). If self is a Port, variable is a 1D array and size is a length-1 1D
-            array. It performs some validations on size and variable as well. This function is overridden in Port.py.
-            If size is NotImplemented (usually in the case of Projections/Functions), then this function passes without
-            doing anything. Be aware that if size is NotImplemented, then variable is never cast to a particular shape.
+    def _parse_input_shapes(
+        self, input_shapes: Union[int, Iterable[Union[int, tuple]]]
+    ) -> np.ndarray:
         """
-        if size is not NotImplemented:
+        Returns the equivalent 'variable' array specified by **input_shapes**
+
+        Args:
+            input_shapes (Union[int, Iterable[Union[int, tuple]]])
+
+        Returns:
+            np.ndarray
+        """
+        def get_input_shapes_elem(s, idx=None):
+            try:
+                return np.zeros(s)
+            except (TypeError, ValueError) as e:
+                if idx is not None:
+                    idx_str = f' at index {idx}'
+                else:
+                    idx_str = ''
+
+                raise ComponentError(
+                    f'Invalid input_shapes argument of {self}{idx_str}. input_shapes must be a'
+                    ' valid numpy shape or a list of shapes for use with'
+                    f' numpy.zeros: {e}'
+                ) from e
+
+        if not is_iterable(input_shapes, exclude_str=True):
+            variable_from_input_shapes = np.asarray([get_input_shapes_elem(input_shapes)])
+        else:
+            if len(input_shapes) == 0:
+                raise ComponentError(
+                    f'Invalid input_shapes argument of {self}. input_shapes must not be an empty list'
+                )
+            variable_from_input_shapes = []
+            for i, s in enumerate(input_shapes):
+                variable_from_input_shapes.append(get_input_shapes_elem(s, i))
+            variable_from_input_shapes = convert_all_elements_to_np_array(variable_from_input_shapes)
+
+        return variable_from_input_shapes
+
+    # ELIMINATE SYSTEM
+    # IMPLEMENTATION NOTE: (7/7/17 CW) Due to System and Process being initialized with input_shapes at the moment (which will
+    # be removed later), I’m keeping _handle_input_shapes in Component.py. I’ll move the bulk of the function to Mechanism
+    # through an override, when Composition is done. For now, only Port.py overwrites _handle_input_shapes().
+    def _handle_input_shapes(self, input_shapes, variable):
+        """If variable is None, _handle_input_shapes tries to infer variable based on the **input_shapes** argument to the
+            __init__() function. If input_shapes is None (usually in the case of
+            Projections/Functions), then this function passes without
+            doing anything. If both input_shapes and variable are not None, a
+            ComponentError is thrown if they are not compatible.
+        """
+        if input_shapes is not None:
             self._variable_shape_flexibility = self._specified_variable_shape_flexibility
-            # region Fill in and infer variable and size if they aren't specified in args
-            # if variable is None and size is None:
+            # region Fill in and infer variable and input_shapes if they aren't specified in args
+            # if variable is None and input_shapes is None:
             #     variable = self.class_defaults.variable
             # 6/30/17 now handled in the individual subclasses' __init__() methods because each subclass has different
-            # expected behavior when variable is None and size is None.
-
-            def checkAndCastInt(x):
-                if not isinstance(x, numbers.Number):
-                    raise ComponentError("An element ({}) in size is not a number.".format(x))
-                if x < 1:
-                    raise ComponentError("An element ({}) in size is not a positive number.".format(x))
-                try:
-                    int_x = int(x)
-                except:
-                    raise ComponentError(
-                        "Failed to convert an element ({}) in size argument for {} {} to an integer. size "
-                        "should be a number, or iterable of numbers, which are integers or "
-                        "can be converted to integers.".format(x, type(self), self.name))
-                if int_x != x:
-                    if hasattr(self, 'prefs') and hasattr(self.prefs, VERBOSE_PREF) and self.prefs.verbosePref:
-                        warnings.warn("When an element ({}) in the size argument was cast to "
-                                      "integer, its value changed to {}.".format(x, int_x))
-                return int_x
-
-            if variable is not None:
-                variable = np.array(variable)
-                if variable.dtype == object:
-                    # CAVEAT: assuming here that object dtype implies there are list objects (i.e. array with
-                    # different sized arrays/lists inside like [[0, 1], [2, 3, 4]]), even though putting a None
-                    # value in the array will give object dtype. This case doesn't really make sense in our
-                    # context though, so ignoring this case in the interest of quickly fixing 3D variable behavior
-                    variable = np.atleast_1d(variable)
-                else:
-                    variable = np.atleast_2d(variable)
-
-                variable = convert_all_elements_to_np_array(variable)
-
-            try:
-                if size is not None:
-                    size = np.atleast_1d(size)
-                    if len(np.shape(size)) > 1:  # number of dimensions of size > 1
-                        if hasattr(self, 'prefs') and hasattr(self.prefs, VERBOSE_PREF) and self.prefs.verbosePref:
-                            warnings.warn(
-                                "size had more than one dimension (size had {} dimensions), so only the first "
-                                "element of its highest-numbered axis will be used".format(len(np.shape(size))))
-                        while len(np.shape(size)) > 1:  # reduce the dimensions of size
-                            size = size[0]
-            except:
-                raise ComponentError("Failed to convert size (of type {}) to a 1D array.".format(type(size)))
-
-            if size is not None:
-                size = np.array(list(map(checkAndCastInt, size)))  # convert all elements of size to int
+            # expected behavior when variable is None and input_shapes is None.
 
             # implementation note: for good coding practices, perhaps add setting to enable easy change of the default
             # value of variable (though it's an unlikely use case), which is an array of zeros at the moment
-            if variable is None and size is not None:
-                try:
-                    variable = []
-                    for s in size:
-                        variable.append(np.zeros(s))
-                    variable = convert_to_np_array(variable)
-                # TODO: fix bare except
-                except:
-                    raise ComponentError("variable (possibly default_variable) was not specified, but PsyNeuLink "
-                                         "was unable to infer variable from the size argument, {}. size should be"
-                                         " an integer or an array or list of integers. Either size or "
-                                         "variable must be specified.".format(size))
 
-            # the two regions below (creating size if it's None and/or expanding it) are probably obsolete (7/7/17 CW)
-
-            if size is None and variable is not None:
-                size = []
-                try:
-                    for input_vector in variable:
-                        size.append(len(input_vector))
-                    size = np.array(size)
-                except:
-                    raise ComponentError(
-                            "{}: size was not specified, and unable to infer it from the variable argument ({}) "
-                            "-- it can be an array, list, a 2D array, a list of arrays, array of lists, etc. ".
-                                format(self.name, variable))
-            # endregion
-
-            if size is not None and variable is not None:
-                if len(size) == 1 and len(variable) > 1:
-                    new_size = np.empty(len(variable))
-                    new_size.fill(size[0])
-                    size = new_size
-
-            # the two lines below were used when size was a param and are likely obsolete (7/7/17 CW)
-            # param_defaults['size'] = size  # 7/5/17 potentially buggy? Not sure (CW)
-            # self.user_params_for_instantiation['size'] = None  # 7/5/17 VERY HACKY: See Changyan's Notes on this.
-
-            # Both variable and size are specified
-            if variable is not None and size is not None:
-                # If they conflict, give warning
-                if len(size) != len(variable):
-                    if hasattr(self, 'prefs') and hasattr(self.prefs, VERBOSE_PREF) and self.prefs.verbosePref:
-                        warnings.warn("The size arg of {} conflicts with the length "
-                                      "of its variable arg ({}) at element {}: variable takes precedence".
-                                      format(self.name, size, variable))
+            def conflict_error(reason=None):
+                if reason is not None:
+                    reason_str = f': {reason}'
                 else:
-                    for i in range(len(size)):
-                        if size[i] != len(variable[i]):
-                            if hasattr(self, 'prefs') and hasattr(self.prefs, VERBOSE_PREF) and self.prefs.verbosePref:
-                                warnings.warn("The size arg of {} ({}) conflicts with the length "
-                                              "of its variable arg ({}) at element {}: variable takes precedence".
-                                              format(self.name, size[i], variable[i], i))
+                    reason_str = ''
 
+                return ComponentError(
+                    f'input_shapes and default_variable arguments of {self} conflict{reason_str}'
+                )
+
+            variable_from_input_shapes = self._parse_input_shapes(input_shapes)
+
+            if variable is None:
+                return variable_from_input_shapes
+
+            if is_iterable(input_shapes, exclude_str=True):
+                assert len(input_shapes) == len(variable_from_input_shapes)
+
+                if variable.ndim == 0:
+                    raise conflict_error(
+                        'input_shapes gives a list of items but default_variable is 0d'
+                    )
+                elif len(input_shapes) != len(variable):
+                    raise conflict_error(
+                        f'len(input_shapes) is {len(input_shapes)};'
+                        f' len(default_variable) is {len(variable)}'
+                    )
+                else:
+                    for i in range(len(input_shapes)):
+                        if variable_from_input_shapes[i].shape != variable[i].shape:
+                            raise conflict_error(
+                                f'input_shapes[{i}].shape: {variable_from_input_shapes[i].shape};'
+                                f' default_variable[{i}].shape: {variable[i].shape}'
+                            )
+            else:
+                if variable_from_input_shapes.shape != variable.shape:
+                    raise conflict_error(
+                        f'input_shapes.shape: {variable_from_input_shapes.shape};'
+                        f' default_variable.shape: {variable.shape}'
+                    )
+
+        # if variable_from_input_shapes is created an error has not been thrown
+        # so far, variable is equal
         return variable
 
     def _get_allowed_arguments(self) -> set:
@@ -1889,11 +1932,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         # If function is called without any arguments, get default for variable
         if variable is None:
-            try:
-                # assigned by the Function class init when initializing
-                variable = self.defaults.variable
-            except AttributeError:
-                variable = self.class_defaults.variable
+            variable = self.defaults.variable
+
+            variable = copy_parameter_value(variable)
 
         # If the variable is a function, call it
         if callable(variable):
@@ -1940,6 +1981,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 raise ComponentError(err_msg)
 
         if isinstance(runtime_params, dict):
+            runtime_params = copy_parameter_value(runtime_params)
             for param_name in runtime_params:
                 if not isinstance(param_name, str):
                     generate_error(param_name)
@@ -1948,9 +1990,15 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                         generate_error(param_name)
                     if context.execution_id not in self._runtime_params_reset:
                         self._runtime_params_reset[context.execution_id] = {}
-                    self._runtime_params_reset[context.execution_id][param_name] = getattr(self.parameters,
-                                                                                           param_name)._get(context)
-                    self._set_parameter_value(param_name, runtime_params[param_name], context)
+                    self._runtime_params_reset[context.execution_id][param_name] = copy_parameter_value(
+                        getattr(self.parameters, param_name)._get(context)
+                    )
+                    if is_numeric(runtime_params[param_name]):
+                        runtime_value = convert_all_elements_to_np_array(runtime_params[param_name])
+                    else:
+                        runtime_value = runtime_params[param_name]
+
+                    self._set_parameter_value(param_name, runtime_value, context)
                 # Any remaining params should either belong to the Component's function
                 #    or, if the Component is a Function, to it or its owner
                 elif ( # If Component is not a function, and its function doesn't have the parameter or
@@ -2142,7 +2190,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             )
 
     def _parse_arguments(
-        self, default_variable, param_defaults, size, function, function_params, kwargs
+        self, default_variable, param_defaults, input_shapes, function, function_params, kwargs
     ):
         if function_params is None:
             function_params = {}
@@ -2155,7 +2203,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         parameter_values = {
             **{
                 'function': function,
-                'size': size,
+                'input_shapes': input_shapes,
                 'default_variable': default_variable,
                 'function_params': function_params
             },
@@ -2200,6 +2248,12 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         return parameter_values, function_params
 
     def _initialize_parameters(self, context=None, **param_defaults):
+        """
+        Args:
+            **param_defaults: maps Parameter names to their default
+            values. Sets instance-level Parameters dynamically for any
+            name that maps to a Parameter object.
+        """
         from psyneulink.core.components.shellclasses import (
             Composition_Base, Function, Mechanism, Port, Process_Base,
             Projection, System_Base
@@ -2233,9 +2287,17 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 if name in alias_names:
                     continue
 
-                try:
+                if isinstance(value, Parameter):
+                    setattr(self.parameters, name, value)
+                    try:
+                        value = copy.copy(value.default_value)
+                    except TypeError:
+                        value = value.default_value
+                    param_defaults[name] = value
+
+                if name in self.parameters._params:
                     parameter_obj = getattr(self.parameters, name)
-                except AttributeError:
+                else:
                     # name in param_defaults does not correspond to a Parameter
                     continue
 
@@ -2265,15 +2327,15 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 if value is not None or parameter_obj.specify_none:
                     defaults[name] = value
 
-        for k in defaults:
-            if defaults[k] is None:
-                continue
-            defaults[k] = copy_parameter_value(
-                defaults[k],
-                shared_types=shared_types
-            )
-
-        self.defaults = Defaults(owner=self, **defaults)
+        self.defaults = Defaults(owner=self)
+        for k in sorted(defaults, key=self.parameters._dependency_order_key(names=True)):
+            if defaults[k] is not None:
+                defaults[k] = copy_parameter_value(
+                    defaults[k],
+                    shared_types=shared_types
+                )
+            parameter_obj = getattr(self.parameters, k)
+            parameter_obj._set_default_value(defaults[k], check_scalar=parameter_obj._user_specified)
 
         for p in filter(lambda x: not isinstance(x, (ParameterAlias, SharedParameter)), self.parameters._in_dependency_order):
             # copy spec so it is not overwritten later
@@ -2288,9 +2350,21 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 if p._user_specified:
                     val = param_defaults[p.name]
 
+                    # ideally, this would include deepcopying any
+                    # Function objects with a non-None owner in val.
+                    # Avoiding universal deep copy for iterables
+                    # containing Functions here ensures that a list (ex.
+                    # noise) containing other objects and a Function
+                    # will use the actual Function passed in and not a
+                    # copy. Not copying - as was done prior to this
+                    # comment - should only be a problem if internal
+                    # code passes such an object that is also used
+                    # elsewhere
                     if isinstance(val, Function):
                         if val.owner is not None:
                             val = copy.deepcopy(val)
+                    elif not contains_type(val, Function):
+                        val = copy_parameter_value(val, shared_types=shared_types)
                 else:
                     val = copy_parameter_value(
                         p.default_value,
@@ -2689,9 +2763,10 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         #    - return
         if variable is None:
             try:
-                return self.defaults.variable
+                variable = self.defaults.variable
             except AttributeError:
-                return self.class_defaults.variable
+                variable = self.class_defaults.variable
+            return copy_parameter_value(variable)
 
         # Otherwise, do some checking on variable before converting to np.ndarray
 
@@ -3142,7 +3217,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 # update it here if needed
                 if MATRIX in kwargs_to_instantiate:
                     try:
-                        kwargs_to_instantiate[MATRIX] = self.parameter_ports[MATRIX].defaults.value
+                        kwargs_to_instantiate[MATRIX] = copy_parameter_value(self.parameter_ports[MATRIX].defaults.value)
                     except (AttributeError, KeyError, TypeError):
                         pass
 
@@ -3216,6 +3291,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     def _update_default_variable(self, new_default_variable, context=None):
         from psyneulink.core.components.shellclasses import Function
 
+        new_default_variable = convert_all_elements_to_np_array(new_default_variable)
         self.defaults.variable = copy.deepcopy(new_default_variable)
 
         # exclude value from validation because it isn't updated until
@@ -3289,6 +3365,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         if context.source is ContextFlags.COMMAND_LINE:
             self._initialize_from_context(context, override=False)
+            if is_numeric(variable):
+                variable = convert_all_elements_to_np_array(variable)
 
         value = self._execute(variable=variable, context=context, runtime_params=runtime_params)
         self.parameters.value._set(value, context=context)
@@ -3402,7 +3480,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 if 'Multiple ParameterPorts' in str(e):
                     raise
 
-        return parameter._get(context)
+        return parameter._get(context, modulated=True)
 
     def _reset_runtime_parameters(self, context):
         if context.execution_id in self._runtime_params_reset:
@@ -3415,16 +3493,23 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             self._runtime_params_reset[context.execution_id] = {}
 
     def _try_execute_param(self, param, var, context=None):
-        def fill_recursively(arr, value, indices=()):
-            if arr.ndim == 0:
+        def execute_if_callable(value, context=None):
+            try:
+                return value(context=context)
+            except TypeError:
                 try:
-                    value = value(context=context)
+                    return value()
                 except TypeError:
-                    try:
-                        value = value()
-                    except TypeError:
-                        pass
-                return value
+                    return value
+
+        def fill_recursively(arr, value, indices=()):
+            try:
+                is_scalar = arr.ndim == 0
+            except AttributeError:
+                is_scalar = True
+
+            if is_scalar:
+                return execute_if_callable(value, context)
 
             try:
                 len_value = len(value)
@@ -3465,7 +3550,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             (isinstance(param, list) and len(param) == 1)
             or (isinstance(param, np.ndarray) and param.shape == (1,))
         ):
-            if isinstance(param[0], Component):
+            if isinstance(param[0], Component) or len(var) > 1:
                 param = param[0]
 
         # Currently most noise functions do not return noise in the same
@@ -3495,6 +3580,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             # param not directly compatible with variable, continue elementwise
             pass
 
+        param = try_extract_0d_array_item(param)
         fill_recursively(var, param)
         return var
 
@@ -3641,7 +3727,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         self._name = value
 
     @property
-    def size(self):
+    def input_shapes(self):
         s = []
 
         try:
@@ -3929,7 +4015,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         from psyneulink.core.compositions.composition import Composition
         from psyneulink.core.components.ports.port import Port
         from psyneulink.core.components.ports.outputport import OutputPort
-        from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
+        from psyneulink.core.components.functions.nonstateful.transformfunctions import MatrixTransform
 
         def parse_parameter_value(value, no_expand_components=False, functions_as_dill=False):
             if isinstance(value, (list, tuple)):
@@ -4010,7 +4096,12 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                     value = None
                 else:
                     value = value.__qualname__
-            elif isinstance(value, types.FunctionType):
+
+            # numpy functions are no longer "FunctionType" since numpy
+            # moved dispatch implementation from Python to C in
+            # https://github.com/numpy/numpy/commit/60a858a372b14b73547baacf4a472eccfade1073
+            # Use np.sum as a representative of these functions
+            elif isinstance(value, (types.FunctionType, type(np.sum))):
                 if functions_as_dill:
                     value = base64.encodebytes(dill.dumps(value)).decode('utf-8')
                 elif '.' in value.__qualname__:
@@ -4065,11 +4156,11 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                         # class default
                         val = p.default_value
                 else:
-                    # special handling because LinearMatrix default values
+                    # special handling because MatrixTransform default values
                     # can be PNL-specific keywords. In future, generalize
                     # this workaround
                     if (
-                        isinstance(self, LinearMatrix)
+                        isinstance(self, MatrixTransform)
                         and p.name == 'matrix'
                     ):
                         val = self.parameters.matrix.values[None]
@@ -4178,6 +4269,18 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             pass
 
         model.args[arg] = value
+
+    def _add_to_composition(self, composition):
+        self.compositions.add(composition)
+
+        for obj in self._parameter_components:
+            obj._add_to_composition(composition)
+
+    def _remove_from_composition(self, composition):
+        self.compositions.discard(composition)
+
+        for obj in self._parameter_components:
+            obj._remove_from_composition(composition)
 
     @property
     def logged_items(self):
@@ -4358,15 +4461,17 @@ class ParameterValue:
 
     @property
     def modulated(self):
-        # TODO: consider making this
-        # self._parameter.port.is_modulated(self._owner.most_recent_context)
+        # TODO: consider using self._parameter.port.has_modulation
         # because the port existing doesn't necessarily mean modulation
         # is actually happening
         if self._parameter.port is not None:
-            return self._parameter.port.owner._get_current_parameter_value(
+            res = self._parameter.port.owner._get_current_parameter_value(
                 self._parameter,
                 self._owner.most_recent_context
             )
+            if is_array_like(res):
+                res = copy_parameter_value(res)
+            return res
         else:
             warnings.warn(
                 f'{self._parameter.name} is not currently modulated in most'

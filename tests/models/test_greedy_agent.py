@@ -9,7 +9,7 @@ from psyneulink.core.components.mechanisms.modulatory.control import Optimizatio
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.core.components.ports.inputport import SHADOW_INPUTS
+#from psyneulink.core.components.ports.inputport import SHADOW_INPUTS
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.core.globals.keywords import VARIANCE, NORMED_L0_SIMILARITY
@@ -33,10 +33,10 @@ def test_simplified_greedy_agent(benchmark, comp_mode):
     player_len = prey_len = predator_len = obs_len
 
 # The original needs GaussianDistort
-#    player = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PLAYER OBS")
-#    prey = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PREY OBS")
-    player = TransferMechanism(size=prey_len, name="PLAYER OBS")
-    prey = TransferMechanism(size=prey_len, name="PREY OBS")
+#    player = ProcessingMechanism(input_shapes=prey_len, function=GaussianDistort, name="PLAYER OBS")
+#    prey = ProcessingMechanism(input_shapes=prey_len, function=GaussianDistort, name="PREY OBS")
+    player = TransferMechanism(input_shapes=prey_len, name="PLAYER OBS")
+    prey = TransferMechanism(input_shapes=prey_len, name="PREY OBS")
 
     # Use ComparatorMechanism to compute direction of action as difference of coordinates between player and prey:
     # note: unitization is done in main loop, to allow compilation of LinearCombination function) (TBI)
@@ -70,8 +70,8 @@ def test_simplified_greedy_agent_random(benchmark, comp_mode):
 
     player_len = prey_len = predator_len = obs_len
 
-    player = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PLAYER OBS")
-    prey = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PREY OBS")
+    player = ProcessingMechanism(input_shapes=prey_len, function=GaussianDistort, name="PLAYER OBS")
+    prey = ProcessingMechanism(input_shapes=prey_len, function=GaussianDistort, name="PREY OBS")
 
     # Use ComparatorMechanism to compute direction of action as difference of coordinates between player and prey:
     # note: unitization is done in main loop, to allow compilation of LinearCombination function) (TBI)
@@ -117,14 +117,14 @@ def test_predator_prey(benchmark, mode, ocm_mode, prng, samples, fp_type):
     player_len = prey_len = predator_len = obs_coords
 
     # Input Mechanisms
-    player_pos = ProcessingMechanism(size=player_len, name="PLAYER POS")
-    prey_pos = ProcessingMechanism(size=prey_len, name="PREY POS")
-    predator_pos = ProcessingMechanism(size=predator_len, name="PREDATOR POS")
+    player_pos = ProcessingMechanism(input_shapes=player_len, name="PLAYER POS")
+    prey_pos = ProcessingMechanism(input_shapes=prey_len, name="PREY POS")
+    predator_pos = ProcessingMechanism(input_shapes=predator_len, name="PREDATOR POS")
 
     # Perceptual Mechanisms
-    player_obs = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PLAYER OBS")
-    prey_obs = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PREY OBS")
-    predator_obs = TransferMechanism(size=predator_len, function=GaussianDistort, name="PREDATOR OBS")
+    player_obs = ProcessingMechanism(input_shapes=prey_len, function=GaussianDistort, name="PLAYER OBS")
+    prey_obs = ProcessingMechanism(input_shapes=prey_len, function=GaussianDistort, name="PREY OBS")
+    predator_obs = TransferMechanism(input_shapes=predator_len, function=GaussianDistort, name="PREDATOR OBS")
 
 
     def action_fn(variable):

@@ -5,12 +5,13 @@ import itertools
 import numpy as np
 import pytest
 import re
-import sys
+import types
 
+import graph_scheduler as gs
 import psyneulink
 from psyneulink import clear_registry, primary_registries, torch_available
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.globals.utilities import set_global_seed
+from psyneulink.core.globals.utilities import is_numeric, set_global_seed
 
 try:
     import torch
@@ -45,9 +46,19 @@ def pytest_runtest_setup(item):
     # Check that all 'cuda' tests are also marked 'llvm'
     assert 'llvm' in item.keywords or 'cuda' not in item.keywords
 
+    # It the item is a parametrized function. It has a 'callspec' attribute.
+    # Convert any dict arguments to an unmutable MappingProxyType.
+    if hasattr(item, 'callspec'):
+        for k, v in item.callspec.params.items():
+            if isinstance(v, dict):
+                item.callspec.params[k] = types.MappingProxyType(v)
+
     for m in marks_default_skip:
         if m in item.keywords and not item.config.getvalue(m):
             pytest.skip('{0} tests not requested'.format(m))
+
+    if 'llvm' in item.keywords and 'llvm_not_implemented' in item.keywords:
+        pytest.skip('LLVM implementation not available')
 
     if 'cuda' in item.keywords and not pnlvm.ptx_enabled:
         pytest.skip('PTX engine not enabled/available')
@@ -126,35 +137,42 @@ def pytest_runtest_teardown(item):
         # Clear Registry to have a stable reference for indexed suffixes of default names
         clear_registry(registry)
 
-    pnlvm.cleanup()
+    gs.utilities.cached_hashable_graph_function.cache_clear()
+
+    # Skip running the leak checker if the test is marked xfail.
+    # XFAIL tests catch exceptions that references call frames
+    # including PNL objects that would be reported as leaks.
+    # Hopefully, there are no leaky codepaths that are only hit
+    # in xfail tests.
+    # The same applies to test failures
+    skip_cleanup_check = ("xfail" in item.keywords) or item.session.testsfailed > 0
+
+    # Only run the llvm leak checker on llvm tests
+    pnlvm.cleanup("llvm" in item.keywords and not skip_cleanup_check)
 
 @pytest.fixture
 def comp_mode_no_llvm():
     # dummy fixture to allow 'comp_mode' filtering
     pass
 
-class FirstBench():
-    def __init__(self, benchmark):
-        super().__setattr__("benchmark", benchmark)
-
-    def __call__(self, f, *args, **kwargs):
-        res = []
-        # Compute the first result if benchmark is enabled
-        if self.benchmark.enabled:
-            res.append(f(*args, **kwargs))
-
-        res.append(self.benchmark(f, *args, **kwargs))
-        return res[0]
-
-    def __getattr__(self, attr):
-        return getattr(self.benchmark, attr)
-
-    def __setattr__(self, attr, val):
-        return setattr(self.benchmark, attr, val)
-
 @pytest.fixture
 def benchmark(benchmark):
-    return FirstBench(benchmark)
+
+    orig_class = type(benchmark)
+
+    class _FirstBench(orig_class):
+        def __call__(self, f, *args, **kwargs):
+            res = []
+            # Compute the first result if benchmark is enabled
+            if self.enabled:
+                res.append(f(*args, **kwargs))
+
+            res.append(orig_class.__call__(self, f, *args, **kwargs))
+            return res[0]
+
+    benchmark.__class__ = _FirstBench
+
+    return benchmark
 
 @pytest.helpers.register
 def llvm_current_fp_precision():
@@ -172,7 +190,6 @@ def get_comp_execution_modes():
             pytest.param(pnlvm.ExecutionMode.LLVM, marks=pytest.mark.llvm),
             pytest.param(pnlvm.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
             pytest.param(pnlvm.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
-            pytest.param(pnlvm.ExecutionMode.PTXExec, marks=[pytest.mark.llvm, pytest.mark.cuda]),
             pytest.param(pnlvm.ExecutionMode.PTXRun, marks=[pytest.mark.llvm,  pytest.mark.cuda])
            ]
 
@@ -191,28 +208,12 @@ def cuda_param(val):
     return pytest.param(val, marks=[pytest.mark.llvm, pytest.mark.cuda])
 
 @pytest.helpers.register
-def get_func_execution(func, func_mode, *, writeback:bool=True):
+def get_func_execution(func, func_mode):
     if func_mode == 'LLVM':
-        ex = pnlvm.execution.FuncExecution(func)
-
-        # Calling writeback here will replace parameter values
-        # with numpy instances that share memory with the binary
-        # structure used by the compiled function
-        if writeback:
-            ex.writeback_params_to_pnl()
-
-        return ex.execute
+        return pnlvm.execution.FuncExecution(func).execute
 
     elif func_mode == 'PTX':
-        ex = pnlvm.execution.FuncExecution(func)
-
-        # Calling writeback here will replace parameter values
-        # with numpy instances that share memory with the binary
-        # structure used by the compiled function
-        if writeback:
-            ex.writeback_params_to_pnl()
-
-        return ex.cuda_execute
+        return pnlvm.execution.FuncExecution(func).cuda_execute
 
     elif func_mode == 'Python':
         return func.function
@@ -223,23 +224,40 @@ def get_func_execution(func, func_mode, *, writeback:bool=True):
 def get_mech_execution(mech, mech_mode):
     if mech_mode == 'LLVM':
         return pnlvm.execution.MechExecution(mech).execute
+
     elif mech_mode == 'PTX':
         return pnlvm.execution.MechExecution(mech).cuda_execute
+
     elif mech_mode == 'Python':
         def mech_wrapper(x):
             mech.execute(x)
             return mech.output_values
+
         return mech_wrapper
     else:
         assert False, "Unknown mechanism mode: {}".format(mech_mode)
 
 @pytest.helpers.register
 def numpy_uses_avx512():
-    out = io.StringIO()
-    with contextlib.redirect_stdout(out):
-        np.show_config()
 
-    return re.search('  found = .*AVX512.*', out.getvalue()) is not None
+    try:
+        # numpy >= 1.26 can return config info in a dictionary
+        config = np.show_config(mode="dicts")
+
+    except TypeError:
+        # Numpy >=1.21 < 1.26 doesn't support 'mode' argument and
+        # prints CPU extensions in one line per category:
+        # baseline = ...
+        # found = ...
+        # not found = ...
+        out = io.StringIO()
+
+        with contextlib.redirect_stdout(out):
+            np.show_config()
+
+        return re.search('  found = .*AVX512.*', out.getvalue()) is not None
+    else:
+        return any(ext.startswith("AVX512") for ext in config['SIMD Extensions']['found'])
 
 @pytest.helpers.register
 def expand_np_ndarray(arr):
@@ -273,7 +291,23 @@ def power_set(s):
     return (c for l in range(len(vals) + 1) for c in itertools.combinations(vals, l))
 
 
+def patch_parameter_set_value_numeric_check():
+    orig_parameter_set_value = psyneulink.core.globals.parameters.Parameter._set_value
+
+    def check_numeric_set_value(self, value, **kwargs):
+        assert isinstance(value, np.ndarray) or not is_numeric(value), (
+            f'{self._owner._owner}.{self.name} is being set to a numeric value.'
+            f' It must first be wrapped in a numpy array:\n\t{value}\n\t{type(value)}'
+        )
+
+        return orig_parameter_set_value(self, value, **kwargs)
+
+    psyneulink.core.globals.parameters.Parameter._set_value = check_numeric_set_value
+
+
 # flag when run from pytest
 # https://docs.pytest.org/en/stable/example/simple.html#detect-if-running-from-within-a-pytest-run
 def pytest_configure(config):
     psyneulink._called_from_pytest = True
+
+    patch_parameter_set_value_numeric_check()

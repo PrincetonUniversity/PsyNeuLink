@@ -144,8 +144,8 @@ class UserDefinedFunction(Function_Base):
         array([[6]])
 
     Note that the function treats its argument, x, as a 2d array, and accesses its first item for the calculation.
-    This is because  the `variable <Mechanism_Base.variable>` of ``my_mech`` is defined in the **size** argument of
-    its constructor as having a single item (a 1d array of length 3;  (see `size <Component.size>`).  In the
+    This is because  the `variable <Mechanism_Base.variable>` of ``my_mech`` is defined in the **input_shapes** argument of
+    its constructor as having a single item (a 1d array of length 3;  (see `input_shapes <Component.input_shapes>`).  In the
     following example, a function is defined for a Mechanism in which the variable has two items, that are summed by
     the function::
 
@@ -267,7 +267,7 @@ class UserDefinedFunction(Function_Base):
         >>> L = pnl.Logistic(gain = 2)
         >>> def my_fct(variable):
         ...     return L(variable) + 2
-        >>> my_mech = pnl.ProcessingMechanism(size = 3, function = my_fct)
+        >>> my_mech = pnl.ProcessingMechanism(input_shapes = 3, function = my_fct)
         >>> my_mech.execute(input = [1, 2, 3])  #doctest: +SKIP
         array([[2.88079708, 2.98201379, 2.99752738]])
 
@@ -280,7 +280,7 @@ class UserDefinedFunction(Function_Base):
     For example, the following assigns ``my_sinusoidal_fct`` to the `function <OutputPort.function>` of an OutputPort
     of ``my_mech``, rather the Mechanism's `function <Mechanism_Base.function>`::
 
-        >>> my_wave_mech = pnl.ProcessingMechanism(size=1,
+        >>> my_wave_mech = pnl.ProcessingMechanism(input_shapes=1,
         ...                                        function=pnl.Linear,
         ...                                        output_ports=[{pnl.NAME: 'SINUSOIDAL OUTPUT',
         ...                                                       pnl.VARIABLE: [(pnl.OWNER_VALUE, 0),pnl.EXECUTION_COUNT],
@@ -606,31 +606,29 @@ class UserDefinedFunction(Function_Base):
     def _validate_params(self, request_set, target_set=None, context=None):
         pass
 
-    def _instantiate_attributes_before_function(self, function=None, context=None):
-        super()._instantiate_attributes_before_function(function=function, context=context)
-        # create transient Parameters objects for custom function params
-        # done here because they need to be present before _instantiate_value which calls self.function
+    def _initialize_parameters(self, context=None, **param_defaults):
+        # pass custom parameter values here so they can be created as
+        # Parameters in Component._initialize_parameters and
+        # automatically handled as if they were normal Parameters
         for param_name in self.cust_fct_params:
-            p = Parameter(self.cust_fct_params[param_name], modulable=True)
-            setattr(self.parameters, param_name, p)
+            param_defaults[param_name] = Parameter(self.cust_fct_params[param_name], modulable=True)
 
-            p._set(p.default_value, context, skip_history=True)
+        super()._initialize_parameters(context, **param_defaults)
 
     def _function(self, variable, context=None, **kwargs):
+        call_params = self.cust_fct_params.copy()
 
         # Update value of parms in cust_fct_params
-        for param in self.cust_fct_params:
+        for param in call_params:
 
             # First check for value passed in params as runtime param:
             if PARAMS in kwargs and kwargs[PARAMS] is not None and param in kwargs[PARAMS]:
-                self.cust_fct_params[param] = kwargs[PARAMS][param]
+                call_params[param] = kwargs[PARAMS][param]
             elif param in kwargs:
-                self.cust_fct_params[param] = kwargs[param]
+                call_params[param] = kwargs[param]
             else:
                 # Otherwise, get current value from ParameterPort (in case it is being modulated by ControlSignal(s)
-                self.cust_fct_params[param] = self._get_current_parameter_value(param, context)
-
-        call_params = self.cust_fct_params.copy()
+                call_params[param] = self._get_current_parameter_value(param, context)
 
         # # MODIFIED 3/6/19 NEW: [JDC]
         # Add any of these that were included in the definition of the custom function:
@@ -655,7 +653,8 @@ class UserDefinedFunction(Function_Base):
                 value = eval(self.custom_function, kwargs)
 
         if self.stateful_parameter is not None and not self.is_initializing:
-            getattr(self.parameters, self.stateful_parameter)._set(value, context)
+            # use external set here because we don't control custom_function
+            getattr(self.parameters, self.stateful_parameter).set(value, context)
 
         return self.convert_output_type(value)
 

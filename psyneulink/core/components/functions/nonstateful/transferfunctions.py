@@ -22,7 +22,6 @@
 * `BinomialDistort`
 * `Dropout`
 * `SoftMax`
-* `LinearMatrix`
 * `TransferWithCosts`
 
 Overview
@@ -76,7 +75,7 @@ except ImportError:
     torch = None
 from beartype import beartype
 
-from psyneulink._typing import Optional, Union, Callable
+from psyneulink._typing import Callable, Mapping, Optional, Union
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import parameter_keywords
@@ -84,27 +83,28 @@ from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, Function, Function_Base, FunctionError, _random_state_getter, _seed_setter, function_keywords,
     get_matrix, is_function_type,
 )
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
-from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
+from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination
+from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot, ARG_MAX, ARG_MAX_INDICATOR
 from psyneulink.core.components.functions.stateful.integratorfunctions import SimpleIntegrator
 from psyneulink.core.components.shellclasses import Projection
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
+from psyneulink.core.globals.utilities import is_numeric_scalar
 from psyneulink.core.globals.keywords import \
-    ADDITIVE_PARAM, ALL, ANGLE_FUNCTION, BIAS, BINOMIAL_DISTORT_FUNCTION, DROPOUT_FUNCTION, EXPONENTIAL_FUNCTION, \
-    GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION, HAS_INITIALIZERS, HOLLOW_MATRIX, \
-    IDENTITY_FUNCTION, IDENTITY_MATRIX, INTERCEPT, LEAK, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, \
-    TANH_FUNCTION, MATRIX_KEYWORD_NAMES, MATRIX, MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE_PARAM, NORMALIZE, \
-    OFF, OFFSET, ON, PER_ITEM, PROB, PRODUCT, OUTPUT_TYPE, PROB_INDICATOR, \
-    RATE, RECEIVER, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM, \
-    TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME
+    (ADAPTIVE, ADDITIVE_PARAM, ALL, ANGLE_FUNCTION, BIAS, BINOMIAL_DISTORT_FUNCTION, DROPOUT_FUNCTION,
+     EXPONENTIAL_FUNCTION, GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION,
+     IDENTITY_FUNCTION, INTERCEPT, LEAK, LINEAR_FUNCTION, LOGISTIC_FUNCTION,
+     TANH_FUNCTION, MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE_PARAM,
+     OFF, OFFSET, ON, OUTPUT_TYPE, PER_ITEM, PROB, PRODUCT, PROB_INDICATOR,
+     RATE, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM,
+     TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME)
 from psyneulink.core.globals.parameters import \
-    FunctionParameter, Parameter, get_validator_by_function, check_user_specified
+    FunctionParameter, Parameter, get_validator_by_function, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, ValidPrefSet
-from psyneulink.core.globals.utilities import ValidParamSpecType, safe_len, is_matrix_keyword
+from psyneulink.core.globals.utilities import ValidParamSpecType, convert_all_elements_to_np_array, safe_len, is_matrix_keyword
 
 __all__ = ['Angle', 'BinomialDistort', 'Dropout', 'Exponential', 'Gaussian', 'GaussianDistort', 'Identity',
-           'Linear', 'LinearMatrix', 'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
+           'Linear', 'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
            ]
 
 class TransferFunction(Function_Base):
@@ -722,8 +722,6 @@ class Exponential(TransferFunction):  # ----------------------------------------
         scale = self._get_current_parameter_value(SCALE, context)
         offset = self._get_current_parameter_value(OFFSET, context)
 
-        # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
-        # result = scale * np.exp(rate * variable + bias) + offset
         result = scale * e**(rate * variable + bias) + offset
         return self.convert_output_type(result)
 
@@ -1022,8 +1020,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
         offset = self._get_current_parameter_value(OFFSET, context)
         scale = self._get_current_parameter_value(SCALE, context)
 
-        # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
-        # result = 1. / (1 + np.exp(-gain * (variable - bias) + offset))
         result = scale * (1. / (1 + e**(-gain * (variable + bias - x_0) + offset)))
 
         return self.convert_output_type(result)
@@ -1120,8 +1116,8 @@ class Logistic(TransferFunction):  # -------------------------------------------
         model = super().as_mdf_model()
 
         # x_0 is included in bias in MDF logistic
-        self._set_mdf_arg(model, 'bias', model.args['bias'] - model.args['x_0'])
-        self._set_mdf_arg(model, 'x_0', 0)
+        self._set_mdf_arg(model, 'bias', np.array(model.args['bias'] - model.args['x_0']))
+        self._set_mdf_arg(model, 'x_0', np.array(0))
 
         if model.args['scale'] != 1.0:
             warnings.warn(
@@ -1346,9 +1342,6 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         offset = self._get_current_parameter_value(OFFSET, context)
         scale = self._get_current_parameter_value(SCALE, context)
 
-        # The following probably doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
-        #   (since np.exp doesn't work)
-        # result = 1. / (1 + np.tanh(-gain * (variable - bias) + offset))
         exponent = -2 * (gain * (variable + bias - x_0) + offset)
         result = scale * (1 - e**exponent)/ (1 + e**exponent)
 
@@ -1442,7 +1435,9 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         gain = self._get_pytorch_fct_param_value('gain', device, context)
         bias = self._get_pytorch_fct_param_value('bias', device, context)
         offset = self._get_pytorch_fct_param_value('offset', device, context)
-        return lambda x: 1 / (1 + torch.exp(-gain * (x + bias) + offset))
+        # return lambda x: 1 / (1 + torch.exp(-gain * (x + bias) + offset))
+        return lambda x: ((torch.exp(-gain * (x + bias) + offset) - torch.exp(-gain * (-x + bias) + offset))
+                          / (torch.exp(-gain * (x + bias) + offset) + torch.exp(-gain * (-x + bias) + offset)))
 
 # **********************************************************************************************************************
 #                                                    ReLU
@@ -2349,7 +2344,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         scale = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
         bounds = (None, None)
 
     @check_user_specified
@@ -2437,7 +2432,6 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         offset = self._get_current_parameter_value(OFFSET, context)
         random_state = self._get_current_parameter_value('random_state', context)
 
-        # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         result = scale * random_state.normal(variable + bias, variance) + offset
 
         return self.convert_output_type(result)
@@ -2574,7 +2568,7 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
         """
         p = Parameter(0.5, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
         bounds = (None, None)
 
     @check_user_specified
@@ -2795,7 +2789,7 @@ class Dropout(TransferFunction):  #
         """
         p = Parameter(0.5, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
 
     @check_user_specified
     @beartype
@@ -2846,7 +2840,6 @@ class Dropout(TransferFunction):  #
             result = variable
 
         else:
-            # ??Not sure whether the following works with autograd (https://github.com/HIPS/autograd/issues/416)
             p = p or self.defaults.p
             self.binomial_distort.parameters.p.set(p, context)
             result = self.binomial_distort(variable) * (1 / (1 - p))
@@ -2901,16 +2894,23 @@ class Dropout(TransferFunction):  #
 #                                                   SoftMax
 # **********************************************************************************************************************
 
+softmax_modes = {ALL, ARG_MAX, ARG_MAX_INDICATOR, MAX_VAL, MAX_INDICATOR, PROB, PROB_INDICATOR}
+
+
 class SoftMax(TransferFunction):
     """
-    SoftMax(               \
-         default_variable, \
-         gain=1.0,         \
-         output=ALL,       \
-         params=None,      \
-         owner=None,       \
-         name=None,        \
-         prefs=None        \
+    SoftMax(                        \
+         default_variable,          \
+         gain=1.0,                  \
+         mask_threshold=None,       \
+         adapt_scale=1,             \
+         adapt_base=1,              \
+         adapt_entropy_weighting=.1 \
+         output=ALL,                \
+         params=None,               \
+         owner=None,                \
+         name=None,                 \
+         prefs=None                 \
          )
 
     .. _SoftMax:
@@ -2923,8 +2923,41 @@ class SoftMax(TransferFunction):
 
         \\frac{e^{gain * variable_i}}{\\sum\\limits^{len(variable)}e^{gain * variable}}
 
-    filtered by `ouptput <SoftMax.output>` specification (see `The Softmax function and its derivative
+    filtered by `output <SoftMax.output>` specification (see `The Softmax function and its derivative
     <http://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/>`_ for a nice discussion).
+
+        .. note::
+           If `variable <SoftMax.variable>` is all zeros, the SoftMax transform returns all zeros.
+
+    .. _SoftMax_AdaptGain:
+
+    *Thresholding and Adaptive Gain*
+
+    For cases in which SoftMax is used with sparse vectors (e.g., one-hots), the value(s) of the most significant
+    entries (e.g., the 1s in a one-hot) can be sensitive to (diminished by) the number of other values in the vector
+    (i.e., its length). For example, whereas for ``[1 0]`` the SoftMax is ``[0.73105858 0.26894142]``, for ``[1 0 0 0]``
+    it is ``[0.47536689 0.1748777  0.1748777  0.1748777]``. This can be addressed in one of two ways: either by
+    thresholding `variable <SoftMax.variable>` before applying the SoftMax function, or by adapting the `gain
+    <SoftMax.gain>` parametrically based on the `variable <SoftMax.variable>`:
+
+    - *mask_threshold* -- setting the **mask_threshold** argument to a scalar value causes the `variable
+      <SoftMax.variable>` to be thresholded by that value before applying the SoftMax function; any elements of
+      `variable <SoftMax.variable>` with an absolute value below the threshold are set to 0; all others are scaled
+      by the specified `gain <SoftMax.gain>` and then passed through the SoftMax function.  This only applies if the
+      **gain** argument is specified as a scalar; if it is specified as *ADAPTIVE*, then the **mask_threshold**
+      argument is ignored.
+
+    - *ADAPTIVE* -- setting **gain** argument to *ADAPTIVE* causes it to be dynamically adjusted,
+      based on the entropy and length of the variable, to keep the mass of the distribution around the highest values
+      as consistent as possible over different sized vectors. If *ADAPTIVE* is specified, then the `mask_threshold
+      <SoftMax.mask_threshold>` argument is ignored. The gain is adapted by calling the SoftMax function's `adapt_gain
+      <SoftMax.adapt_gain>` method. This can be finicky, and may need to be further tuned to the length of `variable
+      <SoftMax.variable>`, which can be done using the SoftMax Function's **adapt_scale**, **adapt_base**, and
+      **adapt_entropy_weighting** arguments.
+
+    .. _SoftMax_Derivative:
+
+    *Derivative*
 
     `derivative <SoftMax.derivative>` returns the derivative of the SoftMax.  If *OUTPUT_TYPE* for the SoftMax
     is *ALL*, returns Jacobian matrix (derivative for each element of the output array with respect to each of the
@@ -2933,9 +2966,9 @@ class SoftMax(TransferFunction):
     .. math::
         D_jS_i = S_i(\\delta_{i,j} - S_j),\\ where\\ \\delta_{i,j}=1\\ if\\ i=j\\ and\\ \\delta_{i,j}=0\\ if\\ i≠j.
 
-    If *OUTPUT_TYPE* is *MAX_VAL* or *MAX_INDICATOR*, returns 1d array of the derivatives of the maximum
-    value with respect to the others (calculated as above). If *OUTPUT_TYPE* is *PROB*, raises an exception
-    (since it is ambiguous as to which element would have been chosen by the SoftMax function)
+    If *OUTPUT_TYPE* is *ARG_MAX*, *ARG_MAX_INDICATOR*, *MAX_VAL*, *MAX_INDICATOR*, returns 1d array of the
+    derivatives of the maximum value(s) with respect to the others (calculated as above). If *OUTPUT_TYPE* is *PROB*,
+    raises an exception (since it is ambiguous as to which element would have been chosen by the SoftMax function)
 
     Arguments
     ---------
@@ -2943,10 +2976,28 @@ class SoftMax(TransferFunction):
     default_variable : 1d array : default class_defaults.variable
         specifies a template for the value to be transformed.
 
-    gain : float : default 1.0
-        specifies a value by which to multiply `variable <Linear.variable>` before SoftMax transformation.
+    gain : scalar or ADAPTIVE : default 1.0
+        specifies the value by which to multiply `variable <Linear.variable>` before SoftMax transformation,
+        which functions as the inverse "temperature" of the function.  If it is a scalar, it must be greater
+        than zero.  If *ADAPTIVE* is specified, the value is determined dynamically based on the `variable
+        <SoftMax.variable>`; see `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for details).
 
-    output : ALL, MAX_VAL, MAX_INDICATOR, or PROB : default ALL
+    mask_threshold : scalar : default None
+        specifies whether to mask_threshold the `variable <SoftMax.variable>` before applying the SoftMax function;
+        this only applies if `gain <SoftMax.gain>` is specified as a scalar;  otherwise it is ignored
+        (see `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for details).
+
+    adapt_scale : scalar : default 1
+        specifies the *scale* parameter using by the `adapt_gain <SoftMax.adapt_gain>` method (see method for details).
+
+    adapt_base : scalar : default 1
+        specifies the *base* parameter using by the `adapt_gain <SoftMax.adapt_gain>` method (see method for details).
+
+    adapt_entropy_weighting : default .1
+        specifies the *entropy_weighting* parameter using by the `adapt_gain <SoftMax.adapt_gain>` method
+        (see method for details).
+
+    output : ALL, ARG_MAX, ARG_MAX_INDICATOR, MAX_VAL, MAX_INDICATOR, or PROB : default ALL
         specifies the format of array returned by `function <SoftMax._function>`
         (see `output <SoftMax.output>` for details).
 
@@ -2974,17 +3025,40 @@ class SoftMax(TransferFunction):
     variable : 1d array
         contains value to be transformed.
 
-    gain : float
-        value by which `variable <Logistic.variable>` is multiplied before the SoftMax transformation;  determines
-        the "sharpness" of the distribution.
+    gain : scalar or ADAPTIVE
+        determines how `variable <Logistic.variable>` is scaled before the SoftMax transformation, determining the
+        "sharpness" of the distribution (it is equivalent to the inverse of the temperature of the SoftMax function);
+        if it is 'ADAPTIVE', it is determined dynamically adjusted using the `adapt_gain <SoftMax.adapt_gain>` method
+        (see `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for additional details).
 
-    output : ALL, MAX_VAL, MAX_INDICATOR, or PROB
+    mask_threshold : scalar or None
+        determines whether the `variable <SoftMax.variable>` is thresholded before applying the SoftMax function;
+        if it is a scalar, only elements of `variable <SoftMax.variable>` with an absolute value greater than that
+        value are considered when applying the SoftMax function (which are then scaled by the `gain <SoftMax.gain>`
+        parameter; all other elements are assigned 0.  This only applies if `gain <SoftMax.gain>` is specified as a
+        scalar;  otherwise it is ignored (see `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for details).
+
+    adapt_scale : scalar
+        determined the *scale* parameter using by the `adapt_gain <SoftMax.adapt_gain>` method (see method for details).
+
+    adapt_base : scalar
+        determines the *base* parameter using by the `adapt_gain <SoftMax.adapt_gain>` method (see method for details).
+
+    adapt_entropy_weighting : scalar
+        determines the *entropy_weighting* parameter using by the `adapt_gain <SoftMax.adapt_gain>` method
+        (see method for details).
+
+    output : ALL, ARG_MAX, ARG_MAX_INDICATOR, MAX_VAL, MAX_INDICATOR, or PROB
         determines how the SoftMax-transformed values of the elements in `variable <SoftMax.variable>` are reported
         in the array returned by `function <SoftMax._function>`:
-            * **ALL**: array of all SoftMax-transformed values (the default);
-            * **MAX_VAL**: SoftMax-transformed value for the element with the maximum such value, 0 for all others;
-            * **MAX_INDICATOR**: 1 for the element with the maximum SoftMax-transformed value, 0 for all others;
-            * **PROB**: probabilistically chosen element based on SoftMax-transformed values after setting the
+            * *ALL*: array of all SoftMax-transformed values (the default);
+            * *ARG_MAX*: 1 for single element with the maximum SoftMax-transformed value, 0 for all others;
+              (one with lowest index of there are multiple maximum values);
+            * *ARG_MAX_INDICATOR*: 1 for a single element with the maximum SoftMax-transformed value, 0 for all others;
+              (one with lowest index of there are multiple maximum values);
+            * *MAX_VAL*: SoftMax-transformed value for the element(s) with the maximum such value, 0 for all others;
+            * *MAX_INDICATOR*: 1 for the element(s) with the maximum SoftMax-transformed value, 0 for all others;
+            * *PROB*: probabilistically chosen element based on SoftMax-transformed values after setting the
               sum of values to 1 (i.e., their `Luce Ratio <https://en.wikipedia.org/wiki/Luce%27s_choice_axiom>`_),
               0 for all others.
 
@@ -2992,7 +3066,7 @@ class SoftMax(TransferFunction):
         for 2d variables, determines whether the SoftMax function is applied to the entire variable (per_item =
         False), or applied to each item in the variable separately (per_item = True).
 
-    bounds : None if `output <SoftMax.output>` == MAX_VAL, else (0,1) : default (0,1)
+    bounds : None if `output <SoftMax.output>` in {ARG_MAX, MAX_VAL}, else (0,1) : default (0,1)
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -3021,6 +3095,24 @@ class SoftMax(TransferFunction):
                     :type: ``numpy.ndarray``
                     :read only: True
 
+                adapt_scale
+                    see `adapt_scale <SoftMax.adapt_scale>`
+
+                    :default value: 1.0
+                    :type: ``float``
+
+                adapt_base
+                    see `adapt_base <SoftMax.adapt_base>`
+
+                    :default value: 1.0
+                    :type: ``float``
+
+                adapt_entropy_weighting
+                    see `adapt_entropy_weighting <SoftMax.adapt_entropy_weighting>`
+
+                    :default value: 0.1
+                    :type: ``float``
+
                 bounds
                     see `bounds <SoftMax.bounds>`
 
@@ -3044,29 +3136,79 @@ class SoftMax(TransferFunction):
 
                     :default value: True
                     :type: ``bool``
+
+                mask_threshold
+                    see `mask_threshold <SoftMax.mask_threshold>`
+
+                    :default value: None
+                    :type: ``float``
         """
         variable = Parameter(np.array([[0.0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        mask_threshold = Parameter(None, modulable=True)
+        adapt_scale = Parameter(1.0, modulable=True)
+        adapt_base = Parameter(1.0, modulable=True)
+        adapt_entropy_weighting = Parameter(0.95, modulable=True)
         bounds = (0, 1)
         output = ALL
         per_item = Parameter(True, pnl_internal=True)
         one_hot_function = Parameter(None, stateful=False, loggable=False)
 
-        def _validate_output(self, output):
-            options = {ALL, MAX_VAL, MAX_INDICATOR, PROB}
-            if output in options:
-                return None
+        def _validate_gain(self, gain):
+            if is_numeric_scalar(gain):
+                if gain <= 0:
+                    return 'must be a scalar greater than 0'
+            elif isinstance(gain, str):
+                if gain != ADAPTIVE:
+                    return f'the keyword for adaptive gain is {ADAPTIVE}'
             else:
-                return 'not one of {0}'.format(options)
+                return f'must be a scalar greater than 0 or the keyword {ADAPTIVE}'
+
+        def _validate_mask_threshold(self, mask_threshold):
+            if mask_threshold is not None:
+                if is_numeric_scalar(mask_threshold):
+                    if mask_threshold <= 0:
+                        return 'must be a scalar greater than 0'
+                    return None
+                return f'must be a scalar greater than 0'
+
+        def _validate_adapt_scale(self, adapt_scale):
+            if is_numeric_scalar(adapt_scale):
+                if adapt_scale <= 0:
+                    return 'must be a scalar greater than 0'
+                return None
+            return f'must be a scalar greater than 0'
+
+        def _validate_adapt_base(self, adapt_base):
+            if is_numeric_scalar(adapt_base):
+                if adapt_base <= 0:
+                    return 'must be a scalar greater than 0'
+                return None
+            return f'must be a scalar greater than 0'
+
+        def _validate_adapt_entropy_weighting(self, adapt_entropy_weighting):
+            if is_numeric_scalar(adapt_entropy_weighting):
+                if adapt_entropy_weighting <= 0:
+                    return 'must be a scalar greater than 0'
+                return None
+            return f'must be a scalar greater than 0'
+
+        def _validate_output(self, output):
+            if output not in softmax_modes:
+                return 'not one of {0}'.format(softmax_modes)
 
     @check_user_specified
     @beartype
     def __init__(self,
                  default_variable=None,
                  gain: Optional[ValidParamSpecType] = None,
+                 mask_threshold: Optional[ValidParamSpecType] = None,
+                 adapt_scale: Optional[ValidParamSpecType] = None,
+                 adapt_base: Optional[ValidParamSpecType] = None,
+                 adapt_entropy_weighting: Optional[ValidParamSpecType] = None,
                  output=None,
                  per_item=None,
-                 params: Optional[dict] = None,
+                 params: Optional[Mapping] = None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
 
@@ -3085,6 +3227,10 @@ class SoftMax(TransferFunction):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
+            mask_threshold=mask_threshold,
+            adapt_scale=adapt_scale,
+            adapt_base=adapt_base,
+            adapt_entropy_weighting=adapt_entropy_weighting,
             per_item=per_item,
             output=output,
             one_hot_function=one_hot_function,
@@ -3115,19 +3261,26 @@ class SoftMax(TransferFunction):
 
         return np.asarray(variable)
 
-    def apply_softmax(self, input_value, gain, output_type):
+    def apply_softmax(self, input_value, gain, mask_threshold, output_type):
+
         # Modulate input_value by gain
         v = gain * input_value
         # Shift by max to avoid extreme values:
         v = v - np.max(v)
         # Exponentiate
         v = np.exp(v)
+        # Threshold if specified:
+        if mask_threshold:
+            v = v * np.where(input_value > mask_threshold, v, 0)
         # Normalize (to sum to 1)
-        sm = v / np.sum(v, axis=0)
+        if not any(v):
+            # If v is all zeros, avoid divide by zero in normalize and return all zeros for softmax
+            sm = v
+        else:
+            sm = v / np.sum(v, axis=0)
 
         # Generate one-hot encoding based on selected output_type
-
-        if output_type in {MAX_VAL, MAX_INDICATOR}:
+        if output_type in {ARG_MAX, ARG_MAX_INDICATOR, MAX_VAL, MAX_INDICATOR}:
             return self.one_hot_function(sm)
         elif output_type in {PROB, PROB_INDICATOR}:
             return self.one_hot_function([input_value, sm])
@@ -3161,17 +3314,40 @@ class SoftMax(TransferFunction):
         # Assign the params and return the result
         output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
         gain = self._get_current_parameter_value(GAIN, context)
+        mask_threshold = self._get_current_parameter_value('mask_threshold', context)
+        if isinstance(gain, str) and gain == ADAPTIVE:
+            gain = self.adapt_gain(variable, context)
         per_item = self._get_current_parameter_value(PER_ITEM, context)
-        # Compute softmax and assign to sm
 
+        # Compute softmax and assign to sm
         if per_item and len(np.shape(variable)) > 1:
             output = []
             for item in variable:
-                output.append(self.apply_softmax(item, gain, output_type))
+                output.append(self.apply_softmax(item, gain, mask_threshold, output_type))
+            output = convert_all_elements_to_np_array(output)
         else:
-            output = self.apply_softmax(variable, gain, output_type)
+            output = self.apply_softmax(variable, gain, mask_threshold, output_type)
 
         return self.convert_output_type(output)
+
+    def adapt_gain(self, v, context)->float:
+        """Compute the softmax gain (inverse temperature) based on the entropy of the distribution of values.
+        Uses base, scale, and entropy_weighting parameters of SoftMax function to compute gain:
+
+        .. math:: gain = scale * (base + (entropy\\_weighting * log(entropy(logistic(v)))))
+        """
+        scale = self._get_current_parameter_value('adapt_scale', context)
+        base = self._get_current_parameter_value('adapt_base', context)
+        entropy_weighting = self._get_current_parameter_value('adapt_entropy_weighting', context)
+        entropy_weighting = np.log(len(v)) * entropy_weighting
+
+        v = np.squeeze(v)
+        gain = scale * (base +
+                        (entropy_weighting *
+                         np.log(
+                             -1 * np.sum((1 / (1 + np.exp(-1 * v))) * np.log(1 / (1 + np.exp(-1 * v)))))))
+        return gain
+
 
     @handle_external_context()
     def derivative(self, input=None, output=None, context=None):
@@ -3179,8 +3355,9 @@ class SoftMax(TransferFunction):
         derivative(output)
 
         .. technical note::
-           If MAX_VAL is specified for the `output <SoftMax.output>` parameter, and there is a tie for the maximum
-           value, the element with the lower index is used to compute the derivative (see IMPLEMENTATION NOTE below).
+           If ARG_MAX or MAX_VAL is specified for the `output <SoftMax.output>` parameter, and there is more than one
+           equivalent maximum value, the element with the lowest index is used to compute the derivative (see
+           IMPLEMENTATION NOTE below).
 
         Returns
         -------
@@ -3189,8 +3366,12 @@ class SoftMax(TransferFunction):
 
         if output is None:
             output = self.function(input, params={OUTPUT_TYPE: ALL}, context=context)
+        elif np.any(np.equal(0, output)) and context.source == ContextFlags.CONSTRUCTOR:
+            # Allow derivative to be computed when output is 0 during initialization
+            output = np.where(output, output==0, 1)
         else:
-            assert not np.any(np.equal(0, output))
+            assert not np.any(np.equal(0, output)), \
+                f"Derivative of SoftMax function for '{self.owner.name}' is not defined when output is 0."
 
         per_item = self._get_current_parameter_value(PER_ITEM, context)
         if not per_item:
@@ -3213,11 +3394,11 @@ class SoftMax(TransferFunction):
                     else:
                         d = 0
                     derivative[j, i] = sm[i] * (d - sm[j])
-            elif output_type in {MAX_VAL, MAX_INDICATOR}:
+            elif output_type in {ARG_MAX, ARG_MAX_INDICATOR, MAX_VAL, MAX_INDICATOR}:
                 # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
                 derivative = np.empty(size)
                 # Get the element of output returned as non-zero (max val) when output_type is not ALL
-                # IMPLEMENTATION NOTES:
+                # IMPLEMENTATION NOTE:
                 #    if there is a tie for max, this chooses the item in sm with the lowest index in sm:
                 index_of_max = int(np.where(sm == np.max(sm))[-1][0])
                 #    the following would randomly choose a value in case of a tie,
@@ -3295,7 +3476,7 @@ class SoftMax(TransferFunction):
         one_hot_out = arg_out
         one_hot_in = builder.alloca(one_hot_f.args[2].type.pointee)
 
-        if output_type in {MAX_VAL, MAX_INDICATOR}:
+        if output_type in {ARG_MAX, ARG_MAX_INDICATOR}:
             with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as (b, i):
                 self.__gen_llvm_exp_div(ctx=ctx, vi=arg_in, vo=one_hot_in,
                                         gain=gain, exp_sum=exp_sum, builder=b, index=i)
@@ -3317,7 +3498,7 @@ class SoftMax(TransferFunction):
 
             builder.call(one_hot_f, [one_hot_p, one_hot_s, one_hot_in, one_hot_out])
         else:
-            assert False, "Unsupported output in {}: {}".format(self, output_type)
+            assert False, "Unsupported output in {} for LLVM execution mode: {}".format(self, output_type)
 
         return builder
 
@@ -3346,8 +3527,9 @@ class SoftMax(TransferFunction):
 
     def __gen_llvm_apply_derivative(self, ctx, builder, params, state, all_out, arg_out, *, tags:frozenset):
 
-        assert self.output in {MAX_VAL, MAX_INDICATOR}, \
-            "Derivative of SoftMax is only implemented for MAX_VAL and MAX_INDICATOR! ({})".format(self.output)
+        assert self.output in {ARG_MAX, ARG_MAX_INDICATOR, MAX_VAL, MAX_INDICATOR}, (
+            "Derivative of SoftMax is only implemented for ARG_MAX and ARG_MAX_INDICATOR "
+            "in LLVM execution mode ({})".format(self.output))
 
         max_pos_ptr = builder.alloca(ctx.int32_ty)
         builder.store(max_pos_ptr.type.pointee(-1), max_pos_ptr)
@@ -3398,630 +3580,35 @@ class SoftMax(TransferFunction):
 
     def _gen_pytorch_fct(self, device, context=None):
         gain = self._get_pytorch_fct_param_value('gain', device, context)
-        return lambda x: (torch.softmax(gain * x, 0))
+        mask_threshold = self._get_pytorch_fct_param_value('mask_threshold', device, context)
+
+        if isinstance(gain, str) and gain == ADAPTIVE:
+            return lambda x: (torch.softmax(self._gen_pytorch_adapt_gain_fct(device, context)(x) * x, 0))
+
+        elif mask_threshold:
+            def pytorch_thresholded_softmax(_input: torch.Tensor) -> torch.Tensor:
+                # Mask elements of input below threshold
+                _mask = (torch.abs(_input) > mask_threshold)
+                # Subtract off the max value in the input to eliminate extreme values, exponentiate, and apply mask
+                masked_exp = _mask * torch.exp(gain * (_input - torch.max(_input, 0, keepdim=True)[0]))
+                if not any(masked_exp):
+                    return masked_exp
+                return masked_exp / torch.sum(masked_exp, 0, keepdim=True)
+            # Return the function
+            return pytorch_thresholded_softmax
 
-
-# **********************************************************************************************************************
-#                                                 LinearMatrix
-# **********************************************************************************************************************
-
-class LinearMatrix(TransferFunction):  # -------------------------------------------------------------------------------
-    """
-    LinearMatrix(          \
-         default_variable, \
-         matrix=None,      \
-         normalize=False,  \
-         params=None,      \
-         owner=None,       \
-         name=None,        \
-         prefs=None        \
-         )
-
-    .. _LinearMatrix:
-
-    Matrix transform of `variable <LinearMatrix.variable>`.
-
-    `function <LinearMatrix._function>` returns dot product of variable with matrix:
-
-    .. math::
-        variable \\bullet matrix
-
-    If **normalize** is True, the result is normalized by the product of the norms of the variable and matrix:
-
-    .. math::
-        \\frac{variable \\bullet matrix}{\\|variable\\| \\cdot \\|matrix\\|}
-
-    COMMENT:  [CONVERT TO FIGURE]
-        ----------------------------------------------------------------------------------------------------------
-        MATRIX FORMAT <shape: (3,5)>
-                                         INDICES:
-                                     Output elements:
-                              0       1       2       3       4
-                         0  [0,0]   [0,1]   [0,2]   [0,3]   [0,4]
-        Input elements:  1  [1,0]   [1,1]   [1,2]   [1,3]   [1,4]
-                         2  [2,0]   [2,1]   [2,2]   [2,3]   [2,4]
-
-        matrix.shape => (input/rows, output/cols)
-
-        ----------------------------------------------------------------------------------------------------------
-        ARRAY FORMAT
-                                                                            INDICES
-                                          [ [      Input 0 (row0)       ], [       Input 1 (row1)      ]... ]
-                                          [ [ out0,  out1,  out2,  out3 ], [ out0,  out1,  out2,  out3 ]... ]
-        matrix[input/rows, output/cols]:  [ [ row0,  row0,  row0,  row0 ], [ row1,  row1,  row1,  row1 ]... ]
-                                          [ [ col0,  col1,  col2,  col3 ], [ col0,  col1,  col2,  col3 ]... ]
-                                          [ [[0,0], [0,1], [0,2], [0,3] ], [[1,0], [1,1], [1,2], [1,3] ]... ]
-
-        ----------------------------------------------------------------------------------------------------------
-    COMMENT
-
-
-    Arguments
-    ---------
-
-    variable : list or 1d array : default class_defaults.variable
-        specifies a template for the value to be transformed; length must equal the number of rows of `matrix
-        <LinearMatrix.matrix>`.
-
-    matrix : number, list, 1d or 2d np.ndarray, np.matrix, function, or matrix keyword : default IDENTITY_MATRIX
-        specifies matrix used to transform `variable <LinearMatrix.variable>`
-        (see `matrix <LinearMatrix.matrix>` for specification details).
-
-        When LinearMatrix is the `function <Projection_Base._function>` of a projection:
-
-            - the matrix specification must be compatible with the variables of the `sender <Projection_Base.sender>`
-              and `receiver <Projection_Base.receiver>`
-
-            - a matrix keyword specification generates a matrix based on the sender and receiver shapes
-
-        When LinearMatrix is instantiated on its own, or as the function of a `Mechanism <Mechanism>` or `Port`:
-
-            - the matrix specification must be compatible with the function's own `variable <LinearMatrix.variable>`
-
-            - if matrix is not specified, a square identity matrix is generated based on the number of columns in
-              `variable <LinearMatrix.variable>`
-
-            - matrix keywords are not valid matrix specifications
-
-    normalize : bool : default False
-        specifies whether to normalize the result of `function <LinearCombination.function>` by dividing it by the
-        norm of `variable <LinearMatrix.variable>` x the norm of `matrix <LinearMatrix.matrix>`.
-
-    bounds : None
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
-        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
-
-    owner : Component
-        `component <Component>` to which to assign the Function.
-
-    name : str : default see `name <Function.name>`
-        specifies the name of the Function.
-
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
-
-    Attributes
-    ----------
-
-    variable : 1d array
-        contains value to be transformed.
-
-    matrix : 2d array
-        matrix used to transform `variable <LinearMatrix.variable>`.
-        Can be specified as any of the following:
-            * number - used as the filler value for all elements of the :keyword:`matrix` (call to np.fill);
-            * list of arrays, 2d array or np.matrix - assigned as the value of :keyword:`matrix`;
-            * matrix keyword - see `MatrixKeywords` for list of options.
-        Rows correspond to elements of the input array (outer index), and
-        columns correspond to elements of the output array (inner index).
-
-    normalize : bool
-        determines whether the result of `function <LinearCombination.function>` is normalized, by dividing it by the
-        norm of `variable <LinearMatrix.variable>` x the norm of `matrix <LinearMatrix.matrix>`.
-
-
-    owner : Component
-        `component <Component>` to which the Function has been assigned.
-
-    name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
-        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict : Function.classPreferences
-        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `PreferenceSet`
-        for details).
-    """
-
-    componentName = LINEAR_MATRIX_FUNCTION
-
-    DEFAULT_FILLER_VALUE = 0
-
-    _model_spec_generic_type_name = 'onnx::MatMul'
-
-    class Parameters(TransferFunction.Parameters):
-        """
-            Attributes
-            ----------
-
-                matrix
-                    see `matrix <LinearMatrix.matrix>`
-
-                    :default value: None
-                    :type:
-
-                normalize
-                    see `normalize <LinearMatrix.normalize>`
-
-                    :default value: False
-                    :type: bool
-        """
-        variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable', mdf_name='A')
-        matrix = Parameter(None, modulable=True, mdf_name='B')
-        normalize = Parameter(False)
-        bounds = None
-
-    # def is_matrix_spec(m):
-    #     if m is None:
-    #         return True
-    #     if m in MATRIX_KEYWORD_VALUES:
-    #         return True
-    #     if isinstance(m, (list, np.ndarray, np.matrix, types.FunctionType)):
-    #         return True
-    #     return False
-
-    @check_user_specified
-    @beartype
-    def __init__(self,
-                 default_variable=None,
-                 matrix=None,
-                 normalize=None,
-                 params=None,
-                 owner=None,
-                 prefs:  Optional[ValidPrefSet] = None):
-
-        # Note: this calls _validate_variable and _validate_params which are overridden below;
-        #       the latter implements the matrix if required
-        # super(LinearMatrix, self).__init__(default_variable=default_variable,
-        super().__init__(
-            default_variable=default_variable,
-            matrix=matrix,
-            normalize=normalize,
-            params=params,
-            owner=owner,
-            prefs=prefs,
-        )
-
-        self.parameters.matrix.set(
-            self.instantiate_matrix(self.parameters.matrix.get()),
-            skip_log=True,
-        )
-
-    # def _validate_variable(self, variable, context=None):
-    #     """Insure that variable passed to LinearMatrix is a max 2D array
-    #
-    #     :param variable: (max 2D array)
-    #     :param context:
-    #     :return:
-    #     """
-    #     variable = super()._validate_variable(variable, context)
-    #
-    #     # Check that variable <= 2D
-    #     try:
-    #         if not variable.ndim <= 2:
-    #             raise FunctionError("variable ({0}) for {1} must be a numpy.ndarray of dimension at most 2".format(variable, self.__class__.__name__))
-    #     except AttributeError:
-    #         raise FunctionError("PROGRAM ERROR: variable ({0}) for {1} should be a numpy.ndarray".
-    #                                 format(variable, self.__class__.__name__))
-    #
-    #     return variable
-
-
-    def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate params and assign to targets
-
-        This overrides the class method, to perform more detailed type checking (see explanation in class method).
-        Note: this method (or the class version) is called only if the parameter_validation attribute is `True`
-
-        :param request_set: (dict) - params to be validated
-        :param target_set: (dict) - destination of validated params
-        :param context: (str)
-        :return none:
-        """
-
-        super()._validate_params(request_set, target_set, context)
-
-        param_set = target_set
-        # proxy for checking whether the owner is a projection
-        if hasattr(self.owner, "receiver"):
-            sender = self.defaults.variable
-            sender_len = np.size(np.atleast_2d(self.defaults.variable), 1)
-
-            # FIX: RELABEL sender -> input AND receiver -> output
-            # FIX: THIS NEEDS TO BE CLEANED UP:
-            #      - AT LEAST CHANGE THE NAME FROM kwReceiver TO output_template OR SOMETHING LIKE THAT
-            #      - MAKE ARG?  OR ADD OTHER PARAMS:  E.G., FILLER?
-            #      - OR REFACTOR TO INCLUDE AS MATRIX SPEC:
-            #          IF MATRIX IS 1D, USE AS OUTPUT TEMPLATE
-            #          IF ALL ITS VALUES ARE 1'S => FULL CONNECTIVITY MATRIX
-            #          IF ALL ITS VALUES ARE 0'S => RANDOM CONNECTIVITY MATRIX
-            #          NOTE:  NO NEED FOR IDENTITY MATRIX, AS THAT WOULD BE SQUARE SO NO NEED FOR OUTPUT TEMPLATE
-            #      - DOCUMENT WHEN DONE
-            # MODIFIED 3/26/17 OLD:
-            # Check for and validate kwReceiver first, since it may be needed to validate and/or construct the matrix
-            # First try to get receiver from specification in params
-            if RECEIVER in param_set:
-                self.receiver = param_set[RECEIVER]
-                # Check that specification is a list of numbers or an array
-                if ((isinstance(self.receiver, list) and all(
-                        isinstance(elem, numbers.Number) for elem in self.receiver)) or
-                        isinstance(self.receiver, np.ndarray)):
-                    self.receiver = np.atleast_1d(self.receiver)
-                else:
-                    raise FunctionError("receiver param ({0}) for {1} must be a list of numbers or an np.array".
-                                        format(self.receiver, self.name))
-            # No receiver, so use sender as template (assuming square -- e.g., identity -- matrix)
-            else:
-                if (self.owner and self.owner.prefs.verbosePref) or self.prefs.verbosePref:
-                    print("Identity matrix requested but kwReceiver not specified; sender length ({0}) will be used".
-                          format(sender_len))
-                self.receiver = param_set[RECEIVER] = sender
-
-            receiver_len = len(self.receiver)
-
-            # Check rest of params
-            message = ""
-            for param_name, param_value in param_set.items():
-
-                # Receiver param already checked above
-                if param_name == RECEIVER:
-                    continue
-
-                # Not currently used here
-                if param_name in function_keywords:
-                    continue
-
-                if param_name == HAS_INITIALIZERS:
-                    continue
-
-                # Matrix specification param
-                elif param_name == MATRIX:
-
-                    # A number (to be used as a filler), so OK
-                    if isinstance(param_value, numbers.Number):
-                        continue
-
-                    # np.matrix or np.ndarray provided, so validate that it is numeric and check dimensions
-                    elif isinstance(param_value, (list, np.ndarray, np.matrix)):
-                        # get dimensions specified by:
-                        #   variable (sender): width/cols/outer index
-                        #   kwReceiver param: height/rows/inner index
-
-                        weight_matrix = np.atleast_2d(param_value)
-                        if 'U' in repr(weight_matrix.dtype):
-                            raise FunctionError("Non-numeric entry in MATRIX "
-                                                "specification ({}) for the {} "
-                                                "function of {}".format(param_value,
-                                                                        self.name,
-                                                                        self.owner_name))
-
-                        if weight_matrix.ndim != 2:
-                            raise FunctionError("The matrix provided for the {} function of {} must be 2d (it is {}d".
-                                                format(weight_matrix.ndim, self.name, self.owner_name))
-
-                        matrix_rows = weight_matrix.shape[0]
-                        matrix_cols = weight_matrix.shape[1]
-
-                        # Check that number of rows equals length of sender vector (variable)
-                        if matrix_rows != sender_len:
-                            raise FunctionError("The number of rows ({}) of the "
-                                                "matrix provided for {} function "
-                                                "of {} does not equal the length "
-                                                "({}) of the sender vector "
-                                                "(variable)".format(matrix_rows,
-                                                                    self.name,
-                                                                    self.owner_name,
-                                                                    sender_len))
-
-                    # Auto, full or random connectivity matrix requested (using keyword):
-                    # Note:  assume that these will be properly processed by caller
-                    #        (e.g., MappingProjection._instantiate_receiver)
-                    elif is_matrix_keyword(param_value):
-                        continue
-
-                    # Identity matrix requested (using keyword), so check send_len == receiver_len
-                    elif param_value in {IDENTITY_MATRIX, HOLLOW_MATRIX}:
-                        # Receiver length doesn't equal sender length
-                        if not (self.receiver.shape == sender.shape and self.receiver.size == sender.size):
-                            # if self.owner.prefs.verbosePref:
-                            #     print ("Identity matrix requested, but length of receiver ({0})"
-                            #            " does not match length of sender ({1});  sender length will be used".
-                            #            format(receiver_len, sender_len))
-                            # # Set receiver to sender
-                            # param_set[kwReceiver] = sender
-                            raise FunctionError("{} requested for the {} function of {}, "
-                                                "but length of receiver ({}) does not match length of sender ({})".
-                                                format(param_value, self.name, self.owner_name, receiver_len,
-                                                       sender_len))
-                        continue
-
-                    # list used to describe matrix, so convert to 2D array and pass to validation of matrix below
-                    elif isinstance(param_value, list):
-                        try:
-                            param_value = np.atleast_2d(param_value)
-                        except (ValueError, TypeError) as error_msg:
-                            raise FunctionError(
-                                "Error in list specification ({}) of matrix for the {} function of {}: {})".
-                                    # format(param_value, self.__class__.__name__, error_msg))
-                                    format(param_value, self.name, self.owner_name, error_msg))
-
-                    # string used to describe matrix, so convert to np.matrix and pass to validation of matrix below
-                    elif isinstance(param_value, str):
-                        try:
-                            param_value = np.atleast_2d(param_value)
-                        except (ValueError, TypeError) as error_msg:
-                            raise FunctionError("Error in string specification ({}) of the matrix "
-                                                "for the {} function of {}: {})".
-                                                # format(param_value, self.__class__.__name__, error_msg))
-                                                format(param_value, self.name, self.owner_name, error_msg))
-
-                    # function so:
-                    # - assume it uses random.rand()
-                    # - call with two args as place markers for cols and rows
-                    # -  validate that it returns an array or np.matrix
-                    elif isinstance(param_value, types.FunctionType):
-                        test = param_value(1, 1)
-                        if not isinstance(test, (np.ndarray, np.matrix)):
-                            raise FunctionError("A function is specified for the matrix of the {} function of {}: {}) "
-                                                "that returns a value ({}) that is neither a matrix nor an array".
-                                                # format(param_value, self.__class__.__name__, test))
-                                                format(self.name, self.owner_name, param_value, test))
-
-                    elif param_value is None:
-                        raise FunctionError("TEMP ERROR: param value is None.")
-
-                    else:
-                        raise FunctionError("Value of {} param ({}) for the {} function of {} "
-                                            "must be a matrix, a number (for filler), or a matrix keyword ({})".
-                                            format(param_name,
-                                                   param_value,
-                                                   self.name,
-                                                   self.owner_name,
-                                                   MATRIX_KEYWORD_NAMES))
-                else:
-                    continue
-            if message:
-                raise FunctionError(message)
-
-        # owner is a mechanism, state
-        # OR function was defined on its own (no owner)
         else:
-            if MATRIX in param_set:
-                param_value = param_set[MATRIX]
+            return lambda x: (torch.softmax(gain * x, 0))
 
-                # numeric value specified; verify that it is compatible with variable
-                if isinstance(param_value, (float, list, np.ndarray, np.matrix)):
-                    param_size = np.size(np.atleast_2d(param_value), 0)
-                    param_shape = np.shape(np.atleast_2d(param_value))
-                    variable_size = np.size(np.atleast_2d(self.defaults.variable),1)
-                    variable_shape = np.shape(np.atleast_2d(self.defaults.variable))
-                    if param_size != variable_size:
-                        raise FunctionError("Specification of matrix and/or default_variable for {} is not valid. The "
-                                            "shapes of variable {} and matrix {} are not compatible for multiplication".
-                                            format(self.name, variable_shape, param_shape))
-
-                # keyword matrix specified - not valid outside of a projection
-                elif is_matrix_keyword(param_value):
-                    raise FunctionError("{} is not a valid specification for the matrix parameter of {}. Keywords "
-                                        "may only be used to specify the matrix parameter of a Projection's "
-                                        "LinearMatrix function. When the LinearMatrix function is implemented in a "
-                                        "mechanism, such as {}, the correct matrix cannot be determined from a "
-                                        "keyword. Instead, the matrix must be fully specified as a float, list, "
-                                        "np.ndarray, or np.matrix".
-                                        format(param_value, self.name, self.owner.name))
-
-                # The only remaining valid option is matrix = None (sorted out in instantiate_attribs_before_fn)
-                elif param_value is not None:
-                    raise FunctionError("Value of the matrix param ({}) for the {} function of {} "
-                                        "must be a matrix, a number (for filler), or a matrix keyword ({})".
-                                        format(param_value,
-                                               self.name,
-                                               self.owner_name,
-                                               MATRIX_KEYWORD_NAMES))
-
-    def _instantiate_attributes_before_function(self, function=None, context=None):
-        # replicates setting of receiver in _validate_params
-        if isinstance(self.owner, Projection):
-            self.receiver = self.defaults.variable
-
-        matrix = self.parameters.matrix._get(context)
-
-        if matrix is None and not hasattr(self.owner, "receiver"):
-            variable_length = np.size(np.atleast_2d(self.defaults.variable), 1)
-            matrix = np.identity(variable_length)
-        self.parameters.matrix._set(self.instantiate_matrix(matrix), context)
-
-    def instantiate_matrix(self, specification, context=None):
-        """Implements matrix indicated by specification
-
-         Specification is derived from MATRIX param (passed to self.__init__ or self._function)
-
-         Specification (validated in _validate_params):
-            + single number (used to fill self.matrix)
-            + matrix keyword (see get_matrix)
-            + 2D list or np.ndarray of numbers
-
-        :return matrix: (2D list)
-        """
-        from psyneulink.core.components.projections.projection import Projection
-        if isinstance(self.owner, Projection):
-            # Matrix provided (and validated in _validate_params); convert to array
-            if isinstance(specification, np.matrix):
-                return np.array(specification)
-
-            sender = self.defaults.variable
-            sender_len = sender.shape[0]
-            try:
-                receiver = self.receiver
-            except:
-                raise FunctionError("Can't instantiate matrix specification ({}) for the {} function of {} "
-                                    "since its receiver has not been specified".
-                                    format(specification, self.name, self.owner_name))
-                # receiver = sender
-            receiver_len = receiver.shape[0]
-
-            matrix = get_matrix(specification, rows=sender_len, cols=receiver_len, context=context)
-
-            # This should never happen (should have been picked up in validate_param or above)
-            if matrix is None:
-                raise FunctionError("MATRIX param ({}) for the {} function of {} must be a matrix, a function "
-                                    "that returns one, a matrix specification keyword ({}), or a number (filler)".
-                                    format(specification, self.name, self.owner_name, MATRIX_KEYWORD_NAMES))
-            else:
-                return matrix
-        else:
-            return np.array(specification)
-
-
-    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags:frozenset):
-        # Restrict to 1d arrays
-        if self.defaults.variable.ndim != 1:
-            warnings.warn("Shape mismatch: {} (in {}) got 2D input: {}".format(
-                          self, self.owner, self.defaults.variable),
-                          pnlvm.PNLCompilerWarning)
-            arg_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        if self.defaults.value.ndim != 1:
-            warnings.warn("Shape mismatch: {} (in {}) has 2D output: {}".format(
-                          self, self.owner, self.defaults.value),
-                          pnlvm.PNLCompilerWarning)
-            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-
-        matrix = ctx.get_param_or_state_ptr(builder, self, MATRIX, param_struct_ptr=params)
-        normalize = ctx.get_param_or_state_ptr(builder, self, NORMALIZE, param_struct_ptr=params)
-
-        # Convert array pointer to pointer to the fist element
-        matrix = builder.gep(matrix, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        vec_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        vec_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-
-        input_length = ctx.int32_ty(arg_in.type.pointee.count)
-        output_length = ctx.int32_ty(arg_out.type.pointee.count)
-
-        # if normalize:
-        #     if vec_in is not zeros:
-        #     # FIX: NORMALIZE vec_in and matrix here
-        #         vec_in_sum = fsum(builder, vec_in)
-        #         vec_in = fdiv(builder, vec_in, vec_in_sum)
-        #     if matrix is not zeros:
-        #     # FIX: NORMALIZE matrix here
-
-        builtin = ctx.import_llvm_function("__pnl_builtin_vxm")
-        builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
-        return builder
-
-    def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
-        """
-
-        Arguments
-        ---------
-        variable : list or 1d array
-            array to be transformed;  length must equal the number of rows of `matrix <LinearMatrix.matrix>`.
-
-        params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
-            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-            arguments of the constructor.
-
-        Returns
-        ---------
-
-        dot product of variable and matrix : 1d array
-            length of the array returned equals the number of columns of `matrix <LinearMatrix.matrix>`.
-
-        """
-        vector = np.array(variable)
-        matrix = self._get_current_parameter_value(MATRIX, context)
-        normalize = self._get_current_parameter_value(NORMALIZE, context)
-        if normalize:
-            if np.any(vector):
-                vector = vector / np.linalg.norm(vector)
-            if np.any(matrix):
-                # FIX: the axis along which norming is carried out should probably be a parameter
-                #      Also need to deal with column- (or row-) wise zeros which cause div by zero
-                #      Replace columns (if norming axis 0) or rows (if norming axis 1) of zeros with 1's
-                # matrix = matrix / np.linalg.norm(matrix,axis=-1,keepdims=True)
-                matrix = matrix / np.linalg.norm(matrix,axis=0,keepdims=True)
-
-        result = np.dot(vector, matrix)
-        return self.convert_output_type(result)
-
-    @staticmethod
-    def keyword(obj, keyword):
-
-        from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-        rows = None
-        cols = None
-        # use of variable attribute here should be ok because it's using it as a format/type
-        if isinstance(obj, MappingProjection):
-            if isinstance(obj.sender.defaults.value, numbers.Number):
-                rows = 1
-            else:
-                rows = len(obj.sender.defaults.value)
-            if isinstance(obj.receiver.defaults.variable, numbers.Number):
-                cols = 1
-            else:
-                cols = obj.receiver.socket_width
-        matrix = get_matrix(keyword, rows, cols)
-
-        if matrix is None:
-            raise FunctionError("Unrecognized keyword ({}) specified for the {} function of {}".
-                                format(keyword, obj.name, obj.owner_name))
-        else:
-            return matrix
-
-    def param_function(owner, function):
-        sender_len = len(owner.sender.defaults.value)
-        receiver_len = len(owner.receiver.defaults.variable)
-        return function(sender_len, receiver_len)
-
-    def _is_identity(self, context=None, defaults=False):
-        if defaults:
-            matrix = self.defaults.matrix
-        else:
-            matrix = self.parameters.matrix._get(context)
-
-        # if matrix is not an np array with at least one dimension,
-        # this isn't an identity matrix
-        try:
-            size = matrix.shape[0]
-        except (AttributeError, IndexError):
-            return False
-
-        # check if the matrix is the same as the identity matrix
-        # note that we can use the first dimension size to create the identity matrix
-        # because if the matrix is not square, this comparison will fail anyway
-        identity_matrix = np.identity(size)
-        # numpy has deprecated == comparisons of arrays
-        try:
-            return np.array_equal(matrix, identity_matrix)
-        except TypeError:
-            return matrix == identity_matrix
-
-# def is_matrix_spec(m):
-#     if m is None:
-#         return True
-#     if isinstance(m, (list, np.ndarray, np.matrix, types.FunctionType)):
-#         return True
-#     if m in MATRIX_KEYWORD_VALUES:
-#         return True
-#     return False
+    def _gen_pytorch_adapt_gain_fct(self, device, context=None):
+        scale = self._get_pytorch_fct_param_value('adapt_scale', device, context)
+        base = self._get_pytorch_fct_param_value('adapt_base', device, context)
+        entropy_weighting = self._get_pytorch_fct_param_value('adapt_entropy_weighting', device, context)
+        # v = torch.squeeze(v)
+        return lambda x : scale * (base +
+                                   (entropy_weighting * len(x) *
+                                    torch.log(-1 * torch.sum((1 / (1 + torch.exp(-1 * x)))
+                                                             * torch.log(1 / (1 + torch.exp(-1 * x)))))))
 
 
 # **********************************************************************************************************************
@@ -4131,7 +3718,7 @@ class TransferWithCosts(TransferFunction):
     """
     TransferWithCosts(                      \
         default_variable=None,              \
-        size=None,                          \
+        input_shapes=None,                          \
         transfer_fct=Line                   \
         enabled_cost_functions=None,        \
         intensity_fct=Exponential           \
@@ -4205,11 +3792,11 @@ class TransferWithCosts(TransferFunction):
         <TransferWithCosts.transfer_fct>`
         on which costs are calculated.
 
-    size : int : None
+    input_shapes : int : None
         specifies length of the array for `variable <TransferWithCosts.variable>` used by `function
         <TransferWithCosts._function>` and on which costs are calculated;  can be used in place of
         default_value, in which case zeros are assigned as the value(s). An error is generated if both are
-        specified but size != len(default_value).
+        specified but input_shapes != len(default_value).
 
     transfer_fct : TransferFunction : Linear
         specifies the primary function, used to generate the value it returns.
@@ -4252,7 +3839,7 @@ class TransferWithCosts(TransferFunction):
         value used by `function <TransferWithCosts._function>`, and on which `intensity <TransferWithCosts.intensity>`
         and associated costs are calculated.
 
-    size : int
+    input_shapes : int
         length of array for `variable <TransferWithCosts.variable>`.
 
     intensity : 1 array
@@ -4607,7 +4194,7 @@ class TransferWithCosts(TransferFunction):
     @beartype
     def __init__(self,
                  default_variable=None,
-                 size=None,
+                 input_shapes=None,
                  transfer_fct: Optional[Callable] = None,
                  enabled_cost_functions: Optional[Union[CostFunctions, list]] = None,
                  intensity_cost_fct: Optional[Callable] = None,
@@ -4618,11 +4205,11 @@ class TransferWithCosts(TransferFunction):
                  owner=None,
                  prefs: Optional[ValidPrefSet] = None):
 
-        # if size:
+        # if input_shapes:
         #     if default_variable is None:
-        #         default_variable = np.zeros(size)
-        #     elif size != len(default_variable):
-        #         raise FunctionError(f"Both {repr(DEFAULT_VARIABLE)} ({default_variable}) and {repr(SIZE)} ({size}) "
+        #         default_variable = np.zeros(input_shapes)
+        #     elif input_shapes != len(default_variable):
+        #         raise FunctionError(f"Both {repr(DEFAULT_VARIABLE)} ({default_variable}) and {repr(SIZE)} ({input_shapes}) "
         #                             f"are specified for {self.name} but are {SIZE}!=len({DEFAULT_VARIABLE}).")
 
         super().__init__(
@@ -4684,32 +4271,9 @@ class TransferWithCosts(TransferFunction):
                 raise FunctionError(f"{fct} is not a valid cost function for {fct_name}.")
 
         self.intensity_cost_fct = instantiate_fct(INTENSITY_COST_FUNCTION, self.intensity_cost_fct)
-        # Initialize default_value for TransferWithCosts' modulation params from intensity_cost_fct's values
-        self.parameters.intensity_cost_fct_mult_param.default_value = \
-            self.parameters.intensity_cost_fct_mult_param.get()
-        self.parameters.intensity_cost_fct_add_param.default_value = \
-            self.parameters.intensity_cost_fct_add_param.get()
-
         self.adjustment_cost_fct = instantiate_fct(ADJUSTMENT_COST_FUNCTION, self.adjustment_cost_fct)
-        # Initialize default_value for TransferWithCosts' modulation params from adjustment_cost_fct's values
-        self.parameters.adjustment_cost_fct_mult_param.default_value = \
-            self.parameters.adjustment_cost_fct_mult_param.get()
-        self.parameters.adjustment_cost_fct_add_param.default_value = \
-            self.parameters.adjustment_cost_fct_add_param.get()
-
         self.duration_cost_fct = instantiate_fct(DURATION_COST_FUNCTION, self.duration_cost_fct)
-        # Initialize default_value for TransferWithCosts' modulation params from duration_cost_fct's values
-        self.parameters.duration_cost_fct_mult_param.default_value = \
-            self.parameters.duration_cost_fct_add_param.get()
-        self.parameters.duration_cost_fct_add_param.default_value = \
-            self.parameters.duration_cost_fct_add_param.get()
-
         self.combine_costs_fct = instantiate_fct(COMBINE_COSTS_FUNCTION, self.combine_costs_fct)
-        # Initialize default_value for TransferWithCosts' modulation params from combined_costs_fct's values
-        self.parameters.combine_costs_fct_mult_param.default_value = \
-            self.parameters.combine_costs_fct_mult_param.get()
-        self.parameters.combine_costs_fct_add_param.default_value = \
-            self.parameters.combine_costs_fct_add_param.get()
 
         # Initialize intensity attributes
         if self.enabled_cost_functions:
@@ -4800,7 +4364,7 @@ class TransferWithCosts(TransferFunction):
             self.parameters.combined_costs._set(combined_costs, context)
 
         # Store current intensity
-        self.parameters.intensity._set(intensity, context)
+        self.parameters.intensity._set(copy_parameter_value(intensity), context)
 
         return intensity
 

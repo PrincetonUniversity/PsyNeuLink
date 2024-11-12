@@ -13,11 +13,6 @@ on:
       - 'v**'
   pull_request:
 
-env:
-  SELF_HOSTED_MACOS: ${{ secrets.SELF_HOSTED_MACOS }}
-  SELF_HOSTED_LINUX: ${{ secrets.SELF_HOSTED_LINUX }}
-  SELF_HOSTED_WINDOWS: ${{ secrets.SELF_HOSTED_WINDOWS }}
-
 # run only the latest instance of this workflow job for the current branch/PR
 # cancel older runs
 # fall back to run id if not available (run id is unique -> no cancellations)
@@ -26,31 +21,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # A job to select self-hosted runner if requested by an env var
-  select-runner:
-    runs-on: ubuntu-latest
-
-    outputs:
-      self_hosted_macos: ${{ steps.is_self_hosted.outputs.macos && 'macos' || '' }}
-      self_hosted_linux: ${{ steps.is_self_hosted.outputs.linux && 'linux' || '' }}
-      self_hosted_windows: ${{ steps.is_self_hosted.outputs.windows && 'windows' || '' }}
-
-    steps:
-    - name: Add macos
-      id: is_self_hosted
-      run: |
-        echo "macos=$SELF_HOSTED_MACOS" | tee -a $GITHUB_OUTPUT
-        echo "linux=$SELF_HOSTED_LINUX" | tee -a $GITHUB_OUTPUT
-        echo "windows=$SELF_HOSTED_WINDOWS" | tee -a $GITHUB_OUTPUT
-
-  # the main build job
+  # The main test job
   build:
-    needs: select-runner
-    runs-on: ${{ (contains(needs.select-runner.outputs.*, matrix.os) && fromJSON(format('[ "self-hosted","{0}", "X64" ]', matrix.os))) || format('{0}-latest', matrix.os) }}
+    runs-on: ${{ (contains(vars.SELF_HOSTED, format(';{0}_{1}_{2}_{3};', matrix.os, matrix.python-version, matrix.python-architecture, matrix.extra-args))
+                && fromJSON(format('[ "self-hosted","{0}", "X64", "enabled" ]', matrix.os == 'ubuntu' && 'Linux' || matrix.os)))
+                || format('{0}-latest', matrix.os) }}
+    env:
+      # Keep DESCRIPTION in sync with the above
+      DESCRIPTION: ${{ format(';{0}_{1}_{2}_{3};', matrix.os, matrix.python-version, matrix.python-architecture, matrix.extra-args) }}
+      SELF_HOSTED: ${{ vars.SELF_HOSTED }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.7', '3.11']
+        python-version: ['3.7', '3.11', '3.12']
         python-architecture: ['x64']
         extra-args: ['']
         os: [ubuntu, macos, windows]
@@ -95,8 +78,8 @@ jobs:
 
           # add python 3.8 build on macos since 3.7 is broken
           # https://github.com/actions/virtual-environments/issues/4230
+          # use default python-architecture
           - python-version: '3.8'
-            python-architecture: 'x64'
             os: macos
 
         exclude:
@@ -149,8 +132,9 @@ jobs:
         key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt') }}-${{ github.sha }}
         restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt') }}
 
-    - name: Install local, editable PNL package
+    - name: Install PNL package
       uses: ./.github/actions/install-pnl
+      id: install
       with:
         features: 'dev'
 
@@ -202,15 +186,10 @@ jobs:
           echo "::warning::Not uploading to coveralls.io, token not available!"
         fi
 
-    - name: Build dist
-      run: |
-        pip install setuptools wheel
-        python setup.py sdist bdist_wheel
-
     - name: Upload dist packages
       uses: actions/upload-artifact@v4
       if: matrix.version-restrict == ''
       with:
         name: dist-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
-        path: dist/
+        path: ${{ steps.install.outputs.wheel }} ${{ steps.install.outputs.sdist }}
         retention-days: 2

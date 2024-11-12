@@ -135,7 +135,7 @@ The following arguments of the Composition's constructor can be used to add Comp
         values as the **projections** argument of that method.  In general, this is not neded -- default Projections
         are created for Pathways and/or Nodes added to the Composition using the methods described above; however
         it can be useful for custom configurations, including the implementation of specific Projection `matrices
-         <MappingProjection.matrix>`.
+        <MappingProjection.matrix>`.
 
    .. _Composition_Controller_Arg:
 
@@ -1000,7 +1000,7 @@ COMMENT:
 Add explanation of how learning_rate applies to Unsupervised forms of learning
 COMMENT
 The rate at which learning occurs in a `learning pathway <Composition_Learning_Pathway>` is determined by the
-`learning_rate <LearningMechanism_Learning_Rate> Parameter of the `LearningMechanism(s) <LearningMechanism>` in that
+`learning_rate <LearningMechanism_Learning_Rate>` Parameter of the `LearningMechanism(s) <LearningMechanism>` in that
 Pathway.  If it is not specified, then the `default value <Parameter_Defaults>` for the LearningMechanism's `function
 <LearningMechanism.function>` is used, which is determined by the kind of learning in that Pathway. However, the
 learning_rate can be specified in several other ways, both at construction and/or execution.  At construction, it can
@@ -1098,19 +1098,19 @@ that execution only.
 .. table::
    :widths: 5 34 33 33
 
-   +--------------------+------------------------------------+--------------------------------------------------------+
-   |                    |**Composition**                     |**AutodiffComposition**                                 |
-   +--------------------+------------------------------------+--------------------------+-----------------------------+
-   |                    |*Python*                            |`AutodiffComposition_LLVM`|`AutodiffComposition_PyTorch`|
-   |                    |                                    |(*Direct Compilation*)    |                             |
-   +====================+====================================+==========================+=============================+
-   |execution_mode=     |`ExecutionMode.Python`              |`ExecutionMode.LLVMRun`   |`ExecutionMode.PyTorch       |
-   +--------------------+------------------------------------+--------------------------+-----------------------------+
-   |`learn()            |                                    |                          |                             |
-   |<Composition.learn>`|Python interpreted                  |LLVM compiled             |PyTorch compiled             |
-   |                    |                                    |                          |                             |
-   |`run()              |                                    |                          |                             |
-   |<Composition.run>`  |Python interpreted                  |LLVM compiled             |Python interpreted           |
+   +--------------------+------------------------------------+---------------------------------------------------------+
+   |                    |**Composition**                     |**AutodiffComposition**                                  |
+   +--------------------+------------------------------------+--------------------------+------------------------------+
+   |                    |*Python*                            |`AutodiffComposition_LLVM`|`AutodiffComposition_PyTorch` |
+   |                    |                                    |(*Direct Compilation*)    |                              |
+   +====================+====================================+==========================+==============================+
+   |execution_mode=     |`ExecutionMode.Python`              |`ExecutionMode.LLVMRun`   |`ExecutionMode.PyTorch`       |
+   +--------------------+------------------------------------+--------------------------+------------------------------+
+   |`learn()            |                                    |                          |                              |
+   |<Composition.learn>`|Python interpreted                  |LLVM compiled             |PyTorch compiled              |
+   |                    |                                    |                          |                              |
+   |`run()              |                                    |                          |                              |
+   |<Composition.run>`  |Python interpreted                  |LLVM compiled             |Python interpreted            |
    +--------------------+------------------------------------+--------------------------+------------------------------+
    |*Speed:*            |slow                                |fastest                   |fast                          |
    +--------------------+------------------------------------+--------------------------+------------------------------+
@@ -1383,11 +1383,11 @@ COMMENT:
     >>> B = ProcessingMechanism(name='B', default_variable=[0,0,0])
     >>> inner_nested_comp = Composition(nodes=[A, B])
 
-    >>> C = ComparatorMechanism(name='C', size=3)
+    >>> C = ComparatorMechanism(name='C', input_shapes=3)
     >>> nested_comp_1 = Composition(nodes=[C, inner_nested_comp])
 
-    >>> D = ComparatorMechanism(name='D', size=3)
-    >>> E = ComparatorMechanism(name='E', size=3)
+    >>> D = ComparatorMechanism(name='D', input_shapes=3)
+    >>> E = ComparatorMechanism(name='E', input_shapes=3)
     >>> nested_comp_2 = Composition([D, E])
 
     >>> F = ComparatorMechanism(name='F')
@@ -2053,9 +2053,6 @@ in order of their power, are:
     * `ExecutionMode.PTXrun` -- compile multiple `TRIAL <TimeScale.TRIAL>`\\s  for execution on GPU
       (see `below <Composition_Compilation_PTX>` for additional details).
 
-    * `ExecutionMode.PTXExec` -- compile individual `TRIAL <TimeScale.TRIAL>`\\s  for execution on GPU
-      (see `below <Composition_Compilation_PTX>` for additional details).
-
 .. _Composition_Compilation_PyTorch:
 
 *PyTorch support.*  When using an `AutodiffComposition`, `ExecutionMode.PyTorch` can be used to execute its
@@ -2067,15 +2064,11 @@ will execute using the Python interpreter.  See `Composition_Learning_AutodiffCo
 *GPU support.*  In addition to compilation for CPUs, support is being developed for `CUDA
 <https://developer.nvidia.com/about-cuda>`_ capable `Invidia GPUs
 <https://en.wikipedia.org/wiki/List_of_Nvidia_graphics_processing_units>`_.  This can be invoked by
-specifying either `ExecutionMode.PTXRun` or `ExecutionMode.PTXExec` oin the **execution_mode** argument
-of a `Composition execution method <Composition_Execution_Methods>`, which are equivalent to the LLVM
-counterparts but run in a single thread of a CUDA capable GPU. This requires that a working `pycuda package
-<https://documen.tician.de/pycuda/>`_ is `installed <https://wiki.tiker.net/PyCuda/Installation>`_, and that
-CUDA execution is explicitly enabled by setting the ``PNL_LLVM_DEBUG`` environment variable to ``cuda``.  At present
-compilation using these modes runs on a single GPU thread, and therefore does not produce any performance benefits
-over running in compiled mode on a CPU;  (see `this <https://github.com/PrincetonUniversity/PsyNeuLink/projects/1>`_
-for progress extending support of parallization in compiled modes).
-
+specifying `ExecutionMode.PTXRun` in the **execution_mode** argument of a `Composition execution
+method <Composition_Execution_Methods>`, which are equivalent to the LLVM counterparts but run in a single
+thread of a CUDA capable GPU. This requires that a working `pycuda package <https://documen.tician.de/pycuda/>`_ is
+`installed <https://wiki.tiker.net/PyCuda/Installation>`_, and that CUDA execution is not explicitly disabled by
+setting the ``PNL_LLVM_DEBUG`` environment variable to ``nocuda``.
 
 .. _Composition_Execution_Results_and_Reporting:
 
@@ -2882,9 +2875,11 @@ import types
 import numbers
 import itertools
 import logging
+import pathlib
 import sys
 import typing
 import warnings
+import weakref
 from copy import deepcopy, copy
 from inspect import isgenerator, isgeneratorfunction
 
@@ -2896,12 +2891,12 @@ import toposort
 from PIL import Image
 from beartype import beartype
 
-from psyneulink._typing import Optional, Union, Literal, Type, Callable, List, Set
+from psyneulink._typing import Callable, Literal, List, Mapping, Optional, Set, Type, Union
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentError, ComponentsMeta
 from psyneulink.core.components.functions.function import is_function_type, Function, RandomMatrix
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import \
+from psyneulink.core.components.functions.nonstateful.transformfunctions import \
         LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.nonstateful.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
@@ -2942,7 +2937,7 @@ from psyneulink.core.globals.keywords import \
     AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, CROSS_ENTROPY, \
     DEFAULT, DEFAULT_VARIABLE, DICT, FEEDBACK, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, \
     INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
-    LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
+    LEARNABLE, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     LEARNING_SIGNAL, Loss, \
     MATRIX, MAYBE, MODEL_SPEC_ID_METADATA, MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, NODES, \
     OBJECTIVE_MECHANISM, ONLINE, ONLY, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
@@ -2951,12 +2946,12 @@ from psyneulink.core.globals.keywords import \
     SAMPLE, SENDER, SHADOW_INPUTS, SOFT_CLAMP, SUM, \
     TARGET, TARGET_MECHANISM, TEXT, VARIABLE, WEIGHT, OWNER_MECH
 from psyneulink.core.globals.log import CompositionLog, LogCondition
-from psyneulink.core.globals.parameters import Parameter, ParametersBase, check_user_specified
+from psyneulink.core.globals.parameters import Parameter, ParametersBase, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, _assign_prefs
 from psyneulink.core.globals.registry import register_category
-from psyneulink.core.globals.utilities import ContentAddressableList, call_with_pruned_args, convert_to_list, \
-    nesting_depth, convert_to_np_array, is_numeric, is_matrix, is_matrix_keyword, parse_valid_identifier
+from psyneulink.core.globals.utilities import ContentAddressableList, call_with_pruned_args, convert_all_elements_to_np_array, convert_to_list, \
+    nesting_depth, convert_to_np_array, is_numeric, is_matrix, is_matrix_keyword, parse_valid_identifier, extended_array_equal
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, Condition, Never, AtNCalls, BeforeNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import Time, TimeScale
@@ -3503,6 +3498,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         include_probes_in_output=False     \
         disable_learning=False,            \
         learning_rate=None,                \
+        minibatch_size=1,                  \
+        optimizations_per_minibatch=1,     \
         controller=None,                   \
         enable_controller=None,            \
         controller_mode=AFTER,             \
@@ -3569,6 +3566,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         specifies the learning_rate to be used by `LearningMechanisms <LearningMechanism>` in the Composition
         that do not have their own `learning_rate <LearningMechanism.learning_rate>` otherwise specified
         (see `Composition_Learning_Rate` for additional details).
+
+    minibatch_size : int : default 1
+        specifies the default for the Composition for the number of distinct inputs from the training set used to
+        compute the `error_signal <LearningMechanism.error_signal>` in one step of learning; it can be overridden by
+        specifying the **minibatch_size** argument in the `learn <Composition.learn>` method (see `minibatch_size
+        <Composition.minibatch_size>` for additional details.
+
+    optimizations_per_minibatch : int : default 1
+        specifies the default for the Composition for the number of repetitions of each stimulus in the training set
+        is used to compute the `error_signal <LearningMechanism.error_signal>` for a given `minibatch
+        <LearningScale.MINIBATCH>`; it can be overridden by specifying the **minibatch_size** argument in the `learn
+        <Composition.learn>` method (see `optimizations_per_minibatch <Composition.optimizations_per_minibatch>` for
+        additional details.
 
     controller : `OptimizationControlMechanism` : default None
         specifies the `OptimizationControlMechanism` to use as the `Composition's controller
@@ -3841,6 +3851,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <LearningMechanism.learning_rate>` Parameter of a LearningMechanism (see `Composition_Learning_Rate` for
         additional details).
 
+    minibatch_size : int
+        determines the number of input stimuli from the training set used to compute the `error_signal
+        <LearningMechanism.error_signal>` in one gradient step of learning if this is not specified in the call to
+        `learn <Composition.learn>` (see `minibatch <LearningScale.MINIBATCH>` for additional details).
+
+    optimizations_per_minibatch : int
+        determines the number of repetitions of each stimulus in the training set used to compute an `error_signal
+        <LearningMechanism.error_signal>` for single gradient step in learning if this is not specified in the call
+        to `learn <Composition.learn>` (see `minibatch <LearningScale.OPTIMIZATION_STEP>` for additional details).
+
     learning_components : list[list]
         a list of the learning-related components in the Composition, all or many of which may have been
         created automatically in a call to one of its `add_<*learning_type*>_pathway' methods (see
@@ -3918,8 +3938,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     _model_spec_generic_type_name = 'graph'
 
-
-    class Parameters(ParametersBase):
+    class Parameters(Composition_Base.Parameters):
         """
             Attributes
             ----------
@@ -3935,6 +3954,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     :default value: []
                     :type: ``list``
+
+                minibatch_size
+                    see `minibatch_size <Composition.minibatch_size>`
+
+                    :default value: 1
+                    :type: ``int``
+
+                optimizations_per_minibatch
+                    see `optimizations_per_minibatch <Composition.optimizations_per_minibatch>`
+
+                    :default value: 1
+                    :type: ``int``
 
                 results
                     see `results <Composition.results>`
@@ -3954,12 +3985,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     :default value: []
                     :type: ``list``
         """
+        minibatch_size = Parameter(1, modulable=True, pnl_internal=True)
+        optimizations_per_minibatch = Parameter(1, modulable=True, pnl_internal=True)
         results = Parameter([], loggable=False, pnl_internal=True)
         learning_results = Parameter([], loggable=False, pnl_internal=True)
         simulation_results = Parameter([], loggable=False, pnl_internal=True)
         retain_old_simulation_data = Parameter(False, stateful=False, loggable=False, pnl_internal=True)
         input_specification = Parameter(None, stateful=False, loggable=False, pnl_internal=True)
+        value = Parameter(NotImplemented, read_only=True)  # replaces deletion in constructor below
 
+        def _validate_minibatch_size(self, minibatch_size):
+            if minibatch_size < 1:
+                raise CompositionError(f"`minibatch_size` ({minibatch_size}) must an int greater than or equal to 1.")
+
+        def _validate_optimizations_per_minibatch(self, optimizations_per_minibatch):
+            if optimizations_per_minibatch < 1:
+                raise CompositionError(f"`optimizations_per_minibatch` ({optimizations_per_minibatch}) "
+                                       f"must an int greater than or equal to 1.")
 
     class _CompilationData(ParametersBase):
         execution = None
@@ -3974,6 +4016,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             include_probes_in_output: bool = False,
             disable_learning: bool = False,
             learning_rate:Optional[Union[float, int]] = None,
+            minibatch_size:int = 1,
+            optimizations_per_minibatch:int = 1,
             controller: ControlMechanism = None,
             enable_controller=None,
             controller_mode: Literal['before', 'after'] = 'after',
@@ -4031,6 +4075,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._executed_from_command_line = False
 
         self.projections = ContentAddressableList(component_type=Component)
+        self.compositions = weakref.WeakSet()
 
         self._scheduler = None
         self._partially_added_nodes = []
@@ -4058,6 +4103,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._initialize_parameters(
             **param_defaults,
+            minibatch_size=minibatch_size,
+            optimizations_per_minibatch=optimizations_per_minibatch,
             retain_old_simulation_data=retain_old_simulation_data,
             context=context
         )
@@ -4096,7 +4143,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.add_controller(controller)
         self.controller_mode = controller_mode
         self.controller_time_scale = controller_time_scale
-        self.controller_condition = controller_condition
+        self.controller_condition = copy(controller_condition)
         self.controller_condition.owner = self.controller
         # This is set at runtime and may be used by the controller to assign its
         #     `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` attribute.
@@ -4110,16 +4157,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # should be used instead - in the long run, we should look into possibly
         # populating both values and results, as it would be more consistent with
         # the behavior of components
-        del self.parameters.value
+        # del self.parameters.value
 
         # Call with context = COMPOSITION to avoid calling _check_initialization_status again
         self._analyze_graph(context=context)
 
-        show_graph_attributes = show_graph_attributes or {}
-        self._show_graph = ShowGraph(self, **show_graph_attributes)
+        # ShowGraph
+        self.assign_ShowGraph(show_graph_attributes)
 
         if termination_processing is not None:
             self.termination_processing = termination_processing
+
+    def assign_ShowGraph(self, show_graph_attributes):
+        """Helper function to allow override of the ShowGraph class in subclasses (e.g., AutodiffComposition)"""
+        show_graph_attributes = show_graph_attributes or {}
+        self._show_graph = ShowGraph(self, **show_graph_attributes)
 
     @property
     def graph_processing(self):
@@ -4296,6 +4348,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         except AttributeError:
             pass
 
+        node._add_to_composition(self)
         node._check_for_composition(context=context)
 
         # Add node to Composition's graph
@@ -4415,6 +4468,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         del self.nodes[node]
         self.node_ordering.remove(node)
+        node._remove_from_composition(self)
 
         for p in self.pathways:
             try:
@@ -4748,15 +4802,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError('Node missing from {0}.nodes_to_roles: {1}'.format(self, e))
 
     def get_nested_nodes_by_roles_at_any_level(self, comp, include_roles, exclude_roles=None)->list or None:
-        """Return all Nodes from nested Compositions that have *include_roles* but not *exclude_roles at all levels*.
-        Returns Nodes that have or don't have the specified roles at *any* level of nesting,
-            irrespective of their status at other levels of nesting.
+        """Return all Nodes from comp or any nested within it that have *include_roles* but not *exclude_roles*.
+        Returns Nodes that have or don't have the specified roles in the Composition specified by **comp**
+        or any Composition nested within it, irrespective of their status at other levels of nesting.
         To get nodes that are either INPUT or OUTPUT Nodes at *all* levels of nesting, use either
             get_nested_input_nodes_at_all_levels() or get_nested_output_nodes_at_all_levels()
         Note:  do this recursively, checking roles on the "way down," as a Node may have a role in a
                deeply nested Composition, but that Composition itself may not have the same role in the Composition
                within which *it* is nested (e.g., a Node might be an INPUT Node of a nested Composition, but that
                nested Composition may not be an INPUT Node of the Composition in which it is nested).
+        Note: exclude_roles takes precedence, so that if a NodeRole is listed in both,
+              nodes with that role will be *excluded*.
         """
         nested_nodes = []
         include_roles = [] if include_roles is None else convert_to_list(include_roles)
@@ -4774,7 +4830,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     nested_nodes.append(node)
         return nested_nodes if any(nested_nodes) else None
 
-    def get_nested_nodes_input_nodes_at_levels(self)->list or None:
+    def get_nested_input_nodes_at_all_levels(self)->list or None:
         """Return all Nodes from nested Compositions that receive input directly from input to outermost Composition."""
         input_nodes = self.get_nested_nodes_by_roles_at_any_level(self, include_roles=NodeRole.INPUT)
         return [input_node for input_node in input_nodes
@@ -4783,7 +4839,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            for input_port in input_node.input_ports for proj in input_port.path_afferents
                            if isinstance(proj.sender.owner, CompositionInterfaceMechanism))] or None
 
-    def get_nested_nodes_output_nodes_at_levels(self)->list or None:
+    def get_nested_output_nodes_at_all_levels(self)->list or None:
         """Return all Nodes from nested Compositions that send output directly to outermost Composition."""
         output_nodes = self.get_nested_nodes_by_roles_at_any_level(self, include_roles=NodeRole.OUTPUT)
         return [output_node for output_node in output_nodes
@@ -5235,7 +5291,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         ORIGIN:
           - all Nodes that are in first consideration_set (i.e., self.scheduler.consideration_queue[0]).
-          .. _note::
+          .. note::
              - this takes account of any Projections designated as feedback by graph_processing
                (i.e., self.graph.comp_to_vertex[efferent].feedback == EdgeType.FEEDBACK)
              - these will all be assigined afferent Projections from Composition.input_CIM
@@ -5328,7 +5384,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             - or for which any efferent projections are either:
                 - to output_CIM OR
                 - assigned as feedback (i.e., self.graph.comp_to_vertex[efferent].feedback == EdgeType.FEEDBACK
-          .. _note::
+          .. note::
              - this insures that for cases in which there are nested CYCLES
                (e.g., LearningMechanisms for a `learning Pathway <Composition.Learning_Pathway>`),
                only the Node in the *outermost* CYCLE that is specified as a FEEDBACK_SENDER
@@ -5863,8 +5919,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # instantiate the input port on the output CIM to correspond to the node's output port
                     interface_input_port = InputPort(owner=self.output_CIM,
-                                                     variable=output_port.defaults.value,
-                                                     reference_value=output_port.defaults.value,
+                                                     variable=copy_parameter_value(output_port.defaults.value),
+                                                     reference_value=copy_parameter_value(output_port.defaults.value),
                                                      name=OUTPUT_CIM_NAME + "_" + node.name + "_" + output_port.name,
                                                      context=context)
 
@@ -5878,7 +5934,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             variable=(OWNER_VALUE, functools.partial(self.output_CIM.get_input_port_position,
                                                                      interface_input_port)),
                             function=Identity,
-                            reference_value=output_port.defaults.value,
+                            reference_value=copy_parameter_value(output_port.defaults.value),
                             name=OUTPUT_CIM_NAME + "_" + node.name + "_" + output_port.name,
                             context=context)
 
@@ -6483,8 +6539,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 proj_spec = {PROJECTION_TYPE:projection.className,
                               PROJECTION_PARAMS:{
                                   FUNCTION:projection.function,
-                                  MATRIX:projection.matrix.base}
-                              }
+                                  MATRIX:projection.matrix.base,
+                                  LEARNABLE:projection.learnable}}
                 return self.add_projection(proj_spec, sender=projection.sender, receiver=projection.receiver)
 
         # Create Projection if it doesn't exist
@@ -6627,6 +6683,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _add_projection(self, projection):
         self.projections.append(projection)
+        projection._add_to_composition(self)
 
     def remove_projection(self, projection):
         # step 1 - remove Vertex from Graph
@@ -6636,6 +6693,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # step 2 - remove Projection from Composition's list
         if projection in self.projections:
             self.projections.remove(projection)
+
+        projection._remove_from_composition(self)
 
         # step 3 - deactivate Projection in this Composition
         projection._deactivate_for_compositions(self)
@@ -6686,7 +6745,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if isinstance(projection, dict):
             proj_type = projection.pop(PROJECTION_TYPE, None) or MappingProjection
             params = projection.pop(PROJECTION_PARAMS, None)
-            projection = MappingProjection(params=params)
+            projection = MappingProjection(**params)
         elif isinstance(projection, (np.ndarray, np.matrix, list, RandomMatrix)):
             return MappingProjection(matrix=projection, sender=sender, receiver=receiver, name=name)
         elif isinstance(projection, str):
@@ -8008,7 +8067,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     pathway,
                                     learning_function: Union[Type[LearningFunction], LearningFunction, Callable] = None,
                                     loss_spec: Optional[Loss] = Loss.MSE,
-                                    learning_rate: Optional[Union[int, float]] = None,
+                                    learning_rate: Optional[Union[int, float, np.ndarray]] = None,
                                     error_function=LinearCombination,
                                     learning_update: Union[bool, Literal['online', 'after']] = 'after',
                                     default_projection_matrix=None,
@@ -8215,7 +8274,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                            learning_update: Union[bool, Literal['online', 'after']] = 'online',
                                            default_projection_matrix=None,
                                            name: Optional[str] = None):
-        """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Reinforcement`
+        """Convenience method that calls `add_linear_learning_pathway` with **learning_function** = `Reinforcement`
 
         Arguments
         ---------
@@ -8272,7 +8331,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 learning_update: Union[bool, Literal['online', 'after']] = 'online',
                                 default_projection_matrix=None,
                                 name: Optional[str] = None):
-        """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`TDLearning`
+        """Convenience method that calls `add_linear_learning_pathway` with **learning_function** = `TDLearning`
 
         Arguments
         ---------
@@ -8328,7 +8387,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                              learning_update: Optional[Union[bool, Literal['online', 'after']]] = 'after',
                                              default_projection_matrix=None,
                                              name: str = None):
-        """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Backpropagation`
+        """Convenience method that calls `add_linear_learning_pathway` with **learning_function** = `Backpropagation`
 
         Arguments
         ---------
@@ -8384,7 +8443,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 default_projection_matrix=default_projection_matrix,
                                                 name=name)
 
-    # NOTES:
+    # IMPLEMENTATION NOTE:
     # Learning-type-specific creation methods should:
     # - create ComparatorMechanism and pass in as error_source (for 1st LearningMechanism in sequence in bp)
     # - Determine and pass error_sources (aka previous_learning_mechanism) (for bp)
@@ -9396,7 +9455,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 and not (isinstance(self.controller.input_ports, ContentAddressableList)
                          and self.controller.input_ports
                          and self.controller.afferents)):
-            warnings.warn(f"{self.controller.name} for {self.name} is enabled but has no inputs.")
+            from psyneulink.core.compositions.parameterestimationcomposition import ParameterEstimationComposition
+            if not isinstance(self, ParameterEstimationComposition):
+                warnings.warn(f"{self.controller.name} for {self.name} is enabled but has no inputs.")
 
         # ADD MODULATORY COMPONENTS -----------------------------------------------------
 
@@ -9733,7 +9794,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                 )
 
             # Get control signal costs
-            other_costs = controller.parameters.costs._get(context) or []
+            other_costs = controller.parameters.costs._get(context)
+            if other_costs is None:
+                other_costs = []
             all_costs = convert_to_np_array(other_costs + [reconfiguration_cost])
             # Compute a total for the candidate control signal(s)
             total_cost = controller.combine_costs(all_costs)
@@ -9843,14 +9906,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if buffer_animate_state:
                 self._animate = buffer_animate_state
 
-        assert result == self.get_output_values(context)
+        assert extended_array_equal(result, self.get_output_values(context))
 
         # Store simulation results on "base" composition
         if self.initialization_status != ContextFlags.INITIALIZING:
             try:
                 self.parameters.simulation_results._get(base_context).append(result)
             except AttributeError:
-                self.parameters.simulation_results._set([result], base_context)
+                self.parameters.simulation_results._set(
+                    convert_to_np_array([result]), base_context
+                )
 
         # COMPUTE net_outcome and aggregate in net_outcomes
 
@@ -9900,7 +9965,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
             # Reassign target inputs from output Nodes to target mechanisms constructed for PyTorch execution
-            return {target: value for target, value in zip(self.target_output_map.keys(), targets.values())}
+            return {target: value for target, value in zip(self.targets_from_outputs_map.keys(), targets.values())}
 
         ret = {}
         for node, values in targets.items():
@@ -10126,7 +10191,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # If Composition is in learning mode, not called from COMMAND_LINE, and not still preparing,
         #   presumably inputs have already been parsed so shouldn't do it again
-        # FIX: 11/3/23 - NOTE: This circumvents parsing of inputs when they are a func and called from autodiff_training
+        # FIX: 11/3/23 - NOTE: This circumvents parsing of inputs when they are a func and called from autodiff_forward
         if (context and (context.runmode & ContextFlags.LEARNING_MODE)
                 and (context.source & ContextFlags.COMPOSITION)
                 and not (context.execution_phase & ContextFlags.PREPARING)):
@@ -10412,7 +10477,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # shapes of entries will be validated in _validate_input_shapes_and_expand_for_all_trials())
 
                 else:
-                    # 3D ragged array or 2d array
+                    # 3d ragged array or 2d array
                     entry = convert_to_np_array(_inputs)
                     ragged_array = entry.dtype == object
                     if ragged_array:
@@ -10844,7 +10909,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             default_absolute_time_unit: typing.Optional[pint.Quantity] = None,
             context=None,
             base_context=Context(execution_id=None),
-            ):
+            **kwargs
+            )->list:
         """Pass inputs to Composition, then execute sets of nodes that are eligible to run until termination
         conditions are met.
 
@@ -10984,9 +11050,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
               are animated; if it is greater than the number of trials being run, only the number being run are
               animated.
 
-            * *MOVIE_DIR*: str (default=project root dir) -- specifies the directdory to be used for the movie file;
-              by default a subdirectory of <root_dir>/show_graph_OUTPUT/GIFS is created using the `name
-              <Composition.name>` of the  `Composition`, and the gif files are stored there.
+            * *MOVIE_DIR*: str or os.PathLike (default=PsyNeuLink root
+              dir or current dir) -- specifies the directory to be used
+              for the movie file; by default a subdirectory of
+              <MOVIE_DIR>/pnl-show_graph-output/GIFs is created using
+              the `name <Composition.name>` of the `Composition`, and
+              the gif files are stored there.
 
             * *MOVIE_NAME*: str (default=\\ `name <Composition.name>` + 'movie') -- specifies the name to be used
               for the movie file; it is automatically appended with '.gif'.
@@ -11082,9 +11151,19 @@ _
 
         if ContextFlags.SIMULATION_MODE not in context.runmode:
             try:
-                self.parameters.input_specification._set(copy(inputs), context)
+                inputs = copy_parameter_value(inputs)
+            except TypeError:
+                # generator, must be copied during generation
+                pass
+
+            if is_numeric(inputs):
+                _input_spec = convert_all_elements_to_np_array(inputs)
+            else:
+                _input_spec = inputs
+            try:
+                self.parameters.input_specification._set(copy(_input_spec), context)
             except:
-                self.parameters.input_specification._set(inputs, context)
+                self.parameters.input_specification._set(_input_spec, context)
 
         # May be used by controller for specifying num_trials_per_simulation
         self.num_trials = num_trials
@@ -11129,10 +11208,6 @@ _
             self._set_up_animation(context)
 
         # SET UP EXECUTION -----------------------------------------------
-        results = self.parameters.results._get(context)
-        if results is None:
-            results = []
-
         self.rich_diverted_reports = None
         self.recorded_reports = None
 
@@ -11212,6 +11287,12 @@ _
                 self._reset_stateful_functions_when_cache[node] = node.reset_stateful_function_when
                 node.reset_stateful_function_when = reset_stateful_functions_when[node]
 
+        results = self.parameters.results._get(context)
+        if results is None:
+            results = []
+        else:
+            results = list(results)
+
         is_simulation = (context is not None and
                          ContextFlags.SIMULATION_MODE in context.runmode)
 
@@ -11248,14 +11329,7 @@ _
                         assert False, "Unknown execution mode: {}".format(execution_mode)
 
                     # Update the parameter for results
-                    self.parameters.results._set(results, context)
-
-                    if self._is_learning(context):
-                        # copies back matrix to pnl from param struct (after learning)
-                        _comp_ex.writeback_params_to_pnl(params=_comp_ex._param_struct,
-                                                         ids="llvm_param_ids",
-                                                         condition=lambda p: p.name == "matrix")
-
+                    self.parameters.results._set(convert_to_np_array(results), context)
                     self._propagate_most_recent_context(context)
 
                     report(self,
@@ -11303,6 +11377,8 @@ _
                    content='run_start',
                    context=context)
 
+            self.TRIAL_NUM = -1
+
             # Loop over the length of the list of inputs - each input represents a TRIAL
             for trial_num in range(num_trials):
 
@@ -11324,11 +11400,13 @@ _
                 # PROCESSING ------------------------------------------------------------------------
                 # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
                 try:
+                    # IMPLEMENTATION NOTE: for autdoiff, the following includes backward pass after forward pass
                     execution_stimuli = self._parse_trial_inputs(inputs, trial_num, context)
                 except StopIteration:
                     break
 
                 # execute processing, passing stimuli for this trial
+                # IMPLEMENTATION NOTE: for autodiff, the following executes the forward pass for a single input
                 trial_output = self.execute(inputs=execution_stimuli,
                                             scheduler=scheduler,
                                             termination_processing=termination_processing,
@@ -11344,20 +11422,20 @@ _
                                             skip_initialization=True,
                                             execution_mode=execution_mode,
                                             report=report,
-                                            report_num=report_num
+                                            report_num=report_num,
+                                            **kwargs
                                             )
 
                 # ---------------------------------------------------------------------------------
                 # store the result of this execution in case it will be the final result
 
-                # object.results.append(result)
-                if isinstance(trial_output, collections.abc.Iterable):
-                    result_copy = trial_output.copy()
-                else:
-                    result_copy = trial_output
+                trial_output = copy_parameter_value(trial_output)
 
-                results.append(result_copy)
-                self.parameters.results._set(results, context)
+                self._update_results(results,
+                                     trial_output,
+                                     execution_mode,
+                                     kwargs['synch_with_pnl_options'] if 'synch_with_pnl_options' in kwargs else None,
+                                     context)
 
                 if not self.parameters.retain_old_simulation_data._get():
                     if self.controller is not None:
@@ -11409,7 +11487,7 @@ _
 
             if self._animate is not False:
                 # Save list of gifs in self._animation as movie file
-                movie_path = self._animation_directory + '/' + self._movie_filename
+                movie_path = pathlib.Path(self._animation_directory, self._movie_filename)
                 self._animation[0].save(fp=movie_path,
                                         format='GIF',
                                         save_all=True,
@@ -11435,21 +11513,22 @@ _
     def learn(
             self,
             inputs: dict,
-            targets: Optional[dict] = None,
+            targets: Optional[Mapping] = None,
             num_trials: Optional[int] = None,
             epochs: int = 1,
             learning_rate: Optional[Union[int,float]]=None,
-            minibatch_size: int = 1,
+            minibatch_size:Optional[int]=None,
+            optimizations_per_minibatch:Optional[int]=None,
             patience: Optional[int] = None,
             min_delta: int = 0,
-            context: Optional[Context] = None,
             execution_mode: pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
             randomize_minibatches=False,
             call_before_minibatch=None,
             call_after_minibatch=None,
+            context: Optional[Context] = None,
             *args,
             **kwargs
-    ):
+    )->list:
         """
             Runs the composition in learning mode - that is, any components with disable_learning False will be
             executed in learning mode. See `Composition_Learning` for details.
@@ -11494,11 +11573,25 @@ _
                 the learn method (see `Composition_Learning_Rate` for additional details).
 
             minibatch_size : int (default=1)
-                specifies the size of the minibatches to use. The input trials will be batched and run, after which
-                learning mechanisms with learning mode TRIAL will update weights
+                specifies the number of inputs used to calculate the `error_signal <LearningMechanism.error_signal>`
+                for one step (gradient update) of learning, after which LearningMechanisms with learning mode TRIAL
+                will update the `matrix <MappingProjection.matrix>` parameter of the `MappingProjection` for which
+                they are responsible; this overrides the Composition's default value.
+
+            optimizations_per_minibatch : int (default=1)
+                specifies the number of executions and weight updates of learnable pathways that are carried out for
+                each set of stimuli in a `minibatch <LearningScale.MINIBATCH>`; this overrides the Composition's
+                default value.
+
+                .. hint::
+                   This can be used to implement the `backprop-to-activation proceedure
+                   <https://web.stanford.edu/~jlmcc/papers/RogersMcCBook_7_03.pdf>`_ in which the `backpropagation
+                   learning algorithm <Backpropagation>` is used, with a high learning rate, to quickly search
+                   for a pattern of activation in response to a given input (or set of inputs) that is useful for some
+                   downstream purpose.
 
             randomize_minibatch: bool (default=False)
-                specifies whether the order of the input trials should be randomized on each epoch
+                specifies whether the order of the input trials should be randomized in each epoch
 
             patience : int or None (default=None)
                 used for early stopping of training; If a model has more than `patience` bad consecutive epochs,
@@ -11512,9 +11605,6 @@ _
             scheduler : Scheduler
                 the scheduler object that owns the conditions that will instruct the execution of the Composition
                 If not specified, the Composition will use its automatically generated scheduler.
-
-            context
-                context will be set to self.default_execution_id if unspecified
 
             call_before_minibatch : callable
                 called before each minibatch is executed
@@ -11543,6 +11633,9 @@ _
                 specifies where output and progress should be reported; see `Report_To_Device` for additional
                 details and `ReportDevices` for options.
 
+            context
+                context will be set to self.default_execution_id if unspecified
+
             Returns
             ---------
 
@@ -11565,14 +11658,12 @@ _
             warnings.warn(f"learn() method called on '{self.name}', but it has no learning components; "
                           f"it will be run but no learning will occur.")
 
+        # Prepare graph and context for learning
         context.add_flag(ContextFlags.LEARNING_MODE)
-
         execution_phase_at_entry = context.execution_phase
         context.execution_phase=ContextFlags.PREPARING
-
         self._analyze_graph()
         self._check_nested_target_mechs()
-
         context.execution_phase = execution_phase_at_entry
 
         result = runner.run_learning(
@@ -11581,7 +11672,12 @@ _
             num_trials=num_trials,
             epochs=epochs,
             learning_rate=learning_rate,
-            minibatch_size=minibatch_size,
+            minibatch_size=minibatch_size
+                            or self.parameters.minibatch_size._get(context)
+                            or self.parameters.minibatch_size.default_value,
+            optimizations_per_minibatch=optimizations_per_minibatch
+                                        or self.parameters.optimizations_per_minibatch._get(context)
+                                        or self.parameters.optimizations_per_minibatch.default_value,
             patience=patience,
             min_delta=min_delta,
             randomize_minibatches=randomize_minibatches,
@@ -11635,7 +11731,8 @@ _
                     assert (execution_mode == pnlvm.ExecutionMode.LLVM
                             or execution_mode & pnlvm.ExecutionMode._Fallback),\
                         f"PROGRAM ERROR: Unrecognized compiled execution_mode: '{execution_mode}'."
-                    _comp_ex.execute_node(self.controller, context=context)
+                    _comp_ex.freeze_values()
+                    _comp_ex.execute_node(self.controller)
 
                 context.remove_flag(ContextFlags.PROCESSING)
 
@@ -11680,7 +11777,8 @@ _
             report_to_devices:ReportDevices=None,
             report=None,
             report_num=None,
-            ):
+            **kwargs
+            )->np.ndarray:
         """
             Passes inputs to any `Nodes <Composition_Nodes>` receiving inputs directly from the user (via the "inputs"
             argument) then coordinates with the `Scheduler` to execute sets of Nodes that are eligible to execute until
@@ -11736,7 +11834,7 @@ _
                 called after each `PASS` is executed
                 passed the current *context* (but it is not necessary for your callable to take).
 
-            execution_mode : enum.Enum[Auto|LLVM|LLVMexec|Python|PTXExec] : default Python
+            execution_mode : enum.Enum[Auto|LLVM|LLVMexec|Python] : default Python
                 specifies whether to run using the Python interpreter or a `compiled mode <Composition_Compilation>`.
                 see **execution_mode** argument of `run <Composition.run>` method for additional details.
 
@@ -11762,7 +11860,7 @@ _
 
             Returns
             ---------
-            output_values : List
+            output_values : np.ndarray
             These are the values of the Composition's output_CIM.output_ports, excluding those the source of which
             are from a (potentially nested) Node with NodeRole.PROBE in its enclosing Composition.
         """
@@ -11860,8 +11958,6 @@ _
                         _comp_ex = pnlvm.CompExecution.get(self, context)
                         if execution_mode & pnlvm.ExecutionMode.LLVM:
                             _comp_ex.execute(llvm_inputs)
-                        elif execution_mode & pnlvm.ExecutionMode.PTX:
-                            _comp_ex.cuda_execute(llvm_inputs)
                         else:
                             assert False, "Unknown execution mode: {}".format(execution_mode)
 
@@ -11964,7 +12060,7 @@ _
                 build_CIM_input = self._build_variable_for_input_CIM(inputs)
 
             if execution_mode & pnlvm.ExecutionMode.COMPILED:
-                _comp_ex.execute_node(self.input_CIM, inputs, context)
+                _comp_ex.execute_node(self.input_CIM, inputs)
                 # FIXME: parameter_CIM should be executed here as well,
                 #        but node execution of nested compositions with
                 #        outside control is not supported yet.
@@ -12206,7 +12302,7 @@ _
 
                     # Store values of all nodes in this execution_set for use by other nodes in the execution set
                     #    throughout this timestep (e.g., for recurrent Projections)
-                    frozen_values[node] = node.get_output_values(context)
+                    frozen_values[node] = copy_parameter_value(node.get_output_values(context))
 
                     # FIX: 6/12/19 Deprecate?
                     # Handle input clamping
@@ -12214,7 +12310,7 @@ _
                         if clamp_input:
                             if node in hard_clamp_inputs:
                                 # clamp = HARD_CLAMP --> "turn off" recurrent projection
-                                if hasattr(node, "recurrent_projection"):
+                                if node.recurrent_projection is not None:
                                     node.recurrent_projection.sender.parameters.value._set([0.0], context)
                             elif node in no_clamp_inputs:
                                 for input_port in node.input_ports:
@@ -12249,7 +12345,7 @@ _
 
                         # Execute Mechanism
                         if execution_mode & pnlvm.ExecutionMode.COMPILED:
-                            _comp_ex.execute_node(node, context=context)
+                            _comp_ex.execute_node(node)
                         else:
                             if node is not self.controller:
                                 mech_context = copy(context)
@@ -12261,7 +12357,7 @@ _
                                              report_num=report_num,
                                              runtime_params=execution_runtime_params,
                                              )
-                                assert True
+                                assert 'DEBUGGING BREAK POINT'
 
                         # Set execution_phase for node's context back to IDLE
                         if self._is_learning(context):
@@ -12291,6 +12387,7 @@ _
                                 # Set current Python values to LLVM results
                                 data = _comp_ex.extract_frozen_node_output(data_loc)
                                 for op, v in zip(srnode.output_ports, data):
+                                    v = convert_all_elements_to_np_array(v)
                                     op.parameters.value._set(
                                       v, context, skip_history=True, skip_log=True)
 
@@ -12351,7 +12448,7 @@ _
 
                     # Store new value generated by node,
                     #    then set back to frozen value for use by other nodes in execution_set
-                    new_values[node] = node.get_output_values(context)
+                    new_values[node] = copy_parameter_value(node.get_output_values(context))
                     for i in range(len(node.output_ports)):
                         node.output_ports[i].parameters.value._set(frozen_values[node][i], context,
                                                                    skip_history=True, skip_log=True)
@@ -12460,7 +12557,7 @@ _
             # Extract result here
             if execution_mode & pnlvm.ExecutionMode.COMPILED:
                 _comp_ex.freeze_values()
-                _comp_ex.execute_node(self.output_CIM, context=context)
+                _comp_ex.execute_node(self.output_CIM)
                 report(self,
                        PROGRESS_REPORT,
                        report_num=report_num,
@@ -12479,9 +12576,9 @@ _
         This allows Composition, after it has been constructed, to be run simply by calling it directly.
         """
         if not args and not kwargs:
-            if self.results:
+            try:
                 return self.results[-1]
-            else:
+            except IndexError:
                 return None
         elif (args and isinstance(args[0],dict)) or INPUTS in kwargs:
             from psyneulink.core.compositions.pathway import PathwayRole
@@ -12528,7 +12625,7 @@ _
             if True, shows labels instead of values for Mechanisms that have an `input_label_dict
             <Mechanism_Base.input_labels_dict>`.  For **num_trials** = 1, a representative label is
             shown; for **num_trials** > 1, a different label is used for each trial shown, cycling
-            through the set if **num_trials** is greater than the number of labels.  If **num_trials = *FULL*,
+            through the set if **num_trials** is greater than the number of labels.  If **num_trials** = *FULL*,
             trials will be included.
 
             it is set to the number of labels in the largest list specified in any `input_label_dict
@@ -12545,7 +12642,7 @@ _
         Returns
         -------
 
-        Either a dict formatted appropriately for assignment as the **inputs** argument of the Composition's `run()
+        Either a dict formatted appropriately for assignment as the **inputs** argument of the Composition's `run()`
         method (form = *DICT*, the default), or string showing the format required by the **inputs** argument
         <Composition.run>` (form = *TEXT*).
 
@@ -12731,7 +12828,10 @@ _
             # Get labels for corresponding values
             values = [node.labeled_output_values for node in output_nodes]
         else:
-            values = self.results[-1] or self.output_values
+            if len(self.results) > 0 and len(self.results[-1]) > 0:
+                values = self.results[-1]
+            else:
+                values = self.output_values
 
         full_output_set = zip(output_nodes, values)
 
@@ -12761,7 +12861,15 @@ _
         else:
             return {k:np.array(v).tolist() for k,v in result_set}
 
-    def _update_learning_parameters(self, context):
+    def _update_results(self, results, trial_output, execution_mode, synch_with_pnl_options, context):
+        """Update results by appending most recent trial_output
+        This is included as a helper so it can be overriden by subclasses (such as AutodiffComposition)
+        that may need to do this less frequently for scallable exeuction
+        """
+        results.append(trial_output)
+        self.parameters.results._set(convert_to_np_array(results), context)
+
+    def do_gradient_optimization(self, retain_in_pnl_options, context, optimization_num=None):
         pass
 
     @handle_external_context(fallback_most_recent=True)
@@ -12835,22 +12943,16 @@ _
         self._set_all_parameter_properties_recursively(history_max_length=0)
 
     def _get_processing_condition_set(self, node):
-        dep_group = []
-        for group in self.scheduler.consideration_queue:
+        for index, group in enumerate(self.scheduler.consideration_queue):
             if node in group:
                 break
-            dep_group = group
 
-        # This condition is used to check of the step has passed.
-        # Not all nodes in the previous step need to execute
-        # (they might have other conditions), but if any one does we're good
-        # FIXME: This will fail if none of the previously considered
-        # nodes executes in this pass, but that is unlikely.
-        conds = [Any(*(AllHaveRun(dep, time_scale=TimeScale.PASS) for dep in dep_group))] if len(dep_group) else []
+        assert index is not None
+
         if node in self.scheduler.conditions:
-            conds.append(self.scheduler.conditions[node])
+            return index, self.scheduler.conditions[node]
 
-        return All(*conds)
+        return index, Always()
 
     def _input_matches_variable(self, input_value, var):
         var_shape = convert_to_np_array(var).shape
@@ -12960,6 +13062,8 @@ _
                                                                               entry,
                                                                               param_key,
                                                                               param_spec[entry])
+            if is_numeric(param_spec):
+                param_spec = convert_all_elements_to_np_array(param_spec)
             return (param_spec, param_condition)
 
         if runtime_params is None:
@@ -13054,12 +13158,21 @@ _
 
     @property
     def _inner_projections(self):
-        # PNL considers afferent projections to input_CIM to be part
-        # of the nested composition. Filter them out.
+        # Filter out projections not used in compiled variant of this composition:
+        # * afferent projections to input_CIM and parameter_CIM.
+        #   These are included in node wrapper of the nested composition node,
+        #   and included in outer composition
+        # * efferent projections from output_CIM.
+        #   Same as above, they are considered part of the outer composition,
+        #   and are executed in node wrappers of the receiving nodes
+        # * Autoassociative projections (RTM, LCA)
+        #   These are executed as part of their respective mechanism and are
+        #   included in the compiled structures of their respective mechanisms.
         return (p for p in self.projections
-                  if p.receiver.owner is not self.input_CIM and
-                     p.receiver.owner is not self.parameter_CIM and
-                     p.sender.owner is not self.output_CIM)
+                if p.receiver.owner is not self.input_CIM and
+                   p.receiver.owner is not self.parameter_CIM and
+                   p.sender.owner is not self.output_CIM and
+                   p.sender.owner is not p.receiver.owner)
 
     def _get_param_ids(self):
         return ["nodes", "projections"] + super()._get_param_ids()
@@ -13132,6 +13245,25 @@ _
             return pnlvm.codegen.gen_composition_run(ctx, self, tags=tags)
         else:
             return pnlvm.codegen.gen_composition_exec(ctx, self, tags=tags)
+
+    def _delete_compilation_data(self, context: Context, from_parameter: Parameter = None):
+        if from_parameter is None:
+            self._compilation_data.execution.delete(context)
+        else:
+            execution_dict = self._compilation_data.execution.get(context)
+            if execution_dict is None:
+                return
+
+            param_owner = from_parameter._owner._owner
+            if from_parameter.name in param_owner.llvm_param_ids:
+                struct_attr = '_param'
+            elif from_parameter.name in param_owner.llvm_state_ids:
+                struct_attr = '_state'
+            else:
+                struct_attr = '_data'
+
+            for execution in execution_dict.values():
+                setattr(execution, struct_attr, None)
 
     def enable_logging(self):
         for item in self.nodes + self.projections:
@@ -13263,9 +13395,11 @@ _
         return self.get_output_values(self.most_recent_context)
 
     def get_output_values(self, context=None):
-        return [output_port.parameters.value.get(context)
-                for output_port in self.output_CIM.output_ports
-                if (not self.output_CIM._sender_is_probe(output_port) or self.include_probes_in_output)]
+        return convert_all_elements_to_np_array([
+            output_port.parameters.value.get(context)
+            for output_port in self.output_CIM.output_ports
+            if (not self.output_CIM._sender_is_probe(output_port) or self.include_probes_in_output)
+        ])
 
     @property
     def shadowing_dict(self):
@@ -13502,7 +13636,9 @@ _
                    active_items=None,
                    output_fmt='pdf',
                    context=None):
-
+        """Patch to ShowGraph method
+        IMPLEMENTATION NOTE: arguments are listed explicitly so they show up in IDEs that support argument completion
+        """
         return self._show_graph(show_all=show_all,
                                 show_node_structure=show_node_structure,
                                 show_nested=show_nested,

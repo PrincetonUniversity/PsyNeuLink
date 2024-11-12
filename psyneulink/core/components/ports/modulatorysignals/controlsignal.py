@@ -21,7 +21,7 @@ Contents:
       - `ControlSignal_Modulation`
       - `ControlSignal_Allocation_and_Intensity`
       - `ControlSignal_Costs`
-  * `ControlSignal_Execution`d
+  * `ControlSignal_Execution`
   * `ControlSignal_Examples`
   * `ControlSignal_Class_Reference`
 
@@ -382,7 +382,7 @@ the `intensity <ControlSignal.intensity>` of which is also ``3``, the value of t
 as shown below::
 
     >>> comp.run(inputs={mech:[3]}, num_trials=2)
-    [array([3.])]
+    array([[3.]])
     >>> ctl_mech_A.control_signals[0].intensity_cost
     array([8103.08392758])
 
@@ -408,7 +408,7 @@ from psyneulink._typing import Optional, Union, Callable
 #            SHOULD THEY BE LIMITED TO EVC??
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import is_function_type
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import Reduce
+from psyneulink.core.components.functions.nonstateful.transformfunctions import Reduce
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Exponential, Linear, CostFunctions, \
     TransferWithCosts
 from psyneulink.core.components.functions.stateful.integratorfunctions import SimpleIntegrator
@@ -795,7 +795,7 @@ class ControlSignal(ModulatorySignal):
                  owner=None,
                  reference_value=None,
                  default_allocation=None,
-                 size=None,
+                 input_shapes=None,
                  transfer_function=None,
                  cost_options: Optional[Union[CostFunctions, list]] = None,
                  intensity_cost_function:Optional[Callable] = None,
@@ -857,7 +857,7 @@ class ControlSignal(ModulatorySignal):
             owner=owner,
             reference_value=reference_value,
             default_allocation=default_allocation,
-            size=size,
+            input_shapes=input_shapes,
             transfer_function=transfer_function,
             modulation=modulation,
             modulates=control,
@@ -900,13 +900,13 @@ class ControlSignal(ModulatorySignal):
         #         cost_function = cost_function()
         #
         #     # cost_function is Function object:
-        #     #     COMBINE_COSTS_FUNCTION must be CombinationFunction
+        #     #     COMBINE_COSTS_FUNCTION must be TransformFunction
         #     #     DURATION_COST_FUNCTION must be an IntegratorFunction
         #     #     others must be TransferFunction
         #     if isinstance(cost_function, Function):
         #         if cost_function_name == COMBINE_COSTS_FUNCTION:
-        #             if not isinstance(cost_function, CombinationFunction):
-        #                 raise ControlSignalError("Assignment of Function to {} ({}) must be a CombinationFunction".
+        #             if not isinstance(cost_function, TransformFunction):
+        #                 raise ControlSignalError("Assignment of Function to {} ({}) must be a TransformFunction".
         #                                          format(COMBINE_COSTS_FUNCTION, cost_function))
         #         elif cost_function_name == DURATION_COST_FUNCTION:
         #             if not isinstance(cost_function, IntegratorFunction):
@@ -1090,7 +1090,7 @@ class ControlSignal(ModulatorySignal):
 
         # COMPUTE COST(S)
         # Initialize as backups for cost function that are not enabled
-        intensity_cost = adjustment_cost = duration_cost = 0
+        intensity_cost = adjustment_cost = duration_cost = np.zeros_like(self.defaults.value)
 
         if CostFunctions.INTENSITY & cost_options:
             intensity_cost = self.intensity_cost_function(intensity, context)
@@ -1108,9 +1108,10 @@ class ControlSignal(ModulatorySignal):
             duration_cost = self.duration_cost_function(self.parameters.cost._get(context), context=context)
             self.parameters.duration_cost._set(duration_cost, context)
 
-        all_costs = [intensity_cost, adjustment_cost, duration_cost]
+        # add second dimension because Reduce function uses axis=1
+        all_costs = [[intensity_cost, adjustment_cost, duration_cost]]
 
         # Combine the costs. Convert to a float because reRedcu
-        combined_cost = self.combine_costs_function(all_costs, context=context).astype(float)
+        combined_cost = float(self.combine_costs_function(all_costs, context=context).item())
 
         return max(0.0, combined_cost)

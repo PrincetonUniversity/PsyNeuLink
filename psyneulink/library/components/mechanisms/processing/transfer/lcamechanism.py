@@ -6,7 +6,7 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 # NOTES:
-#  * NOW THAT NOISE AND BETA ARE PROPRETIES THAT DIRECTLY REFERERNCE integrator_function,
+#  * NOW THAT NOISE AND BETA ARE PROPERTIES THAT DIRECTLY REFERERNCE integrator_function,
 #      SHOULD THEY NOW BE VALIDATED ONLY THERE (AND NOT IN TransferMechanism)??
 #  * ARE THOSE THE ONLY TWO integrator PARAMS THAT SHOULD BE PROPERTIES??
 
@@ -196,14 +196,15 @@ from beartype import beartype
 from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance, MAX_ABS_DIFF
-from psyneulink.core.components.functions.nonstateful.selectionfunctions import max_vs_avg, max_vs_next, MAX_VS_NEXT, MAX_VS_AVG
+from psyneulink.core.components.functions.nonstateful.selectionfunctions import max_vs_avg, max_vs_next
 from psyneulink.core.components.functions.stateful.integratorfunctions import LeakyCompetingIntegrator
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
 from psyneulink.core.globals.keywords import \
-    CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, LCA_MECHANISM, LESS_THAN_OR_EQUAL, MATRIX, NAME, \
-    RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, VALUE, INVERSE_HOLLOW_MATRIX, AUTO
+    (CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, LCA_MECHANISM, LESS_THAN_OR_EQUAL,
+     MATRIX, MAX_VS_NEXT, MAX_VS_AVG, NAME, RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE,
+     TERMINATION_COMPARISION_OP, VALUE, INVERSE_HOLLOW_MATRIX, AUTO)
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
@@ -392,7 +393,7 @@ class LCAMechanism(RecurrentTransferMechanism):
 
         matrix = Parameter(
             INVERSE_HOLLOW_MATRIX,
-            modulable=True,
+            modulable=False,
             getter=_recurrent_transfer_mechanism_matrix_getter,
             setter=_recurrent_transfer_mechanism_matrix_setter
         )
@@ -402,9 +403,9 @@ class LCAMechanism(RecurrentTransferMechanism):
             function_parameter_name='rate',
             aliases='leak'
         )
-        auto = Parameter(0.0, modulable=True, aliases='self_excitation')
-        hetero = Parameter(-1.0, modulable=True)
-        competition = Parameter(1.0, modulable=True)
+        auto = Parameter(0.0, modulable=False, aliases='self_excitation')
+        hetero = Parameter(-1.0, modulable=False)
+        competition = Parameter(1.0, modulable=False)
         time_step_size = FunctionParameter(0.1, function_name='integrator_function')
 
         integrator_mode = Parameter(True, setter=_integrator_mode_setter, valid_types=bool)
@@ -442,7 +443,7 @@ class LCAMechanism(RecurrentTransferMechanism):
     @beartype
     def __init__(self,
                  default_variable=None,
-                 size: Optional[Union[int, list, np.ndarray]] = None,
+                 input_shapes: Optional[Union[int, list, np.ndarray]] = None,
                  input_ports: Optional[Union[list, dict]] = None,
                  function=None,
                  initial_value=None,
@@ -514,7 +515,7 @@ class LCAMechanism(RecurrentTransferMechanism):
 
         super().__init__(
             default_variable=default_variable,
-            size=size,
+            input_shapes=input_shapes,
             input_ports=input_ports,
             # matrix=matrix,
             auto=self_excitation,

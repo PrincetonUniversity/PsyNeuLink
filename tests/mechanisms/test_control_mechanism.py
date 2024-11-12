@@ -4,7 +4,6 @@ import psyneulink as pnl
 import pytest
 
 import psyneulink.core.components.functions.nonstateful.transferfunctions
-import psyneulink.core.llvm as pnlvm
 
 class TestLCControlMechanism:
 
@@ -88,7 +87,7 @@ class TestLCControlMechanism:
         expected = [[3.001397762387422]]
         # The difference in result shape is caused by shape mismatch in output port values.
         # The default shape is 1D, giving 2D overall result in compiled mode.
-        # The true results are 2D per port, giving 3D overall result in Python mode.
+        # The true results are 2D per port, giving 3d overall result in Python mode.
         if mech_mode == 'Python':
             expected = [[ex] for ex in expected]
         np.testing.assert_allclose(val, expected)
@@ -131,19 +130,20 @@ class TestControlMechanism:
         assert Tz.parameter_ports[pnl.SLOPE].mod_afferents[0].sender.owner == C
         assert C.parameters.control_allocation.get() == [1]
         result = comp.run(inputs={Tx:[1,1], Ty:[4,4]})
-        assert comp.results == [[[4.], [4.]], [[4.], [4.]]]
+        np.testing.assert_array_equal(comp.results, [[[4.], [4.]], [[4.], [4.]]])
 
 
     def test_identicalness_of_control_and_gating(self):
         """Tests same configuration as gating in tests/mechansims/test_gating_mechanism"""
-        Input_Layer = pnl.TransferMechanism(name='Input Layer', function=pnl.Logistic, size=2)
-        Hidden_Layer_1 = pnl.TransferMechanism(name='Hidden Layer_1', function=pnl.Logistic, size=5)
-        Hidden_Layer_2 = pnl.TransferMechanism(name='Hidden Layer_2', function=pnl.Logistic, size=4)
-        Output_Layer = pnl.TransferMechanism(name='Output Layer', function=pnl.Logistic, size=3)
+        Input_Layer = pnl.TransferMechanism(name='Input Layer', function=pnl.Logistic, input_shapes=2)
+        Hidden_Layer_1 = pnl.TransferMechanism(name='Hidden Layer_1', function=pnl.Logistic, input_shapes=5)
+        Hidden_Layer_2 = pnl.TransferMechanism(name='Hidden Layer_2', function=pnl.Logistic, input_shapes=4)
+        Output_Layer = pnl.TransferMechanism(name='Output Layer', function=pnl.Logistic, input_shapes=3)
 
-        Control_Mechanism = pnl.ControlMechanism(size=[1], control=[Hidden_Layer_1.input_port,
-                                                                    Hidden_Layer_2.input_port,
-                                                                    Output_Layer.input_port])
+        Control_Mechanism = pnl.ControlMechanism(
+            input_shapes=[1], control=[Hidden_Layer_1.input_port,
+                                       Hidden_Layer_2.input_port,
+                                       Output_Layer.input_port])
 
         Input_Weights_matrix = (np.arange(2 * 5).reshape((2, 5)) + 1) / (2 * 5)
         Middle_Weights_matrix = (np.arange(5 * 4).reshape((5, 4)) + 1) / (5 * 4)

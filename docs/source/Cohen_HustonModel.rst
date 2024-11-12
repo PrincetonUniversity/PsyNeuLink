@@ -58,26 +58,26 @@ Below the Graph of the model is shown.
 Composition
 ~~~~~~~~~~~
 
-**COLOR INPUT LAYER**:  a `TransferMechanism` with **size** = 3 (one element for the input to each color in the
+**COLOR INPUT LAYER**:  a `TransferMechanism` with **input_shapes** = 3 (one element for the input to each color in the
 *HIDDEN COLOR LAYER*, respectively), and assigned a `Linear` function with **slope** = 1.0 and **intercept** = 0.0.
 
-**WORD INPUT LAYER**:  a `TransferMechanism` with **size** = 3 (one element for the input to each word in the
+**WORD INPUT LAYER**:  a `TransferMechanism` with **input_shapes** = 3 (one element for the input to each word in the
 *HIDDEN WORD LAYER*, respectively), and assigned a `Linear` function with **slope** = 1.0 and **intercept** = 0.0.
 
-**TASK INPUT LAYER**:  a `TransferMechanism` with **size** = 2 (one element for the input to each task in the
+**TASK INPUT LAYER**:  a `TransferMechanism` with **input_shapes** = 2 (one element for the input to each task in the
 *TASK LAYER*, respectively), and assigned a `Linear` function with **slope** = 1.0 and **intercept** = 0.0.
 
-**HIDDEN COLOR LAYER**: a `RecurrentTransferMechanism` Mechanism of **size** = 3 (one element each for the color units),
+**HIDDEN COLOR LAYER**: a `RecurrentTransferMechanism` Mechanism of **input_shapes** = 3 (one element each for the color units),
 and assigned a `Logistic` Function with a bias = 4.0 and intercept = 0.0.  Each element is connected to every other
 element by mutually inhibitory connections with a weight specified by **hetero** = -2.0.  An integrator mechanism is
 specified by setting the **integrator_mode** = `True` and **smoothing_factor** = 0.1.
 
-**HIDDEN WORD LAYER**: a `RecurrentTransferMechanism` specified as the *HIDDEN COLOR LAYER* with **size** = 3,
+**HIDDEN WORD LAYER**: a `RecurrentTransferMechanism` specified as the *HIDDEN COLOR LAYER* with **input_shapes** = 3,
 a `Logistic` Function with a **bias** = 4.0 and **intercept** = 0.0, mutually inhibitory connections with a weight specified by
 **hetero** = -2.0, **integrator_mode** = `True` and **smoothing_factor** = 0.1..
 
 **RESPONSE LAYER**: a `RecurrentTransferMechanism` specified as the *HIDDEN COLOR LAYER* with the only difference of
-changing the bias to 0 in the `Logistic` Function, and the size of 2.
+changing the bias to 0 in the `Logistic` Function, and the input_shapes of 2.
 
 **TASK LAYER**: a `RecurrentTransferMechanism` specified as the *RESPONSE LAYER*.
 
@@ -141,7 +141,7 @@ are turned on again and the system is run either for a certain amount of trials,
 stimulus is turned on.
 
 PLEASE NOTE:
------------
+------------
 Note that this implementation is slightly different than what was originally reported. The integration rate was set to
 0.1 instead of 0.01. Noise was turned of to better understand the core processes, and not having to deal with several
 runs, averaging these runs and plotting standard errors for these averages (which depend on the noise and amount of

@@ -240,6 +240,10 @@ gh-pages:
 	git ci -m "Generated gh-pages for `git log devel -1 --pretty=short --abbrev-commit`" && git push origin gh-pages ; git checkout devel
 	make clean
 
+source/generator_scripts/%: source/generator_scripts/%.py
+	python $<
+
+GENERATED=$(patsubst %.py, %, $(shell find source/generator_scripts -name "*.py"))
+
 .PHONY: generated
-generated:
-	find source/generator_scripts -name "*.py" -exec python {} \;
+generated: $(GENERATED)

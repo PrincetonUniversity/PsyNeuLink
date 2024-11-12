@@ -191,7 +191,7 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import L
 from psyneulink.core.globals.keywords import KWTA_MECHANISM, K_VALUE, RATIO, RESULT, THRESHOLD
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
-from psyneulink.core.globals.utilities import NumericCollections
+from psyneulink.core.globals.utilities import NumericCollections, is_numeric_scalar, safe_len
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import get_auto_matrix, get_hetero_matrix
@@ -346,7 +346,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
     @beartype
     def __init__(self,
                  default_variable=None,
-                 size=None,
+                 input_shapes=None,
                  function=None,
                  matrix=None,
                  auto: Optional[NumericCollections] = None,
@@ -378,7 +378,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
 
         super().__init__(
             default_variable=default_variable,
-            size=size,
+            input_shapes=input_shapes,
             input_ports=input_ports,
             function=function,
             matrix=matrix,
@@ -439,7 +439,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
             int_k_value = int(k_value)
         # ^ this is hacky but necessary for now, since something is
         # incorrectly turning k_value into an array of floats
-        n = self.size[0]
+        n = self.input_shapes[0]
         if (k_value[0] > 0) and (k_value[0] < 1):
             k = int(round(k_value[0] * n))
         elif (int_k_value < 0):
@@ -487,20 +487,23 @@ class KWTAMechanism(RecurrentTransferMechanism):
 
         if RATIO in target_set and target_set[RATIO] is not None:
             ratio_param = target_set[RATIO]
-            if not isinstance(ratio_param, numbers.Real):
-                if not (isinstance(ratio_param, (np.ndarray, list)) and len(ratio_param) == 1):
-                    raise KWTAError("ratio parameter ({}) for {} must be a single number".format(ratio_param, self))
+            if not is_numeric_scalar(ratio_param):
+                raise KWTAError("ratio parameter ({}) for {} must be a single number".format(ratio_param, self))
 
             if ratio_param > 1 or ratio_param < 0:
                 raise KWTAError("ratio parameter ({}) for {} must be between 0 and 1".format(ratio_param, self))
 
         if K_VALUE in target_set and target_set[K_VALUE] is not None:
             k_param = target_set[K_VALUE]
-            if not isinstance(k_param, numbers.Real):
-                if not (isinstance(k_param, (np.ndarray, list)) and len(k_param) == 1):
-                    raise KWTAError("k-value parameter ({}) for {} must be a single number".format(k_param, self))
-            if (isinstance(k_param, (np.ndarray, list)) and len(k_param) == 1):
-                k_num = k_param[0]
+
+            if not is_numeric_scalar(k_param):
+                raise KWTAError("k-value parameter ({}) for {} must be a single number".format(k_param, self))
+
+            if (isinstance(k_param, (np.ndarray, list)) and safe_len(k_param) == 1):
+                try:
+                    k_num = k_param[0]
+                except IndexError:
+                    k_num = k_param.item()
             else:
                 k_num = k_param
             if not isinstance(k_num, int):
@@ -510,14 +513,14 @@ class KWTAMechanism(RecurrentTransferMechanism):
                                         format(k_param, self))
                 except AttributeError:
                     raise KWTAError("k-value parameter ({}) for {} was an unexpected type.".format(k_param, self))
-            if abs(k_num) > self.size[0]:
+            if abs(k_num) > self.input_shapes[0]:
                 raise KWTAError("k-value parameter ({}) for {} was larger than the total number of elements.".
                                 format(k_param, self))
 
         if THRESHOLD in target_set and target_set[THRESHOLD] is not None:
             threshold_param = target_set[THRESHOLD]
             if not isinstance(threshold_param, numbers.Real):
-                if not (isinstance(threshold_param, (np.ndarray, list)) and len(threshold_param) == 1):
+                if not (isinstance(threshold_param, (np.ndarray, list)) and safe_len(threshold_param) == 1):
                     raise KWTAError("k-value parameter ({}) for {} must be a single number".
                                     format(threshold_param, self))
 

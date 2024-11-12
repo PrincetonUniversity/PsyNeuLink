@@ -1,6 +1,3 @@
-import logging
-import timeit as timeit
-import os
 import numpy as np
 
 import pytest
@@ -10,12 +7,6 @@ import psyneulink as pnl
 from psyneulink.core.globals.keywords import AUTO, CONTROL
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.library.compositions.emcomposition import EMComposition, EMCompositionError
-
-module_seed = 0
-np.random.seed(0)
-
-logger = logging.getLogger(__name__)
-
 
 # All tests are set to run. If you need to skip certain tests,
 # see http://doc.pytest.org/en/latest/skipping.html
@@ -34,11 +25,11 @@ logger = logging.getLogger(__name__)
 @pytest.mark.autodiff_constructor
 class TestConstruction:
 
-    # def test_two_calls_no_args(self):
-    #     comp = EMComposition()
-    #     comp_2 = EMComposition()
-    #     assert isinstance(comp, EMComposition)
-    #     assert isinstance(comp_2, EMComposition)
+    def test_two_calls_no_args(self):
+        comp = EMComposition()
+        comp_2 = EMComposition()
+        assert isinstance(comp, EMComposition)
+        assert isinstance(comp_2, EMComposition)
 
     # def test_pytorch_representation(self):
     #     comp = EMComposition()
@@ -84,7 +75,7 @@ class TestConstruction:
                 [[0,2],[0,0,0],[0,0]]],  .1,    [1,1,0],   None,    None,  None,      2,      3,     2,   1,    False,),
         (12.3, [[[0,1],[0,0,0],[0,0]], # two entries specified, fields have same weights, but concatenate is False
                 [[0,2],[0,0,0],[0,0]]],  .1,    [1,1,0],   None,    None,  None,      2,      3,     2,   1,    False),
-        (13,   [[[0,1],[0,0,0],[0,0]], # two entries specified, fields have same weights, and concatenate_keys is True
+        (13,   [[[0,1],[0,0,0],[0,0]], # two entries specified, fields have same weights, and concatenate_queries is True
                 [[0,2],[0,0,0],[0,0]]],  .1,    [1,1,0],   True,    None,  None,      2,      3,     2,   1,    True),
         (14,   [[[0,1],[0,0,0],[0,0]], # two entries specified, all fields are keys
                 [[0,2],[0,0,0],[0,0]]],  .1,    [1,1,1],   None,    None,  None,      2,      3,     3,   0,    False),
@@ -100,7 +91,7 @@ class TestConstruction:
                 [[0,3],[0,0,0],[0,0]],
                 [[0,4],[0,0,0],[0,0]]],  .1,     [1,2,0],   None,    None,  None,      4,      3,     2,   1,    False),
     ]
-    args_names = "test_num, memory_template, memory_fill, field_weights, concatenate_keys, normalize_memories, " \
+    args_names = "test_num, memory_template, memory_fill, field_weights, concatenate_queries, normalize_memories, " \
                  "softmax_gain, repeat, num_fields, num_keys, num_values, concatenate_node"
     @pytest.mark.parametrize(args_names,
                              test_structure_data,
@@ -113,7 +104,7 @@ class TestConstruction:
                        memory_template,
                        memory_fill,
                        field_weights,
-                       concatenate_keys,
+                       concatenate_queries,
                        normalize_memories,
                        softmax_gain,
                        repeat,
@@ -142,8 +133,8 @@ class TestConstruction:
             params.update({'memory_fill': memory_fill})
         if field_weights is not None:
             params.update({'field_weights': field_weights})
-        if concatenate_keys is not None:
-            params.update({'concatenate_keys': concatenate_keys})
+        if concatenate_queries is not None:
+            params.update({'concatenate_queries': concatenate_queries})
             # FIX: DELETE THE FOLLOWING ONCE CONCATENATION IS IMPLEMENTED FOR LEARNING
             params.update({'enable_learning': False})
         if normalize_memories is not None:
@@ -191,19 +182,17 @@ class TestConstruction:
         # Validate node structure
         assert len(em.query_input_nodes) == num_keys
         assert len(em.value_input_nodes) == num_values
-        assert isinstance(em.concatenate_keys_node, Mechanism) == concatenate_node
-        if em.concatenate_keys:
+        assert isinstance(em.concatenate_queries_node, Mechanism) == concatenate_node
+        if em.concatenate_queries:
             assert em.field_weight_nodes == []
-            assert bool(softmax_gain in {None, CONTROL}) == bool(len(em.softmax_gain_control_nodes))
+            assert bool(softmax_gain == CONTROL) == bool(em.softmax_gain_control_node)
         else:
             if num_keys > 1:
                 assert len(em.field_weight_nodes) == num_keys
             else:
                 assert em.field_weight_nodes == []
-            if softmax_gain in {None, CONTROL}:
-                assert len(em.softmax_gain_control_nodes) == num_keys
-            else:
-                assert em.softmax_gain_control_nodes == []
+            if softmax_gain == CONTROL:
+                assert em.softmax_gain_control_node
         assert len(em.retrieved_nodes) == num_fields
 
         def test_memory_fill(start, memory_fill):
@@ -231,6 +220,35 @@ class TestConstruction:
             np.testing.assert_allclose(em.memory[-1][0], np.array(repeat,dtype=object).astype(float))
         elif repeat and repeat < memory_capacity:  # Multi-entry specification and repeat = number entries; remainder
             test_memory_fill(start=repeat, memory_fill=memory_fill)
+
+    def test_softmax_choice(self):
+        for softmax_choice in [pnl.WEIGHTED_AVG, pnl.ARG_MAX, pnl.PROBABILISTIC]:
+            em = EMComposition(memory_template=[[[1,.1,.1]], [[1,.1,.1]], [[.1,.1,1]]],
+                               softmax_choice=softmax_choice,
+                               enable_learning=False)
+            result = em.run(inputs={em.query_input_nodes[0]:[[1,0,0]]})
+            if softmax_choice == pnl.WEIGHTED_AVG:
+                np.testing.assert_allclose(result, [[0.93016008, 0.1, 0.16983992]])
+            if softmax_choice == pnl.ARG_MAX:
+                np.testing.assert_allclose(result, [[1, .1, .1]])
+            if softmax_choice == pnl.PROBABILISTIC: # NOTE: actual stochasticity not tested here
+                np.testing.assert_allclose(result, [[1, .1, .1]])
+
+        em = EMComposition(memory_template=[[[1,.1,.1]], [[.1,1,.1]], [[.1,.1,1]]])
+        for softmax_choice in [pnl.ARG_MAX, pnl.PROBABILISTIC]:
+            with pytest.raises(EMCompositionError) as error_text:
+                em.parameters.softmax_choice.set(softmax_choice)
+                em.learn()
+            assert (f"The ARG_MAX and PROBABILISTIC options for the 'softmax_choice' arg "
+                    f"of '{em.name}' cannot be used during learning; change to WEIGHTED_AVG." in str(error_text.value))
+
+        for softmax_choice in [pnl.ARG_MAX, pnl.PROBABILISTIC]:
+            with pytest.warns(UserWarning) as warning:
+                em = EMComposition(softmax_choice=softmax_choice, enable_learning=True)
+                warning_msg = (f"The 'softmax_choice' arg of '{em.name}' is set to '{softmax_choice}' with "
+                               f"'enable_learning' set to True (or a list); this will generate an error if its "
+                               f"'learn' method is called. Set 'softmax_choice' to WEIGHTED_AVG before learning.")
+            assert warning_msg in str(warning[0].message)
 
 
 @pytest.mark.pytorch
@@ -267,11 +285,11 @@ class TestExecution:
         (4, [[[1,2,3],[4,6]],     # Equal field_weights (but not concatenated)
              [[1,2,5],[4,6]],
              [[1,2,10],[4,6]]], (0,.01), 4,  0, [1,1],  None, None,  100,  0, [[[1, 2, 3]],
-                                                                                   [[4, 6]]],   [[0.90323092,
-                                                                                                  1.80586151,
-                                                                                                  4.00008914],
-                                                                                                 [3.61161172,
-                                                                                                  5.41731422]]
+                                                                                   [[4, 6]]],   [[0.99750462,
+                                                                                                  1.99499376,
+                                                                                                  3.51623568],
+                                                                                                 [3.98998465,
+                                                                                                  5.9849743]]
          ),
         (5, [[[1,2,3],[4,6]],     # Equal field_weights with concatenation
              [[1,2,5],[4,8]],
@@ -284,44 +302,44 @@ class TestExecution:
         (6, [[[1,2,3],[4,6]],        # Unequal field_weights
              [[1,2,5],[4,8]],
              [[1,2,10],[4,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  0, [[[1, 2, 3]],
-                                                                                  [[4, 6]]],    [[0.96869477,
-                                                                                                  1.93719534,
-                                                                                                  3.1307577],
-                                                                                                 [3.87435467,
-                                                                                                  6.02081578]]),
+                                                                                  [[4, 6]]],    [[0.99996025,
+                                                                                                  1.99992024,
+                                                                                                  3.19317783],
+                                                                                                 [3.99984044,
+                                                                                                  6.19219795]]),
         (7, [[[1,2,3],[4,6]],        # Store + no decay
              [[1,2,5],[4,8]],
              [[1,2,10],[4,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
-                                                                                  [[4, 6]]],    [[0.96869477,
-                                                                                                  1.93719534,
-                                                                                                  3.1307577],
-                                                                                                 [3.87435467,
-                                                                                                  6.02081578]]),
+                                                                                  [[4, 6]]],    [[0.99996025,
+                                                                                                  1.99992024,
+                                                                                                  3.19317783],
+                                                                                                 [3.99984044,
+                                                                                                  6.19219795]]),
         (8, [[[1,2,3],[4,6]],        # Store + default decay (should be AUTO)
              [[1,2,5],[4,8]],
              [[1,2,10],[4,10]]], (0,.01), 4, None, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
-                                                                                    [[4, 6]]], [[0.96869477,
-                                                                                                  1.93719534,
-                                                                                                  3.1307577 ],
-                                                                                                 [3.87435467,
-                                                                                                  6.02081578]]),
+                                                                                    [[4, 6]]], [[0.99996025,
+                                                                                                 1.99992024,
+                                                                                                 3.19317783],
+                                                                                                 [3.99984044,
+                                                                                                  6.19219795]]),
         (9, [[[1,2,3],[4,6]],        # Store + explicit AUTO decay
              [[1,2,5],[4,8]],
              [[1,2,10],[4,10]]], (0,.01), 4, AUTO, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
-                                                                                  [[4, 6]]],    [[0.96869477,
-                                                                                                  1.93719534,
-                                                                                                  3.1307577 ],
-                                                                                                 [3.87435467,
-                                                                                                  6.02081578]]),
+                                                                                  [[4, 6]]],    [[0.99996025,
+                                                                                                  1.99992024,
+                                                                                                  3.19317783],
+                                                                                                 [3.99984044,
+                                                                                                  6.19219795]]),
         (10, [[[1,2,3],[4,6]],        # Store + numerical decay
               [[1,2,5],[4,8]],
               [[1,2,10],[4,10]]], (0,.01), 4, .1, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
-                                                                                 [[4, 6]]],     [[0.96869477,
-                                                                                                  1.93719534,
-                                                                                                  3.1307577 ],
-                                                                                                 [3.87435467,
-                                                                                                  6.02081578]]),
-        (11, [[[1,2,3],[4,6]],    # Same as 10, but with equal weights and concatenate keysdd
+                                                                                 [[4, 6]]],     [[0.99996025,
+                                                                                                  1.99992024,
+                                                                                                  3.19317783],
+                                                                                                 [3.99984044,
+                                                                                                  6.19219795]]),
+        (11, [[[1,2,3],[4,6]],    # Same as 10, but with equal weights and concatenate keys
               [[1,2,5],[4,8]],
               [[1,2,10],[4,10]]], (0,.01), 4, .1, [1,1],  True, None,  100,  1, [[[1, 2, 3]],
                                                                                  [[4, 6]]],     [[0.99922544,
@@ -329,10 +347,12 @@ class TestExecution:
                                                                                                   3.38989346],
                                                                                                  [3.99689126,
                                                                                                   6.38682264]]),
+#                                                                                                  [3.99984044,
+#                                                                                                   6.19219795]]),
 ]
 
     args_names = "test_num, memory_template, memory_fill, memory_capacity, memory_decay_rate, field_weights, " \
-                 "concatenate_keys, normalize_memories, softmax_gain, storage_prob, inputs, expected_retrieval"
+                 "concatenate_queries, normalize_memories, softmax_gain, storage_prob, inputs, expected_retrieval"
     @pytest.mark.parametrize(args_names,
                              test_execution_data,
                              ids=[x[0] for x in test_execution_data])
@@ -348,7 +368,7 @@ class TestExecution:
                                                memory_fill,
                                                memory_decay_rate,
                                                field_weights,
-                                               concatenate_keys,
+                                               concatenate_queries,
                                                normalize_memories,
                                                softmax_gain,
                                                storage_prob,
@@ -374,8 +394,8 @@ class TestExecution:
             params.update({'memory_decay_rate': memory_decay_rate})
         if field_weights is not None:
             params.update({'field_weights': field_weights})
-        if concatenate_keys is not None:
-            params.update({'concatenate_keys': concatenate_keys})
+        if concatenate_queries is not None:
+            params.update({'concatenate_queries': concatenate_queries})
             # FIX: DELETE THE FOLLOWING ONCE CONCATENATION IS IMPLEMENTED FOR LEARNING
             params.update({'enable_learning': False})
         if normalize_memories is not None:
@@ -384,6 +404,8 @@ class TestExecution:
             params.update({'softmax_gain': softmax_gain})
         if storage_prob is not None:
             params.update({'storage_prob': storage_prob})
+        params.update({'softmax_threshold': None})
+        # FIX: ADD TESTS FOR VALIDATION USING SOFTMAX_THRESHOLD
 
         em = EMComposition(**params)
 
@@ -402,10 +424,10 @@ class TestExecution:
             np.testing.assert_allclose(retrieved, expected)
 
         # Validate that sum of weighted softmax distributions in field_weight_node itself sums to 1
-        np.testing.assert_allclose(np.sum(em.combined_softmax_node.value), 1.0, atol=1e-15)
+        np.testing.assert_allclose(np.sum(em.softmax_node.value), 1.0, atol=1e-15)
 
         # Validate that sum of its output ports also sums to 1
-        np.testing.assert_allclose(np.sum([port.value for port in em.combined_softmax_node.output_ports]),
+        np.testing.assert_allclose(np.sum([port.value for port in em.softmax_node.output_ports]),
                                    1.0, atol=1e-15)
 
         # Validate storage
@@ -451,7 +473,7 @@ class TestExecution:
                            memory_capacity=4,
                            softmax_gain=100,
                            memory_fill=(0,.001),
-                           concatenate_keys=concatenate,
+                           concatenate_queries=concatenate,
                            enable_learning=learning,
                            use_storage_node=use_storage_node)
 
@@ -475,14 +497,14 @@ class TestExecution:
             if concatenate:
                 with pytest.raises(EMCompositionError) as error:
                     em.learn(inputs=inputs, execution_mode=exec_mode)
-                assert "EMComposition does not support learning with 'concatenate_keys'=True." in str(error.value)
+                assert "EMComposition does not support learning with 'concatenate_queries'=True." in str(error.value)
 
             else:
-                if exec_mode == pnl.ExecutionMode.Python:
-                    # FIX: Not sure why Pyton mode reverses last two rows/entries (dict issue?)
-                    expected_memory = [[[0.15625, 0.3125,  0.46875], [0.171875, 0.328125, 0.484375]],
-                                       [[400., 500., 600.], [444., 555., 666.]],
-                                       [[25., 50., 75.], [27.75, 55.5,  83.25]],
-                                       [[2.5, 3.125, 3.75 ], [2.5625, 3.1875, 3.8125]]]
+                # if exec_mode == pnl.ExecutionMode.Python:
+                #     # FIX: Not sure why Python mode reverses last two rows/entries (dict issue?)
+                expected_memory = [[[0.15625, 0.3125,  0.46875], [0.171875, 0.328125, 0.484375]],
+                                   [[400., 500., 600.], [444., 555., 666.]],
+                                   [[25., 50., 75.], [27.75, 55.5,  83.25]],
+                                   [[2.5, 3.125, 3.75 ], [2.5625, 3.1875, 3.8125]]]
                 em.learn(inputs=inputs, execution_mode=exec_mode)
                 np.testing.assert_equal(em.memory, expected_memory)

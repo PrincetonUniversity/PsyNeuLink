@@ -139,19 +139,23 @@ class TestConstructorArguments:
             super().__init__(default_variable=default_variable, **kwargs)
 
     @pytest.mark.parametrize(
-        'cls_',
+        'cls_', [pnl.ProcessingMechanism, pnl.TransferMechanism, pnl.IntegratorMechanism]
+    )
+    @pytest.mark.parametrize(
+        'input_shapes, expected_variable',
         [
-            pnl.ProcessingMechanism,
-            pytest.param(
-                pnl.IntegratorMechanism,
-                marks=pytest.mark.xfail(reason='size currently unsupported at all on IntegratorMechanism')
-            )
+            (1, [[0]]),
+            (2, [[0, 0]]),
+            (3, [[0, 0, 0]]),
+            ((1, 1), [[0], [0]]),
+            ((2, 2), [[0, 0], [0, 0]]),
+            ((3, 3), [[0, 0, 0], [0, 0, 0]]),
         ]
     )
     @pytest.mark.parametrize('params_dict_entry', [NotImplemented, 'params'])
-    def test_size(self, cls_, params_dict_entry):
-        c = cls_(**nest_dictionary({'size': 5}, params_dict_entry))
-        assert len(c.defaults.variable[-1]) == 5
+    def test_input_shapes(self, cls_, params_dict_entry, input_shapes, expected_variable):
+        c = cls_(**nest_dictionary({'input_shapes': input_shapes}, params_dict_entry))
+        np.testing.assert_array_equal(c.defaults.variable, expected_variable)
 
     @pytest.mark.parametrize(
         'cls_, function_params, expected_values',

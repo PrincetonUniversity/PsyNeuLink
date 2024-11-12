@@ -9,8 +9,6 @@ from psyneulink.core.components.mechanisms.processing import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing import TransferMechanism
 from psyneulink.core.compositions.composition import Composition
 
-import psyneulink.core.llvm as pnlvm
-
 
 # default val is same shape as expected output
 # we only use param1 and param2 to avoid automatic shape changes of the variable
@@ -541,7 +539,7 @@ def test_udf_in_mechanism(mech_mode, benchmark):
     def myFunction(variable, param1, param2):
         return sum(variable[0]) + 2
 
-    myMech = ProcessingMechanism(function=myFunction, size=4, name='myMech')
+    myMech = ProcessingMechanism(function=myFunction, input_shapes=4, name='myMech')
     # assert 'param1' in myMech.parameter_ports.names # <- FIX reinstate when problem with function params is fixed
     # assert 'param2' in myMech.parameter_ports.names # <- FIX reinstate when problem with function params is fixed
     e = pytest.helpers.get_mech_execution(myMech, mech_mode)
@@ -610,8 +608,8 @@ def test_udf_composition_origin(comp_mode, benchmark):
     def myFunction(variable, context):
         return [variable[0][1], variable[0][0]]
 
-    myMech = ProcessingMechanism(function=myFunction, size=3, name='myMech')
-    T = TransferMechanism(size=2, function=Linear)
+    myMech = ProcessingMechanism(function=myFunction, input_shapes=3, name='myMech')
+    T = TransferMechanism(input_shapes=2, function=Linear)
     c = Composition(pathways=[myMech, T])
     benchmark(c.run, inputs={myMech: [[1, 3, 5]]}, execution_mode=comp_mode)
     np.testing.assert_allclose(c.results[0][0], [3, 1])
@@ -623,8 +621,8 @@ def test_udf_composition_terminal(comp_mode, benchmark):
     def myFunction(variable, context):
         return [variable[0][2], variable[0][0]]
 
-    myMech = ProcessingMechanism(function=myFunction, size=3, name='myMech')
-    T2 = TransferMechanism(size=3, function=Linear)
+    myMech = ProcessingMechanism(function=myFunction, input_shapes=3, name='myMech')
+    T2 = TransferMechanism(input_shapes=3, function=Linear)
     c2 = Composition(pathways=[[T2, myMech]])
     benchmark(c2.run, inputs={T2: [[1, 2, 3]]}, execution_mode=comp_mode)
     np.testing.assert_allclose(c2.results[0][0], [3, 1])
@@ -637,7 +635,7 @@ def test_udf_with_pnl_func():
         return L(variable) + 2
 
     U = UserDefinedFunction(custom_function=myFunction, default_variable=[[0, 0, 0]])
-    myMech = ProcessingMechanism(function=myFunction, size=3, name='myMech')
+    myMech = ProcessingMechanism(function=myFunction, input_shapes=3, name='myMech')
     val1 = myMech.execute(input=[1, 2, 3])
     val2 = U.execute(variable=[[1, 2, 3]])
     np.testing.assert_allclose(val1, val2)

@@ -615,8 +615,8 @@ from beartype import beartype
 from psyneulink._typing import Optional, Union, Callable, Literal, Iterable
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
+from psyneulink.core.components.functions.nonstateful.transformfunctions import Concatenate
+from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base, MechanismError
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort
@@ -630,7 +630,7 @@ from psyneulink.core.globals.keywords import \
     EID_SIMULATION, FEEDBACK, FUNCTION, GATING_SIGNAL, INIT_EXECUTE_METHOD_ONLY, INTERNAL_ONLY, NAME, \
     MECHANISM, MULTIPLICATIVE, MODULATORY_SIGNALS, MONITOR_FOR_CONTROL, MONITOR_FOR_MODULATION, \
     OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PARAMS, PORT_TYPE, PRODUCT, PROJECTION_TYPE, PROJECTIONS, \
-    REFERENCE_VALUE, SEPARATE, SIZE, VALUE
+    REFERENCE_VALUE, SEPARATE, INPUT_SHAPES, VALUE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
@@ -713,13 +713,11 @@ def validate_monitored_port_spec(owner, spec_list):
 def _control_mechanism_costs_getter(owning_component=None, context=None):
     # NOTE: In cases where there is a reconfiguration_cost, that cost is not returned by this method
     try:
-        costs = [
-            convert_to_np_array(
-                c.compute_costs(c.parameters.value._get(context), context=context)
-            )
+        costs = convert_all_elements_to_np_array([
+            c.compute_costs(c.parameters.value._get(context), context=context)
             for c in owning_component.control_signals
             if hasattr(c, 'compute_costs')
-        ] # GatingSignals don't have cost fcts
+        ])  # GatingSignals don't have cost fcts
         return costs
 
     except TypeError:
@@ -742,11 +740,13 @@ def _net_outcome_getter(owning_component=None, context=None):
             c.combine_costs()
         )
     except TypeError:
-        return [0]
+        return np.array([0])
 
 def _control_allocation_getter(owning_component=None, context=None):
     try:
-        return [v.parameters.variable._get(context) for v in owning_component.control_signals]
+        return convert_to_np_array([
+            v.parameters.variable._get(context) for v in owning_component.control_signals
+        ])
     except (TypeError, AttributeError):
         return owning_component.defaults.control_allocation
 
@@ -1276,7 +1276,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
     @beartype
     def __init__(self,
                  default_variable=None,
-                 size=None,
+                 input_shapes=None,
                  monitor_for_control: Optional[Union[Iterable, Mechanism, OutputPort]] = None,
                  objective_mechanism=None,
                  allow_probes: bool = False,
@@ -1341,7 +1341,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         super(ControlMechanism, self).__init__(
             default_variable=default_variable,
-            size=size,
+            input_shapes=input_shapes,
             modulation=modulation,
             params=params,
             name=name,
@@ -1498,9 +1498,9 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         # Get size of ObjectiveMechanism's OUTCOME OutputPort, and then append sizes of other any InputPorts passed in
         outcome_input_port_size = self.objective_mechanism.output_ports[OUTCOME].value.size
-        outcome_input_port = {SIZE:outcome_input_port_size,
-                               NAME:OUTCOME,
-                               PARAMS:{INTERNAL_ONLY:True}}
+        outcome_input_port = {INPUT_SHAPES:outcome_input_port_size,
+                              NAME:OUTCOME,
+                              PARAMS:{INTERNAL_ONLY:True}}
         other_input_port_value_sizes, _  = self._handle_arg_input_ports(other_input_ports)
         input_port_value_sizes = [outcome_input_port_size] + other_input_port_value_sizes
         input_ports = [outcome_input_port] + other_input_ports
@@ -1603,7 +1603,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             other_input_port_value_sizes  = self._handle_arg_input_ports(other_input_ports)[0]
             # Construct full list of InputPort specifications and sizes
             input_ports = self.input_ports + other_input_ports
-            input_port_value_sizes = [[0]] + other_input_port_value_sizes
+            input_port_value_sizes = convert_all_elements_to_np_array([[0]] + other_input_port_value_sizes)
             super()._instantiate_input_ports(context=context,
                                              input_ports=input_ports,
                                              reference_value=input_port_value_sizes)

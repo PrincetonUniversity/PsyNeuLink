@@ -8,8 +8,9 @@
 
 # ********************************************* PNL LLVM builtins **************************************************************
 
-from llvmlite import ir
-
+from ctypes import util
+from llvmlite import ir, binding
+import sys
 
 from . import helpers
 from .builder_context import LLVMBuilderContext, _BUILTIN_PREFIX
@@ -469,18 +470,39 @@ def setup_pnl_intrinsics(ctx):
     ir.Function(ctx.module, single_intr_ty, name=_BUILTIN_PREFIX + "log")
     ir.Function(ctx.module, double_intr_ty, name=_BUILTIN_PREFIX + "pow")
 
+    # printf address
+    ir.Function(ctx.module, ir.FunctionType(ir.IntType(64), []), name=_BUILTIN_PREFIX + "get_printf_address")
 
-
-def _generate_intrinsic_wrapper(module, name, ret, args):
-    intrinsic = module.declare_intrinsic("llvm." + name, list(set(args)))
-
+def _generate_new_function(module, name, ret, args):
     func_ty = ir.FunctionType(ret, args)
-    function = ir.Function(module, func_ty, name=_BUILTIN_PREFIX + name)
+    function = ir.Function(module, func_ty, name=name)
     function.attributes.add('alwaysinline')
     block = function.append_basic_block(name="entry")
     builder = ir.IRBuilder(block)
     builder.debug_metadata = LLVMBuilderContext.get_debug_location(function, None)
-    builder.ret(builder.call(intrinsic, function.args))
+
+    return builder
+
+def _generate_intrinsic_wrapper(module, name, ret, args):
+    intrinsic = module.declare_intrinsic("llvm." + name, list(set(args)))
+
+    builder = _generate_new_function(module, _BUILTIN_PREFIX + name, ret, args)
+    intrinsic_result = builder.call(intrinsic, builder.block.function.args)
+    builder.ret(intrinsic_result)
+
+def _generate_get_printf_address(module):
+    builder = _generate_new_function(module, _BUILTIN_PREFIX + "get_printf_address", ir.IntType(64), [])
+
+    libc_name = "msvcrt" if sys.platform == "win32" else "c"
+    libc = util.find_library(libc_name)
+    assert libc is not None, "Standard libc library not found"
+
+    binding.load_library_permanently(libc)
+    # Address will be none if the symbol is not found
+    printf_address = binding.address_of_symbol("printf")
+    assert printf_address is not None, "'printf' symbol not found in {}".format(libc)
+
+    builder.ret(ir.IntType(64)(printf_address))
 
 def _generate_cpu_builtins_module(_float_ty):
     """Generate function wrappers for log, exp, and pow intrinsics."""
@@ -489,6 +511,7 @@ def _generate_cpu_builtins_module(_float_ty):
         _generate_intrinsic_wrapper(module, intrinsic, _float_ty, [_float_ty])
 
     _generate_intrinsic_wrapper(module, "pow", _float_ty, [_float_ty, _float_ty])
+    _generate_get_printf_address(module)
     return module
 
 
@@ -510,9 +533,9 @@ def _setup_mt_rand_init_scalar(ctx, state_ty):
     builder.store(seed_lo, a_0)
 
     # clear gauss helpers
-    last_g_avail = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+    last_g_avail = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(3)])
     builder.store(last_g_avail.type.pointee(0), last_g_avail)
-    last_g = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(3)])
+    last_g = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
     builder.store(last_g.type.pointee(0), last_g)
 
     with helpers.for_loop(builder,
@@ -532,8 +555,8 @@ def _setup_mt_rand_init_scalar(ctx, state_ty):
         val = b.and_(val, val.type(0xffffffff))
         b.store(val, a_i)
 
-    pidx = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
-    builder.store(pidx.type.pointee(_MERSENNE_N), pidx)
+    idx_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+    builder.store(idx_ptr.type.pointee(_MERSENNE_N), idx_ptr)
     seed_p = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(4)])
     builder.store(seed, seed_p)
     builder.ret_void()
@@ -641,8 +664,8 @@ def _setup_mt_rand_integer(ctx, state_ty):
     state, out = builder.function.args
 
     array = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
-    pidx = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
-    idx = builder.load(pidx)
+    idx_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+    idx = builder.load(idx_ptr)
 
     cond = builder.icmp_signed(">=", idx, ctx.int32_ty(_MERSENNE_N))
     with builder.if_then(cond, likely=False):
@@ -703,16 +726,16 @@ def _setup_mt_rand_integer(ctx, state_ty):
 
             b.store(val, pkk)
 
-        builder.store(pidx.type.pointee(0), pidx)
+        builder.store(idx_ptr.type.pointee(0), idx_ptr)
 
     # Get pointer and update index
-    idx = builder.load(pidx)
-    pval = builder.gep(array, [ctx.int32_ty(0), idx])
+    idx = builder.load(idx_ptr)
+    val_ptr = builder.gep(array, [ctx.int32_ty(0), idx])
     idx = builder.add(idx, idx.type(1))
-    builder.store(idx, pidx)
+    builder.store(idx, idx_ptr)
 
     # Load and temper
-    val = builder.load(pval)
+    val = builder.load(val_ptr)
     tmp = builder.lshr(val, val.type(11))
     val = builder.xor(val, tmp)
 
@@ -793,15 +816,15 @@ def _setup_mt_rand_normal(ctx, state_ty, gen_float):
     builder = _setup_builtin_func_builder(ctx, "mt_rand_normal", (state_ty.as_pointer(), ctx.float_ty.as_pointer()))
     state, out = builder.function.args
 
-    p_last = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(3)])
-    p_last_avail = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
-    last_avail = builder.load(p_last_avail)
+    last_g_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+    last_g_avail_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(3)])
+    last_g_avail = builder.load(last_g_avail_ptr)
 
-    cond = builder.icmp_signed("==", last_avail, ctx.int32_ty(1))
+    cond = builder.icmp_signed("==", last_g_avail, last_g_avail.type(1))
     with builder.if_then(cond, likely=False):
-        builder.store(builder.load(p_last), out)
-        builder.store(ctx.float_ty(0), p_last)
-        builder.store(p_last_avail.type.pointee(0), p_last_avail)
+        builder.store(builder.load(last_g_ptr), out)
+        builder.store(last_g_ptr.type.pointee(0), last_g_ptr)
+        builder.store(last_g_avail_ptr.type.pointee(0), last_g_avail_ptr)
         builder.ret_void()
 
     loop_block = builder.append_basic_block("gen_loop_gauss")
@@ -844,18 +867,22 @@ def _setup_mt_rand_normal(ctx, state_ty, gen_float):
     builder.store(val, out)
 
     next_val = builder.fmul(f, x1)
-    builder.store(next_val, p_last)
-    builder.store(p_last_avail.type.pointee(1), p_last_avail)
+    builder.store(next_val, last_g_ptr)
+    builder.store(last_g_avail_ptr.type.pointee(1), last_g_avail_ptr)
 
     builder.ret_void()
 
 
 def get_mersenne_twister_state_struct(ctx):
+    assert _MERSENNE_N % 2 == 0
+
+    int16_ty = ir.IntType(16)
+
     return ir.LiteralStructType([
         ir.ArrayType(ctx.int32_ty, _MERSENNE_N),  # array
-        ctx.int32_ty,   # index
-        ctx.int32_ty,   # last_gauss available
         ctx.float_ty,   # last_gauss
+        int16_ty,       # index
+        int16_ty,       # last_gauss available
         ctx.int32_ty])  # used seed
 
 
@@ -1086,10 +1113,11 @@ def _setup_philox_rand_int32(ctx, state_ty, gen_int64):
     buffered_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(3)])
     has_buffered_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(5)])
     has_buffered = builder.load(has_buffered_ptr)
-    with builder.if_then(has_buffered):
+    has_buffered_cond = builder.icmp_unsigned("!=", has_buffered, has_buffered.type(0))
+    with builder.if_then(has_buffered_cond):
         buffered = builder.load(buffered_ptr)
         builder.store(buffered, out)
-        builder.store(has_buffered.type(False), has_buffered_ptr)
+        builder.store(has_buffered.type(0), has_buffered_ptr)
         builder.ret_void()
 
 
@@ -1103,7 +1131,7 @@ def _setup_philox_rand_int32(ctx, state_ty, gen_int64):
     val_hi = builder.lshr(val, val.type(val.type.width // 2))
     val_hi = builder.trunc(val_hi, buffered_ptr.type.pointee)
     builder.store(val_hi, buffered_ptr)
-    builder.store(has_buffered.type(True), has_buffered_ptr)
+    builder.store(has_buffered.type(1), has_buffered_ptr)
 
     builder.ret_void()
 
@@ -2044,7 +2072,7 @@ def get_philox_state_struct(ctx):
         ir.ArrayType(int64_ty, _PHILOX_DEFAULT_BUFFER_SIZE),  #  pre-gen buffer
         ctx.int32_ty,  #  the other half of random 64 bit int
         int16_ty,      #  buffer pos
-        ctx.bool_ty,   #  has uint buffered
+        int16_ty,      #  has uint buffered
         int64_ty])     #  seed
 
 

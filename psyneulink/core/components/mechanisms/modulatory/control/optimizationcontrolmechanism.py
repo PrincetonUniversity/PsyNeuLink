@@ -1111,7 +1111,7 @@ from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import rename_instance_in_registry
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
-from psyneulink.core.globals.utilities import convert_to_list, ContentAddressableList, is_numeric
+from psyneulink.core.globals.utilities import convert_to_list, convert_to_np_array, ContentAddressableList, is_numeric, object_has_single_value, try_extract_0d_array_item
 from psyneulink.core.llvm.debug import debug_env
 
 __all__ = [
@@ -1940,7 +1940,7 @@ class OptimizationControlMechanism(ControlMechanism):
     def _instantiate_input_ports(self, context=None):
         """Instantiate InputPorts for state_features (with state_feature_function if specified).
 
-        This instantiates the OptimizationControlMechanism's `state_input_ports;
+        This instantiates the OptimizationControlMechanism's `state_input_ports`;
              these are used to provide input to the agent_rep when its evaluate method is called
         The OptimizationControlMechanism's outcome_input_ports are instantiated by
             ControlMechanism._instantiate_input_ports in the call to super().
@@ -1966,7 +1966,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # FIX: 11/3/21 :
         #    ADD CHECK IN _parse_state_feature_specs() THAT IF A NODE RATHER THAN InputPort IS SPECIFIED,
         #    ITS PRIMARY IS USED (SEE SCRATCH PAD FOR EXAMPLES)
-        if not self.state_feature_specs:
+        if self.state_feature_specs is None:
             # If agent_rep is CompositionFunctionApproximator, warn if no state_features specified.
             # Note: if agent rep is Composition, state_input_ports and any state_feature_function specified
             #       are assigned in _update_state_input_ports_for_controller.
@@ -2380,7 +2380,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # SINGLE ITEM spec, SO APPLY TO ALL agent_rep_input_ports
         if (user_specs is None
                 or isinstance(user_specs, (str, tuple, InputPort, OutputPort, Mechanism, Composition))
-                or (is_numeric(user_specs) and (np.array(user_specs).ndim < 2))):
+                or (is_numeric(user_specs) and object_has_single_value(user_specs))):
             specs = [user_specs] * len(agent_rep_input_ports)
             # OK to assign here (rather than in _parse_secs()) since spec is intended for *all* state_input_ports
             self.parameters.state_feature_specs.set(specs, override=True)
@@ -2394,10 +2394,10 @@ class OptimizationControlMechanism(ControlMechanism):
         # - SHADOW_INPUTS dict (with list spec as its only entry): {SHADOW_INPUTS: {[spec, spec...]}}
         # Treat specs as sources of input to INPUT Nodes of agent_rep (in corresponding order):
         # Call _parse_specs to construct a regular dict using INPUT Nodes as keys and specs as values
-        elif isinstance(user_specs, list) or (isinstance(user_specs, dict) and SHADOW_INPUTS in user_specs):
-            if isinstance(user_specs, list):
+        elif isinstance(user_specs, (list, np.ndarray)) or (isinstance(user_specs, dict) and SHADOW_INPUTS in user_specs):
+            if isinstance(user_specs, (list, np.ndarray)):
                 num_missing_specs = len(agent_rep_input_ports) - len(self.state_feature_specs)
-                specs = user_specs + [self.state_feature_default] * num_missing_specs
+                specs = list(user_specs) + [self.state_feature_default] * num_missing_specs
                 spec_type = 'list'
             else:
                 # SHADOW_INPUTS spec:
@@ -2953,9 +2953,12 @@ class OptimizationControlMechanism(ControlMechanism):
 
 
     def _create_randomization_control_signal(self, context):
-        if self.num_estimates:
+        num_estimates = self.parameters.num_estimates._get(context)
+        num_estimates = try_extract_0d_array_item(num_estimates)
+
+        if num_estimates:
             # must be SampleSpec in allocation_samples arg
-            randomization_seed_mod_values = SampleSpec(start=1, stop=self.num_estimates, step=1)
+            randomization_seed_mod_values = SampleSpec(start=1, stop=num_estimates, step=1)
 
             # FIX: 11/3/21 noise PARAM OF TransferMechanism IS MARKED AS SEED WHEN ASSIGNED A DISTRIBUTION FUNCTION,
             #                BUT IT HAS NO PARAMETER PORT BECAUSE THAT PRESUMABLY IS FOR THE INTEGRATOR FUNCTION,
@@ -2968,10 +2971,10 @@ class OptimizationControlMechanism(ControlMechanism):
                 self.random_variables = self.agent_rep.random_variables
 
             if not self.random_variables:
-                warnings.warn(f"'{self.name}' has '{NUM_ESTIMATES} = {self.num_estimates}' specified, "
+                warnings.warn(f"'{self.name}' has '{NUM_ESTIMATES} = {num_estimates}' specified, "
                               f"but its '{AGENT_REP}' ('{self.agent_rep.name}') has no random variables: "
                               f"'{RANDOMIZATION_CONTROL_SIGNAL}' will not be created, and num_estimates set to None.")
-                self.num_estimates = None
+                self.parameters.num_estimates._set(None, context)
                 return
 
             randomization_control_signal = ControlSignal(name=RANDOMIZATION_CONTROL_SIGNAL,
@@ -2981,7 +2984,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                                          modulation=OVERRIDE,
                                                          cost_options=CostFunctions.NONE,
                                                          # FIXME: Hack that Jan found to prevent some LLVM runtime errors
-                                                         default_allocation=[self.num_estimates])
+                                                         default_allocation=np.array([num_estimates]))
             randomization_control_signal = self._instantiate_control_signal(randomization_control_signal, context)
             randomization_control_signal_index = len(self.output_ports)
             randomization_control_signal._variable_spec = (OWNER_VALUE, randomization_control_signal_index)
@@ -2990,9 +2993,9 @@ class OptimizationControlMechanism(ControlMechanism):
 
             # Otherwise, assert that num_estimates and number of seeds generated by randomization_control_signal are equal
             num_seeds = self.control_signals[RANDOMIZATION_CONTROL_SIGNAL].parameters.allocation_samples._get(context).num
-            assert self.num_estimates == num_seeds, \
+            assert num_estimates == num_seeds, \
                     f"PROGRAM ERROR:  The value of the {NUM_ESTIMATES} Parameter of {self.name}" \
-                    f"({self.num_estimates}) is not equal to the number of estimates that will be generated by " \
+                    f"({num_estimates}) is not equal to the number of estimates that will be generated by " \
                     f"its {RANDOMIZATION_CONTROL_SIGNAL} ControlSignal ({num_seeds})."
 
             function_search_space = self.function.parameters.search_space._get(context)
@@ -3073,12 +3076,12 @@ class OptimizationControlMechanism(ControlMechanism):
         """
 
         if self.is_initializing:
-            return [defaultControlAllocation]
+            return np.asarray([defaultControlAllocation])
 
         # Assign default control_allocation if it is not yet specified (presumably first trial)
         control_allocation = self.parameters.control_allocation._get(context)
         if control_allocation is None:
-            control_allocation = [c.defaults.variable for c in self.control_signals]
+            control_allocation = convert_to_np_array([c.defaults.variable for c in self.control_signals])
 
         # Give the agent_rep a chance to adapt based on last trial's state_feature_values and control_allocation
         if hasattr(self.agent_rep, "adapt"):
@@ -3376,7 +3379,8 @@ class OptimizationControlMechanism(ControlMechanism):
             if "evaluate_type_objective" in tags:
                 out_idx = idx
             elif "evaluate_type_all_results" in tags:
-                out_idx = builder.mul(idx, builder.load(num_trials_per_estimate_ptr))
+                num_trials_per_estimate = builder.load(num_trials_per_estimate_ptr)
+                out_idx = builder.mul(idx, builder.trunc(num_trials_per_estimate, idx.type))
             else:
                 assert False, "Evaluation type not detected in tags, or unknown: {}".format(tags)
 
@@ -3494,13 +3498,16 @@ class OptimizationControlMechanism(ControlMechanism):
         num_trials_per_estimate = builder.load(num_trials_per_estimate_ptr, "num_trials_per_estimate")
 
         # if num_trials_per_estimate is 0, run 1 trial
-        param_is_zero = builder.icmp_unsigned("==", num_trials_per_estimate,
-                                                    ctx.int32_ty(0))
-        num_sims = builder.select(param_is_zero, ctx.int32_ty(1),
-                                  num_trials_per_estimate, "corrected_trials per_estimate")
+        num_trials_param_is_zero = builder.icmp_unsigned("==",
+                                                         num_trials_per_estimate,
+                                                         num_trials_per_estimate.type(0))
+        num_trials_per_estimate_fixed = builder.select(num_trials_param_is_zero,
+                                                       num_trials_per_estimate.type(1),
+                                                       num_trials_per_estimate,
+                                                       "corrected_num_trials_per_estimate")
 
-        num_trials = builder.alloca(ctx.int32_ty, name="num_sim_trials")
-        builder.store(num_sims, num_trials)
+        num_trials = builder.alloca(sim_f.args[5].type.pointee, name="num_sim_trials")
+        builder.store(builder.trunc(num_trials_per_estimate_fixed, num_trials.type.pointee), num_trials)
 
         # Simulations don't store output unless we run parameter fitting
         if 'evaluate_type_objective' in tags:
@@ -3510,14 +3517,13 @@ class OptimizationControlMechanism(ControlMechanism):
         else:
             assert False, "Evaluation type not detected in tags, or unknown: {}".format(tags)
 
-        builder.call(sim_f, [comp_state, comp_params, comp_data, comp_input,
-                             comp_output, num_trials, num_inputs])
+        builder.call(sim_f, [comp_state, comp_params, comp_data, comp_input, comp_output, num_trials, num_inputs])
 
         if "evaluate_type_objective" in tags:
             # Extract objective mechanism value
 
-            assert self.objective_mechanism, f"objective_mechanism on OptimizationControlMechanism cannot be None " \
-                                             f"in compiled mode"
+            assert self.objective_mechanism, \
+                "objective_mechanism on OptimizationControlMechanism cannot be None in 'evaluate_type_objective'"
 
             obj_idx = self.agent_rep._get_node_index(self.objective_mechanism)
             # Mechanisms' results are stored in the first substructure
@@ -3650,7 +3656,7 @@ class OptimizationControlMechanism(ControlMechanism):
             else:
                 # Specified InputPort is not (yet) in agent_rep
                 input_port_name = (f"{input_port.full_name}" if input_port
-                                   else f"{str(i-len(agent_rep_input_ports))}")
+                                   else f"{str(i - len(agent_rep_input_ports))}")
                 key = _deferred_agent_rep_input_port_name(input_port_name, self.agent_rep.name)
 
             # Get source for state_features dict
@@ -3703,7 +3709,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
     @property
     def state_feature_sources(self):
-        """Dict with {InputPort: source} for all INPUT Nodes of agent_rep, and sources in **state_feature_specs.
+        """Dict with {InputPort: source} for all INPUT Nodes of agent_rep, and sources in **state_feature_specs**.
         Used by state_distal_sources_and_destinations_dict()
         """
         state_dict = {}

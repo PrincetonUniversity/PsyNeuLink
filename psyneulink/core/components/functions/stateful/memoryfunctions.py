@@ -24,36 +24,33 @@ Functions that store and can return a record of their input.
 """
 
 import copy
+import itertools
 import numbers
 import warnings
 from collections import deque
-from itertools import combinations, product
 
-from psyneulink._typing import Callable, List, Literal
+from psyneulink._typing import Callable, List, Literal, Mapping, Optional, Union
 
 import numpy as np
 from beartype import beartype
-
-from typing import Optional, Union
-# from psyneulink._typing import
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, FunctionError, _random_state_getter, _seed_setter, EPSILON, _noise_setter
 )
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance
-from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
+from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot, ARG_MIN, ARG_MIN_INDICATOR
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
 from psyneulink.core.components.functions.stateful.integratorfunctions import StatefulFunction
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, \
     ContentAddressableMemory_FUNCTION, DictionaryMemory_FUNCTION, \
-    MIN_INDICATOR, MULTIPLICATIVE_PARAM, NEWEST, NOISE, OLDEST, OVERWRITE, RATE, RANDOM, SINGLE, WEIGHTED
-from psyneulink.core.globals.parameters import Parameter, check_user_specified
+    MIN_INDICATOR, MIN_VAL, MULTIPLICATIVE_PARAM, NEWEST, NOISE, OLDEST, OVERWRITE, RATE, RANDOM, SINGLE, WEIGHTED
+from psyneulink.core.globals.parameters import Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import \
-    all_within_range, convert_to_np_array, convert_to_list, convert_all_elements_to_np_array
+    all_within_range, convert_all_elements_to_np_array, convert_to_np_array, convert_to_list, is_numeric_scalar
 
 __all__ = ['MemoryFunction', 'Buffer', 'DictionaryMemory', 'ContentAddressableMemory', 'RETRIEVAL_PROB', 'STORAGE_PROB']
 
@@ -64,6 +61,7 @@ class MemoryFunction(StatefulFunction):  # -------------------------------------
     # TODO: refactor to avoid skip of direct super
     def _update_default_variable(self, new_default_variable, context=None):
         if not self.parameters.initializer._user_specified:
+            new_default_variable = convert_all_elements_to_np_array(new_default_variable)
             # use * 0 instead of zeros_like to deal with ragged arrays
             self._initialize_previous_value([new_default_variable * 0], context)
 
@@ -252,8 +250,8 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                  history:Optional[int]=None,
                  # history: Optional[int] = None,
                  initializer=None,
-                 params: Optional[dict] = None,
-                 # params: Optional[dict] = None,
+                 params: Optional[Mapping] = None,
+                 # params: Optional[Mapping] = None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None
                  ):
@@ -351,11 +349,16 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         if len(previous_value):
             # TODO: remove this shape hack when buffer shapes made consistent
             noise = np.reshape(noise, np.asarray(previous_value[0]).shape)
+            variable = np.reshape(variable, np.asarray(previous_value[0]).shape)
             previous_value = convert_to_np_array(previous_value) * rate + noise
 
-        previous_value = deque(previous_value, maxlen=self.parameters.history._get(context))
+        maxlen = self.parameters.history._get(context)
+        previous_value = deque(
+            previous_value,
+            maxlen=maxlen.item() if maxlen is not None else None
+        )
 
-        previous_value.append(variable)
+        previous_value.append(copy_parameter_value(variable))
 
         self.parameters.previous_value._set(previous_value, context)
         return self.convert_output_type(previous_value)
@@ -390,10 +393,10 @@ def _distance_field_weights_setter(value, owning_component=None, context=None):
     # NOTE: need the following to accommodate various forms of specification (single value, None's, etc)
     #       that are resolved elsewhere
     # FIX: STANDARDIZE FORMAT FOR FIELDWEIGHTS HERE (AS LIST OF INTS) AND GET RID OF THE FOLLOWING
-    test_val = np.array([int(val) if val else 0 for val in value])
-    test_val = np.full(len(variable),test_val) if len(test_val) == 1 else test_val
-    test_curr_field_weights = np.array([int(val) if val else 0 for val in current_field_weights])
-    test_curr_field_weights = (np.full(len(variable),test_curr_field_weights) if len(variable) == 1
+    test_val = np.array([int(np.array(val).item()) if val else 0 for val in value])
+    test_val = np.full(len(variable), test_val) if len(test_val) == 1 else test_val
+    test_curr_field_weights = np.array([int(np.array(val).item()) if val else 0 for val in current_field_weights])
+    test_curr_field_weights = (np.full(len(variable), test_curr_field_weights) if len(variable) == 1
                                else test_curr_field_weights)
     if np.all(test_curr_field_weights == test_val) and not owning_component.is_initializing:
         pass
@@ -657,11 +660,11 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         >>> c = ContentAddressableMemory(default_variable=[[0,0],[0,0,0]])
         >>> c([[1,2]])
-        [array([0, 0])]
+        array([[0, 0]])
 
     Since `memory <ContentAddressableMemory.memory>` was not intialized, the first call to the Function returns an
     array of zeros, formatted as specified in **defaul_variable**.  However, the input in the call to the Function
-    (``[[1,2]]``) is stored as an entry in `memory <EpisodicMemoryMechanism.memory>`::
+    (``[[1,2]]``) is stored as an entry in `memory <EpisodicMemoryMechanism.memory>`:
 
         >>> c.memory
         array([[[1., 2.]]])
@@ -833,7 +836,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     noise : float, list, 2d array, or Function : default 0.0
         specifies random value(s) added to `variable <ContentAddressableMemory.variable>` before storing in
         `memory <ContentAddressableMemory.memory>`;  if a list or 2d array, it must be the same shape as `variable
-         ContentAddressableMemory.variable>` (see `noise <ContentAddressableMemory.noise>` for details).
+        ContentAddressableMemory.variable>` (see `noise <ContentAddressableMemory.noise>` for details).
 
     initializer : 3d array or list : default None
         specifies an initial set of entries for `memory <ContentAddressableMemory.memory>` (see
@@ -910,7 +913,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         value added to `variable <ContentAddressableMemory.variable>`) before storing in
         `memory <ContentAddressableMemory.memory>` (see `noise <Stateful_Noise>` for additional details).
         If a 2d array (or `Function` that returns one), its shape must be the same as `variable
-        <ContentAddressableMemory.variable>`; that is, each array in the outer dimension (Axis 0) must have the
+        <ContentAddressableMemory.variable>`; that is, each array in the outer dimension (axis 0) must have the
         same length as the corresponding one in `variable <ContentAddressableMemory.variable>`, so that it
         can be added Hadamard style to `variable <ContentAddressableMemory.variable>` before storing it in
         `memory <ContentAddressableMemory.memory>`.
@@ -1028,8 +1031,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     Returns
     -------
 
-    entry from `memory <ContentAddressableMemory.memory>` that best matches `variable
-    <ContentAddressableMemory.variable>` : 2d array
+    entry from `memory <ContentAddressableMemory.memory>` that best matches `variable <ContentAddressableMemory.variable>` : 2d array
         if no retrieval occurs, an appropriately shaped zero-valued array is returned.
 
     """
@@ -1186,7 +1188,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         )
         max_entries = Parameter(1000)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False, dependencies='distance_function')
         distance = Parameter(0, stateful=True, read_only=True)
@@ -1304,7 +1306,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         field_wts_homog = np.full(len(test_var),1).tolist()
         field_wts_heterog = np.full(len(test_var),range(0,len(test_var))).tolist()
 
-        for granularity, field_weights in product(['full_entry', 'per_field'],[field_wts_homog, field_wts_heterog]):
+        for granularity, field_weights in itertools.product(['full_entry', 'per_field'],[field_wts_homog, field_wts_heterog]):
             try:
                 distance_result = self._get_distance(test_var, test_var, field_weights, granularity, context=context)
             except:
@@ -1490,7 +1492,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         # Retrieve entry from memory that best matches variable
         if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.uniform()):
-            entry = self.get_memory(variable, distance_field_weights, context).copy()
+            entry = copy_parameter_value(self.get_memory(variable, distance_field_weights, context))
         else:
             # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OutputPort FROM LAST TRIAL)?
             #           CURRENT PROBLEM WITH LATTER IS THAT IT CAUSES CRASH ON INIT, SINCE NOT OUTPUT_PORT
@@ -1531,7 +1533,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                                     f"for memory of '{self.name}{owner_name}';  should be: {field_shapes[i]}.")
 
     def uniform_entry(self, value:Union[int, float], context) -> np.ndarray:
-        return [np.full(i,value) for i in self.parameters.memory_field_shapes._get(context)]
+        return convert_all_elements_to_np_array(
+            [np.full(i, value) for i in self.parameters.memory_field_shapes._get(context)]
+        )
 
     @handle_external_context()
     def get_memory(self, cue:Union[list, np.ndarray], field_weights=None, context=None) -> np.ndarray:
@@ -1587,7 +1591,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             # Check for any duplicate entries in matches and, if they are not allowed, return zeros
             if (not self.duplicate_entries_allowed
                     and any(self._is_duplicate(_memory[i],_memory[j], field_weights, context)
-                            for i, j in combinations(indices_of_selected_items, 2))):
+                            for i, j in itertools.combinations(indices_of_selected_items, 2))):
                 warnings.warn(f"More than one entry matched cue ({cue}) in memory for {self.name} "
                               f"{'of ' + self.owner.name if self.owner else ''} even though "
                               f"{repr('duplicate_entries_allowed')} is False; zeros returned as retrieved item.")
@@ -1758,7 +1762,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         if granularity == 'per_field':
             # Note: this is just used for reporting, and not determining storage or retrieval
             # Report None if any element of cue, candidate or field_weights is None or empty list:
-            distances_by_field = np.array([None] * num_fields)
+            distances_by_field = np.full(num_fields, None)
             # If field_weights is scalar, splay out as array of length num_fields so can iterate through all of them
             if len(field_weights)==1:
                 field_weights = np.full(num_fields, field_weights[0])
@@ -1766,7 +1770,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                 if not any([item is None or np.asarray(item).size == 0
                             for item in [cue[i], candidate[i], field_weights[i]]]):
                     distances_by_field[i] = distance_fct([cue[i], candidate[i]]) * field_weights[i]
-            return list(distances_by_field)
+            return distances_by_field
 
         elif granularity == 'full_entry':
             # Use first element as scalar if it is a homogenous array (i.e., all elements are the same)
@@ -1852,8 +1856,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         fields = convert_to_list(fields)
 
         existing_memory = self.parameters.previous_value._get(context)
-        pruned_memory = existing_memory.copy()
-        for entry, memory in product(entries, existing_memory):
+        pruned_memory = copy_parameter_value(existing_memory)
+        for entry, memory in itertools.product(entries, existing_memory):
             if (np.all(entry == memory)
                     or fields and all(entry[f] == memory[f] for f in fields)):
                 pruned_memory = np.delete(pruned_memory, pruned_memory.tolist().index(memory.tolist()), axis=0)
@@ -1993,7 +1997,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
     .. math::
         variable[1] * rate + noise
 
-    If the number of entries exceeds `max_entries <DictionaryMemory.max_entries>, the first (oldest) item in
+    If the number of entries exceeds `max_entries <DictionaryMemory.max_entries>`, the first (oldest) item in
     memory is deleted.
 
     Arguments
@@ -2012,11 +2016,11 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
     rate : float, list, or array : default 1.0
         specifies a value used to multiply key (first item of `variable <DictionaryMemory.variable>`) before
-        storing in `memory <DictionaryMemory.memory>` (see `rate <DictionaryMemory.noise> for details).
+        storing in `memory <DictionaryMemory.memory>` (see `rate <DictionaryMemory.rate>` for details).
 
     noise : float, list, array, or Function : default 0.0
         specifies a random value added to key (first item of `variable <DictionaryMemory.variable>`) before
-        storing in `memory <DictionaryMemory.memory>` (see `noise <DictionaryMemory.noise> for details).
+        storing in `memory <DictionaryMemory.memory>` (see `noise <DictionaryMemory.noise>` for details).
 
     initializer : 3d array or list : default None
         specifies an initial set of entries for `memory <DictionaryMemory.memory>`. It must be of the following
@@ -2028,7 +2032,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         specifies the function used during retrieval to compare the first item in `variable
         <DictionaryMemory.variable>` with keys in `memory <DictionaryMemory.memory>`.
 
-    selection_function : OneHot or function : default OneHot(mode=MIN_VAL)
+    selection_function : OneHot or function : default OneHot(mode=ARG_MIN_VAL)
         specifies the function used during retrieval to evaluate the distances returned by `distance_function
         <DictionaryMemory.distance_function>` and select the item to return.
 
@@ -2098,7 +2102,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         function used during retrieval to compare the first item in `variable <DictionaryMemory.variable>`
         with keys in `memory <DictionaryMemory.memory>`.
 
-    selection_function : OneHot or function : default OneHot(mode=MIN_VAL)
+    selection_function : OneHot or function : default OneHot(mode=ARG_MIN_VAL)
         function used during retrieval to evaluate the distances returned by `distance_function
         <DictionaryMemory.distance_function>` and select the item(s) to return.
 
@@ -2217,7 +2221,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
                 selection_function
                     see `selection_function <DictionaryMemory.selection_function>`
 
-                    :default value: `OneHot`(mode=MIN_INDICATOR)
+                    :default value: `OneHot`(mode=ARG_MIN_INDICATOR)
                     :type: `Function`
 
                 storage_prob
@@ -2245,7 +2249,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         )
         max_entries = Parameter(1000)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
 
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)
@@ -2280,6 +2284,8 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
             retrieval_prob=retrieval_prob,
             storage_prob=storage_prob,
             initializer=initializer,
+            distance_function=distance_function,
+            selection_function=selection_function,
             duplicate_keys=duplicate_keys,
             equidistant_keys_select=equidistant_keys_select,
             rate=rate,
@@ -2393,6 +2399,19 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
                 b.call(distance_f, [distance_params, distance_state,
                                     distance_arg_in, distance_arg_out])
 
+            # MODIFIED 10/13/24 NEW:
+            # IMPLEMENTATION NOTE:
+            #  REPLACE MIN_VAL with ARG_MIN and MIN_INDICATOR with ARG_MIN_INDICATOR
+            #    until the MIN_XXX args are implemented in LLVM
+            #  since, at present, the tests don't seem to distinguish between these (i.e., return of multiple values;
+            #  should add tests that do so once MIN_VAL and related args are implemented in LLVM)
+            if isinstance(self.selection_function, OneHot):
+                mode = self.selection_function.mode
+                if mode == MIN_VAL:
+                    self.selection_function.mode = ARG_MIN
+                elif mode == MIN_INDICATOR:
+                    self.selection_function.mode = ARG_MIN_INDICATOR
+            # MODIFIED 10/13/24 END
             selection_f = ctx.import_llvm_function(self.selection_function)
             selection_params, selection_state = ctx.get_param_or_state_ptr(builder, self, "selection_function", param_struct_ptr=params, state_struct_ptr=state)
             selection_arg_out = builder.alloca(selection_f.args[3].type.pointee)
@@ -2534,7 +2553,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
             fct_msg = 'Function'
         try:
             distance_result = distance_function(test_var, context=context)
-            if not np.isscalar(distance_result):
+            if not is_numeric_scalar(distance_result):
                 raise FunctionError("Value returned by {} specified for {} ({}) must return a scalar".
                                     format(repr(DISTANCE_FUNCTION), self.__name__.__class__, distance_result))
         except:
@@ -2563,6 +2582,11 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         if result.shape != test_var.shape:
             raise FunctionError(f'Value returned by {repr(SELECTION_FUNCTION)} specified for {self.__class__} '
                                 f'({result}) must return an array of the same length it receives')
+
+    def _get_default_entry(self, context):
+        key = np.zeros((self.parameters.key_size._get(context),))
+        val = np.zeros((self.parameters.val_size._get(context),))
+        return convert_to_np_array([key, val])
 
     def _initialize_previous_value(self, initializer, context=None):
         """Ensure that initializer is appropriate for assignment as memory attribute and assign as previous_value
@@ -2682,8 +2706,8 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
         # Set key_size and val_size if this is the first entry
         if len(self.parameters.previous_value._get(context)[KEYS]) == 0:
-            self.parameters.key_size._set(len(key), context)
-            self.parameters.val_size._set(len(val), context)
+            self.parameters.key_size._set(np.array(len(key)), context)
+            self.parameters.val_size._set(np.array(len(val)), context)
 
         # Retrieve value from current dict with key that best matches key
         if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.uniform()):
@@ -2692,8 +2716,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
             # QUESTION: SHOULD IT RETURN 0's VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE & OutputPort FROM LAST TRIAL)?
             #           CURRENT PROBLEM WITH LATTER IS THAT IT CAUSES CRASH ON INIT, SINCE NOT OUTPUT_PORT
             #           SO, WOULD HAVE TO RETURN ZEROS ON INIT AND THEN SUPPRESS AFTERWARDS, AS MOCKED UP BELOW
-            memory = [[0]* self.parameters.key_size._get(context), [0]* self.parameters.val_size._get(context)]
-
+            memory = self._get_default_entry(context)
         # Store variable to dict:
         rate = self._get_current_parameter_value(RATE, context)
         if rate is not None:
@@ -2709,11 +2732,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
             self._store_memory([key, val], context)
 
         # Return 3d array with keys and vals as lists
-        # IMPLEMENTATION NOTE:  if try to create np.ndarray directly, and keys and vals have same length
-        #                       end up with array of arrays, rather than array of lists
-        ret_val = convert_to_np_array([list(memory[0]),[]])
-        ret_val[1] = list(memory[1])
-        return ret_val
+        return memory
 
     @beartype
     def _validate_memory(self, memory: Union[list, np.ndarray], context):
@@ -2760,11 +2779,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
         # if no memory, return the zero vector
         if len(_memory[KEYS]) == 0:
-            # zeros_key = [0] * self.parameters.key_size.get(context)
-            # zeros_val = [0] * self.parameters.val_size.get(context)
-            zeros_key = [0] * self.parameters.key_size.get(context)
-            zeros_val = [0] * self.parameters.val_size.get(context)
-            return [zeros_key, zeros_val]
+            return self._get_default_entry(context)
 
         # Get distances between query_key and all keys in memory
         distances = [self.distance_function([query_key, list(m)]) for m in _memory[KEYS]]
@@ -2774,8 +2789,8 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         indices_of_selected_items = np.flatnonzero(selection_array)
 
         # Single key identified
-        if len(indices_of_selected_items)==1:
-            index_of_selected_item = int(np.flatnonzero(selection_array))
+        if len(indices_of_selected_items) == 1:
+            index_of_selected_item = int(np.flatnonzero(selection_array).item())
         # More than one key identified
         else:
             selected_keys = _memory[KEYS]
@@ -2785,8 +2800,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
                             for other in indices_of_selected_items[1:])):
                 warnings.warn(f'More than one item matched key ({query_key}) in memory for {self.name} of '
                               f'{self.owner.name} even though {repr("duplicate_keys")} is False')
-                return [[0]* self.parameters.key_size._get(context),
-                        [0]* self.parameters.val_size._get(context)]
+                return self._get_default_entry(context)
             if self.equidistant_keys_select == RANDOM:
                 random_state = self._get_current_parameter_value('random_state', context)
                 index_of_selected_item = random_state.choice(indices_of_selected_items)
@@ -2800,8 +2814,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         best_match_key = _memory[KEYS][index_of_selected_item]
         best_match_val = _memory[VALS][index_of_selected_item]
 
-        # Return as list of lists
-        return [list(best_match_key), list(best_match_val)]
+        return convert_all_elements_to_np_array([best_match_key, best_match_val])
 
     @beartype
     def _store_memory(self, memory:Union[list, np.ndarray], context):
@@ -2856,6 +2869,8 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
         if len(d[KEYS]) > self.max_entries:
             d = np.delete(d, [KEYS], axis=1)
+
+        d = convert_all_elements_to_np_array(d)
 
         self.parameters.previous_value._set(d,context)
         self._memory = d

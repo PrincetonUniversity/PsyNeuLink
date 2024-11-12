@@ -128,14 +128,14 @@ def test_aliases_set_alias(obj, param_name, alias_name):
 
 def test_parameter_getter():
     f = pnl.Linear()
-    f.parameters.slope.getter = lambda x: x ** 2
+    f.parameters.slope.getter = lambda x: np.asarray(x ** 2)
 
     assert f.parameters.slope.get(x=3) == 9
 
 
 def test_parameter_setter():
     f = pnl.Linear()
-    f.parameters.slope.setter = lambda x: x ** 2
+    f.parameters.slope.setter = lambda x: np.asarray(x ** 2)
 
     f.parameters.slope.set(3)
 
@@ -345,8 +345,9 @@ class TestSharedParameters:
         for eid in eids:
             obj.execute(np.array([eid, eid]), context=eid)
 
+        context = pnl.Context(execution_id=eid)
         assert all([
-            obj_param.get(eid) is source.get(eid)
+            obj_param._get(context) is source._get(context)
             for eid in eids
         ])
 
@@ -433,8 +434,8 @@ class TestSharedParameters:
 
     def test_conflict_no_warning_parser(self):
         # replace with different class/parameter if _parse_noise ever implemented
-        assert not hasattr(pnl.AdaptiveIntegrator.Parameters, '_parse_noise')
-        pnl.AdaptiveIntegrator.Parameters._parse_noise = lambda self, noise: 2 * noise
+        assert not hasattr(pnl.AdaptiveIntegrator.parameters, '_parse_noise')
+        pnl.AdaptiveIntegrator.parameters._parse_noise = lambda noise: np.array(2 * noise)
 
         # pytest doesn't support inverse warning assertion for specific
         # warning only
@@ -449,7 +450,7 @@ class TestSharedParameters:
                 if re.match(shared_parameter_warning_regex('noise'), str(w)):
                     raise
 
-        delattr(pnl.AdaptiveIntegrator.Parameters, '_parse_noise')
+        delattr(pnl.AdaptiveIntegrator.parameters, '_parse_noise')
 
 
 class TestSpecificationType:
@@ -659,7 +660,7 @@ def test_dependent_parameter_validate():
             return super().__init__(0, {}, **kwargs)
 
         def _function(self, variable=None, context=None, params=None):
-            return 0
+            return np.array(0)
 
     pnl.ProcessingMechanism(function=NewF(a=2, b=3, c=4, d=5))
 

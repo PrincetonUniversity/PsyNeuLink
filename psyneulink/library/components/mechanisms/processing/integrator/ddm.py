@@ -129,7 +129,7 @@ depending on the `function <DDM.function>` that has been assigned to the DDM, as
 +                                    +----------------------------+----------------------------+
 |                                    | `DriftDiffusionAnalytical` | `DriftDiffusionIntegrator` |
 |                                    |   (`analytic               |   (`path integration)      |
-| **OutputPorts:**                  |   <DDM_Analytic_Mode>`)    |   <DDM_Integration_Mode>`) |
+| **OutputPorts:**                   |   <DDM_Analytic_Mode>`)    |   <DDM_Integration_Mode>`) |
 +------------------------------------+----------------------------+----------------------------+
 | `DECISION_VARIABLE                 |                            |                            |
 | <DDM_DECISION_VARIABLE>`           |       X                    |          X                 |
@@ -373,7 +373,7 @@ from psyneulink.core.components.functions.stateful.integratorfunctions import \
     DriftDiffusionIntegrator, IntegratorFunction
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import STARTING_VALUE, \
     DriftDiffusionAnalytical
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import Reduce
+from psyneulink.core.components.functions.nonstateful.transformfunctions import Reduce
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import _is_control_spec
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
@@ -740,7 +740,7 @@ class DDM(ProcessingMechanism):
         input_format = Parameter(SCALAR, stateful=False, loggable=False)
         initializer = np.array([[0]])
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
 
         output_ports = Parameter(
             [DECISION_VARIABLE, RESPONSE_TIME],
@@ -767,7 +767,7 @@ class DDM(ProcessingMechanism):
     @beartype
     def __init__(self,
                  default_variable=None,
-                 size=None,
+                 input_shapes=None,
                  input_format: Optional[Literal['SCALAR', 'ARRAY', 'VECTOR']] = None,
                  function=None,
                  input_ports=None,
@@ -799,7 +799,7 @@ class DDM(ProcessingMechanism):
         #            These are created here rather than as StandardOutputPorts
         #            since they require input_format==ARRAY to be meaningful
         if input_format in {ARRAY, VECTOR}:
-            size=1 # size of variable for DDM Mechanism
+            input_shapes=1 # size of variable for DDM Mechanism
             input_ports = [
                 {NAME:'ARRAY',
                  VARIABLE: np.array([[0.0, 0.0]]),
@@ -822,8 +822,8 @@ class DDM(ProcessingMechanism):
                  #    v[0]=self.value[self.DECISION_VARIABLE_INDEX]
                  #    v[1]=self.parameter_ports[THRESHOLD]
                  #    v[2]=self.input_ports[0].variable
-                 FUNCTION: lambda v: [float(v[2][0][0]), 0] \
-                                      if (v[1] - v[0]) < (v[1] + v[0]) \
+                 FUNCTION: lambda v: [float(v[2][0][0]), 0]
+                                      if (v[1] - v[0]) < (v[1] + v[0])
                                       else [0, float(v[2][0][1])]
                  }
             ])
@@ -848,7 +848,7 @@ class DDM(ProcessingMechanism):
 
         # IMPLEMENTATION NOTE: this manner of setting default_variable works but is idiosyncratic
         # compared to other mechanisms: see TransferMechanism.py __init__ function for a more normal example.
-        if default_variable is None and size is None:
+        if default_variable is None and input_shapes is None:
             try:
                 default_variable = params[FUNCTION_PARAMS][STARTING_VALUE]
                 if not is_numeric(default_variable):
@@ -859,7 +859,7 @@ class DDM(ProcessingMechanism):
                 pass
 
         # # Conflict with above
-        # self.size = size
+        # self.input_shapes = input_shapes
 
         # New (1/19/2021) default behaviour of DDM mechanism is to execute until finished. That
         # is, it should execute until it reaches its threshold.
@@ -882,7 +882,7 @@ class DDM(ProcessingMechanism):
                                   params=params,
                                   name=name,
                                   prefs=prefs,
-                                  size=size,
+                                  input_shapes=input_shapes,
                                   **kwargs),
 
         self._instantiate_plotting_functions()
@@ -964,7 +964,7 @@ class DDM(ProcessingMechanism):
             raise DDMError("Length of input to DDM ({}) is greater than 1, implying there are multiple "
                            "input ports, which is currently not supported in DDM, but may be supported"
                            " in the future under a multi-process DDM. Please use a single numeric "
-                           "item as the default_variable, or use size = 1.".format(variable))
+                           "item as the default_variable, or use input_shapes = 1.".format(variable))
         # # MODIFIED 6/28/17 (CW): changed len(variable) > 1 to len(variable[0]) > 1
         # # if not isinstance(variable, numbers.Number) and len(variable[0]) > 1:
         # if not is_numeric(variable) and len(variable[0]) > 1:
@@ -1110,7 +1110,7 @@ class DDM(ProcessingMechanism):
                                format(self.function.name, self.name))
 
             # Convert ER to decision variable:
-            threshold = float(self.function._get_current_parameter_value(THRESHOLD, context))
+            threshold = float(self.function._get_current_parameter_value(THRESHOLD, context).item())
             random_state = self._get_current_parameter_value(self.parameters.random_state, context)
             if random_state.uniform() < return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]:
                 return_value[self.DECISION_VARIABLE_INDEX] = np.atleast_1d(-1 * threshold)

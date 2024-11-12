@@ -146,7 +146,6 @@ Dependencies that are automatically installed (except those noted as optional) i
    * pillow
    * llvmlite
    * mpi4py (optional)
-   * autograd (optional)
 
 Lists of required packages for PsyNeuLink, developing PsyNeuLink, and running the PsyNeuLink tutorial are also
 stored in pip-style `requirements.txt`, `dev_requirements.txt`, and `tutorial_requirements.txt` in the source code.
@@ -173,13 +172,13 @@ To run the tutorial locally, you must run python 3.5 and install additional pack
 
 ::
 
-    pip install psyneulink[tutorial]
+    pip install "psyneulink[tutorial]"
 
 or if you downloaded the source:
 
 ::
 
-    pip install .[tutorial]
+    pip install ".[tutorial]"
 
 
 To access the tutorial, make sure you fulfill the requirements mentioned above, download the tutorial notebook (/tutorial/PsyNeuLink Tutorial.ipynb), then run the terminal command

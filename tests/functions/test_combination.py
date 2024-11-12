@@ -2,8 +2,6 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
-import psyneulink.core.llvm as pnlvm
-from psyneulink import ParameterError
 
 
 class TestRearrange:
@@ -65,8 +63,8 @@ class TestRearrange:
     # @pytest.mark.function
     # @pytest.mark.combination_function
     # def test_column_vector(self):
-    #     R_function = pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM)
-    #     R_mechanism = pnl.ProcessingMechanism(function=pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM),
+    #     R_function = pnl.core.components.functions.transformfunctions.Reduce(operation=pnl.SUM)
+    #     R_mechanism = pnl.ProcessingMechanism(function=pnl.core.components.functions.transformfunctions.Reduce(operation=pnl.SUM),
     #                                           default_variable=[[1], [2], [3], [4], [5]],
     #                                           name="R_mechanism")
     #
@@ -80,8 +78,8 @@ class TestRearrange:
     # @pytest.mark.function
     # @pytest.mark.combination_function
     # def test_matrix(self):
-    #     R_function = pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM)
-    #     R_mechanism = pnl.ProcessingMechanism(function=pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM),
+    #     R_function = pnl.core.components.functions.transformfunctions.Reduce(operation=pnl.SUM)
+    #     R_mechanism = pnl.ProcessingMechanism(function=pnl.core.components.functions.transformfunctions.Reduce(operation=pnl.SUM),
     #                                           default_variable=[[1, 2, 3], [4, 5, 6], [7, 8, 9]],
     #                                           name="R_mechanism")
     #
@@ -210,7 +208,7 @@ def test_reduce_function(variable, operation, exponents, weights, scale, offset,
                        weights=weights,
                        scale=scale,
                        offset=offset)
-    except ParameterError as e:
+    except pnl.ParameterError as e:
         if not np.isscalar(scale) and "scale must be a scalar" in str(e):
             pytest.xfail("vector scale is not supported")
         if not np.isscalar(offset) and "vector offset is not supported" in str(e):
@@ -229,7 +227,7 @@ def test_reduce_function(variable, operation, exponents, weights, scale, offset,
     if operation == pnl.SUM:
         expected = np.sum(tmp, axis=1) * scale + offset
     if operation == pnl.PRODUCT:
-        expected = np.product(tmp, axis=1) * scale + offset
+        expected = np.prod(tmp, axis=1) * scale + offset
 
     np.testing.assert_allclose(res, expected, rtol=1e-5, atol=1e-8)
 
@@ -267,7 +265,7 @@ def test_linear_combination_function(variable, operation, exponents, weights, sc
     if operation == pnl.SUM:
         expected = np.sum(tmp, axis=0) * scale + offset
     if operation == pnl.PRODUCT:
-        expected = np.product(tmp, axis=0) * scale + offset
+        expected = np.prod(tmp, axis=0) * scale + offset
 
     np.testing.assert_allclose(res, expected, rtol=1e-5, atol=1e-8)
 
@@ -281,7 +279,7 @@ def test_linear_combination_function(variable, operation, exponents, weights, sc
 @pytest.mark.parametrize("offset", [None, 1.5, [1,2.5,0,0]], ids=["O_NONE", "O_SCALAR", "O_VECTOR"])
 def test_linear_combination_function_in_mechanism(operation, input, input_ports, scale, offset, benchmark, mech_mode):
     f = pnl.LinearCombination(default_variable=input, operation=operation, scale=scale, offset=offset)
-    p = pnl.ProcessingMechanism(size=[len(input[0])] * len(input), function=f, input_ports=input_ports)
+    p = pnl.ProcessingMechanism(input_shapes=[len(input[0])] * len(input), function=f, input_ports=input_ports)
 
     EX = pytest.helpers.get_mech_execution(p, mech_mode)
 
@@ -292,7 +290,7 @@ def test_linear_combination_function_in_mechanism(operation, input, input_ports,
     if operation == pnl.SUM:
         expected = np.sum(input, axis=0) * scale + offset
     if operation == pnl.PRODUCT:
-        expected = np.product(input, axis=0) * scale + offset
+        expected = np.prod(input, axis=0) * scale + offset
 
     # expected is always 1d vs 2d return value res
     np.testing.assert_allclose(res[0], expected)

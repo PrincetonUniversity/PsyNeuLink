@@ -329,9 +329,9 @@ type of Port, listed below (and shown in the `table <Port_Projections_Table>`):
    ============================================ ============================================================
    *Attribute*                                  *Projection Type and Port(s)*
    ============================================ ============================================================
-   `path_afferents <Port_Base.path_afferents>` `MappingProjections <MappingProjection>` to `InputPort`
-   `mod_afferents <Port_Base.mod_afferents>`   `ModulatoryProjections <ModulatoryProjection>` to any Port
-   `efferents <Port_Base.efferents>`           `MappingProjections <MappingProjection>` from `OutputPort`
+   `path_afferents <Port_Base.path_afferents>`  `MappingProjections <MappingProjection>` to `InputPort`
+   `mod_afferents <Port_Base.mod_afferents>`    `ModulatoryProjections <ModulatoryProjection>` to any Port
+   `efferents <Port_Base.efferents>`            `MappingProjections <MappingProjection>` from `OutputPort`
    ============================================ ============================================================
 
 In addition to these attributes, all of the Projections sent and received by a Port are listed in its `projections
@@ -783,7 +783,7 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import ComponentError, DefaultsFlexibility, component_keywords
 from psyneulink.core.components.functions.function import \
     Function, get_param_value_for_keyword, is_function_type, RandomMatrix
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import CombinationFunction, LinearCombination
+from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction, LinearCombination
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
@@ -800,14 +800,14 @@ from psyneulink.core.globals.keywords import \
     RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, STANDARD_OUTPUT_PORTS, \
     PORT, PORT_COMPONENT_CATEGORY, PORT_CONTEXT, Port_Name, port_params, PORT_PREFS, PORT_TYPE, port_value, \
     VALUE, VARIABLE, WEIGHT
-from psyneulink.core.globals.parameters import Parameter, check_user_specified
+from psyneulink.core.globals.parameters import Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.socket import ConnectionInfo
 from psyneulink.core.globals.utilities import \
-    ContentAddressableList, convert_to_np_array, get_args, is_value_spec, iscompatible, \
-    MODULATION_OVERRIDE, type_match
+    ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, get_args, is_numeric, is_value_spec, iscompatible, \
+    MODULATION_OVERRIDE, try_extract_0d_array_item, type_match
 
 __all__ = [
     'Port_Base', 'port_keywords', 'port_type_keywords', 'PortError', 'PortRegistry', 'PORT_SPEC'
@@ -843,6 +843,17 @@ def _is_port_class(spec):
     if inspect.isclass(spec) and issubclass(spec, Port):
         return True
     return False
+
+
+def match_modulation_to_value(modulatory_value, reference_value):
+    modulatory_value = type_match(modulatory_value, type(reference_value))
+
+    # mimics cast to float when default is a float, which previously
+    # happened in type_match
+    if isinstance(reference_value, np.ndarray) and reference_value.ndim == 0:
+        modulatory_value = modulatory_value.reshape(reference_value.shape)
+
+    return modulatory_value
 
 
 # Note:  This is created only for assignment of default projection types for each Port subclass (see .__init__.py)
@@ -920,7 +931,7 @@ class Port_Base(Port):
     efferents : Optional[List[Projection]]
         list of outgoing Projections from the Port (i.e., for which is a `sender <Projection_Base.sender>`;
         note:  only `OutputPorts <OutputPort>`, and members of its `ModulatoryProjection <ModulatoryProjection>`
-        subclass (`LearningProjection, ControlProjection and GatingProjection) have efferents;  the list is empty for
+        subclass (`LearningProjection`, `ControlProjection` and `GatingProjection`) have efferents;  the list is empty for
         InputPorts and ParameterPorts.
 
     function : TransferFunction : default determined by type
@@ -1008,7 +1019,7 @@ class Port_Base(Port):
     def __init__(self,
                  owner: Union[Mechanism, Projection],
                  variable=None,
-                 size=None,
+                 input_shapes=None,
                  projections=None,
                  function=None,
                  params=None,
@@ -1028,9 +1039,9 @@ class Port_Base(Port):
             - variable (value): value of the Port:
                 must be list or tuple of numbers, or a number (in which case it will be converted to a single-item list)
                 must match input and output of Port's _update method, and any sending or receiving projections
-            - size (int or array/list of ints):
+            - input_shapes (int or array/list of ints):
                 Sets variable to be array(s) of zeros, if **variable** is not specified as an argument;
-                if **variable** is specified, it takes precedence over the specification of **size**.
+                if **variable** is specified, it takes precedence over the specification of **input_shapes**.
             - params (dict):
                 + if absent, implements default Port determined by PROJECTION_TYPE param
                 + if dict, can have the following entries:
@@ -1089,7 +1100,7 @@ class Port_Base(Port):
         # VALIDATE VARIABLE, PARAM_SPECS, AND INSTANTIATE self.function
         super(Port_Base, self).__init__(
             default_variable=variable,
-            size=size,
+            input_shapes=input_shapes,
             function=function,
             projections=projections,
             param_defaults=params,
@@ -1112,58 +1123,6 @@ class Port_Base(Port):
 
         if context.source == ContextFlags.COMMAND_LINE:
             owner.add_ports([self])
-
-    def _handle_size(self, size, variable):
-        """Overwrites the parent method in Component.py, because the variable of a Port
-            is generally 1D, rather than 2D as in the case of Mechanisms
-        """
-        if size is not NotImplemented:
-
-            def checkAndCastInt(x):
-                if not isinstance(x, numbers.Number):
-                    raise PortError("Size ({}) is not a number.".format(x))
-                if x < 1:
-                    raise PortError("Size ({}) is not a positive number.".format(x))
-                try:
-                    int_x = int(x)
-                except:
-                    raise PortError(
-                        "Failed to convert size argument ({}) for {} {} to an integer. For Ports, size "
-                        "should be a number, which is an integer or can be converted to integer.".
-                        format(x, type(self), self.name))
-                if int_x != x:
-                    if hasattr(self, 'prefs') and hasattr(self.prefs, VERBOSE_PREF) and self.prefs.verbosePref:
-                        warnings.warn("When size ({}) was cast to integer, its value changed to {}.".format(x, int_x))
-                return int_x
-
-            # region Convert variable to a 1D array, cast size to an integer
-            if size is not None:
-                size = checkAndCastInt(size)
-            try:
-                if variable is not None:
-                    variable = np.atleast_1d(variable)
-            except:
-                raise PortError("Failed to convert variable (of type {}) to a 1D array.".format(type(variable)))
-            # endregion
-
-            # region if variable is None and size is not None, make variable a 1D array of zeros of length = size
-            if variable is None and size is not None:
-                try:
-                    variable = np.zeros(size)
-                except:
-                    raise ComponentError("variable (perhaps default_variable) was not specified, but PsyNeuLink "
-                                         "was unable to infer variable from the size argument, {}. size should be"
-                                         " an integer or able to be converted to an integer. Either size or "
-                                         "variable must be specified.".format(size))
-            #endregion
-
-            if variable is not None and size is not None:  # try tossing this "if" check
-                # If they conflict, raise exception
-                if size != len(variable):
-                    raise PortError("The size arg of {} ({}) conflicts with the length of its variable arg ({})".
-                                     format(self.name, size, variable))
-
-        return variable
 
     def _validate_variable(self, variable, context=None):
         """Validate variable and return validated variable
@@ -1464,7 +1423,7 @@ class Port_Base(Port):
                 elif isinstance(projection, ModulatoryProjection_Base):
                     mod_spec, mod_param_name, mod_param_value = self._get_modulated_param(projection, context=context)
                     # Match the projection's value with the value of the function parameter
-                    mod_proj_spec_value = type_match(projection.defaults.value, type(mod_param_value))
+                    mod_proj_spec_value = match_modulation_to_value(projection.defaults.value, mod_param_value)
                     if (mod_param_value is not None
                         and not iscompatible(mod_param_value, mod_proj_spec_value)):
                         raise PortError(f"Output of function for {projection.name} ({projection.defaults.value}) "
@@ -1495,7 +1454,7 @@ class Port_Base(Port):
 
                 # assign identical default variable to function if it can be modified
                 if self.function._variable_shape_flexibility is DefaultsFlexibility.FLEXIBLE:
-                    self.function.defaults.variable = self.defaults.variable.copy()
+                    self.function.defaults.variable = copy_parameter_value(self.defaults.variable)
                 elif (
                     self.function._variable_shape_flexibility is DefaultsFlexibility.INCREASE_DIMENSION
                     and np.array([self.function.defaults.variable]).shape == self.defaults.variable.shape
@@ -1507,12 +1466,12 @@ class Port_Base(Port):
                                   'Projections, but does not use a {}; unexpected results may occur when the {} '
                                   'or {} to which it belongs is executed.'.
                                   format(Projection.__name__, projection.sender.owner.name, self.__class__.__name__,
-                                         self.owner.name, self.name, CombinationFunction.__name__, Mechanism.__name__,
+                                         self.owner.name, self.name, TransformFunction.__name__, Mechanism.__name__,
                                          Composition.__name__))
                             # f'A {Projection.__name__} from {projection.sender.owner.name} is being added ' \
                             #     f'to an {self.__class__.__name__} of {self.owner.name} ({self.name}) ' \
                             #     f'that already receives other Projections, ' \
-                            #     f'but does not use a {CombinationFunction.__name__}; ' \
+                            #     f'but does not use a {TransformFunction.__name__}; ' \
                             #     f'unexpected results may occur when the {Mechanism.__name__} ' \
                             #     f'or {Composition.__name__} to which it belongs is executed.')
 
@@ -1768,7 +1727,7 @@ class Port_Base(Port):
                         # Match the projection's value with the value of the function parameter
                         # should be defaults.value?
                         try:
-                            mod_proj_spec_value = type_match(projection.value, type(mod_param_value))
+                            mod_proj_spec_value = match_modulation_to_value(projection.value, mod_param_value)
                         except TypeError as error:
                             raise PortError(f"The value for {self.name} of {self.owner.name} ({projection.value}) does "
                                             f"not match the format ({mod_param_value}) of the Parameter it modulates "
@@ -1926,17 +1885,22 @@ class Port_Base(Port):
         # Copy all items in outer level of params to local_params (i.e., excluding its subdicts)
         local_params = defaultdict(lambda:{}, {k:v for k,v in params.items() if not isinstance(v,dict)})
         # Get rid of items in params specific to this Port
-        for entry in params[PORT_SPECIFIC_PARAMS].copy():
+        for entry in copy_parameter_value(params[PORT_SPECIFIC_PARAMS]):
             if entry in {self, self.name}:
                 # Move param from params to local_params
                 local_params.update(params[PORT_SPECIFIC_PARAMS].pop(entry))
 
         # Put copy of all type-specific Projection dicts from params into local_params
         # FIX: ON FIRST PASS ALSO CREATES THOSE DICTS IN params IF THEY DON'T ALREADY EXIST
-        projection_params = defaultdict(lambda:{}, {proj_type:params[proj_type].copy()
-                                                    for proj_type in projection_param_keywords()})
+        projection_params = defaultdict(
+            lambda: {},
+            {
+                proj_type: copy_parameter_value(params[proj_type])
+                for proj_type in projection_param_keywords()
+            },
+        )
 
-        for entry in params[PROJECTION_SPECIFIC_PARAMS].copy():
+        for entry in copy_parameter_value(params[PROJECTION_SPECIFIC_PARAMS]):
             if self.all_afferents and entry in self.all_afferents + [p.name for p in self.all_afferents]:
                 if isinstance(entry, str):
                     projection_type = next(p for p in self.all_afferents if p.name ==entry).componentType
@@ -2012,7 +1976,7 @@ class Port_Base(Port):
 
             # Get type-specific params that apply for type of current
             projection_params_keyword = projection_param_keyword_mapping()[projection.componentType]
-            projection_type_params = projection_params[projection_params_keyword].copy()
+            projection_type_params = copy_parameter_value(projection_params[projection_params_keyword])
 
             # Get Projection's variable and/or value if specified in runtime_port_params
             projection_variable = projection_type_params.pop(VARIABLE, None)
@@ -2047,7 +2011,7 @@ class Port_Base(Port):
                 if projection_variable is None:
                     projection_variable = projection.sender.parameters.value._get(context)
                     # KDM 8/14/19: this fallback seems to always happen on the first execution
-                    # of the Projection's function (LinearMatrix). Unsure if this is intended or not
+                    # of the Projection's function (MatrixTransform). Unsure if this is intended or not
                     if projection_variable is None:
                         projection_variable = projection.function.defaults.value
                 projection.parameters.variable._set(projection_variable, context)
@@ -2091,12 +2055,12 @@ class Port_Base(Port):
                     # Otherwise, for efficiency, assign first OVERRIDE value encountered and return
                     else:
                         # FIX 5/8/20 [JDC]: SHOULD THIS USE set_projection_value()??
-                        self.parameters.value._set(type_match(projection_value, type(self.defaults.value)), context)
+                        self.parameters.value._set(match_modulation_to_value(projection_value, self.defaults.value), context)
                         return OVERRIDE
                 else:
                     try:
-                        mod_value = type_match(projection_value, type(mod_param_value))
-                    except TypeError:
+                        mod_value = match_modulation_to_value(projection_value, mod_param_value)
+                    except ValueError:
                         # if type_match fails, assume that the computation is
                         # valid further down the line. This was implicitly true
                         # before adding this catch block by manually setting the
@@ -2114,7 +2078,7 @@ class Port_Base(Port):
             # KDM 6/20/18: consider defining exactly when and how type_match occurs, now it seems
             # a bit handwavy just to make stuff work
             # FIX 5/8/20 [JDC]: SHOULD THIS USE set_projection_value()??
-            self.parameters.value._set(type_match(modulatory_override[1], type(self.defaults.value)), context)
+            self.parameters.value._set(match_modulation_to_value(modulatory_override[1], self.defaults.value), context)
             return OVERRIDE
 
         # AGGREGATE ModulatoryProjection VALUES  -----------------------------------------------------------------------
@@ -2145,7 +2109,7 @@ class Port_Base(Port):
             # KDM 8/2/19: double check the relevance of this branch
             if variable is None:
                 if hasattr(self, DEFAULT_INPUT) and self.default_input == DEFAULT_VARIABLE:
-                    return self.defaults.variable
+                    return copy_parameter_value(self.defaults.variable)
                 return None
 
         return super()._execute(
@@ -2170,7 +2134,7 @@ class Port_Base(Port):
 
         if mod_spec in {OVERRIDE, DISABLE}:
             mod_param_name = mod_proj.receiver.name
-            mod_param_value = mod_proj.sender.parameters.value.get(context)
+            mod_param_value = mod_proj.sender.parameters.value._get(context)
         else:
             mod_param = getattr(receiver.function.parameters, mod_spec)
             try:
@@ -2179,7 +2143,7 @@ class Port_Base(Port):
                 mod_param_name = mod_param.name
 
             # Get the value of the modulated parameter
-            mod_param_value = getattr(receiver.function.parameters, mod_spec).get(context)
+            mod_param_value = getattr(receiver.function.parameters, mod_spec)._get(context)
 
         return mod_spec, mod_param_name, mod_param_value
 
@@ -2192,14 +2156,16 @@ class Port_Base(Port):
         aliases = getattr(self.function.parameters, mod_param_name).aliases
 
         if comb_fct==MULTIPLICATIVE or any(mod_spec in aliases for mod_spec in {MULTIPLICATIVE, MULTIPLICATIVE_PARAM}):
-            return np.product(np.array(values), axis=0)
-        if comb_fct==ADDITIVE or any(mod_spec in aliases for mod_spec in {MULTIPLICATIVE, ADDITIVE_PARAM}):
-            return np.sum(np.array(values), axis=0)
+            res = np.prod(np.array(values), axis=0)
+        elif comb_fct == ADDITIVE or any(mod_spec in aliases for mod_spec in {MULTIPLICATIVE, ADDITIVE_PARAM}):
+            res = np.sum(np.array(values), axis=0)
         elif isinstance(comb_fct, is_function_type):
-            return comb_fct(values)
+            res = comb_fct(values)
         else:
             assert False, f'PROGRAM ERROR: modulation_combination_function not properly specified ' \
                           f'for {mod_param_name} {Parameter.__name__} of {self.name}'
+
+        return convert_all_elements_to_np_array(res)
 
     @abc.abstractmethod
     def _get_variable_from_projections(self, context=None):
@@ -2324,10 +2290,12 @@ class Port_Base(Port):
     def _assign_default_port_Name(self):
         return False
 
-    @handle_external_context()
-    def is_modulated(self, context):
+    def has_modulation(self, composition) -> bool:
+        """Returns True if this Port has an active incoming modulatory
+        projection in **composition** or False if it does not.
+        """
         for ma in self.mod_afferents:
-            if self.afferents_info[ma].is_active_in_composition(context.composition):
+            if self.afferents_info[ma].is_active_in_composition(composition):
                 return True
 
         return False
@@ -2521,7 +2489,7 @@ def _instantiate_port_list(owner,
     # If no Ports were passed in, instantiate a default port_type using reference_value
     if not port_list:
         # assign reference_value as single item in a list, to be used as port_spec below
-        port_list = reference_value
+        port_list = copy_parameter_value(reference_value)
 
         # issue warning if in VERBOSE mode:
         if owner.prefs.verbosePref:
@@ -2880,6 +2848,8 @@ def _parse_port_spec(port_type=None,
     from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
     from psyneulink.core.components.projections.projection import _get_projection_value_shape
 
+    value = copy_parameter_value(value)
+
     # Get all of the standard arguments passed from _instantiate_port (i.e., those other than port_spec) into a dict
     standard_args = get_args(inspect.currentframe())
 
@@ -2946,7 +2916,7 @@ def _parse_port_spec(port_type=None,
             # Use the value of any standard args specified in the Port specification dictionary
             #    to replace those explicitly specified in the call to _instantiate_port (i.e., passed in standard_args)
             #    (use copy so that items in port_spec dict are not deleted when called from _validate_params)
-            port_specific_args = port_spec[PORT_SPEC_ARG].copy()
+            port_specific_args = copy_parameter_value(port_spec[PORT_SPEC_ARG])
             standard_args.update({key: port_specific_args[key]
                                   for key in port_specific_args
                                   if key in standard_args and port_specific_args[key] is not None})
@@ -2966,7 +2936,7 @@ def _parse_port_spec(port_type=None,
                 pass
 
         else:
-            port_specification = port_spec[PORT_SPEC_ARG]
+            port_specification = try_extract_0d_array_item(port_spec[PORT_SPEC_ARG])
 
         # Delete the Port specification dictionary from port_spec
         del port_spec[PORT_SPEC_ARG]
@@ -2984,8 +2954,8 @@ def _parse_port_spec(port_type=None,
     context = port_dict.pop(CONTEXT, None)
     owner = port_dict[OWNER]
     port_type = port_dict[PORT_TYPE]
-    reference_value = port_dict[REFERENCE_VALUE]
-    variable = port_dict[VARIABLE]
+    reference_value = copy_parameter_value(port_dict[REFERENCE_VALUE])
+    variable = copy_parameter_value(port_dict[VARIABLE])
     params = port_specific_args
 
     # Validate that port_type is a Port class
@@ -3251,8 +3221,15 @@ def _parse_port_spec(port_type=None,
 
                 mech = port_specific_args[MECHANISM]
                 if not isinstance(mech, Mechanism):
-                    raise PortError(f"Value of the {MECHANISM} entry ('{mech.name}') in the specification dictionary "
-                                    f"for {port_type.__name__} of '{owner.name}' is not a {Mechanism.__name__}.")
+                    entry_name = ''
+                    from psyneulink.core.components.component import ParameterValue
+                    if hasattr(mech, 'name'):
+                        entry_name = f" ('{mech.name}')"
+                    elif isinstance(mech, ParameterValue):
+                        entry_name = f" ('{mech._parameter.name}' of '{mech._owner.name}')"
+                    raise PortError(f"The type of the {MECHANISM} entry{entry_name} in the specification dictionary "
+                                    f"for {port_type.__name__} of '{owner.name}' is {type(mech).__name__};  "
+                                    f"it must be a {Mechanism.__name__}.")
 
                 # For Ports with which the one being specified can connect:
                 for PORTS in port_type.connectsWithAttribute:
@@ -3359,6 +3336,9 @@ def _parse_port_spec(port_type=None,
             port_dict[VARIABLE] = port_dict[VALUE]
         else:
             port_dict[VARIABLE] = port_dict[REFERENCE_VALUE]
+
+    if is_numeric(port_dict[VARIABLE]):
+        port_dict[VARIABLE] = convert_all_elements_to_np_array(port_dict[VARIABLE])
 
     # get the Port's value from the spec function if it exists,
     # otherwise we can assume there is a default function that does not

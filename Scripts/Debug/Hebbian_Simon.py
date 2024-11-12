@@ -14,7 +14,7 @@ src = small_red_circle
 Hebb_comp = pnl.Composition()
 
 Hebb_mech=pnl.RecurrentTransferMechanism(
-    size=sizeF,
+    input_shapes=sizeF,
     function=pnl.Linear,
     #integrator_mode = True,
     #integration_rate = 0.5,

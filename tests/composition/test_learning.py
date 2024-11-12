@@ -8,7 +8,6 @@ import pytest
 from psyneulink.core.compositions.composition import Composition, CompositionError, RunError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
-import psyneulink.core.llvm as pnlvm
 from psyneulink.core.globals.keywords import Loss
 # from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import SSE, MSE, L0
 
@@ -245,7 +244,7 @@ class TestInputAndTargetSpecs:
     def test_dict_target_spec_converging_pathways(self):
         A = TransferMechanism(name="converging-learning-pathways-mech-A")
         B = TransferMechanism(name="converging-learning-pathways-mech-B")
-        C = TransferMechanism(name="converging-learning-pathways-mech-C", size=2)
+        C = TransferMechanism(name="converging-learning-pathways-mech-C", input_shapes=2)
         D = TransferMechanism(name="converging-learning-pathways-mech-D")
         E = TransferMechanism(name="converging-learning-pathways-mech-E")
         comp = Composition()
@@ -265,7 +264,7 @@ class TestInputAndTargetSpecs:
     def test_function_target_spec_converging_pathways(self):
         A = TransferMechanism(name="converging-learning-pathways-mech-A")
         B = TransferMechanism(name="converging-learning-pathways-mech-B")
-        C = TransferMechanism(name="converging-learning-pathways-mech-C", size=2)
+        C = TransferMechanism(name="converging-learning-pathways-mech-C", input_shapes=2)
         D = TransferMechanism(name="converging-learning-pathways-mech-D")
         E = TransferMechanism(name="converging-learning-pathways-mech-E")
         comp = Composition()
@@ -509,8 +508,9 @@ class TestLearningPathwayMethods:
                     num_trials=2)
         np.testing.assert_allclose(comp2.results, comp1.results)
 
-    @pytest.mark.parametrize('execution_mode',
-                             [pnlvm.ExecutionMode.LLVM, pnlvm.ExecutionMode.PyTorch])
+    # Use explicit parametrize instead of the autodiff_mode fixture to avoid
+    # applying marks. This test doesn't execute pytorch or compiled mode
+    @pytest.mark.parametrize('execution_mode', [pnl.ExecutionMode.LLVM, pnl.ExecutionMode.PyTorch])
     def test_execution_mode_pytorch_and_LLVM_errors(self, execution_mode):
         A = TransferMechanism(name="learning-process-mech-A")
         B = TransferMechanism(name="learning-process-mech-B")
@@ -590,7 +590,7 @@ class TestHebbian:
         size = 9
 
         Hebb2 = pnl.RecurrentTransferMechanism(
-            size=size,
+            input_shapes=size,
             function=pnl.Linear,
             enable_learning=True,
             hetero=0.,
@@ -614,7 +614,8 @@ class TestHebbian:
 class TestReinforcement:
 
     def test_rl(self):
-        input_layer = pnl.TransferMechanism(size=2,
+        input_layer = pnl.TransferMechanism(
+            input_shapes=2,
                                             name='Input Layer')
         input_layer.log.set_log_conditions(items=pnl.VALUE)
         action_selection = pnl.DDM(input_format=pnl.ARRAY,
@@ -654,7 +655,8 @@ class TestReinforcement:
         )
 
     def test_reinforcement_fixed_targets(self):
-        input_layer = pnl.TransferMechanism(size=2,
+        input_layer = pnl.TransferMechanism(
+            input_shapes=2,
                                         name='Input Layer',
         )
 
@@ -1454,7 +1456,8 @@ class TestReinforcement:
                                        err_msg="mismatch on timestep {}".format(i))
 
     def test_rl_enable_learning_false(self):
-        input_layer = pnl.TransferMechanism(size=2,
+        input_layer = pnl.TransferMechanism(
+            input_shapes=2,
                                             name='Input Layer')
         input_layer.log.set_log_conditions(items=pnl.VALUE)
         action_selection = pnl.DDM(input_format=pnl.ARRAY,
@@ -1627,29 +1630,29 @@ class TestNestedLearning:
             return np.append(variable[0], variable[1])
 
         stim_in = pnl.ProcessingMechanism(name='Stimulus',
-                                          size=stim_size)
+                                          input_shapes=stim_size)
         context_in = pnl.ProcessingMechanism(name='Context',
-                                             size=context_size)
+                                             input_shapes=context_size)
         reward_in = pnl.ProcessingMechanism(name='Reward',
-                                            size=1)
+                                            input_shapes=1)
 
         perceptual_state = pnl.ProcessingMechanism(name='Current Port',
                                                    function=Concatenate,
                                                    input_ports=[{pnl.NAME: 'STIM',
-                                                                  pnl.SIZE: stim_size,
+                                                                  pnl.INPUT_SHAPES: stim_size,
                                                                   pnl.PROJECTIONS: stim_in},
                                                                  {pnl.NAME: 'CONTEXT',
-                                                                  pnl.SIZE: context_size,
+                                                                  pnl.INPUT_SHAPES: context_size,
                                                                   pnl.PROJECTIONS: context_in}])
 
         action = pnl.ProcessingMechanism(name='Action',
-                                         size=num_actions)
+                                         input_shapes=num_actions)
 
         # Nested Composition
         rl_agent_state = pnl.ProcessingMechanism(name='RL Agent Port',
-                                                 size=5)
+                                                 input_shapes=5)
         rl_agent_action = pnl.ProcessingMechanism(name='RL Agent Action',
-                                                  size=5)
+                                                  input_shapes=5)
         rl_agent = pnl.Composition(name='RL Agent')
         rl_learning_components = rl_agent.add_reinforcement_learning_pathway([rl_agent_state,
                                                                               rl_agent_action])
@@ -1784,11 +1787,13 @@ class TestNestedLearning:
         wco = np.random.rand(D_c, D_o) * 0.02 - 0.01
         who = np.random.rand(D_h, D_o) * 0.02 - 0.01
 
-        il = pnl.TransferMechanism(size=D_i, name='input')
-        cl = pnl.TransferMechanism(size=D_c, name='control')
-        hl = pnl.TransferMechanism(size=D_h, name='hidden',
+        il = pnl.TransferMechanism(input_shapes=D_i, name='input')
+        cl = pnl.TransferMechanism(input_shapes=D_c, name='control')
+        hl = pnl.TransferMechanism(
+            input_shapes=D_h, name='hidden',
                                    function=pnl.Logistic(bias=-2))
-        ol = pnl.TransferMechanism(size=D_o, name='output',
+        ol = pnl.TransferMechanism(
+            input_shapes=D_o, name='output',
                                    function=pnl.Logistic(bias=-2))
         pih = pnl.MappingProjection(matrix=wih)
         pch = pnl.MappingProjection(matrix=wch)
@@ -1852,9 +1857,9 @@ class TestNestedLearning:
             )
 
     def test_no_learning_of_spanning_nested_compositions(self):
-        input_mech = pnl.ProcessingMechanism(name='input_mech', size=2)
-        hidden_mech = pnl.ProcessingMechanism(name='hidden_mech', size=2)
-        output_mech = pnl.ProcessingMechanism(name='output_mech', size=2)
+        input_mech = pnl.ProcessingMechanism(name='input_mech', input_shapes=2)
+        hidden_mech = pnl.ProcessingMechanism(name='hidden_mech', input_shapes=2)
+        output_mech = pnl.ProcessingMechanism(name='output_mech', input_shapes=2)
         nested = pnl.Composition(name='nested', nodes=[hidden_mech])
         error_msg = ('Learning in Python mode does not currently support nested Compositions;  '
                      'try using an AutodiffComposition with ExecutionMode.PyTorch.')
@@ -1866,10 +1871,12 @@ class TestNestedLearning:
 class TestBackPropLearning:
 
     def test_matrix_spec_and_learning_rate(self):
-        T1 = pnl.TransferMechanism(size = 2,
+        T1 = pnl.TransferMechanism(
+            input_shapes= 2,
                                    initial_value= [[0.0,0.0]],
                                    name = 'INPUT LAYER')
-        T2 = pnl.TransferMechanism(size= 1,
+        T2 = pnl.TransferMechanism(
+            input_shapes= 1,
                                    function =pnl.Logistic,
                                    name = 'OUTPUT LAYER')
         W = np.array([[0.1],[0.2]])
@@ -1893,6 +1900,7 @@ class TestBackPropLearning:
         ('runtime+pway+comp',  None,          .02,              .03,         .04,     [[0.63612349]]),
         ('learning_mech',      .01,           .02,              .03,         .04,     [[0.63458688]]),
     ]
+
     @pytest.mark.parametrize('spec_types', spec_types, ids=[x[0] for x in spec_types])
     def test_different_learning_rate_specs_for_comp(self, spec_types):
         learning_mech_learning_rate = spec_types[1]
@@ -1917,15 +1925,15 @@ class TestBackPropLearning:
     def test_basic_python_back_prop(self):
 
         input_layer = pnl.TransferMechanism(name="input",
-                                            size=2,
+                                            input_shapes=2,
                                             function=pnl.Logistic())
 
         hidden_layer = pnl.TransferMechanism(name="hidden",
-                                             size=2,
+                                             input_shapes=2,
                                              function=pnl.Logistic())
 
         output_layer = pnl.TransferMechanism(name="output",
-                                             size=2,
+                                             input_shapes=2,
                                              function=pnl.Logistic())
 
         comp = pnl.Composition(name="backprop-composition")
@@ -1966,24 +1974,24 @@ class TestBackPropLearning:
         ('autodiff-pytorch', 'autodiff', pnl.ExecutionMode.PyTorch)
     ]
 
-    @ pytest.mark.pytorch
+    @pytest.mark.pytorch
     @pytest.mark.parametrize('test_vars', test_vars, ids=[x[0] for x in test_vars])
     def test_backprop_fct_with_2_inputs_to_linear_combination_product(self, test_vars):
         test_name = test_vars[0]
         comp_type = test_vars[1]
         exec_mode = test_vars[2]
         input_layer1 = pnl.TransferMechanism(name="input1",
-                                            size=2,
+                                            input_shapes=2,
                                             function=pnl.Linear())
         input_layer2 = pnl.TransferMechanism(name="input2",
-                                            size=2,
+                                            input_shapes=2,
                                             function=pnl.Linear())
         hidden_layer = pnl.ProcessingMechanism(name="hidden",
                                                input_ports=['input1','input2'],
-                                               size=(4,4),
+                                               input_shapes=(4, 4),
                                                function=pnl.LinearCombination(operation=pnl.PRODUCT))
         output_layer = pnl.TransferMechanism(name="output",
-                                             size=2,
+                                             input_shapes=2,
                                              function=pnl.Linear())
         i1_h_wts = pnl.MappingProjection(name='input_to_hidden1',
                                      sender=input_layer1,
@@ -2028,27 +2036,27 @@ class TestBackPropLearning:
                     [[0.05066789, 0.05971998]], [[0.06846757, 0.08519742]]]
         np.testing.assert_allclose(comp.results, expected, atol=1e-8)
 
-    @ pytest.mark.pytorch
+    @pytest.mark.pytorch
     @pytest.mark.parametrize('test_vars', test_vars, ids=[x[0] for x in test_vars])
     def test_backprop_fct_with_3_inputs_to_linear_combination_product(self, test_vars):
         test_name = test_vars[0]
         comp_type = test_vars[1]
         exec_mode = test_vars[2]
         input_layer1 = pnl.TransferMechanism(name="input1",
-                                            size=2,
+                                            input_shapes=2,
                                             function=pnl.Linear())
         input_layer2 = pnl.TransferMechanism(name="input2",
-                                            size=2,
+                                            input_shapes=2,
                                             function=pnl.Linear())
         input_layer3 = pnl.TransferMechanism(name="input3",
-                                            size=2,
+                                            input_shapes=2,
                                             function=pnl.Linear())
         hidden_layer = pnl.ProcessingMechanism(name="hidden",
                                                input_ports=['input1','input2','input3'],
-                                               size=(5,5,5),
+                                               input_shapes=(5, 5, 5),
                                                function=pnl.LinearCombination(operation=pnl.PRODUCT))
         output_layer = pnl.TransferMechanism(name="output",
-                                             size=2,
+                                             input_shapes=2,
                                              function=pnl.Linear())
         i1_h_wts = pnl.MappingProjection(name='input_to_hidden1',
                                      sender=input_layer1,
@@ -2099,9 +2107,9 @@ class TestBackPropLearning:
 
     def test_two_output_ports_on_OUTPUT_Node(self):
 
-        input_A = pnl.ProcessingMechanism(name='INPUT_A', size=2)
-        input_B = pnl.ProcessingMechanism(name='INPUT_B', size=2)
-        output = pnl.ProcessingMechanism(name='OUTPUT', size=(2,3))
+        input_A = pnl.ProcessingMechanism(name='INPUT_A', input_shapes=2)
+        input_B = pnl.ProcessingMechanism(name='INPUT_B', input_shapes=2)
+        output = pnl.ProcessingMechanism(name='OUTPUT', input_shapes=(2, 3))
         comp = Composition(name='comp')
 
         with pytest.raises(CompositionError) as error_text:
@@ -2223,6 +2231,7 @@ class TestBackPropLearning:
              [np.array([0.34065762, 0.40283722, 0.90991679])]]
         ),
     ]
+
     # Indices into expected_quantities
     @pytest.mark.parametrize("expected_quantities", expected_quantities,
                              # Rename L0 for test output as keyword actually = 'difference'
@@ -2240,19 +2249,19 @@ class TestBackPropLearning:
 
         input_layer = pnl.TransferMechanism(name='input_layer',
                                             function=pnl.Logistic,
-                                            size=2)
+                                            input_shapes=2)
 
         hidden_layer_1 = pnl.TransferMechanism(name='hidden_layer_1',
                                                function=pnl.Logistic,
-                                               size=5)
+                                               input_shapes=5)
 
         hidden_layer_2 = pnl.TransferMechanism(name='hidden_layer_2',
                                                function=pnl.Logistic,
-                                               size=4)
+                                               input_shapes=4)
 
         output_layer = pnl.TransferMechanism(name='output_layer',
                                              function=pnl.Logistic,
-                                             size=3)
+                                             input_shapes=3)
 
         input_weights_matrix = (np.arange(2 * 5).reshape((2, 5)) + 1) / (2 * 5)
         middle_weights_matrix = (np.arange(5 * 4).reshape((5, 4)) + 1) / (5 * 4)
@@ -2732,10 +2741,10 @@ class TestBackPropLearning:
         word_to_hidden_wts = np.arange(4).reshape((2, 2))
         hidden_to_response_wts = np.arange(4).reshape((2, 2))
 
-        color_comp = pnl.TransferMechanism(size=2, name='Color')
-        word_comp = pnl.TransferMechanism(size=2, name='Word')
-        hidden_comp = pnl.TransferMechanism(size=2, function=pnl.Logistic(), name='Hidden')
-        response_comp = pnl.TransferMechanism(size=2, function=pnl.Logistic(), name='Response')
+        color_comp = pnl.TransferMechanism(input_shapes=2, name='Color')
+        word_comp = pnl.TransferMechanism(input_shapes=2, name='Word')
+        hidden_comp = pnl.TransferMechanism(input_shapes=2, function=pnl.Logistic(), name='Hidden')
+        response_comp = pnl.TransferMechanism(input_shapes=2, function=pnl.Logistic(), name='Response')
 
         if order == 'color_full':
             color_pathway = [color_comp,
@@ -2953,11 +2962,13 @@ class TestBackPropLearning:
         wco = np.random.rand(D_c, D_o) * 0.02 - 0.01
         who = np.random.rand(D_h, D_o) * 0.02 - 0.01
 
-        il = pnl.TransferMechanism(size=D_i, name='input')
-        cl = pnl.TransferMechanism(size=D_c, name='control')
-        hl = pnl.TransferMechanism(size=D_h, name='hidden',
+        il = pnl.TransferMechanism(input_shapes=D_i, name='input')
+        cl = pnl.TransferMechanism(input_shapes=D_c, name='control')
+        hl = pnl.TransferMechanism(
+            input_shapes=D_h, name='hidden',
                                    function=pnl.Logistic(bias=-2))
-        ol = pnl.TransferMechanism(size=D_o, name='output',
+        ol = pnl.TransferMechanism(
+            input_shapes=D_o, name='output',
                                    function=pnl.Logistic(bias=-2))
         pih = pnl.MappingProjection(matrix=wih)
         pch = pnl.MappingProjection(matrix=wch)
@@ -3090,14 +3101,14 @@ class TestRumelhartSemanticNetwork:
 
     def test_rumelhart_semantic_network_sequential(self):
 
-        rep_in = pnl.TransferMechanism(size=10, name='REP_IN')
-        rel_in = pnl.TransferMechanism(size=11, name='REL_IN')
-        rep_hidden = pnl.TransferMechanism(size=4, function=pnl.Logistic, name='REP_HIDDEN')
-        rel_hidden = pnl.TransferMechanism(size=5, function=pnl.Logistic, name='REL_HIDDEN')
-        rep_out = pnl.TransferMechanism(size=10, function=pnl.Logistic, name='REP_OUT')
-        prop_out = pnl.TransferMechanism(size=12, function=pnl.Logistic, name='PROP_OUT')
-        qual_out = pnl.TransferMechanism(size=13, function=pnl.Logistic, name='QUAL_OUT')
-        act_out = pnl.TransferMechanism(size=14, function=pnl.Logistic, name='ACT_OUT')
+        rep_in = pnl.TransferMechanism(input_shapes=10, name='REP_IN')
+        rel_in = pnl.TransferMechanism(input_shapes=11, name='REL_IN')
+        rep_hidden = pnl.TransferMechanism(input_shapes=4, function=pnl.Logistic, name='REP_HIDDEN')
+        rel_hidden = pnl.TransferMechanism(input_shapes=5, function=pnl.Logistic, name='REL_HIDDEN')
+        rep_out = pnl.TransferMechanism(input_shapes=10, function=pnl.Logistic, name='REP_OUT')
+        prop_out = pnl.TransferMechanism(input_shapes=12, function=pnl.Logistic, name='PROP_OUT')
+        qual_out = pnl.TransferMechanism(input_shapes=13, function=pnl.Logistic, name='QUAL_OUT')
+        act_out = pnl.TransferMechanism(input_shapes=14, function=pnl.Logistic, name='ACT_OUT')
 
         comp = pnl.Composition()
 

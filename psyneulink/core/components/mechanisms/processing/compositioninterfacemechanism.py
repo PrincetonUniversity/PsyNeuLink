@@ -180,7 +180,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     @beartype
     def __init__(self,
                  default_variable=None,
-                 size=None,
+                 input_shapes=None,
                  input_ports: Optional[Union[Iterable, Mechanism, OutputPort, InputPort]] = None,
                  function=None,
                  composition=None,
@@ -189,8 +189,6 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
                  name=None,
                  prefs:   Optional[ValidPrefSet] = None):
 
-        if default_variable is None and size is None:
-            default_variable = self.class_defaults.variable
         self.composition = composition
         self.port_map = port_map
         self.connected_to_composition = False
@@ -199,7 +197,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
             OUTPUT_PORTS: set()
         }
         super(CompositionInterfaceMechanism, self).__init__(default_variable=default_variable,
-                                                            size=size,
+                                                            input_shapes=input_shapes,
                                                             input_ports=input_ports,
                                                             function=function,
                                                             params=params,

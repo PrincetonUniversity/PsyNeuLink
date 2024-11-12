@@ -7,16 +7,19 @@ import psyneulink.core.components.functions.nonstateful.distributionfunctions
 import psyneulink.core.components.functions.stateful.integratorfunctions
 import psyneulink.core.components.functions.nonstateful.transferfunctions
 
-colors_input_layer = pnl.TransferMechanism(size=2,
+colors_input_layer = pnl.TransferMechanism(
+    input_shapes=2,
                                            function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear,
                                            name='COLORS_INPUT')
 
-words_input_layer = pnl.TransferMechanism(size=2,
+words_input_layer = pnl.TransferMechanism(
+    input_shapes=2,
                                           function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear,
                                           name='WORDS_INPUT')
 
 #   Task layer, tasks: ('name the color', 'read the word')
-task_layer = pnl.TransferMechanism(size=2,
+task_layer = pnl.TransferMechanism(
+    input_shapes=2,
                                    function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear,
                                    name='TASK')
 
@@ -26,14 +29,16 @@ task_layer = pnl.TransferMechanism(size=2,
 #   randomly distributed noise to the net input
 #   time averaging = integration_rate = 0.1
 unit_noise = 0.001
-colors_hidden_layer = pnl.TransferMechanism(size=2,
+colors_hidden_layer = pnl.TransferMechanism(
+    input_shapes=2,
                                             function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic(gain=1.0, x_0=4.0),  #should be able to get same result with offset = -4.0
                                             integrator_mode=True,
                                             noise=psyneulink.core.components.functions.nonstateful.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function,
                                             integration_rate=0.1,
                                             name='COLORS HIDDEN')
 #    words_hidden: ('RED','GREEN')
-words_hidden_layer = pnl.TransferMechanism(size=2,
+words_hidden_layer = pnl.TransferMechanism(
+    input_shapes=2,
                                            function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic(gain=1.0, x_0=4.0),
                                            integrator_mode=True,
                                            noise=psyneulink.core.components.functions.nonstateful.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function,
@@ -43,7 +48,8 @@ words_hidden_layer = pnl.TransferMechanism(size=2,
 #    OUTPUT UNITS
 
 #   Response layer, provide input to accumulator, responses: ('red', 'green')
-response_layer = pnl.TransferMechanism(size=2,
+response_layer = pnl.TransferMechanism(
+    input_shapes=2,
                                        function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic,
                                        integrator_mode=True,
                                        noise=psyneulink.core.components.functions.nonstateful.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function,
@@ -82,49 +88,49 @@ respond_green_accumulator.set_log_conditions('value')
 #   INPUT TO HIDDEN
 # row 0: input_'red' to hidden_'red', hidden_'green'
 # row 1: input_'green' to hidden_'red', hidden_'green'
-color_weights = pnl.MappingProjection(matrix=np.matrix([[2.2, -2.2],
+color_weights = pnl.MappingProjection(matrix=np.array([[2.2, -2.2],
                                                         [-2.2, 2.2]]),
                                       name='COLOR_WEIGHTS')
 # row 0: input_'RED' to hidden_'RED', hidden_'GREEN'
 # row 1: input_'GREEN' to hidden_'RED', hidden_'GREEN'
-word_weights = pnl.MappingProjection(matrix=np.matrix([[2.6, -2.6],
+word_weights = pnl.MappingProjection(matrix=np.array([[2.6, -2.6],
                                                        [-2.6, 2.6]]),
                                      name='WORD_WEIGHTS')
 
 #   HIDDEN TO RESPONSE
 # row 0: hidden_'red' to response_'red', response_'green'
 # row 1: hidden_'green' to response_'red', response_'green'
-color_response_weights = pnl.MappingProjection(matrix=np.matrix([[1.3, -1.3],
+color_response_weights = pnl.MappingProjection(matrix=np.array([[1.3, -1.3],
                                                                  [-1.3, 1.3]]),
                                                name='COLOR_RESPONSE_WEIGHTS')
 # row 0: hidden_'RED' to response_'red', response_'green'
 # row 1: hidden_'GREEN' to response_'red', response_'green'
-word_response_weights = pnl.MappingProjection(matrix=np.matrix([[2.5, -2.5],
+word_response_weights = pnl.MappingProjection(matrix=np.array([[2.5, -2.5],
                                                                 [-2.5, 2.5]]),
                                               name='WORD_RESPONSE_WEIGHTS')
 
 #   TASK TO HIDDEN LAYER
 #   row 0: task_CN to hidden_'red', hidden_'green'
 #   row 1: task_WR to hidden_'red', hidden_'green'
-task_CN_weights = pnl.MappingProjection(matrix=np.matrix([[4.0, 4.0],
+task_CN_weights = pnl.MappingProjection(matrix=np.array([[4.0, 4.0],
                                                           [0, 0]]),
                                         name='TASK_CN_WEIGHTS')
 
 #   row 0: task_CN to hidden_'RED', hidden_'GREEN'
 #   row 1: task_WR to hidden_'RED', hidden_'GREEN'
-task_WR_weights = pnl.MappingProjection(matrix=np.matrix([[0, 0],
+task_WR_weights = pnl.MappingProjection(matrix=np.array([[0, 0],
                                                           [4.0, 4.0]]),
                                         name='TASK_WR_WEIGHTS')
 
 #   RESPONSE UNITS TO ACCUMULATORS
 #   row 0: response_'red' to respond_red_accumulator
 #   row 1: response_'green' to respond_red_accumulator
-respond_red_differencing_weights = pnl.MappingProjection(matrix=np.matrix([[1.0], [-1.0]]),
+respond_red_differencing_weights = pnl.MappingProjection(matrix=np.array([[1.0], [-1.0]]),
                                                          name='RESPOND_RED_WEIGHTS')
 
 #   row 0: response_'red' to respond_green_accumulator
 #   row 1: response_'green' to respond_green_accumulator
-respond_green_differencing_weights = pnl.MappingProjection(matrix=np.matrix([[-1.0], [1.0]]),
+respond_green_differencing_weights = pnl.MappingProjection(matrix=np.array([[-1.0], [1.0]]),
                                                            name='RESPOND_GREEN_WEIGHTS')
 
 #   Create pathways as processes

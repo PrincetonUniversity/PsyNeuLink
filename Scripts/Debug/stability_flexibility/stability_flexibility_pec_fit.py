@@ -16,9 +16,9 @@ set_global_seed(pnl_seed)
 trial_seq_seed = 0
 
 # High-level parameters the impact performance of the test
-num_trials = 12
+num_trials = 50
 time_step_size = 0.01
-num_estimates = 3
+num_estimates = 10000
 
 sf_params = dict(
     gain=3.0,
@@ -91,6 +91,7 @@ fit_parameters = {
     ("non_decision_time", decisionMaker): np.linspace(0.1, 0.4, 1000),  # Threshold
 }
 
+import optuna
 pec = pnl.ParameterEstimationComposition(
     name="pec",
     nodes=comp,
@@ -100,16 +101,16 @@ pec = pnl.ParameterEstimationComposition(
         responseGate.output_ports[0],
     ],
     data=data_to_fit,
-    optimization_function='differential_evolution',
+    optimization_function=pnl.PECOptimizationFunction(method=optuna.samplers.CmaEsSampler(seed=0), max_iterations=1000),
     num_estimates=num_estimates,
 )
 
-# pec.controller.parameters.comp_execution_mode.set("LLVM")
+pec.controller.parameters.comp_execution_mode.set("LLVM")
 pec.controller.function.parameters.save_values.set(True)
 
 print("Running the PEC")
 ret = pec.run(inputs=inputs)
-optimal_parameters = pec.optimized_parameter_values
+optimal_parameters = list(pec.optimized_parameter_values.values())
 
 # Print the recovered parameters.
 records = []

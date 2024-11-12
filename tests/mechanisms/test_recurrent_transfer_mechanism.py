@@ -2,10 +2,9 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
-import psyneulink.core.llvm as pnlvm
 
 from psyneulink.core.compositions.composition import Composition
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import Reduce
+from psyneulink.core.components.functions.nonstateful.transformfunctions import Reduce
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import NormalDist
 from psyneulink.core.components.functions.function import FunctionError, get_matrix
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Reinforcement
@@ -78,7 +77,7 @@ class TestRecurrentTransferMechanismInputs:
     def test_recurrent_mech_check_attrs(self):
         R = RecurrentTransferMechanism(
             name='R',
-            size=3,
+            input_shapes=3,
             auto=1.0
         )
         print("matrix = ", R.matrix.base)
@@ -91,7 +90,7 @@ class TestRecurrentTransferMechanismInputs:
     def test_recurrent_mech_check_proj_attrs(self):
         R = RecurrentTransferMechanism(
             name='R',
-            size=3
+            input_shapes=3
         )
         np.testing.assert_allclose(R.recurrent_projection.matrix.base, R.matrix.base)
         assert R.recurrent_projection.sender is R.output_port
@@ -102,8 +101,8 @@ class TestRecurrentTransferMechanismInputs:
     @pytest.mark.benchmark(group="RecurrentTransferMechanism")
     @pytest.mark.parametrize("variable, params",
                              [
-                              pytest.param(([10, 12, 0, -1], [1, 2, 3, 0]), {'size': 4}, id="list_of_ints"),
-                              pytest.param(([1.0, 1.2, 0., -1.3], [1., 5., 3., 0.]), {'size': 4}, id="list_of_floats"),
+                              pytest.param(([10, 12, 0, -1], [1, 2, 3, 0]), {'input_shapes': 4}, id="list_of_ints"),
+                              pytest.param(([1.0, 1.2, 0., -1.3], [1., 5., 3., 0.]), {'input_shapes': 4}, id="list_of_floats"),
                               pytest.param(([10], [10]), {}, id="no_init_params"),
                              ])
     def test_recurrent_mech_inputs(self, benchmark, params, variable, mech_mode):
@@ -123,7 +122,8 @@ class TestRecurrentTransferMechanismInputs:
     @pytest.mark.recurrent_transfer_mechanism
     @pytest.mark.benchmark(group="RecurrentTransferMechanism")
     def test_recurrent_mech_integrator(self, benchmark, mech_mode):
-        R = RecurrentTransferMechanism(size=2,
+        R = RecurrentTransferMechanism(
+            input_shapes=2,
                                        function=Logistic(),
                                        hetero=-2.0,
                                        integrator_mode=True,
@@ -149,7 +149,8 @@ class TestRecurrentTransferMechanismInputs:
     @pytest.mark.benchmark(group="RecurrentTransferMechanism")
     def test_recurrent_mech_lci(self, benchmark, mech_mode):
         LCI = pnl.LeakyCompetingIntegrator(rate=0.4)
-        R = RecurrentTransferMechanism(size=2,
+        R = RecurrentTransferMechanism(
+            input_shapes=2,
                                        hetero=-2.0,
                                        integrator_mode=True,
                                        integrator_function=LCI,
@@ -171,7 +172,7 @@ class TestRecurrentTransferMechanismInputs:
     # def test_recurrent_mech_inputs_list_of_fns(self):
     #     R = RecurrentTransferMechanism(
     #         name='R',
-    #         size=4,
+    #         input_shapes=4,
     #         integrator_mode=True
     #     )
     #     val = R.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()])
@@ -205,7 +206,7 @@ class TestRecurrentTransferMechanismInputs:
         with pytest.raises(MechanismError) as error_text:
             R = RecurrentTransferMechanism(
                 name='R',
-                size=4
+                input_shapes=4
             )
             R.execute([1, 2, 3, 4, 5])
         assert ("Shape ((5,)) of input ([1 2 3 4 5]) does not match required shape ((4,)) "
@@ -215,7 +216,7 @@ class TestRecurrentTransferMechanismInputs:
         with pytest.raises(MechanismError) as error_text:
             R = RecurrentTransferMechanism(
                 name='R',
-                size=6
+                input_shapes=6
             )
             R.execute([1, 2, 3, 4, 5])
         assert ("Shape ((5,)) of input ([1 2 3 4 5]) does not match required shape ((6,)) "
@@ -231,19 +232,19 @@ class TestRecurrentTransferMechanismMatrix:
             pytest.skip("Random test")
         R = RecurrentTransferMechanism(
             name='R',
-            size=4,
+            input_shapes=4,
             matrix=matrix
         )
         val = R.execute([10, 10, 10, 10])
         np.testing.assert_allclose(val, [[10., 10., 10., 10.]])
-        np.testing.assert_allclose(R.recurrent_projection.matrix.base, get_matrix(matrix, R.size[0], R.size[0]))
+        np.testing.assert_allclose(R.recurrent_projection.matrix.base, get_matrix(matrix, R.input_shapes[0], R.input_shapes[0]))
 
-    @pytest.mark.parametrize("matrix", [np.matrix('1 2; 3 4'), np.array([[1, 2], [3, 4]]), [[1, 2], [3, 4]], '1 2; 3 4'])
+    @pytest.mark.parametrize("matrix", [pnl.array_from_matrix_string('1 2; 3 4'), np.array([[1, 2], [3, 4]]), [[1, 2], [3, 4]], '1 2; 3 4'])
     def test_recurrent_mech_matrix_other_spec(self, matrix):
 
         R = RecurrentTransferMechanism(
             name='R',
-            size=2,
+            input_shapes=2,
             matrix=matrix
         )
         val = R.execute([10, 10])
@@ -257,7 +258,7 @@ class TestRecurrentTransferMechanismMatrix:
     def test_recurrent_mech_matrix_auto_spec(self):
         R = RecurrentTransferMechanism(
             name='R',
-            size=3,
+            input_shapes=3,
             auto=2
         )
         assert isinstance(R.matrix.base, np.ndarray)
@@ -267,7 +268,7 @@ class TestRecurrentTransferMechanismMatrix:
     def test_recurrent_mech_matrix_hetero_spec(self):
         R = RecurrentTransferMechanism(
             name='R',
-            size=3,
+            input_shapes=3,
             hetero=-1
         )
         # (7/28/17 CW) these numbers assume that execute() leaves its value in the outputPort of the mechanism: if
@@ -287,7 +288,7 @@ class TestRecurrentTransferMechanismMatrix:
     def test_recurrent_mech_matrix_auto_hetero_spec_size_1(self):
         R = RecurrentTransferMechanism(
             name='R',
-            size=1,
+            input_shapes=1,
             auto=-2,
             hetero=4.4
         )
@@ -299,7 +300,7 @@ class TestRecurrentTransferMechanismMatrix:
     def test_recurrent_mech_matrix_auto_hetero_spec_size_4(self):
         R = RecurrentTransferMechanism(
             name='R',
-            size=4,
+            input_shapes=4,
             auto=2.2,
             hetero=-3
         )
@@ -312,7 +313,7 @@ class TestRecurrentTransferMechanismMatrix:
         # when auto, hetero, and matrix are all specified, auto and hetero should take precedence
         R = RecurrentTransferMechanism(
             name='R',
-            size=4,
+            input_shapes=4,
             auto=2.2,
             hetero=-3,
             matrix=[[1, 2, 3, 4]] * 4
@@ -326,7 +327,7 @@ class TestRecurrentTransferMechanismMatrix:
         # auto should override the diagonal only
         R = RecurrentTransferMechanism(
             name='R',
-            size=4,
+            input_shapes=4,
             auto=2.2,
             matrix=[[1, 2, 3, 4]] * 4
         )
@@ -337,7 +338,7 @@ class TestRecurrentTransferMechanismMatrix:
     def test_recurrent_mech_auto_array_matrix_spec(self):
         R = RecurrentTransferMechanism(
             name='R',
-            size=4,
+            input_shapes=4,
             auto=[1.1, 2.2, 3.3, 4.4],
             matrix=[[1, 2, 3, 4]] * 4
         )
@@ -349,7 +350,7 @@ class TestRecurrentTransferMechanismMatrix:
         # hetero should override off-diagonal only
         R = RecurrentTransferMechanism(
             name='R',
-            size=4,
+            input_shapes=4,
             hetero=-2.2,
             matrix=[[1, 2, 3, 4]] * 4
         )
@@ -363,7 +364,7 @@ class TestRecurrentTransferMechanismMatrix:
     def test_recurrent_mech_hetero_matrix_matrix_spec(self):
         R = RecurrentTransferMechanism(
             name='R',
-            size=4,
+            input_shapes=4,
             hetero=np.array([[-4, -3, -2, -1]] * 4),
             matrix=[[1, 2, 3, 4]] * 4
         )
@@ -378,7 +379,7 @@ class TestRecurrentTransferMechanismMatrix:
         # auto and hetero should override matrix
         R = RecurrentTransferMechanism(
             name='R',
-            size=4,
+            input_shapes=4,
             auto=[1, 3, 5, 7],
             hetero=np.array([[-4, -3, -2, -1]] * 4),
             matrix=[[1, 2, 3, 4]] * 4
@@ -393,7 +394,7 @@ class TestRecurrentTransferMechanismMatrix:
     def test_recurrent_mech_auto_hetero_matrix_spec_v2(self):
         R = RecurrentTransferMechanism(
             name='R',
-            size=4,
+            input_shapes=4,
             auto=[3],
             hetero=np.array([[-4, -3, -2, -1]] * 4),
             matrix=[[1, 2, 3, 4]] * 4
@@ -408,7 +409,7 @@ class TestRecurrentTransferMechanismMatrix:
     def test_recurrent_mech_auto_hetero_matrix_spec_v3(self):
         R = RecurrentTransferMechanism(
             name='R',
-            size=4,
+            input_shapes=4,
             auto=[3],
             hetero=2,
             matrix=[[1, 2, 3, 4]] * 4
@@ -424,7 +425,7 @@ class TestRecurrentTransferMechanismMatrix:
         with pytest.raises(RecurrentTransferError) as error_text:
             R = RecurrentTransferMechanism(
                 name='R',
-                size=3,
+                input_shapes=3,
                 matrix=[[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]]
             )
 
@@ -434,7 +435,7 @@ class TestRecurrentTransferMechanismMatrix:
         with pytest.raises(RecurrentTransferError) as error_text:
             R = RecurrentTransferMechanism(
                 name='R',
-                size=5,
+                input_shapes=5,
                 matrix=[[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]]
             )
         assert "must be the same as its variable" in str(error_text.value)
@@ -443,7 +444,7 @@ class TestRecurrentTransferMechanismMatrix:
         with pytest.raises(RecurrentTransferError) as error_text:
             R = RecurrentTransferMechanism(
                 name='R',
-                size=4,
+                input_shapes=4,
                 matrix=[['a', 'b', 'c', 'd'], ['a', 'b', 'c', 'd'], ['a', 'b', 'c', 'd'], ['a', 'b', 'c', 'd']]
             )
         assert "has non-numeric entries" in str(error_text.value)
@@ -452,7 +453,7 @@ class TestRecurrentTransferMechanismMatrix:
         with pytest.raises(RecurrentTransferError) as error_text:
             R = RecurrentTransferMechanism(
                 name='R',
-                size=4,
+                input_shapes=4,
                 matrix=[[1, 3]]
             )
         assert "must be square" in str(error_text.value)
@@ -461,7 +462,7 @@ class TestRecurrentTransferMechanismMatrix:
         with pytest.raises(FunctionError) as error_text:
             R = RecurrentTransferMechanism(
                 name='R',
-                size=2,
+                input_shapes=2,
                 matrix=[[[1, 3], [2, 4]], [[5, 7], [6, 8]]]
             )
         assert "more than 2d" in str(error_text.value)
@@ -473,7 +474,7 @@ class TestRecurrentTransferMechanismFunction:
 
         R = RecurrentTransferMechanism(
             name='R',
-            size=10,
+            input_shapes=10,
             function=Logistic(gain=2, offset=1)
         )
         val = R.execute(np.ones(10))
@@ -485,7 +486,7 @@ class TestRecurrentTransferMechanismFunction:
 
         R = RecurrentTransferMechanism(
             name='R',
-            size=7,
+            input_shapes=7,
             function=a
         )
         val = R.execute(np.zeros(7))
@@ -623,12 +624,12 @@ class TestRecurrentTransferMechanismInProcess:
         # this test ASSUMES that the ParameterPort for auto and hetero is updated one run-cycle AFTER they are set by
         # lines by `R.auto = 0`. If this (potentially buggy) behavior is changed, then change these values
         R = RecurrentTransferMechanism(
-            size=4,
+            input_shapes=4,
             auto=0,
             hetero=-1
         )
         T = TransferMechanism(
-            size=3,
+            input_shapes=3,
             function=Linear
         )
         c = Composition(pathways=[R, T], prefs=TestRecurrentTransferMechanismInComposition.simple_prefs)
@@ -645,11 +646,11 @@ class TestRecurrentTransferMechanismInProcess:
     def test_transfer_mech_process_matrix_change(self):
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
         T1 = TransferMechanism(
-            size=4,
+            input_shapes=4,
             function=Linear)
         proj = MappingProjection(matrix=[[1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1]])
         T2 = TransferMechanism(
-            size=4,
+            input_shapes=4,
             function=Linear)
         c = Composition(pathways=[[T1, proj, T2]])
         c.run(inputs={T1: [[1, 2, 3, 4]]})
@@ -664,11 +665,11 @@ class TestRecurrentTransferMechanismInProcess:
 
     def test_recurrent_mech_process_matrix_change(self):
         R = RecurrentTransferMechanism(
-            size=4,
+            input_shapes=4,
             auto=1,
             hetero=-1)
         T = TransferMechanism(
-            size=4,
+            input_shapes=4,
             function=Linear)
         c = Composition(pathways=[T, R], prefs=TestRecurrentTransferMechanismInComposition.simple_prefs)
         R.matrix = [[2, 0, 1, 3]] * 4
@@ -684,11 +685,11 @@ class TestRecurrentTransferMechanismInProcess:
     # this test must wait until we create a property such that R.recurrent_projection.matrix sets R.auto and R.hetero
     def test_recurrent_mech_process_proj_matrix_change(self):
         R = RecurrentTransferMechanism(
-            size=4,
+            input_shapes=4,
             auto=1,
             hetero=-1)
         T = TransferMechanism(
-            size=4,
+            input_shapes=4,
             function=Linear)
         c = Composition(pathways=[T, R], prefs=TestRecurrentTransferMechanismInComposition.simple_prefs)
         R.recurrent_projection.matrix = [[2, 0, 1, 3]] * 4
@@ -709,11 +710,11 @@ class TestRecurrentTransferMechanismInComposition:
         # this test ASSUMES that the ParameterPort for auto and hetero is updated one run-cycle AFTER they are set by
         # lines by `R.auto = 0`. If this (potentially buggy) behavior is changed, then change these values
         R = RecurrentTransferMechanism(
-            size=4,
+            input_shapes=4,
             auto=0,
             hetero=-1)
         T = TransferMechanism(
-            size=3,
+            input_shapes=3,
             function=Linear)
         c = Composition(pathways=[R,T])
 
@@ -730,11 +731,11 @@ class TestRecurrentTransferMechanismInComposition:
     @pytest.mark.xfail(reason='Unsure if this is correct behavior - see note for _recurrent_transfer_mechanism_matrix_setter')
     def test_recurrent_mech_composition_auto_change(self):
         R = RecurrentTransferMechanism(
-            size=4,
+            input_shapes=4,
             auto=[1, 2, 3, 4],
             hetero=-1)
         T = TransferMechanism(
-            size=3,
+            input_shapes=3,
             function=Linear)
         c = Composition(pathways=[R, T], prefs=TestRecurrentTransferMechanismInComposition.simple_prefs)
         c.run(inputs={R: [[1, 2, 3, 4]]})
@@ -752,11 +753,11 @@ class TestRecurrentTransferMechanismInComposition:
     @pytest.mark.xfail(reason='Unsure if this is correct behavior - see note for _recurrent_transfer_mechanism_matrix_setter')
     def test_recurrent_mech_composition_hetero_change(self):
         R = RecurrentTransferMechanism(
-            size=4,
+            input_shapes=4,
             auto=[1, 2, 3, 4],
             hetero=[[-1, -2, -3, -4]] * 4)
         T = TransferMechanism(
-            size=5,
+            input_shapes=5,
             function=Linear)
         c = Composition(pathways=[R, T], prefs=TestRecurrentTransferMechanismInComposition.simple_prefs)
         c.run(inputs={R: [[1, 2, 3, -0.5]]})
@@ -774,11 +775,11 @@ class TestRecurrentTransferMechanismInComposition:
     @pytest.mark.xfail(reason='Unsure if this is correct behavior - see note for _recurrent_transfer_mechanism_matrix_setter')
     def test_recurrent_mech_composition_auto_and_hetero_change(self):
         R = RecurrentTransferMechanism(
-            size=4,
+            input_shapes=4,
             auto=[1, 2, 3, 4],
             hetero=[[-1, -2, -3, -4]] * 4)
         T = TransferMechanism(
-            size=5,
+            input_shapes=5,
             function=Linear)
         c = Composition(pathways=[R,T], prefs=TestRecurrentTransferMechanismInComposition.simple_prefs)
         c.run(inputs={R: [[1, 2, 3, -0.5]]})
@@ -796,11 +797,11 @@ class TestRecurrentTransferMechanismInComposition:
     @pytest.mark.xfail(reason='Unsure if this is correct behavior - see note for _recurrent_transfer_mechanism_matrix_setter')
     def test_recurrent_mech_composition_matrix_change(self):
         R = RecurrentTransferMechanism(
-            size=4,
+            input_shapes=4,
             auto=1,
             hetero=-1)
         T = TransferMechanism(
-            size=4,
+            input_shapes=4,
             function=Linear)
         c = Composition(pathways=[T, R], prefs=TestRecurrentTransferMechanismInComposition.simple_prefs)
         R.parameters.matrix.set([[2, 0, 1, 3]] * 4, c)
@@ -813,7 +814,8 @@ class TestRecurrentTransferMechanismInComposition:
         np.testing.assert_allclose(R.parameters.value.get(c), [[21, 3, 12, 35]])
 
     def test_recurrent_mech_with_learning(self):
-        R = RecurrentTransferMechanism(size=4,
+        R = RecurrentTransferMechanism(
+            input_shapes=4,
                                        function=Linear,
                                        matrix=np.full((4, 4), 0.1),
                                        enable_learning=True
@@ -865,7 +867,8 @@ class TestRecurrentTransferMechanismInComposition:
         )
 
     def test_recurrent_mech_change_learning_rate(self):
-        R = RecurrentTransferMechanism(size=4,
+        R = RecurrentTransferMechanism(
+            input_shapes=4,
                                        function=Linear,
                                        enable_learning=True,
                                        learning_rate=0.1
@@ -898,7 +901,7 @@ class TestRecurrentTransferMechanismInComposition:
     def test_learning_of_orthognal_inputs(self):
         size=4
         R = RecurrentTransferMechanism(
-            size=size,
+            input_shapes=size,
             function=Linear,
             enable_learning=True,
             auto=0,
@@ -1027,7 +1030,7 @@ class TestCustomCombinationFunction:
     def test_rt_without_custom_comb_fct(self):
         R1 = RecurrentTransferMechanism(
                 has_recurrent_input_port=True,
-                size=2,
+                input_shapes=2,
         )
         result = R1.execute([1,2])
         np.testing.assert_allclose(result, [[1,2]])
@@ -1037,7 +1040,7 @@ class TestCustomCombinationFunction:
             return x[0] * x[1] if len(x) == 2 else x[0]
         R2 = RecurrentTransferMechanism(
                 has_recurrent_input_port=True,
-                size=2,
+                input_shapes=2,
                 combination_function=my_fct
         )
         result = R2.execute([1,2])
@@ -1135,6 +1138,8 @@ class TestCustomCombinationFunction:
         C.run(inputs={I1: [[1.0]], I2: [[1.0]]}, num_trials=7, execution_mode=comp_mode)
 
         np.testing.assert_allclose(exp, C.results)
+        assert I1.has_initializers == has_initializers1
+        assert I2.has_initializers == has_initializers2
 
     @pytest.mark.composition
     @pytest.mark.integrator_mechanism
@@ -1169,7 +1174,7 @@ class TestDebugProperties:
 
     def test_defaults(self):
         R = RecurrentTransferMechanism(name='R',
-                                       size=3)
+                                       input_shapes=3)
         print("\n\nTEST DEFAULTS")
         print("\n\nAuto Values -----------------------------------")
         print("R.auto = ", R.auto)
@@ -1206,7 +1211,7 @@ class TestDebugProperties:
     def test_auto(self):
         auto_val = 10.0
         R = RecurrentTransferMechanism(name='R',
-                                       size=3,
+                                       input_shapes=3,
                                        auto=auto_val)
 
         print("\n\nTEST AUTO     [auto = ", auto_val, "]")
@@ -1245,7 +1250,7 @@ class TestDebugProperties:
     def test_hetero(self):
         hetero_val = 10.0
         R = RecurrentTransferMechanism(name='R',
-                                       size=3,
+                                       input_shapes=3,
                                        hetero=hetero_val)
         print("\n\nTEST HETERO    [hetero = ", hetero_val, "]")
         print("\n\nAuto Values -----------------------------------")
@@ -1288,7 +1293,7 @@ class TestDebugProperties:
         hetero_val = 5.0
 
         R = RecurrentTransferMechanism(name='R',
-                                       size=3,
+                                       input_shapes=3,
                                        auto=auto_val,
                                        hetero=hetero_val)
         print("\n\nTEST AUTO AND HETERO\n [auto = ", auto_val, " | hetero = ", hetero_val, "] ")
@@ -1330,7 +1335,7 @@ class TestDebugProperties:
                       [10.0,  10.0,   5.0]]
 
         R = RecurrentTransferMechanism(name='R',
-                                       size=3,
+                                       input_shapes=3,
                                        matrix=matrix_val)
         print("\n\nTEST MATRIX\n", matrix_val)
         print("\n\nAuto Values -----------------------------------")

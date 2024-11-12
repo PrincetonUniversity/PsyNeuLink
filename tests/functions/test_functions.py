@@ -8,10 +8,10 @@ import psyneulink.core.components.functions.nonstateful.transferfunctions
 @pytest.mark.parametrize(
     'output_type, variable, expected_output',
     [
-        (pnl.FunctionOutputType.RAW_NUMBER, 1, 1.),
-        (pnl.FunctionOutputType.RAW_NUMBER, [1], 1.),
-        (pnl.FunctionOutputType.RAW_NUMBER, [[1]], 1.),
-        (pnl.FunctionOutputType.RAW_NUMBER, [[[1]]], 1.),
+        (pnl.FunctionOutputType.NP_0D_ARRAY, 1, 1.),
+        (pnl.FunctionOutputType.NP_0D_ARRAY, [1], 1.),
+        (pnl.FunctionOutputType.NP_0D_ARRAY, [[1]], 1.),
+        (pnl.FunctionOutputType.NP_0D_ARRAY, [[[1]]], 1.),
         (pnl.FunctionOutputType.NP_1D_ARRAY, 1, np.array([1.])),
         (pnl.FunctionOutputType.NP_1D_ARRAY, [1], np.array([1.])),
         (pnl.FunctionOutputType.NP_1D_ARRAY, [[1]], np.array([1.])),
@@ -33,9 +33,9 @@ def test_output_type_conversion(output_type, variable, expected_output):
 @pytest.mark.parametrize(
     'output_type, variable',
     [
-        (pnl.FunctionOutputType.RAW_NUMBER, [1, 1]),
-        (pnl.FunctionOutputType.RAW_NUMBER, [[1, 1]]),
-        (pnl.FunctionOutputType.RAW_NUMBER, [[[1], [1, 1]]]),
+        (pnl.FunctionOutputType.NP_0D_ARRAY, [1, 1]),
+        (pnl.FunctionOutputType.NP_0D_ARRAY, [[1, 1]]),
+        (pnl.FunctionOutputType.NP_0D_ARRAY, [[[1], [1, 1]]]),
         (pnl.FunctionOutputType.NP_1D_ARRAY, [[1, 1], [1, 1]]),
     ]
 )

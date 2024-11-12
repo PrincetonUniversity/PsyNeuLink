@@ -33,10 +33,10 @@ from psyneulink.core.globals.keywords import \
     CORRELATION, COSINE, COSINE_SIMILARITY, CROSS_ENTROPY, \
     DEFAULT_VARIABLE, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DOT_PRODUCT, \
     ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, NORMALIZE, \
-    NORMED_L0_SIMILARITY, OBJECTIVE_FUNCTION_TYPE, SIZE, STABILITY_FUNCTION
-from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
+    NORMED_L0_SIMILARITY, OBJECTIVE_FUNCTION_TYPE, INPUT_SHAPES, STABILITY_FUNCTION
+from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
-from psyneulink.core.globals.utilities import DistanceMetricLiteral, safe_len, convert_to_np_array
+from psyneulink.core.globals.utilities import DistanceMetricLiteral, safe_len, convert_to_np_array, convert_all_elements_to_np_array
 from psyneulink.core.globals.utilities import is_iterable
 
 
@@ -100,12 +100,12 @@ class Stability(ObjectiveFunction):
     variable : list or 1d array of numbers: Default class_defaults.variable
         specifies shape and default value of the array for which stability is calculated.
 
-    size : int : None
+    input_shapes : int : None
         specifies length of the array over which stability is calculated;  can be used in place of default_value,
         in which case zeros are assigned as the value(s). An error is generated if both are specified but
         size != len(default_value).
 
-    matrix : list, np.ndarray, np.matrix, or matrix keyword : default HOLLOW_MATRIX
+    matrix : list, np.ndarray, or matrix keyword : default HOLLOW_MATRIX
         specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
         length of `variable <Stability.variable>`.
 
@@ -142,7 +142,7 @@ class Stability(ObjectiveFunction):
     size : int
         length of array for which stability is calculated.
 
-    matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default HOLLOW_MATRIX
+    matrix : list, np.ndarray, function keyword, or MappingProjection : default HOLLOW_MATRIX
         weight matrix from each element of `variable <Stability.variablity>` to each other;  if a matrix other
         than HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from the
         stability calculation.
@@ -211,7 +211,7 @@ class Stability(ObjectiveFunction):
     @beartype
     def __init__(self,
                  default_variable=None,
-                 size=None,
+                 input_shapes=None,
                  matrix=None,
                  # metric:is_distance_metric=None,
                  metric: Optional[DistanceMetricLiteral] = None,
@@ -221,12 +221,12 @@ class Stability(ObjectiveFunction):
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
 
-        if size:
+        if input_shapes:
             if default_variable is None:
-                default_variable = np.zeros(size)
-            elif size != len(default_variable):
-                raise FunctionError(f"Both {repr(DEFAULT_VARIABLE)} ({default_variable}) and {repr(SIZE)} ({size}) "
-                                    f"are specified for {self.name} but are {SIZE}!=len({DEFAULT_VARIABLE}).")
+                default_variable = np.zeros(input_shapes)
+            elif input_shapes != len(default_variable):
+                raise FunctionError(f"Both {repr(DEFAULT_VARIABLE)} ({default_variable}) and {repr(INPUT_SHAPES)} ({input_shapes}) "
+                                    f"are specified for {self.name} but are {INPUT_SHAPES}!=len({DEFAULT_VARIABLE}).")
 
         super().__init__(
             default_variable=default_variable,
@@ -254,7 +254,7 @@ class Stability(ObjectiveFunction):
         """Validate matrix param
 
         `matrix <Stability.matrix>` argument must be one of the following
-            - 2d list, np.ndarray or np.matrix
+            - 2d list, np.ndarray
             - ParameterPort for one of the above
             - MappingProjection with a parameterPorts[MATRIX] for one of the above
 
@@ -379,11 +379,8 @@ class Stability(ObjectiveFunction):
 
         # this mirrors the transformation in _function
         # it is a hack, and a general solution should be found
-        squeezed = np.array(new_default_variable)
-        if squeezed.ndim > 1:
-            squeezed = np.squeeze(squeezed)
-
-        size = safe_len(squeezed)
+        new_default_variable = convert_all_elements_to_np_array(new_default_variable)
+        size = safe_len(np.squeeze(new_default_variable))
         matrix = self.parameters.matrix._get(context)
 
         if isinstance(matrix, MappingProjection):
@@ -391,7 +388,7 @@ class Stability(ObjectiveFunction):
         elif isinstance(matrix, ParameterPort):
             pass
         else:
-            matrix = get_matrix(self.defaults.matrix, size, size)
+            matrix = get_matrix(copy_parameter_value(self.defaults.matrix), size, size)
 
         self.parameters.matrix._set(matrix, context)
 
@@ -500,12 +497,12 @@ class Energy(Stability):
     variable : list or 1d array of numbers: Default class_defaults.variable
         specifies shape and default value of the array for which energy is calculated.
 
-    size : int : None
+    input_shapes : int : None
         specifies length of the array over which energy is calculated;  can be used in place of default_value,
         in which case zeros are assigned as the value(s). An error is generated if both are specified but
         size != len(default_value).
 
-    matrix : list, np.ndarray, np.matrix, or matrix keyword : default INVERSE_HOLLOW_MATRIX
+    matrix : list, np.ndarray, or matrix keyword : default INVERSE_HOLLOW_MATRIX
         specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
         length of `variable <Stability.variable>`.
 
@@ -540,7 +537,7 @@ class Energy(Stability):
     size : int
         length of array for which energy is calculated.
 
-    matrix : list, np.ndarray, np.matrix, or matrix keyword
+    matrix : list, np.ndarray, or matrix keyword
         weight matrix from each element of `variable <Energy.variablity>` to each other;  if a matrix other
         than INVERSE_HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from
         the energy calculation.
@@ -567,7 +564,7 @@ class Energy(Stability):
     @check_user_specified
     def __init__(self,
                  default_variable=None,
-                 size=None,
+                 input_shapes=None,
                  normalize:bool=None,
                  # transfer_fct=None,
                  matrix=None,
@@ -577,7 +574,7 @@ class Energy(Stability):
 
         super().__init__(
             default_variable=default_variable,
-            size=size,
+            input_shapes=input_shapes,
                          metric=ENERGY,
                          matrix=matrix,
                          # transfer_fct=transfer_fct,
@@ -591,7 +588,7 @@ class Entropy(Stability):
     """
     Entropy(                          \
         default_variable=None,        \
-        size=None,                    \
+        input_shapes=None,                    \
         matrix=INVERSE_HOLLOW_MATRIX, \
         transfer_fct=None             \
         normalize=False,              \
@@ -610,12 +607,12 @@ class Entropy(Stability):
     variable : list or 1d array of numbers: Default class_defaults.variable
         specifies shape and default value of the array for which entropy is calculated.
 
-    size : int : None
+    input_shapes : int : None
         specifies length of the array over which entropy is calculated;  can be used in place of default_value,
         in which case zeros are assigned as the value(s). An error is generated if both are specified but
-        size != len(default_value).
+        input_shapes != len(default_value).
 
-    matrix : list, np.ndarray, np.matrix, or matrix keyword : default INVERSE_HOLLOW_MATRIX
+    matrix : list, np.ndarray, or matrix keyword : default INVERSE_HOLLOW_MATRIX
         specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
         length of `variable <Stability.variable>`.
 
@@ -647,10 +644,10 @@ class Entropy(Stability):
     variable : 1d array
         array for which entropy is calculated.
 
-    size : int
+    input_shapes : int
         length of array for which energy is calculated.
 
-    matrix : list, np.ndarray, np.matrix, or matrix keyword
+    matrix : list, np.ndarray, or matrix keyword
         weight matrix from each element of `variable <Entropy.variablity>` to each other;  if a matrix other
         than INVERSE_HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from
         the entropy calculation.

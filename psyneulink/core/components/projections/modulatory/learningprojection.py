@@ -204,10 +204,10 @@ import warnings
 import numpy as np
 from beartype import beartype
 
-from psyneulink._typing import Optional, Union, Callable, Literal
+from psyneulink._typing import Callable, Literal, Mapping, Optional, Union
 
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
+from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation, Reinforcement
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
@@ -481,12 +481,12 @@ class LearningProjection(ModulatoryProjection_Base):
                  error_function: Optional[Callable] = None,
                  learning_function: Optional[Callable] = None,
                  # FIX: 10/3/17 - TEST IF THIS OK AND REINSTATE IF SO
-                 # learning_signal_params:Optional[dict]=None,
+                 # learning_signal_params:Optional[Mapping]=None,
                  # learning_rate: Optional[ValidParamSpecType] = None,
                  learning_enabled: Optional[Union[bool, Literal['online', 'after']]] = None,
                  weight=None,
                  exponent=None,
-                 params: Optional[dict] = None,
+                 params: Optional[Mapping] = None,
                  name=None,
                  prefs: Optional[ValidPrefSet] = None,
                  **kwargs

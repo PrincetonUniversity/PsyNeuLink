@@ -15,6 +15,7 @@
 * `Reduce`
 * `LinearCombination`
 * `CombineMeans`
+* `MatrixTransform`
 * `PredictionErrorDeltaFunction`
 
 Overview
@@ -23,17 +24,20 @@ Overview
 Functions that combine multiple items with the same shape, yielding a result with a single item that has the same
 shape as the individual items.
 
-All CombinationFunctions must have two attributes - **multiplicative_param** and **additive_param** -
+All Transformfunctions must have two attributes - **multiplicative_param** and **additive_param** -
 each of which is assigned the name of one of the function's parameters;
 this is for use by ModulatoryProjections (and, in particular, GatingProjections,
-when the CombinationFunction is used as the function of an InputPort or OutputPort).
+when the TransformFunction is used as the function of an InputPort or OutputPort).
 
 
 """
 
 import numbers
+import types
+import warnings
 
 import numpy as np
+
 try:
     import torch
 except ImportError:
@@ -43,28 +47,35 @@ from beartype import beartype
 from psyneulink._typing import Optional, Union, Literal
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.function import Function_Base, FunctionError, FunctionOutputType
-from psyneulink.core.globals.keywords import \
-    ADDITIVE_PARAM, ARRANGEMENT, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONCATENATE_FUNCTION, \
-    CROSS_ENTROPY, DEFAULT_VARIABLE, EXPONENTS, LINEAR_COMBINATION_FUNCTION, MULTIPLICATIVE_PARAM, OFFSET, OPERATION, \
-    PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT, REARRANGE_FUNCTION, REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, \
-    PREFERENCE_SET_NAME
-from psyneulink.core.globals.utilities import convert_to_np_array, is_numeric, np_array_less_than_2d, ValidParamSpecType
+from psyneulink.core.components.functions import function
+from psyneulink.core.components.functions.function import (
+    Function_Base, FunctionError, FunctionOutputType, function_keywords, get_matrix)
+from psyneulink.core.components.shellclasses import Projection
+from psyneulink.core.globals.keywords import (
+    ADDITIVE_PARAM, ARRANGEMENT, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONCATENATE_FUNCTION,
+     CROSS_ENTROPY, DEFAULT_VARIABLE, DOT_PRODUCT, EXPONENTS,
+     HAS_INITIALIZERS, HOLLOW_MATRIX, IDENTITY_MATRIX, LINEAR_COMBINATION_FUNCTION, L0,
+     MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_TRANSFORM_FUNCTION,  MULTIPLICATIVE_PARAM, NORMALIZE,
+     OFFSET, OPERATION, PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT,
+     REARRANGE_FUNCTION, RECEIVER, REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, PREFERENCE_SET_NAME)
+from psyneulink.core.globals.utilities import (
+    convert_all_elements_to_np_array, convert_to_np_array, is_numeric, is_matrix_keyword, is_numeric_scalar,
+    np_array_less_than_2d, ValidParamSpecType)
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.parameters import Parameter, check_user_specified
+from psyneulink.core.globals.parameters import Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, ValidPrefSet, PreferenceEntry, PreferenceLevel
 
-__all__ = ['CombinationFunction', 'Concatenate', 'CombineMeans', 'Rearrange', 'Reduce', 'LinearCombination',
-           'PredictionErrorDeltaFunction']
+__all__ = ['TransformFunction', 'Concatenate', 'CombineMeans', 'Rearrange', 'Reduce',
+           'LinearCombination', 'MatrixTransform', 'PredictionErrorDeltaFunction']
 
-class CombinationFunction(Function_Base):
+class TransformFunction(Function_Base):
     """Function that combines multiple items, yielding a result with the same shape as its operands
 
-    All CombinationFunctions must have two attributes - multiplicative_param and additive_param -
+    All Transformfunctions must have two attributes - multiplicative_param and additive_param -
         each of which is assigned the name of one of the function's parameters;
         this is for use by ModulatoryProjections (and, in particular, GatingProjections,
-        when the CombinationFunction is used as the function of an InputPort or OutputPort).
+        when the TransformFunction is used as the function of an InputPort or OutputPort).
 
     """
     componentType = COMBINATION_FUNCTION_TYPE
@@ -75,7 +86,7 @@ class CombinationFunction(Function_Base):
             ----------
 
                 variable
-                    see `variable <CombinationFunction.variable>`
+                    see `variable <TransformFunction.variable>`
 
                     :default value: numpy.array([0])
                     :type: ``numpy.ndarray``
@@ -104,7 +115,7 @@ class CombinationFunction(Function_Base):
         return builder
 
 
-class Concatenate(CombinationFunction):  # ------------------------------------------------------------------------
+class Concatenate(TransformFunction):  # ------------------------------------------------------------------------
     """
     Concatenate(                                   \
          default_variable=class_defaults.variable, \
@@ -183,7 +194,7 @@ class Concatenate(CombinationFunction):  # -------------------------------------
     componentName = CONCATENATE_FUNCTION
 
 
-    class Parameters(CombinationFunction.Parameters):
+    class Parameters(TransformFunction.Parameters):
         """
             Attributes
             ----------
@@ -254,12 +265,12 @@ class Concatenate(CombinationFunction):  # -------------------------------------
 
         if SCALE in target_set and target_set[SCALE] is not None:
             scale = target_set[SCALE]
-            if not isinstance(scale, numbers.Number):
+            if not is_numeric_scalar(scale):
                 raise FunctionError("{} param of {} ({}) must be a scalar".format(SCALE, self.name, scale))
 
         if OFFSET in target_set and target_set[OFFSET] is not None:
             offset = target_set[OFFSET]
-            if not isinstance(offset, numbers.Number):
+            if not is_numeric_scalar(offset):
                 raise FunctionError("{} param of {} ({}) must be a scalar".format(OFFSET, self.name, offset))
 
     def _function(self,
@@ -321,7 +332,14 @@ class Concatenate(CombinationFunction):  # -------------------------------------
 
         return self._get_current_parameter_value(SCALE, context)
 
-class Rearrange(CombinationFunction):  # ------------------------------------------------------------------------
+    def _gen_pytorch_fct(self, device, context=None):
+        scale = self._get_pytorch_fct_param_value('scale', device, context)
+        offset = self._get_pytorch_fct_param_value('offset', device, context)
+        # return lambda x: torch.concatenate(tuple(x)) * scale + offset
+        return lambda x: torch.hstack(tuple(x)) * scale + offset
+
+
+class Rearrange(TransformFunction):  # ------------------------------------------------------------------------
     """
     Rearrange(                                     \
          default_variable=class_defaults.variable, \
@@ -428,7 +446,7 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
     """
     componentName = REARRANGE_FUNCTION
 
-    class Parameters(CombinationFunction.Parameters):
+    class Parameters(TransformFunction.Parameters):
         """
             Attributes
             ----------
@@ -512,17 +530,17 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
                     except IndexError:
                         raise FunctionError(f"Index ({i}) specified in {repr(ARRANGEMENT)} arg for "
                                             f"{self.name}{owner_str} is out of bounds for its {repr(DEFAULT_VARIABLE)} "
-                                            f"arg (max index = {len(self.parameters.variable.default_value)-1}).")
+                                            f"arg (max index = {len(self.parameters.variable.default_value) - 1}).")
 
         # Check that SCALE and OFFSET are scalars.
         if SCALE in target_set and target_set[SCALE] is not None:
             scale = target_set[SCALE]
-            if not isinstance(scale, numbers.Number):
+            if not is_numeric_scalar(scale):
                 raise FunctionError("{} param of {} ({}) must be a scalar".format(SCALE, self.name, scale))
 
         if OFFSET in target_set and target_set[OFFSET] is not None:
             offset = target_set[OFFSET]
-            if not isinstance(offset, numbers.Number):
+            if not is_numeric_scalar(offset):
                 raise FunctionError("{} param of {} ({}) must be a scalar".format(OFFSET, self.name, offset))
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
@@ -603,7 +621,7 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
         return self.convert_output_type(result, FunctionOutputType.NP_2D_ARRAY)
 
 
-class Reduce(CombinationFunction):  # ------------------------------------------------------------------------
+class Reduce(TransformFunction):  # ------------------------------------------------------------------------
     # FIX: CONFIRM THAT 1D KWEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE
     # FIX  CONFIRM THAT LINEAR TRANSFORMATION (OFFSET, SCALE) APPLY TO THE RESULTING ARRAY
     # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
@@ -711,7 +729,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     componentName = REDUCE_FUNCTION
 
 
-    class Parameters(CombinationFunction.Parameters):
+    class Parameters(TransformFunction.Parameters):
         """
             Attributes
             ----------
@@ -760,11 +778,11 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         changes_shape = Parameter(True, stateful=False, loggable=False, pnl_internal=True)
 
         def _validate_scale(self, scale):
-            if scale is not None and not np.isscalar(scale):
+            if not is_numeric_scalar(scale):
                 return "scale must be a scalar"
 
         def _validate_offset(self, offset):
-            if offset is not None and not np.isscalar(offset):
+            if not is_numeric_scalar(offset):
                 return "vector offset is not supported"
 
 
@@ -845,12 +863,12 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
         if SCALE in target_set and target_set[SCALE] is not None:
             scale = target_set[SCALE]
-            if not isinstance(scale, numbers.Number):
+            if not is_numeric_scalar(scale):
                 raise FunctionError("{} param of {} ({}) must be a scalar".format(SCALE, self.name, scale))
 
         if OFFSET in target_set and target_set[OFFSET] is not None:
             offset = target_set[OFFSET]
-            if not isinstance(offset, numbers.Number):
+            if not is_numeric_scalar(offset):
                 raise FunctionError("{} param of {} ({}) must be a scalar".format(OFFSET, self.name, offset))
 
     def _function(self,
@@ -911,7 +929,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             # result = np.sum(np.atleast_2d(variable), axis=0) * scale + offset
             result = np.sum(np.atleast_2d(variable), axis=1) * scale + offset
         elif operation == PRODUCT:
-            result = np.product(np.atleast_2d(variable), axis=1) * scale + offset
+            result = np.prod(np.atleast_2d(variable), axis=1) * scale + offset
         else:
             raise FunctionError("Unrecognized operator ({0}) for Reduce function".
                                 format(self._get_current_parameter_value(OPERATION, context)))
@@ -987,7 +1005,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
 
 class LinearCombination(
-    CombinationFunction):  # ------------------------------------------------------------------------
+    TransformFunction):  # ------------------------------------------------------------------------
     """
     LinearCombination(     \
          default_variable, \
@@ -1169,7 +1187,7 @@ class LinearCombination(
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
-    class Parameters(CombinationFunction.Parameters):
+    class Parameters(TransformFunction.Parameters):
         """
             Attributes
             ----------
@@ -1311,10 +1329,8 @@ class LinearCombination(
                 pass
             elif isinstance(scale, np.ndarray):
                 target_set[SCALE] = np.array(scale)
-            scale_is_a_scalar = isinstance(scale, numbers.Number) or (len(scale) == 1) and isinstance(scale[0],
-                                                                                                      numbers.Number)
             if context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
-                if not scale_is_a_scalar:
+                if not is_numeric_scalar(scale):
                     err_msg = "Scale is using Hadamard modulation but its shape and/or size (scale shape: {}, size:{})" \
                               " do not match the variable being modulated (variable shape: {}, size: {})". \
                         format(scale.shape, scale.size, self.defaults.variable.shape,
@@ -1332,10 +1348,8 @@ class LinearCombination(
             elif isinstance(offset, np.ndarray):
                 target_set[OFFSET] = np.array(offset)
 
-            offset_is_a_scalar = isinstance(offset, numbers.Number) or (len(offset) == 1) and isinstance(offset[0],
-                                                                                                         numbers.Number)
             if context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
-                if not offset_is_a_scalar:
+                if not is_numeric_scalar(offset):
                     err_msg = "Offset is using Hadamard modulation but its shape and/or size (offset shape: {}, size:{})" \
                               " do not match the variable being modulated (variable shape: {}, size: {})". \
                         format(offset.shape, offset.size, self.defaults.variable.shape,
@@ -1427,18 +1441,22 @@ class LinearCombination(
 
         # CW 3/19/18: a total hack, e.g. to make scale=[4.] turn into scale=4. Used b/c the `scale` ParameterPort
         # changes scale's format: e.g. if you write c = pnl.LinearCombination(scale = 4), print(c.scale) returns [4.]
-        if isinstance(scale, (list, np.ndarray)):
-            if len(scale) == 1 and isinstance(scale[0], numbers.Number):
-                scale = scale[0]
-        if isinstance(offset, (list, np.ndarray)):
-            if len(offset) == 1 and isinstance(offset[0], numbers.Number):
-                offset = offset[0]
+        # Don't use try_extract_0d_array_item because that will only
+        # handle 0d arrays, not 1d.
+        try:
+            scale = scale.item()
+        except (AttributeError, ValueError):
+            pass
+        try:
+            offset = offset.item()
+        except (AttributeError, ValueError):
+            pass
 
         # CALCULATE RESULT USING RELEVANT COMBINATION OPERATION AND MODULATION
         if operation == SUM:
             combination = np.sum(variable, axis=0)
         elif operation == PRODUCT:
-            combination = np.product(variable, axis=0)
+            combination = np.prod(variable, axis=0)
         elif operation == CROSS_ENTROPY:
             v1 = variable[0]
             v2 = variable[1]
@@ -1452,7 +1470,7 @@ class LinearCombination(
             product = combination * scale
         else:
             # Hadamard scale
-            product = np.product([combination, scale], axis=0)
+            product = np.prod([combination, scale], axis=0)
 
         if isinstance(offset, numbers.Number):
             # scalar offset
@@ -1589,7 +1607,694 @@ class LinearCombination(
                                            f"by AutodiffComposition; use 'SUM' or 'PRODUCT' if possible.")
 
 
-class CombineMeans(CombinationFunction):  # ------------------------------------------------------------------------
+# **********************************************************************************************************************
+#                                                 MatrixTransform
+# **********************************************************************************************************************
+
+class MatrixTransform(TransformFunction):  # -------------------------------------------------------------------------------
+    """
+    MatrixTransform(            \
+         default_variable,      \
+         matrix=None,           \
+         operation=DOT_PRODUCT, \
+         normalize=False,       \
+         params=None,           \
+         owner=None,            \
+         name=None,             \
+         prefs=None             \
+         )
+
+    .. _MatrixTransform:
+
+    Matrix transform of `variable <MatrixTransform.variable>`.
+
+    `function <MatrixTransform._function>` returns dot product of variable with matrix:
+
+    .. math::
+        variable \\bullet matrix
+
+    If *DOT_PRODUCT* is specified as the **operation*, the result is the dot product of `variable
+    <MatrixTransform.variable>` and `matrix <MatrixTransform.matrix>`;  if *L0* is specified, the result is the
+    difference between `variable <MatrixTransform.variable>` and `matrix <MatrixTransform.matrix>` (see
+    `operation <MatrixTransform.operation>` for additional details).
+
+    If **normalize** is True, the result is normalized by the product of the norms of the variable and matrix:
+
+    .. math::
+        \\frac{variable \\bullet matrix}{\\|variable\\| \\cdot \\|matrix\\|}
+
+    COMMENT:  [CONVERT TO FIGURE]
+        ----------------------------------------------------------------------------------------------------------
+        MATRIX FORMAT <shape: (3,5)>
+                                         INDICES:
+                                     Output elements:
+                              0       1       2       3       4
+                         0  [0,0]   [0,1]   [0,2]   [0,3]   [0,4]
+        Input elements:  1  [1,0]   [1,1]   [1,2]   [1,3]   [1,4]
+                         2  [2,0]   [2,1]   [2,2]   [2,3]   [2,4]
+
+        matrix.shape => (input/rows, output/cols)
+
+        ----------------------------------------------------------------------------------------------------------
+        ARRAY FORMAT
+                                                                            INDICES
+                                          [ [      Input 0 (row0)       ], [       Input 1 (row1)      ]... ]
+                                          [ [ out0,  out1,  out2,  out3 ], [ out0,  out1,  out2,  out3 ]... ]
+        matrix[input/rows, output/cols]:  [ [ row0,  row0,  row0,  row0 ], [ row1,  row1,  row1,  row1 ]... ]
+                                          [ [ col0,  col1,  col2,  col3 ], [ col0,  col1,  col2,  col3 ]... ]
+                                          [ [[0,0], [0,1], [0,2], [0,3] ], [[1,0], [1,1], [1,2], [1,3] ]... ]
+
+        ----------------------------------------------------------------------------------------------------------
+    COMMENT
+
+
+    Arguments
+    ---------
+
+    variable : list or 1d array : default class_defaults.variable
+        specifies a template for the value to be transformed; length must equal the number of rows of `matrix
+        <MatrixTransform.matrix>`.
+
+    matrix : number, list, 1d or 2d np.ndarray, function, or matrix keyword : default IDENTITY_MATRIX
+        specifies matrix used to transform `variable <MatrixTransform.variable>`
+        (see `matrix <MatrixTransform.matrix>` for specification details).
+
+        When MatrixTransform is the `function <Projection_Base._function>` of a projection:
+
+            - the matrix specification must be compatible with the variables of the `sender <Projection_Base.sender>`
+              and `receiver <Projection_Base.receiver>`
+
+            - a matrix keyword specification generates a matrix based on the sender and receiver shapes
+
+        When MatrixTransform is instantiated on its own, or as the function of a `Mechanism <Mechanism>` or `Port`:
+
+            - the matrix specification must be compatible with the function's own `variable <MatrixTransform.variable>`
+
+            - if matrix is not specified, a square identity matrix is generated based on the number of columns in
+              `variable <MatrixTransform.variable>`
+
+            - matrix keywords are not valid matrix specifications
+
+    operation : DOT_PRODUCT or L0 : default DOT_PRODUCT
+        specifies whether to take the dot product or difference of `variable <MatrixTransform.variable>`
+        and `matrix <MatrixTransform.matrix>`.
+
+    normalize : bool : default False
+        specifies whether to normalize the result of `function <LinearCombination.function>` by dividing it by the
+        norm of `variable <MatrixTransform.variable>` x the norm of `matrix <MatrixTransform.matrix>`;  this cannot
+        be used if `variable <MatrixTransform.variable>` is a scalar (i.e., has only one element), and **operation**
+        is set to *L0* (since it is not needed, and can produce a divide by zero error).
+
+    bounds : None
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : 1d array
+        contains value to be transformed.
+
+    matrix : 2d array
+        matrix used to transform `variable <MatrixTransform.variable>`.
+        Can be specified as any of the following:
+            * number - used as the filler value for all elements of the :keyword:`matrix` (call to np.fill);
+            * list of arrays, 2d array - assigned as the value of :keyword:`matrix`;
+            * matrix keyword - see `MatrixKeywords` for list of options.
+        Rows correspond to elements of the input array (outer index), and
+        columns correspond to elements of the output array (inner index).
+
+    operation : DOT_PRODUCT or L0 : default DOT_PRODUCT
+        determines whether dot product or difference of `variable <MatrixTransform.variable>` and `matrix
+        <MatrixTransform.matrix>` is taken.  If the length of `variable <MatrixTransform.variable>` is greater
+        than 1 and L0 is specified, the `variable <MatrixTransform.variable>` array is subtracted from each
+        array of `matrix <MatrixTransform.matrix>` and the resulting array is summed, to produce the corresponding
+        element of the array returned by the function.
+
+    normalize : bool
+        determines whether the result of `function <LinearCombination.function>` is normalized, by dividing it by the
+        norm of `variable <MatrixTransform.variable>` x the norm of `matrix <MatrixTransform.matrix>`.
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `PreferenceSet`
+        for details).
+    """
+
+    componentName = MATRIX_TRANSFORM_FUNCTION
+
+    DEFAULT_FILLER_VALUE = 0
+
+    _model_spec_generic_type_name = 'onnx::MatMul'
+
+    class Parameters(TransformFunction.Parameters):
+        """
+            Attributes
+            ----------
+
+                matrix
+                    see `matrix <MatrixTransform.matrix>`
+
+                    :default value: None
+                    :type:
+
+                operation
+                    see `operation <MatrixTransform.operation>`
+
+                    :default value: DOT_PRODUCT
+                    :type: bool
+
+                normalize
+                    see `normalize <MatrixTransform.normalize>`
+
+                    :default value: False
+                    :type: bool
+        """
+        variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable', mdf_name='A')
+        matrix = Parameter(None, modulable=True, mdf_name='B')
+        operation = Parameter(DOT_PRODUCT, stateful=False)
+        normalize = Parameter(False)
+        bounds = None
+
+    # def is_matrix_spec(m):
+    #     if m is None:
+    #         return True
+    #     if m in MATRIX_KEYWORD_VALUES:
+    #         return True
+    #     if isinstance(m, (list, np.ndarray, types.FunctionType)):
+    #         return True
+    #     return False
+
+    @check_user_specified
+    @beartype
+    def __init__(self,
+                 default_variable=None,
+                 matrix=None,
+                 operation=None,
+                 normalize=None,
+                 params=None,
+                 owner=None,
+                 prefs:  Optional[ValidPrefSet] = None):
+
+        # Note: this calls _validate_variable and _validate_params which are overridden below;
+        #       the latter implements the matrix if required
+        # super(MatrixTransform, self).__init__(default_variable=default_variable,
+        super().__init__(
+            default_variable=default_variable,
+            matrix=matrix,
+            operation=operation,
+            normalize=normalize,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
+
+        self.parameters.matrix.set(
+            self.instantiate_matrix(self.parameters.matrix.get()),
+            skip_log=True,
+        )
+
+    # def _validate_variable(self, variable, context=None):
+    #     """Insure that variable passed to MatrixTransform is a max 2D array
+    #
+    #     :param variable: (max 2D array)
+    #     :param context:
+    #     :return:
+    #     """
+    #     variable = super()._validate_variable(variable, context)
+    #
+    #     # Check that variable <= 2D
+    #     try:
+    #         if not variable.ndim <= 2:
+    #             raise FunctionError("variable ({0}) for {1} must be a numpy.ndarray of dimension at most 2".format(variable, self.__class__.__name__))
+    #     except AttributeError:
+    #         raise FunctionError("PROGRAM ERROR: variable ({0}) for {1} should be a numpy.ndarray".
+    #                                 format(variable, self.__class__.__name__))
+    #
+    #     return variable
+
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate params and assign to targets
+
+        This overrides the class method, to perform more detailed type checking (see explanation in class method).
+        Note: this method (or the class version) is called only if the parameter_validation attribute is `True`
+
+        :param request_set: (dict) - params to be validated
+        :param target_set: (dict) - destination of validated params
+        :param context: (str)
+        :return none:
+        """
+
+        super()._validate_params(request_set, target_set, context)
+
+        param_set = target_set
+        # proxy for checking whether the owner is a projection
+        if hasattr(self.owner, 'receiver'):
+            sender = self.defaults.variable
+            sender_len = np.size(np.atleast_2d(self.defaults.variable), 1)
+
+            # Check for and validate receiver first, since it may be needed to validate and/or construct the matrix
+            # First try to get receiver from specification in params
+            if RECEIVER in param_set:
+                self.receiver = param_set[RECEIVER]
+                # Check that specification is a list of numbers or an array
+                if ((isinstance(self.receiver, list) and all(
+                        isinstance(elem, numbers.Number) for elem in self.receiver)) or
+                        isinstance(self.receiver, np.ndarray)):
+                    self.receiver = np.atleast_1d(self.receiver)
+                else:
+                    raise FunctionError("receiver param ({0}) for {1} must be a list of numbers or an np.array".
+                                        format(self.receiver, self.name))
+            # No receiver, so use sender as template (assuming square -- e.g., IDENTITY -- matrix)
+            else:
+                if (self.owner and self.owner.prefs.verbosePref) or self.prefs.verbosePref:
+                    print("Identity matrix requested but 'receiver' not specified; sender length ({0}) will be used".
+                          format(sender_len))
+                self.receiver = param_set[RECEIVER] = sender
+
+            receiver_len = len(self.receiver)
+
+            # Check rest of params
+            message = ""
+            for param_name, param_value in param_set.items():
+
+                # receiver param already checked above
+                if param_name == RECEIVER:
+                    continue
+
+                # Not currently used here
+                if param_name in function_keywords:
+                    continue
+
+                if param_name == HAS_INITIALIZERS:
+                    continue
+
+                # matrix specification param
+                elif param_name == MATRIX:
+
+                    # A number (to be used as a filler), so OK
+                    if isinstance(param_value, numbers.Number):
+                        continue
+
+                    # np.matrix or np.ndarray provided, so validate that it is numeric and check dimensions
+                    elif isinstance(param_value, (list, np.ndarray, np.matrix)):
+                        # get dimensions specified by:
+                        #   variable (sender): width/cols/outer index
+                        #   kwReceiver param: height/rows/inner index
+
+                        weight_matrix = np.atleast_2d(param_value)
+                        if 'U' in repr(weight_matrix.dtype):
+                            raise FunctionError("Non-numeric entry in MATRIX "
+                                                "specification ({}) for the {} "
+                                                "function of {}".format(param_value,
+                                                                        self.name,
+                                                                        self.owner_name))
+
+                        if weight_matrix.ndim != 2:
+                            raise FunctionError("The matrix provided for the {} function of {} must be 2d (it is {}d".
+                                                format(weight_matrix.ndim, self.name, self.owner_name))
+
+                        matrix_rows = weight_matrix.shape[0]
+                        matrix_cols = weight_matrix.shape[1]
+
+                        # Check that number of rows equals length of sender vector (variable)
+                        if matrix_rows != sender_len:
+                            raise FunctionError("The number of rows ({}) of the "
+                                                "matrix provided for {} function "
+                                                "of {} does not equal the length "
+                                                "({}) of the sender vector "
+                                                "(variable)".format(matrix_rows,
+                                                                    self.name,
+                                                                    self.owner_name,
+                                                                    sender_len))
+
+                    # Auto, full or random connectivity matrix requested (using keyword):
+                    # Note:  assume that these will be properly processed by caller
+                    #        (e.g., MappingProjection._instantiate_receiver)
+                    elif is_matrix_keyword(param_value):
+                        continue
+
+                    # Identity matrix requested (using keyword), so check send_len == receiver_len
+                    elif param_value in {IDENTITY_MATRIX, HOLLOW_MATRIX}:
+                        # Receiver length doesn't equal sender length
+                        if not (self.receiver.shape == sender.shape and self.receiver.size == sender.size):
+                            # if self.owner.prefs.verbosePref:
+                            #     print ("Identity matrix requested, but length of receiver ({0})"
+                            #            " does not match length of sender ({1});  sender length will be used".
+                            #            format(receiver_len, sender_len))
+                            # # Set receiver to sender
+                            # param_set[kwReceiver] = sender
+                            raise FunctionError("{} requested for the {} function of {}, "
+                                                "but length of receiver ({}) does not match length of sender ({})".
+                                                format(param_value, self.name, self.owner_name, receiver_len,
+                                                       sender_len))
+                        continue
+
+                    # list used to describe matrix, so convert to 2D array and pass to validation of matrix below
+                    elif isinstance(param_value, list):
+                        try:
+                            param_value = np.atleast_2d(param_value)
+                        except (ValueError, TypeError) as error_msg:
+                            raise FunctionError(
+                                "Error in list specification ({}) of matrix for the {} function of {}: {})".
+                                    # format(param_value, self.__class__.__name__, error_msg))
+                                    format(param_value, self.name, self.owner_name, error_msg))
+
+                    # string used to describe matrix, so convert to np.array and pass to validation of matrix below
+                    elif isinstance(param_value, str):
+                        try:
+                            param_value = np.atleast_2d(param_value)
+                        except (ValueError, TypeError) as error_msg:
+                            raise FunctionError("Error in string specification ({}) of the matrix "
+                                                "for the {} function of {}: {})".
+                                                # format(param_value, self.__class__.__name__, error_msg))
+                                                format(param_value, self.name, self.owner_name, error_msg))
+
+                    # function so:
+                    # - assume it uses random.rand()
+                    # - call with two args as place markers for cols and rows
+                    # -  validate that it returns an array
+                    elif isinstance(param_value, types.FunctionType):
+                        test = param_value(1, 1)
+                        if not isinstance(test, np.ndarray):
+                            raise FunctionError("A function is specified for the matrix of the {} function of {}: {}) "
+                                                "that returns a value ({}) that is not an array".
+                                                # format(param_value, self.__class__.__name__, test))
+                                                format(self.name, self.owner_name, param_value, test))
+
+                    elif param_value is None:
+                        raise FunctionError("TEMP ERROR: param value is None.")
+
+                    else:
+                        raise FunctionError("Value of {} param ({}) for the {} function of {} "
+                                            "must be a matrix, a number (for filler), or a matrix keyword ({})".
+                                            format(param_name,
+                                                   param_value,
+                                                   self.name,
+                                                   self.owner_name,
+                                                   MATRIX_KEYWORD_NAMES))
+
+                # operation param
+                elif param_name == OPERATION:
+                    if param_value == L0 and NORMALIZE in param_set and param_set[NORMALIZE]:
+                        raise FunctionError(f"The 'operation' parameter for the {self.name} function of "
+                                            f"{self.owner_name} is set to 'L0', so the 'normalize' parameter "
+                                            f"should not be set to True "
+                                            f"(normalization is not needed, and can cause a divide by zero error). "
+                                            f"Set 'normalize' to False or change 'operation' to 'DOT_PRODUCT'.")
+                else:
+                    continue
+
+        # owner is a mechanism, state
+        # OR function was defined on its own (no owner)
+        else:
+            if MATRIX in param_set:
+                param_value = param_set[MATRIX]
+
+                # numeric value specified; verify that it is compatible with variable
+                if isinstance(param_value, (float, list, np.ndarray, np.matrix)):
+                    param_size = np.size(np.atleast_2d(param_value), 0)
+                    param_shape = np.shape(np.atleast_2d(param_value))
+                    variable_size = np.size(np.atleast_2d(self.defaults.variable),1)
+                    variable_shape = np.shape(np.atleast_2d(self.defaults.variable))
+                    if param_size != variable_size:
+                        raise FunctionError("Specification of matrix and/or default_variable for {} is not valid. The "
+                                            "shapes of variable {} and matrix {} are not compatible for multiplication".
+                                            format(self.name, variable_shape, param_shape))
+
+                # keyword matrix specified - not valid outside of a projection
+                elif is_matrix_keyword(param_value):
+                    raise FunctionError("{} is not a valid specification for the matrix parameter of {}. Keywords "
+                                        "may only be used to specify the matrix parameter of a Projection's "
+                                        "MatrixTransform function. When the MatrixTransform function is implemented in a "
+                                        "mechanism, such as {}, the correct matrix cannot be determined from a "
+                                        "keyword. Instead, the matrix must be fully specified as a float, list, "
+                                        "np.ndarray".
+                                        format(param_value, self.name, self.owner.name))
+
+                # The only remaining valid option is matrix = None (sorted out in instantiate_attribs_before_fn)
+                elif param_value is not None:
+                    raise FunctionError("Value of the matrix param ({}) for the {} function of {} "
+                                        "must be a matrix, a number (for filler), or a matrix keyword ({})".
+                                        format(param_value,
+                                               self.name,
+                                               self.owner_name,
+                                               MATRIX_KEYWORD_NAMES))
+
+    def _instantiate_attributes_before_function(self, function=None, context=None):
+        # replicates setting of receiver in _validate_params
+        if isinstance(self.owner, Projection):
+            self.receiver = copy_parameter_value(self.defaults.variable)
+
+        matrix = self.parameters.matrix._get(context)
+
+        if matrix is None and not hasattr(self.owner, "receiver"):
+            variable_length = np.size(np.atleast_2d(self.defaults.variable), 1)
+            matrix = np.identity(variable_length)
+        self.parameters.matrix._set(self.instantiate_matrix(matrix), context)
+
+    def instantiate_matrix(self, specification, context=None):
+        """Implements matrix indicated by specification
+
+         Specification is derived from MATRIX param (passed to self.__init__ or self._function)
+
+         Specification (validated in _validate_params):
+            + single number (used to fill self.matrix)
+            + matrix keyword (see get_matrix)
+            + 2D list or np.ndarray of numbers
+
+        :return matrix: (2D list)
+        """
+        from psyneulink.core.components.projections.projection import Projection
+        if isinstance(self.owner, Projection):
+            # Matrix provided (and validated in _validate_params); convert to array
+            if isinstance(specification, np.matrix):
+                return np.array(specification)
+
+            sender = copy_parameter_value(self.defaults.variable)
+            sender_len = sender.shape[0]
+            try:
+                receiver = self.receiver
+            except:
+                raise FunctionError("Can't instantiate matrix specification ({}) for the {} function of {} "
+                                    "since its receiver has not been specified".
+                                    format(specification, self.name, self.owner_name))
+                # receiver = sender
+            receiver_len = receiver.shape[0]
+
+            matrix = get_matrix(specification, rows=sender_len, cols=receiver_len, context=context)
+
+            # This should never happen (should have been picked up in validate_param or above)
+            if matrix is None:
+                raise FunctionError("MATRIX param ({}) for the {} function of {} must be a matrix, a function "
+                                    "that returns one, a matrix specification keyword ({}), or a number (filler)".
+                                    format(specification, self.name, self.owner_name, MATRIX_KEYWORD_NAMES))
+            else:
+                return matrix
+        else:
+            return np.array(specification)
+
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+        # Restrict to 1d arrays
+        if self.defaults.variable.ndim != 1:
+            warnings.warn("Shape mismatch: {} (in {}) got 2D input: {}".format(
+                          self, self.owner, self.defaults.variable),
+                          pnlvm.PNLCompilerWarning)
+            arg_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        if self.defaults.value.ndim != 1:
+            warnings.warn("Shape mismatch: {} (in {}) has 2D output: {}".format(
+                          self, self.owner, self.defaults.value),
+                          pnlvm.PNLCompilerWarning)
+            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+        matrix = ctx.get_param_or_state_ptr(builder, self, MATRIX, param_struct_ptr=params, state_struct_ptr=state)
+        normalize = ctx.get_param_or_state_ptr(builder, self, NORMALIZE, param_struct_ptr=params)
+
+        # Convert array pointer to pointer to the fist element
+        matrix = builder.gep(matrix, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        vec_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        vec_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+        input_length = ctx.int32_ty(arg_in.type.pointee.count)
+        output_length = ctx.int32_ty(arg_out.type.pointee.count)
+
+        # if normalize:
+        #     if vec_in is not zeros:
+        #     # FIX: NORMALIZE vec_in and matrix here
+        #         vec_in_sum = fsum(builder, vec_in)
+        #         vec_in = fdiv(builder, vec_in, vec_in_sum)
+        #     if matrix is not zeros:
+        #     # FIX: NORMALIZE matrix here
+
+        builtin = ctx.import_llvm_function("__pnl_builtin_vxm")
+        builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
+        return builder
+
+    def _gen_pytorch_fct(self, device, context=None):
+        operation = self._get_pytorch_fct_param_value('operation', device, context)
+        normalize = self._get_pytorch_fct_param_value('normalize', device, context)
+
+        def dot_product_with_normalization(vector, matrix):
+            if torch.any(vector):
+                vector = vector / torch.norm(vector)
+            if torch.any(matrix):
+                matrix = matrix / torch.norm(matrix)
+            return torch.matmul(vector, matrix)
+
+        def diff_with_normalization(vector, matrix):
+            normalize = torch.sum(torch.abs(vector - matrix))
+            return torch.sum((1 - torch.abs(vector - matrix) / normalize), axis=0)
+
+        if operation is DOT_PRODUCT:
+            if normalize:
+                return dot_product_with_normalization
+            else:
+                return lambda x, y : torch.matmul(x, y)
+
+        elif operation is L0:
+            if normalize:
+                return diff_with_normalization
+            else:
+                return lambda x, y: torch.sum((1 - torch.abs(x - y)),axis=0)
+
+        else:
+            from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
+            raise AutodiffCompositionError(f"The 'operation' parameter of {function.componentName} is not supported "
+                                           f"by AutodiffComposition; use 'DOT_PRODUCT' or 'L0'.")
+
+    def _function(self,
+                 variable=None,
+                 context=None,
+                 params=None):
+        """
+
+        Arguments
+        ---------
+        variable : list or 1d array
+            array to be transformed;  length must equal the number of rows of `matrix <MatrixTransform.matrix>`.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        Returns
+        ---------
+
+        dot product of or difference between variable and matrix : 1d array
+            length of the array returned equals the number of columns of `matrix <MatrixTransform.matrix>`.
+
+        """
+        vector = np.array(variable)
+        matrix = self._get_current_parameter_value(MATRIX, context)
+        operation = self._get_current_parameter_value(OPERATION, context)
+        normalize = self._get_current_parameter_value(NORMALIZE, context)
+
+        if operation == DOT_PRODUCT:
+            if normalize:
+                if np.any(vector):
+                    vector = vector / np.linalg.norm(vector)
+                if np.any(matrix):
+                    # FIX: the axis along which norming is carried out should probably be a parameter
+                    #      Also need to deal with column- (or row-) wise zeros which cause div by zero
+                    #      Replace columns (if norming axis 0) or rows (if norming axis 1) of zeros with 1's
+                    # matrix = matrix / np.linalg.norm(matrix,axis=-1,keepdims=True)
+                    matrix = matrix / np.linalg.norm(matrix,axis=0,keepdims=True)
+            result = np.dot(vector, matrix)
+
+        elif operation == L0:
+            normalization = 1
+            if normalize:
+                normalization = np.sum(np.abs(vector - matrix))
+            result = np.sum(((1 - np.abs(vector - matrix)) / normalization),axis=0)
+
+        return self.convert_output_type(result)
+
+    @staticmethod
+    def keyword(obj, keyword):
+
+        from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+        rows = None
+        cols = None
+        # use of variable attribute here should be ok because it's using it as a format/type
+        if isinstance(obj, MappingProjection):
+            if isinstance(obj.sender.defaults.value, numbers.Number):
+                rows = 1
+            else:
+                rows = len(obj.sender.defaults.value)
+            if isinstance(obj.receiver.defaults.variable, numbers.Number):
+                cols = 1
+            else:
+                cols = obj.receiver.socket_width
+        matrix = get_matrix(keyword, rows, cols)
+
+        if matrix is None:
+            raise FunctionError("Unrecognized keyword ({}) specified for the {} function of {}".
+                                format(keyword, obj.name, obj.owner_name))
+        else:
+            return matrix
+
+    def param_function(owner, function):
+        sender_len = len(owner.sender.defaults.value)
+        receiver_len = len(owner.receiver.defaults.variable)
+        return function(sender_len, receiver_len)
+
+    def _is_identity(self, context=None, defaults=False):
+        if defaults:
+            matrix = self.defaults.matrix
+        else:
+            matrix = self.parameters.matrix._get(context)
+
+        # if matrix is not an np array with at least one dimension,
+        # this isn't an identity matrix
+        try:
+            size = matrix.shape[0]
+        except (AttributeError, IndexError):
+            return False
+
+        # check if the matrix is the same as the identity matrix
+        # note that we can use the first dimension size to create the identity matrix
+        # because if the matrix is not square, this comparison will fail anyway
+        identity_matrix = np.identity(size)
+        # numpy has deprecated == comparisons of arrays
+        try:
+            return np.array_equal(matrix, identity_matrix)
+        except TypeError:
+            return matrix == identity_matrix
+
+# def is_matrix_spec(m):
+#     if m is None:
+#         return True
+#     if isinstance(m, (list, np.ndarray, types.FunctionType)):
+#         return True
+#     if m in MATRIX_KEYWORD_VALUES:
+#         return True
+#     return False
+
+
+
+class CombineMeans(TransformFunction):  # ------------------------------------------------------------------------
     # FIX: CONFIRM THAT 1D KWEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE
     # FIX  CONFIRM THAT LINEAR TRANSFORMATION (OFFSET, SCALE) APPLY TO THE RESULTING ARRAY
     # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
@@ -1768,7 +2473,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
-    class Parameters(CombinationFunction.Parameters):
+    class Parameters(TransformFunction.Parameters):
         """
             Attributes
             ----------
@@ -1972,9 +2677,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         # if np_array_less_than_2d(variable):
         #     return (variable * scale) + offset
 
-        means = np.array([[None]] * len(variable))
-        for i, item in enumerate(variable):
-            means[i] = np.mean(item)
+        means = convert_all_elements_to_np_array([np.mean(item) for item in variable])
 
         # FIX FOR EFFICIENCY: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
         # Apply exponents if they were specified
@@ -1997,7 +2700,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
             result = np.sum(means, axis=0) * scale + offset
 
         elif operation == PRODUCT:
-            result = np.product(means, axis=0) * scale + offset
+            result = np.prod(means, axis=0) * scale + offset
 
         else:
             raise FunctionError("Unrecognized operator ({0}) for CombineMeans function".
@@ -2031,7 +2734,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 GAMMA = 'gamma'
 
 
-class PredictionErrorDeltaFunction(CombinationFunction):
+class PredictionErrorDeltaFunction(TransformFunction):
     """
     Calculate temporal difference prediction error.
 
@@ -2049,7 +2752,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
-    class Parameters(CombinationFunction.Parameters):
+    class Parameters(TransformFunction.Parameters):
         """
             Attributes
             ----------
@@ -2186,7 +2889,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         delta values : 1d np.array
 
         """
-        gamma = self._get_current_parameter_value(GAMMA, context)
+        gamma = self._get_current_parameter_value(GAMMA, context).item()
         sample = variable[0]
         reward = variable[1]
         delta = np.zeros(sample.shape)

@@ -185,9 +185,9 @@ class TestGilzenratMechanisms:
 #         input_weights = np.array([[1, .33], [.33, 1]])
 #
 #         # Implement self-excitatory (auto) and mutually inhibitory (hetero) connections within the decision layer
-#         decision_layer = GilzenratTransferMechanism(size=2,
+#         decision_layer = GilzenratTransferMechanism(input_shapes=2,
 #                                                     initial_value=np.array([[1, 0]]),
-#                                                     matrix=np.matrix([[1, 0], [0, -1]]),
+#                                                     matrix=np.array([[1, 0], [0, -1]]),
 #                                                     # auto=1.0,
 #                                                     # hetero=-1.0,
 #                                                     time_step_size=time_step_size,
@@ -201,9 +201,9 @@ class TestGilzenratMechanisms:
 #
 #         # Implement response layer with a single, self-excitatory connection
 #         # To do Markus: specify recurrent self-connrection weight for response unit to 2.00
-#         response = GilzenratTransferMechanism(size=1,
+#         response = GilzenratTransferMechanism(input_shapes=1,
 #                                               initial_value=np.array([[2.0]]),
-#                                               matrix=np.matrix([[0.5]]),
+#                                               matrix=np.array([[0.5]]),
 #                                               function=Logistic(bias=2),
 #                                               time_step_size=time_step_size,
 #                                               noise=NormalDist(mean=0.0, standard_deviation=standard_deviation).function,

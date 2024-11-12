@@ -182,9 +182,9 @@ the `InputPort` of all the layers in a 3-layered feedforward neural network.  Or
 *MULTIPLICATIVE_PARAM* of an InputPort's `function <InputPort.function>`.  In the example, this is changed so that
 it *adds* the `value <GatingSignal.value>` of the `GatingSignal` to the `value <InputPort.value>` of each InputPort::
 
-    >>> my_input_layer = pnl.TransferMechanism(size=3)
-    >>> my_hidden_layer = pnl.TransferMechanism(size=5)
-    >>> my_output_layer = pnl.TransferMechanism(size=2)
+    >>> my_input_layer = pnl.TransferMechanism(input_shapes=3)
+    >>> my_hidden_layer = pnl.TransferMechanism(input_shapes=5)
+    >>> my_output_layer = pnl.TransferMechanism(input_shapes=2)
     >>> my_gating_mechanism = pnl.GatingMechanism(gating_signals=[{pnl.NAME: 'GATE_ALL',
     ...                                                            pnl.PROJECTIONS: [my_input_layer,
     ...                                                                              my_hidden_layer,
@@ -422,7 +422,7 @@ class GatingSignal(ControlSignal):
                  owner=None,
                  reference_value=None,
                  default_allocation=defaultGatingAllocation,
-                 size=None,
+                 input_shapes=None,
                  transfer_function=None,
                  modulation:Optional[str]=None,
                  gate=None,
@@ -466,7 +466,7 @@ class GatingSignal(ControlSignal):
         super().__init__(owner=owner,
                          reference_value=reference_value,
                          default_allocation=default_allocation,
-                         size=size,
+                         input_shapes=input_shapes,
                          modulation=modulation,
                          control=gate,
                          params=params,

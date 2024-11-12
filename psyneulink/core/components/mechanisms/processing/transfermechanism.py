@@ -110,7 +110,7 @@ Structure
 ~~~~~~~~~~~~~
 
 By default, a TransferMechanism has a single `InputPort`;  however, more than one can be specified
-using the **default_variable** or **size** arguments of its constructor (see `Mechanism`).  The `value
+using the **default_variable** or **input_shapes** arguments of its constructor (see `Mechanism`).  The `value
 <InputPort.value>` of each InputPort is used as a separate item of the Mechanism's `variable
 <Mechanism_Base.variable>`, and transformed independently by its `function <Mechanism_Base.function>`.
 
@@ -417,12 +417,12 @@ If `integrator_mode <TransferMechanism.integrator_mode>` is False (the default),
 `value <Mechanism_Base.value>` and the `value <OutputPort.value>` of its `output_ports <Mechanism_Base.output_ports>`
 without using its `integrator_function <TransferMechanism.integrator_function>`, as in the following example::
 
-    # >>> my_mech = pnl.TransferMechanism(size=2)
+    # >>> my_mech = pnl.TransferMechanism(input_shapes=2)
     # >>> my_mech.execute([0.5, 1])
     # array([[0.5, 1. ]])
 
     >>> my_logistic_tm = pnl.TransferMechanism(function=pnl.Logistic,
-    ...                                        size=3)
+    ...                                        input_shapes=3)
     >>> my_logistic_tm.execute([-2.0, 0, 2.0])
     array([[0.11920292, 0.5       , 0.88079708]])
 
@@ -431,7 +431,7 @@ added to the result. It can be specified as a float, and array, or function. If 
 the value is simply added to the result, as shown in the example below, that uses the TransferMechanism's default
 `function <Mechanism_Base>`, `Linear`::
 
-    >>> my_linear_tm = pnl.TransferMechanism(size=3,
+    >>> my_linear_tm = pnl.TransferMechanism(input_shapes=3,
     ...                                      noise=2.0)
     >>> my_linear_tm.execute([1.0, 1.0, 1.0])
     array([[3., 3., 3.]])
@@ -452,7 +452,7 @@ function that specifies a float, for example a `DistributionFunction`.  As with 
 is specified, it is applied to all elements; however, on each execution, the function is executed indpendently for
 each element.  This is shown below using the `NormalDist` function::
 
-    >>> my_linear_tm = pnl.TransferMechanism(size=3,
+    >>> my_linear_tm = pnl.TransferMechanism(input_shapes=3,
     ...                                      noise=pnl.NormalDist)
     >>> my_linear_tm.execute([1.0, 1.0, 1.0])
     array([[2.1576537 , 1.60782117, 0.75840058]])
@@ -466,7 +466,7 @@ executions.  Notice that since only a single function was specified, it could be
 can also be used in a list to specify **noise**, together with other functions or with numeric values;  however,
 when used in a list, functions must be instances, as shown below::
 
-    >>> my_linear_tm = pnl.TransferMechanism(size=3,
+    >>> my_linear_tm = pnl.TransferMechanism(input_shapes=3,
     ...                                      noise=[pnl.NormalDist(), pnl.UniformDist(), 3.0])
     >>> my_linear_tm.execute([1.0, 1.0, 1.0])
     array([[-0.22503678,  1.36995517,  4.        ]])
@@ -509,7 +509,7 @@ the default for a TransferMechanism is used, which is `AdaptiveIntegrator`.  Thi
 results that begin close to its `initializer <AdaptiveIntegrator.initializer>` and asymptotically approach the value
 of the current input, which in this example is [1.0, 1.0, 1,0] for each execution::
 
-    >>> my_linear_tm = pnl.TransferMechanism(size=3,
+    >>> my_linear_tm = pnl.TransferMechanism(input_shapes=3,
     ...                                      function=pnl.Linear,
     ...                                      integrator_mode=True,
     ...                                      initial_value=np.array([[0.1, 0.5, 0.9]]),
@@ -662,7 +662,7 @@ is ignored). After each execution, the function is passed the Mechanism's curren
 and the scalar returned is compared to **termination_threshold** using the comparison operator specified by
 **termination_comparison_op**. Execution continues until this returns True, as in the following example::
 
-    >>> my_mech = pnl.TransferMechanism(size=2,
+    >>> my_mech = pnl.TransferMechanism(input_shapes=2,
     ...                                 integrator_mode=True,
     ...                                 termination_measure=max,
     ...                                 termination_threshold=0.9,
@@ -687,7 +687,7 @@ the **termination_comparison_op** argument is ignored (the `termination_comparis
 <TransferMechanism.termination_comparison_op>` is automatically set to *GREATER_THAN_OR_EQUAL*).  For example,
 ``my_mech`` is configured below to execute at least twice per trial::
 
-    >>> my_mech = pnl.TransferMechanism(size=2,
+    >>> my_mech = pnl.TransferMechanism(input_shapes=2,
     ...                                 integrator_mode=True,
     ...                                 termination_measure=TimeScale.TRIAL,
     ...                                 termination_threshold=2)
@@ -713,20 +713,20 @@ to integrate for a fixed number of steps (e.g., to simulate the time taken to en
 which feature of the stimulus should be attended) before a stimulus is presented, and then allowing that
 Mechanism to continue to integrate the instruction and impact stimulus processing once the stimulus is presented::
 
-    >>> stim_input = pnl.ProcessingMechanism(size=2)
-    >>> stim_percept = pnl.TransferMechanism(size=2, function=pnl.Logistic)
-    >>> decision = pnl.TransferMechanism(name='Decision', size=2,
+    >>> stim_input = pnl.ProcessingMechanism(input_shapes=2)
+    >>> stim_percept = pnl.TransferMechanism(input_shapes=2, function=pnl.Logistic)
+    >>> decision = pnl.TransferMechanism(name='Decision', input_shapes=2,
     ...                                  integrator_mode=True,
     ...                                  execute_until_finished=False,
     ...                                  termination_threshold=0.65,
     ...                                  termination_measure=max,
     ...                                  termination_comparison_op=pnl.GREATER_THAN)
-    >>> instruction_input = pnl.ProcessingMechanism(size=2, function=pnl.Linear(slope=10))
-    >>> attention = pnl.LCAMechanism(name='Attention', size=2, function=pnl.Logistic,
+    >>> instruction_input = pnl.ProcessingMechanism(input_shapes=2, function=pnl.Linear(slope=10))
+    >>> attention = pnl.LCAMechanism(name='Attention', input_shapes=2, function=pnl.Logistic,
     ...                              leak=8, competition=8, self_excitation=0, time_step_size=.1,
     ...                              termination_threshold=3,
     ...                              termination_measure = pnl.TimeScale.TRIAL)
-    >>> response = pnl.ProcessingMechanism(name='Response', size=2)
+    >>> response = pnl.ProcessingMechanism(name='Response', input_shapes=2)
     ...
     >>> comp = pnl.Composition()
     >>> comp.add_linear_processing_pathway([stim_input, [[1,-1],[-1,1]], stim_percept, decision, response]) #doctest: +SKIP
@@ -818,7 +818,6 @@ Class Reference
 import copy
 import inspect
 import logging
-import numbers
 import types
 import warnings
 from collections.abc import Iterable
@@ -829,7 +828,7 @@ from beartype import beartype
 from psyneulink._typing import Optional, Union, Literal
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, SUM
+from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination, SUM
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import DistributionFunction
 from psyneulink.core.components.functions.function import Function, is_function_type
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance
@@ -854,7 +853,7 @@ from psyneulink.core.globals.parameters import Parameter, FunctionParameter, che
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
-    all_within_range, append_type_to_name, iscompatible, convert_to_np_array, safe_equals, parse_valid_identifier
+    all_within_range, is_numeric_scalar, append_type_to_name, convert_all_elements_to_np_array, iscompatible, convert_to_np_array, safe_equals, parse_valid_identifier, safe_len, try_extract_0d_array_item
 from psyneulink.core.scheduling.time import TimeScale
 
 __all__ = [
@@ -889,8 +888,8 @@ class TransferError(MechanismError):
     pass
 
 
-def _integrator_mode_setter(value, owning_component=None, context=None):
-    if value:
+def _integrator_mode_setter(value, owning_component=None, context=None, *, compilation_sync=False):
+    if value and not compilation_sync:
         if not owning_component.parameters.integrator_mode._get(context):
             # when first creating parameters, integrator_function is not
             # instantiated yet
@@ -909,7 +908,8 @@ def _integrator_mode_setter(value, owning_component=None, context=None):
                 elif owning_component.on_resume_integrator_mode == RESET:
                     owning_component.reset(force=True, context=context)
 
-    owning_component.parameters.has_initializers._set(value, context)
+    if not compilation_sync:
+        owning_component.parameters.has_initializers._set(value, context)
 
     return value
 
@@ -1241,16 +1241,12 @@ class TransferMechanism(ProcessingMechanism_Base):
                 return 'may not contain non-numeric entries'
 
         def _validate_clip(self, clip):
-            if clip:
-                if (not (isinstance(clip, (list,tuple)) and len(clip)==2
-                         and all(isinstance(i, numbers.Number)) for i in clip)):
+            if clip is not None:
+                if (not (isinstance(clip, (list, tuple, np.ndarray)) and len(clip) == 2
+                         and all(is_numeric_scalar(i)) for i in clip)):
                     return 'must be a tuple with two numbers.'
                 if not clip[0] < clip[1]:
                     return 'first item must be less than the second.'
-
-        def _parse_clip(self, clip):
-            if clip:
-                return tuple(clip)
 
         def _validate_integrator_mode(self, integrator_mode):
             if not isinstance(integrator_mode, bool):
@@ -1271,8 +1267,14 @@ class TransferMechanism(ProcessingMechanism_Base):
             return termination_measure
 
         def _validate_termination_threshold(self, termination_threshold):
-            if (termination_threshold is not None
-                    and not isinstance(termination_threshold, (int, float))):
+            if (
+                termination_threshold is not None
+                and not (
+                    isinstance(termination_threshold, np.ndarray)
+                    and termination_threshold.ndim == 0
+                    and isinstance(termination_threshold.item(), (int, float))
+                )
+            ):
                 return 'must be a float or int.'
 
         def _validate_termination_comparison_op(self, termination_comparison_op):
@@ -1285,7 +1287,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     @beartype
     def __init__(self,
                  default_variable=None,
-                 size=None,
+                 input_shapes=None,
                  input_ports: Optional[Union[Iterable, Mechanism, OutputPort, InputPort]] = None,
                  function=None,
                  noise=None,
@@ -1318,7 +1320,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         super(TransferMechanism, self).__init__(
             default_variable=default_variable,
-            size=size,
+            input_shapes=input_shapes,
             input_ports=input_ports,
             output_ports=output_ports,
             initial_value=initial_value,
@@ -1439,7 +1441,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             noise = noise.execute
 
         if isinstance(noise, (np.ndarray, list)):
-            if len(noise) == 1:
+            if safe_len(noise) == 1:
                 pass
             # Variable is a list/array
             elif (not iscompatible(np.atleast_2d(noise), self.defaults.variable)
@@ -1450,12 +1452,14 @@ class TransferMechanism(ProcessingMechanism_Base):
                                      f"({np.shape(np.array(self.defaults.variable))}).")
             else:
                 for i in range(len(noise)):
-                    if isinstance(noise[i], DistributionFunction):
-                        noise[i] = noise[i].execute
-                    if (not np.isscalar(noise[i]) and not callable(noise[i])
-                            and not iscompatible(np.atleast_2d(noise[i]), self.defaults.variable[i])
-                            and not iscompatible(np.atleast_1d(noise[i]), self.defaults.variable[i])):
-                        raise MechanismError(f"The element '{noise[i]}' specified in 'noise' for {self.name} "
+                    elem = try_extract_0d_array_item(noise[i])
+
+                    if isinstance(elem, DistributionFunction):
+                        elem = elem.execute
+                    if (not isinstance(elem, (float, int)) and not callable(elem)
+                            and not iscompatible(np.atleast_2d(elem), self.defaults.variable[i])
+                            and not iscompatible(np.atleast_1d(elem), self.defaults.variable[i])):
+                        raise MechanismError(f"The element '{elem}' specified in 'noise' for {self.name} "
                                              f"is not valid; noise must be list or array must be floats or functions.")
 
         elif _is_control_spec(noise):
@@ -1530,13 +1534,20 @@ class TransferMechanism(ProcessingMechanism_Base):
         return current_input
 
     def _gen_llvm_is_finished_cond(self, ctx, builder, m_base_params, m_state, m_in):
-        current = ctx.get_param_or_state_ptr(builder, self, "value", state_struct_ptr=m_state)
 
         m_params, builder = self._gen_llvm_param_ports_for_obj(
                 self, m_base_params, ctx, builder, m_base_params, m_state, m_in)
+
         threshold_ptr = ctx.get_param_or_state_ptr(builder, self, "termination_threshold", param_struct_ptr=m_params)
+        current_mech_value_ptr = ctx.get_param_or_state_ptr(builder, self, "value", state_struct_ptr=m_state)
+        measure_ptrs = ctx.get_param_or_state_ptr(builder,
+                                                  self,
+                                                  "termination_measure",
+                                                  param_struct_ptr=m_base_params,
+                                                  state_struct_ptr=m_state)
 
         if isinstance(threshold_ptr.type.pointee, pnlvm.ir.LiteralStructType):
+
             # Threshold is not defined, return the old value of finished flag
             assert len(threshold_ptr.type.pointee) == 0
             is_finished_ptr = ctx.get_param_or_state_ptr(builder, self, "is_finished_flag", state_struct_ptr=m_state)
@@ -1545,27 +1556,34 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # If modulated, termination threshold is single element array.
         # Otherwise, it is scalar
-        threshold = pnlvm.helpers.load_extract_scalar_array_one(builder,
-                                                                threshold_ptr)
+        threshold = pnlvm.helpers.load_extract_scalar_array_one(builder, threshold_ptr)
 
-        cmp_val_ptr = builder.alloca(threshold.type, name="is_finished_value")
-        if self.termination_measure is max:
+        # Extract value to compare with threshold above
+        cmp_val_ptr = builder.alloca(threshold.type, name="is_finished_threshold")
+
+        is_in_params = "termination_measure" in self.llvm_param_ids
+        is_in_state = "termination_measure" in self.llvm_state_ids
+
+        if not is_in_params and not is_in_state:
+
+            # This can be any builtint function, but currently only max() is supported
+            assert measure_ptrs is None
+            assert self.termination_measure is max
             assert self._termination_measure_num_items_expected == 1
+
             # Get inside of the structure
-            val = builder.gep(current, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            first_val = builder.load(builder.gep(val, [ctx.int32_ty(0), ctx.int32_ty(0)]))
+            value = builder.gep(current_mech_value_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            first_val = builder.load(builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(0)]))
             builder.store(first_val, cmp_val_ptr)
-            with pnlvm.helpers.array_ptr_loop(builder, val, "max_loop") as (b, idx):
-                test_val = b.load(b.gep(val, [ctx.int32_ty(0), idx]))
+            with pnlvm.helpers.array_ptr_loop(builder, value, "max_loop") as (b, idx):
+                test_val = b.load(b.gep(value, [ctx.int32_ty(0), idx]))
                 max_val = b.load(cmp_val_ptr)
+
                 cond = b.fcmp_ordered(">=", test_val, max_val)
                 max_val = b.select(cond, test_val, max_val)
                 b.store(max_val, cmp_val_ptr)
-            assert "termination_measure" not in self.llvm_param_ids, "'termination_measure' in {}: {}".format(self.name, pnlvm.helpers.get_param_ptr(builder, self, m_base_params, "termination_measure").type.pointee)
 
-        elif isinstance(self.termination_measure, Function):
-            prev_val_ptr = ctx.get_param_or_state_ptr(builder, self, "value", state_struct_ptr=m_state, history=1)
-            prev_val = builder.load(prev_val_ptr)
+        elif is_in_params and is_in_state:
 
             expected = np.empty_like([self.defaults.value[0], self.defaults.value[0]])
             got = np.empty_like(self.termination_measure.defaults.variable)
@@ -1573,32 +1591,34 @@ class TransferMechanism(ProcessingMechanism_Base):
                 warnings.warn("Shape mismatch: Termination measure input: "
                               "{} should be {}.".format(self.termination_measure.defaults.variable, expected.shape),
                               pnlvm.PNLCompilerWarning)
-                # FIXME: HACK the distance function is not initialized
+
+                # FIXME: HACK: the distance function is not initialized
                 self.termination_measure.defaults.variable = expected
 
             func = ctx.import_llvm_function(self.termination_measure)
-            func_params, func_state = ctx.get_param_or_state_ptr(builder,
-                                                                 self,
-                                                                 "termination_measure",
-                                                                 param_struct_ptr=m_base_params,
-                                                                 state_struct_ptr=m_state)
-            func_in = builder.alloca(func.args[2].type.pointee, name="is_finished_func_in")
-            # Populate input
-            func_in_current_ptr = builder.gep(func_in, [ctx.int32_ty(0),
-                                                        ctx.int32_ty(0)])
-            current_ptr = builder.gep(current, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            builder.store(builder.load(current_ptr), func_in_current_ptr)
+            func_params, func_state = measure_ptrs
+            func_in = builder.alloca(func.args[2].type.pointee, name="termination_func_in")
 
-            func_in_prev_ptr = builder.gep(func_in, [ctx.int32_ty(0),
-                                                     ctx.int32_ty(1)])
-            builder.store(builder.extract_value(prev_val, 0), func_in_prev_ptr)
+            # Populate input
+            func_in_current_ptr = builder.gep(func_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            func_in_prev_ptr = builder.gep(func_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
+
+            # Remove second dimension from 'value' and 'previous_value'
+            current_ptr = builder.gep(current_mech_value_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            prev_mech_value_ptr = ctx.get_param_or_state_ptr(builder, self, "value", state_struct_ptr=m_state, history=1)
+            prev_ptr = builder.gep(prev_mech_value_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            builder.store(builder.load(current_ptr), func_in_current_ptr)
+            builder.store(builder.load(prev_ptr), func_in_prev_ptr)
 
             builder.call(func, [func_params, func_state, func_in, cmp_val_ptr])
 
-        elif isinstance(self.termination_measure, TimeScale):
+        elif is_in_params and not is_in_state:
+
             num_executions_array_ptr = ctx.get_param_or_state_ptr(builder, self, "num_executions", state_struct_ptr=m_state)
-            elem_ptr = builder.gep(num_executions_array_ptr, [ctx.int32_ty(0), ctx.int32_ty(self.termination_measure.value)])
-            elem_val = builder.sitofp(builder.load(elem_ptr), threshold.type)
+            index = pnlvm.helpers.load_extract_scalar_array_one(builder, measure_ptrs)
+            elem_ptr = builder.gep(num_executions_array_ptr, [ctx.int32_ty(0), index])
+            elem_val = builder.sitofp(builder.load(elem_ptr), cmp_val_ptr.type.pointee)
             builder.store(elem_val, cmp_val_ptr)
 
         else:
@@ -1773,13 +1793,14 @@ class TransferMechanism(ProcessingMechanism_Base):
             # return True
             return self.parameters.is_finished_flag._get(context)
 
-        assert self.parameters.value.history_min_length + 1 >= self._termination_measure_num_items_expected,\
-            "History of 'value' is not guaranteed enough entries for termination_mesasure"
+        assert self.parameters.value.history_min_length + 1 >= self._termination_measure_num_items_expected, \
+            "History of 'value' is not guaranteed enough entries for termination_measure"
+
         measure = self.termination_measure
         value = self.parameters.value._get(context)
 
         if self._termination_measure_num_items_expected==0:
-            status = self.parameters.num_executions._get(context)._get_by_time_scale(self.termination_measure)
+            status = self.parameters.num_executions._get(context)._get_by_time_scale(TimeScale(self.termination_measure))
 
         elif self._termination_measure_num_items_expected==1:
             # Squeeze to collapse 2d array with single item
@@ -1788,6 +1809,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             previous_value = self.parameters.value.get_previous(context)
             status = measure([value, previous_value])
 
+        status = convert_all_elements_to_np_array(status)
         self.parameters.termination_measure_value._set(status, context=context, override=True)
 
         # comparator = self.parameters.termination_comparison_op._get(context)
@@ -1800,6 +1822,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     @handle_external_context()
     def _update_default_variable(self, new_default_variable, context=None):
+        new_default_variable = convert_all_elements_to_np_array(new_default_variable)
+
         if not self.parameters.initial_value._user_specified:
             integrator_function_variable = self._get_parsed_variable(
                 self.parameters.integrator_function,

@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
-import psyneulink.core.llvm as pnlvm
 
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import DriftDiffusionAnalytical, NormalDist
@@ -174,7 +173,7 @@ class TestThreshold:
 class TestInputPorts:
 
     def test_regular_input_mode(self):
-        input_mech = ProcessingMechanism(size=2)
+        input_mech = ProcessingMechanism(input_shapes=2)
         ddm = DDM(
             function=DriftDiffusionAnalytical(),
             output_ports=[SELECTED_INPUT_ARRAY, DECISION_VARIABLE_ARRAY],
@@ -192,7 +191,7 @@ class TestInputPorts:
         np.testing.assert_allclose(result, [[1.0], [1.0]])
 
     def test_array_mode(self):
-        input_mech = ProcessingMechanism(size=2)
+        input_mech = ProcessingMechanism(input_shapes=2)
         ddm = DDM(
             input_format=ARRAY,
             function=DriftDiffusionAnalytical(),
@@ -266,8 +265,8 @@ def test_DDM_Integrator_Bogacz(benchmark, mech_mode, prng):
     ex = pytest.helpers.get_mech_execution(T, mech_mode)
 
     ex(stim)
-    val = benchmark(ex, stim)[0]
-    np.testing.assert_allclose(val, [1.0])
+    val = benchmark(ex, stim)
+    np.testing.assert_allclose(val, [[1.0], [0.3]])
 
 # ------------------------------------------------------------------------------------------------
 # # TEST 3
@@ -284,8 +283,8 @@ def test_DDM_Integrator_Bogacz(benchmark, mech_mode, prng):
 #         name='DDM',
 #         function=NavarroAndFuss()
 #     )
-#     val = float(T.execute(stim)[0])
-#     assert val == 10
+#     val = T.execute(stim)
+#     np.testing.assert_array_equal(val, [[10]])
 
 
 # ======================================= NOISE TESTS ============================================
@@ -339,7 +338,7 @@ def test_DDM_noise_invalid(noise):
                 time_step_size=1.0
             ),
         )
-        float(T.execute(stim)[0])
+        T.execute(stim)
     assert "DriftDiffusionIntegrator requires noise parameter to be a float" in str(error_text.value)
 
 # ======================================= INPUT TESTS ============================================
@@ -362,8 +361,8 @@ def test_DDM_input(stim):
         ),
         execute_until_finished=False,
     )
-    val = float(T.execute(stim)[0])
-    assert val == 10
+    val = T.execute(stim)
+    np.testing.assert_array_equal(val, [[10], [1]])
 
 # ------------------------------------------------------------------------------------------------
 
@@ -388,7 +387,7 @@ def test_DDM_input_list_len_2():
             ),
             execute_until_finished=False,
         )
-        float(T.execute(stim)[0])
+        T.execute(stim)
     assert "single numeric item" in str(error_text.value)
 
 # ------------------------------------------------------------------------------------------------
@@ -413,7 +412,7 @@ def test_DDM_input_fn():
             ),
             execute_until_finished=False,
         )
-        float(T.execute(stim))
+        T.execute(stim)
     assert 'Input to \'DDM\' ([(NormalDist Normal Distribution Function' in str(error_text.value)
     assert 'is incompatible with its corresponding InputPort (DDM[InputPort-0]): ' \
            '\'unsupported operand type(s) for *: \'NormalDist\' and \'float\'.\'' in str(error_text.value)
@@ -445,8 +444,8 @@ def test_DDM_rate(benchmark, rate, expected, mech_mode):
     ex = pytest.helpers.get_mech_execution(T, mech_mode)
 
     ex(stim)
-    val = float(benchmark(ex, stim)[0][0])
-    assert val == expected
+    val = benchmark(ex, stim)
+    np.testing.assert_array_equal(val, [[expected], [2]])
 
 # ------------------------------------------------------------------------------------------------
 # INVALID RATES:
@@ -475,7 +474,7 @@ def test_DDM_rate_fn():
             ),
             execute_until_finished=False,
         )
-        float(T.execute(stim)[0])
+        T.execute(stim)
     assert "incompatible value" in str(error_text.value)
 
 # ------------------------------------------------------------------------------------------------
@@ -487,13 +486,13 @@ def test_DDM_rate_fn():
 
 # ------------------------------------------------------------------------------------------------
 # TEST 1
-# size = int, check if variable is an array of zeros
+# input_shapes = int, check if variable is an array of zeros
 
 
 def test_DDM_size_int_check_var():
     T = DDM(
         name='DDM',
-        size=1,
+        input_shapes=1,
         function=DriftDiffusionIntegrator(
             noise=0.0,
             rate=-5.0,
@@ -505,13 +504,13 @@ def test_DDM_size_int_check_var():
 
 # ------------------------------------------------------------------------------------------------
 # TEST 2
-# size = float, variable = [.4], check output after execution
+# input_shapes = float, variable = [.4], check output after execution
 
 def test_DDM_size_int_inputs():
 
     T = DDM(
         name='DDM',
-        size=1,
+        input_shapes=1,
         function=DriftDiffusionIntegrator(
             noise=0.0,
             rate=-5.0,
@@ -530,34 +529,15 @@ def test_DDM_size_int_inputs():
 # INVALID INPUTS
 
 # ------------------------------------------------------------------------------------------------
-# TEST 1
-# size = 0, check less-than-one error
-
-
-def test_DDM_mech_size_zero():
-    with pytest.raises(ComponentError) as error_text:
-        T = DDM(
-            name='DDM',
-            size=0,
-            function=DriftDiffusionIntegrator(
-                noise=0.0,
-                rate=-5.0,
-                time_step_size=1.0
-            ),
-            execute_until_finished=False,
-        )
-    assert "is not a positive number" in str(error_text.value)
-
-# ------------------------------------------------------------------------------------------------
 # TEST 2
-# size = -1.0, check less-than-one error
+# input_shapes = -1.0, check less-than-one error
 
 
 def test_DDM_mech_size_negative_one():
     with pytest.raises(ComponentError) as error_text:
         T = DDM(
             name='DDM',
-            size=-1.0,
+            input_shapes=-1,
             function=DriftDiffusionIntegrator(
                 noise=0.0,
                 rate=-5.0,
@@ -565,18 +545,18 @@ def test_DDM_mech_size_negative_one():
             ),
             execute_until_finished=False,
         )
-    assert "is not a positive number" in str(error_text.value)
+    assert "negative dimensions" in str(error_text.value)
 
 # ------------------------------------------------------------------------------------------------
 # TEST 3
-# size = 3.0, check size-too-large error
+# input_shapes = 3.0, check input_shapes-too-large error
 
 
 def test_DDM_size_too_large():
     with pytest.raises(DDMError) as error_text:
         T = DDM(
             name='DDM',
-            size=3.0,
+            input_shapes=3,
             function=DriftDiffusionIntegrator(
                 noise=0.0,
                 rate=-5.0,
@@ -588,14 +568,14 @@ def test_DDM_size_too_large():
 
 # ------------------------------------------------------------------------------------------------
 # TEST 4
-# size = [1,1], check too-many-input-ports error
+# input_shapes = [1,1], check too-many-input-ports error
 
 
 def test_DDM_size_too_long():
     with pytest.raises(DDMError) as error_text:
         T = DDM(
             name='DDM',
-            size=[1, 1],
+            input_shapes=[1, 1],
             function=DriftDiffusionIntegrator(
                 noise=0.0,
                 rate=-5.0,
@@ -710,20 +690,16 @@ def test_DDM_threshold_modulation_integrator(comp_mode):
 
 @pytest.mark.composition
 @pytest.mark.parametrize(["noise", "threshold", "expected_results"],[
-                            (1.0, 0.0, (0.0, 1.0)),
-                            (1.5, 2, (-2.0, 1.0)),
-                            (10.0, 10.0, (10.0, 29.0)),
-                            (100.0, 100.0, (100.0, 76.0)),
+                            (1.0, 0.0, [[0.0], [1.0]]),
+                            (1.5, 2, [[-2.0], [1.0]]),
+                            (10.0, 10.0, [[10.0], [29.0]]),
+                            (100.0, 100.0, [[100.0], [76.0]]),
                         ])
+# 3/5/2021 - DDM' default behaviour now requires resetting stateful
+# functions after each trial. This is not supported in LLVM execution mode.
+# See: https://github.com/PrincetonUniversity/PsyNeuLink/issues/1935
+@pytest.mark.usefixtures("comp_mode_no_llvm")
 def test_ddm_is_finished(comp_mode, noise, threshold, expected_results):
-
-    # 3/5/2021 - DDM' default behaviour now requires resetting stateful
-    # functions after each trial. This is not supported in LLVM execution mode.
-    # See: https://github.com/PrincetonUniversity/PsyNeuLink/issues/1935
-    if comp_mode == pnl.ExecutionMode.LLVM:
-        pytest.xfail(reason="DDM' default behaviour now requires resetting stateful functions after each trial. "
-                            "This is not supported in LLVM execution mode. "
-                            "See: https://github.com/PrincetonUniversity/PsyNeuLink/issues/1935")
 
     comp = Composition()
     ddm = DDM(function=DriftDiffusionIntegrator(threshold=threshold, noise=np.sqrt(noise), time_step_size=1.0),
@@ -732,9 +708,42 @@ def test_ddm_is_finished(comp_mode, noise, threshold, expected_results):
 
     results = comp.run([0], execution_mode=comp_mode)
 
-    results = [x for x in np.array(results).flatten()] #HACK: The result is an object dtype in Python comp_mode for some reason?
-    np.testing.assert_allclose(results, np.array(expected_results).flatten())
+    np.testing.assert_array_equal(results, expected_results)
 
+@pytest.mark.composition
+@pytest.mark.parametrize("until_finished", ["until_finished", "not_until_finished"])
+@pytest.mark.parametrize("threshold_mod", ["threshold_modulated", "threshold_not_modulated"])
+# 3/5/2021 - DDM' default behaviour now requires resetting stateful
+# functions after each trial. This is not supported in LLVM execution mode.
+# See: https://github.com/PrincetonUniversity/PsyNeuLink/issues/1935
+# Moreover, evaluating scheduler conditions in Python is not supported
+# for compiled execution
+@pytest.mark.usefixtures("comp_mode_no_llvm")
+def test_ddm_is_finished_with_dependency(comp_mode, until_finished, threshold_mod):
+
+    comp = Composition()
+    ddm = DDM(function=DriftDiffusionIntegrator(),
+              # Use only the decision variable in this test
+              output_ports=[pnl.DECISION_VARIABLE],
+              execute_until_finished=until_finished == "until_finished")
+    dep = pnl.ProcessingMechanism()
+    comp.add_linear_processing_pathway([ddm, dep])
+    comp.scheduler.add_condition(dep, pnl.WhenFinished(ddm))
+
+    inputs = {ddm: [4]}
+    expected_results = [[100]]
+
+    if threshold_mod == "threshold_modulated":
+        control = pnl.ControlMechanism(control_signals=[(pnl.THRESHOLD, ddm)])
+        comp.add_node(control)
+
+        # reduce the threshold by half
+        inputs[control] = 0.5
+        expected_results = [[50]]
+
+    results = comp.run(inputs, execution_mode=comp_mode)
+
+    np.testing.assert_array_equal(results, expected_results)
 
 def test_sequence_of_DDM_mechs_in_Composition_Pathway():
     myMechanism = DDM(
@@ -794,18 +803,14 @@ def test_sequence_of_DDM_mechs_in_Composition_Pathway():
 
 @pytest.mark.composition
 @pytest.mark.ddm_mechanism
+# 3/5/2021 - DDM' default behaviour now requires resetting stateful
+# functions after each trial. This is not supported in LLVM execution mode.
+# See: https://github.com/PrincetonUniversity/PsyNeuLink/issues/1935
+@pytest.mark.usefixtures("comp_mode_no_llvm")
 def test_DDMMechanism_LCA_equivalent(comp_mode):
 
-    # 3/5/2021 - DDM' default behaviour now requires resetting stateful
-    # functions after each trial. This is not supported in LLVM execution mode.
-    # See: https://github.com/PrincetonUniversity/PsyNeuLink/issues/1935
-    if comp_mode == pnl.ExecutionMode.LLVM:
-        pytest.xfail(reason="DDM' default behaviour now requires resetting stateful functions after each trial. "
-                            "This is not supported in LLVM execution mode. "
-                            "See: https://github.com/PrincetonUniversity/PsyNeuLink/issues/1935")
-
-
-    ddm = DDM(default_variable=[0], function=DriftDiffusionIntegrator(rate=1, time_step_size=0.1),
+    ddm = DDM(default_variable=[0],
+              function=DriftDiffusionIntegrator(rate=1, time_step_size=0.1),
               execute_until_finished=False)
     comp2 = Composition()
     comp2.add_node(ddm)

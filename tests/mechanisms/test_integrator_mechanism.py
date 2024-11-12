@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
-import psyneulink.core.llvm as pnlvm
 
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.components.functions.function import FunctionError
@@ -461,7 +460,7 @@ class TestIntegratorFunctions:
         expected = [[0.10501801629915011], [0.10501801629915011], [0.10501801629915011]]
         # The difference in results is caused by a shape mismatch;
         # default output port values are 1D, giving 2D results in compiled mode
-        # in reality Python returns 2D value per output port for a 3D result
+        # in reality Python returns 2D value per output port for a 3d result
         if mech_mode == 'Python':
             expected = [[e] for e in expected]
 
@@ -653,8 +652,8 @@ class TestIntegratorInputs:
             )
         )
         # P = Process(pathway=[I])
-        val = float(I.execute(10.0))
-        assert val == 10.0
+        val = I.execute(10.0)
+        np.testing.assert_array_equal(val, [[10.0]])
 
     # input = list of length 1
 
@@ -667,8 +666,8 @@ class TestIntegratorInputs:
             )
         )
         # P = Process(pathway=[I])
-        val = float(I.execute([10.0]))
-        assert val == 10.0
+        val = I.execute([10.0])
+        np.testing.assert_array_equal(val, [[10.0]])
 
     # input = list of length 5
 
@@ -764,8 +763,8 @@ class TestIntegratorRate:
             )
         )
         # P = Process(pathway=[I])
-        val = float(I.execute(10.0))
-        assert val == 50.0
+        val = I.execute(10.0)
+        np.testing.assert_array_equal(val, [[50.0]])
 
     # rate = float, increment = float, integration_type = accumulator
 
@@ -780,9 +779,9 @@ class TestIntegratorRate:
             )
         )
         # P = Process(pathway=[I])
-        float(I.execute())
-        val = float(I.execute())
-        assert val == 9.0
+        I.execute()
+        val = I.execute()
+        np.testing.assert_array_equal(val, [[9.0]])
 
     # rate = float, integration_type = diffusion
 
@@ -797,7 +796,7 @@ class TestIntegratorRate:
         )
         # P = Process(pathway=[I])
         val = I.execute(10.0)
-        np.testing.assert_allclose([[50.0], [1.0]], val)
+        np.testing.assert_array_equal([[50.0], [1.0]], val)
 
     # rate = list, integration_type = simple
 
@@ -812,8 +811,8 @@ class TestIntegratorRate:
             )
         )
         # P = Process(pathway=[I])
-        val = list(I.execute([10.0, 10.0, 10.0])[0])
-        assert val == [50.0, 50.0, 50.0]
+        val = I.execute([10.0, 10.0, 10.0])
+        np.testing.assert_array_equal(val, [[50.0, 50.0, 50.0]])
 
     # rate = float, increment = list, integration_type = accumulator
 
@@ -829,9 +828,9 @@ class TestIntegratorRate:
             )
         )
         # P = Process(pathway=[I])
-        list(I.execute([10.0, 10.0, 10.0])[0])
-        val = list(I.execute([10.0, 10.0, 10.0])[0])
-        assert val == [12.0, 15.0, 18.0]
+        I.execute([10.0, 10.0, 10.0])
+        val = I.execute([10.0, 10.0, 10.0])
+        np.testing.assert_array_equal(val, [[12.0, 15.0, 18.0]])
 
     # rate = float, increment = list, integration_type = accumulator
 
@@ -847,9 +846,9 @@ class TestIntegratorRate:
             )
         )
         # P = Process(pathway=[I])
-        list(I.execute([10.0, 10.0, 10.0])[0])
-        val = list(I.execute([10.0, 10.0, 10.0])[0])
-        assert val == [15.0, 20.0, 25.0]
+        I.execute([10.0, 10.0, 10.0])
+        val = I.execute([10.0, 10.0, 10.0])
+        np.testing.assert_array_equal(val, [[15.0, 20.0, 25.0]])
 
     # rate = list, increment = list, integration_type = accumulator
 
@@ -865,9 +864,9 @@ class TestIntegratorRate:
             )
         )
         # P = Process(pathway=[I])
-        list(I.execute([10.0, 10.0, 10.0])[0])
-        val = list(I.execute([10.0, 10.0, 10.0])[0])
-        assert val == [8.0, 15.0, 24.0]
+        I.execute([10.0, 10.0, 10.0])
+        val = I.execute([10.0, 10.0, 10.0])
+        np.testing.assert_array_equal(val, [[8.0, 15.0, 24.0]])
 
 
     # rate = list, integration_type = diffusion
@@ -898,8 +897,8 @@ class TestIntegratorRate:
             )
         )
         # P = Process(pathway=[I])
-        val = list(I.execute([10.0, 10.0, 10.0])[0])
-        assert val == [5.0, 5.0, 5.0]
+        val = I.execute([10.0, 10.0, 10.0])
+        np.testing.assert_array_equal(val, [[5.0, 5.0, 5.0]])
 
     # rate = float, integration_type = modulatory
 
@@ -914,8 +913,8 @@ class TestIntegratorRate:
             )
         )
         # P = Process(pathway=[I])
-        val = list(I.execute([10.0, 10.0, 10.0])[0])
-        assert val == [5.0, 5.0, 5.0]
+        val = I.execute([10.0, 10.0, 10.0])
+        np.testing.assert_array_equal(val, [[5.0, 5.0, 5.0]])
 
     # rate = float, integration_type = modulatory
 
@@ -929,8 +928,8 @@ class TestIntegratorRate:
             )
         )
         # P = Process(pathway=[I])
-        val = list(I.execute(10.0))
-        assert val == [5.0]
+        val = I.execute(10.0)
+        np.testing.assert_array_equal(val, [[5.0]])
 
     # INVALID RATE:
 
@@ -1043,14 +1042,14 @@ class TestIntegratorNoise:
             ),
         )
 
-        val = float(I.execute(10))
+        val = I.execute(10)
 
         I.function.reset(5.0)
 
-        val2 = float(I.execute(0))
+        val2 = I.execute(0)
 
-        np.testing.assert_allclose(val, 11.00018002983055)
-        np.testing.assert_allclose(val2, 7.549690404329112)
+        np.testing.assert_allclose(val, [[11.00018002983055]])
+        np.testing.assert_allclose(val2, [[7.549690404329112]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -1061,9 +1060,9 @@ class TestIntegratorNoise:
                 noise=[NormalDist()]
             ),
         )
-        val = float(I.execute(10))
+        val = I.execute(10)
 
-        np.testing.assert_allclose(val, 10.302846)
+        np.testing.assert_allclose(val, [[10.302846]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -1105,9 +1104,8 @@ class TestIntegratorNoise:
             ),
         )
 
-        val = I.execute([10, 10, 10, 10])[0]
-
-        np.testing.assert_allclose(val, [11.10887925, 9.0840107, 10.30157835, 10.65375815])
+        val = I.execute([10, 10, 10, 10])
+        np.testing.assert_allclose(val, [[11.10887925, 9.0840107, 10.30157835, 10.65375815]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -1119,9 +1117,8 @@ class TestIntegratorNoise:
             ),
         )
 
-        val = float(I.execute(10))
-
-        np.testing.assert_allclose(val, 1.00018)
+        val = I.execute(10)
+        np.testing.assert_allclose(val, [[1.00018]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -1134,8 +1131,8 @@ class TestIntegratorNoise:
             ),
         )
 
-        val = I.execute([10, 10, 10, 10])[0]
-        np.testing.assert_allclose(val, [1.10887925, -0.9159893, 0.30157835, 0.65375815])
+        val = I.execute([10, 10, 10, 10])
+        np.testing.assert_allclose(val, [[1.10887925, -0.9159893, 0.30157835, 0.65375815]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -1147,9 +1144,9 @@ class TestIntegratorNoise:
             ),
         )
 
-        val = float(I.execute(10))
+        val = I.execute(10)
 
-        np.testing.assert_allclose(val, 11.00018002983055)
+        np.testing.assert_allclose(val, [[11.00018002983055]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -1162,9 +1159,8 @@ class TestIntegratorNoise:
             ),
         )
 
-        val = I.execute([10, 10, 10, 10])[0]
-
-        np.testing.assert_allclose(val, [11.10887925, 9.0840107, 10.30157835, 10.65375815])
+        val = I.execute([10, 10, 10, 10])
+        np.testing.assert_allclose(val, [[11.10887925, 9.0840107, 10.30157835, 10.65375815]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism

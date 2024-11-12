@@ -74,13 +74,13 @@ class TestNested:
     def test_multiple_projections_to_node_of_nested_composition(self):
         '''This is based on the nback script'''
 
-        stim = TransferMechanism(name='STIM', size=5)
-        context = TransferMechanism(name='CONTEXT', size=5)
+        stim = TransferMechanism(name='STIM', input_shapes=5)
+        context = TransferMechanism(name='CONTEXT', input_shapes=5)
 
         # Nested comp (ffn)
-        stim_input_layer = TransferMechanism(name='STIM INPUT LAYER', size=5)
-        context_input_layer = TransferMechanism(name='CONTEXT INPUT LAYER', size=5)
-        match_output_layer = TransferMechanism(name='MATCH LAYER', size=1)
+        stim_input_layer = TransferMechanism(name='STIM INPUT LAYER', input_shapes=5)
+        context_input_layer = TransferMechanism(name='CONTEXT INPUT LAYER', input_shapes=5)
+        match_output_layer = TransferMechanism(name='MATCH LAYER', input_shapes=1)
         ffn = Composition(name='FFN', pathways=[[stim_input_layer, match_output_layer],
                                                 [context_input_layer, match_output_layer]])
 
@@ -760,7 +760,7 @@ class TestControl:
                 #    OCM's outcome_input_port.
                 # If the test fails in this condition, it could mean that the bug has been corrected.
                 # The bug may be the same one as in eb61303808ad2a5ba46fdd18d0e583283397915c
-                raise (AssertionError,"FAILURE TO REPLICATE BUGGY SHOW_GRAPH OUTPUT -- SEE COMMENT IN TEST")
+                raise AssertionError("FAILURE TO REPLICATE BUGGY SHOW_GRAPH OUTPUT -- SEE COMMENT IN TEST")
             # elif ('show_node_structure' in show_graph_kwargs
             #         and ('show_cim' in show_graph_kwargs
             #              and show_graph_kwargs['show_cim'] is True)
@@ -769,7 +769,7 @@ class TestControl:
             # ):
             #     pass
             else:
-                raise (AssertionError)
+                raise AssertionError
 
     # def test_show_graph_for_nested_composition_as_agent_rep(self):
     #     """Note: this is the same as test_control/test_nested_composition_as_agent_rep but with show_graph()"""

@@ -64,7 +64,7 @@ However, it can be configured otherwise, for various forms of processing, as des
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 As with any `Mechanism`, the number of InputPorts can be specified using the **input_ports**, **default_variable** or
-**size** arguments of the constructor (see `Mechanism_InputPorts`), and OutputPorts can be specified using the
+**input_shapes** arguments of the constructor (see `Mechanism_InputPorts`), and OutputPorts can be specified using the
 **output_ports** argument (see `Mechanism_OutputPorts`).  These can be used to configure processing in a variety of
 ways. Some common ones are described below (also see `ProcessingMechanism_Examples`).
 
@@ -188,7 +188,8 @@ from psyneulink._typing import Optional, Union
 import numpy as np
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
-from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
+from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot, ARG_MAX, ARG_MAX_ABS, \
+    ARG_MAX_INDICATOR, ARG_MAX_ABS_INDICATOR
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, Mechanism, MechanismError
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
@@ -254,13 +255,13 @@ class ProcessingMechanism_Base(Mechanism_Base):
                                   {NAME: MAX_ABS_VAL,
                                    FUNCTION:lambda x: np.max(np.absolute(x))},
                                   {NAME: MAX_ONE_HOT,
-                                   FUNCTION: OneHot(mode=MAX_VAL)},
+                                   FUNCTION: OneHot(mode=ARG_MAX)},
                                   {NAME: MAX_ABS_ONE_HOT,
-                                   FUNCTION: OneHot(mode=MAX_ABS_VAL)},
+                                   FUNCTION: OneHot(mode=ARG_MAX_ABS)},
                                   {NAME: MAX_INDICATOR,
-                                   FUNCTION: OneHot(mode=MAX_INDICATOR)},
+                                   FUNCTION: OneHot(mode=ARG_MAX_INDICATOR)},
                                   {NAME: MAX_ABS_INDICATOR,
-                                   FUNCTION: OneHot(mode=MAX_ABS_INDICATOR)},
+                                   FUNCTION: OneHot(mode=ARG_MAX_ABS_INDICATOR)},
                                   {NAME: PROB,
                                    VARIABLE: OWNER_VALUE,
                                    FUNCTION: SoftMax(output=PROB)}])
@@ -269,7 +270,7 @@ class ProcessingMechanism_Base(Mechanism_Base):
     @check_user_specified
     def __init__(self,
                  default_variable=None,
-                 size=None,
+                 input_shapes=None,
                  input_ports=None,
                  function=None,
                  output_ports=None,
@@ -282,7 +283,7 @@ class ProcessingMechanism_Base(Mechanism_Base):
         """Abstract class for processing mechanisms
 
         :param variable: (value)
-        :param size: (int or list/array of ints)
+        :param input_shapes: (int or list/array of ints)
         :param params: (dict)
         :param name: (str)
         :param prefs: (PreferenceSet)
@@ -290,7 +291,7 @@ class ProcessingMechanism_Base(Mechanism_Base):
         """
 
         super().__init__(default_variable=default_variable,
-                         size=size,
+                         input_shapes=input_shapes,
                          input_ports=input_ports,
                          function=function,
                          output_ports=output_ports,
@@ -378,7 +379,7 @@ class ProcessingMechanism(ProcessingMechanism_Base):
     @beartype
     def __init__(self,
                  default_variable=None,
-                 size=None,
+                 input_shapes=None,
                  input_ports:Optional[Union[Iterable, Mechanism, OutputPort, InputPort]]=None,
                  output_ports:Optional[Union[str, Iterable]]=None,
                  function=None,
@@ -387,7 +388,7 @@ class ProcessingMechanism(ProcessingMechanism_Base):
                  prefs:   Optional[ValidPrefSet] = None,
                  **kwargs):
         super(ProcessingMechanism, self).__init__(default_variable=default_variable,
-                                                  size=size,
+                                                  input_shapes=input_shapes,
                                                   input_ports=input_ports,
                                                   function=function,
                                                   output_ports=output_ports,

@@ -33,7 +33,7 @@ Overview
 A MappingProjection transmits the `value <OutputPort.value>` of an `OutputPort` of one `ProcessingMechanism
 <ProcessingMechanism>` (its `sender <MappingProjection.sender>`) to the `InputPort` of another (its `receiver
 <MappingProjection.receiver>`). The default `function <Projection_Base.function>` for a MappingProjection is
-`LinearMatrix`, which uses the MappingProjection's `matrix <MappingProjection.matrix>` attribute to transform the
+`MatrixTransform`, which uses the MappingProjection's `matrix <MappingProjection.matrix>` attribute to transform the
 value received from its `sender <MappingProjection.sender>` and provide the result to its `receiver
 <MappingProjection.receiver>`.
 
@@ -84,8 +84,8 @@ its `matrix <MappingProjection.matrix>` parameter.  This is used by the MappingP
 <Projection_Base.value>` provided to its `receiver <MappingProjection.receiver>`. It can be specified in any of the
 following ways:
 
-  * **List, array or matrix**  -- if it is a list, each item must be a list or 1d np.array of numbers;  otherwise,
-    it must be a 2d np.array or np.matrix.  In each case, the outer dimension (outer list items, array axis 0,
+  * **List or array**  -- if it is a list, each item must be a list or 1d np.array of numbers;  otherwise,
+    it must be a 2d np.array.  In each case, the outer dimension (outer list items, array axis 0,
     or matrix rows) corresponds to the elements of the `sender <MappingProjection.sender>`, and the inner dimension
     (inner list items, array axis 1, or matrix columns) corresponds to the weighting of the contribution that a
     given `sender <MappingProjection.sender>` makes to the `receiver <MappingProjection.receiver>` (the number of which
@@ -256,7 +256,7 @@ of one or more `LearningProjections <LearningProjection>` that project to its *M
 This conforms to the general procedures for modulation used by `ModulatoryProjections <ModulatoryProjection>`
 A LearningProjection `modulates <LearningSignal_Modulation>` the `function <ParameterPort.function>` of the
 *MATRIX* ParameterPort, which is responsible for keeping a record of the value of the MappingProjection's matrix,
-and providing it to the MappingProjection's `function <Projection_Base.function>` (usually `LinearMatrix`).  By
+and providing it to the MappingProjection's `function <Projection_Base.function>` (usually `MatrixTransform`).  By
 default, the function for the *MATRIX* ParameterPort is an `AccumulatorIntegrator`.  A LearningProjection
 modulates it by assigning the value of its `additive_param <AccumulatorIntegrator.additive_param>` (`increment
 <AccumulatorIntegrator.increment>`), which is added to its `previous_value <AccumulatorIntegrator.previous_value>`
@@ -264,7 +264,7 @@ attribute each time it is executed. The result is that each time the MappingProj
 executes its *MATRIX* ParameterPort, the `weight changes <LearningProjection_Structure>` conveyed to the
 MappingProjection from any LearningProjection(s) are added to the record of the matrix kept by the *MATRIX*
 ParameterPort's `AccumulatorIntegrator` function in its `previous_value <AccumulatorIntegrator.previous_value>`
-attribute. This is then the value of the matrix used  by the MappingProjection's `LinearMatrix` function when it is
+attribute. This is then the value of the matrix used  by the MappingProjection's `MatrixTransform` function when it is
 executed.  It is important to note that the accumulated weight changes received by a MappingProjection from its
 LearningProjection(s) are stored by the *MATRIX* ParameterPort's function, and not the MappingProjection's `matrix
 <MappingProjection.matrix>` parameter itself; the latter stores the original value of the matrix before learning (that
@@ -291,7 +291,7 @@ from psyneulink._typing import Optional
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.stateful.integratorfunctions import AccumulatorIntegrator
-from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
+from psyneulink.core.components.functions.nonstateful.transformfunctions import MatrixTransform
 from psyneulink.core.components.functions.function import get_matrix
 from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.core.components.projections.projection import ProjectionError, projection_keywords
@@ -301,7 +301,7 @@ from psyneulink.core.globals.keywords import \
     MAPPING_PROJECTION, MATRIX, \
     OUTPUT_PORT, VALUE
 from psyneulink.core.globals.log import ContextFlags
-from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
+from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -357,7 +357,7 @@ class MappingProjection(PathwayProjection_Base):
         the context in which the Projection is used, or its initialization will be `deferred
         <MappingProjection_Deferred_Initialization>`.
 
-    matrix : list, np.ndarray, np.matrix, function, `RandomMatrix` or keyword : default DEFAULT_MATRIX
+    matrix : list, np.ndarray, function, `RandomMatrix` or keyword : default DEFAULT_MATRIX
         specifies the matrix used by `function <Projection_Base.function>` (default: `LinearCombination`) to
         transform the `value <Projection_Base.value>` of the `sender <MappingProjection.sender>` into a form suitable
         for the `variable <InputPort.variable>` of its `receiver <MappingProjection.receiver>` `InputPort`
@@ -416,7 +416,7 @@ class MappingProjection(PathwayProjection_Base):
                 function
                     see `function <MappingProjection.function>`
 
-                    :default value: `LinearMatrix`
+                    :default value: `MatrixTransform`
                     :type: `Function`
 
                 matrix
@@ -425,7 +425,7 @@ class MappingProjection(PathwayProjection_Base):
                     :default value: `AUTO_ASSIGN_MATRIX`
                     :type: ``str``
         """
-        function = Parameter(LinearMatrix, stateful=False, loggable=False)
+        function = Parameter(MatrixTransform, stateful=False, loggable=False)
         matrix = FunctionParameter(
             DEFAULT_MATRIX,
             setter=_mapping_projection_matrix_setter
@@ -468,7 +468,7 @@ class MappingProjection(PathwayProjection_Base):
         # Assign matrix to function_params for use as matrix param of MappingProjection.function
         # (7/12/17 CW) this is a PATCH to allow the user to set matrix as an np.matrix... I still don't know why
         # it wasn't working.
-        if isinstance(matrix, (np.matrix, list)):
+        if isinstance(matrix, list):
             matrix = np.array(matrix)
 
         self.learning_mechanism = None
@@ -553,7 +553,7 @@ class MappingProjection(PathwayProjection_Base):
         except TypeError:
             mapping_output_len = 1
 
-        matrix_spec = self.defaults.matrix
+        matrix_spec = copy_parameter_value(self.defaults.matrix)
 
         if (type(matrix_spec) == str and
                 matrix_spec == AUTO_ASSIGN_MATRIX):

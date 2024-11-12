@@ -136,7 +136,7 @@ class KohonenMechanism(TransferMechanism):
         cannot be enabled until it is configured for learning by calling the Mechanism's `configure_learning
         <KohonenMechanism.configure_learning>` method.
 
-    learning_rate : scalar, or list, 1d or 2d np.array, or np.matrix of numeric values: default False
+    learning_rate : scalar, or list, 1d or 2d np.array of numeric values: default False
         specifies the learning rate used by its `learning function <KohonenMechanism.learning_function>`.
         If it is `None`, the `default learning_rate for a LearningMechanism <LearningMechanism_Learning_Rate>` is
         used; if it is assigned a value, that is used as the learning_rate (see `learning_rate
@@ -144,7 +144,7 @@ class KohonenMechanism(TransferMechanism):
 
     learning_function : LearningFunction, function or method : default Kohonen(distance_function=GUASSIAN)
         specifies function used by `learning_mechanism <KohonenMechanism.learning_mechanism>` to update `matrix
-        <MappingProjection.matrix>` of `learned_projection <KohonenMechanism.learned_projection>.
+        <MappingProjection.matrix>` of `learned_projection <KohonenMechanism.learned_projection>`.
 
 
     Attributes
@@ -168,7 +168,7 @@ class KohonenMechanism(TransferMechanism):
         indicates whether `learning is enabled <KohonenMechanism_Learning>`;  see `learning_enabled
         <KohonenMechanism.learning_enabled>` for additional details.
 
-    learning_rate : float, 1d or 2d np.array, or np.matrix of numeric values : default None
+    learning_rate : float, 1d or 2d np.array of numeric values : default None
         determines the learning rate used by the `learning_function <KohonenMechanism.learning_function>`
         of the `learning_mechanism <KohonenMechanism.learning_mechanism>` (see `learning_rate
         <KohonenLearningMechanism.learning_rate>` for details concerning specification and default value assignment).
@@ -179,7 +179,7 @@ class KohonenMechanism(TransferMechanism):
 
     learning_function : LearningFunction, function or method
         function used by `learning_mechanism <KohonenMechanism.learning_mechanism>` to update `matrix
-        <MappingProjection.matrix>` of `learned_projection <KohonenMechanism.learned_projection>.
+        <MappingProjection.matrix>` of `learned_projection <KohonenMechanism.learned_projection>`.
 
     learning_mechanism : LearningMechanism
         created automatically if `learning is specified <KohonenMechanism_Learning>`, and used to train the
@@ -275,7 +275,7 @@ class KohonenMechanism(TransferMechanism):
     @beartype
     def __init__(self,
                  default_variable=None,
-                 size=None,
+                 input_shapes=None,
                  function=None,
                  # selection_function=OneHot(mode=MAX_INDICATOR),  # RE-INSTATE WHEN IMPLEMENT NHot function
                  integrator_function=None,
@@ -311,7 +311,7 @@ class KohonenMechanism(TransferMechanism):
 
         super().__init__(
             default_variable=default_variable,
-            size=size,
+            input_shapes=input_shapes,
             function=function,
             integrator_function=integrator_function,
             integrator_mode=integrator_mode,

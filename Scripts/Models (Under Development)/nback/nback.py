@@ -305,28 +305,28 @@ def construct_model(stim_size:int = STIM_SIZE,
     #     output: match [1,0] or non-match [0,1]
     # Must be trained to detect match for specified task (1-back, 2-back, etc.)
     input_current_stim = TransferMechanism(name=FFN_STIMULUS_INPUT,
-                                           size=stim_size,
+                                           input_shapes=stim_size,
                                            function=FFN_TRANSFER_FUNCTION)
     input_current_context = TransferMechanism(name=FFN_CONTEXT_INPUT,
-                                              size=context_size,
+                                              input_shapes=context_size,
                                               function=FFN_TRANSFER_FUNCTION)
     input_retrieved_stim = TransferMechanism(name=FFN_STIMULUS_RETRIEVED,
-                                             size=stim_size,
+                                             input_shapes=stim_size,
                                              function=FFN_TRANSFER_FUNCTION)
     input_retrieved_context = TransferMechanism(name=FFN_CONTEXT_RETRIEVED,
-                                                size=context_size,
+                                                input_shapes=context_size,
                                                 function=FFN_TRANSFER_FUNCTION)
     input_task = TransferMechanism(name=FFN_TASK,
-                                   size=num_nback_levels,
+                                   input_shapes=num_nback_levels,
                                    function=FFN_TRANSFER_FUNCTION)
     hidden = TransferMechanism(name=FFN_HIDDEN,
-                               size=hidden_size,
+                               input_shapes=hidden_size,
                                function=FFN_TRANSFER_FUNCTION)
     dropout = TransferMechanism(name=FFN_DROPOUT,
-                               size=hidden_size,
+                               input_shapes=hidden_size,
                                function=Dropout(p=DROPOUT_PROB))
     output = ProcessingMechanism(name=FFN_OUTPUT,
-                                 size=2,
+                                 input_shapes=2,
                                    # function=ReLU
                                  )
 
@@ -354,7 +354,7 @@ def construct_model(stim_size:int = STIM_SIZE,
     print(f"constructing '{NBACK_MODEL}'...")
 
     # Stimulus Encoding: takes STIM_SIZE vector as input
-    stim = TransferMechanism(name=MODEL_STIMULUS_INPUT, size=stim_size)
+    stim = TransferMechanism(name=MODEL_STIMULUS_INPUT, input_shapes=stim_size)
 
     # Context Encoding: takes scalar as drift step for current trial
     context = ProcessingMechanism(name=MODEL_CONTEXT_INPUT,
@@ -365,16 +365,16 @@ def construct_model(stim_size:int = STIM_SIZE,
 
     # Task: task one-hot indicating n-back (1, 2, 3 etc.) - must correspond to what ffn has been trained to do
     task = ProcessingMechanism(name=MODEL_TASK_INPUT,
-                               size=num_nback_levels)
+                               input_shapes=num_nback_levels)
 
     # Episodic Memory:
     #    - entries: stimulus (field[0]) and context (field[1]); randomly initialized
     #    - uses Softmax to retrieve best matching input, subject to weighting of stimulus and context by STIM_WEIGHT
     em = EpisodicMemoryMechanism(name=EM,
                                  input_ports=[{NAME:"STIMULUS_FIELD",
-                                               SIZE:stim_size},
+                                               INPUT_SHAPES:stim_size},
                                               {NAME:"CONTEXT_FIELD",
-                                               SIZE:context_size}],
+                                               INPUT_SHAPES:context_size}],
                                  function=ContentAddressableMemory(
                                      initializer=[[[0] * stim_size, [0] * context_size]],
                                      distance_field_weights=[retrieval_stimulus_weight,
@@ -385,13 +385,13 @@ def construct_model(stim_size:int = STIM_SIZE,
                                  )
 
     logit = TransferMechanism(name='LOGIT',
-                              size=2,
+                              input_shapes=2,
                               # output_ports=[{VARIABLE: (OWNER_VALUE,0),
                               #                FUNCTION: lambda x : np.log(x)}],
                               function=Logistic)
 
     decision = TransferMechanism(name=DECISION,
-                                 size=2,
+                                 input_shapes=2,
                                  function=SoftMax(output=MAX_INDICATOR))
 
     # Control Mechanism
@@ -890,7 +890,7 @@ def network_test(network:AutodiffComposition,
         coded_responses, stats = analyze_results([network.results,conditions], test=True)
         import torch
         cross_entropy_loss = \
-            [network.loss(torch.Tensor(output[0]),torch.Tensor(np.array(target))).detach().numpy().tolist()
+            [network.loss_function(torch.Tensor(output[0]),torch.Tensor(np.array(target))).detach().numpy().tolist()
              for output, target in zip(network.results, targets)]
 
     coded_responses_flat = []

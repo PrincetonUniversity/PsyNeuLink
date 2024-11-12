@@ -409,7 +409,7 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import get_matrix, ValidMatrixSpecType
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
-from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
+from psyneulink.core.components.functions.nonstateful.transformfunctions import MatrixTransform
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.ports.port import PortError
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Projection, Port
@@ -426,7 +426,7 @@ from psyneulink.core.globals.keywords import \
     PROJECTION_RECEIVER, PROJECTION_SENDER, PROJECTION_TYPE, \
     RECEIVER, SENDER, STANDARD_ARGS, PORT, PORTS, WEIGHT, ADD_INPUT_PORT, ADD_OUTPUT_PORT, \
     PROJECTION_COMPONENT_CATEGORY
-from psyneulink.core.globals.parameters import Parameter, check_user_specified
+from psyneulink.core.globals.parameters import Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
@@ -511,7 +511,7 @@ class Projection_Base(Projection):
     """
     Projection_Base(           \
         sender=None,           \
-        function=LinearMatrix, \
+        function=MatrixTransform, \
         receiver=None,         \
         feedback=None          \
         )
@@ -546,7 +546,7 @@ class Projection_Base(Projection):
         the context in which the Projection is used, or its initialization will be `deferred
         <Projection_Deferred_Initialization>`.
 
-    function : TransferFunction : default LinearMatrix
+    function : TransferFunction : default MatrixTransform
         specifies function used to convey (and potentially convert) `value <Port_Base.value>` of `sender
         <Projection_Base.sender>` `Port` to `variable <Port_Base.variable>` of `receiver <Projection_Base.receiver>`
         Port.
@@ -562,6 +562,9 @@ class Projection_Base(Projection):
         it is assigned (see `Composition_Cycles_and_Feedback`); specifying True or the keyword *FEEDBACK* forces its
         assignment as a *feedback* Projection, whereas False precludes it from being assigned as a feedback Projection;
         None (the default) allows the Composition to determine whether it is assigned as a feedback Projection.
+
+    exclude_in_autodiff : bool : default False
+        specifies whether Projection is included in `AutodiffComposition` gradient calculations.
 
     Attributes
     ----------
@@ -587,6 +590,9 @@ class Projection_Base(Projection):
         <Projection_Base.function>`.  The value of the parameters of the Projection and its `function
         <Projection_Base.function>` are also accessible as (and can be modified using) attributes of the Projection,
         in the same manner as they can for a `Mechanism <Mechanism_ParameterPorts>`).
+
+    exclude_in_autodiff : bool : default False
+        determines whether Projection is included in `AutodiffComposition` gradient calculations.
 
     weight : number
        multiplies the `value <Projection_Base.value>` of the Projection after applying the `exponent
@@ -628,7 +634,7 @@ class Projection_Base(Projection):
                 function
                     see `function <Projection_Base.function>`
 
-                    :default value: `LinearMatrix`
+                    :default value: `MatrixTransform`
                     :type: `Function`
 
                 weight
@@ -639,7 +645,7 @@ class Projection_Base(Projection):
         """
         weight = Parameter(None, modulable=True)
         exponent = Parameter(None, modulable=True)
-        function = Parameter(LinearMatrix, stateful=False, loggable=False)
+        function = Parameter(MatrixTransform, stateful=False, loggable=False)
 
     registry = ProjectionRegistry
 
@@ -717,7 +723,7 @@ class Projection_Base(Projection):
             return
 
         self.receiver = receiver
-        self._exclude_from_autodiff = exclude_in_autodiff
+        self.exclude_in_autodiff = exclude_in_autodiff
         self._feedback = feedback # Assign to _feedback to avoid interference with vertex.feedback used in Composition
 
          # Register with ProjectionRegistry or create one
@@ -741,7 +747,7 @@ class Projection_Base(Projection):
         # FIX: NEED TO KNOW HERE IF SENDER IS SPECIFIED AS A MECHANISM OR PORT
         try:
             # this should become _default_value when that is fully implemented
-            variable = self.sender.defaults.value
+            variable = copy_parameter_value(self.sender.defaults.value)
         except AttributeError:
             if receiver.prefs.verbosePref:
                 warnings.warn("Unable to get value of sender ({0}) for {1};  will assign default ({2})".
@@ -839,7 +845,7 @@ class Projection_Base(Projection):
         # if MATRIX in target_set and target_set[MATRIX] is not None:
         #     matrix = target_set[MATRIX]
         #     # If matrix_spec is keyword and sender and receiver have been instantiated, implement matrix
-        #     #   so that it can be passed to function (e.g., LinearMatrix) if needed.
+        #     #   so that it can be passed to function (e.g., MatrixTransform) if needed.
         #     if not is_matrix(matrix):
         #         raise ProjectionError(f"Matrix ('{matrix}') specified for '{self.name}' is not a legal matrix spec.")
         #     if self.sender_instantiated and self.receiver_instantiated:
@@ -1203,7 +1209,7 @@ class Projection_Base(Projection):
             func_model = [f for f in edge_node.functions if f.id == parse_valid_identifier(f'{edge_node.id}_{edge_function.name}')][0]
             var_name = _get_variable_parameter_name(edge_function)
 
-            # 2d variable on LinearMatrix will be incorrect on import back to psyneulink
+            # 2d variable on MatrixTransform will be incorrect on import back to psyneulink
             func_model.metadata[var_name] = func_model.metadata[var_name][-1]
 
             pre_edge = mdf.Edge(

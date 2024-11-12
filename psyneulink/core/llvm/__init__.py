@@ -11,16 +11,19 @@
 import ctypes
 import enum
 import functools
+import gc
+import inspect
 import numpy as np
 import time
 from math import ceil, log2
 from psyneulink._typing import Set
+import weakref
 
 from llvmlite import ir
 
 from . import codegen
 from .builder_context import *
-from .builder_context import _all_modules, _convert_llvm_ir_to_ctype
+from .builder_context import _all_modules, _convert_llvm_ir_to_ctype, _convert_llvm_ir_to_dtype
 from .debug import debug_env
 from .execution import *
 from .execution import _tupleize
@@ -67,9 +70,6 @@ class ExecutionMode(enum.Flag):
     PTX
       compile and run Composition `Nodes <Composition_Nodes>` and `Projections <Projection>` using CUDA for GPU.
 
-    PTXExec
-      compile and run each `TRIAL <TimeScale.TRIAL>` using CUDA for GPU.
-
     PTXRun
       compile and run multiple `TRIAL <TimeScale.TRIAL>`\\s using CUDA for GPU.
    """
@@ -86,7 +86,6 @@ class ExecutionMode(enum.Flag):
     LLVMRun = LLVM | _Run
     LLVMExec = LLVM | _Exec
     PTXRun = PTX | _Run
-    PTXExec = PTX | _Exec
     COMPILED = ~ (Python | PyTorch)
 
 
@@ -120,7 +119,7 @@ def _llvm_build(target_generation=_binary_generation + 1):
 
 
 class LLVMBinaryFunction:
-    def __init__(self, name: str):
+    def __init__(self, name: str, *, ctype_ptr_args:tuple=(), dynamic_size_args:tuple=()):
         self.name = name
 
         self.__c_func = None
@@ -140,16 +139,29 @@ class LLVMBinaryFunction:
         # Create ctype function instance
         start = time.perf_counter()
         return_type = _convert_llvm_ir_to_ctype(f.return_value.type)
-        params = [_convert_llvm_ir_to_ctype(a.type) for a in f.args]
+
+        self.np_arg_dtypes = [_convert_llvm_ir_to_dtype(getattr(a.type, "pointee", a.type)) for a in f.args]
+
+        args = [_convert_llvm_ir_to_ctype(a.type) for a in f.args]
+
+        # '_type_' special attribute stores pointee type for pointers
+        # https://docs.python.org/3/library/ctypes.html#ctypes._Pointer._type_
+        self.byref_arg_types = [a._type_ if hasattr(a, "contents") else None for a in args]
+
+        for i, arg in enumerate(self.np_arg_dtypes):
+            if i not in ctype_ptr_args and self.byref_arg_types[i] is not None:
+                if i in dynamic_size_args:
+                    args[i] = np.ctypeslib.ndpointer(dtype=arg.base, ndim=len(arg.shape) + 1, flags='C_CONTIGUOUS')
+                else:
+                    args[i] = np.ctypeslib.ndpointer(dtype=arg.base, shape=arg.shape, flags='C_CONTIGUOUS')
+
         middle = time.perf_counter()
-        self.__c_func_type = ctypes.CFUNCTYPE(return_type, *params)
+        self.__c_func_type = ctypes.CFUNCTYPE(return_type, *args)
         finish = time.perf_counter()
 
         if "time_stat" in debug_env:
             print("Time to create ctype function '{}': {} ({} to create types)".format(
                   name, finish - start, middle - start))
-
-        self.byref_arg_types = [p._type_ for p in params]
 
     @property
     def c_func(self):
@@ -164,11 +176,6 @@ class LLVMBinaryFunction:
 
     def __call__(self, *args, **kwargs):
         return self.c_func(*args, **kwargs)
-
-    def wrap_call(self, *pargs):
-        cpargs = (ctypes.byref(p) if p is not None else None for p in pargs)
-        args = zip(cpargs, self.c_func.argtypes)
-        self(*(ctypes.cast(p, t) for p, t in args))
 
     @property
     def _cuda_kernel(self):
@@ -215,26 +222,24 @@ class LLVMBinaryFunction:
         wrap_args = (jit_engine.pycuda.driver.InOut(a) if isinstance(a, np.ndarray) else a for a in args)
         self.cuda_call(*wrap_args, **kwargs)
 
+    def np_buffer_for_arg(self, arg_num, *, extra_dimensions=(), fill_value=np.nan):
+
+        out_base = self.np_arg_dtypes[arg_num].base
+        out_shape = extra_dimensions + self.np_arg_dtypes[arg_num].shape
+
+        # fill the buffer with NaN poison
+        return np.full(out_shape, fill_value, dtype=out_base)
+
     @staticmethod
     @functools.lru_cache(maxsize=32)
-    def from_obj(obj, *, tags:frozenset=frozenset()):
+    def from_obj(obj, *, tags:frozenset=frozenset(), ctype_ptr_args:tuple=(), dynamic_size_args:tuple=()):
         name = LLVMBuilderContext.get_current().gen_llvm_function(obj, tags=tags).name
-        return LLVMBinaryFunction.get(name)
+        return LLVMBinaryFunction.get(name, ctype_ptr_args=ctype_ptr_args, dynamic_size_args=dynamic_size_args)
 
     @staticmethod
     @functools.lru_cache(maxsize=32)
-    def get(name: str):
-        return LLVMBinaryFunction(name)
-
-    def get_multi_run(self):
-        try:
-            multirun_llvm = _find_llvm_function(self.name + "_multirun")
-        except ValueError:
-            function = _find_llvm_function(self.name)
-            with LLVMBuilderContext.get_current() as ctx:
-                multirun_llvm = codegen.gen_multirun_wrapper(ctx, function)
-
-        return LLVMBinaryFunction.get(multirun_llvm.name)
+    def get(name: str, *, ctype_ptr_args:tuple=(), dynamic_size_args:tuple=()):
+        return LLVMBinaryFunction(name, ctype_ptr_args=ctype_ptr_args, dynamic_size_args=dynamic_size_args)
 
 
 _cpu_engine = None
@@ -255,7 +260,7 @@ def _get_engines():
 
 
 
-def cleanup():
+def cleanup(check_leaks:bool=False):
     global _cpu_engine
     _cpu_engine = None
     global _ptx_engine
@@ -267,4 +272,33 @@ def cleanup():
     LLVMBinaryFunction.get.cache_clear()
     LLVMBinaryFunction.from_obj.cache_clear()
 
-    LLVMBuilderContext.clear_global()
+    if check_leaks and LLVMBuilderContext.is_active():
+        old_context = LLVMBuilderContext.get_current()
+
+        LLVMBuilderContext.clear_global()
+
+        # check that WeakKeyDictionary is not keeping any references
+        # Try first without calling the GC
+        c = weakref.WeakSet(old_context._cache.keys())
+        if len(c) > 0:
+            gc.collect()
+
+        assert len(c) == 0, list(c)
+    else:
+        LLVMBuilderContext.clear_global()
+
+        # If not checking for leaks, there might be active compositions that
+        # cache pointers to binary functions. Accessing those pointers would
+        # cause segfault.
+        # Extract the set of associated compositions. Both to avoid duplicate
+        # clears for executions that belong to the same composition, and to
+        # avoid modifying the container that is iterated over.
+        for c in {e._composition for e in CompExecution.active_executions}:
+            c._compilation_data.execution.values.clear()
+            c._compilation_data.execution.history.clear()
+
+        # The set of active executions should be empty
+        for e in CompExecution.active_executions:
+            assert any(inspect.isframe(r) for r in gc.get_referrers(e))
+
+        CompExecution.active_executions.clear()

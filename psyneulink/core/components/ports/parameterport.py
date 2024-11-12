@@ -187,7 +187,7 @@ In the following example, a Mechanism is created by specifying two of its parame
 
     >>> import psyneulink as pnl
     >>> my_mechanism = pnl.RecurrentTransferMechanism(
-    ...                         size=5,
+    ...                         input_shapes=5,
     ...                         noise=pnl.ControlSignal(),
     ...                         function=pnl.Logistic(
     ...                                         gain=(0.5, pnl.ControlSignal),
@@ -198,7 +198,7 @@ COMMENT:
     default noise value, why are we using a ControlSignal here??
 COMMENT
 
-The first argument of the constructor for the Mechanism specifies its `size <Component.size>` parameter by
+The first argument of the constructor for the Mechanism specifies its `input_shapes <Component.input_shapes>` parameter by
 directly assigning a value to it.  The second specifies the `noise <RecurrentTransferMechanism.noise>` parameter
 by assigning a default `ControlSignal`;  this will use the default value of the
 `noise <RecurrentTransferMechanism.noise>` attribute.  The **function** argument is specified using the constructor for
@@ -384,12 +384,12 @@ from psyneulink.core.globals.keywords import \
     CONTEXT, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, FUNCTION, FUNCTION_PARAMS, \
     LEARNING_SIGNAL, LEARNING_SIGNALS, MECHANISM, NAME, PARAMETER_PORT, PARAMETER_PORT_PARAMS, PATHWAY_PROJECTION, \
     PROJECTION, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, VALUE
-from psyneulink.core.globals.parameters import ParameterBase, ParameterAlias, SharedParameter, check_user_specified
+from psyneulink.core.globals.parameters import ParameterAlias, SharedParameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities \
     import ContentAddressableList, ReadOnlyOrderedDict, is_iterable, is_numeric, is_value_spec, iscompatible, \
-    is_instance_or_subclass, UtilitiesError, gen_friendly_comma_str
+    is_instance_or_subclass, gen_friendly_comma_str
 
 __all__ = [
     'ParameterPort', 'ParameterPortError', 'port_type_keywords',
@@ -431,6 +431,23 @@ class ParameterPortList(ContentAddressableList):
         except KeyError:
             pass
 
+        # is a Parameter
+        try:
+            final_source = key.final_source
+        except AttributeError:
+            pass
+        else:
+            try:
+                return self.parameter_mapping[final_source]
+            except KeyError as e:
+                try:
+                    raise ParameterPortError(
+                        f'No ParameterPort corresponds to {key._owner._owner}'
+                        f'.parameters.{key.name}'
+                    ) from None
+                except AttributeError:
+                    raise e from None
+
         try:
             return super().__getitem__(key)
         except TypeError as e:
@@ -452,27 +469,6 @@ class ParameterPortList(ContentAddressableList):
                     f'Multiple ParameterPorts for {key} exist. Did you want'
                     f' {gen_friendly_comma_str(sorted([p.name for p in possible_ports]))}?'
                 ) from None
-        except UtilitiesError as e:
-            # ContentAddressableList throws UtilitiesError if key is not an int
-            # or string. handle only Parameter key here
-            if not isinstance(key, ParameterBase):
-                raise e from None
-
-            try:
-                final_source = key.final_source
-            except AttributeError:
-                final_source = key
-
-            try:
-                res = self.parameter_mapping[final_source]
-            except KeyError:
-                try:
-                    raise ParameterPortError(
-                        f'No ParameterPort corresponds to {key._owner._owner}'
-                        f'.parameters.{key.name}'
-                    ) from None
-                except AttributeError:
-                    raise e from None
 
         if res is not None:
             self.parameter_mapping[key] = res
@@ -704,7 +700,7 @@ class ParameterPort(Port_Base):
                  owner,
                  reference_value=None,
                  variable=None,
-                 size=None,
+                 input_shapes=None,
                  function=None,
                  projections=None,
                  params=None,
@@ -730,7 +726,7 @@ class ParameterPort(Port_Base):
         # Note: pass name of Mechanism (to override assignment of componentName in super.__init__)
         super(ParameterPort, self).__init__(owner,
                                             variable=variable,
-                                            size=size,
+                                            input_shapes=input_shapes,
                                             projections=projections,
                                             function=function,
                                             params=params,
@@ -1245,7 +1241,7 @@ def _instantiate_parameter_port(
         return
     # (7/19/17 CW) added this if statement below while adding `hetero` and `auto` and AutoAssociativeProjections: this
     # allows `hetero` to be specified as a matrix, while still generating a ParameterPort
-    elif isinstance(param_value, np.ndarray) or isinstance(param_value, np.matrix):
+    elif isinstance(param_value, np.ndarray):
         pass
     # allow function parameters
     elif param_name in function.parameters.names():

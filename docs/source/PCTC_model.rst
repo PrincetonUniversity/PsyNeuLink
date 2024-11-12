@@ -1,5 +1,5 @@
 Proactive Control & Task Control: A Stroop Model (Kalanthroff et al., 2018)
-================================================================
+===========================================================================
 `"Task Conflict and Proactive Control: A Computational Theory of the Stroop Task" <https://www.ncbi.nlm.nih.gov/m/pubmed/25257710/>`_
 
 Overview
@@ -56,33 +56,33 @@ model. A graph of the model is shown below.
 
 Network System
 ~~~~~~~~~~~~~~
-**COLOR INPUT LAYER**:  a `TransferMechanism` with **size**\ =2 (one unit for the input of one color, respectively
+**COLOR INPUT LAYER**:  a `TransferMechanism` with **input_shapes**\ =2 (one unit for the input of one color, respectively
 here blue & green), and assigned a `Linear` function with **slope**\ =1.0 and **intercept**\ =0.0.
 
-**WORD INPUT LAYER**:  a `TransferMechanism` with **size**\ =2 (one unit for the input of one word, respectively,
+**WORD INPUT LAYER**:  a `TransferMechanism` with **input_shapes**\ =2 (one unit for the input of one word, respectively,
 here blue & green), and assigned a `Linear` function with **slope**\ =1.0 and **intercept**\ =0.0.
 
-**BIAS INPUT LAYER**:  a `TransferMechanism` with **size**\ =2 (one unit for the bias of one of the hidden layers,
+**BIAS INPUT LAYER**:  a `TransferMechanism` with **input_shapes**\ =2 (one unit for the bias of one of the hidden layers,
 which is the same in this model), and assigned a `Linear` function with **slope**\ =1.0 and **intercept**\ =0.0.
 
-**PROACTIVE CONTROL INPUT LAYER**:  a `TransferMechanism` with **size**\ =2 (one unit specified with a proactive control
+**PROACTIVE CONTROL INPUT LAYER**:  a `TransferMechanism` with **input_shapes**\ =2 (one unit specified with a proactive control
 value, the other one set to zero), and assigned a `Linear` function with **slope**\ =1.0 and **intercept**\ =0.0.
 
-**COLOR HIDDEN LAYER**: a `RecurrentTransferMechanism` with **size**\ =2 (one element for each of the two colors, and
+**COLOR HIDDEN LAYER**: a `RecurrentTransferMechanism` with **input_shapes**\ =2 (one element for each of the two colors, and
 assigned a `Logistic` function with **gain**\ =4.0 and **bias**\ =1.0. The **integrator_mode**\ =\ `True`
 and **smoothing_factor**\ =0.03. Both units receive mutually inhibitory weights (**hetero**\ =-2). A python function that
 sets the output of the `Logistic` function to 0 when it receives 0 as an input is specified on the `output_ports`. It
 simply subtracts 0.018 from the output of a logistic function and if this leads to a value below 0,
 outputs a 0 as a minimum value.
 
-**WORD HIDDEN LAYER**: a `RecurrentTransferMechanism` with **size**\ =2 (one element for each of the two words, and
+**WORD HIDDEN LAYER**: a `RecurrentTransferMechanism` with **input_shapes**\ =2 (one element for each of the two words, and
 assigned a `Logistic` function with **gain**\ =4.0 and **bias**\ =1.0. The **integrator_mode**\ =\ `True`
 and **smoothing_factor**\ =0.03. Both units receive mutually inhibitory weights (**hetero**\ =-2). A python function that
 sets the output of the `Logistic` function to 0 when it receives 0 as an input is specified on the `output_ports`. It
 simply subtracts 0.018 from the output of a logistic function and if this leads to a value below 0,
 outputs a 0 as a minimum value.
 
-**TASK DEMAND LAYER**: a `RecurrentTransferMechanism` with **size**\ =2 (one element for each of the two tasks, and
+**TASK DEMAND LAYER**: a `RecurrentTransferMechanism` with **input_shapes**\ =2 (one element for each of the two tasks, and
 assigned a `Logistic` function with **gain**\ =4.0 and **bias**\ =1.0. The **integrator_mode**\ =\ `True`
 and **smoothing_factor**\ =0.03. Both units receive mutually inhibitory weights (**hetero**\ =-2). A python function that
 sets the output of the `Logistic` function to 0 when it receives 0 as an input is specified on the `output_ports`. It
@@ -90,7 +90,7 @@ simply subtracts 0.018 from the output of a logistic function and if this leads 
 outputs a 0 as a minimum value. A second OutputPort is specified that computes the conflict between the two task
 units.
 
-**WORD HIDDEN LAYER**: a `RecurrentTransferMechanism` with **size**\ =2 (one element for each of the two responses, and
+**WORD HIDDEN LAYER**: a `RecurrentTransferMechanism` with **input_shapes**\ =2 (one element for each of the two responses, and
 assigned a `Logistic` function with **gain**\ =4.0 and **bias**\ =1.0. The **integrator_mode**\ =\ `True`
 and **smoothing_factor**\ =0.03. Both units receive mutually inhibitory weights (**hetero**\ =-2). A python function that
 sets the output of the `Logistic` function to 0 when it receives 0 as an input is specified on the `output_ports`. It

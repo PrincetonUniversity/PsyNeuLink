@@ -1,4 +1,3 @@
-import ctypes
 import numpy as np
 import pytest
 
@@ -35,14 +34,12 @@ def test_integer_broadcast(mode, val):
         builder.ret_void()
 
     binf = pnlvm.LLVMBinaryFunction.get(custom_name)
-    res = np.zeros(8, dtype=val.dtype)
+    val = np.asarray(val)
+    res = binf.np_buffer_for_arg(1)
 
     if mode == 'CPU':
-        ct_res = np.ctypeslib.as_ctypes(res)
-        ct_in = np.ctypeslib.as_ctypes(val)
-
-        binf(ctypes.byref(ct_in), ctypes.byref(ct_res))
+        binf(val, res)
     else:
-        binf.cuda_wrap_call(np.asarray(val), res)
+        binf.cuda_wrap_call(val, res)
 
     assert all(res == np.broadcast_to(val + 1, 8))
