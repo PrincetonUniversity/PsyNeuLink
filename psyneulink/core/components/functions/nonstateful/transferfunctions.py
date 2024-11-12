@@ -970,10 +970,10 @@ class ExponentialDecay(TransferFunction):  # -----------------------------------
                     :default value: 0.01
                     :type: ``float``
         """
-        start = Parameter(1.0, modulable=True, aliases='bias')
+        start = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        end = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM, 'rate'])
-        tolerance = Parameter(0.01, modulable=True, aliases=['scale'])
+        end = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        tolerance = Parameter(0.01, modulable=True, aliases=[SCALE])
         bounds = (None, None)
 
         def _validate_start(self, start):
@@ -1103,10 +1103,10 @@ class ExponentialDecay(TransferFunction):  # -----------------------------------
         builder.store(val, ptro)
 
     def _gen_pytorch_fct(self, device, context=None):
-        offset = self._get_pytorch_fct_param_value('offset', device, context)
-        end = self._get_pytorch_fct_param_value('end', device, context)
-        tolerance = self._get_pytorch_fct_param_value('tolerance', device, context)
-        start = self._get_pytorch_fct_param_value('start', device, context)
+        offset = self._get_pytorch_fct_param_value(OFFSET, device, context)
+        end = self._get_pytorch_fct_param_value(END, device, context)
+        tolerance = self._get_pytorch_fct_param_value(TOLERANCE, device, context)
+        start = self._get_pytorch_fct_param_value(START, device, context)
 
         return lambda x : offset + start * torch.exp(-x * torch.log(1 / tolerance) / end)
 
@@ -1157,15 +1157,6 @@ class AcceleratingDecay(TransferFunction):  #
       .. math::
        - start \\frac{e^{\\left(variable-e\\right)}}{e^{\\left(end-e-k^{end}\\right)}}
 
-    COMMENT:
-    FOR TIMER VERSION:
-    `function <AcceleratingDecay._function>` returns exponentially decaying transform of `variable
-    <AcceleratingDecay.variable>`, that has a value of `start <AcceleratingDecay.start>` + `offset
-    <AcceleratingDecay.offset>` at `variable <AcceleratingDecay.variable>` = 0, and a value of `threshold
-    <AcceleratingDecay.end>` * `start <AcceleratingDecay.start>` + `offset <AcceleratingDecay.offset>` at
-    `variable at `variable <AcceleratingDecay.variable>` = `end <AcceleratingDecay.end>`:
-    COMMENT
-
     Arguments
     ---------
 
@@ -1179,6 +1170,11 @@ class AcceleratingDecay(TransferFunction):  #
     end : float : default 1.0
         specifies the value of `variable <AcceleratingDecay.variable>` at which the value of the function
         should equal 0; must be greater than 0.
+
+    k : float : default 0.4
+        specifies the constant used to ensure that value of the function when `variable
+        <AcceleratingDecay.variable>` = `end <AcceleratingDecay.end>` is as close to 0 as possible;
+        must be beetween 0 and 1.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -1205,6 +1201,10 @@ class AcceleratingDecay(TransferFunction):  #
 
     end : float (>0)
         determines the value of `variable <AcceleratingDecay.variable>` at which the value of the function equals 0.
+
+    k : float (0,1)
+        determines the constant used to ensure that value of the function when `variable
+        <AcceleratingDecay.variable>` = `end <AcceleratingDecay.end>` is as close to 0 as possible.
 
     bounds : (None, None)
 
@@ -1240,11 +1240,16 @@ class AcceleratingDecay(TransferFunction):  #
                     :default value: 1.0
                     :type: ``float``
 
+                k
+                    see `end <AcceleratingDecay.k>`
+
+                    :default value: 0.4
+                    :type: ``float``
+
         """
         start = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        offset = Parameter(0.0, modulable=True)
         end = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        tolerance = Parameter(0.01, modulable=True)
+        k = Parameter(0.4, modulable=True)
         bounds = (None, None)
 
         def _validate_start(self, start):
@@ -1254,6 +1259,9 @@ class AcceleratingDecay(TransferFunction):  #
         def _validate_end(self, end):
             if end < 0:
                 return f"must be greater than 0."
+        def _validate_k(self, k):
+            if k <= 0 or k >= 1:
+                return f"must be greater than 0 and less than 1."
 
     @check_user_specified
     @beartype
@@ -1261,6 +1269,7 @@ class AcceleratingDecay(TransferFunction):  #
                  default_variable=None,
                  start: Optional[ValidParamSpecType] = None,
                  end: Optional[ValidParamSpecType] = None,
+                 k: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
@@ -1268,6 +1277,7 @@ class AcceleratingDecay(TransferFunction):  #
             default_variable=default_variable,
             start=start,
             end=end,
+            k=k,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -1299,8 +1309,9 @@ class AcceleratingDecay(TransferFunction):  #
         """
         start = self._get_current_parameter_value(START, context)
         end = self._get_current_parameter_value(END, context)
+        k = self._get_current_parameter_value('k', context)
 
-        result = offset + start * np.exp(-variable * np.log(1 / tolerance) / end)
+        result = start + start * np.exp(-e)/np.exp(end - e - k**end) * (1 - np.exp(variable))
 
         return self.convert_output_type(result)
 
@@ -1309,8 +1320,7 @@ class AcceleratingDecay(TransferFunction):  #
         """
         derivative(input)
         .. math::
-            \frac{start\ln\left(\frac{1}{tolerance}\right)e^{-\left(\frac{variable\ln
-            \left(\frac{1}{tolerance}\right)}{end}\right)}}{end}
+         - start \\frac{e^{\\left(variable-e\\right)}}{e^{\\left(end-e-k^{end}\\right)}}
 
         Arguments
         ---------
@@ -1327,8 +1337,9 @@ class AcceleratingDecay(TransferFunction):  #
 
         start = self._get_current_parameter_value(START, context)
         end = self._get_current_parameter_value(END, context)
+        k = self._get_current_parameter_value('k', context)
 
-        return (start * np.log(1/tolerance) / end) * np.exp(-input * np.log(tolerance) / end)
+        return -start * np.exp(input - e) / np.exp(end - e - k**end)
 
     # FIX:
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
@@ -1363,12 +1374,11 @@ class AcceleratingDecay(TransferFunction):  #
         builder.store(val, ptro)
 
     def _gen_pytorch_fct(self, device, context=None):
-        offset = self._get_pytorch_fct_param_value('offset', device, context)
-        end = self._get_pytorch_fct_param_value('end', device, context)
-        tolerance = self._get_pytorch_fct_param_value('tolerance', device, context)
-        start = self._get_pytorch_fct_param_value('start', device, context)
+        start = self._get_pytorch_fct_param_value(START, device, context)
+        end = self._get_pytorch_fct_param_value(END, device, context)
+        k = self._get_pytorch_fct_param_value('k', device, context)
 
-        return lambda x : offset + start * torch.exp(-x * torch.log(1 / tolerance) / end)
+        return lambda x : start + start * torch.exp(-e)/torch.exp(end - e - k**end) * (1 - np.exp(x))
 
 
 # **********************************************************************************************************************

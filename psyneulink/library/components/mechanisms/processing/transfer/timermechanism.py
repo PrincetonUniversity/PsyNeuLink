@@ -110,6 +110,12 @@ end = scale (x value at which y=0)
    This is an empirically-derived function;  the value of 0.4 is used to ensure that the function reaches 0 at the
     specified end value. If anyone has an analytic solution, please add it here.
 
+`function <AcceleratingDecay._function>` returns exponentially decaying transform of `variable
+<AcceleratingDecay.variable>`, that has a value of `start <AcceleratingDecay.start>` + `offset
+<AcceleratingDecay.offset>` at `variable <AcceleratingDecay.variable>` = 0, and a value of `threshold
+<AcceleratingDecay.end>` * `start <AcceleratingDecay.start>` + `offset <AcceleratingDecay.offset>` at
+`variable at `variable <AcceleratingDecay.variable>` = `end <AcceleratingDecay.end>`:
+
 RESET()
 
 When an TimerMechanism is executed, it carries out the specified integration, and assigns the result to the
