@@ -968,10 +968,10 @@ class ExponentialDecay(TransferFunction):  # -----------------------------------
                     :default value: 0.01
                     :type: ``float``
         """
-        start = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        offset = Parameter(0.0, modulable=True)
-        end = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        tolerance = Parameter(0.01, modulable=True)
+        start = Parameter(1.0, modulable=True, aliases='bias')
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        end = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM, 'rate'])
+        tolerance = Parameter(0.01, modulable=True, aliases=['scale'])
         bounds = (None, None)
 
         def _validate_start(self, start):
