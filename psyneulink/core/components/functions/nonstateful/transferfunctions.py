@@ -11,25 +11,25 @@
 """
 
 **Monotonic**
-* `Identity`
-* `Linear`
-* `Exponential`
-* `ExponentialDecay`
-* `Logarithmic`
-* `LogarithmicDecay`
+    * `Identity`
+    * `Linear`
+    * `Exponential`
+    * `ExponentialDecay`
+    * `Logarithmic`
+    * `LogarithmicDecay`
 
 **Sigmoid**
-* `Logistic`
-* `Tanh`
-* `ReLU`
+    * `Logistic`
+    * `Tanh`
+    * `ReLU`
 
 **Probability**
-* `Angle`
-* `Gaussian`
-* `GaussianDistort`
-* `BinomialDistort`
-* `Dropout`
-* `SoftMax`
+    * `Angle`
+    * `Gaussian`
+    * `GaussianDistort`
+    * `BinomialDistort`
+    * `Dropout`
+    * `SoftMax`
 
 * `TransferWithCosts`
 
@@ -112,8 +112,8 @@ from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, ValidPrefSet
 from psyneulink.core.globals.utilities import ValidParamSpecType, convert_all_elements_to_np_array, safe_len, is_matrix_keyword
 
-__all__ = ['Angle', 'BinomialDistort', 'Dropout', 'Exponential', 'Gaussian', 'GaussianDistort', 'Identity',
-           'Linear', 'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
+__all__ = ['Angle', 'BinomialDistort', 'Dropout', 'Exponential', 'ExponentialDecay', 'Gaussian', 'GaussianDistort',
+           'Identity', 'Linear', 'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
            ]
 
 class TransferFunction(Function_Base):
@@ -797,7 +797,6 @@ class Exponential(TransferFunction):  # ----------------------------------------
         return rate * scale * torch.exp(rate * input + bias)
 
 
-
 # **********************************************************************************************************************
 #                                                    ExponentialDecay
 # **********************************************************************************************************************
@@ -819,13 +818,13 @@ class ExponentialDecay(TransferFunction):  # -----------------------------------
     .. _ExponentialDecay:
 
     `function <ExponentialDecay._function>` returns exponentially decaying transform of `variable
-    <ExponentialDecay.variable>`, that has a value of `bias <ExponentialDecay.bias>` + `offset
-    <ExponentialDecay.offset>` at `variable <ExponentialDecay.variable>` = 0, and a value of `offset
-    <ExponentialDecay.offset>` * `scale <ExponentialDecay.scale>` at `variable <ExponentialDecay.variable>`
-    = `rate <ExponentialDecay.rate>`:
+    <ExponentialDecay.variable>`
 
     .. math::
-        offset\ + bias e^{-\left(\frac{variable\ln\left(\frac{1}{scale}\right)}{rate}\right)}
+        offset + bias*e^{-\left(\frac{variable\ln\left(\frac{1}{scale}\right)}{rate}\right)}
+
+    such that :math:`value = bias + offset` when :math:`variable = 0`,
+    and :math:`value = offset * scale` when :math:`variable = rate`:
 
     where:
 
@@ -839,7 +838,7 @@ class ExponentialDecay(TransferFunction):  # -----------------------------------
     <ExponentialDecay.variable>` = 0, and its linear offset for all other values;
 
     **rate** determines the value of `variable <ExponentialDecay.variable>` at which `value <ExponentialDecay.value>`
-    should equal :math:`bias * scale) + offset` (can also be referenced as **end**).
+    should equal :math:`bias * scale + offset` (can also be referenced as **end**).
 
     **scale** is the fraction of `bias <ExponentialDecay.bias>` when, added to `offset <ExponentialDecay.offset>`,
     is used to determine the value of the function when `variable <ExponentialDecay.variable>`should equal `rate
