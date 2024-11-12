@@ -72,8 +72,11 @@ class CompositionRunner():
         assert call_before_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
         assert call_after_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
 
-        if type(minibatch_size) is not int:
-            minibatch_size = np.asscalar(minibatch_size)
+        if type(minibatch_size) == np.ndarray:
+            minibatch_size = minibatch_size.item()
+
+        if type(minibatch_size) == list:
+            minibatch_size = np.array(minibatch_size).item()
 
         if minibatch_size > 1 and optimizations_per_minibatch != 1:
             raise ValueError("Cannot optimize multiple times per batch if minibatch size is greater than 1.")
