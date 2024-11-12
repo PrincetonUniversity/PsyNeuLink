@@ -140,9 +140,9 @@ signal specified in the PredictionErrorMechanism's **target** argument, the
 value of which is a vector of the same length as the output of sample.
 
     >>> import psyneulink as pnl
-    >>> sample_mech = pnl.TransferMechanism(size=5,
+    >>> sample_mech = pnl.TransferMechanism(input_shapes=5,
     ...                                     function=pnl.Linear())
-    >>> reward_mech = pnl.TransferMechanism(size=5)
+    >>> reward_mech = pnl.TransferMechanism(input_shapes=5)
     >>> prediction_error_mech = pnl.PredictionErrorMechanism(sample=sample_mech,
     ...                                                      target=reward_mech)
 
@@ -170,7 +170,7 @@ from beartype import beartype
 
 from psyneulink._typing import Optional, Union
 
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import PredictionErrorDeltaFunction
+from psyneulink.core.components.functions.nonstateful.transformfunctions import PredictionErrorDeltaFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import PREDICTION_ERROR_MECHANISM, SAMPLE, TARGET
@@ -217,7 +217,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
     target : OutputPort, Mechanism_Base, dict, number, or str
         specifies the *TARGET* InputPort used by the function to evaluate `sample<PredictionErrorMechanism.sample>`.
 
-    function : CombinationFunction, ObjectiveFunction, function, or method : default PredictionErrorDeltaFunction
+    function : TransformFunction, ObjectiveFunction, function, or method : default PredictionErrorDeltaFunction
         the function used to evaluate the SAMPLE and TARGET inputs.
 
     learning_rate : Number : default 0.3
@@ -234,7 +234,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
         the *TARGET* `InputPort`, the `value <InputPort.value>` of which will be used to evaluate `sample
         <PredictionErrorMechanism.sample>`.
 
-    function : CombinationFunction, ObjectiveFunction, Function, or method : default PredictionErrorDeltaFunction
+    function : TransformFunction, ObjectiveFunction, Function, or method : default PredictionErrorDeltaFunction
         the function used to evaluate the sample and target inputs.
 
     output_ports : str, Iterable : default OUTCOME

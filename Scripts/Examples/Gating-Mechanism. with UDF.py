@@ -69,7 +69,7 @@ Output_Layer = pnl.TransferMechanism(
 
 Gating_Mechanism = pnl.GatingMechanism(
     # default_gating_allocation=0.0,
-    size=[1],
+    input_shapes=[1],
     gating_signals=[
         # Output_Layer
         Output_Layer.output_port,

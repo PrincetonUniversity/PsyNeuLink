@@ -60,7 +60,7 @@ initial_v = (initial_hv - (1 - C) * d) / C    # get initial v from initial h(v)
 
 # Input Layer --- [ Target, Distractor ]
 input_layer = pnl.TransferMechanism(
-    size=2,
+    input_shapes=2,
     initial_value=np.array([[0.0, 0.0]]),
     name='INPUT LAYER'
 )
@@ -68,7 +68,7 @@ input_layer = pnl.TransferMechanism(
 # Create Decision Layer  --- [ Target, Distractor ]
 
 decision_layer = pnl.LCAMechanism(
-    size=2,
+    input_shapes=2,
     time_step_size=dt,
     leak=1.0,
     self_excitation=w_XiXi,
@@ -84,7 +84,7 @@ decision_layer = pnl.LCAMechanism(
 # Create Response Layer  --- [ Target ]
 
 response_layer = pnl.LCAMechanism(
-    size=1,
+    input_shapes=1,
     time_step_size=dt,
     leak=1.0,
     self_excitation=w_X3X3,

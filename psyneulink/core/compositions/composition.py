@@ -1383,11 +1383,11 @@ COMMENT:
     >>> B = ProcessingMechanism(name='B', default_variable=[0,0,0])
     >>> inner_nested_comp = Composition(nodes=[A, B])
 
-    >>> C = ComparatorMechanism(name='C', size=3)
+    >>> C = ComparatorMechanism(name='C', input_shapes=3)
     >>> nested_comp_1 = Composition(nodes=[C, inner_nested_comp])
 
-    >>> D = ComparatorMechanism(name='D', size=3)
-    >>> E = ComparatorMechanism(name='E', size=3)
+    >>> D = ComparatorMechanism(name='D', input_shapes=3)
+    >>> E = ComparatorMechanism(name='E', input_shapes=3)
     >>> nested_comp_2 = Composition([D, E])
 
     >>> F = ComparatorMechanism(name='F')
@@ -2053,9 +2053,6 @@ in order of their power, are:
     * `ExecutionMode.PTXrun` -- compile multiple `TRIAL <TimeScale.TRIAL>`\\s  for execution on GPU
       (see `below <Composition_Compilation_PTX>` for additional details).
 
-    * `ExecutionMode.PTXExec` -- compile individual `TRIAL <TimeScale.TRIAL>`\\s  for execution on GPU
-      (see `below <Composition_Compilation_PTX>` for additional details).
-
 .. _Composition_Compilation_PyTorch:
 
 *PyTorch support.*  When using an `AutodiffComposition`, `ExecutionMode.PyTorch` can be used to execute its
@@ -2067,15 +2064,11 @@ will execute using the Python interpreter.  See `Composition_Learning_AutodiffCo
 *GPU support.*  In addition to compilation for CPUs, support is being developed for `CUDA
 <https://developer.nvidia.com/about-cuda>`_ capable `Invidia GPUs
 <https://en.wikipedia.org/wiki/List_of_Nvidia_graphics_processing_units>`_.  This can be invoked by
-specifying either `ExecutionMode.PTXRun` or `ExecutionMode.PTXExec` oin the **execution_mode** argument
-of a `Composition execution method <Composition_Execution_Methods>`, which are equivalent to the LLVM
-counterparts but run in a single thread of a CUDA capable GPU. This requires that a working `pycuda package
-<https://documen.tician.de/pycuda/>`_ is `installed <https://wiki.tiker.net/PyCuda/Installation>`_, and that
-CUDA execution is explicitly enabled by setting the ``PNL_LLVM_DEBUG`` environment variable to ``cuda``.  At present
-compilation using these modes runs on a single GPU thread, and therefore does not produce any performance benefits
-over running in compiled mode on a CPU;  (see `this <https://github.com/PrincetonUniversity/PsyNeuLink/projects/1>`_
-for progress extending support of parallization in compiled modes).
-
+specifying `ExecutionMode.PTXRun` in the **execution_mode** argument of a `Composition execution
+method <Composition_Execution_Methods>`, which are equivalent to the LLVM counterparts but run in a single
+thread of a CUDA capable GPU. This requires that a working `pycuda package <https://documen.tician.de/pycuda/>`_ is
+`installed <https://wiki.tiker.net/PyCuda/Installation>`_, and that CUDA execution is not explicitly disabled by
+setting the ``PNL_LLVM_DEBUG`` environment variable to ``nocuda``.
 
 .. _Composition_Execution_Results_and_Reporting:
 
@@ -2882,6 +2875,7 @@ import types
 import numbers
 import itertools
 import logging
+import pathlib
 import sys
 import typing
 import warnings
@@ -2902,7 +2896,7 @@ from psyneulink._typing import Callable, Literal, List, Mapping, Optional, Set, 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentError, ComponentsMeta
 from psyneulink.core.components.functions.function import is_function_type, Function, RandomMatrix
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import \
+from psyneulink.core.components.functions.nonstateful.transformfunctions import \
         LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.nonstateful.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
@@ -9461,7 +9455,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 and not (isinstance(self.controller.input_ports, ContentAddressableList)
                          and self.controller.input_ports
                          and self.controller.afferents)):
-            warnings.warn(f"{self.controller.name} for {self.name} is enabled but has no inputs.")
+            from psyneulink.core.compositions.parameterestimationcomposition import ParameterEstimationComposition
+            if not isinstance(self, ParameterEstimationComposition):
+                warnings.warn(f"{self.controller.name} for {self.name} is enabled but has no inputs.")
 
         # ADD MODULATORY COMPONENTS -----------------------------------------------------
 
@@ -11046,9 +11042,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
               are animated; if it is greater than the number of trials being run, only the number being run are
               animated.
 
-            * *MOVIE_DIR*: str (default=project root dir) -- specifies the directdory to be used for the movie file;
-              by default a subdirectory of <root_dir>/show_graph_OUTPUT/GIFS is created using the `name
-              <Composition.name>` of the  `Composition`, and the gif files are stored there.
+            * *MOVIE_DIR*: str or os.PathLike (default=PsyNeuLink root
+              dir or current dir) -- specifies the directory to be used
+              for the movie file; by default a subdirectory of
+              <MOVIE_DIR>/pnl-show_graph-output/GIFs is created using
+              the `name <Composition.name>` of the `Composition`, and
+              the gif files are stored there.
 
             * *MOVIE_NAME*: str (default=\\ `name <Composition.name>` + 'movie') -- specifies the name to be used
               for the movie file; it is automatically appended with '.gif'.
@@ -11488,7 +11487,7 @@ _
 
             if self._animate is not False:
                 # Save list of gifs in self._animation as movie file
-                movie_path = self._animation_directory + '/' + self._movie_filename
+                movie_path = pathlib.Path(self._animation_directory, self._movie_filename)
                 self._animation[0].save(fp=movie_path,
                                         format='GIF',
                                         save_all=True,
@@ -11835,7 +11834,7 @@ _
                 called after each `PASS` is executed
                 passed the current *context* (but it is not necessary for your callable to take).
 
-            execution_mode : enum.Enum[Auto|LLVM|LLVMexec|Python|PTXExec] : default Python
+            execution_mode : enum.Enum[Auto|LLVM|LLVMexec|Python] : default Python
                 specifies whether to run using the Python interpreter or a `compiled mode <Composition_Compilation>`.
                 see **execution_mode** argument of `run <Composition.run>` method for additional details.
 
@@ -11959,8 +11958,6 @@ _
                         _comp_ex = pnlvm.CompExecution.get(self, context)
                         if execution_mode & pnlvm.ExecutionMode.LLVM:
                             _comp_ex.execute(llvm_inputs)
-                        elif execution_mode & pnlvm.ExecutionMode.PTX:
-                            _comp_ex.cuda_execute(llvm_inputs)
                         else:
                             assert False, "Unknown execution mode: {}".format(execution_mode)
 
@@ -12946,22 +12943,16 @@ _
         self._set_all_parameter_properties_recursively(history_max_length=0)
 
     def _get_processing_condition_set(self, node):
-        dep_group = []
-        for group in self.scheduler.consideration_queue:
+        for index, group in enumerate(self.scheduler.consideration_queue):
             if node in group:
                 break
-            dep_group = group
 
-        # This condition is used to check of the step has passed.
-        # Not all nodes in the previous step need to execute
-        # (they might have other conditions), but if any one does we're good
-        # FIXME: This will fail if none of the previously considered
-        # nodes executes in this pass, but that is unlikely.
-        conds = [Any(*(AllHaveRun(dep, time_scale=TimeScale.PASS) for dep in dep_group))] if len(dep_group) else []
+        assert index is not None
+
         if node in self.scheduler.conditions:
-            conds.append(self.scheduler.conditions[node])
+            return index, self.scheduler.conditions[node]
 
-        return All(*conds)
+        return index, Always()
 
     def _input_matches_variable(self, input_value, var):
         var_shape = convert_to_np_array(var).shape

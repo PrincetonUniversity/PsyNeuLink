@@ -783,7 +783,7 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import ComponentError, DefaultsFlexibility, component_keywords
 from psyneulink.core.components.functions.function import \
     Function, get_param_value_for_keyword, is_function_type, RandomMatrix
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import CombinationFunction, LinearCombination
+from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction, LinearCombination
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
@@ -1019,7 +1019,7 @@ class Port_Base(Port):
     def __init__(self,
                  owner: Union[Mechanism, Projection],
                  variable=None,
-                 size=None,
+                 input_shapes=None,
                  projections=None,
                  function=None,
                  params=None,
@@ -1039,9 +1039,9 @@ class Port_Base(Port):
             - variable (value): value of the Port:
                 must be list or tuple of numbers, or a number (in which case it will be converted to a single-item list)
                 must match input and output of Port's _update method, and any sending or receiving projections
-            - size (int or array/list of ints):
+            - input_shapes (int or array/list of ints):
                 Sets variable to be array(s) of zeros, if **variable** is not specified as an argument;
-                if **variable** is specified, it takes precedence over the specification of **size**.
+                if **variable** is specified, it takes precedence over the specification of **input_shapes**.
             - params (dict):
                 + if absent, implements default Port determined by PROJECTION_TYPE param
                 + if dict, can have the following entries:
@@ -1100,7 +1100,7 @@ class Port_Base(Port):
         # VALIDATE VARIABLE, PARAM_SPECS, AND INSTANTIATE self.function
         super(Port_Base, self).__init__(
             default_variable=variable,
-            size=size,
+            input_shapes=input_shapes,
             function=function,
             projections=projections,
             param_defaults=params,
@@ -1123,58 +1123,6 @@ class Port_Base(Port):
 
         if context.source == ContextFlags.COMMAND_LINE:
             owner.add_ports([self])
-
-    def _handle_size(self, size, variable):
-        """Overwrites the parent method in Component.py, because the variable of a Port
-            is generally 1D, rather than 2D as in the case of Mechanisms
-        """
-        if size is not NotImplemented:
-
-            def checkAndCastInt(x):
-                if not isinstance(x, numbers.Number):
-                    raise PortError("Size ({}) is not a number.".format(x))
-                if x < 1:
-                    raise PortError("Size ({}) is not a positive number.".format(x))
-                try:
-                    int_x = int(x)
-                except:
-                    raise PortError(
-                        "Failed to convert size argument ({}) for {} {} to an integer. For Ports, size "
-                        "should be a number, which is an integer or can be converted to integer.".
-                        format(x, type(self), self.name))
-                if int_x != x:
-                    if hasattr(self, 'prefs') and hasattr(self.prefs, VERBOSE_PREF) and self.prefs.verbosePref:
-                        warnings.warn("When size ({}) was cast to integer, its value changed to {}.".format(x, int_x))
-                return int_x
-
-            # region Convert variable to a 1D array, cast size to an integer
-            if size is not None:
-                size = checkAndCastInt(size)
-            try:
-                if variable is not None:
-                    variable = np.atleast_1d(variable)
-            except:
-                raise PortError("Failed to convert variable (of type {}) to a 1D array.".format(type(variable)))
-            # endregion
-
-            # region if variable is None and size is not None, make variable a 1D array of zeros of length = size
-            if variable is None and size is not None:
-                try:
-                    variable = np.zeros(size)
-                except:
-                    raise ComponentError("variable (perhaps default_variable) was not specified, but PsyNeuLink "
-                                         "was unable to infer variable from the size argument, {}. size should be"
-                                         " an integer or able to be converted to an integer. Either size or "
-                                         "variable must be specified.".format(size))
-            #endregion
-
-            if variable is not None and size is not None:  # try tossing this "if" check
-                # If they conflict, raise exception
-                if size != len(variable):
-                    raise PortError("The size arg of {} ({}) conflicts with the length of its variable arg ({})".
-                                     format(self.name, size, variable))
-
-        return variable
 
     def _validate_variable(self, variable, context=None):
         """Validate variable and return validated variable
@@ -1518,12 +1466,12 @@ class Port_Base(Port):
                                   'Projections, but does not use a {}; unexpected results may occur when the {} '
                                   'or {} to which it belongs is executed.'.
                                   format(Projection.__name__, projection.sender.owner.name, self.__class__.__name__,
-                                         self.owner.name, self.name, CombinationFunction.__name__, Mechanism.__name__,
+                                         self.owner.name, self.name, TransformFunction.__name__, Mechanism.__name__,
                                          Composition.__name__))
                             # f'A {Projection.__name__} from {projection.sender.owner.name} is being added ' \
                             #     f'to an {self.__class__.__name__} of {self.owner.name} ({self.name}) ' \
                             #     f'that already receives other Projections, ' \
-                            #     f'but does not use a {CombinationFunction.__name__}; ' \
+                            #     f'but does not use a {TransformFunction.__name__}; ' \
                             #     f'unexpected results may occur when the {Mechanism.__name__} ' \
                             #     f'or {Composition.__name__} to which it belongs is executed.')
 
@@ -2063,7 +2011,7 @@ class Port_Base(Port):
                 if projection_variable is None:
                     projection_variable = projection.sender.parameters.value._get(context)
                     # KDM 8/14/19: this fallback seems to always happen on the first execution
-                    # of the Projection's function (LinearMatrix). Unsure if this is intended or not
+                    # of the Projection's function (MatrixTransform). Unsure if this is intended or not
                     if projection_variable is None:
                         projection_variable = projection.function.defaults.value
                 projection.parameters.variable._set(projection_variable, context)

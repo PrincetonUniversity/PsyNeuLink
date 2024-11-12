@@ -155,28 +155,24 @@ def comp_mode_no_llvm():
     # dummy fixture to allow 'comp_mode' filtering
     pass
 
-class FirstBench():
-    def __init__(self, benchmark):
-        super().__setattr__("benchmark", benchmark)
-
-    def __call__(self, f, *args, **kwargs):
-        res = []
-        # Compute the first result if benchmark is enabled
-        if self.benchmark.enabled:
-            res.append(f(*args, **kwargs))
-
-        res.append(self.benchmark(f, *args, **kwargs))
-        return res[0]
-
-    def __getattr__(self, attr):
-        return getattr(self.benchmark, attr)
-
-    def __setattr__(self, attr, val):
-        return setattr(self.benchmark, attr, val)
-
 @pytest.fixture
 def benchmark(benchmark):
-    return FirstBench(benchmark)
+
+    orig_class = type(benchmark)
+
+    class _FirstBench(orig_class):
+        def __call__(self, f, *args, **kwargs):
+            res = []
+            # Compute the first result if benchmark is enabled
+            if self.enabled:
+                res.append(f(*args, **kwargs))
+
+            res.append(orig_class.__call__(self, f, *args, **kwargs))
+            return res[0]
+
+    benchmark.__class__ = _FirstBench
+
+    return benchmark
 
 @pytest.helpers.register
 def llvm_current_fp_precision():
@@ -194,7 +190,6 @@ def get_comp_execution_modes():
             pytest.param(pnlvm.ExecutionMode.LLVM, marks=pytest.mark.llvm),
             pytest.param(pnlvm.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
             pytest.param(pnlvm.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
-            pytest.param(pnlvm.ExecutionMode.PTXExec, marks=[pytest.mark.llvm, pytest.mark.cuda]),
             pytest.param(pnlvm.ExecutionMode.PTXRun, marks=[pytest.mark.llvm,  pytest.mark.cuda])
            ]
 

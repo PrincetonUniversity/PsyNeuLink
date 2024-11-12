@@ -26,8 +26,8 @@ Leab = pnl.LeabraMechanism(input_size=n_input, output_size=n_output, hidden_laye
                         hidden_sizes=None, training_flag=True, quarter_size=20)
 
 ### building the PsyNeuLink network
-T_input = pnl.TransferMechanism(size=n_input)
-T_target = pnl.TransferMechanism(size=n_output)
+T_input = pnl.TransferMechanism(input_shapes=n_input)
+T_target = pnl.TransferMechanism(input_shapes=n_output)
 # target_projection connects T_target to the TARGET InputPort of Leab
 target_projection = pnl.MappingProjection(sender=T_target, receiver = Leab.input_ports[1])
 comp = pnl.Composition(pathways=[[T_input, Leab], [T_target, target_projection, Leab]])

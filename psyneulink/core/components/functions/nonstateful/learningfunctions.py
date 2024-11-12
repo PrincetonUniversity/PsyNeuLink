@@ -822,10 +822,10 @@ class BayesGLM(LearningFunction):
             prefs=prefs,
         )
 
-    def _handle_default_variable(self, default_variable=None, size=None):
+    def _handle_default_variable(self, default_variable=None, input_shapes=None):
 
         # If default_variable was not specified by user...
-        if default_variable is None and size in {None, NotImplemented}:
+        if default_variable is None and input_shapes in {None, NotImplemented}:
             #  but mu_0 and/or sigma_0 was specified as an array...
             if isinstance(self.mu_0, (list, np.ndarray)) or isinstance(self.sigma_0, (list, np.ndarray)):
                 # if both are specified, make sure they are the same size
@@ -842,7 +842,7 @@ class BayesGLM(LearningFunction):
                 else:
                     default_variable = [np.zeros_like(self.sigma_0), np.zeros((1,1))]
 
-        return super()._handle_default_variable(default_variable=default_variable, size=size)
+        return super()._handle_default_variable(default_variable=default_variable, input_shapes=input_shapes)
 
     def initialize_priors(self):
         """Set the prior parameters (`mu_prior <BayesGLM.mu_prior>`, `Lamba_prior <BayesGLM.Lambda_prior>`,

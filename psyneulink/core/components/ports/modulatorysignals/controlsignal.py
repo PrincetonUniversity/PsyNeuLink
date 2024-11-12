@@ -408,7 +408,7 @@ from psyneulink._typing import Optional, Union, Callable
 #            SHOULD THEY BE LIMITED TO EVC??
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import is_function_type
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import Reduce
+from psyneulink.core.components.functions.nonstateful.transformfunctions import Reduce
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Exponential, Linear, CostFunctions, \
     TransferWithCosts
 from psyneulink.core.components.functions.stateful.integratorfunctions import SimpleIntegrator
@@ -795,7 +795,7 @@ class ControlSignal(ModulatorySignal):
                  owner=None,
                  reference_value=None,
                  default_allocation=None,
-                 size=None,
+                 input_shapes=None,
                  transfer_function=None,
                  cost_options: Optional[Union[CostFunctions, list]] = None,
                  intensity_cost_function:Optional[Callable] = None,
@@ -857,7 +857,7 @@ class ControlSignal(ModulatorySignal):
             owner=owner,
             reference_value=reference_value,
             default_allocation=default_allocation,
-            size=size,
+            input_shapes=input_shapes,
             transfer_function=transfer_function,
             modulation=modulation,
             modulates=control,
@@ -900,13 +900,13 @@ class ControlSignal(ModulatorySignal):
         #         cost_function = cost_function()
         #
         #     # cost_function is Function object:
-        #     #     COMBINE_COSTS_FUNCTION must be CombinationFunction
+        #     #     COMBINE_COSTS_FUNCTION must be TransformFunction
         #     #     DURATION_COST_FUNCTION must be an IntegratorFunction
         #     #     others must be TransferFunction
         #     if isinstance(cost_function, Function):
         #         if cost_function_name == COMBINE_COSTS_FUNCTION:
-        #             if not isinstance(cost_function, CombinationFunction):
-        #                 raise ControlSignalError("Assignment of Function to {} ({}) must be a CombinationFunction".
+        #             if not isinstance(cost_function, TransformFunction):
+        #                 raise ControlSignalError("Assignment of Function to {} ({}) must be a TransformFunction".
         #                                          format(COMBINE_COSTS_FUNCTION, cost_function))
         #         elif cost_function_name == DURATION_COST_FUNCTION:
         #             if not isinstance(cost_function, IntegratorFunction):

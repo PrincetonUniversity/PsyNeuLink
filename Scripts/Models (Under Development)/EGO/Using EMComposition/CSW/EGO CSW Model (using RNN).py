@@ -135,12 +135,10 @@ MORE HERE
 """
 
 import numpy as np
-import graph_scheduler as gs
 from enum import IntEnum
 
 from psyneulink import *
-from psyneulink._typing import Union, Literal
-from psyneulink.core.scheduling.condition import Any, And, AllHaveRun, AtRunStart
+from psyneulink._typing import Union
 
 # Settings for running script:
 
@@ -276,14 +274,14 @@ def construct_model(model_name:str=MODEL_NAME,
     # -------------------------------------------------  Nodes  ------------------------------------------------------
     # ----------------------------------------------------------------------------------------------------------------
 
-    state_input_layer = ProcessingMechanism(name=state_input_name, size=state_size)
-    previous_state_layer = ProcessingMechanism(name=previous_state_input_name, size=state_size)
+    state_input_layer = ProcessingMechanism(name=state_input_name, input_shapes=state_size)
+    previous_state_layer = ProcessingMechanism(name=previous_state_input_name, input_shapes=state_size)
     integrator_layer = RecurrentTransferMechanism(name=integrator_name,
                                                   function=Tanh,
-                                                  size=integrator_size,
+                                                  input_shapes=integrator_size,
                                                   auto=1-integration_rate,
                                                   hetero=0.0)
-    context_layer = ProcessingMechanism(name=context_name, size=context_size)
+    context_layer = ProcessingMechanism(name=context_name, input_shapes=context_size)
 
     em = EMComposition(name=em_name,
                        memory_template=[[0] * state_size,   # state
@@ -305,7 +303,7 @@ def construct_model(model_name:str=MODEL_NAME,
                        )
 
     prediction_layer = ProcessingMechanism(name=prediction_layer_name,
-                                           size=state_size)
+                                           input_shapes=state_size)
 
     
     # ----------------------------------------------------------------------------------------------------------------

@@ -56,8 +56,6 @@ class Scheduler(graph_scheduler.Scheduler, MDFSerializable):
 
         # TODO: consider integrating something like this into graph-scheduler?
         self._user_specified_conds = graph_scheduler.ConditionSet()
-        if conditions is not None:
-            self._user_specified_conds.add_condition_set(copy.copy(conditions))
         self._user_specified_termination_conds = copy.copy(termination_conds) if termination_conds is not None else {}
 
         super().__init__(

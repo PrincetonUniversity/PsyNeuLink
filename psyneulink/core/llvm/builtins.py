@@ -8,8 +8,9 @@
 
 # ********************************************* PNL LLVM builtins **************************************************************
 
-from llvmlite import ir
-
+from ctypes import util
+from llvmlite import ir, binding
+import sys
 
 from . import helpers
 from .builder_context import LLVMBuilderContext, _BUILTIN_PREFIX
@@ -469,18 +470,39 @@ def setup_pnl_intrinsics(ctx):
     ir.Function(ctx.module, single_intr_ty, name=_BUILTIN_PREFIX + "log")
     ir.Function(ctx.module, double_intr_ty, name=_BUILTIN_PREFIX + "pow")
 
+    # printf address
+    ir.Function(ctx.module, ir.FunctionType(ir.IntType(64), []), name=_BUILTIN_PREFIX + "get_printf_address")
 
-
-def _generate_intrinsic_wrapper(module, name, ret, args):
-    intrinsic = module.declare_intrinsic("llvm." + name, list(set(args)))
-
+def _generate_new_function(module, name, ret, args):
     func_ty = ir.FunctionType(ret, args)
-    function = ir.Function(module, func_ty, name=_BUILTIN_PREFIX + name)
+    function = ir.Function(module, func_ty, name=name)
     function.attributes.add('alwaysinline')
     block = function.append_basic_block(name="entry")
     builder = ir.IRBuilder(block)
     builder.debug_metadata = LLVMBuilderContext.get_debug_location(function, None)
-    builder.ret(builder.call(intrinsic, function.args))
+
+    return builder
+
+def _generate_intrinsic_wrapper(module, name, ret, args):
+    intrinsic = module.declare_intrinsic("llvm." + name, list(set(args)))
+
+    builder = _generate_new_function(module, _BUILTIN_PREFIX + name, ret, args)
+    intrinsic_result = builder.call(intrinsic, builder.block.function.args)
+    builder.ret(intrinsic_result)
+
+def _generate_get_printf_address(module):
+    builder = _generate_new_function(module, _BUILTIN_PREFIX + "get_printf_address", ir.IntType(64), [])
+
+    libc_name = "msvcrt" if sys.platform == "win32" else "c"
+    libc = util.find_library(libc_name)
+    assert libc is not None, "Standard libc library not found"
+
+    binding.load_library_permanently(libc)
+    # Address will be none if the symbol is not found
+    printf_address = binding.address_of_symbol("printf")
+    assert printf_address is not None, "'printf' symbol not found in {}".format(libc)
+
+    builder.ret(ir.IntType(64)(printf_address))
 
 def _generate_cpu_builtins_module(_float_ty):
     """Generate function wrappers for log, exp, and pow intrinsics."""
@@ -489,6 +511,7 @@ def _generate_cpu_builtins_module(_float_ty):
         _generate_intrinsic_wrapper(module, intrinsic, _float_ty, [_float_ty])
 
     _generate_intrinsic_wrapper(module, "pow", _float_ty, [_float_ty, _float_ty])
+    _generate_get_printf_address(module)
     return module
 
 

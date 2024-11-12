@@ -35,7 +35,7 @@ composition.add_node(syn1)
 composition.add_projection(
     projection=pnl.MappingProjection(
         name="MappingProjection from syn1[OutputPort-0] to fnPop1[InputPort-0]",
-        function=pnl.LinearMatrix(matrix=[[1.0]]),
+        function=pnl.MatrixTransform(matrix=[[1.0]]),
         matrix=[[1.0]],
     ),
     sender=syn1,
@@ -44,7 +44,7 @@ composition.add_projection(
 composition.add_projection(
     projection=pnl.MappingProjection(
         name="MappingProjection from fnPop1[OutputPort-0] to fnPop2[InputPort-0]",
-        function=pnl.LinearMatrix(matrix=[[1.0]]),
+        function=pnl.MatrixTransform(matrix=[[1.0]]),
         matrix=[[1.0]],
     ),
     sender=fnPop1,

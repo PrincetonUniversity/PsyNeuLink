@@ -59,10 +59,10 @@ as the `receiver <MappingProjection.receiver>` of a `MappingProjection` from the
 <Process.pathway>`.  InputPorts can also be specified in the **input_ports** argument of a Mechanism's constructor
 (see `below <InputPort_Specification>`).
 
-The `variable <InputPort.variable>` of an InputPort can be specified using the **variable** or **size** arguments of
-its constructor.  It can also be specified using the **projections** argument, if neither **variable** nor **size** is
+The `variable <InputPort.variable>` of an InputPort can be specified using the **variable** or **input_shapes** arguments of
+its constructor.  It can also be specified using the **projections** argument, if neither **variable** nor **input_shapes** is
 specified.  The **projections** argument is used to `specify Projections <Port_Projections>` to the InputPort. If
-neither the **variable** nor **size** arguments is specified, then the value of the `Projections(s) <Projection>` or
+neither the **variable** nor **input_shapes** arguments is specified, then the value of the `Projections(s) <Projection>` or
 their `sender <Projection_Base.sender>`\\s (all of which must be the same length) is used to determine the `variable
 <InputPort.variable>` of the InputPort.
 
@@ -581,7 +581,7 @@ from psyneulink._typing import Optional, Literal
 
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import CombinationFunction, LinearCombination
+from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction, LinearCombination
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.port import PortError, Port_Base, _instantiate_port_list, port_type_keywords
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
@@ -590,7 +590,7 @@ from psyneulink.core.globals.keywords import \
     INPUT_PORT, INPUT_PORTS, INPUT_PORT_PARAMS, \
     LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, NAME, OPERATION, OUTPUT_PORT, OUTPUT_PORTS, OWNER, \
     PARAMS, PROJECTIONS, REFERENCE_VALUE, \
-    SENDER, SHADOW_INPUTS, SHADOW_INPUT_NAME, SIZE, PORT_TYPE, SUM, VALUE, VARIABLE, WEIGHT
+    SENDER, SHADOW_INPUTS, SHADOW_INPUT_NAME, INPUT_SHAPES, PORT_TYPE, SUM, VALUE, VARIABLE, WEIGHT
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -666,7 +666,7 @@ class InputPort(Port_Base):
         <Projection_Base.value>` of the `Projections <Projection>` received by the InputPort.  Any function
         can be assigned, however:  a) it must produce a result that has the same format (number and type of elements)
         as the item of its owner Mechanism's `variable <Mechanism_Base.variable>` to which the InputPort has been
-        assigned;  b) if it is not a CombinationFunction, it may produce unpredictable results if the InputPort
+        assigned;  b) if it is not a TransformFunction, it may produce unpredictable results if the InputPort
         receives more than one Projection (see `function <InputPort.function>`.
 
     combine : SUM or PRODUCT : default None
@@ -681,7 +681,7 @@ class InputPort(Port_Base):
         `GatingProjection(s) <GatingProjection>` to be received by the InputPort, and that are listed in its
         `path_afferents <Port_Base.path_afferents>` and `mod_afferents <Port_Base.mod_afferents>` attributes,
         respectively (see `InputPort_Compatability_and_Constraints` for additional details).  If **projections** but
-        neither **variable** nor **size** are specified, then the `value <Projection_Base.value>` of the Projection(s)
+        neither **variable** nor **input_shapes** are specified, then the `value <Projection_Base.value>` of the Projection(s)
         or their `senders <Projection_Base.sender>` specified in **projections** argument are used to determine the
         InputPort's `variable <InputPort.variable>`.
 
@@ -701,7 +701,7 @@ class InputPort(Port_Base):
     variable : value, list or np.ndarray
         the template for the `value <Projection_Base.value>` of each Projection that the InputPort receives,
         each of which must match the format (number and types of elements) of the InputPort's
-        `variable <InputPort.variable>`.  If neither the **variable** or **size** argument is specified, and
+        `variable <InputPort.variable>`.  If neither the **variable** or **input_shapes** argument is specified, and
         **projections** is specified, then `variable <InputPort.variable>` is assigned the `value
         <Projection_Base.value>` of the Projection(s) or its `sender <Projection_Base.sender>`.
 
@@ -727,7 +727,7 @@ class InputPort(Port_Base):
         expected for any `path_afferent Projections <Port_Base.path_afferents>`.
 
     function : Function
-        if it is a `CombinationFunction <CombinationFunctions>`, it combines the `values <Projection_Base.value>` of
+        if it is a `TransformFunction <Transformfunctions>`, it combines the `values <Projection_Base.value>` of
         the `PathwayProjections <PathwayProjection>` (e.g., `MappingProjections <MappingProjection>`) received by the
         InputPort  (listed in its `path_afferents <Port_Base.path_afferents>` attribute), under the possible
         influence of `GatingProjections <GatingProjection>` received by the InputPort (listed in its `mod_afferents
@@ -738,7 +738,7 @@ class InputPort(Port_Base):
         <Projection_Base.value>`.  If the InputPort receives only one Projection, then any other function can be
         applied and it will generate a value that is the same length as the Projection's `value
         <Projection_Base.value>`. However, if the InputPort receives more than one Projection and
-        uses a function other than a CombinationFunction, a warning is generated and only the `value
+        uses a function other than a TransformFunction, a warning is generated and only the `value
         <Projection_Base.value>` of the first Projection listed in `path_afferents <Port_Base.path_afferents>`
         is used by the function, which may generate unexpected results when executing the Mechanism or Composition
         to which it belongs.
@@ -878,7 +878,7 @@ class InputPort(Port_Base):
                  owner=None,
                  reference_value=None,
                  variable=None,
-                 size=None,
+                 input_shapes=None,
                  default_input=None,
                  function=None,
                  projections=None,
@@ -892,8 +892,8 @@ class InputPort(Port_Base):
                  context=None,
                  **kwargs):
 
-        if variable is None and size is None and projections is not None:
-            variable = self._assign_variable_from_projection(variable, size, projections)
+        if variable is None and input_shapes is None and projections is not None:
+            variable = self._assign_variable_from_projection(variable, input_shapes, projections)
 
         # If combine argument is specified, save it along with any user-specified function for _validate_params()
         if combine:
@@ -922,7 +922,7 @@ class InputPort(Port_Base):
         super(InputPort, self).__init__(
             owner,
             variable=variable,
-            size=size,
+            input_shapes=input_shapes,
             projections=projections,
             function=function,
             weight=weight,
@@ -938,7 +938,7 @@ class InputPort(Port_Base):
         if self.name is self.componentName or self.componentName + '-' in self.name:
             self._assign_default_port_Name()
 
-    def _assign_variable_from_projection(self, variable, size, projections):
+    def _assign_variable_from_projection(self, variable, input_shapes, projections):
         """Assign variable to value of Projection in projections
         """
         from psyneulink.core.components.projections.projection import \
@@ -1032,7 +1032,7 @@ class InputPort(Port_Base):
             del self.combine_function_args
         super()._instantiate_function(function=function, context=context)
         self._use_1d_variable = False
-        if not isinstance(self.function, CombinationFunction):
+        if not isinstance(self.function, TransformFunction):
             self._use_1d_variable = True
             self.function._variable_shape_flexibility = DefaultsFlexibility.RIGID
         else:
@@ -1153,16 +1153,16 @@ class InputPort(Port_Base):
             # if MECHANISM in port_specific_spec:
             #     if OUTPUT_PORTS in port_specific_spec
 
-            if any(spec in port_specific_spec for spec in {SIZE, COMBINE}):
+            if any(spec in port_specific_spec for spec in {INPUT_SHAPES, COMBINE}):
 
-                if SIZE in port_specific_spec:
+                if INPUT_SHAPES in port_specific_spec:
                     if (VARIABLE in port_specific_spec or
-                            any(key in port_dict and port_dict[key] is not None for key in {VARIABLE, SIZE})):
+                            any(key in port_dict and port_dict[key] is not None for key in {VARIABLE, INPUT_SHAPES})):
                         raise InputPortError(f"PROGRAM ERROR: SIZE specification found in port_specific_spec dict "
                                              f"for {self.__name__} specification of {owner.name} when SIZE or VARIABLE "
                                              f"is already present in its port_specific_spec dict or port_dict.")
-                    port_dict.update({VARIABLE:np.zeros(port_specific_spec[SIZE])})
-                    del port_specific_spec[SIZE]
+                    port_dict.update({VARIABLE:np.zeros(port_specific_spec[INPUT_SHAPES])})
+                    del port_specific_spec[INPUT_SHAPES]
 
                 if COMBINE in port_specific_spec:
                     fct_err = None
@@ -1395,7 +1395,7 @@ class InputPort(Port_Base):
         Returns
         -------
             True - if **spec** outlines a spec for creating an InputPort whose variable can be
-                overridden by a default_variable or size argument
+                overridden by a default_variable or input_shapes argument
             False - otherwise
 
             ex: specifying an InputPort with a Mechanism allows overriding
