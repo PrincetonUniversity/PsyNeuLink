@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.15.0.0+5.g9b68ab824 documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.15.1.0+7.gcc0a66388 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.0.0+5
+                  0.15.1.0+7
                 </div>
               
             
@@ -306,7 +306,8 @@ with the one exception of <a class="reference internal" href="#component-prefs">
 <li><p><strong>variable</strong> - used as the input to its <a class="reference internal" href="#component-function"><span class="std std-ref">function</span></a>.  Specification of the <strong>default_variable</strong>
 argument in the constructor for a Component determines both its format (e.g., whether its value is numeric, its
 dimensionality and shape if it is an array, etc.) as well as its <a class="reference internal" href="#psyneulink.core.components.component.Component.defaults" title="psyneulink.core.components.component.Component.defaults"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">default_value</span></code></a> (the value
-used when the Component is executed and no input is provided), and takes precedence over the specification of <a class="reference internal" href="#component-size"><span class="std std-ref">size</span></a>.</p>
+used when the Component is executed and no input is provided).
+It may alternatively be specified by <a class="reference internal" href="#component-input-shapes"><span class="std std-ref">input_shapes</span></a>.</p>
 <div class="technical-note docutils container">
 <p>Internally, the attribute <strong>variable</strong> is not directly used as input to functions, to allow for parallelization.
 The attribute is maintained as a way for the user to monitor variable along the execution chain.
@@ -315,17 +316,24 @@ being used, due to asynchrony inherent to parallelization.</p>
 </div>
 </li>
 </ul>
-<ul id="component-size">
-<li><p><strong>size</strong> - the dimension of the <a class="reference internal" href="#psyneulink.core.components.component.Component.variable" title="psyneulink.core.components.component.Component.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> attribute.  The <strong>size</strong> argument of the
+<ul id="component-input-shapes">
+<li><p><strong>input_shapes</strong> - the numpy shape or iterable of shapes matching the
+<a class="reference internal" href="#psyneulink.core.components.component.Component.variable" title="psyneulink.core.components.component.Component.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> attribute. The <strong>input_shapes</strong> argument of
+the
 constructor for a Component can be used as a convenient method for specifying the <a class="reference internal" href="#component-variable"><span class="std std-ref">variable</span></a>,
-attribute in which case it will be assigned as an array of zeros of the specified size.  For example,
-setting  <strong>size</strong> = 3 is equivalent to setting <strong>variable</strong> = [0, 0, 0] and setting <strong>size</strong> = [4, 3] is equivalent
+attribute in which case it will be assigned as an array of zeros of
+the specified shape. When <strong>input_shapes</strong> is an iterable, each item in the
+iterable is treated as a single shape, and the entire iterable is then
+assigned as an array. When <strong>input_shapes</strong> is an integer, it is treated the
+same as a one-item iterable containing that integer. For example,
+setting  <strong>input_shapes</strong> = 3 is equivalent to setting
+<strong>variable</strong> = [[0, 0, 0]] and setting <strong>input_shapes</strong> = [4, 3] is equivalent
 to setting <strong>variable</strong> = [[0, 0, 0, 0], [0, 0, 0]].</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The size attribute serves a role similar to
-<a href="#id2"><span class="problematic" id="id3">`shape &lt;https://numpy.org/doc/stable/reference/generated/numpy.shape.html&gt; in Numpy`_</span></a>, with the difference that
-size permits the specification of <a class="reference external" href="https://en.wikipedia.org/wiki/Jagged_array">ragged arrays</a> – that is, ones
+<p>The input_shapes attribute serves a role similar to
+<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.shape.html">shape in Numpy</a>, with the difference that
+input_shapes permits the specification of <a class="reference external" href="https://en.wikipedia.org/wiki/Jagged_array">ragged arrays</a> – that is, ones
 that have elements of varying lengths, such as [[1,2],[3,4,5]].</p>
 </div>
 </li>
@@ -555,7 +563,7 @@ last execution.</p></li>
 <span id="component-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.component.</span></span><span class="sig-name descname"><span class="pre">Component</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.component.</span></span><span class="sig-name descname"><span class="pre">Component</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for Component.</p>
 <p>The arguments below are ones that can be used in the constructor for any Component subclass.</p>
 <div class="admonition note">
@@ -568,9 +576,10 @@ It should be instantiated using the constructor for a subclass.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>default_variable</strong> (<em>scalar</em><em>, </em><em>list</em><em> or </em><em>array : default</em><em> [</em><em>[</em><em>0</em><em>]</em><em>]</em>) – specifies template for the input to the Component’s <a class="reference internal" href="#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, and the value used as the
 input to the Component if none is provided on execution (see <code class="xref any docutils literal notranslate"><span class="pre">Component_Variable</span></code> for additional information).</p></li>
-<li><p><strong>size</strong> (<em>int</em><em>, </em><em>list</em><em> or </em><em>np.ndarray of ints : default None</em>) – specifies default_variable as array(s) of zeros if <strong>default_variable</strong> is not passed as an argument;
-if <strong>default_variable</strong> is specified, it takes precedence over the specification of <strong>size</strong> (see
-<a class="reference internal" href="#component-size"><span class="std std-ref">size</span></a> for additonal details).</p></li>
+<li><p><strong>input_shapes</strong> (<em>int</em><em>, or </em><em>Iterable of tuple</em><em> or </em><em>int : default None</em>) – specifies default_variable as array(s) of zeros if <strong>default_variable</strong> is not passed as an argument;
+if <strong>default_variable</strong> is specified, it is checked for
+compatibility against <strong>input_shapes</strong> (see
+<a class="reference internal" href="#component-input-shapes"><span class="std std-ref">input_shapes</span></a> for additonal details).</p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
 the Component and/or a custom function and its parameters. Values specified for parameters in the dictionary
 override any assigned to those parameters in arguments of the constructor.</p></li>
@@ -593,12 +602,12 @@ override any assigned to those parameters in arguments of the constructor.</p></
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.component.Component.size">
-<span class="sig-name descname"><span class="pre">size</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.size" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <a class="reference internal" href="#component-size"><span class="std std-ref">size</span></a></p>
+<dt class="sig sig-object py" id="psyneulink.core.components.component.Component.input_shapes">
+<span class="sig-name descname"><span class="pre">input_shapes</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.input_shapes" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#component-input-shapes"><span class="std std-ref">input_shapes</span></a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int or array of ints</p>
+<dd class="field-odd"><p>Union[int, Iterable[Union[int, tuple]]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -815,8 +824,8 @@ when variable shape was manually specified</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._handle_default_variable">
-<span class="sig-name descname"><span class="pre">_handle_default_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._handle_default_variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds whether default_variable can be determined using <strong>default_variable</strong> and <strong>size</strong>
+<span class="sig-name descname"><span class="pre">_handle_default_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._handle_default_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds whether default_variable can be determined using <strong>default_variable</strong> and <strong>input_shapes</strong>
 arguments.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -830,15 +839,30 @@ arguments.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.components.component.Component._handle_size">
-<span class="sig-name descname"><span class="pre">_handle_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._handle_size" title="Permalink to this definition">¶</a></dt>
-<dd><p>If variable is None, _handle_size tries to infer variable based on the <strong>size</strong> argument to the
-__init__() function. This method is overwritten in subclasses like Mechanism and Port.
-If self is a Mechanism, it converts variable to a 2D array, (for a Mechanism, variable[i] represents
-the input from the i-th InputPort). If self is a Port, variable is a 1D array and size is a length-1 1D
-array. It performs some validations on size and variable as well. This function is overridden in Port.py.
-If size is NotImplemented (usually in the case of Projections/Functions), then this function passes without
-doing anything. Be aware that if size is NotImplemented, then variable is never cast to a particular shape.</p>
+<dt class="sig sig-object py" id="psyneulink.core.components.component.Component._parse_input_shapes">
+<span class="sig-name descname"><span class="pre">_parse_input_shapes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._parse_input_shapes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the equivalent ‘variable’ array specified by <strong>input_shapes</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input_shapes</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>tuple</em><em>]</em><em>]</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.component.Component._handle_input_shapes">
+<span class="sig-name descname"><span class="pre">_handle_input_shapes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._handle_input_shapes" title="Permalink to this definition">¶</a></dt>
+<dd><p>If variable is None, _handle_input_shapes tries to infer variable based on the <strong>input_shapes</strong> argument to the
+__init__() function. If input_shapes is None (usually in the case of
+Projections/Functions), then this function passes without
+doing anything. If both input_shapes and variable are not None, a
+ComponentError is thrown if they are not compatible.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -959,6 +983,20 @@ arguments to __init__</p></li>
 ParameterAlias</p></li>
 </ul>
 </div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.component.Component._initialize_parameters">
+<span class="sig-name descname"><span class="pre">_initialize_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">param_defaults</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._initialize_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>**param_defaults</strong> – maps Parameter names to their default</p></li>
+<li><p><strong>any</strong> (<em>values. Sets instance-level Parameters dynamically for</em>) – </p></li>
+<li><p><strong>object.</strong> (<em>name that maps to a Parameter</em>) – </p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">

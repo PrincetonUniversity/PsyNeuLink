@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanism &mdash; PsyNeuLink 0.15.0.0+5.g9b68ab824 documentation</title>
+  <title>Mechanism &mdash; PsyNeuLink 0.15.1.0+7.gcc0a66388 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.0.0+5
+                  0.15.1.0+7
                 </div>
               
             
@@ -374,7 +374,7 @@ default, can be specified to be the <a class="reference internal" href="Transfer
 <p>Notice that the parameters of the <code class="xref std std-keyword docutils literal notranslate"><span class="pre">function</span></code> (in this case, <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a> and <a class="reference internal" href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.bias" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.bias"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bias</span></code></a>) can be specified by including
 them in its constructor.  Some Mechanisms support only a single function.  In that case, the <code class="xref std std-keyword docutils literal notranslate"><span class="pre">function</span></code>
 argument is not available in the Mechanism’s constructor, but it does include arguments for the function’s
-parameters.  For example, the <code class="xref std std-keyword docutils literal notranslate"><span class="pre">function</span></code> of a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> is always the <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearCombination</span></code></a> function,
+parameters.  For example, the <code class="xref std std-keyword docutils literal notranslate"><span class="pre">function</span></code> of a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> is always the <code class="xref any docutils literal notranslate"><span class="pre">LinearCombination</span></code> function,
 so the Mechanisms’ constructor does not have a <code class="xref std std-keyword docutils literal notranslate"><span class="pre">function</span></code> argument.  However, it does have a
 <strong>comparison_operation</strong> argument, that is used to set the LinearCombination function’s <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.DualAdaptiveIntegrator.operation" title="psyneulink.core.components.functions.stateful.integratorfunctions.DualAdaptiveIntegrator.operation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">operation</span></code></a> parameter.</p>
 <p>The parameters for a Mechanism’s primary function can also be specified as entries in a <em>FUNCTION_PARAMS</em> entry of a
@@ -392,8 +392,7 @@ itself (see <a class="reference internal" href="DDM.html#ddm-creation"><span cla
 <p class="admonition-title">Note</p>
 <p>It is important to recognize the distinction between a <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> and its <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> attribute (note the difference in capitalization).  A <em>Function</em> is a PsyNeuLink <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>, that can be created using a constructor; a <em>function</em> is an attribute that contains a callable method
 belonging to a Function, and that is executed when the Component to which the Function belongs is executed.
-Functions are used to assign, store, and apply parameter values associated with their function (see <a href="#id1"><span class="problematic" id="id2">`</span></a>Function
-&lt;Function_Overview&gt; for a more detailed explanation).</p>
+Functions are used to assign, store, and apply parameter values associated with their function (see <a class="reference internal" href="Functions.html#function-overview"><span class="std std-ref">Function</span></a> for a more detailed explanation).</p>
 </div>
 <p>The parameters of a Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> are attributes of its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, and can be accessed using standard “dot” notation for that object.  For
 example, the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a> and <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.bias" title="psyneulink.core.components.functions.transferfunctions.Logistic.bias"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bias</span></code></a> parameters of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> function in the example
@@ -452,14 +451,14 @@ when the Mechanism is created.  InputPorts and OutputPorts (but not ParameterPor
 for a Mechanism, or added to an existing Mechanism using its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_ports"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_ports</span></code></a> method, as
 described <a class="reference internal" href="#mechanism-port-specification"><span class="std std-ref">above</span></a>).</p>
 <p id="mechanism-figure">The three types of Ports are shown schematically in the figure below, and described briefly in the following sections.</p>
-<figure class="align-left" id="id22">
+<figure class="align-left" id="id14">
 <img alt="Mechanism Ports" src="_images/Mechanism_Ports_fig.svg" /><figcaption>
 <p><span class="caption-text"><strong>Schematic of a Mechanism showing its three types of Ports</strong> (<a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>, <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> and <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>).
 Every Mechanism has at least one (<a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary</span></a>) InputPort and one (<a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary</span></a>) OutputPort, but can have additional ports of each type.  It also has one
 <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> for each of its parameters and the parameters of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.
 The <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of each InputPort is assigned as an item of the Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>, and the result of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> is assigned as the Mechanism’s
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>, the items of which are referenced by its OutputPorts to determine their own
-<a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>s (see <a class="reference internal" href="#mechanism-variable-and-value"><span class="std std-ref">variable and value attributes</span></a> above, and more detailed descriptions below).</span><a class="headerlink" href="#id22" title="Permalink to this image">¶</a></p>
+<a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>s (see <a class="reference internal" href="#mechanism-variable-and-value"><span class="std std-ref">variable and value attributes</span></a> above, and more detailed descriptions below).</span><a class="headerlink" href="#id14" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <section id="inputports">
@@ -483,7 +482,7 @@ convenient way of accessing the value of its individual items.  Because there is
 a Mechanism’s InputPorts and the items of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>, their size along their outermost
 dimension (axis 0) must be equal; that is, the number of items in the Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>
 attribute must equal the number of InputPorts in its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a> attribute. A
-Mechanism’s constructor does its best to insure this:  if its <strong>default_variable</strong> and/or its <strong>size</strong> argument is
+Mechanism’s constructor does its best to insure this:  if its <strong>default_variable</strong> and/or its <strong>input_shapes</strong> argument is
 specified, it constructs a number of InputPorts (and each with a <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>) corresponding to the
 items specified for the Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>, as in the examples below:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_mech_A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">default_variable</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]])</span>
@@ -508,7 +507,7 @@ the Mechanism’s variable:</p>
 <span class="o">&gt;</span> <span class="p">[</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span> <span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">])]</span>
 </pre></div>
 </div>
-<p>If both the <strong>default_variable</strong> (or <strong>size</strong>) and <strong>input_ports</strong> arguments are specified, then the number and format
+<p>If both the <strong>default_variable</strong> (or <strong>input_shapes</strong>) and <strong>input_ports</strong> arguments are specified, then the number and format
 of their respective items must be the same (see <a class="reference internal" href="Port.html#port-examples"><span class="std std-ref">Port</span></a> for additional examples of specifying Ports).</p>
 <p>If InputPorts are added using the Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_ports"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_ports</span></code></a> method, then its
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is extended to accommodate the number of InputPorts added (note that this must
@@ -534,9 +533,9 @@ must match the number of items in <strong>default_variable</strong>, or an error
 <strong>input_ports</strong> argument or <em>INPUT_PORTS</em> entry (see below).</p></li>
 </ul>
 <ul>
-<li><p><strong>size</strong> (int, list or ndarray) – specifies the number and length of items in the Mechanism’s variable,
+<li><p><strong>input_shapes</strong> (int, list or ndarray) – specifies the number and length of items in the Mechanism’s variable,
 if <strong>default_variable</strong> is not specified. For example, the following mechanisms are equivalent:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">T1</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">T1</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">input_shapes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
 <span class="n">T2</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">default_variable</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
 </pre></div>
 </div>
@@ -548,7 +547,7 @@ with the latter taking precedence (see above).</p>
 <ul class="simple">
 <li><p><strong>input_ports</strong> (list) – this can be used to explicitly <a class="reference internal" href="InputPort.html#inputport-specification"><span class="std std-ref">specify the InputPorts</span></a>
 created for the Mechanism. Each item must be an <a class="reference internal" href="InputPort.html#inputport-specification"><span class="std std-ref">InputPort specification</span></a>, and the number
-of items must match the number of items in the <strong>default_variable</strong> argument or <strong>size</strong> argument
+of items must match the number of items in the <strong>default_variable</strong> argument or <strong>input_shapes</strong> argument
 if either of those is specified.  If the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> and/or <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>
 is <a class="reference internal" href="InputPort.html#inputport-variable-and-value"><span class="std std-ref">explicitly specified for an InputPort</span></a> in the <strong>input_ports</strong> argument or
 <em>INPUT_PORTS</em> entry of a <strong>params</strong> dictionary, it must be compatible with the value of the corresponding
@@ -684,15 +683,15 @@ learning (see <a class="reference internal" href="LearningMechanism.html#learnin
 Mechanisms that send/receive these:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><a class="reference internal" href="#id18" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.projections"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">projections</span></code></a> – all of the Projections sent or received by the Mechanism;</p></li>
-<li><p><a class="reference internal" href="#id16" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">afferents</span></code></a> – all of the Projections received by the Mechanism;</p></li>
-<li><p><a class="reference internal" href="#id16" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">path_afferents</span></code></a> – all of the PathwayProjections received by the Mechanism;</p></li>
-<li><p><a class="reference internal" href="#id16" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mod_afferents</span></code></a> – all of the ModulatoryProjections received by the Mechanism;</p></li>
-<li><p><a class="reference internal" href="#id17" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.efferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">efferents</span></code></a> – all of the Projections sent by the Mechanism;</p></li>
-<li><p><a class="reference internal" href="#id19" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.senders"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">senders</span></code></a> – all of the Mechanisms that send a Projection to the Mechanism</p></li>
-<li><p><a class="reference internal" href="#id21" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.modulators"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">modulators</span></code></a> – all of the ModulatoryMechanisms that send a ModulatoryProjection to
+<li><p><a class="reference internal" href="#id10" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.projections"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">projections</span></code></a> – all of the Projections sent or received by the Mechanism;</p></li>
+<li><p><a class="reference internal" href="#id8" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">afferents</span></code></a> – all of the Projections received by the Mechanism;</p></li>
+<li><p><a class="reference internal" href="#id8" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">path_afferents</span></code></a> – all of the PathwayProjections received by the Mechanism;</p></li>
+<li><p><a class="reference internal" href="#id8" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mod_afferents</span></code></a> – all of the ModulatoryProjections received by the Mechanism;</p></li>
+<li><p><a class="reference internal" href="#id9" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.efferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">efferents</span></code></a> – all of the Projections sent by the Mechanism;</p></li>
+<li><p><a class="reference internal" href="#id11" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.senders"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">senders</span></code></a> – all of the Mechanisms that send a Projection to the Mechanism</p></li>
+<li><p><a class="reference internal" href="#id13" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.modulators"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">modulators</span></code></a> – all of the ModulatoryMechanisms that send a ModulatoryProjection to
 the Mechanism</p></li>
-<li><p><a class="reference internal" href="#id20" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.receivers"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receivers</span></code></a> – all of the Mechanisms that receive a Projection from the Mechanism</p></li>
+<li><p><a class="reference internal" href="#id12" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.receivers"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receivers</span></code></a> – all of the Mechanisms that receive a Projection from the Mechanism</p></li>
 </ul>
 </div></blockquote>
 <p>Each of these is a <code class="xref any docutils literal notranslate"><span class="pre">ContentAddressableList</span></code>, which means that the names of the Components in each list can be listed by
@@ -808,7 +807,7 @@ OutputPort(s).</p>
 <div><ul>
 <li><p>The <code class="xref any docutils literal notranslate"><span class="pre">label</span></code> attribute of an InputPort or OutputPort returns the current label of
 its value, if one exists, and its numeric value otherwise.</p></li>
-<li><p>The <a class="reference internal" href="#id11" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.labeled_input_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">labeled_input_values</span></code></a> and <a class="reference internal" href="#id12" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.labeled_output_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">labeled_output_values</span></code></a> attributes of a Mechanism return lists containing the labels
+<li><p>The <a class="reference internal" href="#id3" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.labeled_input_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">labeled_input_values</span></code></a> and <a class="reference internal" href="#id4" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.labeled_output_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">labeled_output_values</span></code></a> attributes of a Mechanism return lists containing the labels
 corresponding to the value(s) of the InputPort(s) or OutputPort(s) of the Mechanism, respectively. If the
 current value of a Port does not have a corresponding label, then its numeric value is reported instead.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">output_labels_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;red&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
@@ -958,7 +957,7 @@ the parameter is assigned its previous value and <em>not</em> its default, as sh
 </section>
 <section id="runtime-specification-ditionary-parameters-of-a-mechanism-s-ports-and-projections">
 <span id="mechanism-runtime-port-and-projection-param-specification"></span><h4><em>Runtime specification ditionary: parameters of a Mechanism’s Ports and Projections</em><a class="headerlink" href="#runtime-specification-ditionary-parameters-of-a-mechanism-s-ports-and-projections" title="Permalink to this headline">¶</a></h4>
-<p>Runtime values can also be assigned to the parameters of a Mechanism’s <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a> and/or their <a class="reference internal" href="#id16" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">afferent</span>
+<p>Runtime values can also be assigned to the parameters of a Mechanism’s <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a> and/or their <a class="reference internal" href="#id8" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">afferent</span>
 <span class="pre">Projections</span></code></a> in entries of a <strong>runtime_params</strong> dict,</p>
 <p><em>Ports</em>.  Runtime values are assigned to the parameters of Ports (and/or their <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>s)
 in entries with a key that designates the type of Port (<em>INPUT_PORT_PARAMS</em>, <em>OUTPUT_PORT_PARAMS</em> or
@@ -973,11 +972,12 @@ or its <a class="reference internal" href="Port.html#psyneulink.core.components.
 <ul class="simple">
 <li><p>If the <code class="xref any docutils literal notranslate"><span class="pre">variable</span></code> of a Port is specified as a runtime parameter, then its afferent
 Projections will not be executed (see <a class="reference internal" href="Component.html#component-lazy-updating"><span class="std std-ref">Lazy Evaluation</span></a>), but its <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> will be.</p></li>
-<li><p>If the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of a Port is specified, <a href="#id4"><span class="problematic" id="id5">*</span></a>neither its <a class="reference internal" href="Port.html#port-projections"><span class="std std-ref">afferent Projections</span></a>
+<li><p>If the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of a Port is specified, <em>neither</em> its <a class="reference internal" href="Port.html#port-projections"><span class="std std-ref">afferent Projections</span></a>
 nor it <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> will be executed.</p></li>
 <li><p>If the <code class="xref any docutils literal notranslate"><span class="pre">variable</span></code> and/or <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> is specified for <em>all</em> of the
 OutputPorts of a Mechanism, then it’s function will not be executed, and the <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>
-will retain its previous value (again in accord with <code class="xref any docutils literal notranslate"><span class="pre">Lazy</span> <span class="pre">Evaluation</span></code>
+will retain its previous value (again in accord with <a class="reference internal" href="Component.html#component-lazy-updating"><span class="std std-ref">Lazy Evaluation</span></a>), though its
+OutputPorts <em>will</em> be executed using the assigned values, and it’s <a class="reference internal" href="Component.html#component-execution-count"><span class="std std-ref">execution_count</span></a>
 and <a class="reference internal" href="Component.html#component-num-executions"><span class="std std-ref">num_executions</span></a> attributes will be incremented (since the OutputPorts –
 Components of the Mechanism – executed).</p></li>
 <li><p>As expected, specifying <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> supersedes any specification of <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.variable" title="psyneulink.core.components.ports.port.Port_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> or of the parameters of its <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.</p></li>
@@ -991,7 +991,7 @@ key for each type of projecction is its <a class="reference internal" href="Comp
 <em>MAPPING_PROJECTION_PARAMS</em>, <em>CONTROL_PROJECTION_PARAMS</em>, etc.).  The sub-dictionary can contain specifications that
 apply to <em>all</em> Projections of that type and/or individual Projections. If the key of an entryis the name of a parameter
 of the Projection (or its <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>), the specified value applies to <em>all</em> Projections of that
-type. Parameters for individual Projections are specified using the Projections or its <a href="#id6"><span class="problematic" id="id7">`</span></a>name &lt;Projection_Base.name&gt;
+type. Parameters for individual Projections are specified using the Projections or its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.name" title="psyneulink.core.components.projections.projection.Projection_Base.name"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">name</span></code></a>
 as the key, and a dictionary containing parameter specifications as its value.</p>
 <blockquote>
 <div><div class="admonition note">
@@ -1009,7 +1009,7 @@ supersedes any specification of <a class="reference internal" href="Port.html#ps
 <span id="mechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.mechanisms.mechanism.</span></span><span class="sig-name descname"><span class="pre">Mechanism_Base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">default_variable=None</span></em>, <em class="sig-param"><span class="pre">size=None</span></em>, <em class="sig-param"><span class="pre">input_ports</span></em>, <em class="sig-param"><span class="pre">function</span></em>, <em class="sig-param"><span class="pre">output_ports</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.mechanisms.mechanism.</span></span><span class="sig-name descname"><span class="pre">Mechanism_Base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">default_variable=None</span></em>, <em class="sig-param"><span class="pre">input_shapes=None</span></em>, <em class="sig-param"><span class="pre">input_ports</span></em>, <em class="sig-param"><span class="pre">function</span></em>, <em class="sig-param"><span class="pre">output_ports</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for Mechanism.</p>
 <p>The arguments below can be used in the constructor for any subclass of Mechanism.
 See <a class="reference internal" href="Component.html#component-class-reference"><span class="std std-ref">Component</span></a> and subclasses for additional arguments and attributes.</p>
@@ -1025,18 +1025,21 @@ for specifying a Mechanism in context (see <a class="reference internal" href="#
 <li><p><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray : default None</em>) – specifies the input to the Mechanism to use if none is provided in a call to its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method; also serves as a template to specify the shape of the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> for its <a class="reference internal" href="#mechanism-inputports"><span class="std std-ref">InputPorts</span></a> and the <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>
 of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> if those are not specified.  If it is not specified, then a
 subclass-specific default is assigned (usually [[0]]).</p></li>
-<li><p><strong>size</strong> (<em>int</em><em>, </em><em>list</em><em> or </em><em>np.ndarray of ints : default None</em>) – <p>specifies default_variable as array(s) of zeros if <strong>default_variable</strong> is not passed as an argument;
-if <strong>default_variable</strong> is specified, it takes precedence over the specification of <strong>size</strong>.
+<li><p><strong>input_shapes</strong> (<em>int</em><em>, or </em><em>Iterable of tuples</em><em> or </em><em>ints : default None</em>) – <p>specifies default_variable as array(s) of zeros if <strong>default_variable</strong> is not passed as an argument;
+if <strong>default_variable</strong> is specified, it must be equivalent to
+<strong>input_shapes</strong>.
 For example, the following Mechanisms are equivalent:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">input_shapes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
 <span class="n">my_mech</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">default_variable</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
 </pre></div>
 </div>
+<p>When specified as an iterable, each element of <strong>input_shapes</strong> is used
+as the size of the corresponding InputPort.</p>
 </p></li>
 <li><p><strong>input_ports</strong> (<em>str</em><em>, </em><em>list</em><em>, </em><em>dict</em><em>, or </em><em>np.ndarray : default None</em>) – specifies the InputPorts for the Mechanism; if it is not specified, a single InputPort is created
 using the value of default_variable as its <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>;  if more than one is specified,
 the number and, if specified, their values must be compatible with any specifications made for
-<strong>default_variable</strong> or <strong>size</strong> (see <a class="reference internal" href="#mechanism-inputports"><span class="std std-ref">InputPorts</span></a> for additional details).</p></li>
+<strong>default_variable</strong> or <strong>input_shapes</strong> (see <a class="reference internal" href="#mechanism-inputports"><span class="std std-ref">InputPorts</span></a> for additional details).</p></li>
 <li><p><strong>input_labels</strong> (<em>dict</em>) – specifies labels (strings) that can be used to specify numeric values as input to the Mechanism;
 entries must be either label:value pairs, or sub-dictionaries containing label:value pairs,
 in which each label (key) specifies a string associated with a value for the corresponding InputPort(s)
@@ -1368,7 +1371,7 @@ constructor, and to reference it in Mechanism’s list of <a class="reference in
 <span class="sig-name descname"><span class="pre">projections</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.projections" title="Permalink to this definition">¶</a></dt>
 <dd><p>a list of all of the Mechanism’s <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>, composed from the
 <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.path_afferents" title="psyneulink.core.components.ports.port.Port_Base.path_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">path_afferents</span></code></a> of all of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a>,
-the <a class="reference internal" href="#id15" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.mod_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mod_afferents</span></code></a> of all of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a>,
+the <a class="reference internal" href="#id7" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.mod_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mod_afferents</span></code></a> of all of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a>,
 <code class="xref any docutils literal notranslate"><span class="pre">parameter_ports</span></code>, and <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_ports</span></code></a>,
 and the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.efferents" title="psyneulink.core.components.ports.port.Port_Base.efferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">efferents</span></code></a> of all of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_ports</span></code></a>.</p>
 <dl class="field-list simple">
@@ -1383,7 +1386,7 @@ and the <a class="reference internal" href="Port.html#psyneulink.core.components
 <span class="sig-name descname"><span class="pre">afferents</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.afferents" title="Permalink to this definition">¶</a></dt>
 <dd><p>a list of all of the Mechanism’s afferent <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>, composed from the
 <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.path_afferents" title="psyneulink.core.components.ports.port.Port_Base.path_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">path_afferents</span></code></a> of all of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a>,
-and the <a class="reference internal" href="#id15" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.mod_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mod_afferents</span></code></a> of all of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a>,
+and the <a class="reference internal" href="#id7" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.mod_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mod_afferents</span></code></a> of all of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a>,
 <code class="xref any docutils literal notranslate"><span class="pre">parameter_ports</span></code>, and <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_ports</span></code></a>.,</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1408,7 +1411,7 @@ and the <a class="reference internal" href="#id15" title="psyneulink.core.compon
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.mod_afferents">
 <span class="sig-name descname"><span class="pre">mod_afferents</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.mod_afferents" title="Permalink to this definition">¶</a></dt>
 <dd><p>a list of all of the Mechanism’s afferent <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a>, composed from the
-<a class="reference internal" href="#id15" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.mod_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mod_afferents</span></code></a> attributes of all of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a>, <code class="xref any docutils literal notranslate"><span class="pre">parameter_ports</span></code>, and <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_ports</span></code></a>.</p>
+<a class="reference internal" href="#id7" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.mod_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mod_afferents</span></code></a> attributes of all of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a>, <code class="xref any docutils literal notranslate"><span class="pre">parameter_ports</span></code>, and <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_ports</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>ContentAddressableList</p>
@@ -1431,9 +1434,9 @@ and the <a class="reference internal" href="#id15" title="psyneulink.core.compon
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.senders">
 <span class="sig-name descname"><span class="pre">senders</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.senders" title="Permalink to this definition">¶</a></dt>
 <dd><p>a list of all of the Mechanisms that send <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> to the Mechanism (i.e., the senders of
-its <a class="reference internal" href="#id16" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">afferents</span></code></a>; this includes both <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a>
+its <a class="reference internal" href="#id8" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">afferents</span></code></a>; this includes both <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a>
 (that send <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> and <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanisms</span></a> (that send
-<a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> (also see <a class="reference internal" href="#id21" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.modulators"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">modulators</span></code></a>).</p>
+<a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> (also see <a class="reference internal" href="#id13" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.modulators"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">modulators</span></code></a>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>ContentAddressableList</p>
@@ -1444,7 +1447,7 @@ its <a class="reference internal" href="#id16" title="psyneulink.core.components
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.modulators">
 <span class="sig-name descname"><span class="pre">modulators</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.modulators" title="Permalink to this definition">¶</a></dt>
-<dd><p>a list of all of the <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">AdapativeMechanisms</span></a> that send <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> to the Mechanism (i.e., the senders of its <a class="reference internal" href="#id15" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.mod_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mod_afferents</span></code></a> (also see <a class="reference internal" href="#id19" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.senders"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">senders</span></code></a>).</p>
+<dd><p>a list of all of the <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">AdapativeMechanisms</span></a> that send <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> to the Mechanism (i.e., the senders of its <a class="reference internal" href="#id7" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.mod_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mod_afferents</span></code></a> (also see <a class="reference internal" href="#id11" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.senders"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">senders</span></code></a>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>ContentAddressableList</p>
@@ -1456,7 +1459,7 @@ its <a class="reference internal" href="#id16" title="psyneulink.core.components
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.receivers">
 <span class="sig-name descname"><span class="pre">receivers</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.receivers" title="Permalink to this definition">¶</a></dt>
 <dd><p>a list of all of the Mechanisms that receive <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> from the Mechanism (i.e.,
-the receivers of its <a class="reference internal" href="#id17" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.efferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">efferents</span></code></a>.</p>
+the receivers of its <a class="reference internal" href="#id9" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.efferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">efferents</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>ContentAddressableList</p>
@@ -1532,8 +1535,8 @@ for input ports is expected</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._handle_default_variable">
-<span class="sig-name descname"><span class="pre">_handle_default_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._handle_default_variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds whether default_variable can be determined using <strong>default_variable</strong> and <strong>size</strong>
+<span class="sig-name descname"><span class="pre">_handle_default_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._handle_default_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds whether default_variable can be determined using <strong>default_variable</strong> and <strong>input_shapes</strong>
 arguments.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -1734,7 +1737,7 @@ as well as other reinitialization steps that the reset method may carry out.</p>
 <div class="technical-note docutils container">
 <p>Execution sequence:</p>
 <ul>
-<li><p>Handle initialization if <a href="#id8"><span class="problematic" id="id9">`</span></a>initialization_status &lt;Compoonent.initialization_status&gt; is
+<li><p>Handle initialization if <code class="xref any docutils literal notranslate"><span class="pre">initialization_status</span></code> is
 <em>ContextFlags.INITIALIZING</em></p></li>
 <li><p>Assign any <code class="xref any docutils literal notranslate"><span class="pre">Port-specific</span> <span class="pre">runtime</span> <span class="pre">params</span></code>
 to corresponding <code class="xref any docutils literal notranslate"><span class="pre">runtime_params</span></code> dict.</p></li>
@@ -1884,7 +1887,7 @@ loop (invocation of Ports and Functions).</p>
 (standard with PsyNeuLink pip install)</p>
 </div>
 <p>Displays the structure of a Mechanism using html table format and shape=’plaintext’.
-This method is called by <code class="xref any docutils literal notranslate"><span class="pre">Composition.show_graph</span></code> if its <strong>show_mechanism_structure</strong> argument is specified as
+This method is called by <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Composition.show_graph</span></code></a> if its <strong>show_mechanism_structure</strong> argument is specified as
 <code class="xref any docutils literal notranslate"><span class="pre">True</span></code> when it is called.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -2115,78 +2118,78 @@ If the labels dict does not have subdicts, then use the same dict for the only (
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="id10">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">external_input_variables</span></span><a class="headerlink" href="#id10" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id2">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">external_input_variables</span></span><a class="headerlink" href="#id2" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns variables of all external InputPorts that belong to the Mechanism</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="id11">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">labeled_input_values</span></span><a class="headerlink" href="#id11" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id3">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">labeled_input_values</span></span><a class="headerlink" href="#id3" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a list with as many items as there are InputPorts of the Mechanism. Each list item represents the value
 of the corresponding InputPort, and is populated by a string label (from the input_labels_dict) when one
 exists, and the numeric value otherwise.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="id12">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">labeled_output_values</span></span><a class="headerlink" href="#id12" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id4">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">labeled_output_values</span></span><a class="headerlink" href="#id4" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a list with as many items as there are OutputPorts of the Mechanism. Each list item represents the
 value of the corresponding OutputPort, and is populated by a string label (from the output_labels_dict) when
 one exists, and the numeric value otherwise.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="id13">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">ports</span></span><a class="headerlink" href="#id13" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id5">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">ports</span></span><a class="headerlink" href="#id5" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return list of all of the Mechanism’s Ports</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="id14">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">path_afferents</span></span><a class="headerlink" href="#id14" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id6">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">path_afferents</span></span><a class="headerlink" href="#id6" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return list of the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.path_afferents" title="psyneulink.core.components.ports.port.Port_Base.path_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">path_afferents</span></code></a> for all of the Mechanism’s input_ports</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="id15">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">mod_afferents</span></span><a class="headerlink" href="#id15" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id7">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">mod_afferents</span></span><a class="headerlink" href="#id7" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return all of the Mechanism’s afferent modulatory Projections</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="id16">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">afferents</span></span><a class="headerlink" href="#id16" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id8">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">afferents</span></span><a class="headerlink" href="#id8" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return list of all of the Mechanism’s afferent Projections</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="id17">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">efferents</span></span><a class="headerlink" href="#id17" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id9">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">efferents</span></span><a class="headerlink" href="#id9" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return list of all of the Mechanism’s efferent Projections</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="id18">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">projections</span></span><a class="headerlink" href="#id18" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id10">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">projections</span></span><a class="headerlink" href="#id10" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return all Projections</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="id19">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">senders</span></span><a class="headerlink" href="#id19" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id11">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">senders</span></span><a class="headerlink" href="#id11" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return all Mechanisms that send Projections to self</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="id20">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">receivers</span></span><a class="headerlink" href="#id20" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id12">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">receivers</span></span><a class="headerlink" href="#id12" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return all Mechanisms that send Projections to self</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="id21">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">modulators</span></span><a class="headerlink" href="#id21" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id13">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">modulators</span></span><a class="headerlink" href="#id13" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return all Mechanisms that send Projections to self</p>
 </dd></dl>
 

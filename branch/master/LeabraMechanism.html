@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LeabraMechanism &mdash; PsyNeuLink 0.15.0.0+5.g9b68ab824 documentation</title>
+  <title>LeabraMechanism &mdash; PsyNeuLink 0.15.1.0+7.gcc0a66388 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.0.0+5
+                  0.15.1.0+7
                 </div>
               
             
@@ -268,8 +268,8 @@ Mechanisms instead, and have these two TransferMechanisms pass their output to t
 LeabraMechanism. Here is an example of how to do this. In the example, T2 passes the training_data to the
 <em>LEARNING_TARGET</em> InputPort of L (L.input_ports[1]):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">L</span> <span class="o">=</span> <span class="n">LeabraMechanism</span><span class="p">(</span><span class="n">input_size</span><span class="o">=</span><span class="n">input_size</span><span class="p">,</span> <span class="n">output_size</span><span class="o">=</span><span class="n">output_size</span><span class="p">)</span>
-<span class="n">T1</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;T1&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">input_size</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Linear</span><span class="p">)</span>
-<span class="n">T2</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;T2&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">output_size</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Linear</span><span class="p">)</span>
+<span class="n">T1</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;T1&#39;</span><span class="p">,</span> <span class="n">input_shapes</span><span class="o">=</span><span class="n">input_size</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Linear</span><span class="p">)</span>
+<span class="n">T2</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;T2&#39;</span><span class="p">,</span> <span class="n">input_shapes</span><span class="o">=</span><span class="n">output_size</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Linear</span><span class="p">)</span>
 <span class="n">p1</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">T1</span><span class="p">,</span> <span class="n">L</span><span class="p">])</span>
 <span class="n">proj</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">T2</span><span class="p">,</span> <span class="n">receiver</span><span class="o">=</span><span class="n">L</span><span class="o">.</span><span class="n">input_ports</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 <span class="n">p2</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">T2</span><span class="p">,</span> <span class="n">proj</span><span class="p">,</span> <span class="n">L</span><span class="p">])</span>

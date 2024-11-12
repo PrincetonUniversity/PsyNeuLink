@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferFunctions &mdash; PsyNeuLink 0.15.0.0+5.g9b68ab824 documentation</title>
+  <title>TransferFunctions &mdash; PsyNeuLink 0.15.1.0+7.gcc0a66388 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.0.0+5
+                  0.15.1.0+7
                 </div>
               
             
@@ -214,7 +214,6 @@
 <li><p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.BinomialDistort" title="psyneulink.core.components.functions.transferfunctions.BinomialDistort"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BinomialDistort</span></code></a></p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Dropout" title="psyneulink.core.components.functions.transferfunctions.Dropout"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Dropout</span></code></a></p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax" title="psyneulink.core.components.functions.transferfunctions.SoftMax"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SoftMax</span></code></a></p></li>
-<li><p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearMatrix</span></code></a></p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TransferWithCosts</span></code></a></p></li>
 </ul>
 <section id="overview">
@@ -1317,171 +1316,6 @@ arguments of the constructor.</p></li>
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.LinearMatrix">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.transferfunctions.</span></span><span class="sig-name descname"><span class="pre">LinearMatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix" title="Permalink to this definition">¶</a></dt>
-<dd><p id="linearmatrix">Matrix transform of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
-<p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix._function" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> returns dot product of variable with matrix:</p>
-<div class="math notranslate nohighlight">
-\[variable \bullet matrix\]</div>
-<p>If <strong>normalize</strong> is True, the result is normalized by the product of the norms of the variable and matrix:</p>
-<div class="math notranslate nohighlight">
-\[\frac{variable \bullet matrix}{\|variable\| \cdot \|matrix\|}\]</div>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>variable</strong> (<em>list</em><em> or </em><em>1d array : default class_defaults.variable</em>) – specifies a template for the value to be transformed; length must equal the number of rows of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a>.</p></li>
-<li><p><strong>matrix</strong> (<em>number</em><em>, </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><em>function</em><em>, or </em><em>matrix keyword : default IDENTITY_MATRIX</em>) – <p>specifies matrix used to transform <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>
-(see <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> for specification details).</p>
-<p>When LinearMatrix is the <code class="xref any docutils literal notranslate"><span class="pre">function</span></code> of a projection:</p>
-<blockquote>
-<div><ul>
-<li><p>the matrix specification must be compatible with the variables of the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a>
-and <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a></p></li>
-<li><p>a matrix keyword specification generates a matrix based on the sender and receiver shapes</p></li>
-</ul>
-</div></blockquote>
-<p>When LinearMatrix is instantiated on its own, or as the function of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or <a class="reference internal" href="Port.html"><span class="doc">Port</span></a>:</p>
-<blockquote>
-<div><ul>
-<li><p>the matrix specification must be compatible with the function’s own <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a></p></li>
-<li><p>if matrix is not specified, a square identity matrix is generated based on the number of columns in
-<a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a></p></li>
-<li><p>matrix keywords are not valid matrix specifications</p></li>
-</ul>
-</div></blockquote>
-</p></li>
-<li><p><strong>normalize</strong> (<em>bool : default False</em>) – specifies whether to normalize the result of <code class="xref any docutils literal notranslate"><span class="pre">function</span></code> by dividing it by the
-norm of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> x the norm of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a>.</p></li>
-<li><p><strong>bounds</strong> (<em>None</em>) – </p></li>
-<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
-function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-arguments of the constructor.</p></li>
-<li><p><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p></li>
-<li><p><strong>name</strong> (str : default see <code class="xref any docutils literal notranslate"><span class="pre">name</span></code>) – specifies the name of the Function.</p></li>
-<li><p><strong>prefs</strong> (<em>PreferenceSet</em><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable">
-<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>contains value to be transformed.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>1d array</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix">
-<span class="sig-name descname"><span class="pre">matrix</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix" title="Permalink to this definition">¶</a></dt>
-<dd><p>matrix used to transform <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.
-Can be specified as any of the following:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>number - used as the filler value for all elements of the <code class="xref std std-keyword docutils literal notranslate"><span class="pre">matrix</span></code> (call to np.fill);</p></li>
-<li><p>list of arrays, 2d array or np.matrix - assigned as the value of <code class="xref std std-keyword docutils literal notranslate"><span class="pre">matrix</span></code>;</p></li>
-<li><p>matrix keyword - see <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.MatrixKeywords" title="psyneulink.core.globals.keywords.MatrixKeywords"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MatrixKeywords</span></code></a> for list of options.</p></li>
-</ul>
-</div></blockquote>
-<p>Rows correspond to elements of the input array (outer index), and
-columns correspond to elements of the output array (inner index).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>2d array</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.LinearMatrix.normalize">
-<span class="sig-name descname"><span class="pre">normalize</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.normalize" title="Permalink to this definition">¶</a></dt>
-<dd><p>determines whether the result of <code class="xref any docutils literal notranslate"><span class="pre">function</span></code> is normalized, by dividing it by the
-norm of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> x the norm of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>bool</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="simple">
-<dt>owner<span class="classifier">Component</span></dt><dd><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
-</dd>
-<dt>name<span class="classifier">str</span></dt><dd><p>the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
-assigned by FunctionRegistry (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</p>
-</dd>
-<dt>prefs<span class="classifier">PreferenceSet or specification dict</span><span class="classifier">Function.classPreferences</span></dt><dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
-constructor, a default is assigned using <code class="xref any docutils literal notranslate"><span class="pre">classPreferences</span></code> defined in __init__.py (see <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code>
-for details).</p>
-</dd>
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.LinearMatrix._validate_params">
-<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix._validate_params" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validate params and assign to targets</p>
-<p>This overrides the class method, to perform more detailed type checking (see explanation in class method).
-Note: this method (or the class version) is called only if the parameter_validation attribute is <code class="xref any docutils literal notranslate"><span class="pre">True</span></code></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>request_set</strong> – (dict) - params to be validated</p></li>
-<li><p><strong>target_set</strong> – (dict) - destination of validated params</p></li>
-<li><p><strong>context</strong> – (str)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return none</dt>
-<dd class="field-even"><p></p></dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.LinearMatrix.instantiate_matrix">
-<span class="sig-name descname"><span class="pre">instantiate_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">specification</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.instantiate_matrix" title="Permalink to this definition">¶</a></dt>
-<dd><p>Implements matrix indicated by specification</p>
-<blockquote>
-<div><p>Specification is derived from MATRIX param (passed to self.__init__ or self._function)</p>
-<dl class="simple">
-<dt>Specification (validated in _validate_params):</dt><dd><ul class="simple">
-<li><p>single number (used to fill self.matrix)</p></li>
-<li><p>matrix keyword (see get_matrix)</p></li>
-<li><p>2D list or np.ndarray of numbers</p></li>
-</ul>
-</dd>
-</dl>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Return matrix</dt>
-<dd class="field-odd"><p>(2D list)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.LinearMatrix._function">
-<span class="sig-name descname"><span class="pre">_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix._function" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>variable</strong> (<em>list</em><em> or </em><em>1d array</em>) – array to be transformed;  length must equal the number of rows of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a>.</p></li>
-<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
-function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-arguments of the constructor.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>dot product of variable and matrix</strong> – length of the array returned equals the number of columns of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a>.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>1d array</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.Logistic">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.transferfunctions.</span></span><span class="sig-name descname"><span class="pre">Logistic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Logistic" title="Permalink to this definition">¶</a></dt>
 <dd><p id="logistic-function"><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic._function" title="psyneulink.core.components.functions.transferfunctions.Logistic._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> returns logistic transform of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="psyneulink.core.components.functions.transferfunctions.Logistic.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>:</p>
@@ -1857,26 +1691,59 @@ and then used to compute the derivative.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.SoftMax">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.transferfunctions.</span></span><span class="sig-name descname"><span class="pre">SoftMax</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">per_item</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.SoftMax" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.transferfunctions.</span></span><span class="sig-name descname"><span class="pre">SoftMax</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adapt_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adapt_base</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adapt_entropy_weighting</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">per_item</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.SoftMax" title="Permalink to this definition">¶</a></dt>
 <dd><p id="softmax">SoftMax transform of <code class="xref any docutils literal notranslate"><span class="pre">variable</span></code></p>
 <p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax._function" title="psyneulink.core.components.functions.transferfunctions.SoftMax._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> returns SoftMax transform of <code class="xref any docutils literal notranslate"><span class="pre">variable</span></code>:</p>
 <div class="math notranslate nohighlight">
 \[\frac{e^{gain * variable_i}}{\sum\limits^{len(variable)}e^{gain * variable}}\]</div>
-<p>filtered by <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.output" title="psyneulink.core.components.functions.transferfunctions.SoftMax.output"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ouptput</span></code></a> specification (see <a class="reference external" href="http://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/">The Softmax function and its derivative</a> for a nice discussion).</p>
+<p>filtered by <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.output" title="psyneulink.core.components.functions.transferfunctions.SoftMax.output"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output</span></code></a> specification (see <a class="reference external" href="http://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/">The Softmax function and its derivative</a> for a nice discussion).</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.variable" title="psyneulink.core.components.functions.transferfunctions.SoftMax.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is all zeros, the SoftMax transform returns all zeros.</p>
+</div>
+</div></blockquote>
+<p id="softmax-adaptgain"><em>Thresholding and Adaptive Gain</em></p>
+<p>For cases in which SoftMax is used with sparse vectors (e.g., one-hots), the value(s) of the most significant
+entries (e.g., the 1s in a one-hot) can be sensitive to (diminished by) the number of other values in the vector
+(i.e., its length). For example, whereas for <code class="docutils literal notranslate"><span class="pre">[1</span> <span class="pre">0]</span></code> the SoftMax is <code class="docutils literal notranslate"><span class="pre">[0.73105858</span> <span class="pre">0.26894142]</span></code>, for <code class="docutils literal notranslate"><span class="pre">[1</span> <span class="pre">0</span> <span class="pre">0</span> <span class="pre">0]</span></code>
+it is <code class="docutils literal notranslate"><span class="pre">[0.47536689</span> <span class="pre">0.1748777</span>&#160; <span class="pre">0.1748777</span>&#160; <span class="pre">0.1748777]</span></code>. This can be addressed in one of two ways: either by
+thresholding <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.variable" title="psyneulink.core.components.functions.transferfunctions.SoftMax.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> before applying the SoftMax function, or by adapting the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.gain" title="psyneulink.core.components.functions.transferfunctions.SoftMax.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a> parametrically based on the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.variable" title="psyneulink.core.components.functions.transferfunctions.SoftMax.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>:</p>
+<ul class="simple">
+<li><p><em>mask_threshold</em> – setting the <strong>mask_threshold</strong> argument to a scalar value causes the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.variable" title="psyneulink.core.components.functions.transferfunctions.SoftMax.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> to be thresholded by that value before applying the SoftMax function; any elements of
+<a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.variable" title="psyneulink.core.components.functions.transferfunctions.SoftMax.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> with an absolute value below the threshold are set to 0; all others are scaled
+by the specified <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.gain" title="psyneulink.core.components.functions.transferfunctions.SoftMax.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a> and then passed through the SoftMax function.  This only applies if the
+<strong>gain</strong> argument is specified as a scalar; if it is specified as <em>ADAPTIVE</em>, then the <strong>mask_threshold</strong>
+argument is ignored.</p></li>
+<li><p><em>ADAPTIVE</em> – setting <strong>gain</strong> argument to <em>ADAPTIVE</em> causes it to be dynamically adjusted,
+based on the entropy and length of the variable, to keep the mass of the distribution around the highest values
+as consistent as possible over different sized vectors. If <em>ADAPTIVE</em> is specified, then the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.mask_threshold" title="psyneulink.core.components.functions.transferfunctions.SoftMax.mask_threshold"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mask_threshold</span></code></a> argument is ignored. The gain is adapted by calling the SoftMax function’s <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain" title="psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">adapt_gain</span></code></a> method. This can be finicky, and may need to be further tuned to the length of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.variable" title="psyneulink.core.components.functions.transferfunctions.SoftMax.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>, which can be done using the SoftMax Function’s <strong>adapt_scale</strong>, <strong>adapt_base</strong>, and
+<strong>adapt_entropy_weighting</strong> arguments.</p></li>
+</ul>
+<p id="softmax-derivative"><em>Derivative</em></p>
 <p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.derivative" title="psyneulink.core.components.functions.transferfunctions.SoftMax.derivative"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">derivative</span></code></a> returns the derivative of the SoftMax.  If <em>OUTPUT_TYPE</em> for the SoftMax
 is <em>ALL</em>, returns Jacobian matrix (derivative for each element of the output array with respect to each of the
 others):</p>
 <div class="math notranslate nohighlight">
 \[D_jS_i = S_i(\delta_{i,j} - S_j),\ where\ \delta_{i,j}=1\ if\ i=j\ and\ \delta_{i,j}=0\ if\ i≠j.\]</div>
-<p>If <em>OUTPUT_TYPE</em> is <em>MAX_VAL</em> or <em>MAX_INDICATOR</em>, returns 1d array of the derivatives of the maximum
-value with respect to the others (calculated as above). If <em>OUTPUT_TYPE</em> is <em>PROB</em>, raises an exception
-(since it is ambiguous as to which element would have been chosen by the SoftMax function)</p>
+<p>If <em>OUTPUT_TYPE</em> is <em>ARG_MAX</em>, <em>ARG_MAX_INDICATOR</em>, <em>MAX_VAL</em>, <em>MAX_INDICATOR</em>, returns 1d array of the
+derivatives of the maximum value(s) with respect to the others (calculated as above). If <em>OUTPUT_TYPE</em> is <em>PROB</em>,
+raises an exception (since it is ambiguous as to which element would have been chosen by the SoftMax function)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>default_variable</strong> (<em>1d array : default class_defaults.variable</em>) – specifies a template for the value to be transformed.</p></li>
-<li><p><strong>gain</strong> (<em>float : default 1.0</em>) – specifies a value by which to multiply <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Linear.variable" title="psyneulink.core.components.functions.transferfunctions.Linear.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> before SoftMax transformation.</p></li>
-<li><p><strong>output</strong> (<em>ALL</em><em>, </em><em>MAX_VAL</em><em>, </em><em>MAX_INDICATOR</em><em>, or </em><em>PROB : default ALL</em>) – specifies the format of array returned by <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax._function" title="psyneulink.core.components.functions.transferfunctions.SoftMax._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a>
+<li><p><strong>gain</strong> (<em>scalar</em><em> or </em><em>ADAPTIVE : default 1.0</em>) – specifies the value by which to multiply <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Linear.variable" title="psyneulink.core.components.functions.transferfunctions.Linear.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> before SoftMax transformation,
+which functions as the inverse “temperature” of the function.  If it is a scalar, it must be greater
+than zero.  If <em>ADAPTIVE</em> is specified, the value is determined dynamically based on the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.variable" title="psyneulink.core.components.functions.transferfunctions.SoftMax.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>; see <a class="reference internal" href="#softmax-adaptgain"><span class="std std-ref">Thresholding and Adaptive Gain</span></a> for details).</p></li>
+<li><p><strong>mask_threshold</strong> (<em>scalar : default None</em>) – specifies whether to mask_threshold the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.variable" title="psyneulink.core.components.functions.transferfunctions.SoftMax.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> before applying the SoftMax function;
+this only applies if <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.gain" title="psyneulink.core.components.functions.transferfunctions.SoftMax.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a> is specified as a scalar;  otherwise it is ignored
+(see <a class="reference internal" href="#softmax-adaptgain"><span class="std std-ref">Thresholding and Adaptive Gain</span></a> for details).</p></li>
+<li><p><strong>adapt_scale</strong> (<em>scalar : default 1</em>) – specifies the <em>scale</em> parameter using by the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain" title="psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">adapt_gain</span></code></a> method (see method for details).</p></li>
+<li><p><strong>adapt_base</strong> (<em>scalar : default 1</em>) – specifies the <em>base</em> parameter using by the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain" title="psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">adapt_gain</span></code></a> method (see method for details).</p></li>
+<li><p><strong>adapt_entropy_weighting</strong> (<em>default .1</em>) – specifies the <em>entropy_weighting</em> parameter using by the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain" title="psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">adapt_gain</span></code></a> method
+(see method for details).</p></li>
+<li><p><strong>output</strong> (<em>ALL</em><em>, </em><em>ARG_MAX</em><em>, </em><em>ARG_MAX_INDICATOR</em><em>, </em><em>MAX_VAL</em><em>, </em><em>MAX_INDICATOR</em><em>, or </em><em>PROB : default ALL</em>) – specifies the format of array returned by <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax._function" title="psyneulink.core.components.functions.transferfunctions.SoftMax._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a>
 (see <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.output" title="psyneulink.core.components.functions.transferfunctions.SoftMax.output"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output</span></code></a> for details).</p></li>
 <li><p><strong>per_item</strong> (<em>boolean : default True</em>) – for 2d variables, determines whether the SoftMax function will be applied to the entire variable (per_item =
 False), or applied to each item in the variable separately (per_item = True).</p></li>
@@ -1903,11 +1770,62 @@ arguments of the constructor.</p></li>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.SoftMax.gain">
 <span class="sig-name descname"><span class="pre">gain</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.gain" title="Permalink to this definition">¶</a></dt>
-<dd><p>value by which <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="psyneulink.core.components.functions.transferfunctions.Logistic.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is multiplied before the SoftMax transformation;  determines
-the “sharpness” of the distribution.</p>
+<dd><p>determines how <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="psyneulink.core.components.functions.transferfunctions.Logistic.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is scaled before the SoftMax transformation, determining the
+“sharpness” of the distribution (it is equivalent to the inverse of the temperature of the SoftMax function);
+if it is ‘ADAPTIVE’, it is determined dynamically adjusted using the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain" title="psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">adapt_gain</span></code></a> method
+(see <a class="reference internal" href="#softmax-adaptgain"><span class="std std-ref">Thresholding and Adaptive Gain</span></a> for additional details).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>float</p>
+<dd class="field-odd"><p>scalar or ADAPTIVE</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.SoftMax.mask_threshold">
+<span class="sig-name descname"><span class="pre">mask_threshold</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.mask_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines whether the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.variable" title="psyneulink.core.components.functions.transferfunctions.SoftMax.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is thresholded before applying the SoftMax function;
+if it is a scalar, only elements of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.variable" title="psyneulink.core.components.functions.transferfunctions.SoftMax.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> with an absolute value greater than that
+value are considered when applying the SoftMax function (which are then scaled by the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.gain" title="psyneulink.core.components.functions.transferfunctions.SoftMax.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a>
+parameter; all other elements are assigned 0.  This only applies if <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.gain" title="psyneulink.core.components.functions.transferfunctions.SoftMax.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a> is specified as a
+scalar;  otherwise it is ignored (see <a class="reference internal" href="#softmax-adaptgain"><span class="std std-ref">Thresholding and Adaptive Gain</span></a> for details).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>scalar or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_scale">
+<span class="sig-name descname"><span class="pre">adapt_scale</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>determined the <em>scale</em> parameter using by the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain" title="psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">adapt_gain</span></code></a> method (see method for details).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>scalar</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_base">
+<span class="sig-name descname"><span class="pre">adapt_base</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_base" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the <em>base</em> parameter using by the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain" title="psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">adapt_gain</span></code></a> method (see method for details).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>scalar</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_entropy_weighting">
+<span class="sig-name descname"><span class="pre">adapt_entropy_weighting</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_entropy_weighting" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the <em>entropy_weighting</em> parameter using by the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain" title="psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">adapt_gain</span></code></a> method
+(see method for details).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>scalar</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1919,17 +1837,21 @@ the “sharpness” of the distribution.</p>
 in the array returned by <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax._function" title="psyneulink.core.components.functions.transferfunctions.SoftMax._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a>:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><strong>ALL</strong>: array of all SoftMax-transformed values (the default);</p></li>
-<li><p><strong>MAX_VAL</strong>: SoftMax-transformed value for the element with the maximum such value, 0 for all others;</p></li>
-<li><p><strong>MAX_INDICATOR</strong>: 1 for the element with the maximum SoftMax-transformed value, 0 for all others;</p></li>
-<li><p><strong>PROB</strong>: probabilistically chosen element based on SoftMax-transformed values after setting the
+<li><p><em>ALL</em>: array of all SoftMax-transformed values (the default);</p></li>
+<li><p><em>ARG_MAX</em>: 1 for single element with the maximum SoftMax-transformed value, 0 for all others;
+(one with lowest index of there are multiple maximum values);</p></li>
+<li><p><em>ARG_MAX_INDICATOR</em>: 1 for a single element with the maximum SoftMax-transformed value, 0 for all others;
+(one with lowest index of there are multiple maximum values);</p></li>
+<li><p><em>MAX_VAL</em>: SoftMax-transformed value for the element(s) with the maximum such value, 0 for all others;</p></li>
+<li><p><em>MAX_INDICATOR</em>: 1 for the element(s) with the maximum SoftMax-transformed value, 0 for all others;</p></li>
+<li><p><em>PROB</em>: probabilistically chosen element based on SoftMax-transformed values after setting the
 sum of values to 1 (i.e., their <a class="reference external" href="https://en.wikipedia.org/wiki/Luce%27s_choice_axiom">Luce Ratio</a>),
 0 for all others.</p></li>
 </ul>
 </div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>ALL, MAX_VAL, MAX_INDICATOR, or PROB</p>
+<dd class="field-odd"><p>ALL, ARG_MAX, ARG_MAX_INDICATOR, MAX_VAL, MAX_INDICATOR, or PROB</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1951,7 +1873,7 @@ False), or applied to each item in the variable separately (per_item = True).</p
 <span class="sig-name descname"><span class="pre">bounds</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.bounds" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>None if <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.output" title="psyneulink.core.components.functions.transferfunctions.SoftMax.output"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output</span></code></a> == MAX_VAL, else (0,1) : default (0,1)</p>
+<dd class="field-odd"><p>None if <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.output" title="psyneulink.core.components.functions.transferfunctions.SoftMax.output"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output</span></code></a> in {ARG_MAX, MAX_VAL}, else (0,1) : default (0,1)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2044,6 +1966,20 @@ arguments of the constructor.</p></li>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>number or array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain">
+<span class="sig-name descname"><span class="pre">adapt_gain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.adapt_gain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the softmax gain (inverse temperature) based on the entropy of the distribution of values.
+Uses base, scale, and entropy_weighting parameters of SoftMax function to compute gain:</p>
+<div class="math notranslate nohighlight">
+\[gain = scale * (base + (entropy\_weighting * log(entropy(logistic(v)))))\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -2260,7 +2196,7 @@ arguments of the constructor.</p></li>
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.transferfunctions.</span></span><span class="sig-name descname"><span class="pre">TransferFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function that transforms variable but maintains its shape.</p>
 <p>All TransferFunctions MUST have the following attributes:</p>
-<p><a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.bounds" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.bounds"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bounds</span></code></a> – specifies the lower and upper limits of the result;  if there are none, the attribute is set to
+<p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Exponential.bounds" title="psyneulink.core.components.functions.transferfunctions.Exponential.bounds"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bounds</span></code></a> – specifies the lower and upper limits of the result;  if there are none, the attribute is set to
 <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>;  if it has at least one bound, the attribute is set to a tuple specifying the lower and upper bounds,
 respectively, with <code class="xref any docutils literal notranslate"><span class="pre">None</span></code> as the entry for no bound.</p>
 <p><a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a> and <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">additive_param</span></a> – each
@@ -2270,7 +2206,7 @@ of these is assigned the name of one of the function’s parameters and used by 
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.TransferWithCosts">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.transferfunctions.</span></span><span class="sig-name descname"><span class="pre">TransferWithCosts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transfer_fct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enabled_cost_functions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensity_cost_fct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjustment_cost_fct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration_cost_fct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">combine_costs_fct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.transferfunctions.</span></span><span class="sig-name descname"><span class="pre">TransferWithCosts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transfer_fct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enabled_cost_functions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensity_cost_fct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjustment_cost_fct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration_cost_fct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">combine_costs_fct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts" title="Permalink to this definition">¶</a></dt>
 <dd><p id="transferwithcosts">returns value of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.variable" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> transformed by <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.transfer_fct" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.transfer_fct"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">transfer_fct</span></code></a>, after calling any cost functions that are enabled and assigning
 the result(s) to the corresponding parameter(s), as described below.</p>
 <p id="transferwithcosts-cost-functions"><strong>Cost Functions</strong></p>
@@ -2317,16 +2253,16 @@ modulate the parameters of the cost functions of a TransferMechanism assigned to
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>variable</strong> (<em>list</em><em> or </em><em>1d array of numbers: Default class_defaults.variable</em>) – specifies shape and default value of the array for variable used by <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.transfer_fct" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.transfer_fct"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">transfer_fct</span></code></a>
 on which costs are calculated.</p></li>
-<li><p><strong>size</strong> (<em>int : None</em>) – specifies length of the array for <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.variable" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> used by <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts._function" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> and on which costs are calculated;  can be used in place of
+<li><p><strong>input_shapes</strong> (<em>int : None</em>) – specifies length of the array for <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.variable" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> used by <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts._function" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> and on which costs are calculated;  can be used in place of
 default_value, in which case zeros are assigned as the value(s). An error is generated if both are
-specified but size != len(default_value).</p></li>
+specified but input_shapes != len(default_value).</p></li>
 <li><p><strong>transfer_fct</strong> (<em>TransferFunction : Linear</em>) – specifies the primary function, used to generate the value it returns.</p></li>
 <li><p><strong>enabled_cost_functions</strong> (<a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.CostFunctions" title="psyneulink.core.components.functions.transferfunctions.CostFunctions"><em>CostFunctions</em></a><em> or </em><em>List</em><em>[</em><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.CostFunctions" title="psyneulink.core.components.functions.transferfunctions.CostFunctions"><em>CostFunctions</em></a><em>] </em><em>: None</em>) – specifies the costs to execute when <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts._function" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> is called, and
 include in the computation of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.combined_costs" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.combined_costs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">combined_costs</span></code></a>.</p></li>
 <li><p><strong>intensity_cost_fct</strong> (Optional[<a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferFunction" title="psyneulink.core.components.functions.transferfunctions.TransferFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TransferFunction</span></code></a>] : default <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Exponential" title="psyneulink.core.components.functions.transferfunctions.Exponential"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Exponential</span></code></a>) – specifies the function used to compute the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity_cost" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.intensity_cost"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">intensity_cost</span></code></a>.</p></li>
 <li><p><strong>adjustment_cost_fct</strong> (Optional[<a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferFunction" title="psyneulink.core.components.functions.transferfunctions.TransferFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TransferFunction</span></code></a>] : default <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a>) – specifies the function used to compute the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.adjustment_cost" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.adjustment_cost"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">adjustment_cost</span></code></a>.</p></li>
 <li><p><strong>duration_cost_fct</strong> (<a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">IntegratorFunction</span></code></a> : default <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">IntegratorFunction</span></code></a>) – specifies the function used to compute the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.duration_cost" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.duration_cost"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">duration_cost</span></code></a>.</p></li>
-<li><p><strong>combine_costs_fct</strong> (function : default <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearCombination</span></code></a>) – specifies the function used to compute <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.combined_costs" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.combined_costs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">combined_costs</span></code></a>.</p></li>
+<li><p><strong>combine_costs_fct</strong> (function : default <code class="xref any docutils literal notranslate"><span class="pre">LinearCombination</span></code>) – specifies the function used to compute <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.combined_costs" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.combined_costs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">combined_costs</span></code></a>.</p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</p></li>
@@ -2349,8 +2285,8 @@ and associated costs are calculated.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.size">
-<span class="sig-name descname"><span class="pre">size</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.size" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.input_shapes">
+<span class="sig-name descname"><span class="pre">input_shapes</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.input_shapes" title="Permalink to this definition">¶</a></dt>
 <dd><p>length of array for <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.variable" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>

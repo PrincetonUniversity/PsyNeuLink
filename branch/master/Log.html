@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Log &mdash; PsyNeuLink 0.15.0.0+5.g9b68ab824 documentation</title>
+  <title>Log &mdash; PsyNeuLink 0.15.1.0+7.gcc0a66388 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.0.0+5
+                  0.15.1.0+7
                 </div>
               
             
@@ -338,8 +338,8 @@ is <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition
 another, and logs the <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">noise</span></code></a> and <em>RESULT</em> <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of the first and the
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the first to the second:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a Process with two TransferMechanisms, and get a reference for the Projection created between them:</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">my_mech_A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;mech_A&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">my_mech_B</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;mech_B&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">my_mech_A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;mech_A&#39;</span><span class="p">,</span> <span class="n">input_shapes</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">my_mech_B</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;mech_B&#39;</span><span class="p">,</span> <span class="n">input_shapes</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">my_composition</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">(</span><span class="n">pathways</span><span class="o">=</span><span class="p">[</span><span class="n">my_mech_A</span><span class="p">,</span> <span class="n">my_mech_B</span><span class="p">])</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">proj_A_to_B</span> <span class="o">=</span> <span class="n">my_mech_B</span><span class="o">.</span><span class="n">path_afferents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 

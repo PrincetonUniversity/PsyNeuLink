@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Quick Reference &mdash; PsyNeuLink 0.15.0.0+5.g9b68ab824 documentation</title>
+  <title>Quick Reference &mdash; PsyNeuLink 0.15.1.0+7.gcc0a66388 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.0.0+5
+                  0.15.1.0+7
                 </div>
               
             
@@ -443,7 +443,7 @@ Every Composition has a <a class="reference internal" href="Composition.html#psy
 node and each <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> is a directed edge.  The graph defines the default flow of computation (from each node to
 the ones to which it projects)when it is executed using its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method, that may be modified by
 <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> assigned to the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.scheduler" title="psyneulink.core.compositions.composition.Composition.scheduler"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">scheduler</span></code></a> (see
-<a class="reference internal" href="#quick-reference-scheduling"><span class="std std-ref">below</span></a>.  The graph can be displayed using the Composition’s <code class="xref any docutils literal notranslate"><span class="pre">show_graph</span></code> method, an example of which is shown in the following figure:</p>
+<a class="reference internal" href="#quick-reference-scheduling"><span class="std std-ref">below</span></a>.  The graph can be displayed using the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method, an example of which is shown in the following figure:</p>
 <figure class="align-default" id="id4">
 <span id="quick-reference-compositions-figure"></span><a class="reference internal image-reference" href="_images/QuickReference_Composition_fig.svg"><img alt="_images/QuickReference_Composition_fig.svg" src="_images/QuickReference_Composition_fig.svg" width="75%" /></a>
 <figcaption>
@@ -483,7 +483,7 @@ context in which the value was recorded, and the third the <a class="reference i
 <section id="graphic-display">
 <span id="quick-reference-graphic-displays"></span><h2>Graphic Display<a class="headerlink" href="#graphic-display" title="Permalink to this headline">¶</a></h2>
 <p>At the moment, PsyNeuLink has limited support for graphic displays:  the graph of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> can be displayed
-using its <code class="xref any docutils literal notranslate"><span class="pre">show_graph</span></code> method.  This can be used to display just the processing components
+using its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method.  This can be used to display just the processing components
 (i.e., <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> and <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>), or to include
 <a class="reference internal" href="LearningMechanism.html"><span class="doc">learning</span></a> and/or <a class="reference internal" href="ControlMechanism.html"><span class="doc">control</span></a> components.  A future release will include
 a more complete and interacdtive graphical user interface.</p>

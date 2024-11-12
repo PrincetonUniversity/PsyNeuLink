@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DDM &mdash; PsyNeuLink 0.15.0.0+5.g9b68ab824 documentation</title>
+  <title>DDM &mdash; PsyNeuLink 0.15.1.0+7.gcc0a66388 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.0.0+5
+                  0.15.1.0+7
                 </div>
               
             
@@ -279,7 +279,7 @@ that represents the stimulus for the decision process.  However, this can be con
 argument of the DDM’s consructor, to accomodate use of the DDM with other Mechanisms that generate a stimulus array
 (e.g., representing the stimuli associated with each of the two choices). By default, the <strong>input_format</strong> is
 <em>SCALAR</em>.  However, if it is specified as <em>ARRAY</em>, the DDM’s InputPort is configured to accept a 1d 2-item vector,
-and to use <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.Reduce" title="psyneulink.core.components.functions.combinationfunctions.Reduce"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Reduce</span></code></a> as its Function, which subtracts the 2nd element of the vector from the 1st, and provides this as
+and to use <code class="xref any docutils literal notranslate"><span class="pre">Reduce</span></code> as its Function, which subtracts the 2nd element of the vector from the 1st, and provides this as
 the input to the DDM’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.  If <em>ARRAY</em> is specified, two  <code class="xref any docutils literal notranslate"><span class="pre">Standard</span> <span class="pre">OutputPorts</span></code> are added to the DDM, that allow the result of the decision process to be represented
 as an array corresponding to the input array (see <a class="reference internal" href="#ddm-custom-outputports"><span class="std std-ref">below</span></a>).</p>
 </section>
@@ -293,6 +293,73 @@ execution of the mechanism computes one step. (see <a class="reference internal"
 are represented by the DDM Mechanism’s two default <code class="xref any docutils literal notranslate"><span class="pre">OutputPorts`</span></code>: <a class="reference internal" href="#ddm-decision-variable"><span class="std std-ref">DECISION_VARIABLE</span></a> and
 <a class="reference internal" href="#ddm-response-time"><span class="std std-ref">RESPONSE_TIME</span></a>.  Other <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.output_ports" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_ports</span></code></a> may be automatically assigned,
 depending on the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> that has been assigned to the DDM, as shown in the table below:</p>
+<table class="docutils align-default" id="ddm-default-outputports">
+<colgroup>
+<col style="width: 39%" />
+<col style="width: 30%" />
+<col style="width: 30%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td rowspan="2"><p><strong>OutputPorts:</strong></p></td>
+<td colspan="2"><dl class="simple">
+<dt><strong>Function</strong></dt><dd><p><em>(type)</em></p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-even"><td><dl class="simple">
+<dt><a class="reference internal" href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DriftDiffusionAnalytical</span></code></a></dt><dd><p>(<a class="reference internal" href="#ddm-analytic-mode"><span class="std std-ref">analytic</span></a>)</p>
+</dd>
+</dl>
+</td>
+<td><dl class="simple">
+<dt><a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DriftDiffusionIntegrator</span></code></a></dt><dd><p>(<a class="reference internal" href="#ddm-integration-mode"><span class="std std-ref">path integration)</span></a>)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ddm-decision-variable"><span class="std std-ref">DECISION_VARIABLE</span></a></p></td>
+<td><p>X</p></td>
+<td><p>X</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ddm-response-time"><span class="std std-ref">RESPONSE_TIME</span></a></p></td>
+<td><p>X</p></td>
+<td><p>X</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ddm-probability-upper-threshold"><span class="std std-ref">PROBABILITY_UPPER_THRESHOLD</span></a></p></td>
+<td><p>X</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ddm-probability-lower-threshold"><span class="std std-ref">PROBABILITY_LOWER_THRESHOLD</span></a></p></td>
+<td><p>X</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ddm-rt-correct-mean"><span class="std std-ref">RT_CORRECT_MEAN</span></a></p></td>
+<td><p>X</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ddm-rt-correct-variance"><span class="std std-ref">RT_CORRECT_VARIANCE</span></a></p></td>
+<td><p>X</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ddm-rt-correct-skew"><span class="std std-ref">RT_CORRECT_SKEW</span></a></p></td>
+<td><p>X</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ddm-rt-incorrect-mean"><span class="std std-ref">RT_INCORRECT_MEAN</span></a></p></td>
+<td><p>X</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ddm-rt-incorrect-variance"><span class="std std-ref">RT_INCORRECT_VARIANCE</span></a></p></td>
+<td><p>X</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ddm-rt-incorrect-skew"><span class="std std-ref">RT_INCORRECT_SKEW</span></a></p></td>
+<td><p>X</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 <p id="ddm-custom-outputports">The <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.output_ports" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_ports</span></code></a> assigned to a DDM can explicilty determined by specifying ones from its list
 of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.standard_output_ports" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.standard_output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">standard_output_ports</span></code></a> in the <strong>output_ports</strong> argument of its constructor, or the
 <em>OUTPUT_PORTS</em> entry of an <a class="reference internal" href="OutputPort.html#outputport-specification-dictionary"><span class="std std-ref">OutputPort specification dictionary</span></a>.  This
@@ -380,7 +447,7 @@ ISSN 0022-2496,
 <span id="ddm-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.processing.integrator.ddm.</span></span><span class="sig-name descname"><span class="pre">DDM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.processing.integrator.ddm.</span></span><span class="sig-name descname"><span class="pre">DDM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements a drift diffusion process (also known as the <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2474742/">Diffusion Decision Model</a>, either by calculating an <a class="reference internal" href="#ddm-analytic-mode"><span class="std std-ref">analytic solution</span></a> or carrying out <a class="reference internal" href="#ddm-integration-mode"><span class="std std-ref">step-wise numerical integration</span></a>.
 See <a class="reference internal" href="Mechanism.html#mechanism-class-reference"><span class="std std-ref">Mechanism</span></a> for additional arguments and attributes.</p>
 <p>The default behaviour for the DDM is to reset its integration state on each new trial, this can be overridden by

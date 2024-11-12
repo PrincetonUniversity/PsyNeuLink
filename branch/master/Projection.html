@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Projection &mdash; PsyNeuLink 0.15.0.0+5.g9b68ab824 documentation</title>
+  <title>Projection &mdash; PsyNeuLink 0.15.1.0+7.gcc0a66388 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.0.0+5
+                  0.15.1.0+7
                 </div>
               
             
@@ -579,7 +579,7 @@ It should be created by calling the constructor for a subclass` or by using any 
 <li><p><strong>sender</strong> (<a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort"><em>OutputPort</em></a><em> or </em><em>Mechanism : default None</em>) – specifies the source of the Projection’s input. If a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> is specified, its
 <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> is used. If it is not specified, it is assigned in
 the context in which the Projection is used, or its initialization will be <a class="reference internal" href="#projection-deferred-initialization"><span class="std std-ref">deferred</span></a>.</p></li>
-<li><p><strong>function</strong> (<em>TransferFunction : default LinearMatrix</em>) – specifies function used to convey (and potentially convert) <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> <a class="reference internal" href="Port.html"><span class="doc">Port</span></a> to <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.variable" title="psyneulink.core.components.ports.port.Port_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> of <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a>
+<li><p><strong>function</strong> (<em>TransferFunction : default MatrixTransform</em>) – specifies function used to convey (and potentially convert) <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> <a class="reference internal" href="Port.html"><span class="doc">Port</span></a> to <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.variable" title="psyneulink.core.components.ports.port.Port_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> of <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a>
 Port.</p></li>
 <li><p><strong>receiver</strong> (<a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort" title="psyneulink.core.components.ports.inputport.InputPort"><em>InputPort</em></a><em> or </em><em>Mechanism : default None</em>) – specifies the destination of the Projection’s output.  If a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> is specified, its
 <a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary InputPort</span></a> will be used. If it is not specified, it will be assigned in
@@ -588,6 +588,7 @@ the context in which the Projection is used, or its initialization will be <a cl
 it is assigned (see <a class="reference internal" href="Composition.html#composition-cycles-and-feedback"><span class="std std-ref">Cycles and Feedback</span></a>); specifying True or the keyword <em>FEEDBACK</em> forces its
 assignment as a <em>feedback</em> Projection, whereas False precludes it from being assigned as a feedback Projection;
 None (the default) allows the Composition to determine whether it is assigned as a feedback Projection.</p></li>
+<li><p><strong>exclude_in_autodiff</strong> (<em>bool : default False</em>) – specifies whether Projection is included in <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a> gradient calculations.</p></li>
 </ul>
 </dd>
 </dl>
@@ -655,6 +656,17 @@ in the same manner as they can for a <a class="reference internal" href="Mechani
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>ContentAddressableList[str, <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort" title="psyneulink.core.components.ports.parameterport.ParameterPort">ParameterPort</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.projection.Projection_Base.exclude_in_autodiff">
+<span class="sig-name descname"><span class="pre">exclude_in_autodiff</span></span><a class="headerlink" href="#psyneulink.core.components.projections.projection.Projection_Base.exclude_in_autodiff" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines whether Projection is included in <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a> gradient calculations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool : default False</p>
 </dd>
 </dl>
 </dd></dl>
