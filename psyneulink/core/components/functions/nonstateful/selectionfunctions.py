@@ -421,10 +421,10 @@ class OneHot(SelectionFunction):
                                     f"cannot be specified.")
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        best_idx_ptr = builder.alloca(ctx.int32_ty)
-        builder.store(best_idx_ptr.type.pointee(0), best_idx_ptr)
-
         if self.mode in {PROB, PROB_INDICATOR}:
+            best_idx_ptr = builder.alloca(ctx.int32_ty)
+            builder.store(best_idx_ptr.type.pointee(0), best_idx_ptr)
+
             sum_ptr = builder.alloca(ctx.float_ty)
             builder.store(sum_ptr.type.pointee(-0.0), sum_ptr)
 
@@ -437,6 +437,51 @@ class OneHot(SelectionFunction):
             prob_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
             arg_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
+            with pnlvm.helpers.array_ptr_loop(builder, arg_in, "search") as (b1, idx):
+                best_idx = b1.load(best_idx_ptr)
+                best_ptr = b1.gep(arg_in, [ctx.int32_ty(0), best_idx])
+
+                current_ptr = b1.gep(arg_in, [ctx.int32_ty(0), idx])
+                current = b1.load(current_ptr)
+
+                # Update prefix sum
+                current_prob_ptr = b1.gep(prob_in, [ctx.int32_ty(0), idx])
+                sum_old = b1.load(sum_ptr)
+                sum_new = b1.fadd(sum_old, b1.load(current_prob_ptr))
+                b1.store(sum_new, sum_ptr)
+
+                old_below = b1.fcmp_ordered("<=", sum_old, random_draw)
+                new_above = b1.fcmp_ordered("<", random_draw, sum_new)
+                cond = b1.and_(new_above, old_below)
+
+                cmp_prev = current.type(1.0)
+                cmp_curr = b1.select(cond, cmp_prev, cmp_prev.type(0.0))
+                cmp_op = "=="
+                if self.mode == PROB:
+                    val = current
+                else:
+                    val = current.type(1.0)
+
+                prev_res_ptr = b1.gep(arg_out, [ctx.int32_ty(0), best_idx])
+                cur_res_ptr = b1.gep(arg_out, [ctx.int32_ty(0), idx])
+
+                # Make sure other elements are zeroed
+                builder.store(cur_res_ptr.type.pointee(0), cur_res_ptr)
+
+                cmp_res = builder.fcmp_unordered(cmp_op, cmp_curr, cmp_prev)
+                with builder.if_then(cmp_res):
+                    builder.store(prev_res_ptr.type.pointee(0), prev_res_ptr)
+                    builder.store(val, cur_res_ptr)
+                    builder.store(idx, best_idx_ptr)
+
+            return builder
+
+        elif self.mode == DETERMINISTIC:
+            assert False, "DETERMINISTIC mode not supported"
+
+        best_idx_ptr = builder.alloca(ctx.int32_ty)
+        builder.store(best_idx_ptr.type.pointee(0), best_idx_ptr)
+
         with pnlvm.helpers.array_ptr_loop(builder, arg_in, "search") as (b1, idx):
             best_idx = b1.load(best_idx_ptr)
             best_ptr = b1.gep(arg_in, [ctx.int32_ty(0), best_idx])
@@ -444,13 +489,12 @@ class OneHot(SelectionFunction):
             current_ptr = b1.gep(arg_in, [ctx.int32_ty(0), idx])
             current = b1.load(current_ptr)
 
-            if self.mode not in {PROB, PROB_INDICATOR}:
-                fabs = ctx.get_builtin("fabs", [current.type])
+            fabs = ctx.get_builtin("fabs", [current.type])
 
-                is_first = b1.icmp_unsigned("==", idx, idx.type(0))
+            is_first = b1.icmp_unsigned("==", idx, idx.type(0))
 
-                # Allow the first element to win the comparison
-                prev_best = b1.select(is_first, best_ptr.type.pointee(float("NaN")), b1.load(best_ptr))
+            # Allow the first element to win the comparison
+            prev_best = b1.select(is_first, best_ptr.type.pointee(float("NaN")), b1.load(best_ptr))
 
             if self.mode == ARG_MAX:
                 cmp_op = ">"
@@ -500,24 +544,6 @@ class OneHot(SelectionFunction):
                 cmp_curr = b1.call(fabs, [current])
                 val = current.type(1.0)
 
-            elif self.mode in {PROB, PROB_INDICATOR}:
-                # Update prefix sum
-                current_prob_ptr = b1.gep(prob_in, [ctx.int32_ty(0), idx])
-                sum_old = b1.load(sum_ptr)
-                sum_new = b1.fadd(sum_old, b1.load(current_prob_ptr))
-                b1.store(sum_new, sum_ptr)
-
-                old_below = b1.fcmp_ordered("<=", sum_old, random_draw)
-                new_above = b1.fcmp_ordered("<", random_draw, sum_new)
-                cond = b1.and_(new_above, old_below)
-
-                cmp_prev = current.type(1.0)
-                cmp_curr = b1.select(cond, cmp_prev, cmp_prev.type(0.0))
-                cmp_op = "=="
-                if self.mode == PROB:
-                    val = current
-                else:
-                    val = current.type(1.0)
             else:
                 assert False, "Unsupported mode in LLVM: {} for OneHot Function".format(self.mode)
 
