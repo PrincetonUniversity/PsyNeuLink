@@ -1173,10 +1173,11 @@ class AcceleratingDecay(TransferFunction):  #
         specifies a template for the value to be transformed.
 
     start : float : default 1.0
-        specifies the value of the function when `variable <AcceleratingDecay.variable>` = 0; must be greater than 0.
+        specifies the value function should have when `variable <AcceleratingDecay.variable>` = 0;
+        must be greater than 0.
 
     end : float : default 1.0
-        specifies the value of `variable <AcceleratingDecay.variable>` at which the `value of the function
+        specifies the value of `variable <AcceleratingDecay.variable>` at which the value of the function
         should equal 0; must be greater than 0.
 
     params : Dict[param keyword: param value] : default None
@@ -1200,21 +1201,10 @@ class AcceleratingDecay(TransferFunction):  #
         contains value to be transformed.
 
     start : float (>0)
-        determines, together with `offset <AcceleratingDecay.offset>`, the value of the function when `variable
-        <AcceleratingDecay.variable>` = 0.
-
-    offset : float
-        determines, together with `start <AcceleratingDecay.start>`, the value of the function when `variable
-        <AcceleratingDecay.variable>` = 0, and its linear offset for all other values.
+        determines the value the function should have when `variable <AcceleratingDecay.variable>` = 0.
 
     end : float (>0)
-        determines the value of `variable <AcceleratingDecay.variable>` at which the value of the function should
-        equal `start <AcceleratingDecay.start>` * `tolerance <AcceleratingDecay.tolerance>` + `offset <AcceleratingDecay.offset>`.
-
-    tolerance : float (0,1)
-        determines the fraction of `start <AcceleratingDecay.start>` when added to `offset <AcceleratingDecay.offset>`,
-        that determines the value of the function when `variable <AcceleratingDecay.variable>` = `end
-        <AcceleratingDecay.end>`.
+        determines the value of `variable <AcceleratingDecay.variable>` at which the value of the function equals 0.
 
     bounds : (None, None)
 
@@ -1244,23 +1234,12 @@ class AcceleratingDecay(TransferFunction):  #
                     :default value: 1.0
                     :type: ``float``
 
-                offset
-                    see `offset <AcceleratingDecay.offset>`
-
-                    :default value: 0.0
-                    :type: ``float``
-
                 end
                     see `end <AcceleratingDecay.end>`
 
                     :default value: 1.0
                     :type: ``float``
 
-                tolerance
-                    see `tolerance <AcceleratingDecay.tolerance>`
-
-                    :default value: 0.01
-                    :type: ``float``
         """
         start = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
         offset = Parameter(0.0, modulable=True)
@@ -1276,27 +1255,19 @@ class AcceleratingDecay(TransferFunction):  #
             if end < 0:
                 return f"must be greater than 0."
 
-        def _validate_tolerance(self, tolerance):
-            if tolerance < 0:
-                return f"must be between 0 and 1."
-
     @check_user_specified
     @beartype
     def __init__(self,
                  default_variable=None,
                  start: Optional[ValidParamSpecType] = None,
-                 offset: Optional[ValidParamSpecType] = None,
                  end: Optional[ValidParamSpecType] = None,
-                 tolerance: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
             start=start,
-            offset=offset,
             end=end,
-            tolerance=tolerance,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -1326,10 +1297,8 @@ class AcceleratingDecay(TransferFunction):  #
         Exponentially decayed transformation of variable : number or array
 
         """
-        start = self._get_current_parameter_value('start', context)
-        offset = self._get_current_parameter_value('offset', context)
-        end = self._get_current_parameter_value('end', context)
-        tolerance = self._get_current_parameter_value('tolerance', context)
+        start = self._get_current_parameter_value(START, context)
+        end = self._get_current_parameter_value(END, context)
 
         result = offset + start * np.exp(-variable * np.log(1 / tolerance) / end)
 
@@ -1358,7 +1327,6 @@ class AcceleratingDecay(TransferFunction):  #
 
         start = self._get_current_parameter_value(START, context)
         end = self._get_current_parameter_value(END, context)
-        tolerance = self._get_current_parameter_value(TOLERANCE, context)
 
         return (start * np.log(1/tolerance) / end) * np.exp(-input * np.log(tolerance) / end)
 
