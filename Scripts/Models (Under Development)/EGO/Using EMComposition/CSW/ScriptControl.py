@@ -20,7 +20,7 @@ DISPLAY_MODEL =  (                     # Only one of the following can be uncomm
     # }
 )
 # RUN_MODEL = False                      # False => don't run the model
-# RUN_MODEL = True,                       # True => run the model
+RUN_MODEL = True,                       # True => run the model
 # REPORT_OUTPUT = ReportOutput.FULL  # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_OUTPUT = ReportOutput.OFF     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_PROGRESS = ReportProgress.OFF # Sets console progress bar during run
