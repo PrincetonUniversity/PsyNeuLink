@@ -833,19 +833,20 @@ class ExponentialDecay(TransferFunction):  # -----------------------------------
 
     where:
 
-    **start**, together with `offset <ExponentialDecay.offset>`, determines the value of the function when `variable
-    <ExponentialDecay.variable>` = 0, and is used together with `tolerance <ExponentialDecay.tolerance>` to determine
-    the value of the function when `variable <ExponentialDecay.variable>` = `end <ExponentialDecay.end>`.
+        **start**, together with `offset <ExponentialDecay.offset>`, determines the value of the function when
+        `variable <ExponentialDecay.variable>` = 0, and is used together with `tolerance <ExponentialDecay.tolerance>`
+        to determine the value of the function when `variable <ExponentialDecay.variable>` = `end
+        <ExponentialDecay.end>`.
 
-    **offset**, together with `start <ExponentialDecay.start>`, determines the value of the function
-    when `variable <ExponentialDecay.variable>` = 0, and its linear offset from 0 for all other values;
+        **offset**, together with `start <ExponentialDecay.start>`, determines the value of the function
+        when `variable <ExponentialDecay.variable>` = 0, and its linear offset from 0 for all other values;
 
-    **end** determines the value of `variable <ExponentialDecay.variable>` at which
-    the value of the function should equal :math:`start * tolerance + offset`.
+        **end** determines the value of `variable <ExponentialDecay.variable>` at which
+        the value of the function should equal :math:`start * tolerance + offset`.
 
-    **tolerance** is the fraction of `start <ExponentialDecay.start>` when, added to `offset
-    <ExponentialDecay.offset>`, is used to determine the value of the function when `variable
-    <ExponentialDecay.variable>` should equal `end <ExponentialDecay.end>`.
+        **tolerance** is the fraction of `start <ExponentialDecay.start>` when, added to `offset
+        <ExponentialDecay.offset>`, is used to determine the value of the function when `variable
+        <ExponentialDecay.variable>` should equal `end <ExponentialDecay.end>`.
 
     `derivative <ExponentialDecay.derivative>` returns the derivative of the ExponentialDecay Function:
 
@@ -1133,7 +1134,7 @@ class AcceleratingDecay(TransferFunction):  #
     <AcceleratingDecay.variable>`
 
     .. math::
-       start +\\frac{start * e^{-e}\\left(1-e^{variable}\\right)}{e^{\\left(f-e-k^{end}\\right)}}
+       start + start \\frac{e^{-e}}{e^{\\left(end-e-k^{end}\\right)}} \\left(1-e^{variable}\\right)
 
     such that:
 
@@ -1144,14 +1145,17 @@ class AcceleratingDecay(TransferFunction):  #
 
     where:
 
-    **start** determines the value of the function when `variable <AcceleratingDecay.variable>` = 0.
+        **start** determines the value of the function when `variable <AcceleratingDecay.variable>` = 0.
 
-    **end** determines the value of `variable <AcceleratingDecay.variable>` at which the value of the function = 0.
+        **end** determines the value of `variable <AcceleratingDecay.variable>` at which the value of the function = 0.
+
+        **k** is a constant used to enforce that the value of the function when `variable
+        <AcceleratingDecay.variable>` = `end <AcceleratingDecay.end>` is as close to 0 as possible.
 
     `derivative <AcceleratingDecay.derivative>` returns the derivative of the AcceleratingDecay Function:
 
       .. math::
-       start + start * \\frac{e^{-e}}{e^{\\left(f-e-k^{end}\\right)}}\\left(1-e^{variable}\\right)}}
+       - start \\frac{e^{\\left(variable-e\\right)}}{e^{\\left(end-e-k^{end}\\right)}}
 
     COMMENT:
     FOR TIMER VERSION:
@@ -1169,22 +1173,11 @@ class AcceleratingDecay(TransferFunction):  #
         specifies a template for the value to be transformed.
 
     start : float : default 1.0
-        specifies, together with `offset <AcceleratingDecay.offset>`, the value of the function when `variable
-        <AcceleratingDecay.variable>` = 0; must be greater than 0.
-
-    offset : float : default 0.0
-        specifies, together with `start <AcceleratingDecay.start>`, the value of the function when `variable
-        <AcceleratingDecay.variable>` = 0, and its linear offset for all other values.
+        specifies the value of the function when `variable <AcceleratingDecay.variable>` = 0; must be greater than 0.
 
     end : float : default 1.0
         specifies the value of `variable <AcceleratingDecay.variable>` at which the `value of the function
-        should equal `start <AcceleratingDecay.start>` * `tolerance <AcceleratingDecay.tolerance>` + `offset
-        <AcceleratingDecay.offset>`; must be greater than 0.
-
-    tolerance : float : default 0.01
-        specifies the fraction of `start <AcceleratingDecay.start>` when added to `offset <AcceleratingDecay.offset>`,
-        that determines the value of the function when `variable <AcceleratingDecay.variable>` = `end
-        <AcceleratingDecay.end>`; must be between 0 and 1.
+        should equal 0; must be greater than 0.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
