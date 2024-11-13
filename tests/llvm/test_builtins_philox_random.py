@@ -16,7 +16,6 @@ SEED = 0
     (0xfeedcafe, [14360762734736817955, 5188080951818105836, 1417692977344505657, 15919241602363537044, 11006348070701344872, 12539562470140893435]),
 ])
 def test_random_int64(benchmark, mode, seed, expected):
-    res = []
     if mode == 'numpy':
         state = np.random.Philox([np.int64(seed).astype(np.uint64)])
         prng = np.random.Generator(state)
@@ -64,8 +63,61 @@ def test_random_int64(benchmark, mode, seed, expected):
 @pytest.mark.parametrize('mode', ['numpy',
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
                                   pytest.helpers.cuda_param('PTX')])
+@pytest.mark.parametrize("bounds, expected",
+    [((0xffffffff,), [582496169, 60417458, 4027530181, 1107101889, 1659784452, 2025357889]),
+     ((15,), [2, 0, 14, 3, 5, 7]),
+     ((0,15), [2, 0, 14, 3, 5, 7]),
+     ((5,0xffff), [8892, 926, 61454, 16896, 25328, 30906]),
+    ], ids=lambda x: str(x) if len(x) != 6 else "")
+def test_random_int32_bounded(benchmark, mode, bounds, expected):
+    if mode == 'numpy':
+        state = np.random.Philox([SEED])
+        prng = np.random.Generator(state)
+
+        def f():
+            return prng.integers(*bounds, dtype=np.uint32, endpoint=False)
+
+    elif mode == 'LLVM':
+        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
+        state = init_fun.np_buffer_for_arg(0)
+        init_fun(state, SEED)
+
+        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_int32_bounded')
+
+        def f():
+            lower, upper = bounds if len(bounds) == 2 else (0, bounds[0])
+            out = gen_fun.np_buffer_for_arg(3)
+            gen_fun(state, lower, upper, out)
+            return out
+
+    elif mode == 'PTX':
+        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
+        state_size = init_fun.np_buffer_for_arg(0).nbytes
+        gpu_state = pnlvm.jit_engine.pycuda.driver.mem_alloc(state_size)
+        init_fun.cuda_call(gpu_state, np.int64(SEED))
+
+        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_int32_bounded')
+        out = gen_fun.np_buffer_for_arg(3)
+        gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
+
+        def f():
+            lower, upper = bounds if len(bounds) == 2 else (0, bounds[0])
+            gen_fun.cuda_call(gpu_state, np.uint32(lower), np.uint32(upper), gpu_out)
+            return out.copy()
+
+    else:
+        assert False, "Unknown mode: {}".format(mode)
+
+    # Get >4 samples to force regeneration of Philox buffer
+    res = [f(), f(), f(), f(), f(), f()]
+    np.testing.assert_allclose(res, expected)
+    benchmark(f)
+
+@pytest.mark.benchmark(group="Philox integer PRNG")
+@pytest.mark.parametrize('mode', ['numpy',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.helpers.cuda_param('PTX')])
 def test_random_int32(benchmark, mode):
-    res = []
     if mode == 'numpy':
         state = np.random.Philox([SEED])
         prng = np.random.Generator(state)\
@@ -114,7 +166,6 @@ def test_random_int32(benchmark, mode):
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
                                   pytest.helpers.cuda_param('PTX')])
 def test_random_double(benchmark, mode):
-    res = []
     if mode == 'numpy':
         state = np.random.Philox([SEED])
         prng = np.random.Generator(state)
@@ -161,7 +212,6 @@ def test_random_double(benchmark, mode):
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
                                   pytest.helpers.cuda_param('PTX')])
 def test_random_float(benchmark, mode):
-    res = []
     if mode == 'numpy':
         state = np.random.Philox([SEED])
         prng = np.random.Generator(state)

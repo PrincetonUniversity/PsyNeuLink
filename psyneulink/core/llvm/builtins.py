@@ -17,8 +17,10 @@ from .builder_context import LLVMBuilderContext, _BUILTIN_PREFIX
 
 
 def _setup_builtin_func_builder(ctx, name, args, *, return_type=ir.VoidType()):
-    builder = ctx.create_llvm_function(args, None, _BUILTIN_PREFIX + name,
-                                       return_type=return_type)
+    if not name.startswith(_BUILTIN_PREFIX):
+        name = _BUILTIN_PREFIX + name
+
+    builder = ctx.create_llvm_function(args, None, name, return_type=return_type)
 
     # Add noalias attribute
     for a in builder.function.args:
@@ -757,7 +759,6 @@ def _setup_mt_rand_integer(ctx, state_ty):
 
     return builder.function
 
-
 def _setup_mt_rand_float(ctx, state_ty, gen_int):
     """
     Mersenne Twister double prcision random number generation.
@@ -1136,6 +1137,88 @@ def _setup_philox_rand_int32(ctx, state_ty, gen_int64):
     builder.ret_void()
 
     return builder.function
+
+
+def _setup_rand_lemire_int32(ctx, state_ty, gen_int32):
+    """
+    Uses Lemire's algorithm - https://arxiv.org/abs/1805.10941
+    As implemented in Numpy to match Numpy results.
+    """
+
+    out_ty = gen_int32.args[1].type.pointee
+    builder = _setup_builtin_func_builder(ctx, gen_int32.name + "_bounded", (state_ty.as_pointer(), out_ty, out_ty, out_ty.as_pointer()))
+    state, lower, upper, out_ptr = builder.function.args
+
+    rand_range_excl = builder.sub(upper, lower)
+    rand_range_excl_64 = builder.zext(rand_range_excl, ir.IntType(64))
+    rand_range = builder.sub(rand_range_excl, rand_range_excl.type(1))
+
+
+    builder.call(gen_int32, [state, out_ptr])
+    val = builder.load(out_ptr)
+
+    is_full_range = builder.icmp_unsigned("==", rand_range, rand_range.type(0xffffffff))
+    with builder.if_then(is_full_range):
+        builder.ret_void()
+
+    val64 = builder.zext(val, rand_range_excl_64.type)
+    m = builder.mul(val64, rand_range_excl_64)
+
+    # Store current result as output. It will be overwritten below if needed.
+    out_val = builder.lshr(m, m.type(32))
+    out_val = builder.trunc(out_val, out_ptr.type.pointee)
+    out_val = builder.add(out_val, lower)
+    builder.store(out_val, out_ptr)
+
+    leftover = builder.and_(m, m.type(0xffffffff))
+
+    is_good = builder.icmp_unsigned(">=", leftover, rand_range_excl_64)
+    with builder.if_then(is_good):
+        builder.ret_void()
+
+    # Apply rejection sampling
+    leftover_ptr = builder.alloca(leftover.type)
+    builder.store(leftover, leftover_ptr)
+
+    rand_range_64 = builder.zext(rand_range, ir.IntType(64))
+    threshold = builder.sub(rand_range_64, rand_range_64.type(0xffffffff))
+    threshold = builder.urem(threshold, rand_range_excl_64)
+
+    cond_block = builder.append_basic_block("bounded_cond_block")
+    loop_block = builder.append_basic_block("bounded_loop_block")
+    out_block = builder.append_basic_block("bounded_out_block")
+
+    builder.branch(cond_block)
+
+    # Condition: leftover < threshold
+    builder.position_at_end(cond_block)
+    leftover = builder.load(leftover_ptr)
+    do_next = builder.icmp_unsigned("<", leftover, threshold)
+    builder.cbranch(do_next, loop_block, out_block)
+
+    # Loop block:
+    # m = ((uint64_t)next_uint32(bitgen_state)) * rng_excl;
+    # leftover = m & 0xffffffff
+    # result = m >> 32
+    builder.position_at_end(loop_block)
+    builder.call(gen_int32, [state, out_ptr])
+
+    val = builder.load(out_ptr)
+    val64 = builder.zext(val, rand_range_excl_64.type)
+    m = builder.mul(val64, rand_range_excl_64)
+
+    leftover = builder.and_(m, m.type(0xffffffff))
+    builder.store(leftover, leftover_ptr)
+
+    out_val = builder.lshr(m, m.type(32))
+    out_val = builder.trunc(out_val, out_ptr.type.pointee)
+    out_val = builder.add(out_val, lower)
+    builder.store(out_val, out_ptr)
+    builder.branch(cond_block)
+
+
+    builder.position_at_end(out_block)
+    builder.ret_void()
 
 
 def _setup_philox_rand_double(ctx, state_ty, gen_int64):
@@ -2087,6 +2170,7 @@ def setup_philox(ctx):
     _setup_rand_binomial(ctx, state_ty, gen_double, prefix="philox")
 
     gen_int32 = _setup_philox_rand_int32(ctx, state_ty, gen_int64)
+    _setup_rand_lemire_int32(ctx, state_ty, gen_int32)
     gen_float = _setup_philox_rand_float(ctx, state_ty, gen_int32)
     _setup_philox_rand_normal(ctx, state_ty, gen_float, gen_int32, _wi_float_data, _ki_i32_data, _fi_float_data)
     _setup_rand_binomial(ctx, state_ty, gen_float, prefix="philox")
