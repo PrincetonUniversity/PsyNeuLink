@@ -975,19 +975,29 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.configure_learning(context=context)
 
         if ENERGY_OUTPUT_PORT_NAME in self.output_ports.names:
-            energy = Stability(self.defaults.variable[0],
+            energy = Stability(self.defaults.variable,
                                metric=ENERGY,
                                transfer_fct=self.function,
-                               matrix=self.recurrent_projection._parameter_ports[MATRIX])
-            self.output_ports[ENERGY_OUTPUT_PORT_NAME]._calculate = energy.function
+                               # # MODIFIED 11/12/24 OLD:
+                               # matrix=self.recurrent_projection._parameter_ports[MATRIX])
+                               # MODIFIED 11/12/24 NEW:
+                               matrix=matrix)
+                               # MODIFIED 11/12/24 END
+            # self.output_ports[ENERGY_OUTPUT_PORT_NAME]._calculate = energy.function
+            self.output_ports[ENERGY_OUTPUT_PORT_NAME].function = energy
 
         if ENTROPY_OUTPUT_PORT_NAME in self.output_ports.names:
             if self.function.bounds == (0,1) or self.clip == (0,1):
-                entropy = Stability(self.defaults.variable[0],
+                entropy = Stability(self.defaults.variable,
                                     metric=ENTROPY,
                                     transfer_fct=self.function,
-                                    matrix=self.recurrent_projection._parameter_ports[MATRIX])
-                self.output_ports[ENTROPY_OUTPUT_PORT_NAME]._calculate = entropy.function
+                                    # # MODIFIED 11/12/24 OLD:
+                                    # matrix=self.recurrent_projection._parameter_ports[MATRIX])
+                                    # MODIFIED 11/12/24 NEW:
+                                    matrix=matrix)
+                                    # MODIFIED 11/12/24 END
+                # self.output_ports[ENTROPY_OUTPUT_PORT_NAME]._calculate = entropy.function
+                self.output_ports[ENTROPY_OUTPUT_PORT_NAME].function = entropy
             else:
                 del self.output_ports[ENTROPY_OUTPUT_PORT_NAME]
 

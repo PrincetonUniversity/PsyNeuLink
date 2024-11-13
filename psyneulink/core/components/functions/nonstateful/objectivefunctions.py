@@ -352,7 +352,11 @@ class Stability(ObjectiveFunction):
         if isinstance(matrix, MappingProjection):
             matrix = matrix._parameter_ports[MATRIX]
         elif isinstance(matrix, ParameterPort):
+            # MODIFIED 11/12/24 OLD:
             pass
+            # MODIFIED 11/12/24 NEW:
+            # matrix = matrix.value
+            # MODIFIED 11/12/24 END
         else:
             matrix = get_matrix(matrix, size, size)
 
@@ -386,7 +390,11 @@ class Stability(ObjectiveFunction):
         if isinstance(matrix, MappingProjection):
             matrix = matrix._parameter_ports[MATRIX]
         elif isinstance(matrix, ParameterPort):
+            # MODIFIED 11/12/24 OLD:
             pass
+            # MODIFIED 11/12/24 NEW:
+            # matrix = matrix.value
+            # MODIFIED 11/12/24 END
         else:
             matrix = get_matrix(copy_parameter_value(self.defaults.matrix), size, size)
 
@@ -462,6 +470,13 @@ class Stability(ObjectiveFunction):
         # MODIFIED 6/12/19 END
 
         matrix = self._get_current_parameter_value(MATRIX, context)
+        # MODIFIED 11/12/24 NEW:
+        if matrix is None:
+            matrix = self.matrix
+        # from psyneulink.core.components.ports.parameterport import ParameterPort
+        # if isinstance(matrix, ParameterPort):
+        #     matrix = matrix.parameters.value.get(context)
+        # MODIFIED 11/12/24 END
 
         current = variable
 
