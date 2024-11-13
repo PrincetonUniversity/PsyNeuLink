@@ -70,9 +70,6 @@ class ExecutionMode(enum.Flag):
     PTX
       compile and run Composition `Nodes <Composition_Nodes>` and `Projections <Projection>` using CUDA for GPU.
 
-    PTXExec
-      compile and run each `TRIAL <TimeScale.TRIAL>` using CUDA for GPU.
-
     PTXRun
       compile and run multiple `TRIAL <TimeScale.TRIAL>`\\s using CUDA for GPU.
    """
@@ -89,7 +86,6 @@ class ExecutionMode(enum.Flag):
     LLVMRun = LLVM | _Run
     LLVMExec = LLVM | _Exec
     PTXRun = PTX | _Run
-    PTXExec = PTX | _Exec
     COMPILED = ~ (Python | PyTorch)
 
 

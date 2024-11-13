@@ -501,15 +501,6 @@ class CompExecution(CUDAExecution):
                             self._data_struct,
                             self._conditions)
 
-    def cuda_execute(self, inputs):
-        # NOTE: Make sure that input struct generation is inlined.
-        # We need the binary function to be setup for it to work correctly.
-        self._bin_exec_func.cuda_call(self._cuda_state_struct,
-                                      self._cuda_param_struct,
-                                      jit_engine.pycuda.driver.In(self._get_input_struct(inputs)),
-                                      self._cuda_data_struct,
-                                      self._cuda_conditions)
-
     # Methods used to accelerate "Run"
     def _get_run_input_struct(self, inputs, num_input_sets, arg=3):
         # Callers that override input arg, should ensure that _bin_func is not None
