@@ -658,10 +658,11 @@ def _setup_mt_rand_init(ctx, state_ty, init_scalar):
     return builder.function
 
 
-def _setup_mt_rand_integer(ctx, state_ty):
+def _setup_mt_rand_int32(ctx, state_ty):
     int64_ty = ir.IntType(64)
+
     # Generate random number generator function.
-    # It produces random 32bit numberin a 64bit word
+    # It produces random 32bit number in a 64bit word
     builder = _setup_builtin_func_builder(ctx, "mt_rand_int32", (state_ty.as_pointer(), int64_ty.as_pointer()))
     state, out = builder.function.args
 
@@ -758,6 +759,43 @@ def _setup_mt_rand_integer(ctx, state_ty):
     builder.ret_void()
 
     return builder.function
+
+
+def _setup_rand_bounded_int32(ctx, state_ty, gen_int32):
+
+    out_ty = gen_int32.args[1].type.pointee
+    builder = _setup_builtin_func_builder(ctx, gen_int32.name + "_bounded", (state_ty.as_pointer(), ctx.int32_ty, ctx.int32_ty, out_ty.as_pointer()))
+    state, lower, upper, out_ptr = builder.function.args
+
+    rand_range_excl = builder.sub(upper, lower)
+    rand_range_excl = builder.zext(rand_range_excl, out_ty)
+
+    range_leading_zeros = builder.ctlz(rand_range_excl, ctx.bool_ty(1))
+    mask = builder.lshr(range_leading_zeros.type(-1), range_leading_zeros)
+
+    loop_block = builder.append_basic_block("bounded_loop_block")
+    out_block = builder.append_basic_block("bounded_out_block")
+
+    builder.branch(loop_block)
+
+    # Loop:
+    # do:
+    #   r = random() & mask
+    # while r >= limit
+    builder.position_at_end(loop_block)
+
+    builder.call(gen_int32, [state, out_ptr])
+    val = builder.load(out_ptr)
+    val = builder.and_(val, mask)
+
+    is_above_limit = builder.icmp_unsigned(">=", val, rand_range_excl)
+    builder.cbranch(is_above_limit, loop_block, out_block)
+
+    builder.position_at_end(out_block)
+    offset = builder.zext(lower, val.type)
+    result = builder.add(val, offset)
+    builder.store(result, out_ptr)
+    builder.ret_void()
 
 def _setup_mt_rand_float(ctx, state_ty, gen_int):
     """
@@ -893,8 +931,9 @@ def setup_mersenne_twister(ctx):
     init_scalar = _setup_mt_rand_init_scalar(ctx, state_ty)
     _setup_mt_rand_init(ctx, state_ty, init_scalar)
 
-    gen_int = _setup_mt_rand_integer(ctx, state_ty)
-    gen_float = _setup_mt_rand_float(ctx, state_ty, gen_int)
+    gen_int32 = _setup_mt_rand_int32(ctx, state_ty)
+    _setup_rand_bounded_int32(ctx, state_ty, gen_int32)
+    gen_float = _setup_mt_rand_float(ctx, state_ty, gen_int32)
     _setup_mt_rand_normal(ctx, state_ty, gen_float)
     _setup_rand_binomial(ctx, state_ty, gen_float, prefix="mt")
 
