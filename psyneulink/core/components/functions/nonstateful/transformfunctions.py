@@ -1628,20 +1628,48 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
 
     Matrix transform of `variable <MatrixTransform.variable>`.
 
-    `function <MatrixTransform._function>` returns dot product of variable with matrix:
+    `function <MatrixTransform._function>` returns a matrix transform of `variable <MatrixTransform.variable>`
+     based on the **operation** argument.
 
-    .. math::
-        variable \\bullet matrix
+    **operation** = *DOT_PRODUCT*:
 
-    If *DOT_PRODUCT* is specified as the **operation*, the result is the dot product of `variable
-    <MatrixTransform.variable>` and `matrix <MatrixTransform.matrix>`;  if *L0* is specified, the result is the
-    difference between `variable <MatrixTransform.variable>` and `matrix <MatrixTransform.matrix>` (see
-    `operation <MatrixTransform.operation>` for additional details).
+        Returns the dot (inner) product of `variable <MatrixTransform.variable>` and `matrix <MatrixTransform.matrix>`:
 
-    If **normalize** is True, the result is normalized by the product of the norms of the variable and matrix:
+        .. math::
+            {variable} \\bullet |matrix|
 
-    .. math::
-        \\frac{variable \\bullet matrix}{\\|variable\\| \\cdot \\|matrix\\|}
+        If **normalize** =True, the result is normalized by the product of the norms of the variable and matrix:
+
+        .. math::
+            \\frac{variable \\bullet matrix}{\\|variable\\| \\cdot \\|matrix\\|}
+
+        .. note::
+           For **normalize** =True, the result is the same as the cosine of the angle between pairs of vectors.
+
+    **operation** = *L0*:
+
+        Returns the absolute value of the difference between `variable <MatrixTransform.variable>` and `matrix
+        <MatrixTransform.matrix>`:
+
+        .. math::
+            |variable - matrix|
+
+        If **normalize** =True, the result is normalized by the norm of the sum of differences between the variable and
+        matrix, which is then subtracted from 1:
+
+        .. math::
+            1 - \\frac{|variable - matrix|}{\\|variable - matrix\\|}
+
+        .. note::
+           For **normalize** =True, the result has the same effect as the normalized *DOT_PRODUCT* operation,
+           with more similar pairs of vectors producing larger values (closer to 1).
+
+        .. warning::
+           For **normalize** =False, the result is smaller (closer to 0) for more similar pairs of vectors,
+           which is **opposite** the effect of the *DOT_PRODUCT* and normalized *L0* operations.  If the desired
+           result is that more similar pairs of vectors produce larger values, set **normalize** =True or
+           use the *DOT_PRODUCT* operation.
+
 
     COMMENT:  [CONVERT TO FIGURE]
         ----------------------------------------------------------------------------------------------------------
@@ -1679,7 +1707,7 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
         specifies matrix used to transform `variable <MatrixTransform.variable>`
         (see `matrix <MatrixTransform.matrix>` for specification details).
 
-        When MatrixTransform is the `function <Projection_Base._function>` of a projection:
+        When MatrixTransform is the `function <Projection_Base.function>` of a projection:
 
             - the matrix specification must be compatible with the variables of the `sender <Projection_Base.sender>`
               and `receiver <Projection_Base.receiver>`
@@ -1795,15 +1823,6 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
         normalize = Parameter(False)
         bounds = None
 
-    # def is_matrix_spec(m):
-    #     if m is None:
-    #         return True
-    #     if m in MATRIX_KEYWORD_VALUES:
-    #         return True
-    #     if isinstance(m, (list, np.ndarray, types.FunctionType)):
-    #         return True
-    #     return False
-
     @check_user_specified
     @beartype
     def __init__(self,
@@ -1832,25 +1851,6 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
             self.instantiate_matrix(self.parameters.matrix.get()),
             skip_log=True,
         )
-
-    # def _validate_variable(self, variable, context=None):
-    #     """Insure that variable passed to MatrixTransform is a max 2D array
-    #
-    #     :param variable: (max 2D array)
-    #     :param context:
-    #     :return:
-    #     """
-    #     variable = super()._validate_variable(variable, context)
-    #
-    #     # Check that variable <= 2D
-    #     try:
-    #         if not variable.ndim <= 2:
-    #             raise FunctionError("variable ({0}) for {1} must be a numpy.ndarray of dimension at most 2".format(variable, self.__class__.__name__))
-    #     except AttributeError:
-    #         raise FunctionError("PROGRAM ERROR: variable ({0}) for {1} should be a numpy.ndarray".
-    #                                 format(variable, self.__class__.__name__))
-    #
-    #     return variable
 
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -2013,18 +2013,6 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
                                                    self.name,
                                                    self.owner_name,
                                                    MATRIX_KEYWORD_NAMES))
-
-                # # MODIFIED 11/13/24 OLD:
-                # # operation param
-                # elif param_name == OPERATION:
-                #     if param_value == L0 and NORMALIZE in param_set and param_set[NORMALIZE]:
-                #         raise FunctionError(f"The 'operation' parameter for the {self.name} function of "
-                #                             f"{self.owner_name} is set to 'L0', so the 'normalize' parameter "
-                #                             f"should not be set to True "
-                #                             f"(normalization is not needed, and can cause a divide by zero error). "
-                #                             f"Set 'normalize' to False or change 'operation' to 'DOT_PRODUCT'.")
-                # MODIFIED 11/13/24 END
-
                 else:
                     continue
 
@@ -2179,7 +2167,7 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
             if normalize:
                 return diff_with_normalization
             else:
-                return lambda x, y: torch.sum((1 - torch.abs(x - y)),axis=0)
+                return lambda x, y: torch.sum(torch.abs(x - y),axis=0)
 
         else:
             from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
