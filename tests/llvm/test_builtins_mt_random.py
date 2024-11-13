@@ -10,7 +10,7 @@ SEED = 0
 @pytest.mark.parametrize('mode', ['Python', 'numpy',
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
                                   pytest.helpers.cuda_param('PTX')])
-def test_random_int(benchmark, mode):
+def test_random_int32(benchmark, mode):
     res = []
     if mode == 'Python':
         state = random.Random(SEED)
@@ -23,7 +23,7 @@ def test_random_int(benchmark, mode):
         state = np.random.RandomState([SEED])
 
         def f():
-            return state.randint(0xffffffff, dtype=np.int64)
+            return state.randint(0xffffffff, dtype=np.uint32)
 
     elif mode == 'LLVM':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
@@ -57,8 +57,8 @@ def test_random_int(benchmark, mode):
     else:
         assert False, "Unknown mode: {}".format(mode)
 
-    res = [f(), f()]
-    np.testing.assert_allclose(res, [3626764237, 1654615998])
+    res = [f(), f(), f(), f(), f()]
+    np.testing.assert_allclose(res, [3626764237, 1654615998, 3255389356, 3823568514, 1806341205])
     benchmark(f)
 
 
