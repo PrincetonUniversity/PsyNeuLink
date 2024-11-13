@@ -2014,14 +2014,17 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
                                                    self.owner_name,
                                                    MATRIX_KEYWORD_NAMES))
 
-                # operation param
-                elif param_name == OPERATION:
-                    if param_value == L0 and NORMALIZE in param_set and param_set[NORMALIZE]:
-                        raise FunctionError(f"The 'operation' parameter for the {self.name} function of "
-                                            f"{self.owner_name} is set to 'L0', so the 'normalize' parameter "
-                                            f"should not be set to True "
-                                            f"(normalization is not needed, and can cause a divide by zero error). "
-                                            f"Set 'normalize' to False or change 'operation' to 'DOT_PRODUCT'.")
+                # # MODIFIED 11/13/24 OLD:
+                # # operation param
+                # elif param_name == OPERATION:
+                #     if param_value == L0 and NORMALIZE in param_set and param_set[NORMALIZE]:
+                #         raise FunctionError(f"The 'operation' parameter for the {self.name} function of "
+                #                             f"{self.owner_name} is set to 'L0', so the 'normalize' parameter "
+                #                             f"should not be set to True "
+                #                             f"(normalization is not needed, and can cause a divide by zero error). "
+                #                             f"Set 'normalize' to False or change 'operation' to 'DOT_PRODUCT'.")
+                # MODIFIED 11/13/24 END
+
                 else:
                     continue
 
@@ -2224,10 +2227,11 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
             result = np.dot(vector, matrix)
 
         elif operation == L0:
-            normalization = 1
             if normalize:
                 normalization = np.sum(np.abs(vector - matrix))
-            result = np.sum(((np.abs(vector - matrix)) / normalization),axis=0)
+                result = np.sum(((1 - np.abs(vector - matrix)) / normalization),axis=0)
+            else:
+                result = np.sum((np.abs(vector - matrix)),axis=0)
 
         return self.convert_output_type(result)
 

@@ -2201,7 +2201,12 @@ class EMComposition(AutodiffComposition):
         """
         OPERATION = 0
         NORMALIZE = 1
-        args = [(L0,False) if len(key) == 1 else (DOT_PRODUCT,normalize_memories) for key in memory_template[0]]
+        # MODIFIED 11/13/24 OLD:
+        # args = [(L0,False) if len(key) == 1 else (DOT_PRODUCT,normalize_memories) for key in memory_template[0]]
+        # MODIFIED 11/13/24 NEW:
+        args = [(L0,normalize_memories) if len(key) == 1 else (DOT_PRODUCT,normalize_memories)
+                for key in memory_template[0]]
+        # MODIFIED 11/13/24 END
 
         if concatenate_queries:
             # Get fields of memory structure corresponding to the keys
