@@ -985,6 +985,8 @@ class RecurrentTransferMechanism(TransferMechanism):
                                # MODIFIED 11/12/24 END
             # self.output_ports[ENERGY_OUTPUT_PORT_NAME]._calculate = energy.function
             self.output_ports[ENERGY_OUTPUT_PORT_NAME].function = energy
+            self.output_ports[ENERGY_OUTPUT_PORT_NAME].execute()
+            assert True
 
         if ENTROPY_OUTPUT_PORT_NAME in self.output_ports.names:
             if self.function.bounds == (0,1) or self.clip == (0,1):
