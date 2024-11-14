@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ComparatorMechanism &mdash; PsyNeuLink 0.15.2.0+3.g3fc73e1d0 documentation</title>
+  <title>ComparatorMechanism &mdash; PsyNeuLink 0.15.2.0+4.gee61d35db documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.2.0+3
+                  0.15.2.0+4
                 </div>
               
             
@@ -267,7 +267,7 @@ and named, respectively, <em>SAMPLE</em> and <em>TARGET</em>.  The OutputPorts f
 in the <strong>sample</strong> and <strong>target</strong> arguments) are listed in the Mechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sample</span></code></a> and
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">target</span></code></a> attributes as well as in its <code class="xref any docutils literal notranslate"><span class="pre">monitor</span></code> attribute.
 The ComparatorMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> compares the value of the sample and target
-InputPorts.  By default, it uses a <code class="xref any docutils literal notranslate"><span class="pre">LinearCombination</span></code> function, assigning the sample InputPort a <code class="xref any docutils literal notranslate"><span class="pre">weight</span></code> of <em>-1</em> and the target a <code class="xref any docutils literal notranslate"><span class="pre">weight</span></code> of <em>1</em>, so that the sample
+InputPorts.  By default, it uses a <a class="reference internal" href="TransformFunctions.html#psyneulink.core.components.functions.transformfunctions.LinearCombination" title="psyneulink.core.components.functions.transformfunctions.LinearCombination"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearCombination</span></code></a> function, assigning the sample InputPort a <code class="xref any docutils literal notranslate"><span class="pre">weight</span></code> of <em>-1</em> and the target a <code class="xref any docutils literal notranslate"><span class="pre">weight</span></code> of <em>1</em>, so that the sample
 is subtracted from the target.  However, the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> can be customized, so long as
 it is replaced with one that takes two arrays with the same format as its inputs and generates a similar array as its
 result. The result is assigned as the value of the Comparator Mechanism’s <em>OUTCOME</em> (<a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary</span></a>)

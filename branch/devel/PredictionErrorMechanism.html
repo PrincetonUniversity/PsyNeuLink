@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>PredictionErrorMechanism &mdash; PsyNeuLink 0.15.2.0+3.g3fc73e1d0 documentation</title>
+  <title>PredictionErrorMechanism &mdash; PsyNeuLink 0.15.2.0+4.gee61d35db documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.2.0+3
+                  0.15.2.0+4
                 </div>
               
             
@@ -280,7 +280,7 @@ from which they receive their projections (specified in the <strong>sample</stro
 <code class="xref any docutils literal notranslate"><span class="pre">monitored_output_ports</span></code>
 attribute. The PredictionErrorMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function" title="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> calculates the difference between the
 predicted reward and the true reward at each timestep in <strong>SAMPLE</strong>. By
-default, it uses a <code class="xref any docutils literal notranslate"><span class="pre">PredictionErrorDeltaFunction</span></code>. However, the
+default, it uses a <a class="reference internal" href="TransformFunctions.html#psyneulink.core.components.functions.transformfunctions.PredictionErrorDeltaFunction" title="psyneulink.core.components.functions.transformfunctions.PredictionErrorDeltaFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PredictionErrorDeltaFunction</span></code></a>. However, the
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function" title="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> can be customized, so long as it
 is replaced with one that takes two arrays with the same format as its inputs
 and generates a similar array as its result. The result is assigned as the

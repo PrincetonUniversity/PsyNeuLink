@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.15.2.0+3.g3fc73e1d0 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.15.2.0+4.gee61d35db documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.2.0+3
+                  0.15.2.0+4
                 </div>
               
             
@@ -4477,7 +4477,7 @@ additional details).</p></li>
 <p class="admonition-title">Note</p>
 <p>For most learning algorithms (and by default), a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> is used to compute the error.
 However, some learning algorithms may use a different Mechanism (e.g., for <code class="xref any docutils literal notranslate"><span class="pre">TDlearning</span></code> a
-<a class="reference internal" href="PredictionErrorMechanism.html"><span class="doc">PredictionErrorMechanism</span></a> is used, which uses as its fuction <code class="xref any docutils literal notranslate"><span class="pre">PredictionErrorDeltaFunction</span></code>.</p>
+<a class="reference internal" href="PredictionErrorMechanism.html"><span class="doc">PredictionErrorMechanism</span></a> is used, which uses as its fuction <a class="reference internal" href="TransformFunctions.html#psyneulink.core.components.functions.transformfunctions.PredictionErrorDeltaFunction" title="psyneulink.core.components.functions.transformfunctions.PredictionErrorDeltaFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PredictionErrorDeltaFunction</span></code></a>.</p>
 </div>
 </p></li>
 <li><p><strong>learning_update</strong> (<em>Optional</em><em>[</em><em>bool</em><em>|</em><em>ONLINE</em><em>|</em><em>AFTER</em><em>] </em><em>: default AFTER</em>) – specifies when the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter of the <a class="reference internal" href="KohonenMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learned_projection" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learned_projection"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learned_projection</span></code></a> is updated
