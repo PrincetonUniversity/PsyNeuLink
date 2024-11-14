@@ -978,26 +978,20 @@ class RecurrentTransferMechanism(TransferMechanism):
             energy = Stability(self.defaults.variable,
                                metric=ENERGY,
                                transfer_fct=self.function,
-                               # # MODIFIED 11/12/24 OLD:
-                               # matrix=self.recurrent_projection._parameter_ports[MATRIX])
-                               # MODIFIED 11/12/24 NEW:
                                matrix=matrix)
-                               # MODIFIED 11/12/24 END
             # self.output_ports[ENERGY_OUTPUT_PORT_NAME]._calculate = energy.function
             self.output_ports[ENERGY_OUTPUT_PORT_NAME].function = energy
+            self.output_ports[ENERGY_OUTPUT_PORT_NAME]._update_default_variable(energy.value, context)
 
         if ENTROPY_OUTPUT_PORT_NAME in self.output_ports.names:
             if self.function.bounds == (0,1) or self.clip == (0,1):
                 entropy = Stability(self.defaults.variable,
                                     metric=ENTROPY,
                                     transfer_fct=self.function,
-                                    # # MODIFIED 11/12/24 OLD:
-                                    # matrix=self.recurrent_projection._parameter_ports[MATRIX])
-                                    # MODIFIED 11/12/24 NEW:
                                     matrix=matrix)
-                                    # MODIFIED 11/12/24 END
                 # self.output_ports[ENTROPY_OUTPUT_PORT_NAME]._calculate = entropy.function
                 self.output_ports[ENTROPY_OUTPUT_PORT_NAME].function = entropy
+                self.output_ports[ENERGY_OUTPUT_PORT_NAME]._update_default_variable(entropy.value, context)
             else:
                 del self.output_ports[ENTROPY_OUTPUT_PORT_NAME]
 
