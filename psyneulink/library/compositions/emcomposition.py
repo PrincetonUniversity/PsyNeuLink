@@ -1100,7 +1100,6 @@ def _memory_getter(owning_component=None, context=None)->list:
 
 def field_weights_setter(field_weights, owning_component=None, context=None):
     # FIX: ALLOW DICTIONARY WITH FIELD NAME AND WEIGHT
-    # FIX: MAKE SURE NO CHANGES ARE MADE TO VALUE NODES (AS THOSE ARE STRUCTURAL)
     # if field_weights is None and owning_component.is_initializing:
     #     owning_component.parameters.set()
     #
@@ -1110,11 +1109,21 @@ def field_weights_setter(field_weights, owning_component=None, context=None):
         raise EMCompositionError(f"The number of field_weights ({len(field_weights)}) must match the number of fields "
                                  f"{len(owning_component.field_weights)}")
     if owning_component.normalize_field_weights:
-        # FIX: ONLY DO THIS FOR NON-ZERO WEIGHTS?
         field_weights = field_weights / np.sum(field_weights)
-    for i, node in enumerate(owning_component.field_weight_nodes):
-        node.input_port.defaults.variable = field_weights[i]
+    field_wt_node_idx = 0  # Needed since # of field_weight_nodes may be less than # of fields
+    for i, field_weight in enumerate(field_weights):
+        if not owning_component.parameters.field_weights.get(context)[i]:
+            if field_weight:
+                raise EMCompositionError(f"Field '{owning_component.field_names[i]}' of '{owning_component.name}' "
+                                         f"was originally assigned as a value node (i.e., with a field_weight = 0); "
+                                         f"this cannot be changed after construction. If you want to change it to a "
+                                         f"key field, you must re-construct the EMComposition using a non-zero value "
+                                         f"for its field in the `field_weights` arg, "
+                                         f"which can then be changed to 0 after construction.")
+            continue
+        owning_component.field_weight_nodes[field_wt_node_idx].input_port.defaults.variable = field_weights[i]
         owning_component.field_weights[i] = field_weights[i]
+        field_wt_node_idx += 1
     return field_weights
 
 def get_softmax_gain(v, scale=1, base=1, entropy_weighting=.1)->float:
