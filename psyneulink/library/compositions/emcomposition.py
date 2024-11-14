@@ -1518,7 +1518,7 @@ class EMComposition(AutodiffComposition):
         memory = Parameter(None, loggable=True, getter=_memory_getter, read_only=True)
         memory_template = Parameter([[0],[0]], structural=True, valid_types=(tuple, list, np.ndarray), read_only=True)
         memory_capacity = Parameter(1000, structural=True)
-        field_weights = Parameter(None)
+        field_weights = Parameter(None, setter=field_weights_setter, getter=field_weights_getter)
         normalize_field_weights = Parameter(True)
         field_names = Parameter(None, structural=True)
         concatenate_queries = Parameter(False, structural=True)
