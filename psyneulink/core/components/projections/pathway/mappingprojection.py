@@ -522,7 +522,6 @@ class MappingProjection(PathwayProjection_Base):
             context=context
         )
         self._parameter_ports[MATRIX]._instantiate_value(context)
-        self._parameter_ports[MATRIX]._update_parameter_components(context)
 
         # # Assign ParameterPort the same Log as the MappingProjection, so that its entries are accessible to Mechanisms
         # self._parameter_ports[MATRIX].log = self.log

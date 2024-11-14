@@ -4149,8 +4149,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` attribute.
         self.num_trials = None
 
-        self._update_parameter_components()
-
         self.initialization_status = ContextFlags.INITIALIZED
         #FIXME: This removes `composition.parameters.values`, as it was not being
         # populated correctly in the first place. `composition.parameters.results`

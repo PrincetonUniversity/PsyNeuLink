@@ -302,7 +302,6 @@ class RegressionCFA(CompositionFunctionApproximator):
         if isinstance(self.update_weights, type):
             self.update_weights = \
                 self.update_weights(default_variable=update_weights_default_variable)
-            self._update_parameter_components(context)
         else:
             self.update_weights.reset({DEFAULT_VARIABLE: update_weights_default_variable})
 

@@ -1273,8 +1273,6 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         self.initialization_status = ContextFlags.INITIALIZED
 
-        self._update_parameter_components(context)
-
         self.compositions = weakref.WeakSet()
 
         # Delete the _user_specified_args attribute, we don't need it anymore
@@ -4357,25 +4355,19 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             Returns a set of Components that are values of this object's
             Parameters
         """
-        try:
-            return self.__parameter_components
-        except AttributeError:
-            self.__parameter_components = set()
-            return self.__parameter_components
-
-    @handle_external_context()
-    def _update_parameter_components(self, context=None):
         # store all Components in Parameters to be used in
         # _dependent_components for _initialize_from_context
+        res = set()
         for p in self.parameters:
-            param_value = p._get(context)
-            try:
-                param_value = param_value.__self__
-            except AttributeError:
-                pass
+            for param_value in p.values.values():
+                try:
+                    param_value = param_value.__self__
+                except AttributeError:
+                    pass
 
-            if isinstance(param_value, Component) and param_value is not self:
-                self._parameter_components.add(param_value)
+                if isinstance(param_value, Component) and param_value is not self:
+                    res.add(param_value)
+        return res
 
     @property
     def _dependent_components(self):
