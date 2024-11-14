@@ -473,7 +473,6 @@ class TestExecution:
                                 [[0.1], [0.1], [10]],
                                 [[0.1], [0.1], [10]]],
                                [[5], [5], [10]],       # 1d query
-                               [[0], [5], [10]],       # 1d expected retrieval
                                pnl.L0                  # 1d retrieval operation
                                ),
                               ([[[5,0], [0,5], [10]],  # 2d template
@@ -481,7 +480,6 @@ class TestExecution:
                                 [[0.1, 0.1], [0.1, 0.1], [0.1]],
                                 [[0.1, 0.1], [0.1, 0.1], [0.1]]],
                                 [[5,0], [5,0], [10]],   # 2d query
-                                [[0,5], [5,0], [10]],   # 2d expected retrieval
                                pnl.DOT_PRODUCT)),      # 2d retrieval operation
                              ids=['1d', '2d'])
     @pytest.mark.composition
@@ -500,8 +498,8 @@ class TestExecution:
         assert em.nodes['A [WEIGHT]'].input_port.defaults.variable == [.75]
         assert em.nodes['B [WEIGHT]'].input_port.defaults.variable == [.25]
         # Confirm use of L0 for retrieval since keys for A and B are scalars
-        assert em.projections['MEMORY for A [KEY]'].function.operation == data[3]
-        assert em.projections['MEMORY for B [KEY]'].function.operation == data[3]
+        assert em.projections['MEMORY for A [KEY]'].function.operation == data[2]
+        assert em.projections['MEMORY for B [KEY]'].function.operation == data[2]
         # Change fields weights to favor B
         em.field_weights = [0,1,0]
         # Ensure weights got changed
@@ -514,12 +512,12 @@ class TestExecution:
         result = em.run(test_input, execution_mode=exec_mode)
         #  If the weights change DIDN'T get used, it should favor field A and return [5,0,10] as the best match
         #  If weights change DID get used, it should favor field B and return [0,5,10] as the best match
-        for i,j in zip(result, data[2]):
+        for i,j in zip(result, data[0][1]):
             assert (i == j).all()
-        #  Changes weights back and confirm that it favors A
+        #  Change weights back and confirm that it now favors A
         em.field_weights = [1,0,0]
         result = em.run(test_input, execution_mode=exec_mode)
-        for i,j in zip(result, data[2]):
+        for i,j in zip(result, data[0][0]):
             assert (i == j).all()
 
     @pytest.mark.composition
