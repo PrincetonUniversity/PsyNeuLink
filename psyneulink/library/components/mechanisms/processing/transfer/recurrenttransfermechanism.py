@@ -518,13 +518,13 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         *ENERGY* : float
             the energy of the elements in the LCAMechanism's `value <Mechanism_Base.value>`,
-            calculated using the `Stability` Function using the `ENERGY` metric.
+            calculated using the `Stability` Function with the `ENERGY` metric.
 
         .. _LCAMechanism_ENTROPY:
 
         *ENTROPY* : float
             the entropy of the elements in the LCAMechanism's `value <Mechanism_Base.value>`,
-            calculated using the `Stability` Function using the `ENTROPY <CROSS_ENTROPY>` metric.
+            calculated using the `Stability` Function with the `ENTROPY <CROSS_ENTROPY>` metric.
 
     Returns
     -------
@@ -985,7 +985,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
             # self.output_ports[ENERGY_OUTPUT_PORT_NAME]._calculate = energy.function
             self.output_ports[ENERGY_OUTPUT_PORT_NAME].function = energy
-            self.output_ports[ENERGY_OUTPUT_PORT_NAME]._update_default_variable(energy.value, context)
+            self.output_ports[ENERGY_OUTPUT_PORT_NAME]._update_default_variable(energy.variable, context)
 
         if ENTROPY_OUTPUT_PORT_NAME in self.output_ports.names:
             if self.function.bounds == (0,1) or self.clip == (0,1):
@@ -998,7 +998,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                 #                   matrix=matrix)
                 # self.output_ports[ENTROPY_OUTPUT_PORT_NAME]._calculate = entropy.function
                 self.output_ports[ENTROPY_OUTPUT_PORT_NAME].function = entropy
-                self.output_ports[ENERGY_OUTPUT_PORT_NAME]._update_default_variable(entropy.value, context)
+                self.output_ports[ENERGY_OUTPUT_PORT_NAME]._update_default_variable(entropy.variable, context)
             else:
                 del self.output_ports[ENTROPY_OUTPUT_PORT_NAME]
 
