@@ -1098,6 +1098,19 @@ def _memory_getter(owning_component=None, context=None)->list:
         for i in range(memory_capacity)
     ])
 
+def field_weights_setter(owning_component=None, field_weights=None, context=None):
+    # FIX: ALLOW DICTIONARY WITH FIELD NAME AND WEIGHT
+    # FIX: MAKE SURE NO CHANGES ARE MADE TO VALUE NODES (AS THOSE ARE STRUCTURAL)
+    if len(field_weights) != len(owning_component.field_weights):
+        raise EMCompositionError(f"The number of field_weights ({len(field_weights)}) must match the number of fields "
+                                 f"{len(owning_component.field_weights)}")
+    if owning_component.normalize_field_weights:
+        # FIX: ONLY DO THIS FOR NON-ZERO WEIGHTS?
+        field_weights = field_weights / np.sum(field_weights)
+    for i, node in enumerate(owning_component.field_weight_nodes):
+        node.input_port.defaults.variable = field_weights[i]
+        owning_component.field_weights[i] = field_weights[i]
+
 def get_softmax_gain(v, scale=1, base=1, entropy_weighting=.1)->float:
     """Compute the softmax gain (inverse temperature) based on the entropy of the distribution of values.
     scale * (base + (entropy_weighting * log(entropy(logistic(v))))))))
