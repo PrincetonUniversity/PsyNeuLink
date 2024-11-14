@@ -13,6 +13,7 @@
 #   - SHOULD differential of SoftmaxGainControl Node be included in learning?
 #   - SHOULD MEMORY DECAY OCCUR IF STORAGE DOES NOT? CURRENTLY IT DOES NOT (SEE EMStorage Function)
 
+# - FIX: Refacdtor field_weights to use None instead of 0 to specify value fields
 # - FIX: Concatenation:
 # -      LLVM for function and derivative
 # -      Add Concatenate to pytorchcreator_function
@@ -28,6 +29,7 @@
 #         - list with number of entries > memory_capacity if specified
 #         - input is added to the correct row of the matrix for each key and value for
 #                for non-contiguous keys (e.g, field_weights = [1,0,1]))
+#         - illegal field weight assignment
 #         - explicitly that storage occurs after retrieval
 # - FIX: WARNING NOT OCCURRING FOR Normalize ON ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
 # - FIX: IMPLEMENT LearningMechanism FOR RETRIEVAL WEIGHTS:
