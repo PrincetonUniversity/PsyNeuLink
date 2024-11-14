@@ -516,6 +516,11 @@ class TestExecution:
         #  If weights change DID get used, it should favor field B and return [0,5,10] as the best match
         for i,j in zip(result, data[2]):
             assert (i == j).all()
+        #  Changes weights back and confirm that it favors A
+        em.field_weights = [1,0,0]
+        result = em.run(test_input, execution_mode=exec_mode)
+        for i,j in zip(result, data[2]):
+            assert (i == j).all()
 
     @pytest.mark.composition
     @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch])

@@ -449,6 +449,21 @@ An EMComposition is created by calling its constructor, that takes the following
       corresponding fields during retrieval (see `Weight fields <EMComposition_Processing>`).  In either case,
       the remaining fields (with zero weights) are treated as value fields.
 
+    _EMComposition_Field_Weights_Note:
+    .. note::
+       The field_weights can be modified after the EMComposition has been constructed, by assigning a new set of weights
+       to its `field_weights <EMComposition.field_weights>` `Parameter`.  However, only field_weights associated with
+       key fields (i.e., were initially assigned non-zero field_weights) can be modified; the weights for value fields
+       (i.e., ones that were initially assigned a field_weight of 0) cannot be modified, and an attempt to do so will
+       generate an error.  If a field initially used as a value may later need to be used as a key, it should be
+       assigned a non-zero field_weight when the EMComposition is constructed; it can then be assigned 0 just after
+       construction, and later changed as needed.
+
+    .. technical_note::
+       The reason that only field_weights for keys can be modified is that only `field_weight_nodes
+       <EMComposition.field_weight_nodes>` for keys are constructed, since ones for values would have no effect on the
+       retrieval process and thus are uncecessary.
+
 .. _EMComposition_Normalize_Field_Weights:
 
 * **normalize_field_weights**: specifies whether the `field_weights <EMComposition.field_weights>` are normalized
@@ -1100,9 +1115,6 @@ def _memory_getter(owning_component=None, context=None)->list:
 
 def field_weights_setter(field_weights, owning_component=None, context=None):
     # FIX: ALLOW DICTIONARY WITH FIELD NAME AND WEIGHT
-    # if field_weights is None and owning_component.is_initializing:
-    #     owning_component.parameters.set()
-    #
     if owning_component.field_weights is None:
         return field_weights
     elif len(field_weights) != len(owning_component.field_weights):
@@ -1112,7 +1124,8 @@ def field_weights_setter(field_weights, owning_component=None, context=None):
         field_weights = field_weights / np.sum(field_weights)
     field_wt_node_idx = 0  # Needed since # of field_weight_nodes may be less than # of fields
     for i, field_weight in enumerate(field_weights):
-        if not owning_component.parameters.field_weights.get(context)[i]:
+        # Check if original value was 0 (i.e., a value node), in which case disallow change
+        if not owning_component.parameters.field_weights.default_value[i]:
             if field_weight:
                 raise EMCompositionError(f"Field '{owning_component.field_names[i]}' of '{owning_component.name}' "
                                          f"was originally assigned as a value node (i.e., with a field_weight = 0); "
@@ -1280,7 +1293,10 @@ class EMComposition(AutodiffComposition):
         `memory <EMComposition.memory>` for retrieval, and which are used as "values" (zero values) that are stored
         and retrieved from memory but not used in the match process (see `Match memories by field
         <EMComposition_Processing>`; also determines the relative contribution of each key field to the match process;
-        see `field_weights <EMComposition_Field_Weights>` additional details.
+        see `field_weights <EMComposition_Field_Weights>` additional details. The field_weights can be changed by
+        assigning a new list of weights to the `field_weights <EMComposition.field_weights>` attribute, however only
+        the weights for fields used as `keys <EMComposition_Entries_and_Fields>` can be changed (see
+        `EMComposition_Field_Weights_Note` for additional details).
 
     normalize_field_weights : bool : default True
         determines whether `fields_weights <EMComposition.field_weights>` are normalized over the number of keys, or
