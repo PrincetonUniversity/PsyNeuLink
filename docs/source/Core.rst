@@ -57,8 +57,6 @@ Core
 
       - `NonStatefulFunctions`
 
-            - `CombinationFunctions`
-
             - `DistributionFunctions`
 
             - `LearningFunctions`
@@ -70,6 +68,8 @@ Core
             - `SelectionFunctions`
 
             - `TransferFunctions`
+
+            - `TransformFunctions`
 
       - `StatefulFunctions`
 
