@@ -351,8 +351,8 @@ class Stability(ObjectiveFunction):
 
         if isinstance(matrix, MappingProjection):
             matrix = matrix._parameter_ports[MATRIX]
-        elif isinstance(matrix, ParameterPort):
-            pass
+        # elif isinstance(matrix, ParameterPort):
+        #     pass
         else:
             matrix = get_matrix(matrix, size, size)
 
@@ -364,9 +364,13 @@ class Stability(ObjectiveFunction):
                             self.defaults.variable]
 
         if self.metric == ENTROPY:
-            self.metric_fct = Distance(default_variable=default_variable, metric=CROSS_ENTROPY, normalize=self.parameters.normalize.default_value)
+            self.metric_fct = Distance(default_variable=default_variable,
+                                       metric=CROSS_ENTROPY,
+                                       normalize=self.parameters.normalize.default_value)
         elif self.metric in DISTANCE_METRICS._set():
-            self.metric_fct = Distance(default_variable=default_variable, metric=self.metric, normalize=self.parameters.normalize.default_value)
+            self.metric_fct = Distance(default_variable=default_variable,
+                                       metric=self.metric,
+                                       normalize=self.parameters.normalize.default_value)
         else:
             assert False, "Unknown metric"
 
@@ -568,7 +572,7 @@ class Energy(Stability):
                  default_variable=None,
                  input_shapes=None,
                  normalize:bool=None,
-                 # transfer_fct=None,
+                 transfer_fct=None,
                  matrix=None,
                  params=None,
                  owner=None,
@@ -579,7 +583,7 @@ class Energy(Stability):
             input_shapes=input_shapes,
                          metric=ENERGY,
                          matrix=matrix,
-                         # transfer_fct=transfer_fct,
+                         transfer_fct=transfer_fct,
                          normalize=normalize,
                          params=params,
                          owner=owner,
@@ -590,7 +594,7 @@ class Entropy(Stability):
     """
     Entropy(                          \
         default_variable=None,        \
-        input_shapes=None,                    \
+        input_shapes=None,            \
         matrix=INVERSE_HOLLOW_MATRIX, \
         transfer_fct=None             \
         normalize=False,              \
@@ -677,6 +681,7 @@ class Entropy(Stability):
     def __init__(self,
                  default_variable=None,
                  normalize:bool=None,
+                 # matrix=None,
                  transfer_fct=None,
                  params=None,
                  owner=None,
@@ -684,13 +689,13 @@ class Entropy(Stability):
 
         super().__init__(
             default_variable=default_variable,
+            metric=ENTROPY,
             # matrix=matrix,
-                         metric=ENTROPY,
-                         transfer_fct=transfer_fct,
-                         normalize=normalize,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs)
+            transfer_fct=transfer_fct,
+            normalize=normalize,
+            params=params,
+            owner=owner,
+            prefs=prefs)
 
 
 class Distance(ObjectiveFunction):
