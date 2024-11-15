@@ -25,49 +25,48 @@ Contents
 Overview
 --------
 
-A TimerMechanism progressively changes its ouput until it reaches a specified value.  It's starting and edning values,
-as well as the direction, rate, and function form of the change can be specified.  The TimerMechanism can be used to
-implement a variety of time-based processes, such as the decay of a value over time, or the progression of a value from
-one value to another over time.  It can also be configured to execute multiple such processes in parallel, each with
-its own starting and ending values as well as direction and rates of change, but all of which use the same functional
-form.
+A TimerMechanism progressively evolves its output until it reaches a specified value. It's starting and ending values,
+as well as the direction, rate, and functional form of its evolution can be specified. If an input is provided, this
+is used to increment the timer by that ammount;  otherwise it is incremented by the value of its `increment
+<TimerMechanism.increment>` parameter. The TimerMechanism can be reset to its starting value by calling its `reset
+<TimerMechanism.reset>` method, or by modulating its `reset <TimerMechanism.reset>` parameter with a `ControlSignal`.
+
+The TimerMechanism can be used to implement a variety of time-based processes, such as the collapse of a boundary over,
+or the rise in a value to a threshold. It can also be configured to execute multiple such processes in parallel, each
+with its own starting and ending values, as well as direction, increment and input (on a given execution),
+all of which use the same functional form.
 
 .. _TimerMechanism_Creation:
 
-Creating an TimerMechanism
--------------------------------
+Creating a TimerMechanism
+-------------------------
 
-A TimerMechanism can be created directly by calling its constructor, or using the `mechanism` command and
-specifying *TIMER_MECHANISM* as its **mech_spec** argument.  The functional form of the timer is specified
-by it **form** argument, which can be *LINEAR*, *ACCELERATING*, or *DECELLERATING*, as well as its **direction**
-argument, which can be *INCREASING* or *DECREASING* (see `TimerMechanism_Execution` below for more details).
-The starting and ending values of the timer are specified by its **start** and **end** arguments, respectively,
-and the ammount it progresses each time the Mechanimsm is executed can be specified by its **rate** argument.
-The accelerating and decelearting forms of the timer implement expoenntial proceses with the following
+A TimerMechanism can be created directly by calling its constructor, or using the `mechanism` command and specifying
+*TIMER_MECHANISM* as its **mech_spec** argument. It can be created with or without a source of input. The functional
+form of the timer is specified by it **form** argument, which can be *LINEAR*, *ACCELERATING*, or *DECELLERATING*,
+as well as its **direction** argument, which can be *INCREASING* or *DECREASING* (see `TimerMechanism_Execution` below
+for more details).The starting and ending values of the timer are specified by its **start** and **end** arguments,
+respectively, and the ammount it progresses (in the absence of input) each time the Mechanimsm is executed can be
+specified by its **increment** argument.
 
 .. _TimerMechanism_Structure:
 
 Structure
 ---------
-HAS NO EXTERNAL INPUT;
-TEHCINOAL:  It `InputPort` IS ASSIGNED DEFAULT_INPUT, and the **start** parameter is assigned as its default_variable
-**end** -> WhenFinished
-parallel structure configuration
 
-A TimerMechanism has a single `InputPort`, the `value <InputPort.InputPort.value>` of which is
-used as the  `variable <Mechanism_Base.variable>` for its `function <TimerMechanism.function>`.
-The default for `function <TimerMechanism.function>` is `AdaptiveIntegrator(rate=0.5)`. However,
-a custom function can also be specified,  so long as it takes a numeric value, or a list or np.ndarray of numeric
-values as its input, and returns a value of the same type and format.  The Mechanism has a single `OutputPort`,
-the `value <OutputPort.OutputPort.value>` of which is assigned the result of the call to the Mechanism's
-`function  <TimerMechanism.function>`.
+A TimerMechanism may or may not have a source of input, and has a single `OutputPort`. Its `start
+<TimerMechanism.start>`, `end <TimerMechanism.end>` and `increment <TimerMechanism.rate>` parameters can be `modulated
+<ModulatorySignal_Modulation>` a `ControlMechanism`.
+
+.. technical_note::
+   The value of the **start** parameter is assigned as the  `initializer <IntegratorFunction.initializer>` of the
+   TimerMechanism's `function <TimerMechanism.function>`.
 
 .. _TimerMechanism_Execution:
 
 Execution
 ---------
 
-rate = how much x increments in each execution (= step_size)
 
 EXPONENTIAL GROWTH: **form** = EXPONENTIAL;  **direction** = *INCREASING*
 :math: s-1\ +\ e^{\frac{-\ln\left(1-\frac{d}{s}\right)}{f}x}
