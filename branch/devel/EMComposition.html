@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EMComposition &mdash; PsyNeuLink 0.15.2.0+5.g7542b7565 documentation</title>
+  <title>EMComposition &mdash; PsyNeuLink 0.15.2.0+6.g67e6d0e47 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.2.0+5
+                  0.15.2.0+6
                 </div>
               
             
@@ -411,6 +411,21 @@ are weighted equally for retrieval; if the non-zero entries are non-identical, t
 corresponding fields during retrieval (see <a class="reference internal" href="#emcomposition-processing"><span class="std std-ref">Weight fields</span></a>).  In either case,
 the remaining fields (with zero weights) are treated as value fields.</p></li>
 </ul>
+<p>_EMComposition_Field_Weights_Note:
+.. note:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>The field_weights can be modified after the EMComposition has been constructed, by assigning a new set of weights
+to its `field_weights &lt;EMComposition.field_weights&gt;` `Parameter`.  However, only field_weights associated with
+key fields (i.e., were initially assigned non-zero field_weights) can be modified; the weights for value fields
+(i.e., ones that were initially assigned a field_weight of 0) cannot be modified, and an attempt to do so will
+generate an error.  If a field initially used as a value may later need to be used as a key, it should be
+assigned a non-zero field_weight when the EMComposition is constructed; it can then be assigned 0 just after
+construction, and later changed as needed.
+</pre></div>
+</div>
+<div class="technical-note docutils container">
+<p>The reason that only field_weights for keys can be modified is that only <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.field_weight_nodes" title="psyneulink.library.compositions.emcomposition.EMComposition.field_weight_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">field_weight_nodes</span></code></a> for keys are constructed, since ones for values would have no effect on the
+retrieval process and thus are uncecessary.</p>
+</div>
 </div></blockquote>
 </li>
 </ul>
@@ -953,7 +968,10 @@ executing its <a class="reference internal" href="Composition.html#psyneulink.co
 <dd><p>determines which fields of the input are treated as “keys” (non-zero values) that are used to match entries in
 <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> for retrieval, and which are used as “values” (zero values) that are stored
 and retrieved from memory but not used in the match process (see <a class="reference internal" href="#emcomposition-processing"><span class="std std-ref">Match memories by field</span></a>; also determines the relative contribution of each key field to the match process;
-see <a class="reference internal" href="#emcomposition-field-weights"><span class="std std-ref">field_weights</span></a> additional details.</p>
+see <a class="reference internal" href="#emcomposition-field-weights"><span class="std std-ref">field_weights</span></a> additional details. The field_weights can be changed by
+assigning a new list of weights to the <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.field_weights" title="psyneulink.library.compositions.emcomposition.EMComposition.field_weights"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">field_weights</span></code></a> attribute, however only
+the weights for fields used as <a class="reference internal" href="#emcomposition-entries-and-fields"><span class="std std-ref">keys</span></a> can be changed (see
+<code class="xref any docutils literal notranslate"><span class="pre">EMComposition_Field_Weights_Note</span></code> for additional details).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>tuple[float]</p>
