@@ -955,7 +955,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         matrix = self.parameters.matrix._get(context)
 
-        # Now that matrix and and default_variable size are known,
+        # Now that matrix and default_variable size are known,
         #     instantiate functions for ENERGY and ENTROPY standard_output_ports
         if ENERGY_OUTPUT_PORT_NAME in self.output_ports:
             energy_idx = self.standard_output_port_names.index(ENERGY_OUTPUT_PORT_NAME)
