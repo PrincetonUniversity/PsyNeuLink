@@ -462,9 +462,9 @@ An EMComposition is created by calling its constructor, that takes the following
        construction, and later changed as needed.
 
     .. technical_note::
-       The reason that only field_weights for keys can be modified is that only `field_weight_nodes
-       <EMComposition.field_weight_nodes>` for keys are constructed, since ones for values would have no effect on the
-       retrieval process and thus are uncecessary.
+       The reason that field_weights can be modified only for keys is that `field_weight_nodes
+       <EMComposition.field_weight_nodes>` are constructed only for keys, since ones for values would have no effect
+       on the retrieval process and therefore are uncecessary (and can be misleading).
 
 .. _EMComposition_Normalize_Field_Weights:
 
@@ -1601,6 +1601,8 @@ class EMComposition(AutodiffComposition):
             if field_weights is not None:
                 if not np.atleast_1d(field_weights).ndim == 1:
                     return f"must be a scalar, list of scalars, or 1d array."
+                if not field_weights:
+                    XXX
                 if any([field_weight < 0 for field_weight in field_weights]):
                     return f"must be all be positive values."
 
