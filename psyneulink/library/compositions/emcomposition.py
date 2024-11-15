@@ -1564,7 +1564,7 @@ class EMComposition(AutodiffComposition):
         memory = Parameter(None, loggable=True, getter=_memory_getter, read_only=True)
         memory_template = Parameter([[0],[0]], structural=True, valid_types=(tuple, list, np.ndarray), read_only=True)
         memory_capacity = Parameter(1000, structural=True)
-        field_weights = Parameter(None, setter=field_weights_setter)
+        field_weights = Parameter([1], setter=field_weights_setter)
         normalize_field_weights = Parameter(True)
         field_names = Parameter(None, structural=True)
         concatenate_queries = Parameter(False, structural=True)
@@ -1601,8 +1601,8 @@ class EMComposition(AutodiffComposition):
             if field_weights is not None:
                 if not np.atleast_1d(field_weights).ndim == 1:
                     return f"must be a scalar, list of scalars, or 1d array."
-                if not field_weights:
-                    XXX
+                if len(field_weights) == 1 and field_weights[0] == None:
+                    raise EMCompositionError(f"must be a scalar, since there is only one field specified.")
                 if any([field_weight < 0 for field_weight in field_weights]):
                     return f"must be all be positive values."
 
@@ -1667,10 +1667,17 @@ class EMComposition(AutodiffComposition):
         # Construct memory --------------------------------------------------------------------------------
 
         memory_fill = memory_fill or 0 # FIX: GET RID OF THIS ONCE IMPLEMENTED AS A Parameter
-        self._validate_memory_specs(memory_template, memory_capacity, memory_fill, field_weights, field_names, name)
+        self._validate_memory_specs(memory_template,
+                                    memory_capacity,
+                                    memory_fill,
+                                    field_weights,
+                                    field_names,
+                                    name)
+
         memory_template, memory_capacity = self._parse_memory_template(memory_template,
                                                                        memory_capacity,
                                                                        memory_fill)
+
         field_weights, field_names, concatenate_queries = self._parse_fields(field_weights,
                                                                              normalize_field_weights,
                                                                              field_names,
@@ -1829,7 +1836,7 @@ class EMComposition(AutodiffComposition):
             for entry in memory_template:
                 if not (len(entry) == num_fields
                         and np.all([len(entry[i]) == len(memory_template[0][i]) for i in range(num_fields)])):
-                    raise EMCompositionError(f"The 'memory_template' arg for {self.name} must specify a list "
+                    raise EMCompositionError(f"The 'memory_template' arg for {name} must specify a list "
                                              f"or 2d array that has the same shape for all entries.")
 
         # Validate memory_fill specification (int, float, or tuple with two scalars)
@@ -1845,22 +1852,30 @@ class EMComposition(AutodiffComposition):
                                      f"for {name} must match the number of fields in memory "
                                      f"({num_fields}).")
 
+        _field_wts = np.atleast_1d(field_weights)
+        _field_wts_len = len(_field_wts)
+
         # If len of field_weights > 1, must match the len of 1st dimension (axis 0) of memory_template:
-        field_weights_len = len(np.atleast_1d(field_weights))
         if field_weights is not None:
-            if field_weights_len == 1 and not field_weights:
-                raise EMCompositionError(f"{self.name} has been configured with a single field, so that must be "
-                                         f"assigned a non-zero 'field_weight'.")
-            elif field_weights_len > 1 and field_weights_len != num_fields:
-                raise EMCompositionError(f"The number of items ({field_weights_len}) in the 'field_weights' arg "
+            if _field_wts_len > 1 and _field_wts_len != num_fields:
+                raise EMCompositionError(f"The number of items ({_field_wts_len}) in the 'field_weights' arg "
                                          f"for {name} must match the number of items in an entry of memory "
                                          f"({num_fields}).")
+            # Deal with this here instead of Parameter._validate_field_weights since this is called before super()
+            if _field_wts_len == 1:
+                if _field_wts[0] == None:
+                    raise EMCompositionError(f"The 'field_weights' arg for {name} can't be None since there is only "
+                                             f"one field specified; it must be a scalar >= 0")
+                if _field_wts[0] == 0:
+                    warnings.warn(f"There is only one field specified for {name} and its 'field_weights' arg "
+                                  f"is set to 0; this will result in no retrievals unless/until that is changed "
+                                  f"to a positive value.")
 
         # If field_names has more than one value it must match the first dimension (axis 0) of memory_template:
         if field_names and len(field_names) != num_fields:
             raise EMCompositionError(f"The number of items ({len(field_names)}) "
                                      f"in the 'field_names' arg for {name} must match "
-                                     f"the number of fields ({field_weights_len}).")
+                                     f"the number of fields ({_field_wts_len}).")
 
     def _parse_memory_template(self, memory_template, memory_capacity, memory_fill)->(np.ndarray,int):
         """Construct memory from memory_template and memory_fill
@@ -1957,7 +1972,7 @@ class EMComposition(AutodiffComposition):
                       learning_rate,
                       name):
 
-        num_fields = len(self.entry_template)
+        self.num_fields = len(self.entry_template)
 
         # Deal with default field_weights
         if field_weights is None:
@@ -1965,27 +1980,24 @@ class EMComposition(AutodiffComposition):
                 field_weights = [1]
             else:
                 # Default is to treat all fields as keys except the last one, which is the value
-                field_weights = [1] * num_fields
+                field_weights = [1] * self.num_fields
                 field_weights[-1] = 0
         field_weights = np.atleast_1d(field_weights)
 
-        # Fill out field_weights, normalizing if specified:
-        if len(field_weights) == 1:
-            if normalize_field_weights:
-                parsed_field_weights = np.repeat(field_weights / np.sum(field_weights), len(self.entry_template))
-            else:
-                parsed_field_weights = np.repeat(field_weights[0], len(self.entry_template))
+        if normalize_field_weights:
+            parsed_field_weights = field_weights / np.sum(field_weights)
         else:
-            if normalize_field_weights:
-                parsed_field_weights = np.array(field_weights) / np.sum(field_weights)
-            else:
-                parsed_field_weights = field_weights
+            parsed_field_weights = field_weights
+
+        # If only one field_weight was specified, but there is more than one field,
+        #    repeat the single weight for each field
+        if len(field_weights) == 1 and self.num_fields > 1:
+            parsed_field_weights = np.repeat(parsed_field_weights, self.num_fields)
 
         # Memory structure Parameters
         parsed_field_names = field_names.copy() if field_names is not None else None
 
         # Set memory field attributes
-        self.num_fields = len(self.entry_template)
         keys_weights = [i for i in parsed_field_weights if i != 0]
         self.num_keys = len(keys_weights)
 
