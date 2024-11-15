@@ -13,6 +13,8 @@
 #   - SHOULD differential of SoftmaxGainControl Node be included in learning?
 #   - SHOULD MEMORY DECAY OCCUR IF STORAGE DOES NOT? CURRENTLY IT DOES NOT (SEE EMStorage Function)
 
+# - FIX: Refactor field_weights to use None instead of 0 to specify value fields, and allow inputs to field_nodes
+# - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
 # - FIX: Concatenation:
 # -      LLVM for function and derivative
 # -      Add Concatenate to pytorchcreator_function
@@ -28,6 +30,7 @@
 #         - list with number of entries > memory_capacity if specified
 #         - input is added to the correct row of the matrix for each key and value for
 #                for non-contiguous keys (e.g, field_weights = [1,0,1]))
+#         - illegal field weight assignment
 #         - explicitly that storage occurs after retrieval
 # - FIX: WARNING NOT OCCURRING FOR Normalize ON ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
 # - FIX: IMPLEMENT LearningMechanism FOR RETRIEVAL WEIGHTS:
@@ -58,7 +61,6 @@
 # - FIX: ADD NOISE
 # - FIX: ?ADD add_memory() METHOD FOR STORING W/O RETRIEVAL, OR JUST ADD retrieval_prob AS modulable Parameter
 # - FIX: CONFIDENCE COMPUTATION (USING SIGMOID ON DOT PRODUCTS) AND REPORT THAT (EVEN ON FIRST CALL)
-# - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
 # MISC:
 # - WRITE TESTS FOR INPUT_PORT and MATRIX SPECS CORRECT IN LATEST BRANCHs
 # - ACCESSIBILITY OF DISTANCES (SEE BELOW): MAKE IT A LOGGABLE PARAMETER (I.E., WITH APPROPRIATE SETTER)
@@ -448,6 +450,21 @@ An EMComposition is created by calling its constructor, that takes the following
       are weighted equally for retrieval; if the non-zero entries are non-identical, they are used to weight the
       corresponding fields during retrieval (see `Weight fields <EMComposition_Processing>`).  In either case,
       the remaining fields (with zero weights) are treated as value fields.
+
+    _EMComposition_Field_Weights_Note:
+    .. note::
+       The field_weights can be modified after the EMComposition has been constructed, by assigning a new set of weights
+       to its `field_weights <EMComposition.field_weights>` `Parameter`.  However, only field_weights associated with
+       key fields (i.e., were initially assigned non-zero field_weights) can be modified; the weights for value fields
+       (i.e., ones that were initially assigned a field_weight of 0) cannot be modified, and an attempt to do so will
+       generate an error.  If a field initially used as a value may later need to be used as a key, it should be
+       assigned a non-zero field_weight when the EMComposition is constructed; it can then be assigned 0 just after
+       construction, and later changed as needed.
+
+    .. technical_note::
+       The reason that only field_weights for keys can be modified is that only `field_weight_nodes
+       <EMComposition.field_weight_nodes>` for keys are constructed, since ones for values would have no effect on the
+       retrieval process and thus are uncecessary.
 
 .. _EMComposition_Normalize_Field_Weights:
 
@@ -1098,6 +1115,32 @@ def _memory_getter(owning_component=None, context=None)->list:
         for i in range(memory_capacity)
     ])
 
+def field_weights_setter(field_weights, owning_component=None, context=None):
+    # FIX: ALLOW DICTIONARY WITH FIELD NAME AND WEIGHT
+    if owning_component.field_weights is None:
+        return field_weights
+    elif len(field_weights) != len(owning_component.field_weights):
+        raise EMCompositionError(f"The number of field_weights ({len(field_weights)}) must match the number of fields "
+                                 f"{len(owning_component.field_weights)}")
+    if owning_component.normalize_field_weights:
+        field_weights = field_weights / np.sum(field_weights)
+    field_wt_node_idx = 0  # Needed since # of field_weight_nodes may be less than # of fields
+    for i, field_weight in enumerate(field_weights):
+        # Check if original value was 0 (i.e., a value node), in which case disallow change
+        if not owning_component.parameters.field_weights.default_value[i]:
+            if field_weight:
+                raise EMCompositionError(f"Field '{owning_component.field_names[i]}' of '{owning_component.name}' "
+                                         f"was originally assigned as a value node (i.e., with a field_weight = 0); "
+                                         f"this cannot be changed after construction. If you want to change it to a "
+                                         f"key field, you must re-construct the EMComposition using a non-zero value "
+                                         f"for its field in the `field_weights` arg, "
+                                         f"which can then be changed to 0 after construction.")
+            continue
+        owning_component.field_weight_nodes[field_wt_node_idx].input_port.defaults.variable = field_weights[i]
+        owning_component.field_weights[i] = field_weights[i]
+        field_wt_node_idx += 1
+    return field_weights
+
 def get_softmax_gain(v, scale=1, base=1, entropy_weighting=.1)->float:
     """Compute the softmax gain (inverse temperature) based on the entropy of the distribution of values.
     scale * (base + (entropy_weighting * log(entropy(logistic(v))))))))
@@ -1252,7 +1295,10 @@ class EMComposition(AutodiffComposition):
         `memory <EMComposition.memory>` for retrieval, and which are used as "values" (zero values) that are stored
         and retrieved from memory but not used in the match process (see `Match memories by field
         <EMComposition_Processing>`; also determines the relative contribution of each key field to the match process;
-        see `field_weights <EMComposition_Field_Weights>` additional details.
+        see `field_weights <EMComposition_Field_Weights>` additional details. The field_weights can be changed by
+        assigning a new list of weights to the `field_weights <EMComposition.field_weights>` attribute, however only
+        the weights for fields used as `keys <EMComposition_Entries_and_Fields>` can be changed (see
+        `EMComposition_Field_Weights_Note` for additional details).
 
     normalize_field_weights : bool : default True
         determines whether `fields_weights <EMComposition.field_weights>` are normalized over the number of keys, or
@@ -1518,7 +1564,7 @@ class EMComposition(AutodiffComposition):
         memory = Parameter(None, loggable=True, getter=_memory_getter, read_only=True)
         memory_template = Parameter([[0],[0]], structural=True, valid_types=(tuple, list, np.ndarray), read_only=True)
         memory_capacity = Parameter(1000, structural=True)
-        field_weights = Parameter(None)
+        field_weights = Parameter(None, setter=field_weights_setter)
         normalize_field_weights = Parameter(True)
         field_names = Parameter(None, structural=True)
         concatenate_queries = Parameter(False, structural=True)
