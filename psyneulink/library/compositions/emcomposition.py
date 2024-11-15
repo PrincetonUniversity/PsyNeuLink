@@ -1847,10 +1847,14 @@ class EMComposition(AutodiffComposition):
 
         # If len of field_weights > 1, must match the len of 1st dimension (axis 0) of memory_template:
         field_weights_len = len(np.atleast_1d(field_weights))
-        if field_weights is not None and field_weights_len > 1 and field_weights_len != num_fields:
-            raise EMCompositionError(f"The number of items ({field_weights_len}) in the 'field_weights' arg "
-                                     f"for {name} must match the number of items in an entry of memory "
-                                     f"({num_fields}).")
+        if field_weights is not None:
+            if field_weights_len == 1 and not field_weights:
+                raise EMCompositionError(f"{self.name} has been configured with a single field, so that must be "
+                                         f"assigned a non-zero 'field_weight'.")
+            elif field_weights_len > 1 and field_weights_len != num_fields:
+                raise EMCompositionError(f"The number of items ({field_weights_len}) in the 'field_weights' arg "
+                                         f"for {name} must match the number of items in an entry of memory "
+                                         f"({num_fields}).")
 
         # If field_names has more than one value it must match the first dimension (axis 0) of memory_template:
         if field_names and len(field_names) != num_fields:
@@ -1964,8 +1968,8 @@ class EMComposition(AutodiffComposition):
                 field_weights = [1] * num_fields
                 field_weights[-1] = 0
         field_weights = np.atleast_1d(field_weights)
-        # Fill out field_weights, normalizing if specified:
 
+        # Fill out field_weights, normalizing if specified:
         if len(field_weights) == 1:
             if normalize_field_weights:
                 parsed_field_weights = np.repeat(field_weights / np.sum(field_weights), len(self.entry_template))
