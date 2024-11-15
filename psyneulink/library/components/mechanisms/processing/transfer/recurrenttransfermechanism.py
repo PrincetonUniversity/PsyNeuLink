@@ -193,10 +193,11 @@ from psyneulink._typing import Optional, Union, Callable, Literal
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import _get_parametervalue_attr
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination
 from psyneulink.core.components.functions.function import Function, get_matrix
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Hebbian
-from psyneulink.core.components.functions.nonstateful.objectivefunctions import Stability
+from psyneulink.core.components.functions.nonstateful.objectivefunctions import Stability, Energy, Entropy
 from psyneulink.core.components.functions.stateful.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError
@@ -210,7 +211,8 @@ from psyneulink.core.components.projections.modulatory.learningprojection import
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
-    AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_PORT, MATRIX, NAME, RECURRENT_TRANSFER_MECHANISM, RESULT
+    (AUTO, ENERGY, ENTROPY, FUNCTION, HETERO, HOLLOW_MATRIX, INPUT_PORT,
+     MATRIX, NAME, RECURRENT_TRANSFER_MECHANISM, RESULT)
 from psyneulink.core.globals.parameters import Parameter, SharedParameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.registry import register_instance, remove_instance_from_registry
@@ -241,7 +243,6 @@ UPDATE = 'UPDATE'
 CONVERGENCE = 'CONVERGENCE'
 ENERGY_OUTPUT_PORT_NAME=ENERGY
 ENTROPY_OUTPUT_PORT_NAME=ENTROPY
-
 
 
 class RecurrentTransferError(MechanismError):
@@ -518,13 +519,13 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         *ENERGY* : float
             the energy of the elements in the LCAMechanism's `value <Mechanism_Base.value>`,
-            calculated using the `Stability` Function using the `ENERGY` metric.
+            calculated using the `Stability` Function with the `ENERGY` metric.
 
         .. _LCAMechanism_ENTROPY:
 
         *ENTROPY* : float
             the entropy of the elements in the LCAMechanism's `value <Mechanism_Base.value>`,
-            calculated using the `Stability` Function using the `ENTROPY <CROSS_ENTROPY>` metric.
+            calculated using the `Stability` Function with the `ENTROPY <CROSS_ENTROPY>` metric.
 
     Returns
     -------
@@ -532,6 +533,11 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     """
     componentType = RECURRENT_TRANSFER_MECHANISM
+
+    standard_output_ports = TransferMechanism.standard_output_ports.copy()
+    standard_output_ports.extend([{NAME:ENERGY_OUTPUT_PORT_NAME}, {NAME:ENTROPY_OUTPUT_PORT_NAME}])
+    standard_output_port_names = TransferMechanism.standard_output_port_names.copy()
+    standard_output_port_names.extend([ENERGY_OUTPUT_PORT_NAME, ENTROPY_OUTPUT_PORT_NAME])
 
     class Parameters(TransferMechanism.Parameters):
         """
@@ -636,11 +642,6 @@ class RecurrentTransferMechanism(TransferMechanism):
             structural=True,
         )
         recurrent_projection = Parameter(None, stateful=False, loggable=False, structural=True)
-
-    standard_output_ports = TransferMechanism.standard_output_ports.copy()
-    standard_output_ports.extend([{NAME:ENERGY_OUTPUT_PORT_NAME}, {NAME:ENTROPY_OUTPUT_PORT_NAME}])
-    standard_output_port_names = TransferMechanism.standard_output_port_names.copy()
-    standard_output_port_names.extend([ENERGY_OUTPUT_PORT_NAME, ENTROPY_OUTPUT_PORT_NAME])
 
     @check_user_specified
     @beartype
@@ -952,9 +953,20 @@ class RecurrentTransferMechanism(TransferMechanism):
         """
         from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
+        matrix = self.parameters.matrix._get(context)
+
+        # Now that matrix and default_variable size are known,
+        #     instantiate functions for ENERGY and ENTROPY standard_output_ports
+        if ENERGY_OUTPUT_PORT_NAME in self.output_ports:
+            energy_idx = self.standard_output_port_names.index(ENERGY_OUTPUT_PORT_NAME)
+            self.standard_output_ports[energy_idx][FUNCTION] = Energy(self.defaults.variable,
+                                                                      matrix=matrix)
+        if ENTROPY_OUTPUT_PORT_NAME in self.output_ports:
+            energy_idx = self.standard_output_port_names.index(ENTROPY_OUTPUT_PORT_NAME)
+            self.standard_output_ports[energy_idx][FUNCTION] = Entropy(self.defaults.variable)
+
         super()._instantiate_attributes_after_function(context=context)
 
-        matrix = self.parameters.matrix._get(context)
         # (7/19/17 CW) this line of code is now questionable, given the changes to matrix and the recurrent projection
         if isinstance(matrix, AutoAssociativeProjection):
             self.recurrent_projection = matrix
@@ -973,23 +985,6 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         if self.learning_enabled:
             self.configure_learning(context=context)
-
-        if ENERGY_OUTPUT_PORT_NAME in self.output_ports.names:
-            energy = Stability(self.defaults.variable[0],
-                               metric=ENERGY,
-                               transfer_fct=self.function,
-                               matrix=self.recurrent_projection._parameter_ports[MATRIX])
-            self.output_ports[ENERGY_OUTPUT_PORT_NAME]._calculate = energy.function
-
-        if ENTROPY_OUTPUT_PORT_NAME in self.output_ports.names:
-            if self.function.bounds == (0,1) or self.clip == (0,1):
-                entropy = Stability(self.defaults.variable[0],
-                                    metric=ENTROPY,
-                                    transfer_fct=self.function,
-                                    matrix=self.recurrent_projection._parameter_ports[MATRIX])
-                self.output_ports[ENTROPY_OUTPUT_PORT_NAME]._calculate = entropy.function
-            else:
-                del self.output_ports[ENTROPY_OUTPUT_PORT_NAME]
 
     def _update_parameter_ports(self, runtime_params=None, context=None):
         for port in self._parameter_ports:
