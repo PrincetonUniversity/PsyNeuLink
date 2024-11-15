@@ -975,30 +975,16 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.configure_learning(context=context)
 
         if ENERGY_OUTPUT_PORT_NAME in self.output_ports.names:
-            energy = Stability(self.defaults.variable,
-                               metric=ENERGY,
-                               # transfer_fct=self.function, # Not supporred for LLVM
-                               matrix=matrix)
-            # energy = Energy(self.defaults.variable,
-            #                 # transfer_fct=self.function, # Not supported for LLVM
-            #                 matrix=matrix)
-
-            # self.output_ports[ENERGY_OUTPUT_PORT_NAME]._calculate = energy.function
+            energy = Energy(self.defaults.variable,
+                            matrix=matrix)
             self.output_ports[ENERGY_OUTPUT_PORT_NAME].function = energy
             self.output_ports[ENERGY_OUTPUT_PORT_NAME]._update_default_variable(energy.variable, context)
 
         if ENTROPY_OUTPUT_PORT_NAME in self.output_ports.names:
             if self.function.bounds == (0,1) or self.clip == (0,1):
-                entropy = Stability(self.defaults.variable,
-                                    metric=ENTROPY,
-                                    # transfer_fct=self.function, # Not supported for LLVM
-                                    matrix=matrix)
-                # entropy = Entropy(self.defaults.variable,
-                #                   # transfer_fct=self.function,  # Not supported for LLVM
-                #                   matrix=matrix)
-                # self.output_ports[ENTROPY_OUTPUT_PORT_NAME]._calculate = entropy.function
+                entropy = Entropy(self.defaults.variable)
                 self.output_ports[ENTROPY_OUTPUT_PORT_NAME].function = entropy
-                self.output_ports[ENERGY_OUTPUT_PORT_NAME]._update_default_variable(entropy.variable, context)
+                self.output_ports[ENTROPY_OUTPUT_PORT_NAME]._update_default_variable(entropy.variable, context)
             else:
                 del self.output_ports[ENTROPY_OUTPUT_PORT_NAME]
 

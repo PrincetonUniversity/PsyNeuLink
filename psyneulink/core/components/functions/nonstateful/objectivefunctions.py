@@ -143,7 +143,7 @@ class Stability(ObjectiveFunction):
         length of array for which stability is calculated.
 
     matrix : list, np.ndarray, function keyword, or MappingProjection : default HOLLOW_MATRIX
-        weight matrix from each element of `variable <Stability.variablity>` to each other;  if a matrix other
+        weight matrix from each element of `variable <Stability.variable>` to each other;  if a matrix other
         than HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from the
         stability calculation.
 
@@ -544,7 +544,7 @@ class Energy(Stability):
         length of array for which energy is calculated.
 
     matrix : list, np.ndarray, or matrix keyword
-        weight matrix from each element of `variable <Energy.variablity>` to each other;  if a matrix other
+        weight matrix from each element of `variable <Energy.variable>` to each other;  if a matrix other
         than INVERSE_HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from
         the energy calculation.
 
@@ -581,13 +581,13 @@ class Energy(Stability):
         super().__init__(
             default_variable=default_variable,
             input_shapes=input_shapes,
-                         metric=ENERGY,
-                         matrix=matrix,
-                         transfer_fct=transfer_fct,
-                         normalize=normalize,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs)
+            metric=ENERGY,
+            matrix=matrix,
+            transfer_fct=transfer_fct,
+            normalize=normalize,
+            params=params,
+            owner=owner,
+            prefs=prefs)
 
 
 class Entropy(Stability):
@@ -654,7 +654,7 @@ class Entropy(Stability):
         length of array for which energy is calculated.
 
     matrix : list, np.ndarray, or matrix keyword
-        weight matrix from each element of `variable <Entropy.variablity>` to each other;  if a matrix other
+        weight matrix from each element of `variable <Entropy.variable>` to each other;  if a matrix other
         than INVERSE_HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from
         the entropy calculation.
 
@@ -680,8 +680,9 @@ class Entropy(Stability):
     @check_user_specified
     def __init__(self,
                  default_variable=None,
+                 input_shapes=None,
                  normalize:bool=None,
-                 # matrix=None,
+                 matrix=None,
                  transfer_fct=None,
                  params=None,
                  owner=None,
@@ -689,8 +690,9 @@ class Entropy(Stability):
 
         super().__init__(
             default_variable=default_variable,
+            input_shapes=input_shapes,
             metric=ENTROPY,
-            # matrix=matrix,
+            matrix=matrix,
             transfer_fct=transfer_fct,
             normalize=normalize,
             params=params,
