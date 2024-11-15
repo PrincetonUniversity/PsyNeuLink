@@ -13,7 +13,8 @@
 #   - SHOULD differential of SoftmaxGainControl Node be included in learning?
 #   - SHOULD MEMORY DECAY OCCUR IF STORAGE DOES NOT? CURRENTLY IT DOES NOT (SEE EMStorage Function)
 
-# - FIX: Refacdtor field_weights to use None instead of 0 to specify value fields
+# - FIX: Refactor field_weights to use None instead of 0 to specify value fields, and allow inputs to field_nodes
+# - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
 # - FIX: Concatenation:
 # -      LLVM for function and derivative
 # -      Add Concatenate to pytorchcreator_function
@@ -60,7 +61,6 @@
 # - FIX: ADD NOISE
 # - FIX: ?ADD add_memory() METHOD FOR STORING W/O RETRIEVAL, OR JUST ADD retrieval_prob AS modulable Parameter
 # - FIX: CONFIDENCE COMPUTATION (USING SIGMOID ON DOT PRODUCTS) AND REPORT THAT (EVEN ON FIRST CALL)
-# - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
 # MISC:
 # - WRITE TESTS FOR INPUT_PORT and MATRIX SPECS CORRECT IN LATEST BRANCHs
 # - ACCESSIBILITY OF DISTANCES (SEE BELOW): MAKE IT A LOGGABLE PARAMETER (I.E., WITH APPROPRIATE SETTER)
