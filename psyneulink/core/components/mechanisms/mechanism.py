@@ -2520,15 +2520,17 @@ class Mechanism_Base(Mechanism):
                 # Executing or simulating Composition, so get input by updating input_ports
                 if (input is None
                     and (context.execution_phase is not ContextFlags.IDLE)
-                    and any(p.path_afferents for p in self.input_ports)):
+                    and (any((p.path_afferents or p.default_input) for p in self.input_ports))):
                     variable = self._update_input_ports(runtime_port_params[INPUT_PORT_PARAMS], context)
 
-                # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_ports
                 else:
+                    # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_ports
                     if context.source & ContextFlags.COMMAND_LINE:
                         context.execution_phase = ContextFlags.PROCESSING
                         if input is not None:
                             input = convert_all_elements_to_np_array(input)
+
+                    # No input was specified, so use Mechanism's default variable
                     if input is None:
                         input = self.defaults.variable
                     #     FIX:  this input value is sent to input CIMs when compositions are nested
@@ -3197,11 +3199,40 @@ class Mechanism_Base(Mechanism):
         reinit_in = builder.alloca(reinit_func.args[2].type.pointee, name="reinit_in")
         reinit_out = builder.alloca(reinit_func.args[3].type.pointee, name="reinit_out")
 
-        reinit_base_params, reinit_state = ctx.get_param_or_state_ptr(builder, self, "function", param_struct_ptr=m_base_params, state_struct_ptr=m_state)
-        reinit_params, builder = self._gen_llvm_param_ports_for_obj(
-                self.function, reinit_base_params, ctx, builder, m_base_params, m_state, m_arg_in)
+        reinit_base_params, reinit_state = ctx.get_param_or_state_ptr(builder,
+                                                                      self,
+                                                                      "function",
+                                                                      param_struct_ptr=m_base_params,
+                                                                      state_struct_ptr=m_state)
+        reinit_params, builder = self._gen_llvm_param_ports_for_obj(self.function,
+                                                                    reinit_base_params,
+                                                                    ctx,
+                                                                    builder,
+                                                                    m_base_params,
+                                                                    m_state,
+                                                                    m_arg_in)
 
         builder.call(reinit_func, [reinit_params, reinit_state, reinit_in, reinit_out])
+
+        if hasattr(self, "integrator_function") and getattr(self, "integrator_mode", False):
+            reinit_func = ctx.import_llvm_function(self.integrator_function, tags=tags)
+            reinit_in = builder.alloca(reinit_func.args[2].type.pointee, name="integrator_reinit_in")
+            reinit_out = builder.alloca(reinit_func.args[3].type.pointee, name="integrator_reinit_out")
+
+            reinit_base_params, reinit_state = ctx.get_param_or_state_ptr(builder,
+                                                                          self,
+                                                                          "integrator_function",
+                                                                          param_struct_ptr=m_base_params,
+                                                                          state_struct_ptr=m_state)
+            reinit_params, builder = self._gen_llvm_param_ports_for_obj(self.integrator_function,
+                                                                        reinit_base_params,
+                                                                        ctx,
+                                                                        builder,
+                                                                        m_base_params,
+                                                                        m_state,
+                                                                        m_arg_in)
+
+            builder.call(reinit_func, [reinit_params, reinit_state, reinit_in, reinit_out])
 
         return builder
 
@@ -3212,9 +3243,11 @@ class Mechanism_Base(Mechanism):
         Mechanisms need to support "is_finished" execution variant (used by scheduling conditions)
         on top of the variants supported by Component.
         """
+
+        # Call parent "_gen_llvm_function", this should result in calling
+        # "_gen_llvm_function_body" below
         if "is_finished" not in tags:
-            return super()._gen_llvm_function(extra_args=extra_args, ctx=ctx,
-                                              tags=tags)
+            return super()._gen_llvm_function(extra_args=extra_args, ctx=ctx, tags=tags)
 
         # Keep all 4 standard arguments to ease invocation
         args = [ctx.get_param_struct_type(self).as_pointer(),

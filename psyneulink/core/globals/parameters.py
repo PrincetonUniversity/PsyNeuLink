@@ -1516,7 +1516,7 @@ class Parameter(ParameterBase):
         if isinstance(value, Component):
             owner = self._owner._owner
             if value not in owner._parameter_components:
-                if not owner.is_initializing:
+                if owner.initialization_status == ContextFlags.INITIALIZED:
                     value._initialize_from_context(context)
                     owner._parameter_components.add(value)
 
