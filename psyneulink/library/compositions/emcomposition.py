@@ -2201,7 +2201,11 @@ class EMComposition(AutodiffComposition):
         """
         OPERATION = 0
         NORMALIZE = 1
-        args = [(L0,False) if len(key) == 1 else (DOT_PRODUCT,normalize_memories) for key in memory_template[0]]
+        # Enforce normalization of memories if key is a scalar
+        #   (this is to allow 1-L0 distance to be used as similarity measure, so that better matches
+        #   (more similar memories) have higher match values; see `MatrixTransform` for explanation)
+        args = [(L0,True) if len(key) == 1 else (DOT_PRODUCT,normalize_memories)
+                for key in memory_template[0]]
 
         if concatenate_queries:
             # Get fields of memory structure corresponding to the keys
@@ -2237,7 +2241,6 @@ class EMComposition(AutodiffComposition):
                     name=self.key_names[i] + MATCH_TO_KEYS_AFFIX)
                 for i in range(self.num_keys)
             ]
-
 
         return match_nodes
 

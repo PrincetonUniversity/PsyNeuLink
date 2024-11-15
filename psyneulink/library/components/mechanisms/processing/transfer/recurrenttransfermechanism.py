@@ -193,10 +193,11 @@ from psyneulink._typing import Optional, Union, Callable, Literal
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import _get_parametervalue_attr
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination
 from psyneulink.core.components.functions.function import Function, get_matrix
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Hebbian
-from psyneulink.core.components.functions.nonstateful.objectivefunctions import Stability
+from psyneulink.core.components.functions.nonstateful.objectivefunctions import Stability, Energy, Entropy
 from psyneulink.core.components.functions.stateful.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError
@@ -241,7 +242,6 @@ UPDATE = 'UPDATE'
 CONVERGENCE = 'CONVERGENCE'
 ENERGY_OUTPUT_PORT_NAME=ENERGY
 ENTROPY_OUTPUT_PORT_NAME=ENTROPY
-
 
 
 class RecurrentTransferError(MechanismError):
@@ -518,13 +518,13 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         *ENERGY* : float
             the energy of the elements in the LCAMechanism's `value <Mechanism_Base.value>`,
-            calculated using the `Stability` Function using the `ENERGY` metric.
+            calculated using the `Stability` Function with the `ENERGY` metric.
 
         .. _LCAMechanism_ENTROPY:
 
         *ENTROPY* : float
             the entropy of the elements in the LCAMechanism's `value <Mechanism_Base.value>`,
-            calculated using the `Stability` Function using the `ENTROPY <CROSS_ENTROPY>` metric.
+            calculated using the `Stability` Function with the `ENTROPY <CROSS_ENTROPY>` metric.
 
     Returns
     -------
@@ -975,19 +975,16 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.configure_learning(context=context)
 
         if ENERGY_OUTPUT_PORT_NAME in self.output_ports.names:
-            energy = Stability(self.defaults.variable[0],
-                               metric=ENERGY,
-                               transfer_fct=self.function,
-                               matrix=self.recurrent_projection._parameter_ports[MATRIX])
-            self.output_ports[ENERGY_OUTPUT_PORT_NAME]._calculate = energy.function
+            energy = Energy(self.defaults.variable,
+                            matrix=matrix)
+            self.output_ports[ENERGY_OUTPUT_PORT_NAME].function = energy
+            self.output_ports[ENERGY_OUTPUT_PORT_NAME]._update_default_variable(energy.variable, context)
 
         if ENTROPY_OUTPUT_PORT_NAME in self.output_ports.names:
             if self.function.bounds == (0,1) or self.clip == (0,1):
-                entropy = Stability(self.defaults.variable[0],
-                                    metric=ENTROPY,
-                                    transfer_fct=self.function,
-                                    matrix=self.recurrent_projection._parameter_ports[MATRIX])
-                self.output_ports[ENTROPY_OUTPUT_PORT_NAME]._calculate = entropy.function
+                entropy = Entropy(self.defaults.variable)
+                self.output_ports[ENTROPY_OUTPUT_PORT_NAME].function = entropy
+                self.output_ports[ENTROPY_OUTPUT_PORT_NAME]._update_default_variable(entropy.variable, context)
             else:
                 del self.output_ports[ENTROPY_OUTPUT_PORT_NAME]
 
