@@ -1603,7 +1603,7 @@ class EMComposition(AutodiffComposition):
                     return f"must be a scalar, list of scalars, or 1d array."
                 if len(field_weights) == 1 and field_weights[0] == None:
                     raise EMCompositionError(f"must be a scalar, since there is only one field specified.")
-                if any([field_weight < 0 for field_weight in field_weights]):
+                if any([field_weight < 0 for field_weight in field_weights if field_weight is not None]):
                     return f"must be all be positive values."
 
         def _validate_normalize_field_weights(self, normalize_field_weights):
@@ -1981,11 +1981,14 @@ class EMComposition(AutodiffComposition):
             else:
                 # Default is to treat all fields as keys except the last one, which is the value
                 field_weights = [1] * self.num_fields
-                field_weights[-1] = 0
+                field_weights[-1] = None
         field_weights = np.atleast_1d(field_weights)
 
-        if normalize_field_weights:
-            parsed_field_weights = field_weights / np.sum(field_weights)
+        if normalize_field_weights and not all([fw == 0 for fw in field_weights]): # noqa: E127
+            fld_wts_0s_for_Nones = [fw if fw is not None else 0 for fw in field_weights]
+            parsed_field_weights = fld_wts_0s_for_Nones / np.sum(fld_wts_0s_for_Nones)
+            parsed_field_weights = [pfw if fw is not None else None
+                                    for pfw, fw in zip(parsed_field_weights, field_weights)]
         else:
             parsed_field_weights = field_weights
 
@@ -1998,15 +2001,15 @@ class EMComposition(AutodiffComposition):
         parsed_field_names = field_names.copy() if field_names is not None else None
 
         # Set memory field attributes
-        keys_weights = [i for i in parsed_field_weights if i != 0]
+        keys_weights = [i for i in parsed_field_weights if i is not None]
         self.num_keys = len(keys_weights)
 
         # Get indices of field_weights that specify keys and values:
-        self.key_indices = np.flatnonzero(parsed_field_weights)
+        self.key_indices = [i for i, pfw in enumerate(parsed_field_weights) if pfw is not None]
         assert len(self.key_indices) == self.num_keys, \
             f"PROGRAM ERROR: number of keys ({self.num_keys}) does not match number of " \
             f"non-zero values in field_weights ({len(self.key_indices)})."
-        self.value_indices = np.where(parsed_field_weights==0)[0]
+        self.value_indices = [i for i, pfw in enumerate(parsed_field_weights) if pfw is None]
         self.num_values = self.num_fields - self.num_keys
         assert len(self.value_indices) == self.num_values, \
             f"PROGRAM ERROR: number of values ({self.num_values}) does not match number of " \
@@ -2225,12 +2228,12 @@ class EMComposition(AutodiffComposition):
         # Get indices of field_weights that specify keys:
         value_indices = np.where(field_weights == 0)[0]
 
-        assert len(value_indices) == self.num_values, \
+        assert len(self.value_indices) == self.num_values, \
             f"PROGRAM ERROR: number of values ({self.num_values}) does not match number of " \
-            f"non-zero values in field_weights ({len(value_indices)})."
+            f"non-zero values in field_weights ({len(self.value_indices)})."
 
         value_input_nodes = [ProcessingMechanism(
-            input_shapes=len(self.entry_template[value_indices[i]]),
+            input_shapes=len(self.entry_template[self.value_indices[i]]),
                                                name= f'{self.value_names[i]} [VALUE]')
                            for i in range(self.num_values)]
 
@@ -2521,7 +2524,7 @@ class EMComposition(AutodiffComposition):
         storage_node = EMStorageMechanism(default_variable=[self.input_nodes[i].value[0]
                                                             for i in range(self.num_fields)],
                                           fields=[self.input_nodes[i] for i in range(self.num_fields)],
-                                          field_types=[0 if weight == 0 else 1 for weight in field_weights],
+                                          field_types=[0 if weight is None else 1 for weight in field_weights],
                                           concatenation_node=concatenate_queries_node,
                                           memory_matrix=memory_template,
                                           learning_signals=learning_signals,

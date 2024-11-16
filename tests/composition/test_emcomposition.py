@@ -43,7 +43,7 @@ class TestConstruction:
     test_structure_data = [
         # NOTE: None => use default value (i.e., don't specify in constructor, rather than forcing None as value of arg)
         # ------------------ SPECS ---------------------------------------------   ------- EXPECTED -------------------
-        #   memory_template       memory_fill   field_wts cncat_ky nmlze sm_gain   repeat  #fields #keys #vals  concat
+        #   memory_template       memory_fill   field_wts cncat_qy nmlze sm_gain   repeat  #fields #keys #vals  concat
         (0,    (2,3),                  None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
         (0.1,  (2,3),                   .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
         (0.2,  (2,3),                 (0,.1),     None,    None,    None,  None,    False,    2,     1,   1,    False,),
@@ -61,35 +61,38 @@ class TestConstruction:
         (6,    [[0,0,0],[0],[0,0]],    None,    [1,1,1],   False,   None,  None,    False,    3,     3,   0,    False,),
         (7,    [[0,0,0],[0],[0,0]],    None,    [1,1,1],   True,    None,  None,    False,    3,     3,   0,    True,),
         (7.1,  [[0,0,0],[0],[0,0]],    None,    [1,1,1],   True ,   False, None,    False,    3,     3,   0,    False,),
-        (8,    [[0,0],[0,0],[0,0]],    None,    [1,2,0],   None,    None,  None,    False,    3,     2,   1,    False,),
-        (8.1,  [[0,0],[0,0],[0,0]],    None,    [1,2,0],   True,    None,  None,    False,    3,     2,   1,    False,),
-        (9,    [[0,1],[0,0],[0,0]],    None,    [1,2,0],   None,    None,  None,    [0,1],    3,     2,   1,    False,),
-        (9.1,  [[0,1],[0,0,0],[0,0]],  None,    [1,2,0],   None,    None,  None,    [0,1],    3,     2,   1,    False,),
-        (10,   [[0,1],[0,0,0],[0,0]],    .1,    [1,2,0],   None,    None,  None,    [0,1],    3,     2,   1,    False,),
-        (11,   [[0,0],[0,0,0],[0,0]],    .1,    [1,2,0],   None,    None,  None,    False,    3,     2,   1,    False,),
+        (8,    [[0,0],[0,0],[0,0]],    None,   [1,2,None], None,    None,  None,    False,    3,     2,   1,    False,),
+        (8.1,  [[0,0],[0,0],[0,0]],    None,   [1,2,None], True,    None,  None,    False,    3,     2,   1,    False,),
+        (8.2,  [[0,0],[0,0],[0,0]],    None,   [1,1,None], True,    None,  None,    False,    3,     2,   1,    True,),
+        (8.3,  [[0,0],[0,0],[0,0]],    None,    [1,1,0],   True,    None,  None,    False,    3,     3,   0,    False,),
+        (8.4,  [[0,0],[0,0],[0,0]],    None,    [0,0,0],   True,    None,  None,    False,    3,     3,   0,    True,),
+        (9,    [[0,1],[0,0],[0,0]],    None,   [1,2,None], None,    None,  None,    [0,1],    3,     2,   1,    False,),
+        (9.1,  [[0,1],[0,0,0],[0,0]],  None,   [1,2,None], None,    None,  None,    [0,1],    3,     2,   1,    False,),
+        (10,   [[0,1],[0,0,0],[0,0]],    .1,   [1,2,None], None,    None,  None,    [0,1],    3,     2,   1,    False,),
+        (11,   [[0,0],[0,0,0],[0,0]],    .1,   [1,2,None], None,    None,  None,    False,    3,     2,   1,    False,),
         (12,   [[[0,0],[0,0],[0,0]],   # two entries specified, fields all same length, both entries have all 0's
                 [[0,0],[0,0],[0,0]]],    .1,    [1,1,1],   None,    None,  None,      2,      3,     3,   0,    False,),
         (12.1, [[[0,0],[0,0,0],[0,0]], # two entries specified, fields have different lenghts, entries all have 0's
-                [[0,0],[0,0,0],[0,0]]],  .1,    [1,1,0],   None,    None,  None,      2,      3,     2,   1,    False,),
+                [[0,0],[0,0,0],[0,0]]],  .1,   [1,1,None], None,    None,  None,      2,      3,     2,   1,    False,),
         (12.2,  [[[0,0],[0,0,0],[0,0]], # two entries specified, first has 0's
-                [[0,2],[0,0,0],[0,0]]],  .1,    [1,1,0],   None,    None,  None,      2,      3,     2,   1,    False,),
+                [[0,2],[0,0,0],[0,0]]],  .1,   [1,1,None], None,    None,  None,      2,      3,     2,   1,    False,),
         (12.3, [[[0,1],[0,0,0],[0,0]], # two entries specified, fields have same weights, but concatenate is False
-                [[0,2],[0,0,0],[0,0]]],  .1,    [1,1,0],   None,    None,  None,      2,      3,     2,   1,    False),
+                [[0,2],[0,0,0],[0,0]]],  .1,   [1,1,None], None,    None,  None,      2,      3,     2,   1,    False),
         (13,   [[[0,1],[0,0,0],[0,0]], # two entries specified, fields have same weights, and concatenate_queries is True
-                [[0,2],[0,0,0],[0,0]]],  .1,    [1,1,0],   True,    None,  None,      2,      3,     2,   1,    True),
+                [[0,2],[0,0,0],[0,0]]],  .1,   [1,1,None], True,    None,  None,      2,      3,     2,   1,    True),
         (14,   [[[0,1],[0,0,0],[0,0]], # two entries specified, all fields are keys
                 [[0,2],[0,0,0],[0,0]]],  .1,    [1,1,1],   None,    None,  None,      2,      3,     3,   0,    False),
         (15,   [[[0,1],[0,0,0],[0,0]], # two entries specified; fields have different weights, constant memory_fill
-                [[0,2],[0,0,0],[0,0]]],  .1,    [1,2,0],   None,    None,  None,      2,      3,     2,   1,    False),
+                [[0,2],[0,0,0],[0,0]]],  .1,   [1,2,None], None,    None,  None,      2,      3,     2,   1,    False),
         (15.1, [[[0,1],[0,0,0],[0,0]], # two entries specified; fields have different weights, random memory_fill
-                [[0,2],[0,0,0],[0,0]]], (0,.1), [1,2,0],   None,    None,  None,      2,      3,     2,   1,    False),
+                [[0,2],[0,0,0],[0,0]]], (0,.1),[1,2,None], None,    None,  None,      2,      3,     2,   1,    False),
         (16,   [[[0,1],[0,0,0],[0,0]], # three entries specified
                 [[0,2],[0,0,0],[0,0]],
-                [[0,3],[0,0,0],[0,0]]],  .1,     [1,2,0],   None,    None,  None,     3,      3,     2,   1,    False),
+                [[0,3],[0,0,0],[0,0]]],  .1,    [1,2,None], None,    None,  None,     3,      3,     2,   1,    False),
         (17,   [[[0,1],[0,0,0],[0,0]], # all four entries allowed by memory_capacity specified
                 [[0,2],[0,0,0],[0,0]],
                 [[0,3],[0,0,0],[0,0]],
-                [[0,4],[0,0,0],[0,0]]],  .1,     [1,2,0],   None,    None,  None,      4,      3,     2,   1,    False),
+                [[0,4],[0,0,0],[0,0]]],  .1,    [1,2,None], None,    None,  None,      4,      3,     2,   1,    False),
     ]
     args_names = "test_num, memory_template, memory_fill, field_weights, concatenate_queries, normalize_memories, " \
                  "softmax_gain, repeat, num_fields, num_keys, num_values, concatenate_node"
