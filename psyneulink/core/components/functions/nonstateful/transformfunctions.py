@@ -2216,7 +2216,7 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
 
         elif operation == L0:
             if normalize:
-                normalization = np.sum(np.abs(vector - matrix))
+                normalization = np.sum(np.abs(vector - matrix)) or 1
                 result = np.sum((1 - (np.abs(vector - matrix)) / normalization),axis=0)
             else:
                 result = np.sum((np.abs(vector - matrix)),axis=0)

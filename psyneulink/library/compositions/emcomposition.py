@@ -1123,7 +1123,7 @@ def field_weights_setter(field_weights, owning_component=None, context=None):
         raise EMCompositionError(f"The number of field_weights ({len(field_weights)}) must match the number of fields "
                                  f"{len(owning_component.field_weights)}")
     if owning_component.normalize_field_weights:
-        denominator = np.sum(np.where(field_weights != None))
+        denominator = np.sum(np.where(field_weights != None, field_weights, 0))
         field_weights = [fw / denominator if fw is not None else None for fw in field_weights]
 
     # Assign new fields_weights to default_variable of field_weight_nodes
