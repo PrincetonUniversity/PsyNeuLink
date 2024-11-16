@@ -265,21 +265,21 @@ class TestExecution:
         # ----------------------------------------------------------------------------------  ------------------------
         (0, [[[1,2,3],[4,6]],
              [[1,2,5],[4,8]],
-             [[1,2,10],[4,10]]],    None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]]], [[1., 2., 3.16585899],
-                                                                                                 [4., 6.16540637]]),
+             [[1,2,10],[4,10]]],    None,   3,  0, [1,None], None, None,  100,  0, [[[1, 2, 3]]], [[1., 2., 3.16585899],
+                                                                                                   [4., 6.16540637]]),
         (1, [[[1,2,3],[4,6]],
              [[1,2,5],[4,8]],
-             [[1,2,10],[4,10]]],  None,   3,  0, [1,0],  None, None,  100,  0,   [[1, 2, 3],
-                                                                                  [4, 6]],      [[1., 2., 3.16585899],
-                                                                                                 [4., 6.16540637]]),
+             [[1,2,10],[4,10]]],  None,   3,  0, [1,None], None, None,  100,  0,   [[1, 2, 3],
+                                                                                    [4, 6]],      [[1., 2., 3.16585899],
+                                                                                                   [4., 6.16540637]]),
         (2, [[[1,2,3],[4,6]],
              [[1,2,5],[4,8]],
-             [[1,2,10],[4,10]]],  None,   3,  0, [1,0],  None, None,  100,  0,   [[1, 2, 3],
-                                                                                  [4, 8]],     [[1., 2., 3.16585899],
-                                                                                                [4., 6.16540637]]),
+             [[1,2,10],[4,10]]],  None,   3,  0, [1,None], None, None,  100,  0,   [[1, 2, 3],
+                                                                                    [4, 8]],     [[1., 2., 3.16585899],
+                                                                                                  [4., 6.16540637]]),
         (3, [[[1,2,3],[4,6]],
              [[1,2,5],[4,8]],
-             [[1,2,10],[4,10]]], (0,.01), 4,  0, [1,0],  None, None,  100,  0, [[1, 2, 3],
+             [[1,2,10],[4,10]]], (0,.01), 4,  0, [1,None],  None, None,  100,  0, [[1, 2, 3],
                                                                                    [4, 8]],      [[0.99998628,
                                                                                                    1.99997247,
                                                                                                    3.1658154 ],
@@ -352,11 +352,11 @@ class TestExecution:
                                                                                                   6.38682264]]),
 
         (12, [[[1],[2],[3]],    # Scalar keys - exact match  (this tests use of L0 for retreieval in MEMORY matrix)
-              [[10],[0],[100]]], (0,.01), 3, 0, [1,1,0], None, None, pnl.ARG_MAX, 1, [[10],[0],[100]],
+              [[10],[0],[100]]], (0,.01), 3, 0, [1,1,None], None, None, pnl.ARG_MAX, 1, [[10],[0],[100]],
                                                                                                    [[10],[0],[100]]),
 
         (13, [[[1],[2],[3]],    # Scalar keys - close match  (this tests use of L0 for retreieval in MEMORY matrix
-              [[10],[0],[100]]], (0,.01), 3, 0, [1,1,0], None, None, pnl.ARG_MAX, 1, [[2],[3],[4]], [[1],[2],[3]]),
+              [[10],[0],[100]]], (0,.01), 3, 0, [1,1,None], None, None, pnl.ARG_MAX, 1, [[2],[3],[4]], [[1],[2],[3]]),
 ]
 
     args_names = "test_num, memory_template, memory_fill, memory_capacity, memory_decay_rate, field_weights, " \
@@ -470,58 +470,169 @@ class TestExecution:
                 memory_fill = memory_fill or 0
                 assert all(elem == memory_fill for elem in em.memory[-1])
 
-    @pytest.mark.parametrize('data',
-                             (([[[5], [0], [10]],      # 1d template
+    @pytest.mark.parametrize('test_field_weights_0_vs_None_data',
+                             (([[[5], [0], [10]],       # 1d memory template
                                 [[0], [5], [10]],
                                 [[0.1], [0.1], [10]],
                                 [[0.1], [0.1], [10]]],
-                               [[5], [5], [10]],       # 1d query
-                               pnl.L0                  # 1d retrieval operation
+                               [[5], [5], [10]],        # 1d query
+                               pnl.L0),                 # 1d retrieval operation
+                              ([[[5,0], [0,5], [10,10]],   # 2d memory template
+                                [[0,5], [5,0], [10,10]],
+                                [[0.1, 0.1], [0.1, 0.1], [0.1, 0.1]],
+                                [[0.1, 0.1], [0.1, 0.1], [0.1, 0.1]]],
+                                [[5,0], [5,0], [10,10]],  # 2d query
+                               pnl.DOT_PRODUCT),          # 2d retrieval operation
                                ),
-                              ([[[5,0], [0,5], [10]],  # 2d template
-                                [[0,5], [5,0], [10]],
-                                [[0.1, 0.1], [0.1, 0.1], [0.1]],
-                                [[0.1, 0.1], [0.1, 0.1], [0.1]]],
-                                [[5,0], [5,0], [10]],   # 2d query
-                               pnl.DOT_PRODUCT)),      # 2d retrieval operation
                              ids=['1d', '2d'])
+    @pytest.mark.parametrize('field_weights', [
+        [.75, .25, 0],
+        # [.75, .25, None
+    ],
+                             ids=[
+                                 '0',
+                                 # 'None'
+                             ])
+    @pytest.mark.parametrize('softmax_choice', [
+        pnl.MAX_VAL,
+        # pnl.ARG_MAX
+    ], ids=[
+        # 'MAX_VAL',
+        'ARG_MAX'
+    ])
+    @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python,
+                                           pnl.ExecutionMode.PyTorch,
+                                           # pnl.ExecutionMode.LLVM
+                                           ],
+                             ids=['Python',
+                                  'PyTorch',
+                                  # 'LLVM'
+                                  ])
     @pytest.mark.composition
-    @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch])
-    def test_em_field_weights_assignment(self, exec_mode, data):
-        EM_assign_template = data[0]
-        em = pnl.EMComposition(memory_template=EM_assign_template,
-                               memory_capacity=4,
-                               memory_decay_rate= 0,
-                               memory_fill=0.001,
-                               enable_learning = False,
-                               softmax_choice=pnl.ARG_MAX,
-                               field_weights=(.75,.25,0),
-                               field_names=['A','B','C'])
-        # Confirm initial weight assginments (that favor A)
-        assert em.nodes['A [WEIGHT]'].input_port.defaults.variable == [.75]
-        assert em.nodes['B [WEIGHT]'].input_port.defaults.variable == [.25]
-        # Confirm use of L0 for retrieval since keys for A and B are scalars
-        assert em.projections['MEMORY for A [KEY]'].function.operation == data[2]
-        assert em.projections['MEMORY for B [KEY]'].function.operation == data[2]
-        # Change fields weights to favor B
-        em.field_weights = [0,1,0]
-        # Ensure weights got changed
-        assert em.nodes['A [WEIGHT]'].input_port.defaults.variable == [0]
-        assert em.nodes['B [WEIGHT]'].input_port.defaults.variable == [1]
-        # Note:  The input matches both fields A and B;
-        test_input = {em.nodes['A [QUERY]']: [data[1][0]],
-                      em.nodes['B [QUERY]']: [data[1][1]],
-                      em.nodes['C [VALUE]']: [data[1][2]]}
-        result = em.run(test_input, execution_mode=exec_mode)
-        #  If the weights change DIDN'T get used, it should favor field A and return [5,0,10] as the best match
-        #  If weights change DID get used, it should favor field B and return [0,5,10] as the best match
-        for i,j in zip(result, data[0][1]):
-            assert (i == j).all()
-        #  Change weights back and confirm that it now favors A
-        em.field_weights = [1,0,0]
-        result = em.run(test_input, execution_mode=exec_mode)
-        for i,j in zip(result, data[0][0]):
-            assert (i == j).all()
+    def test_field_weights_0_vs_None(self, field_weights, softmax_choice, test_field_weights_0_vs_None_data, exec_mode):
+            memory_template = test_field_weights_0_vs_None_data[0]
+            query = test_field_weights_0_vs_None_data[1]
+            operation = test_field_weights_0_vs_None_data[2]
+
+            em = pnl.EMComposition(memory_template=memory_template,
+                                   memory_capacity=4,
+                                   memory_decay_rate= 0,
+                                   enable_learning = False,
+                                   softmax_choice=softmax_choice,
+                                   field_weights=field_weights,
+                                   field_names=['A','B','C'])
+            # Confirm initial weight assignments (that favor A)
+            assert em.nodes['A [WEIGHT]'].input_port.defaults.variable == [.75]
+            assert em.nodes['B [WEIGHT]'].input_port.defaults.variable == [.25]
+            if field_weights[2] == 0:
+                assert 'C [QUERY]' in em.nodes.names
+                assert len(em.field_weight_nodes) == 3
+                assert em.nodes['C [WEIGHT]'].input_port.defaults.variable == [0]
+            elif field_weights[2] == None:
+                assert 'C [VALUE]' in em.nodes.names
+                assert len(em.field_weight_nodes) == 2
+                assert 'C [WEIGHT]' not in em.nodes.names
+
+            # Confirm use of L0 for retrieval since keys for A and B are scalars
+            assert em.projections['MEMORY for A [KEY]'].function.operation == operation
+            assert em.projections['MEMORY for B [KEY]'].function.operation == operation
+            if field_weights[2] == 0:
+                assert em.projections['MEMORY for C [KEY]'].function.operation == operation
+
+            A = em.nodes['A [QUERY]']
+            B = em.nodes['B [QUERY]']
+            C = em.nodes['C [QUERY]' if field_weights[2] == 0 else 'C [VALUE]']
+
+            # Note:  The input matches both fields A and B
+            test_input = {A: [query[0]],
+                          B: [query[1]],
+                          C: [query[2]]}
+            result = em.run(test_input, execution_mode=exec_mode)
+            # Note: field_weights favors A
+            if softmax_choice == pnl.MAX_VAL:
+                if operation == pnl.L0:
+                    expected = [[1.70381182], [0.], [3.40762364]]
+                else:
+                    expected = [[1.56081243, 0.0], [0.0, 1.56081243], [3.12162487, 3.12162487]]
+            else:
+                expected = memory_template[0]
+            np.testing.assert_allclose(result, expected)
+
+            # Change fields weights to favor C
+            with pytest.raises(EMCompositionError) as error_text:
+                em.field_weights = np.array([0,0,1])
+                if field_weights[2] == None:
+                    error_text_msg = (f"Field weights for '{em.name}' cannot be changed to favor field 'C' ")
+                else:
+                    # Ensure weights got changed
+                    assert em.nodes['A [WEIGHT]'].input_port.defaults.variable == [0]
+                    assert em.nodes['B [WEIGHT]'].input_port.defaults.variable == [1]
+                    # Note:  The input matches both fields A and B;
+                    test_input = {em.nodes['A [QUERY]']: [query[0]],
+                                  em.nodes['B [QUERY]']: [query[1]],
+                                  em.nodes['C [QUERY]']: [query[2]]}
+                    result = em.run(test_input, execution_mode=exec_mode)
+                    #  If the weights change DIDN'T get used, it should favor field A and return [5,0,10] as the best match
+                    #  If weights change DID get used, it should favor field B and return [0,5,10] as the best match
+                    for i,j in zip(result, memory_template[1]):
+                        assert (i == j).all()
+                    #  Change weights back and confirm that it now favors A
+                    em.field_weights = [1,0,0]
+                    result = em.run(test_input, execution_mode=exec_mode)
+                    for i,j in zip(result, memory_template[0]):
+                        assert (i == j).all()
+
+    # @pytest.mark.parametrize('test_field_weights_reassignment_data',
+    #                          ([[[5], [0], [10]],      # 1d template
+    #                            [[0], [5], [10]],
+    #                            [[0.1], [0.1], [10]],
+    #                            [[0.1], [0.1], [10]]],
+    #                           [[5], [5], [10]],       # 1d query
+    #                           pnl.L0),                # 1d retrieval operation
+    #                          ([[[5,0], [0,5], [10]],  # 2d template
+    #                            [[0,5], [5,0], [10]],
+    #                            [[0.1, 0.1], [0.1, 0.1], [0.1]],
+    #                            [[0.1, 0.1], [0.1, 0.1], [0.1]]],
+    #                           [[5,0], [5,0], [10]],   # 2d query
+    #                           pnl.DOT_PRODUCT),      # 2d retrieval operation
+    #                          ids=['1d', '2d'])
+    # @pytest.mark.composition
+    # def test_field_weights_reassignment(self, test_field_weights_reassignment_data, exec_mode):
+    #     EM_assign_template = data[0]
+    #     em = pnl.EMComposition(memory_template=EM_assign_template,
+    #                            memory_capacity=4,
+    #                            memory_decay_rate= 0,
+    #                            memory_fill=0.001,
+    #                            enable_learning = False,
+    #                            softmax_choice=pnl.ARG_MAX,
+    #                            field_weights=(.75,.25,None),
+    #                            field_names=['A','B','C'])
+    #     # Confirm initial weight assignments (that favor A)
+    #     assert em.nodes['A [WEIGHT]'].input_port.defaults.variable == [.75]
+    #     assert em.nodes['B [WEIGHT]'].input_port.defaults.variable == [.25]
+    #     # Confirm use of L0 for retrieval since keys for A and B are scalars
+    #     assert em.projections['MEMORY for A [KEY]'].function.operation == data[2]
+    #     assert em.projections['MEMORY for B [KEY]'].function.operation == data[2]
+    #     # Change fields weights to favor B
+    #     em.field_weights = np.array([0,1,None])
+    #     # Ensure weights got changed
+    #     assert em.nodes['A [WEIGHT]'].input_port.defaults.variable == [0]
+    #     assert em.nodes['B [WEIGHT]'].input_port.defaults.variable == [1]
+    #     # Note:  The input matches both fields A and B;
+    #     test_input = {em.nodes['A [QUERY]']: [data[1][0]],
+    #                   em.nodes['B [QUERY]']: [data[1][1]],
+    #                   # em.nodes['C [QUERY]']: [data[1][2]]}
+    #                   em.nodes['C [VALUE]']: [data[1][2]]}
+    #     result = em.run(test_input, execution_mode=exec_mode)
+    #     #  If the weights change DIDN'T get used, it should favor field A and return [5,0,10] as the best match
+    #     #  If weights change DID get used, it should favor field B and return [0,5,10] as the best match
+    #     for i,j in zip(result, data[0][1]):
+    #         assert (i == j).all()
+    #         #  Change weights back and confirm that it now favors A
+    #         em.field_weights = [1,0,0]
+    #         result = em.run(test_input, execution_mode=exec_mode)
+    #         for i,j in zip(result, data[0][0]):
+    #             assert (i == j).all()
 
     @pytest.mark.composition
     @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch])

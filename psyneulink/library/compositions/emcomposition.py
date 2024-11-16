@@ -1123,23 +1123,26 @@ def field_weights_setter(field_weights, owning_component=None, context=None):
         raise EMCompositionError(f"The number of field_weights ({len(field_weights)}) must match the number of fields "
                                  f"{len(owning_component.field_weights)}")
     if owning_component.normalize_field_weights:
-        field_weights = field_weights / np.sum(field_weights)
+        denominator = np.sum(np.where(field_weights != None))
+        field_weights = [fw / denominator if fw is not None else None for fw in field_weights]
+
+    # Assign new fields_weights to default_variable of field_weight_nodes
     field_wt_node_idx = 0  # Needed since # of field_weight_nodes may be less than # of fields
+                           # and now way to know if user has assigned a value where there used to be a None
     for i, field_weight in enumerate(field_weights):
-        # Check if original value was 0 (i.e., a value node), in which case disallow change
-        if not owning_component.parameters.field_weights.default_value[i]:
+        # Check if original value was None (i.e., a value node), in which case disallow change
+        if owning_component.parameters.field_weights.default_value[i] is None:
             if field_weight:
                 raise EMCompositionError(f"Field '{owning_component.field_names[i]}' of '{owning_component.name}' "
-                                         f"was originally assigned as a value node (i.e., with a field_weight = 0); "
+                                         f"was originally assigned as a value node (i.e., with a field_weight = None); "
                                          f"this cannot be changed after construction. If you want to change it to a "
-                                         f"key field, you must re-construct the EMComposition using a non-zero value "
-                                         f"for its field in the `field_weights` arg, "
-                                         f"which can then be changed to 0 after construction.")
+                                         f"key field, you must re-construct the EMComposition using a scalar "
+                                         f"for its field in the `field_weights` arg (including 0.")
             continue
         owning_component.field_weight_nodes[field_wt_node_idx].input_port.defaults.variable = field_weights[i]
         owning_component.field_weights[i] = field_weights[i]
         field_wt_node_idx += 1
-    return field_weights
+    return np.array(field_weights)
 
 def get_softmax_gain(v, scale=1, base=1, entropy_weighting=.1)->float:
     """Compute the softmax gain (inverse temperature) based on the entropy of the distribution of values.
