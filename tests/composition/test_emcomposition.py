@@ -553,7 +553,12 @@ class TestExecution:
         if field_weights[2] is None:
             with pytest.raises(EMCompositionError) as error_text:
                 em.field_weights = np.array([0,0,1])
-                error_text_msg = (f"Field weights for '{em.name}' cannot be changed to favor field 'C' ")
+            assert error_text.value.error_value == (f"Field 'C' of 'EM_Composition' was originally assigned "
+                                                    f"as a value node (i.e., with a field_weight = None); "
+                                                    f"this cannot be changed after construction. If you want to "
+                                                    f"change it to a key field, you must re-construct the "
+                                                    f"EMComposition using a scalar for its field in the "
+                                                    f"`field_weights` arg (including 0.")
         else:
             em.field_weights = np.array([0,0,1])
             # Ensure weights got changed
