@@ -100,10 +100,10 @@ class TestConstruction:
                              test_structure_data,
                              ids=[x[0] for x in test_structure_data]
                              )
-    @pytest.mark.parametrize('learn_field_weights', [False, True], ids=['no_learning','learning'])
+    @pytest.mark.parametrize('enable_learning', [False, True], ids=['no_learning','learning'])
     def test_structure(self,
                        test_num,
-                       learn_field_weights,
+                       enable_learning,
                        memory_template,
                        memory_fill,
                        field_weights,
@@ -119,11 +119,11 @@ class TestConstruction:
         """
 
         # Restrict testing of learning configurations (which are much larger) to select tests
-        if learn_field_weights and test_num not in {2, 2.2, 4, 8}:
+        if enable_learning and test_num not in {2, 2.2, 4, 8}:
             pytest.skip('Limit tests of learning to subset of parametrizations (for efficiency)')
 
         params = {'memory_template': memory_template,
-                  'learn_field_weights': learn_field_weights}
+                  'enable_learning': enable_learning}
         # Add explicit argument specifications (to avoid forcing to None in constructor)
         if isinstance(memory_template, tuple) and len(memory_template) == 3:
             # Assign for tests below, but allow it to be inferred in constructor
@@ -139,7 +139,7 @@ class TestConstruction:
         if concatenate_queries is not None:
             params.update({'concatenate_queries': concatenate_queries})
             # FIX: DELETE THE FOLLOWING ONCE CONCATENATION IS IMPLEMENTED FOR LEARNING
-            params.update({'learn_field_weights': False})
+            params.update({'enable_learning': False})
         if normalize_memories is not None:
             params.update({'normalize_memories': normalize_memories})
         if softmax_gain is not None:
@@ -228,7 +228,7 @@ class TestConstruction:
         for softmax_choice in [pnl.WEIGHTED_AVG, pnl.ARG_MAX, pnl.PROBABILISTIC]:
             em = EMComposition(memory_template=[[[1,.1,.1]], [[1,.1,.1]], [[.1,.1,1]]],
                                softmax_choice=softmax_choice,
-                               learn_field_weights=False)
+                               enable_learning=False)
             result = em.run(inputs={em.query_input_nodes[0]:[[1,0,0]]})
             if softmax_choice == pnl.WEIGHTED_AVG:
                 np.testing.assert_allclose(result, [[0.93016008, 0.1, 0.16983992]])
@@ -247,11 +247,43 @@ class TestConstruction:
 
         for softmax_choice in [pnl.ARG_MAX, pnl.PROBABILISTIC]:
             with pytest.warns(UserWarning) as warning:
-                em = EMComposition(softmax_choice=softmax_choice, learn_field_weights=True)
+                em = EMComposition(softmax_choice=softmax_choice, enable_learning=True)
                 warning_msg = (f"The 'softmax_choice' arg of '{em.name}' is set to '{softmax_choice}' with "
-                               f"'learn_field_weights' set to True (or a list); this will generate an error if its "
+                               f"'enable_learning' set to True; this will generate an error if its "
                                f"'learn' method is called. Set 'softmax_choice' to WEIGHTED_AVG before learning.")
             assert warning_msg in str(warning[0].message)
+
+    def test_fields_arg(self):
+
+        em = EMComposition(memory_template=(5,1),
+                           memory_capacity=1,
+                           normalize_field_weights=False,
+                           fields={'A': (1.2, 3.4),
+                                   'B': (5.6, True),
+                                   'C': (0, False),
+                                   'D': (7.8, False),
+                                   'E': (None, True)})
+        assert em.num_fields == 5
+        assert em.num_keys == 4
+        assert (em.field_weights == [1.2, 5.6, 0, 7.8, None]).all()
+        assert (em.learn_field_weights == [3.4, True, False, False, True]).all()
+
+        # # Test wrong number of entries
+        with pytest.raises(EMCompositionError) as error_text:
+            EMComposition(memory_template=(3,1), memory_capacity=1, fields={'A': (1.2, 3.4)})
+        assert error_text.value.error_value == (f"The number of entries (1) in the dict specified in the 'fields' arg "
+                                                f"of 'EM_Composition' does not match the number of fields in its "
+                                                f"memory (3).")
+        # Test dual specification of fields and corresponding args
+        with pytest.warns(UserWarning) as warning:
+            EMComposition(memory_template=(2,1),
+                          memory_capacity=1,
+                          fields={'A': (1.2, 3.4),
+                                  'B': (5.6, 7.8)},
+                          field_weights=[10, 11.0])
+        warning_msg = (f"The 'fields' arg for 'EM_Composition' was specified, so any of the 'field_names', "
+                       f"'field_weights',  or 'learn_field_weights' args will be ignored.")
+        assert warning_msg in str(warning[0].message)
 
     def test_field_weights_all_None_and_or_0(self):
         with pytest.raises(EMCompositionError) as error_text:

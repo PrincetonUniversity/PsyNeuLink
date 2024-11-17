@@ -666,10 +666,10 @@ The following arguments of the EMCComposition's constructor can be used to confi
   and optionally the `learning_rate <EMComposition.learning_rate>` for each. The following specfications can be used:
 
   * *None*: all field_weights are subject to learning, and the `learning_rate <EMComposition.learning_rate>` for the
-    EMComposition is used for all field_weights.
+    EMComposition is used as the learning_rate for all field_weights.
 
   * *bool*: If True, all field_weights are subject to learning, and the `learning_rate <EMComposition.learning_rate>`
-    for the EMComposition is used to specify the learning rate for all field_weights; if False, no field_weights are
+    for the EMComposition is used as the learning rate for all field_weights; if False, no field_weights are
     subject to learning, regardless of `enable_learning <EMComposition.enable_learning>`.
 
   * *list* or *tuple*: must be the same length as the number of fields specified in the memory_template, and each entry
@@ -1251,6 +1251,7 @@ class EMComposition(AutodiffComposition):
         memory_template=[[0],[0]],      \
         memory_fill=0,                  \
         memory_capacity=None,           \
+        fields=None,                    \
         field_names=None,               \
         field_weights=None,             \
         learn_field_weights=True,       \
@@ -1582,6 +1583,12 @@ class EMComposition(AutodiffComposition):
                     :default value: None
                     :type: ``numpy.ndarray``
 
+                learn_field_weights
+                    see `learn_field_weights <EMComposition.learn_field_weights>`
+
+                    :default value: True
+                    :type: ``numpy.ndarray``
+
                 learning_rate
                     see `learning_results <EMComposition.learning_rate>`
 
@@ -1660,9 +1667,10 @@ class EMComposition(AutodiffComposition):
         memory = Parameter(None, loggable=True, getter=_memory_getter, read_only=True)
         memory_template = Parameter([[0],[0]], structural=True, valid_types=(tuple, list, np.ndarray), read_only=True)
         memory_capacity = Parameter(1000, structural=True)
-        field_weights = Parameter([1], setter=field_weights_setter)
-        normalize_field_weights = Parameter(True)
         field_names = Parameter(None, structural=True)
+        field_weights = Parameter([1], setter=field_weights_setter)
+        learn_field_weights = Parameter(True, structural=True)
+        normalize_field_weights = Parameter(True)
         concatenate_queries = Parameter(False, structural=True)
         normalize_memories = Parameter(True)
         softmax_gain = Parameter(1.0, modulable=True)
@@ -1670,7 +1678,6 @@ class EMComposition(AutodiffComposition):
         softmax_choice = Parameter(WEIGHTED_AVG, modulable=False, specify_none=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         memory_decay_rate = Parameter(AUTO, modulable=True)
-        learn_field_weights = Parameter(True, structural=True)
         enable_learning = Parameter(True, structural=True)
         learning_rate = Parameter(.001, modulable=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
@@ -1693,6 +1700,10 @@ class EMComposition(AutodiffComposition):
             else:
                 return f"must be tuple of length 2 or 3, or a list or array that is either 2 or 3d."
 
+        def _validate_field_names(self, field_names):
+            if field_names and not all(isinstance(item, str) for item in field_names):
+                return f"must be a list of strings."
+
         def _validate_field_weights(self, field_weights):
             if field_weights is not None:
                 if not np.atleast_1d(field_weights).ndim == 1:
@@ -1706,16 +1717,12 @@ class EMComposition(AutodiffComposition):
             if not isinstance(normalize_field_weights, bool):
                 return f"must be all be a boolean value."
 
-        def _validate_field_names(self, field_names):
-            if field_names and not all(isinstance(item, str) for item in field_names):
-                return f"must be a list of strings."
-
         def _validate_learn_field_weights(self, learn_field_weights):
-            if isinstance(learn_field_weights, list):
-                if not all(isinstance(item, bool) for item in learn_field_weights):
-                    return f"can only contains bools as entries."
+            if isinstance(learn_field_weights, (list, np.ndarray)):
+                if not all(isinstance(item, (bool, int, float)) for item in learn_field_weights):
+                    return f"can only contains bools, ints or floats as entries."
             elif not isinstance(learn_field_weights, bool):
-                return f"must be a bool or list of bools."
+                return f"must be a bool or list of bools, ints and/or floats."
 
         def _validate_memory_decay_rate(self, memory_decay_rate):
             if memory_decay_rate is None or memory_decay_rate == AUTO:
@@ -1742,7 +1749,7 @@ class EMComposition(AutodiffComposition):
                  memory_fill:Union[int, float, tuple, RANDOM]=0,
                  fields:Optional[dict]=None,
                  field_names:Optional[list]=None,
-                 field_weights:Union[list,tuple]=None,
+                 field_weights:Union[int,float,list,tuple]=None,
                  learn_field_weights:Union[bool,list,tuple]=True,
                  normalize_field_weights:bool=True,
                  concatenate_queries:bool=False,
@@ -1776,15 +1783,15 @@ class EMComposition(AutodiffComposition):
                                                                        memory_capacity,
                                                                        memory_fill)
 
-        field_weights, field_names, concatenate_queries = self._parse_fields(fields,
-                                                                             field_names,
-                                                                             field_weights,
-                                                                             learn_field_weights,
-                                                                             normalize_field_weights,
-                                                                             concatenate_queries,
-                                                                             normalize_memories,
-                                                                             learning_rate,
-                                                                             name)
+        field_names, field_weights, learn_field_weights, concatenate_queries = self._parse_fields(fields,
+                                                                                                  field_names,
+                                                                                                  field_weights,
+                                                                                                  learn_field_weights,
+                                                                                                  normalize_field_weights,
+                                                                                                  concatenate_queries,
+                                                                                                  normalize_memories,
+                                                                                                  learning_rate,
+                                                                                                  name)
         if memory_decay_rate is AUTO:
             memory_decay_rate = 1 / memory_capacity
 
@@ -1799,8 +1806,9 @@ class EMComposition(AutodiffComposition):
         super().__init__(name=name,
                          memory_template = memory_template,
                          memory_capacity = memory_capacity,
-                         field_weights = field_weights,
                          field_names = field_names,
+                         field_weights = field_weights,
+                         learn_field_weights=learn_field_weights,
                          normalize_field_weights = normalize_field_weights,
                          concatenate_queries = concatenate_queries,
                          softmax_gain = softmax_gain,
@@ -1809,7 +1817,6 @@ class EMComposition(AutodiffComposition):
                          storage_prob = storage_prob,
                          memory_decay_rate = memory_decay_rate,
                          normalize_memories = normalize_memories,
-                         learn_field_weights=learn_field_weights,
                          enable_learning = enable_learning,
                          learning_rate = learning_rate,
                          random_state = random_state,
@@ -1948,9 +1955,9 @@ class EMComposition(AutodiffComposition):
 
         # If learn_field_weights is a list of bools, it must match the len of 1st dimension (axis 0) of memory_template:
         if isinstance(self.learn_field_weights, list) and len(self.learn_field_weights) != num_fields:
-            raise EMCompositionError(f"The number of items ({len(self.learn_field_weights)}) in the 'learn_field_weights' arg "
-                                     f"for {name} must match the number of fields in memory "
-                                     f"({num_fields}).")
+            raise EMCompositionError(f"The number of items ({len(self.learn_field_weights)}) in the "
+                                     f"'learn_field_weights' arg for {name} must match the number of "
+                                     f"fields in memory ({num_fields}).")
 
         _field_wts = np.atleast_1d(field_weights)
         _field_wts_len = len(_field_wts)
@@ -2071,22 +2078,23 @@ class EMComposition(AutodiffComposition):
                       concatenate_queries,
                       normalize_memories,
                       learning_rate,
-                      name):
+                      name)->(list, list, list, bool):
 
         def _parse_fields_dict(name, fields, num_fields)->(list,list,list):
             if len(fields) != num_fields:
-                raise EMCompositionError(f"The number of items ({len(fields)}) in the 'fields' arg for {name} "
-                                         f"does not match the number of fields in memory ({self.num_fields}).")
+                raise EMCompositionError(f"The number of entries ({len(fields)}) in the dict specified in the 'fields' "
+                                         f"arg of '{name}' does not match the number of fields in its memory "
+                                         f"({self.num_fields}).")
             field_names = list(fields.keys())
-            field_weights = [item(0) for item in list(fields.values())]
-            learn_field_weights = [item(1) for item in list(fields.values())]
+            field_weights = [item[0] for item in list(fields.values())]
+            learn_field_weights = [item[1] for item in list(fields.values())]
             return field_names, field_weights, learn_field_weights
 
         self.num_fields = len(self.entry_template)
 
         if fields:
             # If a fields dict has been specified, use that to assign field_names, field_weights & learn_field_weights
-            if any(field_names, field_weights, learn_field_weights):
+            if any([field_names, field_weights, learn_field_weights]):
                 warnings.warn(f"The 'fields' arg for '{name}' was specified, so any of the 'field_names', "
                               f"'field_weights',  or 'learn_field_weights' args will be ignored.")
             field_names, field_weights, learn_field_weights = _parse_fields_dict(name, fields, self.num_fields)
@@ -2167,7 +2175,7 @@ class EMComposition(AutodiffComposition):
                           f"concatenation will be ignored.{correction_msg}")
 
         self.learning_rate = learning_rate
-        return parsed_field_weights, parsed_field_names, parsed_concatenate_queries
+        return parsed_field_names, parsed_field_weights, learn_field_weights, parsed_concatenate_queries
 
     def _parse_memory_shape(self, memory_template):
         """Parse shape of memory_template to determine number of entries and fields"""
@@ -2260,7 +2268,7 @@ class EMComposition(AutodiffComposition):
 
         # LEARNING NOT ENABLED --------------------------------------------------
         # Set up pathways WITHOUT PsyNeuLink learning pathways
-        if not self.learn_field_weights:
+        if not self.enable_learning:
             self.add_nodes(self.query_input_nodes + self.value_input_nodes)
             if use_storage_node:
                 self.add_node(self.storage_node)
@@ -2562,9 +2570,9 @@ class EMComposition(AutodiffComposition):
                           f"'learn' method is called. Set 'use_gating_for_weighting' to True in order "
                           f"to enable learning of field weights.")
 
-        if softmax_choice in {ARG_MAX, PROBABILISTIC} and learn_field_weights:
+        if softmax_choice in {ARG_MAX, PROBABILISTIC} and enable_learning:
             warnings.warn(f"The 'softmax_choice' arg of '{self.name}' is set to '{softmax_choice}' with "
-                          f"'learn_field_weights' set to True (or a list); this will generate an error if its "
+                          f"'enable_learning' set to True; this will generate an error if its "
                           f"'learn' method is called. Set 'softmax_choice' to WEIGHTED_AVG before learning.")
 
     def _construct_retrieved_nodes(self, memory_template)->list:
@@ -2657,12 +2665,35 @@ class EMComposition(AutodiffComposition):
         # 7/10/24 FIX: SHOULD THIS ALSO BE CONSTRAINED BY VALUE OF field_weights FOR CORRESPONDING FIELD?
         #         (i.e., if it is zero then not learnable? or is that a valid initial condition?)
         for projection in self.projections:
-            if (projection.sender.owner in self.field_weight_nodes
-                    and self.learn_field_weights
-                    and self.enable_learning):
-                projection.learnable = True
-            else:
+
+            projection_is_field_weight = projection.sender.owner in self.field_weight_nodes
+
+            if self.enable_learning == False or not projection_is_field_weight:
                 projection.learnable = False
+                continue
+
+            # Use globally specified learning_rate
+            if self.learn_field_weights is None: # Default, which should be treat same as True
+                learning_rate = True
+            elif isinstance(self.learn_field_weights, (bool, int, float)):
+                learning_rate = self.learn_field_weights
+
+            # Use individually specified learning_rate
+            else:
+                learning_rate = self.learn_field_weights[self.field_weight_nodes.index(projection.sender.owner)]
+
+            if learning_rate == False:
+                projection.learnable = False
+                continue
+            elif learning_rate == True:
+                # Default (EMComposition's learning_rate) is used for all field_weight Projections:
+                learning_rate = self.learning_rate
+            assert isinstance(learning_rate, (int, float)), \
+                (f"PROGRAM ERROR: learning_rate for {projection.sender.owner.name} is not a valid value.")
+
+            projection.learnable = True
+            if projection.learning_mechanism:
+                projection.learning_mechanism.learning_rate = learning_rate
 
     #endregion
 
