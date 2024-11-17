@@ -259,14 +259,15 @@ class TestConstruction:
                            memory_capacity=1,
                            normalize_field_weights=False,
                            fields={'A': (1.2, 3.4),
-                                   'B': (5.6, True),
-                                   'C': (0, False),
+                                   'B': (None, False),
+                                   'C': (0, True),
                                    'D': (7.8, False),
-                                   'E': (None, True)})
+                                   'E': (5.6, True)})
         assert em.num_fields == 5
         assert em.num_keys == 4
-        assert (em.field_weights == [1.2, 5.6, 0, 7.8, None]).all()
-        assert (em.learn_field_weights == [3.4, True, False, False, True]).all()
+        assert (em.field_weights == [1.2, None, 0, 7.8, 5.6]).all()
+        assert (em.learn_field_weights == [3.4, False, True, False, True]).all()
+
 
         # # Test wrong number of entries
         with pytest.raises(EMCompositionError) as error_text:
@@ -274,16 +275,19 @@ class TestConstruction:
         assert error_text.value.error_value == (f"The number of entries (1) in the dict specified in the 'fields' arg "
                                                 f"of 'EM_Composition' does not match the number of fields in its "
                                                 f"memory (3).")
-        # Test dual specification of fields and corresponding args
+        # Test dual specification of fields and corresponding args and learning specified for value field
         with pytest.warns(UserWarning) as warning:
             EMComposition(memory_template=(2,1),
                           memory_capacity=1,
                           fields={'A': (1.2, 3.4),
-                                  'B': (5.6, 7.8)},
+                                  'B': (None, True)},
                           field_weights=[10, 11.0])
-        warning_msg = (f"The 'fields' arg for 'EM_Composition' was specified, so any of the 'field_names', "
-                       f"'field_weights',  or 'learn_field_weights' args will be ignored.")
-        assert warning_msg in str(warning[0].message)
+        warning_msg_1 = (f"The 'fields' arg for 'EM_Composition' was specified, so any of the 'field_names', "
+                         f"'field_weights',  or 'learn_field_weights' args will be ignored.")
+        warning_msg_2 = ("Learning was specified for field 'B' in the 'learn_field_weights' arg for "
+                         "'EM_Composition', but it is not allowed for value fields; it will be ignored.")
+        assert warning_msg_1 in str(warning[0].message)
+        assert warning_msg_2 in str(warning[1].message)
 
     def test_field_weights_all_None_and_or_0(self):
         with pytest.raises(EMCompositionError) as error_text:

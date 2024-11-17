@@ -2122,6 +2122,13 @@ class EMComposition(AutodiffComposition):
         if len(field_weights) == 1 and self.num_fields > 1:
             parsed_field_weights = np.repeat(parsed_field_weights, self.num_fields)
 
+        # Make sure learning was not specified for any value fields
+        if isinstance(learn_field_weights, (list, tuple, np.ndarray)):
+            for i, lfw in enumerate(learn_field_weights):
+                if parsed_field_weights[i] is None and lfw is not False:
+                    warnings.warn(f"Learning was specified for field '{field_names[i]}' in the 'learn_field_weights' "
+                                  f"arg for '{name}', but it is not allowed for value fields; it will be ignored.")
+
         # Memory structure Parameters
         parsed_field_names = field_names.copy() if field_names is not None else None
 
