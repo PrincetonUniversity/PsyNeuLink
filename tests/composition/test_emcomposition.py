@@ -43,7 +43,7 @@ class TestConstruction:
     test_structure_data = [
         # NOTE: None => use default value (i.e., don't specify in constructor, rather than forcing None as value of arg)
         # ------------------ SPECS ---------------------------------------------   ------- EXPECTED -------------------
-        #   memory_template       memory_fill   field_wts cncat_qy nmlze sm_gain   repeat  #fields #keys #vals  concat
+        #   memory_template       memory_fill   field_wts cncat_qy nmlze  sm_gain  repeat  #fields #keys #vals  concat
         (0,    (2,3),                  None,      None,    None,    None,  None,    False,    2,     1,   1,    False,),
         (0.1,  (2,3),                   .1,       None,    None,    None,  None,    False,    2,     1,   1,    False,),
         (0.2,  (2,3),                 (0,.1),     None,    None,    None,  None,    False,    2,     1,   1,    False,),
@@ -252,6 +252,18 @@ class TestConstruction:
                                f"'enable_learning' set to True (or a list); this will generate an error if its "
                                f"'learn' method is called. Set 'softmax_choice' to WEIGHTED_AVG before learning.")
             assert warning_msg in str(warning[0].message)
+
+    def test_field_weights_all_None_and_or_0(self):
+        with pytest.raises(EMCompositionError) as error_text:
+            em = EMComposition(memory_template=(3,1), memory_capacity=1, field_weights=[None, None, None])
+        assert error_text.value.error_value == (f"The entries in 'field_weights' arg for EM_Composition can't all "
+                                                f"be 'None' since that will preclude the construction of any keys.")
+
+        with pytest.warns(UserWarning) as warning:
+            em = EMComposition(memory_template=(3,1), memory_capacity=1, field_weights=[0, None, 0])
+        warning_msg = (f"All of the entries in the 'field_weights' arg for EM_Composition are either None or set to 0; "
+                       f"this will result in no retrievals unless/until the 0(s) is(are) changed to a positive value.")
+        assert warning_msg in str(warning[0].message)
 
 
 @pytest.mark.pytorch

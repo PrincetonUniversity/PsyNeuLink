@@ -1860,19 +1860,18 @@ class EMComposition(AutodiffComposition):
 
         # If len of field_weights > 1, must match the len of 1st dimension (axis 0) of memory_template:
         if field_weights is not None:
-            if _field_wts_len > 1 and _field_wts_len != num_fields:
+            if (_field_wts_len > 1 and _field_wts_len != num_fields):
                 raise EMCompositionError(f"The number of items ({_field_wts_len}) in the 'field_weights' arg "
                                          f"for {name} must match the number of items in an entry of memory "
                                          f"({num_fields}).")
             # Deal with this here instead of Parameter._validate_field_weights since this is called before super()
-            if _field_wts_len == 1:
-                if _field_wts[0] == None:
-                    raise EMCompositionError(f"The 'field_weights' arg for {name} can't be None since there is only "
-                                             f"one field specified; it must be a scalar >= 0")
-                if _field_wts[0] == 0:
-                    warnings.warn(f"There is only one field specified for {name} and its 'field_weights' arg "
-                                  f"is set to 0; this will result in no retrievals unless/until that is changed "
-                                  f"to a positive value.")
+            if all([fw == None for fw in _field_wts]):
+                raise EMCompositionError(f"The entries in 'field_weights' arg for {name} can't all be 'None' "
+                                         f"since that will preclude the construction of any keys.")
+            if all([fw in {0, None} for fw in _field_wts]):
+                warnings.warn(f"All of the entries in the 'field_weights' arg for {name} are either None or "
+                              f"set to 0; this will result in no retrievals unless/until the 0(s) is(are) changed "
+                              f"to a positive value.")
 
         # If field_names has more than one value it must match the first dimension (axis 0) of memory_template:
         if field_names and len(field_names) != num_fields:
