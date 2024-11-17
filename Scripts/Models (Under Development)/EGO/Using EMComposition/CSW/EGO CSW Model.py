@@ -210,7 +210,7 @@ def construct_model(model_name:str=model_params['name'],
                     context_retrieval_weight:Union[float,int]=model_params['context_weight'],
                     normalize_field_weights = model_params['normalize_field_weights'],
                     concatenate_queries = model_params['concatenate_queries'],
-                    learn_field_weights = model_params['learn_field_weights'],
+                    enable_learning = model_params['enable_learning'],
                     memory_capacity = memory_capacity,
                     memory_init=model_params['memory_init'],
 
@@ -219,7 +219,7 @@ def construct_model(model_name:str=model_params['name'],
 
                     # Learning
                     loss_spec=model_params['loss_spec'],
-                    enable_learning=model_params['enable_learning'],
+                    learn_field_weights=model_params['learn_field_weights'],
                     learning_rate = model_params['learning_rate'],
                     device=model_params['device']
 
@@ -269,9 +269,9 @@ def construct_model(model_name:str=model_params['name'],
                                       ),
                        normalize_field_weights=normalize_field_weights,
                        concatenate_queries=concatenate_queries,
-                       learn_field_weights=learn_field_weights,
-                       learning_rate=learning_rate,
                        enable_learning=enable_learning,
+                       learning_rate=learning_rate,
+                       learn_field_weights=learn_field_weights,
                        device=device
                        )
 

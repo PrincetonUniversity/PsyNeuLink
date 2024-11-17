@@ -100,10 +100,10 @@ class TestConstruction:
                              test_structure_data,
                              ids=[x[0] for x in test_structure_data]
                              )
-    @pytest.mark.parametrize('enable_learning', [False, True], ids=['no_learning','learning'])
+    @pytest.mark.parametrize('learn_field_weights', [False, True], ids=['no_learning','learning'])
     def test_structure(self,
                        test_num,
-                       enable_learning,
+                       learn_field_weights,
                        memory_template,
                        memory_fill,
                        field_weights,
@@ -119,11 +119,11 @@ class TestConstruction:
         """
 
         # Restrict testing of learning configurations (which are much larger) to select tests
-        if enable_learning and test_num not in {2, 2.2, 4, 8}:
+        if learn_field_weights and test_num not in {2, 2.2, 4, 8}:
             pytest.skip('Limit tests of learning to subset of parametrizations (for efficiency)')
 
         params = {'memory_template': memory_template,
-                  'enable_learning': enable_learning}
+                  'learn_field_weights': learn_field_weights}
         # Add explicit argument specifications (to avoid forcing to None in constructor)
         if isinstance(memory_template, tuple) and len(memory_template) == 3:
             # Assign for tests below, but allow it to be inferred in constructor
@@ -139,7 +139,7 @@ class TestConstruction:
         if concatenate_queries is not None:
             params.update({'concatenate_queries': concatenate_queries})
             # FIX: DELETE THE FOLLOWING ONCE CONCATENATION IS IMPLEMENTED FOR LEARNING
-            params.update({'enable_learning': False})
+            params.update({'learn_field_weights': False})
         if normalize_memories is not None:
             params.update({'normalize_memories': normalize_memories})
         if softmax_gain is not None:
@@ -228,7 +228,7 @@ class TestConstruction:
         for softmax_choice in [pnl.WEIGHTED_AVG, pnl.ARG_MAX, pnl.PROBABILISTIC]:
             em = EMComposition(memory_template=[[[1,.1,.1]], [[1,.1,.1]], [[.1,.1,1]]],
                                softmax_choice=softmax_choice,
-                               enable_learning=False)
+                               learn_field_weights=False)
             result = em.run(inputs={em.query_input_nodes[0]:[[1,0,0]]})
             if softmax_choice == pnl.WEIGHTED_AVG:
                 np.testing.assert_allclose(result, [[0.93016008, 0.1, 0.16983992]])
@@ -247,9 +247,9 @@ class TestConstruction:
 
         for softmax_choice in [pnl.ARG_MAX, pnl.PROBABILISTIC]:
             with pytest.warns(UserWarning) as warning:
-                em = EMComposition(softmax_choice=softmax_choice, enable_learning=True)
+                em = EMComposition(softmax_choice=softmax_choice, learn_field_weights=True)
                 warning_msg = (f"The 'softmax_choice' arg of '{em.name}' is set to '{softmax_choice}' with "
-                               f"'enable_learning' set to True (or a list); this will generate an error if its "
+                               f"'learn_field_weights' set to True (or a list); this will generate an error if its "
                                f"'learn' method is called. Set 'softmax_choice' to WEIGHTED_AVG before learning.")
             assert warning_msg in str(warning[0].message)
 
@@ -376,13 +376,13 @@ class TestExecution:
     @pytest.mark.parametrize(args_names,
                              test_execution_data,
                              ids=[x[0] for x in test_execution_data])
-    @pytest.mark.parametrize('enable_learning', [False, True], ids=['no_learning','learning'])
+    @pytest.mark.parametrize('learn_field_weights', [False, True], ids=['no_learning','learning'])
     @pytest.mark.composition
     @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch],
                              ids=['Python','PyTorch'])
     def test_simple_execution_without_learning(self,
                                                exec_mode,
-                                               enable_learning,
+                                               learn_field_weights,
                                                test_num,
                                                memory_template,
                                                memory_capacity,
@@ -400,12 +400,12 @@ class TestExecution:
         # #     pytest.skip('Execution of EMComposition not yet supported for LLVM Mode.')
 
         # Restrict testing of learning configurations (which are much larger) to select tests
-        if enable_learning and test_num not in {10}:
+        if learn_field_weights and test_num not in {10}:
             pytest.skip('Limit tests of learning to subset of parametrizations (for efficiency)')
 
         params = {'memory_template': memory_template,
                   'memory_capacity': memory_capacity,
-                  'enable_learning': enable_learning,
+                  'learn_field_weights': learn_field_weights,
                   }
         # Add explicit argument specifications only for args that are not None
         # (to avoid forcing to None in constructor)
@@ -418,7 +418,7 @@ class TestExecution:
         if concatenate_queries is not None:
             params.update({'concatenate_queries': concatenate_queries})
             # FIX: DELETE THE FOLLOWING ONCE CONCATENATION IS IMPLEMENTED FOR LEARNING
-            params.update({'enable_learning': False})
+            params.update({'learn_field_weights': False})
         if normalize_memories is not None:
             params.update({'normalize_memories': normalize_memories})
         if softmax_gain is not None:
@@ -520,7 +520,7 @@ class TestExecution:
         em = pnl.EMComposition(memory_template=memory_template,
                                memory_capacity=4,
                                memory_decay_rate= 0,
-                               enable_learning = False,
+                               learn_field_weights = False,
                                softmax_choice=softmax_choice,
                                field_weights=field_weights,
                                field_names=['A','B','C'])
@@ -623,7 +623,7 @@ class TestExecution:
                            softmax_gain=100,
                            memory_fill=(0,.001),
                            concatenate_queries=concatenate,
-                           enable_learning=learning,
+                           learn_field_weights=learning,
                            use_storage_node=use_storage_node)
 
         inputs = [[[[1,2,3]],[[4,5,6]],[[10,20,30]],[[40,50,60]],[[100,200,300]],[[400,500,600]]],
