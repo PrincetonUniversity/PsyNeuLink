@@ -249,14 +249,14 @@ Contents
      - `Organization <EMComposition_Organization>`
      - `Operation <EMComposition_Operation>`
   * `EMComposition_Creation`
-     - `Memory <EMComposition_Memory>`
+     - `Memory <EMComposition_Memory_Specification>`
      - `Capacity <EMComposition_Memory_Capacity>`
      - `Fields <EMComposition_Fields>`
      - `Storage and Retrieval <EMComposition_Retrieval_Storage>`
      - `Learning <EMComposition_Learning>`
   * `EMComposition_Structure`
      - `Input <EMComposition_Input>`
-     - `Memory <EMComposition_Memory>`
+     - `Memory <EMComposition_Memory_Structure>`
      - `Output <EMComposition_Output>`
   * `EMComposition_Execution`
      - `Processing <EMComposition_Processing>`
@@ -271,12 +271,13 @@ Contents
 Overview
 --------
 
-The EMComposition implements a configurable, content-addressable form of episodic, or external memory, that emulates
+The EMComposition implements a configurable, content-addressable form of episodic, or external memory. It emulates
 an `EpisodicMemoryMechanism` -- reproducing all of the functionality of its `ContentAddressableMemory` `Function` --
-in the form of an `AutodiffComposition` that is capable of learning how to differentially weight different cues used
-for retrieval, and that adds the capability for `memory_decay <EMComposition.memory_decay_rate>`. In these respects,
-it implements a variant of a `Modern Hopfield Network <https://en.wikipedia.org/wiki/Modern_Hopfield_network>`_, as
-well as some of the feature of a Transformer (see `note <EMComposition_Transformer>).
+in the form of an `AutodiffComposition`. This allows it to backpropagate error signals, based retrieved values, to
+it inputs, learn how to differentially weight different cues used for retrieval, and that adds the capability for
+`memory_decay <EMComposition.memory_decay_rate>`. In these respects, it implements a variant of a `Modern Hopfield
+Network <https://en.wikipedia.org/wiki/Modern_Hopfield_network>`_, as well as some of the feature of a `Transformer
+<https://arxiv.org/abs/1706.03762>`_
 
 The `memory <EMComposition.memory>` of an EMComposition is configured using two arguments of its constructor:
 **memory_template** argument,that defines how each entry in `memory <EMComposition.memory>` is structured (the
@@ -295,11 +296,11 @@ input is then stored i its `memory <EMComposition.memory>`, with a probability d
 <EMComposition.memory>` attribute.
 
     .. technical_note::
-       The memories of an EMComposition are actually stored in the `matrix <EMComposition_Memory>` attribute of a
-       set of `MappingProjections <MappingProjection>` (see `note below <EMComposition_Memory_Storage>`).  The `memory
-       <EMComposition.memory>` attribute compiles and formats these as a single 3d array, the rows of which (axis 0)
-       are each entry, the columns of which (axis 1) are the fields of each entry, and the items of which (axis 2)
-       are the values of each field (see `EMComposition_Memory` for additional details).
+       The memories of an EMComposition are actually stored in the `matrix <MappingProjection.matrix>` attribute
+       of a set of `MappingProjections <MappingProjection>` (see `note below <EMComposition_Memory_Storage>`). The
+       `memory <EMComposition.memory>` attribute compiles and formats these as a single 3d array, the rows of which
+       (axis 0) are each entry, the columns of which (axis 1) are the fields of each entry, and the items of which
+       (axis 2)  are the values of each field (see `EMComposition_Memory_Configuration` for additional details).
 
 .. _EMComposition_Organization:
 
@@ -313,11 +314,11 @@ length across entries. Each field is treated as a separate "channel" for storage
 its own corresponding input (key or value) and output (retrieved value) `Node <Composition_Nodes>`, some or all of
 which can be used to compute the similarity of the input (key) to entries in memory, that is used for retreieval.
 Fields can be differentially weighted to determine the influence they have on retrieval, using the `field_weights
-<EMComposition.field_weights>` parameter (see `retrieval <EMComposition_Retrieval_Storage>` below). The number and
-shape of the fields in each entry is specified in the **memory_template** argument of the EMComposition's constructor
-(see `memory_template <EMComposition_Memory>`). Which fields treated as keys (i.e., matched against queries during
-retrieval) and which are treated as values (i.e., retrieved but not used for matching retrieval) is specified in the
-**field_weights** argument of the EMComposition's constructor (see `field_weights <EMComposition_Field_Weights>`).
+<EMComposition.field_weights>` parameter (see `retrieval <EMComposition_Retrieval_Storage>` below). The number and shape
+of the fields in each entry is specified in the **memory_template** argument of the EMComposition's constructor (see
+`memory_template <EMComposition_Memory_Specification>`). Which fields treated as keys (i.e., matched against queries
+during retrieval) and which are treated as values (i.e., retrieved but not used for matching retrieval) is specified in
+the **field_weights** argument of the EMComposition's constructor (see `field_weights <EMComposition_Field_Weights>`).
 
 .. _EMComposition_Operation:
 
@@ -354,11 +355,11 @@ Creation
 --------
 
 An EMComposition is created by calling its constructor.  There are four major elements that must be configured:
-the structure of its `memory <EMComposition_Memory>; the fields <EMComposition_Fields>` for the entries in
-memory; how `storage and retrieval <EMComposition_Retrieval_Storage>` operate; and whether and how `learning
+the structure of its `memory <EMComposition_Memory_Specification>; the fields <EMComposition_Fields>` for the entries
+in memory; how `storage and retrieval <EMComposition_Retrieval_Storage>` operate; and whether and how `learning
 <EMComposition_Learning>` is to be conducted.
 
-.. _EMComposition_Memory:
+.. _EMComposition_Memory_Specification:
 
 *Memory Specification*
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -724,7 +725,7 @@ The inputs corresponding to each key and value field are represented as `INPUT <
 <Composition_Nodes>` of the EMComposition, listed in its `query_input_nodes <EMComposition.query_input_nodes>`
 and `value_input_nodes <EMComposition.value_input_nodes>` attributes, respectively,
 
-.. _EMComposition_Memory:
+.. _EMComposition_Memory_Structure:
 
 *Memory*
 ~~~~~~~~
@@ -1007,7 +1008,7 @@ and
     >>> em = EMComposition(memory_template=(4,2,5))
 
 both of which create a memory with 4 entries, each with 2 fields of length 5. The contents of `memory
-<EMComposition_Memory>` can be inspected using the `memory <EMComposition.memory>` attribute::
+<EMComposition_Memory_Specification>` can be inspected using the `memory <EMComposition.memory>` attribute::
 
     >>> em.memory
     [[array([0., 0., 0., 0., 0.]), array([0., 0., 0., 0., 0.])],
@@ -1410,7 +1411,8 @@ class EMComposition(AutodiffComposition):
 
     memory : ndarray
         3d array of entries in memory, in which each row (axis 0) is an entry, each column (axis 1) is a field, and
-        each item (axis 2) is the value for the corresponding field (see `EMComposition_Memory` for additional details).
+        each item (axis 2) is the value for the corresponding field (see `EMComposition_Memory_Specification`  for
+        additional details).
 
         .. note::
            This is a read-only attribute;  memories can be added to the EMComposition's memory either by
@@ -2690,7 +2692,8 @@ class EMComposition(AutodiffComposition):
         and from the value_input_node to the retrieved_node for values. The `function <EMStorageMechanism.function>`
         of the `EMSorageMechanism` that takes the following arguments:
 
-         - **variable** -- template for an `entry <EMComposition_Memory>` in `memory<EMComposition.memory>`;
+         - **variable** -- template for an `entry <EMComposition_Memory_Specification>`
+           in `memory<EMComposition.memory>`;
 
          - **fields** -- the `input_nodes <EMComposition.input_nodes>` for the corresponding `fields
            <EMComposition_Fields>` of an `entry <EMCmposition_Memory>` in `memory <EMComposition.memory>`;
