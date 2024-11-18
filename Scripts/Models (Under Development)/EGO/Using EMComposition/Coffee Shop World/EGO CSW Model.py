@@ -174,7 +174,7 @@ EMFieldsIndex = IntEnum('EMFields',
                          'CONTEXT',
                          'PREVIOUS STATE'],
                         start=0)
-state_retrieval_weight = 0
+state_retrieval_weight = None
 RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projections
 
 if is_numeric_scalar(model_params['softmax_temperature']):      # translate to gain of softmax retrieval function
@@ -219,7 +219,7 @@ def construct_model(model_name:str=model_params['name'],
 
                     # Learning
                     loss_spec=model_params['loss_spec'],
-                    learn_field_weights=model_params['learn_field_weights'],
+                    target_fields=model_params['target_fields'],
                     learning_rate = model_params['learning_rate'],
                     device=model_params['device']
 
@@ -271,7 +271,7 @@ def construct_model(model_name:str=model_params['name'],
                        concatenate_queries=concatenate_queries,
                        enable_learning=enable_learning,
                        learning_rate=learning_rate,
-                       learn_field_weights=learn_field_weights,
+                       target_fields=target_fields,
                        device=device
                        )
 
