@@ -52,7 +52,6 @@
 # - IMPLEMENT use OF multiple inheritance of EMComposition from AutoDiff and Composition
 
 # - FIX: DOCUMENTATION:
-#        - learn_field_weights vs. learning_field_weights
 #        - USE OF EMStore.storage_location (NONE => LOCAL, SPECIFIED => GLOBAL)
 #        - define "keys" and "values" explicitly
 #        - define "key weights" explicitly as field_weights for all non-zero values
@@ -439,20 +438,35 @@ weighted for retrieval, and whether those weights are learned.
 .. _EMComposition_Field_Specification_Dict:
 
 * **fields**: a dict that specifies the names of the fields and their attributes. There must be an entry for each
-  field specified in the **memory_template**; the key for each must be a string that specifies its name, and the
-  value must be a tuple, the first item of which specifies it `field weight <EMComposition_Field_Weights>` and the
-  second its `learning specification <EMComposition_Field_Weights_Learning>`.  The field_weight specificaton must be
-  a scalar or None; if it is a scalar the field is treated as a key and weighted by that value during retrieval; if it
-  is None, it is treated as a value and cannot be changed later.  The learning specification must be a boolean or a
-  float; if it is False, the field_weight for that field is not learned; if it is True, the field weight is learned
-  using the EMCompositoin's `learning_rate <EMComposition.learning_rate>`; if it is a float, that is used as its
-  learning_rate. See below for additional information about these specificaiton.  If **fields** is specified,
-  it overrides the **field_names**, **field_weights**, and **learn_field_weights** arguments.
+  field specified in the **memory_template**, with the following format:
+
+  * *key*:  a string that specifies the name of the field.
+
+  * *value*: a tuple with three items, im the following order:
+
+    - `field_weight <EMComposition_Field_Weights>` specification - must be a scalar or None. If it is a scalar,
+      the field is treated as a retrieval `key <EMComposition_Field_Weights>` and weighted by that value during
+      retrieval; if it is None, it is treated as a value and cannot be changed later.
+
+    - `learn_field_weight <EMComposition_Field_Weights_Learning>` specification - must be a boolean or
+      a float; if it is False, the field_weight for that field is not learned; if it is True, the field
+      weight is learned using the EMComposition's `learning_rate <EMComposition.learning_rate>`; if it
+      is a float, that is used as its learning_rate.
+
+    - `target_field EMComposition_Target_Fields>` specification - must be a boolean; if it is True, the value of the
+      `retrieved_node <EMComposition.retrieved_nodes>` for that field conrtributes to the error computed during learning
+      and backpropagated through the EMComposition (see `Backpropagation of <EMComposition_Error_BackPropagation>`);if
+      it is False, the retrieved value for that field does not contribute to the error; however, its field_weight can
+      still be learned if that is specfified in `learn_field_weight <EMComposition_Field_Weights_Learning>`.
 
   .. _note:
-     The **fields** argument is provided as a convenient and reliable way of specifying field attributes:
-     all of the specifications are assigned to the corresponding Parameters of the EMComposition (described below),
-     but the dict itself is not retained as a `Parameter` or attribute of the EMComposition.
+     The **fields** argument is provided as a convenient and reliable way of specifying field attributes;
+     the dict itself is not retained as a `Parameter` or attribute of the EMComposition.
+
+  The specifications provided in the **fields** argument are assigned to the corresponding Parameters of
+  the EMComposition which, alternatively, can  be specified individually using the **field_names**, **field_weights**,
+  **learn_field_weights** and **target_fields** arguments of the EMComposition's constructor, as described below.
+  However, these and the **fields** argument cannot both be used together; doing so will generate an error.
 
 .. _EMComposition_Field_Names:
 
@@ -627,6 +641,8 @@ argument of the EMComposition's constructor to True, and optionally specifying t
 (as detailed below). If **enable_learning** is False, no learning of any kind occurs; if it is True, then both forms
 of learning are enable.
 
+.. _EMComposition_Error_BackPropagation
+
 *Backpropagation of error*.  If **enable_learning** is True, then the values retrieved from `memory
 <EMComposition.memory>` when the EMComposition is executed during learning can be used for error computation
 and backpropagation through the EMComposition to its inputs.  By default, the values of all of its `retrieved_nodes
@@ -636,14 +652,17 @@ for each, and used to compute errors that are backpropagated through the network
 <EMComposition.query_input_nodes>` and `value_input_nodes <EMComposition.value_input_nodes>`, and on to any
 nodes that project to those from a Composition within which the EMComposition is `nested <Composition_Nested>`.
 Retrieved_nodes that *do* project to an outer Composition receive their errors from those nodes, which are also
-backpropagated through the EMComposition. Fields can be selecdtively specified for learning using the **target_fields**
-argument, as detailed below.
-
+backpropagated through the EMComposition. Fields can be selecdtively specified for learning in the **fields** argument
+or the **target_fields** argument of the EMComposition's constructor, as detailed below.
 
 *Field Weight Learning*.  If **enable_learning** is True, then the `field_weights <EMComposition.field_weights>` can
-be learned, by specifhing the **learn_field_weights** argument of the EMComposition's constructor, as detailed below.
+be learned, by specifing these either in the **fields** argument or the **learn_field_weights** argument of the
+EMComposition's constructor, as detailed below. Learning field_weights implements a function comparable to the learning
+in an attention head of the `Transformer <https://arxiv.org/abs/1706.03762>`_ architecture, although at present the
+field can only be scalar values rather than vectors or matrices, and it cannot receive input. These capabilities will
+be added in the future.
 
-The following arguments of the EMCComposition's constructor can be used to configure learning:
+The following arguments of the EMComposition's constructor can be used to configure learning:
 
 * **enable_learning**: specifies whether any learning is enabled for the EMComposition.  If False,
   no learning occurs; ` if True, then both error backpropagation and learning of `field_weights
@@ -652,18 +671,19 @@ The following arguments of the EMCComposition's constructor can be used to confi
 
 .. _EMComposition_Target_Fields:
 
-* **target_fields**: if `enable_learning <EMComposition.enable_learning>` is True, this specifies which
-  `retrieved_nodes <EMComposition.retrieved_nodes>` are used to compute errors, and propagate these
-  back through the EMComposition to its `query <EMComposition.query_input_nodes>` and `value_input_nodes
-  <EMComposition.value_input_nodes>`. If this is None (the default), all `retrieved_nodes
+* **target_fields**: specifies which `retrieved_nodes <EMComposition.retrieved_nodes>` are used to compute
+  errors, and propagate these back through the EMComposition to its `query <EMComposition.query_input_nodes>` and
+  `value_input_nodes <EMComposition.value_input_nodes>`. If this is None (the default), all `retrieved_nodes
   <EMComposition.retrieved_nodes>` are used;  if it is a list or tuple, then it must have the same number of entries
   as there are fields, and each entry must be a boolean specifying whether the corresponding `retrieved_nodes
-  <EMComposition.retrieved_nodes>` participate in learning, and errors are computed only for those nodes.
+  <EMComposition.retrieved_nodes>` participate in learning, and errors are computed only for those nodes. This can
+  also be specified in a dict for the **fields** argument (see `fields <EMComposition_Field_Specification_Dict>`).
 
 .. _EMComposition_Field_Weights_Learning:
 
-* **learn_field_weights**:  if **enable_learning** is True, this specifies which field_weights are subject to learning,
-  and optionally the `learning_rate <EMComposition.learning_rate>` for each. The following specfications can be used:
+* **learn_field_weights**: specifies which field_weights are subject to learning, and optionally the `learning_rate
+  <EMComposition.learning_rate>` for each; this can also be specified in a dict for the **fields** argument (see
+  `fields <EMComposition_Field_Specification_Dict>`). The following specfications can be used:
 
   * *None*: all field_weights are subject to learning, and the `learning_rate <EMComposition.learning_rate>` for the
     EMComposition is used as the learning_rate for all field_weights.
@@ -677,12 +697,6 @@ The following arguments of the EMCComposition's constructor can be used to confi
     learning and the `learning_rate <EMComposition.learning_rate>` for the EMComposition is used to specify the
     learning_ rate for that field; if False, the corresponding field_weight is not subject to learning; if a scalar
     value is specified, it is used as the `learning_rate` for that field.
-
-  .. _EMComoposition_Transformer:
-  .. note::
-     Learning field_weights implements a function comparable to the learning in an attention head of the `Transformer
-     <https://arxiv.org/abs/1706.03762>`_ architecture, although at present the field can only be scalar values rather
-     than vectors or matrices, and it cannot receive input. These capacilities will be added in the future.
 
 * **learning_rate**: specifies the learning_rate for any `field_weights <EMComposition.field_weights>` for which a
   learning_rate is not individually specified in the **learn_field_weights** argument (see above).
@@ -835,9 +849,12 @@ When the EMComposition is executed, the following sequence of operations occur
   `gain <Softmax.gain>` parameter; if None is specified, the default value of the `Softmax` Function is used as the
   `gain <Softmax.gain>` parameter (see `Softmax_Gain <EMComposition_Softmax_Gain>` for additional  details).
 
+.. _EMComposition_Retreived_Values:
+
 * **Retrieve values by field**. The vector of softmax weights for each memory generated by the `softmax_node
   <EMComposition.softmax_node>` is passed through the Projections to the each of the `retrieved_nodes
-  <EMComposition.retrieved_nodes>` to compute the retrieved value for each field.
+  <EMComposition.retrieved_nodes>` to compute the retrieved value for each field, which is assigned as the value
+  of the corresponding `retrieved_node <EMComposition.retrieved_nodes>`.
 
 * **Decay memories**.  If `memory_decay <EMComposition.memory_decay>` is True, then each of the memories is decayed
   by the amount specified in `memory_decay_rate <EMComposition.memory_decay_rate>`.
@@ -1255,6 +1272,7 @@ class EMComposition(AutodiffComposition):
         field_names=None,               \
         field_weights=None,             \
         learn_field_weights=True,       \
+        learning_rate=True,             \
         normalize_field_weights=True,   \
         concatenate_queries=False,      \
         normalize_memories=True,        \
@@ -1263,7 +1281,6 @@ class EMComposition(AutodiffComposition):
         memory_decay_rate=AUTO,         \
         enable_learning=True,           \
         target_fields=None,             \
-        learning_rate=True,             \
         use_gating_for_weighting=False, \
         name="EM_Composition"           \
         )
@@ -1306,6 +1323,11 @@ class EMComposition(AutodiffComposition):
         specifies whether the `field_weights <EMComposition.field_weights>` are learnable and, if so, optionally what
         the learning_rate is for each field; see `learn_field_weights <EMComposition_Field_Weights_Learning>` for
         specifications.
+
+    learning_rate : float : default .01
+        specifies the default learning_rate for `field_weights <EMComposition.field_weights>` not
+        specified in `learn_field_weights <EMComposition.learn_field_weights>` (see `learning_rate
+        <EMComposition_Field_Weights_Learning>` for additional details).
 
     normalize_field_weights : bool : default True
         specifies whether the **fields_weights** are normalized over the number of keys, or used as absolute
@@ -1350,11 +1372,6 @@ class EMComposition(AutodiffComposition):
         of the EMComposition.  If it is a list, each item must be ``True`` or ``False`` and the number of items
         must be equal to the number of `fields <EMComposition_Fields> specified (see `Target Fields
          <EMComposition_Target_Fields>` for additional details).
-
-    learning_rate : float : default .01
-        specifies the default learning_rate for `field_weights <EMComposition.field_weights>` not
-        specified in `learn_field_weights <EMComposition.learn_field_weights>` (see `learning_rate
-        <EMComposition_Field_Weights_Learning>` for additional details).
 
     # 7/10/24 FIX: STILL TRUE?  DOES IT PRECLUDE USE OF EMComposition as a nested Composition??
     .. technical_note::
@@ -1406,6 +1423,11 @@ class EMComposition(AutodiffComposition):
         determines whether the `field_weight <EMComposition.field_weights>` for each `field <EMComposition_Fields>
         is learnable (see `learn_field_weights <EMComposition_Learning>` for additional details).
 
+    learning_rate : float
+        determines the default learning_rate for `field_weights <EMComposition.field_weights>`
+        not specified in `learn_field_weights <EMComposition.learn_field_weights>`
+        (see `learning_rate <EMComposition_Field_Weights_Learning>` for additional details).
+
     normalize_field_weights : bool : default True
         determines whether `fields_weights <EMComposition.field_weights>` are normalized over the number of keys, or
         used as absolute weighting values when retrieving an item from memory; see `normalize_field weights
@@ -1448,11 +1470,6 @@ class EMComposition(AutodiffComposition):
     target_fields : list[bool]
         determines which fields convey error signals during learning
         (see `Target Fields <EMComposition_Target_Fields>` for additional details).
-
-    learning_rate : float
-        determines the default learning_rate for `field_weights <EMComposition.field_weights>`
-        not specified in `learn_field_weights <EMComposition.learn_field_weights>`
-        (see `learning_rate <EMComposition_Field_Weights_Learning>` for additional details).
 
     .. _EMComposition_Nodes:
 
@@ -1565,11 +1582,11 @@ class EMComposition(AutodiffComposition):
                     :default value: False
                     :type: ``bool``
 
-                learn_field_weights
-                    see `learn_field_weights <EMComposition.learn_field_weights>`
+                enable_learning
+                    see `enable_learning <EMComposition.enable_learning>`
 
                     :default value: True
-                    :type: ``bool`` or ``list``
+                    :type: ``bool``
 
                 field_names
                     see `field_names <EMComposition.field_names>`
@@ -1594,12 +1611,6 @@ class EMComposition(AutodiffComposition):
 
                     :default value: []
                     :type: ``list``
-
-                enable_learning
-                    see `enable_learning <EMComposition.enable_learning>`
-
-                    :default value: True
-                    :type: ``bool``
 
                 memory
                     see `memory <EMComposition.memory>`
@@ -1670,6 +1681,7 @@ class EMComposition(AutodiffComposition):
         field_names = Parameter(None, structural=True)
         field_weights = Parameter([1], setter=field_weights_setter)
         learn_field_weights = Parameter(True, structural=True)
+        learning_rate = Parameter(.001, modulable=True)
         normalize_field_weights = Parameter(True)
         concatenate_queries = Parameter(False, structural=True)
         normalize_memories = Parameter(True)
@@ -1679,7 +1691,7 @@ class EMComposition(AutodiffComposition):
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         memory_decay_rate = Parameter(AUTO, modulable=True)
         enable_learning = Parameter(True, structural=True)
-        learning_rate = Parameter(.001, modulable=True)
+        target_fields = Parameter(None, read_only=True, structural=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED(), modulable=True, setter=_seed_setter)
 
@@ -1751,6 +1763,7 @@ class EMComposition(AutodiffComposition):
                  field_names:Optional[list]=None,
                  field_weights:Union[int,float,list,tuple]=None,
                  learn_field_weights:Union[bool,list,tuple]=True,
+                 learning_rate:float=None,
                  normalize_field_weights:bool=True,
                  concatenate_queries:bool=False,
                  normalize_memories:bool=True,
@@ -1761,7 +1774,6 @@ class EMComposition(AutodiffComposition):
                  memory_decay_rate:Union[float,AUTO]=AUTO,
                  enable_learning:bool=True,
                  target_fields:Optional[Union[list, tuple, np.ndarray]]=None,
-                 learning_rate:float=None,
                  use_storage_node:bool=True,
                  use_gating_for_weighting:bool=False,
                  random_state=None,
@@ -1782,16 +1794,20 @@ class EMComposition(AutodiffComposition):
         memory_template, memory_capacity = self._parse_memory_template(memory_template,
                                                                        memory_capacity,
                                                                        memory_fill)
-
-        field_names, field_weights, learn_field_weights, concatenate_queries = self._parse_fields(fields,
-                                                                                                  field_names,
-                                                                                                  field_weights,
-                                                                                                  learn_field_weights,
-                                                                                                  normalize_field_weights,
-                                                                                                  concatenate_queries,
-                                                                                                  normalize_memories,
-                                                                                                  learning_rate,
-                                                                                                  name)
+        (field_names,
+         field_weights,
+         learn_field_weights,
+         target_fields,
+         concatenate_queries) = self._parse_fields(fields,
+                                                   field_names,
+                                                   field_weights,
+                                                   learn_field_weights,
+                                                   learning_rate,
+                                                   normalize_field_weights,
+                                                   concatenate_queries,
+                                                   normalize_memories,
+                                                   target_fields,
+                                                   name)
         if memory_decay_rate is AUTO:
             memory_decay_rate = 1 / memory_capacity
 
@@ -1809,6 +1825,7 @@ class EMComposition(AutodiffComposition):
                          field_names = field_names,
                          field_weights = field_weights,
                          learn_field_weights=learn_field_weights,
+                         learning_rate = learning_rate,
                          normalize_field_weights = normalize_field_weights,
                          concatenate_queries = concatenate_queries,
                          softmax_gain = softmax_gain,
@@ -1818,7 +1835,7 @@ class EMComposition(AutodiffComposition):
                          memory_decay_rate = memory_decay_rate,
                          normalize_memories = normalize_memories,
                          enable_learning = enable_learning,
-                         learning_rate = learning_rate,
+                         target_fields = target_fields,
                          random_state = random_state,
                          seed = seed,
                          **kwargs
@@ -2074,13 +2091,14 @@ class EMComposition(AutodiffComposition):
                       field_names,
                       field_weights,
                       learn_field_weights,
+                      learning_rate,
                       normalize_field_weights,
                       concatenate_queries,
                       normalize_memories,
-                      learning_rate,
+                      target_fields,
                       name)->(list, list, list, bool):
 
-        def _parse_fields_dict(name, fields, num_fields)->(list,list,list):
+        def _parse_fields_dict(name, fields, num_fields)->(list,list,list,list):
             if len(fields) != num_fields:
                 raise EMCompositionError(f"The number of entries ({len(fields)}) in the dict specified in the 'fields' "
                                          f"arg of '{name}' does not match the number of fields in its memory "
@@ -2088,7 +2106,8 @@ class EMComposition(AutodiffComposition):
             field_names = list(fields.keys())
             field_weights = [item[0] for item in list(fields.values())]
             learn_field_weights = [item[1] for item in list(fields.values())]
-            return field_names, field_weights, learn_field_weights
+            target_fields = [item[2] for item in list(fields.values())]
+            return field_names, field_weights, learn_field_weights, target_fields
 
         self.num_fields = len(self.entry_template)
 
@@ -2097,7 +2116,10 @@ class EMComposition(AutodiffComposition):
             if any([field_names, field_weights, learn_field_weights]):
                 warnings.warn(f"The 'fields' arg for '{name}' was specified, so any of the 'field_names', "
                               f"'field_weights',  or 'learn_field_weights' args will be ignored.")
-            field_names, field_weights, learn_field_weights = _parse_fields_dict(name, fields, self.num_fields)
+            (field_names,
+             field_weights,
+             learn_field_weights,
+             target_fields) = _parse_fields_dict(name, fields, self.num_fields)
 
         # Deal with default field_weights
         if field_weights is None:
@@ -2122,7 +2144,7 @@ class EMComposition(AutodiffComposition):
         if len(field_weights) == 1 and self.num_fields > 1:
             parsed_field_weights = np.repeat(parsed_field_weights, self.num_fields)
 
-        # Make sure learning was not specified for any value fields
+        # Make sure field_weight learning was not specified for any value fields (since they don't have field_weights)
         if isinstance(learn_field_weights, (list, tuple, np.ndarray)):
             for i, lfw in enumerate(learn_field_weights):
                 if parsed_field_weights[i] is None and lfw is not False:
@@ -2182,7 +2204,12 @@ class EMComposition(AutodiffComposition):
                           f"concatenation will be ignored.{correction_msg}")
 
         self.learning_rate = learning_rate
-        return parsed_field_names, parsed_field_weights, learn_field_weights, parsed_concatenate_queries
+
+        return (parsed_field_names,
+                parsed_field_weights,
+                learn_field_weights,
+                target_fields,
+                parsed_concatenate_queries)
 
     def _parse_memory_shape(self, memory_template):
         """Parse shape of memory_template to determine number of entries and fields"""
@@ -2822,19 +2849,19 @@ class EMComposition(AutodiffComposition):
         return execution_mode
 
     def _identify_target_nodes(self, context)->list:
-        """Identify retrieval_nodes specified by **learn_field_weights** as TARGET nodes"""
-        learn_field_weights = self.parameters.learn_field_weights._get(context)
-        if learn_field_weights is False:
+        """Identify retrieval_nodes specified by **target_field_weights** as TARGET nodes"""
+        target_fields = self.target_fields
+        if target_fields is False:
             if self.enable_learning:
                 warnings.warn(f"The 'enable_learning' arg for {self.name} is True "
-                              f"but its 'learn_field_weights' is False, so enable_learning will have no effect.")
+                              f"but its 'target_fields' is False, so enable_learning will have no effect.")
             target_nodes = []
-        elif learn_field_weights is True:
+        elif target_fields is True:
             target_nodes = [node for node in self.retrieved_nodes]
-        elif isinstance(learn_field_weights, list):
-            target_nodes = [node for node in self.retrieved_nodes if learn_field_weights[self.retrieved_nodes.index(node)]]
+        elif isinstance(target_fields, list):
+            target_nodes = [node for node in self.retrieved_nodes if target_fields[self.retrieved_nodes.index(node)]]
         else:
-            assert False, (f"PROGRAM ERROR: learn_field_weights arg for {self.name}: {learn_field_weights} "
+            assert False, (f"PROGRAM ERROR: target_fields arg for {self.name}: {target_fields} "
                            f"is neither True, False nor a list of bools as it should be.")
         super()._identify_target_nodes(context)
         return target_nodes
