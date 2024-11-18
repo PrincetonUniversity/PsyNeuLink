@@ -442,22 +442,23 @@ weighted for retrieval, and whether those weights are learned.
 
   * *key*:  a string that specifies the name of the field.
 
-  * *value*: a tuple with three items, im the following order:
+  * *value*: a dict or tuple with three entries; if a dict, the key to each entry must be the keyword specified below,
+    and if a tuple, the entries must appear in the following order:
 
-    - `field_weight <EMComposition_Field_Weights>` specification - must be a scalar or None. If it is a scalar,
-      the field is treated as a retrieval `key <EMComposition_Field_Weights>` and weighted by that value during
-      retrieval; if it is None, it is treated as a value and cannot be changed later.
+    - *FIELD_WEIGHT* `specification <EMComposition_Field_Weights>` - value must be a scalar or None. If it is a scalar,
+      the field is treated as a `retrieval key <EMComposition_Field_Weights>` in `memory <EMComposition.memory>` that
+      is weighted by that value during retrieval; if None, it is treated as a value in `memory  <EMComposition.memory>`
+      and the field cannot be reconfigured later.
 
-    - `learn_field_weight <EMComposition_Field_Weights_Learning>` specification - must be a boolean or
-      a float; if it is False, the field_weight for that field is not learned; if it is True, the field
-      weight is learned using the EMComposition's `learning_rate <EMComposition.learning_rate>`; if it
-      is a float, that is used as its learning_rate.
+    - *LEARN_FIELD_WEIGHT* `specification <EMComposition_Field_Weights_Learning>` - value must be a boolean or a float;
+      if False, the field_weight for that field is not learned; if True, the field weight is learned using the
+      EMComposition's `learning_rate <EMComposition.learning_rate>`; if a float, that is used as its learning_rate.
 
-    - `target_field EMComposition_Target_Fields>` specification - must be a boolean; if it is True, the value of the
+    - *TARGET_FIELD* `specification <EMComposition_Target_Fields>` - value must be a boolean; if True, the value of the
       `retrieved_node <EMComposition.retrieved_nodes>` for that field conrtributes to the error computed during learning
-      and backpropagated through the EMComposition (see `Backpropagation of <EMComposition_Error_BackPropagation>`);if
-      it is False, the retrieved value for that field does not contribute to the error; however, its field_weight can
-      still be learned if that is specfified in `learn_field_weight <EMComposition_Field_Weights_Learning>`.
+      and backpropagated through the EMComposition (see `Backpropagation of <EMComposition_Error_BackPropagation>`);
+      if False, the retrieved value for that field does not contribute to the error; however, its field_weight can still
+      be learned if that is specfified in `learn_field_weight <EMComposition_Field_Weights_Learning>`.
 
   .. _note:
      The **fields** argument is provided as a convenient and reliable way of specifying field attributes;
