@@ -438,7 +438,7 @@ weighted for retrieval, and whether those weights are learned.
 .. _EMComposition_Field_Specification_Dict:
 
 * **fields**: a dict that specifies the names of the fields and their attributes. There must be an entry for each
-  field specified in the **memory_template**, with the following format:
+  field specified in the **memory_template**, and must have the following format:
 
   * *key*:  a string that specifies the name of the field.
 
@@ -467,7 +467,7 @@ weighted for retrieval, and whether those weights are learned.
   The specifications provided in the **fields** argument are assigned to the corresponding Parameters of
   the EMComposition which, alternatively, can  be specified individually using the **field_names**, **field_weights**,
   **learn_field_weights** and **target_fields** arguments of the EMComposition's constructor, as described below.
-  However, these and the **fields** argument cannot both be used together; doing so will generate an error.
+  However, these and the **fields** argument cannot both be used together; doing so raises an error.
 
 .. _EMComposition_Field_Names:
 
@@ -512,15 +512,16 @@ weighted for retrieval, and whether those weights are learned.
       <EMComposition.field_weight_nodes>`, and are ignored during retrieval.  These *cannot be modified* after the
       EMComposition has been constructed (see note below).
 
-    _EMComposition_Field_Weights_Change_Note:
+    .. _EMComposition_Field_Weights_Change_Note:
+
     .. note::
        The field_weights can be modified after the EMComposition has been constructed, by assigning a new set of weights
        to its `field_weights <EMComposition.field_weights>` `Parameter`.  However, only field_weights associated with
        key fields (i.e., that were initially assigned non-zero field_weights) can be modified; the weights for value
-       fields (i.e., ones that were initially assigned a field_weight of None) cannot be modified, and an attempt to do
-       so will generate an error. If a field initially used as a value may later need to be used as a key, it should be
+       fields (i.e., ones that were initially assigned a field_weight of None) cannot be modified, and doing so raises
+       an error. If a field that will be used initially as a value may later need to be used as a key, it should be
        assigned a `field_weight <EMComposition.field_weights>` of 0 at construction (rather than None), which can then
-       and later be changed as needed.
+       later be changed as needed.
 
     .. technical_note::
        The reason that field_weights can be modified only for keys is that `field_weight_nodes
@@ -1912,7 +1913,7 @@ class EMComposition(AutodiffComposition):
             # self.scheduler.add_condition(self.storage_node, conditions.AllHaveRun(*self.retrieved_nodes))
             #
             # Generates the desired execution set for a single pass, and runs with expected results,
-            #   but generates warning messages for every node of the following sort:
+            #   but raises a warning messages for every node of the following sort:
             # /Users/jdc/PycharmProjects/PsyNeuLink/psyneulink/core/scheduling/scheduler.py:120:
             #   UserWarning: BeforeNCalls((EMStorageMechanism STORAGE MECHANISM), 1) is dependent on
             #   (EMStorageMechanism STORAGE MECHANISM), but you are assigning (EMStorageMechanism STORAGE MECHANISM)
