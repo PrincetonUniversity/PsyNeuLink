@@ -247,6 +247,7 @@ def construct_model(model_name:str=model_params['name'],
                                         [0] * state_size],  # context
                        memory_fill=memory_init,
                        memory_capacity=memory_capacity,
+                       normalize_memories=False,
                        memory_decay_rate=0,
                        softmax_gain=retrieval_softmax_gain,
                        softmax_threshold=retrieval_softmax_threshold,
