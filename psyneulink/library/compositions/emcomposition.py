@@ -1165,12 +1165,20 @@ from psyneulink.core.globals.registry import name_without_suffix
 from psyneulink.core.llvm import ExecutionMode
 
 
-__all__ = ['EMComposition', 'EMCompositionError', 'WEIGHTED_AVG', 'PROBABILISTIC']
+__all__ = ['EMComposition', 'EMCompositionError', 'FIELD_WEIGHT', 'LEARN_FIELD_WEIGHT',
+           'PROBABILISTIC', 'TARGET_FIELD','WEIGHTED_AVG']
 
+# softmax_choice options:
 STORAGE_PROB = 'storage_prob'
 WEIGHTED_AVG = ALL
 PROBABILISTIC = PROB_INDICATOR
 
+# specs for entry of fields specification dict
+FIELD_WEIGHT = 'field_weight'
+LEARN_FIELD_WEIGHT = 'learn_field_weight'
+TARGET_FIELD = 'target_field'
+
+# Node names
 QUERY_NODE_NAME = 'QUERY'
 QUERY_AFFIX = f' [{QUERY_NODE_NAME}]'
 VALUE_NODE_NAME = 'VALUE'
@@ -1294,35 +1302,37 @@ class EMComposition(AutodiffComposition):
     ---------
 
     memory_template : tuple, list, 2d or 3d array : default [[0],[0]]
-        specifies the shape of an item to be stored in the EMComposition's memory;
-        see `memory_template <EMComposition_Memory_Template>` for details.
+        specifies the shape of an item to be stored in the EMComposition's memory
+        (see `memory_template <EMComposition_Memory_Template>` for details).
 
     memory_fill : scalar or tuple : default 0
-        specifies the value used to fill the memory when it is initialized;
-        see `memory_fill <EMComposition_Memory_Fill>` for details.
+        specifies the value used to fill the memory when it is initialized
+        (see `memory_fill <EMComposition_Memory_Fill>` for details).
 
     memory_capacity : int : default None
         specifies the number of items that can be stored in the EMComposition's memory;
-        see `memory_capacity <EMComposition_Memory_Capacity>` for details.
+        (see `memory_capacity <EMComposition_Memory_Capacity>` for details).
 
     fields : dict[tuple[field weight, learning specification]] : default None
-        each key must a string that is the name of a field, and its value a tuple that specifies that field's
-        `field_weight <EMComposition.field_weights>` and `learning specification <EMComposition.learn_field_weights>`;
-        if a dict is specified, it overrides the **field_names**, **field_weights*  and **learn_field_weights**
-        arguments (see `fields <EMComposition_Fields>` for additional details).
+        each key must a string that is the name of a field, and its value a dict or tuple that specifies that field's
+        `field_weight <EMComposition.field_weights>`, `learn_field_weights <EMComposition.learn_field_weights>`, and
+        `target_fields <EMComposition.target_fields>` specifications (see `fields <EMComposition_Fields>` for details
+        of specificaton format). The **fields** arg replaces the **field_names**, **field_weights**
+        **learn_field_weights**, and **target_fields** arguments, and specifying any of these raises an error.
 
     field_names : list or tuple : default None
-        specifies the optional names assigned to each field in the memory_template;
-        see `field names <EMComposition_Field_Names>` for details.
+        specifies the names assigned to each field in the memory_template (see `field names <EMComposition_Field_Names>`
+        for details). If the **fields** argument is specified, this is not necessary and specifying raises an error.
 
     field_weights : list or tuple : default (1,0)
-        specifies the relative weight assigned to each key when matching an item in memory;
-        see `field weights <EMComposition_Field_Weights>` for additional details.
+        specifies the relative weight assigned to each key when matching an item in memory (see `field weights
+        <EMComposition_Field_Weights>` for additional details). If the **fields** argument is specified, this
+        is not necessary and specifying raises an error.
 
     learn_field_weights : bool or list[bool, int, float]: default False
         specifies whether the `field_weights <EMComposition.field_weights>` are learnable and, if so, optionally what
-        the learning_rate is for each field; see `learn_field_weights <EMComposition_Field_Weights_Learning>` for
-        specifications.
+        the learning_rate is for each field (see `learn_field_weights <EMComposition_Field_Weights_Learning>` for
+        specifications). If the **fields** argument is specified, this is not necessary and specifying raises an error.
 
     learning_rate : float : default .01
         specifies the default learning_rate for `field_weights <EMComposition.field_weights>` not
@@ -1331,28 +1341,28 @@ class EMComposition(AutodiffComposition):
 
     normalize_field_weights : bool : default True
         specifies whether the **fields_weights** are normalized over the number of keys, or used as absolute
-        weighting values when retrieving an item from memory; see `normalize_field weights
-        <EMComposition_Normalize_Field_Weights>` for additional details.
+        weighting values when retrieving an item from memory (see `normalize_field weights
+        <EMComposition_Normalize_Field_Weights>` for additional details).
 
     concatenate_queries : bool : default False
         specifies whether to concatenate the keys into a single field before matching them to items in
-        the corresponding fields in memory; see `concatenate keys <EMComposition_Concatenate_Queries>` for details.
+        the corresponding fields in memory (see `concatenate keys <EMComposition_Concatenate_Queries>` for details).
 
     normalize_memories : bool : default True
-        specifies whether keys and memories are normalized before computing their dot product (similarity);
-        see `Match memories by field <EMComposition_Processing>` for additional details.
+        specifies whether keys and memories are normalized before computing their dot product (similarity)
+        (see `Match memories by field <EMComposition_Processing>` for additional details).
 
     softmax_gain : float, ADAPTIVE or CONTROL : default 1.0
-        specifies the temperature used for softmax normalizing the distance of queries and keys in memory;
-        see `Softmax normalize matches over fields <EMComposition_Processing>` for additional details.
+        specifies the temperature used for softmax normalizing the distance of queries and keys in memory
+        (see `Softmax normalize matches over fields <EMComposition_Processing>` for additional details).
 
     softmax_threshold : float : default .0001
-        specifies the threshold used to mask out small values in the softmax calculation;
+        specifies the threshold used to mask out small values in the softmax calculation
         see *mask_threshold* under `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for details).
 
     softmax_choice : WEIGHTED_AVG, ARG_MAX, PROBABILISTIC : default WEIGHTED_AVG
-        specifies how the softmax over distances of queries and keys in memory is used for retrieval;
-        see `softmax_choice <EMComposition_Softmax_Choice>` for a description of each option.
+        specifies how the softmax over distances of queries and keys in memory is used for retrieval
+        (see `softmax_choice <EMComposition_Softmax_Choice>` for a description of each option).
 
     storage_prob : float : default 1.0
         specifies the probability that an item will be stored in `memory <EMComposition.memory>`
@@ -1360,8 +1370,8 @@ class EMComposition(AutodiffComposition):
         additional details).
 
     memory_decay_rate : float : AUTO
-        specifies the rate at which items in the EMComposition's memory decay;
-        see `memory_decay_rate <EMComposition_Memory_Decay_Rate>` for details.
+        specifies the rate at which items in the EMComposition's memory decay
+        (see `memory_decay_rate <EMComposition_Memory_Decay_Rate>` for details).
 
     enable_learning : bool : default True
         specifies whether learning is enabled for the EMCComposition (see `Learning <EMComposition_Learning>`
@@ -1371,7 +1381,8 @@ class EMComposition(AutodiffComposition):
         specifies whether a learning pathway is constructed for each `field <EMComposition_Entries_and_Fields>`
         of the EMComposition.  If it is a list, each item must be ``True`` or ``False`` and the number of items
         must be equal to the number of `fields <EMComposition_Fields> specified (see `Target Fields
-         <EMComposition_Target_Fields>` for additional details).
+         <EMComposition_Target_Fields>` for additional details). If the **fields** argument is specified,
+         this is not necessary and specifying raises an error.
 
     # 7/10/24 FIX: STILL TRUE?  DOES IT PRECLUDE USE OF EMComposition as a nested Composition??
     .. technical_note::
@@ -1390,7 +1401,7 @@ class EMComposition(AutodiffComposition):
 
     memory : ndarray
         3d array of entries in memory, in which each row (axis 0) is an entry, each column (axis 1) is a field, and
-        each item (axis 2) is the value for the corresponding field;  see `EMComposition_Memory` for additional details.
+        each item (axis 2) is the value for the corresponding field (see `EMComposition_Memory` for additional details).
 
         .. note::
            This is a read-only attribute;  memories can be added to the EMComposition's memory either by
@@ -1402,12 +1413,12 @@ class EMComposition(AutodiffComposition):
     .. _EMComposition_Parameters:
 
     memory_capacity : int
-        determines the number of items that can be stored in `memory <EMComposition.memory>`; see `memory_capacity
-        <EMComposition_Memory_Capacity>` for additional details.
+        determines the number of items that can be stored in `memory <EMComposition.memory>`
+        (see `memory_capacity <EMComposition_Memory_Capacity>` for additional details).
 
     field_names : list[str]
-        determines which names that can be used to label fields in `memory <EMComposition.memory>`;  see
-        `field_names <EMComposition_Field_Names>` for additional details.
+        determines which names that can be used to label fields in `memory <EMComposition.memory>`
+        (see `field_names <EMComposition_Field_Names>` for additional details).
 
     field_weights : tuple[float]
         determines which fields of the input are treated as "keys" (non-zero values) that are used to match entries in
@@ -1430,29 +1441,29 @@ class EMComposition(AutodiffComposition):
 
     normalize_field_weights : bool
         determines whether `fields_weights <EMComposition.field_weights>` are normalized over the number of keys, or
-        used as absolute weighting values when retrieving an item from memory; see `normalize_field weights
-        <EMComposition_Normalize_Field_Weights>` for additional details.
+        used as absolute weighting values when retrieving an item from memory (see `normalize_field weights
+        <EMComposition_Normalize_Field_Weights>` for additional details).
 
     concatenate_queries : bool
         determines whether keys are concatenated into a single field before matching them to items in `memory
-        <EMComposition.memory>`; see `concatenate keys <EMComposition_Concatenate_Queries>` for additional details.
+        <EMComposition.memory (see `concatenate keys <EMComposition_Concatenate_Queries>` for additional details).
 
     normalize_memories : bool
-        determines whether keys and memories are normalized before computing their dot product (similarity);
-        see `Match memories by field <EMComposition_Processing>` for additional details.
+        determines whether keys and memories are normalized before computing their dot product (similarity)
+        (see `Match memories by field <EMComposition_Processing>` for additional details).
 
     softmax_gain : float, ADAPTIVE or CONTROL
-        determines gain (inverse temperature) used for softmax normalizing the summed distances of queries and keys in
-        memory by the `SoftMax` Function of the `softmax_node <EMComposition.softmax_node>`; see `Softmax normalize
-        distances <EMComposition_Processing>` for additional details.
+        determines gain (inverse temperature) used for softmax normalizing the summed distances of queries
+        and keys in memory by the `SoftMax` Function of the `softmax_node <EMComposition.softmax_node>`
+        (see `Softmax normalize distances <EMComposition_Processing>` for additional details).
 
     softmax_threshold : float
-        determines the threshold used to mask out small values in the softmax calculation;
-        see *mask_threshold* under `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for details).
+        determines the threshold used to mask out small values in the softmax calculation
+        (see *mask_threshold* under `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for details).
 
     softmax_choice : WEIGHTED_AVG, ARG_MAX or PROBABILISTIC
-        determines how the softmax over distances of queries and keys in memory is used for retrieval;
-        see `softmax_choice <EMComposition_Softmax_Choice>` for a description of each option.
+        determines how the softmax over distances of queries and keys in memory is used for retrieval
+        (see `softmax_choice <EMComposition_Softmax_Choice>` for a description of each option).
 
     storage_prob : float
         determines the probability that an item will be stored in `memory <EMComposition.memory>`
@@ -1680,7 +1691,7 @@ class EMComposition(AutodiffComposition):
         memory_capacity = Parameter(1000, structural=True)
         field_names = Parameter(None, structural=True)
         field_weights = Parameter([1], setter=field_weights_setter)
-        learn_field_weights = Parameter(False, structural=True) # Note, actual default is assigned in _parse_fields()
+        learn_field_weights = Parameter(False, structural=True)
         learning_rate = Parameter(.001, modulable=True)
         normalize_field_weights = Parameter(True)
         concatenate_queries = Parameter(False, structural=True)
@@ -2099,14 +2110,30 @@ class EMComposition(AutodiffComposition):
                       name)->(list, list, list, bool):
 
         def _parse_fields_dict(name, fields, num_fields)->(list,list,list,list):
+            """Parse fields dict into field_names, field_weights, learn_field_weights, and target_fields"""
             if len(fields) != num_fields:
                 raise EMCompositionError(f"The number of entries ({len(fields)}) in the dict specified in the 'fields' "
                                          f"arg of '{name}' does not match the number of fields in its memory "
                                          f"({self.num_fields}).")
-            field_names = list(fields.keys())
-            field_weights = [item[0] for item in list(fields.values())]
-            learn_field_weights = [item[1] for item in list(fields.values())]
-            target_fields = [item[2] for item in list(fields.values())]
+            field_names = [None] * num_fields
+            field_weights = [None] * num_fields
+            learn_field_weights = [None] * num_fields
+            target_fields = [None] * num_fields
+            for i, field_name in enumerate(fields):
+                field_names[i] = field_name
+                if isinstance(fields[field_name], (tuple, list)):
+                    # field specified as tuple or list
+                    field_weights[i] = fields[field_name][0]
+                    learn_field_weights[i] = fields[field_name][1]
+                    target_fields[i] = fields[field_name][2]
+                elif isinstance(fields[field_name], dict):
+                    # field specified as dict
+                    field_weights[i] = fields[field_name][FIELD_WEIGHT]
+                    learn_field_weights[i] = fields[field_name][LEARN_FIELD_WEIGHT]
+                    target_fields[i] = fields[field_name][TARGET_FIELD]
+                else:
+                    raise EMCompositionError(f"Unrecognized specification for field '{field_name}' in the 'fields' "
+                                             f"arg of '{name}'; it must be a tuple, list or dict.")
             return field_names, field_weights, learn_field_weights, target_fields
 
         self.num_fields = len(self.entry_template)
