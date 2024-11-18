@@ -7,241 +7,8 @@
 
 
 # ********************************************* EMComposition *************************************************
-#
-# TODO:
-# - QUESTION:
-#   - SHOULD differential of SoftmaxGainControl Node be included in learning?
-#   - SHOULD MEMORY DECAY OCCUR IF STORAGE DOES NOT? CURRENTLY IT DOES NOT (SEE EMStorage Function)
-
-# - FIX: Refactor field_weights to use None instead of 0 to specify value fields, and allow inputs to field_nodes
-# - FIX: ALLOW SOFTMAX SPEC TO BE A DICT WITH PARAMETERS FOR _get_softmax_gain() FUNCTION
-# - FIX: Concatenation:
-# -      LLVM for function and derivative
-# -      Add Concatenate to pytorchcreator_function
-# -      Deal with matrix assignment in LearningProjection LINE 643
-# -      Reinstate test for execution of Concatenate with learning in test_emcomposition (currently commented out)
-# - FIX: Softmax Gain Control:
-#        Test if it current works (they are added to Composition but not in BackProp processing pathway)
-#        Does backprop have to run through this if not learnable?
-#        If so, need to add PNL Function, with derivative and LLVM and Pytorch implementations
-# - FIX: WRITE MORE TESTS FOR EXECUTION, WARNINGS, AND ERROR MESSAGES
-#         - learning (with and without learning field weights
-#         - 3d tuple with first entry != memory_capacity if specified
-#         - list with number of entries > memory_capacity if specified
-#         - input is added to the correct row of the matrix for each key and value for
-#                for non-contiguous keys (e.g, field_weights = [1,0,1]))
-#         - illegal field weight assignment
-#         - explicitly that storage occurs after retrieval
-# - FIX: WARNING NOT OCCURRING FOR Normalize ON ZEROS WITH MULTIPLE ENTRIES (HAPPENS IF *ANY* KEY IS EVER ALL ZEROS)
-# - FIX: IMPLEMENT LearningMechanism FOR RETRIEVAL WEIGHTS:
-#        - what is learning_update: AFTER doing?  Use for scheduling execution of storage_node?
-#        ?? implement derivative for concatenate
-# - FIX: implement add_storage_pathway to handle addition of storage_node as learning mechanism
-#        - in "_create_storage_learning_components()" assign "learning_update" arg
-#          as BEORE OR DURING instead of AFTER (assigned to learning_enabled arg of LearningMechanism)
-# - FIX: Add StorageMechanism LearningProjections to Composition? -> CAUSES TEST FAILURES; NEEDS INVESTIGATION
-# - FIX: Thresholded version of SoftMax gain (per Kamesh)
-# - FIX: DEAL WITH INDEXING IN NAMES FOR NON-CONTIGUOUS KEYS AND VALUES (reorder to keep all keys together?)
-# - FIX: _import_composition:
-#        - MOVE LearningProjections
-#        - MOVE Condition? (e.g., AllHaveRun) (OR PUT ON MECHANISM?)
-# - FIX: IMPLEMENT _integrate_into_composition METHOD THAT CALLS _import_composition ON ANOTHER COMPOSITION
-# -      AND TRANSFERS RELEVANT ATTRIBUTES (SUCH AS MEMORY, query_input_nodeS, ETC., POSSIBLY APPENDING NAMES)
-# - FIX: ADD Option to suppress field_weights when computing norm for weakest entry in EMStorageMechanism
-# - FIX: GENERATE ANIMATION w/ STORAGE (uses Learning but not in usual way)
-# - IMPLEMENT use OF multiple inheritance of EMComposition from AutoDiff and Composition
-
-# - FIX: DOCUMENTATION:
-#        - USE OF EMStore.storage_location (NONE => LOCAL, SPECIFIED => GLOBAL)
-#        - define "keys" and "values" explicitly
-#        - define "key weights" explicitly as field_weights for all non-zero values
-#        - make it clear that full size of memory is initialized (rather than "filling up" w/ use)
-#        - write examples for run()
-# - FIX: ADD NOISE
-# - FIX: ?ADD add_memory() METHOD FOR STORING W/O RETRIEVAL, OR JUST ADD retrieval_prob AS modulable Parameter
-# - FIX: CONFIDENCE COMPUTATION (USING SIGMOID ON DOT PRODUCTS) AND REPORT THAT (EVEN ON FIRST CALL)
-# MISC:
-# - WRITE TESTS FOR INPUT_PORT and MATRIX SPECS CORRECT IN LATEST BRANCHs
-# - ACCESSIBILITY OF DISTANCES (SEE BELOW): MAKE IT A LOGGABLE PARAMETER (I.E., WITH APPROPRIATE SETTER)
-#   ADD COMPILED VERSION OF NORMED LINEAR_COMBINATION FUNCTION TO LinearCombination FUNCTION: dot / (norm a * norm b)
-# - DECAY WEIGHTS BY:
-#   ? 1-SOFTMAX / N (WHERE N = NUMBER OF ITEMS IN MEMORY)
-#   or
-#      1/N (where N=number of items in memory, and thus gets smaller as N gets
-#      larger) on each storage (to some asymptotic minimum value), and store the new memory to the unit with the
-#      smallest weights (randomly selected among “ties" [i.e., within epsilon of each other]), I think we have a
-#      mechanism that can adaptively use its limited capacity as sensibly as possible, by re-cycling the units
-#      that have the least used memories.
-# - MAKE "_store_memory" METHOD USE LEARNING INSTEAD OF ASSIGNMENT
-#   - make LearningMechanism that, instead of error, simply adds relevant input to weights (with all others = 0)
-#   - (relationship to Steven's Hebbian / DPP model?):
-
-# - ADD ADDITIONAL PARAMETERS FROM CONTENTADDRESSABLEMEMORY FUNCTION
-# - ADAPTIVE TEMPERATURE: KAMESH FOR FORMULA
-# - ADD MEMORY_DECAY TO ContentAddressableMemory FUNCTION (and compiled version by Samyak)
-# - MAKE memory_template A CONSTRUCTOR ARGUMENT FOR default_variable
-
-# - FIX: PSYNEULINK:
-#      - TESTS:
-#        - WRITE TESTS FOR DriftOnASphere variable = scalar, 2d vector or 1d vector of correct and incorrect lengths
-#        - WRITE TESTS FOR LEARNING WITH LinearCombination of 1, 2 and 3 inputs
-#
-#      - COMPILATION:
-#        - Remove CIM projections on import to another composition
-#        - Autodiff support for IdentityFunction
-#        - MatrixTransform to add normalization
-#        - _store() method to assign weights to memory
-#        - LLVM problem with ComparatorMechanism
-#
-#      - pytorchcreator_function:
-#           SoftMax implementation:  torch.nn.Softmax(dim=0) is not getting passed correctly
-#           Implement LinearCombination
-#        - MatrixTransform Function:
-#
-#      - LEARNING - Backpropagation LearningFunction / LearningMechanism
-#        - DOCUMENTATION:
-#           - weight_change_matrix = gradient (result of delta rule) * learning_rate
-#           - ERROR_SIGNAL is OPTIONAL (only implemented when there is an error_source specified)
-#        - Backprop: (related to above?) handle call to constructor with default_variable = None
-#        - WRITE TESTS FOR USE OF COVARIATES AND RELATED VIOLATIONS: (see ScratchPad)
-#          - Use of LinearCombination with PRODUCT in output_source
-#          - Use of LinearCombination with PRODUCT in InputPort of output_source
-#                  - Construction of LearningMechanism with Backprop:
-#        - MappingProjection / LearningMechanism:
-#          - Add learning_rate parameter to MappingProjection (if learnable is True)
-#          - Refactor LearningMechanism to use MappingProjection learning_rate specification if present
-#        - CHECK FOR EXISTING LM ASSERT IN pytests
-#
-#      - AutodiffComposition:
-#         - replace handling / flattening of nested compositions with Pytorch.add_module (which adds "child" modules)
-#         - Check that error occurs for adding a controller to an AutodiffComposition
-#         - Check that if "epochs" is not in input_dict for Autodiff, then:
-#           - set to num_trials as default,
-#           - leave it to override num_trials if specified (add this to DOCUMENTATION)
-#        - Input construction has to be:
-#           - same for Autodiff in Python mode and PyTorch mode
-#               (NOTE: used to be that autodiff could get left in Python mode
-#                      so only where tests for Autodiff happened did it branch)
-#           - AND different from Composition (in Python mode)
-#        - support use of pathway argument in Autodff
-#        - the following format doesn't work for LLVM (see test_identicalness_of_input_types:
-#           xor = pnl.AutodiffComposition(nodes=[input_layer,hidden_layer,output_layer])
-#           xor.add_projections([input_to_hidden_wts, hidden_to_output_wts])
-#          - DOCUMENTATION: execution_mode=ExecutionMode.Python allowed
-#          - Add warning of this on initial call to learn()
-#
-#      - Composition:
-#        - Add default_execution_mode attribute to allow nested Compositions to be executed in
-#              different model than outer Composition
-#        - _validate_input_shapes_and_expand_for_all_trials: consolidate with get_input_format()
-#        - Generalize treatment of FEEDBACK specification:
-      #        - FIX: ADD TESTS FOR FEEDBACK TUPLE SPECIFICATION OF Projection, DIRECT SPECIFICATION IN CONSTRUCTOR
-#              - FIX: why aren't FEEDBACK_SENDER and FEEDBACK_RECEIVER roles being assigned when feedback is specified?
-#        - add property that keeps track of warnings that have been issued, and suppresses repeats if specified
-#        - add property of Composition that lists it cycles
-#        - Add warning if termination_condition is trigged (and verbosePref is set)
-#        - Addition of projections to a ControlMechanism seems too dependent on the order in which the
-#              the ControlMechanism is constructed with respect to its afferents (if it comes before one,
-#              the projection to it (i.e., for monitoring) does not get added to the Composition
-# -      - IMPLEMENTATION OF LEARNING: NEED ERROR IF TRY TO CALL LEARN ON A COMPOSITION THAT HAS NO LEARNING MECHANISMS
-#          INCLUDING IN PYTHON MODE??  OR JUST ALLOW IT TO CONSTRUCT THE PATHWAY AUTOMATICALLY?
-#        - Change size argument in constructor to use standard numpy shape format if tupe, and PNL format if list
-#        - Write convenience Function for returning current time from context
-#             - requires it be called from execution within aComposition, error otherwise)
-#             - takes argument for time scale (e.g., TimeScale.TRIAL, TimeScale.RUN, etc.)
-#             - Add TimeMechanism for which this is the function, and can be configured to report at a timescale
-#        - Add Composition.run_status attribute assigned a context flag, with is_preparing property that checks it
-#               (paralleling handling of is_initializing)
-#        - Allow set of lists as specification for pathways in Composition
-#        - Add support for set notation in add_backpropagation_learning_pathway (to match add_linear_processing_pathway)
-#             see ScratchPad: COMPOSITION 2 INPUTS UNNESTED VERSION: MANY-TO-MANY
-#        - Make sure that shadow inputs (see InputPort_Shadow_Inputs) uses the same matrix as shadowed input.
-#        - composition.add_backpropagation_learning_pathway(): support use of set notation for multiple nodes that
-#        project to a single one.
-#        - add LearningProjections executed in EXECUTION_PHASE to self.projections
-#          and then remove MODIFIED 8/1/23 in _check_for_unused_projections
-#        - Why can't verbosePref be set directly on a composition?
-#        - Composition.add_nodes():
-#           - should check, on each call to add_node, to see if one that has a releavantprojection and, if so, add it.
-#           - Allow [None] as argument and treat as []
-#        - IF InputPort HAS default_input = DEFAULT_VARIABLE,
-#           THEN IT SHOULD BE IGNORED AS AN INPUT NODE IN A COMPOSITION
-#        - Add use of dict in pathways specification to map outputs from a set to inputs of another set
-#            (including nested comps)
-#
-#      - ShowGraph:  (show_graph)
-#        - don't show INPUT/OUTPUT Nodes for nested Comps in green/red
-#                (as they don't really receive input or generate output on a run
-#        - show feedback projections as pink (shouldn't that already be the case?)
-#        - add mode for showing projections as diamonds without show_learning (e.g., "show_projections")
-#        - figure out how to get storage_node to show without all other learning stuff
-#        - show 'operation' parameter for LinearCombination in show_node_structure=ALL
-#        - specify set of nodes to show and only show those
-#        - fix: show_learning=ALL (or merge from EM branch)
-#
-#      - ControlMechanism
-#        - refactor ControlMechanism per notes of 11/3/21, including:
-#                FIX: 11/3/21 - MOVE _parse_monitor_specs TO HERE FROM ObjectiveMechanism
-#      - EpisodicMemoryMechanism:
-#        - make storage_prob and retrieval_prob parameters linked to function
-#        - make distance_field_weights a parameter linked to function
-#
-#      - LinearCombination Function:
-#        - finish adding derivative (for if exponents are specified)
-#        - remove properties (use getter and setter for Parameters)
-#
-#      - ContentAddressableMemory Function:
-#           - rename "cue" -> "query"
-#           - add field_weights as parameter of EM, and make it a shared_parameter ?as well as a function_parameter?
-
-#     - DDM:
-#        - make reset_stateful_function_when a Parameter and arg in constructor
-#          and align with reset Parameter of IntegratorMechanism)
-#
-#    - FIX: BUGS:
-#      - composition:
-#          - If any MappingProjection is specified from nested node to outer node,
-#            then direct projections are instantiated to the output_CIM of the outer comp, and the
-#            nested comp is treated as OUTPUT Node of outer comp even if all its projections are to nodes in outer comp
-#            LOOK IN add_projections? for nested comps
-#      - composition (?add_backpropagation_learning_pathway?):
-#           THIS FAILS:
-#             comp = Composition(name='a_outer')
-#             comp.add_backpropagation_learning_pathway([input_1, hidden_1, output_1])
-#             comp.add_backpropagation_learning_pathway([input_1, hidden_1, output_2])
-#           BUT THE FOLLOWING WORKS (WITH IDENTICAL show_graph(show_learning=True)):
-#             comp = Composition(name='a_outer')
-#             comp.add_backpropagation_learning_pathway([input_1, hidden_1, output_1])
-#             comp.add_backpropagation_learning_pathway([hidden_1, output_2])
-#      - show_graph(): QUIRK (BUT NOT BUG?):
-#           SHOWS TWO PROJECTIONS FROM a_inner.input_CIM -> hidden_x:
-#            ?? BECAUSE hidden_x HAS TWO input_ports SINCE ITS FUNCTION IS LinearCombination?
-#             a_inner = AutodiffComposition([hidden_x],name='a_inner')
-#             a_outer = AutodiffComposition([[input_1, a_inner, output_1],
-#                                            [a_inner, output_2]],
-#             a_outer.show_graph(show_cim=True)
-
-#      -LearningMechanism / Backpropagation LearningFunction:
-#         - Construction of LearningMechanism on its own fails; e.g.:
-#             lm = LearningMechanism(learning_rate=.01, learning_function=BackPropagation())
-#             causes the following error:
-#                TypeError("Logistic.derivative() missing 1 required positional argument: 'self'")
-#      - Adding GatingMechanism after Mechanisms they gate fails to implement gating projections
-#           (example:  reverse order of the following in _construct_pathways
-#                      self.add_nodes(self.softmax_nodes)
-#                      self.add_nodes(self.field_weight_nodes)
-#           - add Normalize as option
-#           - Anytime a row's norm is 0, replace with 1s
-#      - WHY IS Concatenate NOT WORKING AS FUNCTION OF AN INPUTPORT (WASN'T THAT USED IN CONTEXT OF BUFFER?
-#           SEE NOTES TO KATHERINE
-#
-#     - TESTS
-#       For duplicate Projections (e.g., assign a Mechanism in **monitor** of ControlMechanism
-#            and use comp.add_projection(MappingProjection(mointored, control_mech) -> should generate a duplicate
-#            then search for other instances of the same error message
 
 """
-
 Contents
 --------
 
@@ -271,34 +38,34 @@ Contents
 Overview
 --------
 
-The EMComposition implements a configurable, content-addressable form of episodic, or external memory. It emulates
+The EMComposition implements a configurable, content-addressable form of episodic (or external) memory. It emulates
 an `EpisodicMemoryMechanism` -- reproducing all of the functionality of its `ContentAddressableMemory` `Function` --
-in the form of an `AutodiffComposition`. This allows it to backpropagate error signals, based retrieved values, to
-it inputs, learn how to differentially weight different cues used for retrieval, and that adds the capability for
+in the form of an `AutodiffComposition`. This allows it to backpropagate error signals based retrieved values to
+it inputs, and learn how to differentially weight cues (queries) used for retrieval. It also adds the capability for
 `memory_decay <EMComposition.memory_decay_rate>`. In these respects, it implements a variant of a `Modern Hopfield
-Network <https://en.wikipedia.org/wiki/Modern_Hopfield_network>`_, as well as some of the feature of a `Transformer
-<https://arxiv.org/abs/1706.03762>`_
+Network <https://en.wikipedia.org/wiki/Modern_Hopfield_network>`_, as well as some of the features of a `Transformer
+<https://en.wikipedia.org/wiki/Transformer_(deep_learning_architecture)>`_
 
 The `memory <EMComposition.memory>` of an EMComposition is configured using two arguments of its constructor:
-**memory_template** argument,that defines how each entry in `memory <EMComposition.memory>` is structured (the
-number of fields in each entry and the length of each field); and **field_weights** argument, that defines which
-fields are used as cues for retrieval (i.e., as "keys"), including whether and how they are differentially weighted in
-the match process used for retrieval, and which fields are treated as "values" that are stored retrieved but not
-used by the match process. The inputs to an EMComposition, corresponding to each key and value field are assigned to
-each of its `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>`, with inputs to be matched to keys (i.e., to be
-treated as "queries") assigned to its `query_input_nodes <EMComposition.query_input_nodes>`, and the remaining inputs
-assigned to it `value_input_nodes <EMComposition.value_input_nodes>`. When the EMComposition is executed, the retrieved
-values for all fields are returned as it result, and recorded in its `result <Composition.result>` attribute, and the
-value for each field is assigned as the value of its `OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>`.  The
-input is then stored i its `memory <EMComposition.memory>`, with a probability determined by its `storage_prob
-<EMComposition.storage_prob>` attribute, and all previous memories decayed by its `memory_decay_rate
-<EMComposition.memory_decay_rate>`. The `memory <EMComposition.memory>` can be accessed using its `memory
-<EMComposition.memory>` attribute.
+the **memory_template** argument, that defines the overall structure of its `memory <EMComposition.memory>` (the
+number of fields in each entry, the length of each field, and the number of entries); and **fields** argument, that
+defines which fields are used as cues for retrieval (i.e., as "keys"), including whether and how they are weighted in
+the match process used for retrieval, which fields are treated as "values" that are stored retrieved but not used by
+the match process, and which are involved in learning. The inputs to an EMComposition, corresponding to its keys and
+values, are assigned to each of its `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>`: inputs to be matched to keys
+(i.e., used as "queries") are assigned to its `query_input_nodes <EMComposition.query_input_nodes>`; and the remaining
+inputs assigned to it `value_input_nodes <EMComposition.value_input_nodes>`. When the EMComposition is executed, the
+retrieved values for all fields are returned as the result, and recorded in its `results <Composition.result>`
+attribute. The value for each field is assigned as the `value <OutputPort.value>` of its `OUTPUT <NodeRole.OUTPUT>`
+`Nodes <Composition_Nodes>`. The input is then stored in its `memory <EMComposition.memory>`, with a probability
+determined by its `storage_prob <EMComposition.storage_prob>` `Parameter`, and all previous memories decayed by its
+`memory_decay_rate <EMComposition.memory_decay_rate>`. The `memory <EMComposition.memory>` can be accessed using its
+`memory <EMComposition.memory>` Parameter.
 
     .. technical_note::
-       The memories of an EMComposition are actually stored in the `matrix <MappingProjection.matrix>` attribute
+       The memories of an EMComposition are actually stored in the `matrix <MappingProjection.matrix>` `Parameter`
        of a set of `MappingProjections <MappingProjection>` (see `note below <EMComposition_Memory_Storage>`). The
-       `memory <EMComposition.memory>` attribute compiles and formats these as a single 3d array, the rows of which
+       `memory <EMComposition.memory>` Parameter compiles and formats these as a single 3d array, the rows of which
        (axis 0) are each entry, the columns of which (axis 1) are the fields of each entry, and the items of which
        (axis 2)  are the values of each field (see `EMComposition_Memory_Configuration` for additional details).
 
@@ -326,38 +93,39 @@ the **field_weights** argument of the EMComposition's constructor (see `field_we
 
 *Retrieval.*  The values retrieved from `memory <ContentAddressableMemory.memory>` (one for each field) are based
 on the relative similarity of the keys to the entries in memory, computed as the distance of each key and the
-values in the corresponding field for each entry in memory. By default, normalized dot products (comparable to cosine
-similarity) are used to compute the similarity of each query to each key in memory. These distances are then
-weighted by the corresponding `field_weights <EMComposition.field_weights>` for each field (if specified) and then
-summed, and the sum is softmaxed to produce a softmax distribution over the entries in memory. That is then used to
-generate a softmax-weighted average of the retrieved values across all fields, which is returned as the `result
-<Composition.result>` of the EMComposition's `execution <Composition_Execution>` (an EMComposition can also be
-configured to return the entry with the lowest distance weighted by field, however then it is not compatible
-with learning; see `softmax_choice <EMComposition_Softmax_Choice>`).
+values in the corresponding field for each entry in memory. By default, for queries and keys that are vectors,
+normalized dot products (comparable to cosine similarity) are used to compute the similarity of each query to each
+key in memory; and if they are scalars the L0 norm is used.  These distances are then weighted by the corresponding
+`field_weights <EMComposition.field_weights>` for each field (if specified) and then summed, and the sum is softmaxed
+to produce a softmax distribution over the entries in memory. That is then used to generate a softmax-weighted average
+of the retrieved values across all fields, which is returned as the `result <Composition.result>` of the EMComposition's
+`execution <Composition_Execution>` (an EMComposition can also be configured to return the exact entry with the lowest
+distance (weighted by field), however then it is not compatible with learning; see `softmax_choice
+<EMComposition_Softmax_Choice>`).
 
   COMMENT:
   TBD DISTANCE ATTRIBUTES:
-  The distances used for the last retrieval is stored in XXXX and the distances of each of their corresponding fields
+  The distance used for the last retrieval is stored in XXXX, and the distances of each of their corresponding fields
   (weighted by `distance_field_weights <ContentAddressableMemory.distance_field_weights>`), are returned in XXX,
   respectively.
   COMMENT
 
-*Storage.*  The `inputs <Composition_Input_External_InputPorts>` to the EMComposition's fields are stored in `memory
-<EMComposition.memory>` after each execution, with a probability determined by `storage_prob
-<EMComposition.storage_prob>`.  If `memory_decay_rate <EMComposition.memory_decay_rate>` is specified, then the `memory
-<EMComposition.memory>` is decayed by that amount after each execution.  If `memory_capacity
-<EMComposition.memory_capacity>` has been reached, then each new memory replaces the weakest entry (i.e., the one
-with the smallest norm across all of its fields) in `memory <EMComposition.memory>`.
+*Storage.*  The `inputs <Composition_Input_External_InputPorts>` to the EMComposition's fields are stored
+in `memory <EMComposition.memory>` after each execution, with a probability determined by `storage_prob
+<EMComposition.storage_prob>`.  If `memory_decay_rate <EMComposition.memory_decay_rate>` is specified, then
+the `memory <EMComposition.memory>` is decayed by that amount after each execution.  If `memory_capacity
+<EMComposition.memory_capacity>` has been reached, then each new memory replaces the weakest entry
+(i.e., the one with the smallest norm across all of its fields) in `memory <EMComposition.memory>`.
 
 .. _EMComposition_Creation:
 
 Creation
 --------
 
-An EMComposition is created by calling its constructor.  There are four major elements that must be configured:
+An EMComposition is created by calling its constructor.  There are four major elements that can be configured:
 the structure of its `memory <EMComposition_Memory_Specification>; the fields <EMComposition_Fields>` for the entries
 in memory; how `storage and retrieval <EMComposition_Retrieval_Storage>` operate; and whether and how `learning
-<EMComposition_Learning>` is to be conducted.
+<EMComposition_Learning>` is carried out.
 
 .. _EMComposition_Memory_Specification:
 
