@@ -353,11 +353,15 @@ with the smallest norm across all of its fields) in `memory <EMComposition.memor
 Creation
 --------
 
-An EMComposition is created by calling its constructor, that takes the following arguments:
+An EMComposition is created by calling its constructor.  There are four major elements that must be configured:
+the structure of its `memory <EMComposition_Memory>; the fields <EMComposition_Fields>` for the entries in
+memory; how `storage and retrieval <EMComposition_Retrieval_Storage>` operate; and whether and how `learning
+<EMComposition_Learning>` is to be conducted.
 
 .. _EMComposition_Memory:
 
 *Memory Specification*
+~~~~~~~~~~~~~~~~~~~~~~
 
 These arguments are used to specify the shape and number of memory entries.
 
@@ -431,6 +435,7 @@ These arguments are used to specify the shape and number of memory entries.
 .. _EMComposition_Fields:
 
 *Fields*
+~~~~~~~~
 
 These arguments are used to specify the names of the fields in a memory entry, which are used as keys and how those are
 weighted for retrieval, and whether those weights are learned.
@@ -567,6 +572,7 @@ weighted for retrieval, and whether those weights are learned.
 .. _EMComposition_Retrieval_Storage:
 
 *Retrieval and Storage*
+~~~~~~~~~~~~~~~~~~~~~~~
 
 * **storage_prob**: specifies the probability that the inputs to the EMComposition will be stored as an item in
   `memory <EMComposition.memory>` on each execution.
@@ -636,6 +642,7 @@ weighted for retrieval, and whether those weights are learned.
 .. _EMComposition_Learning:
 
 *Learning*
+~~~~~~~~~~
 
 EMComposition supports two forms of learning: error backpropagation through the entire Composition, and the learning
 of `field_weights <EMComposition.field_weights>` within it. Learning is enabled by setting the **enable_learning**
