@@ -194,7 +194,7 @@ def construct_model(model_name:str=model_params['name'],
                     state_size:int=model_params['state_d'],
 
                     # Previous state
-                    previous_state_input_name:str=model_params['previous_state_layer_name'],
+                    previous_state_name:str=model_params['previous_state_layer_name'],
 
                     # Context representation (learned):
                     context_name:str=model_params['context_layer_name'],
@@ -219,7 +219,7 @@ def construct_model(model_name:str=model_params['name'],
 
                     # Learning
                     loss_spec=model_params['loss_spec'],
-                    target_fields=model_params['target_fields'],
+                    # target_fields=model_params['target_fields'],
                     learning_rate = model_params['learning_rate'],
                     device=model_params['device']
 
@@ -233,13 +233,15 @@ def construct_model(model_name:str=model_params['name'],
     # ----------------------------------------------------------------------------------------------------------------
 
     state_input_layer = ProcessingMechanism(name=state_input_name, input_shapes=state_size)
-    previous_state_layer = ProcessingMechanism(name=previous_state_input_name, input_shapes=state_size)
+    previous_state_layer = ProcessingMechanism(name=previous_state_name, input_shapes=state_size)
     # context_layer = ProcessingMechanism(name=context_name, input_shapes=context_size)
     context_layer = TransferMechanism(name=context_name,
                                       input_shapes=context_size,
                                       function=Tanh,
                                       integrator_mode=True,
                                       integration_rate=integration_rate)
+
+
 
     em = EMComposition(name=em_name,
                        memory_template=[[0] * state_size,   # state
@@ -250,6 +252,9 @@ def construct_model(model_name:str=model_params['name'],
                        memory_decay_rate=0,
                        softmax_gain=retrieval_softmax_gain,
                        softmax_threshold=retrieval_softmax_threshold,
+                       fields = {state_input_name: (state_retrieval_weight,False, True),
+                                 previous_state_name: (previous_state_retrieval_weight, learning_rate, False),
+                                 context_name: (context_retrieval_weight, False, False)},
                        # Input Nodes:
                        # field_names=[state_input_name,
                        #              previous_state_input_name,
@@ -259,19 +264,19 @@ def construct_model(model_name:str=model_params['name'],
                        #                previous_state_retrieval_weight,
                        #                context_retrieval_weight
                        #                ),
-                       field_names=[previous_state_input_name,
-                                    context_name,
-                                    state_input_name,
-                                    ],
-                       field_weights=(previous_state_retrieval_weight,
-                                      context_retrieval_weight,
-                                      state_retrieval_weight,
-                                      ),
+                       # field_names=[previous_state_input_name,
+                       #              context_name,
+                       #              state_input_name,
+                       #              ],
+                       # field_weights=(previous_state_retrieval_weight,
+                       #                context_retrieval_weight,
+                       #                state_retrieval_weight,
+                       #                ),
                        normalize_field_weights=normalize_field_weights,
                        concatenate_queries=concatenate_queries,
                        enable_learning=enable_learning,
                        learning_rate=learning_rate,
-                       target_fields=target_fields,
+                       # target_fields=target_fields,
                        device=device
                        )
 
@@ -311,7 +316,7 @@ def construct_model(model_name:str=model_params['name'],
                            em]
     previous_state_to_em_pathway = [previous_state_layer,
                                     MappingProjection(sender=previous_state_layer,
-                                                      receiver=em.nodes[previous_state_input_name+QUERY],
+                                                      receiver=em.nodes[previous_state_name+QUERY],
                                                       matrix=IDENTITY_MATRIX,
                                                       learnable=False),
                                     em]

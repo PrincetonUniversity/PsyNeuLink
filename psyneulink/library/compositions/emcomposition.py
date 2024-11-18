@@ -1271,7 +1271,7 @@ class EMComposition(AutodiffComposition):
         fields=None,                    \
         field_names=None,               \
         field_weights=None,             \
-        learn_field_weights=True,       \
+        learn_field_weights=False,      \
         learning_rate=True,             \
         normalize_field_weights=True,   \
         concatenate_queries=False,      \
@@ -1319,7 +1319,7 @@ class EMComposition(AutodiffComposition):
         specifies the relative weight assigned to each key when matching an item in memory;
         see `field weights <EMComposition_Field_Weights>` for additional details.
 
-    learn_field_weights : bool or list[bool, int, float]: default True
+    learn_field_weights : bool or list[bool, int, float]: default False
         specifies whether the `field_weights <EMComposition.field_weights>` are learnable and, if so, optionally what
         the learning_rate is for each field; see `learn_field_weights <EMComposition_Field_Weights_Learning>` for
         specifications.
@@ -1419,7 +1419,7 @@ class EMComposition(AutodiffComposition):
         the weights for fields used as `keys <EMComposition_Entries_and_Fields>` can be changed (see
         `EMComposition_Field_Weights_Change_Note` for additional details).
 
-    learn_field_weights : bool or list[bool, int, float]: default True
+    learn_field_weights : bool or list[bool, int, float]
         determines whether the `field_weight <EMComposition.field_weights>` for each `field <EMComposition_Fields>
         is learnable (see `learn_field_weights <EMComposition_Learning>` for additional details).
 
@@ -1428,7 +1428,7 @@ class EMComposition(AutodiffComposition):
         not specified in `learn_field_weights <EMComposition.learn_field_weights>`
         (see `learning_rate <EMComposition_Field_Weights_Learning>` for additional details).
 
-    normalize_field_weights : bool : default True
+    normalize_field_weights : bool
         determines whether `fields_weights <EMComposition.field_weights>` are normalized over the number of keys, or
         used as absolute weighting values when retrieving an item from memory; see `normalize_field weights
         <EMComposition_Normalize_Field_Weights>` for additional details.
@@ -1680,7 +1680,7 @@ class EMComposition(AutodiffComposition):
         memory_capacity = Parameter(1000, structural=True)
         field_names = Parameter(None, structural=True)
         field_weights = Parameter([1], setter=field_weights_setter)
-        learn_field_weights = Parameter(True, structural=True)
+        learn_field_weights = Parameter(False, structural=True) # Note, actual default is assigned in _parse_fields()
         learning_rate = Parameter(.001, modulable=True)
         normalize_field_weights = Parameter(True)
         concatenate_queries = Parameter(False, structural=True)
@@ -1762,7 +1762,7 @@ class EMComposition(AutodiffComposition):
                  fields:Optional[dict]=None,
                  field_names:Optional[list]=None,
                  field_weights:Union[int,float,list,tuple]=None,
-                 learn_field_weights:Union[bool,list,tuple]=True,
+                 learn_field_weights:Union[bool,list,tuple]=None,
                  learning_rate:float=None,
                  normalize_field_weights:bool=True,
                  concatenate_queries:bool=False,
@@ -2113,9 +2113,9 @@ class EMComposition(AutodiffComposition):
 
         if fields:
             # If a fields dict has been specified, use that to assign field_names, field_weights & learn_field_weights
-            if any([field_names, field_weights, learn_field_weights]):
+            if any([field_names, field_weights, learn_field_weights, target_fields]):
                 warnings.warn(f"The 'fields' arg for '{name}' was specified, so any of the 'field_names', "
-                              f"'field_weights',  or 'learn_field_weights' args will be ignored.")
+                              f"'field_weights',  'learn_field_weights' or 'target_fields' args will be ignored.")
             (field_names,
              field_weights,
              learn_field_weights,
