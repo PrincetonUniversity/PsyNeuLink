@@ -1330,7 +1330,7 @@ class EMComposition(AutodiffComposition):
         <EMComposition.memory>` (see `Retrieve values by field <EMComposition_Processing>` for additional details).
         These are assigned the same names as the `query_input_nodes <EMComposition.query_input_nodes>` and
         `value_input_nodes <EMComposition.value_input_nodes>` to which they correspond appended with the suffix
-        * [RETRIEVED]*, and are in the same order as  `input_nodes_by_fields <EMComposition.input_nodes_by_fields>`
+        * [RETRIEVED]*, and are in the same order as  `input_nodes <EMComposition.input_nodes>`
         to which to which they correspond.
 
     storage_node : EMStorageMechanism
@@ -1345,12 +1345,12 @@ class EMComposition(AutodiffComposition):
            any subequent processing is done (i.e., in a composition in which the EMComposition may be embededded.
 
     input_nodes : list[ProcessingMechanism]
-        Full list of `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` ordered with query_input_nodes first
-        followed by value_input_nodes; used primarily for internal computations
-
-    input_nodes_by_fields : list[ProcessingMechanism]
         Full list of `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` in the same order specified in the
         **field_names** argument of the constructor and in `self.field_names <EMComposition.field_names>`.
+
+    query_and_value_input_nodes : list[ProcessingMechanism]
+        Full list of `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` ordered with query_input_nodes first
+        followed by value_input_nodes; used primarily for internal computations.
 
     """
 
@@ -2062,15 +2062,15 @@ class EMComposition(AutodiffComposition):
         # First, construct Nodes of Composition with their Projections
         self.query_input_nodes = self._construct_query_input_nodes(field_weights)
         self.value_input_nodes = self._construct_value_input_nodes(field_weights)
-        self.input_nodes = self.query_input_nodes + self.value_input_nodes
+        self.query_and_value_input_nodes = self.query_input_nodes + self.value_input_nodes
 
         # Get list of nodes in order specified in self.field_names
-        self.input_nodes_by_fields = [None] * len(field_weights)
+        self.input_nodes = [None] * len(field_weights)
         for i in range(self.num_keys):
-            self.input_nodes_by_fields[self.key_indices[i]] = self.query_input_nodes[i]
+            self.input_nodes[self.key_indices[i]] = self.query_input_nodes[i]
         for i in range(self.num_values):
-            self.input_nodes_by_fields[self.value_indices[i]] = self.value_input_nodes[i]
-        assert all(self.input_nodes_by_fields), "PROGRAM ERROR: input_nodes_by_fields not fully populated."
+            self.input_nodes[self.value_indices[i]] = self.value_input_nodes[i]
+        assert all(self.input_nodes), "PROGRAM ERROR: input_nodes not fully populated."
 
         self.concatenate_queries_node = self._construct_concatenate_queries_node(concatenate_queries)
         self.match_nodes = self._construct_match_nodes(memory_template, memory_capacity,
@@ -2257,6 +2257,7 @@ class EMComposition(AutodiffComposition):
                                                                     normalize=args[0][NORMALIZE]),
                                                                 name=f'MEMORY')},
                     name='MATCH')]
+            match_nodes[0]._field_idx = 0
 
         # One node for each key
         else:

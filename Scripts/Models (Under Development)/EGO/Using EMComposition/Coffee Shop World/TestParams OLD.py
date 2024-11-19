@@ -1,16 +1,14 @@
 from psyneulink.core.llvm import ExecutionMode
 from psyneulink.core.globals.keywords import ALL, ADAPTIVE, CONTROL, CPU, Loss, MPS, OPTIMIZATION_STEP, RUN, TRIAL
 
-
-
 model_params = dict(
 
     # Names:
     name = "EGO Model CSW",
-    em_name = "EM",
     state_input_layer_name = "STATE",
     previous_state_layer_name = "PREVIOUS STATE",
     context_layer_name = 'CONTEXT',
+    em_name = "EM",
     prediction_layer_name = "PREDICTION",
 
     # Structural
@@ -22,6 +20,7 @@ model_params = dict(
     # memory_init = None,  # Initialize with zeros
     concatenate_queries = False,
     # concatenate_queries = True,
+
     # environment
     # curriculum_type = 'Interleaved',
     curriculum_type = 'Blocked',
@@ -40,7 +39,7 @@ model_params = dict(
     # softmax_temperature = CONTROL, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
     # softmax_threshold = None, # threshold used to mask out small values in softmax
     softmax_threshold = .001, # threshold used to mask out small values in softmax
-    # target_fields=[True, False, False], # Enable learning for PREDICTION (STATE) but not CONTEXT or PREVIOUS STATE
+    target_fields=[True, False, False], # Enable learning for PREDICTION (STATE) but not CONTEXT or PREVIOUS STATE
     # target_fields=[True, True, True]
     # target_fields=True,
     # target_fields=False,

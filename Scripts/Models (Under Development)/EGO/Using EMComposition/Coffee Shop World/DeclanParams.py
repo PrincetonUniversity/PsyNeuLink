@@ -70,6 +70,7 @@ model_params = dict(
     state_weight = None, # weight of the state used during memory retrieval
     # normalize_field_weights = False, # whether to normalize the field weights during memory retrieval
     normalize_field_weights = True, # whether to normalize the field weights during memory retrieval
+    normalize_memories = False, # whether to normalize the memory during memory retrieval
     # softmax_temperature = None, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
     softmax_temperature = .1, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
     # softmax_temperature = ADAPTIVE, # temperature of the softmax used during memory retrieval (smaller means more argmax-like

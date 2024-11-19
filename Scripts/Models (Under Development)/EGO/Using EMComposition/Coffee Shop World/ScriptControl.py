@@ -4,7 +4,6 @@ import psyneulink as pnl
 # Settings for running script:
 
 # MODEL_PARAMS = 'TestParams'
-# MODEL_PARAMS = 'TestParams(DICT)'
 MODEL_PARAMS = 'DeclanParams'
 
 CONSTRUCT_MODEL = True                 # THIS MUST BE SET TO True to run the script
