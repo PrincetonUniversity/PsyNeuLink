@@ -267,8 +267,7 @@ class TestConstruction:
         assert em.num_keys == 4
         assert (em.field_weights == [1.2, None, 0, 7.8, 5.6]).all()
         assert (em.learn_field_weights == [3.4, False, True, False, True]).all()
-        assert (em.target_fields == [True, True, True]).all()
-
+        np.testing.assert_allclose(em.target_fields, [True, True, True, True, True])
 
         # # Test wrong number of entries
         with pytest.raises(EMCompositionError) as error_text:
@@ -284,7 +283,7 @@ class TestConstruction:
                                   'B': (None, True, True)},
                           field_weights=[10, 11.0])
         warning_msg_1 = (f"The 'fields' arg for 'EM_Composition' was specified, so any of the 'field_names', "
-                         f"'field_weights',  or 'learn_field_weights' args will be ignored.")
+                         f"'field_weights',  'learn_field_weights' or 'target_fields' args will be ignored.")
         warning_msg_2 = (f"Learning was specified for field 'B' in the 'learn_field_weights' arg for "
                          f"'EM_Composition', but it is not allowed for value fields; it will be ignored.")
         assert warning_msg_1 in str(warning[0].message)
