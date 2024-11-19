@@ -2104,6 +2104,38 @@ class EMComposition(AutodiffComposition):
             assert not self.field_weight_nodes, \
                 f"PROGRAM ERROR: There should be no field_weight_nodes for concatenated queries."
 
+        # Create field_index map for nodes and projections
+        _field_index_map = {}
+        for i in range(len(self.input_nodes)):
+            _field_index_map[self.input_nodes[i]] = i
+            _field_index_map[self.storage_node.path_afferents[i]] = i
+            _field_index_map[self.retrieved_nodes[i]] = i
+            _field_index_map[self.retrieved_nodes[i].path_afferents[0]] = i
+        if self.concatenate_queries:
+            for proj in self.concatenate_queries_node.path_afferents:
+                _field_index_map[proj] = _field_index_map[proj.sender.owner]
+            _field_index_map[self.concatenate_queries_node] = None
+            _field_index_map[self.match_nodes[0]] = None
+            _field_index_map[self.match_nodes[0].path_afferents[0]] = None
+            _field_index_map[self.match_nodes[0].efferents[0]] = None
+        else:
+            # Input nodes, Projections to storage_node, retrieval Projections and retrieved_nodes
+            for match_node in self.match_nodes:
+                field_index = _field_index_map[match_node.path_afferents[0].sender.owner]
+                # match_node
+                _field_index_map[match_node] = field_index
+                # afferent MEMORY Projection
+                _field_index_map[match_node.path_afferents[0]] = field_index
+                # efferent Projection to weighted_match_node
+                _field_index_map[match_node.efferents[0]] = field_index
+                # weighted_match_node
+                _field_index_map[match_node.efferents[0].receiver.owner] = field_index
+                # Projection to combined_matches_node
+                _field_index_map[match_node.efferents[0].receiver.owner.efferents[0]] = field_index
+            for field_weight_node in self.field_weight_nodes:
+                _field_index_map[field_weight_node] = _field_index_map[field_weight_node.efferents[0].receiver.owner]
+        self._field_index_map = _field_index_map
+
         # Construct Pathways --------------------------------------------------------------------------------
 
         # LEARNING NOT ENABLED --------------------------------------------------
