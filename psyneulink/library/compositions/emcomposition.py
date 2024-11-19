@@ -2159,8 +2159,8 @@ class EMComposition(AutodiffComposition):
             # Query-specific pathways
             if not self.concatenate_queries:
                 if self.num_keys == 1:
-                    self.add_linear_processing_pathway([self.query_input_nodes[i],
-                                                        self.match_nodes[i],
+                    self.add_linear_processing_pathway([self.query_input_nodes[0],
+                                                        self.match_nodes[0],
                                                         self.softmax_node])
                 else:
                     for i in range(self.num_keys):
