@@ -258,15 +258,16 @@ class TestConstruction:
         em = EMComposition(memory_template=(5,1),
                            memory_capacity=1,
                            normalize_field_weights=False,
-                           fields={'A': (1.2, 3.4),
-                                   'B': (None, False),
-                                   'C': (0, True),
-                                   'D': (7.8, False),
-                                   'E': (5.6, True)})
+                           fields={'A': (1.2, 3.4, True),
+                                   'B': (None, False, True),
+                                   'C': (0, True, True),
+                                   'D': (7.8, False, True),
+                                   'E': (5.6, True, True)})
         assert em.num_fields == 5
         assert em.num_keys == 4
         assert (em.field_weights == [1.2, None, 0, 7.8, 5.6]).all()
         assert (em.learn_field_weights == [3.4, False, True, False, True]).all()
+        assert (em.target_fields == [True, True, True]).all()
 
 
         # # Test wrong number of entries
@@ -279,13 +280,13 @@ class TestConstruction:
         with pytest.warns(UserWarning) as warning:
             EMComposition(memory_template=(2,1),
                           memory_capacity=1,
-                          fields={'A': (1.2, 3.4),
-                                  'B': (None, True)},
+                          fields={'A': (1.2, 3.4, True),
+                                  'B': (None, True, True)},
                           field_weights=[10, 11.0])
         warning_msg_1 = (f"The 'fields' arg for 'EM_Composition' was specified, so any of the 'field_names', "
                          f"'field_weights',  or 'learn_field_weights' args will be ignored.")
-        warning_msg_2 = ("Learning was specified for field 'B' in the 'learn_field_weights' arg for "
-                         "'EM_Composition', but it is not allowed for value fields; it will be ignored.")
+        warning_msg_2 = (f"Learning was specified for field 'B' in the 'learn_field_weights' arg for "
+                         f"'EM_Composition', but it is not allowed for value fields; it will be ignored.")
         assert warning_msg_1 in str(warning[0].message)
         assert warning_msg_2 in str(warning[1].message)
 

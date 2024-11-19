@@ -2009,6 +2009,10 @@ class EMComposition(AutodiffComposition):
             warnings.warn(f"The 'concatenate_queries' arg for '{name}' is True but {error_msg}; "
                           f"concatenation will be ignored.{correction_msg}")
 
+        # Deal with default target_fields
+        if target_fields is None:
+            target_fields = [True] * self.num_fields
+
         self.learning_rate = learning_rate
 
         return (parsed_field_names,
@@ -2108,7 +2112,8 @@ class EMComposition(AutodiffComposition):
         _field_index_map = {}
         for i in range(len(self.input_nodes)):
             _field_index_map[self.input_nodes[i]] = i
-            _field_index_map[self.storage_node.path_afferents[i]] = i
+            if self._use_storage_node:
+                _field_index_map[self.storage_node.path_afferents[i]] = i
             _field_index_map[self.retrieved_nodes[i]] = i
             _field_index_map[self.retrieved_nodes[i].path_afferents[0]] = i
         if self.concatenate_queries:
