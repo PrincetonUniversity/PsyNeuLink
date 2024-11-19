@@ -280,3 +280,22 @@ class TestResetValues:
         np.testing.assert_allclose(output_after_saving_state, output_after_reinitialization)
         np.testing.assert_allclose(original_output, [np.array([[0.5]]), np.array([[0.75]])])
         np.testing.assert_allclose(output_after_reinitialization, [np.array([[0.875]]), np.array([[0.9375]])])
+
+    @pytest.mark.usefixtures("comp_mode_no_llvm")
+    def test_reset_integrator_function(self, comp_mode):
+        """This test checks that the Mechanism.integrator_function is reset when the mechanism is"""
+
+        threshold_mech = pnl.TransferMechanism(input_shapes=1,
+                                               default_variable=0,
+                                               integrator_function=pnl.SimpleIntegrator(rate=1, offset=-0.001),
+                                               function=pnl.Linear(intercept=0.06, slope=1),
+                                               integrator_mode=True,
+                                               execute_until_finished=True,
+                                               termination_threshold=10,
+                                               reset_stateful_function_when=pnl.AtTrialStart(),
+                                               termination_measure=pnl.TimeScale.TRIAL)
+        comp = pnl.Composition()
+        comp.add_node(threshold_mech)
+
+        results = comp.run(inputs=[[0.0], [0.0]], execution_mode=comp_mode)
+        np.testing.assert_allclose(results, [[0.05]])
