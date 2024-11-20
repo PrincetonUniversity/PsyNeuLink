@@ -204,6 +204,7 @@ def test_ego_csw_model():
                   6.61008388e-04,  9.88672202e-01,  6.52088276e-04,  2.83918640e-03,  0.00000000e+00]]
     np.testing.assert_allclose(result, expected)
 
+    # Plots for debugging
     # fig, axes = plt.subplots(3, 1, figsize=(5, 12))
     # axes[0].imshow(EGO_comp.projections[7].parameters.matrix.get(EGO_comp.name), interpolation=None)
     # axes[1].plot((1 - np.abs(EGO_comp.results[1:50,2]-TARGETS[:49])).sum(-1))
