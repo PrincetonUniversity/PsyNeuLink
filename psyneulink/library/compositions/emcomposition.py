@@ -2617,8 +2617,8 @@ class EMComposition(AutodiffComposition):
         # Get least used slot (i.e., weakest memory = row of matrix with lowest weights) computed across all fields
         field_norms = np.array([np.linalg.norm(field, axis=1)
                                 for field in [row for row in self.parameters.memory.get(context)]])
-        if self.purge_by_field_weights:
-            field_norms *= self.field_weights
+        # if self.purge_by_field_weights:
+        #     field_norms *= self.field_weights
         row_norms = np.sum(field_norms, axis=1)
         idx_of_min = np.argmin(row_norms)
 
