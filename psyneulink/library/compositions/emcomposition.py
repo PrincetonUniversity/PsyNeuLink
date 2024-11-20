@@ -2559,6 +2559,7 @@ class EMComposition(AutodiffComposition):
 
             # Use individually specified learning_rate
             else:
+                # FIX: THIS NEEDS TO USE field_index_map, BUT THAT DOESN'T SEEM TO HAVE THE WEIGHT PROJECTION YET
                 learning_rate = self.learn_field_weights[self.field_weight_nodes.index(projection.sender.owner)]
 
             if learning_rate is False:
