@@ -1995,7 +1995,6 @@ class EMComposition(AutodiffComposition):
             #   field weights are not all equal and/or
             #   normalize_memories is False and/or
             #   there is only one key
-            fw_error_msg = nm_error_msg = fw_correction_msg = nm_correction_msg = None
             if self.num_keys == 1:
                 error_msg = f"there is only one key"
                 correction_msg = ""
@@ -2229,9 +2228,6 @@ class EMComposition(AutodiffComposition):
         Used to assign new set of weights for Projection for combined_matches_node -> retrieved_node[i]
         where i is selected randomly without replacement from (0->memory_capacity)
         """
-
-        # Get indices of field_weights that specify keys:
-        value_indices = np.where(field_weights == 0)[0]
 
         assert len(self.value_indices) == self.num_values, \
             f"PROGRAM ERROR: number of values ({self.num_values}) does not match number of " \
