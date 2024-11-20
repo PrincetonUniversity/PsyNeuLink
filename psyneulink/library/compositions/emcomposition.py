@@ -399,7 +399,7 @@ weighted for retrieval, and whether those weights are learned.
      passed as *ARG_MAX_INDICATOR*; and *PROBALISTIC* is passed as *PROB_INDICATOR*; the other SoftMax options are
      not currently supported.
 
-.. _EMComposition_Memory_Decay_Rate
+.. _EMComposition_Memory_Decay_Rate:
 
 * **memory_decay_rate**: specifies the rate at which items in the EMComposition's memory decay;  the default rate
   is *AUTO*, which sets it to  1 / `memory_capacity <EMComposition.memory_capacity>`, such that the oldest memories
@@ -407,6 +407,12 @@ weighted for retrieval, and whether those weights are learned.
   **memory_decay_rate** is set to 0 None or False, then memories do not decay and, when `memory_capacity
   <EMComposition.memory_capacity>` is reached, the weakest memories are replaced, irrespective of order of entry.
 
+.. _EMComposition_Purge_by_Weight:
+
+* **purge_by_field_weight**: specifies whether `field_weights <EMComposition.field_weights>` are used in determining
+  which memory entry is replaced when a new memory is `stored <EMComposition_Storage>`.  If True, the norm of each
+  entry is multiplied by its `field_weight <EMComposition_Field_Weighting>` to determine which entry is the weakest and
+  will be replaced.
 
 .. _EMComposition_Learning:
 
@@ -647,19 +653,19 @@ When the EMComposition is executed, the following sequence of operations occur
 
 .. _EMComposition_Storage:
 
-* **Store memories**. After the values have been retrieved, the inputs to for each field (i.e., values in the
-  `query_input_nodes <EMComposition.query_input_nodes>` and `value_input_nodes <EMComposition.value_input_nodes>`)
-  are added by the `storage_node <EMComposition.storage_node>` as a new entry in `memory <EMComposition.memory>`,
-  replacing the weakest one if `memory_capacity <EMComposition_Memory_Capacity>` has been reached.
+* **Store memories**. After the values have been retrieved, the `storage_node <EMComposition.storage_node>`
+  adds the inputs to each field (i.e., values in the `query_input_nodes <EMComposition.query_input_nodes>` and
+  `value_input_nodes <EMComposition.value_input_nodes>`) as a new entry in `memory <EMComposition.memory>`,
+  replacing the weakest one. The weakest memory is the one with the lowest norm, multipled  by its `field_weight
+  <EMComposition.field_weights>` if `purge_by_field_weight <EMComposition.purge_by_field_weight>` is True.
 
     .. technical_note::
-       This is done by adding the input vectors to the the corresponding rows of the `matrix <MappingProjection.matrix>`
-       of the `MappingProjection` from the `combined_matches_node <EMComposition.combined_matches_node>` to each
-       of the `retrieved_nodes <EMComposition.retrieved_nodes>`, as well as the `matrix <MappingProjection.matrix>`
-       parameter of the `MappingProjection` from each `query_input_node <EMComposition.query_input_nodes>` to the
-       corresponding `match_node <EMComposition.match_nodes>` (see note `above <EMComposition_Memory_Storage>` for
-       additional details). If `memory_capacity <EMComposition_Memory_Capacity>` has been reached, then the weakest
-       memory (i.e., the one with the lowest norm across all fields) is replaced by the new memory.
+       The norm of each entry is calculated by adding the input vectors to the the corresponding rows of
+       the `matrix <MappingProjection.matrix>` of the `MappingProjection` from the `combined_matches_node
+       <EMComposition.combined_matches_node>` to each of the `retrieved_nodes <EMComposition.retrieved_nodes>`,
+       as well as the `matrix <MappingProjection.matrix>` parameter of the `MappingProjection` from each
+       `query_input_node <EMComposition.query_input_nodes>` to the corresponding `match_node
+       <EMComposition.match_nodes>` (see note `above <EMComposition_Memory_Storage>` for additional details).
 
 COMMENT:
 FROM CodePilot: (OF HISTORICAL INTEREST?)
@@ -1151,6 +1157,10 @@ class EMComposition(AutodiffComposition):
         specifies the rate at which items in the EMComposition's memory decay
         (see `memory_decay_rate <EMComposition_Memory_Decay_Rate>` for details).
 
+    purge_by_field_weights : bool : False
+        specifies whether `fields_weights <EMComposition.field_weights>` are used to determine which memory to
+        replace when a new one is stored (see `purge_by_field_weight <EMComposition_Purge_by_Weight>` for details).
+
     enable_learning : bool : default True
         specifies whether learning is enabled for the EMCComposition (see `Learning <EMComposition_Learning>`
         for additional details); **use_gating_for_weighting** must be False.
@@ -1252,6 +1262,10 @@ class EMComposition(AutodiffComposition):
     memory_decay_rate : float
         determines the rate at which items in the EMComposition's memory decay
         (see `memory_decay_rate <EMComposition_Memory_Decay_Rate>` for details).
+
+    purge_by_field_weights : bool
+        determines whether `fields_weights <EMComposition.field_weights>` are used to determine which memory to
+        replace when a new one is stored (see `purge_by_field_weight <EMComposition_Purge_by_Weight>` for details).
 
     enable_learning : bool
         determines whether learning is enabled for the EMCComposition
@@ -1438,6 +1452,12 @@ class EMComposition(AutodiffComposition):
                     :default value: True
                     :type: ``bool``
 
+                purge_by_field_weights
+                    see `purge_by_field_weights <EMComposition.purge_by_field_weights>`
+
+                    :default value: False
+                    :type: ``bool``
+
                 random_state
                     see `random_state <NormalDist.random_state>`
 
@@ -1480,6 +1500,7 @@ class EMComposition(AutodiffComposition):
         softmax_choice = Parameter(WEIGHTED_AVG, modulable=False, specify_none=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         memory_decay_rate = Parameter(AUTO, modulable=True)
+        purge_by_field_weights = Parameter(False, structural=True)
         enable_learning = Parameter(True, structural=True)
         target_fields = Parameter(None, read_only=True, structural=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
@@ -1562,6 +1583,7 @@ class EMComposition(AutodiffComposition):
                  softmax_choice:Optional[Union[WEIGHTED_AVG, ARG_MAX, PROBABILISTIC]]=WEIGHTED_AVG,
                  storage_prob:float=1.0,
                  memory_decay_rate:Union[float,AUTO]=AUTO,
+                 purge_by_field_weights:bool=False,
                  enable_learning:bool=True,
                  target_fields:Optional[Union[list, tuple, np.ndarray]]=None,
                  use_storage_node:bool=True,
@@ -1618,12 +1640,13 @@ class EMComposition(AutodiffComposition):
                          learning_rate = learning_rate,
                          normalize_field_weights = normalize_field_weights,
                          concatenate_queries = concatenate_queries,
+                         normalize_memories = normalize_memories,
                          softmax_gain = softmax_gain,
                          softmax_threshold = softmax_threshold,
                          softmax_choice = softmax_choice,
                          storage_prob = storage_prob,
                          memory_decay_rate = memory_decay_rate,
-                         normalize_memories = normalize_memories,
+                         purge_by_field_weights = purge_by_field_weights,
                          enable_learning = enable_learning,
                          target_fields = target_fields,
                          random_state = random_state,
@@ -2617,8 +2640,8 @@ class EMComposition(AutodiffComposition):
         # Get least used slot (i.e., weakest memory = row of matrix with lowest weights) computed across all fields
         field_norms = np.array([np.linalg.norm(field, axis=1)
                                 for field in [row for row in self.parameters.memory.get(context)]])
-        # if self.purge_by_field_weights:
-        #     field_norms *= self.field_weights
+        if self.purge_by_field_weights:
+            field_norms *= self.field_weights
         row_norms = np.sum(field_norms, axis=1)
         idx_of_min = np.argmin(row_norms)
 
