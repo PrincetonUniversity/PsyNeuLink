@@ -312,13 +312,13 @@ class TestConstruction:
 
     @pytest.mark.parametrize(field_arg_names, test_field_map_and_args_assignment_data,
                              ids=[x[0] for x in test_field_map_and_args_assignment_data])
-    def test_field_map_and_args_assignment(self,
-                                           format,
-                                           fields,
-                                           field_names,
-                                           field_weights,
-                                           learn_field_weights,
-                                           target_fields):
+    def test_field_args_and_map_assignments(self,
+                                            format,
+                                            fields,
+                                            field_names,
+                                            field_weights,
+                                            learn_field_weights,
+                                            target_fields):
         # individual args
         em = EMComposition(memory_template=(5,2),
                            memory_capacity=2,
@@ -363,9 +363,8 @@ class TestConstruction:
         #      KEY B USES INDIVIDUALLY ASSIGNED LEARNING RATE OF .01
         assert em.learn_field_weights == [True, False, .01, False, False]
         assert em.projections['WEIGHT to WEIGHTED MATCH for KEY A'].learnable
-        assert not em.projections['WEIGHT to WEIGHTED MATCH for KEY B'].learnable
-        # FIX:
-        # assert not em.projections['WEIGHT to WEIGHTED MATCH for KEY VALUE'].learnable
+        assert em.projections['WEIGHT to WEIGHTED MATCH for KEY B'].learnable
+        assert not em.projections['WEIGHT to WEIGHTED MATCH for KEY VALUE'].learnable
 
         # Validate _field_index_map
         assert em._field_index_map[[k for k in em._field_index_map.keys()
@@ -430,6 +429,12 @@ class TestConstruction:
                                     if 'WEIGHTED MATCH for KEY VALUE to COMBINE MATCHES' in k.name][0]] == 3
         assert em._field_index_map[[k for k in em._field_index_map.keys() if 'KEY B [WEIGHT]' in k.name][0]] == 2
         assert em._field_index_map[[k for k in em._field_index_map.keys() if 'KEY VALUE [WEIGHT]' in k.name][0]] == 3
+        assert em._field_index_map[[k for k in em._field_index_map.keys()
+                                    if 'WEIGHT to WEIGHTED MATCH for KEY VALUE' in k.name][0]] == 3
+        assert em._field_index_map[[k for k in em._field_index_map.keys()
+                                    if 'WEIGHT to WEIGHTED MATCH for KEY A' in k.name][0]] == 0
+        assert em._field_index_map[[k for k in em._field_index_map.keys()
+                                    if 'WEIGHT to WEIGHTED MATCH for KEY B' in k.name][0]] == 2
 
     def test_field_weights_all_None_and_or_0(self):
         with pytest.raises(EMCompositionError) as error_text:

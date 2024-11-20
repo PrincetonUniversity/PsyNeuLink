@@ -2138,7 +2138,10 @@ class EMComposition(AutodiffComposition):
                 # Projection to combined_matches_node
                 _field_index_map[match_node.efferents[0].receiver.owner.efferents[0]] = field_index
             for field_weight_node in self.field_weight_nodes:
+                # Weight nodes;
                 _field_index_map[field_weight_node] = _field_index_map[field_weight_node.efferents[0].receiver.owner]
+                # Weight Projections;
+                _field_index_map[field_weight_node.efferents[0]] = _field_index_map[field_weight_node]
         self._field_index_map = _field_index_map
 
         # Construct Pathways --------------------------------------------------------------------------------
@@ -2560,7 +2563,7 @@ class EMComposition(AutodiffComposition):
             # Use individually specified learning_rate
             else:
                 # FIX: THIS NEEDS TO USE field_index_map, BUT THAT DOESN'T SEEM TO HAVE THE WEIGHT PROJECTION YET
-                learning_rate = self.learn_field_weights[self.field_weight_nodes.index(projection.sender.owner)]
+                learning_rate = self.learn_field_weights[self._field_index_map[projection]]
 
             if learning_rate is False:
                 projection.learnable = False
