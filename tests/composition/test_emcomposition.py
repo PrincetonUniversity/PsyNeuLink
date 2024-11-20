@@ -289,16 +289,40 @@ class TestConstruction:
         assert warning_msg_1 in str(warning[0].message)
         assert warning_msg_2 in str(warning[1].message)
 
-    def test_field_map_and_args_assignment(self):
 
-        field_names = ['KEY A','VALUE A', 'KEY B','KEY VALUE','VALUE LEARN']
-        field_weights = [1, None, 2, 0, None]
-        learn_field_weights = [True, False, .01, False, False]
-        target_fields = [True, False, False, True, True]
 
+    field_names = ['KEY A','VALUE A', 'KEY B','KEY VALUE','VALUE LEARN']
+    field_weights = [1, None, 2, 0, None]
+    learn_field_weights = [True, False, .01, False, False]
+    target_fields = [True, False, False, True, True]
+    dict_subdict = {}
+    for i, fn in enumerate(field_names):
+        dict_subdict[fn] = {pnl.FIELD_WEIGHT: field_weights[i],
+                            pnl.LEARN_FIELD_WEIGHT: learn_field_weights[i],
+                            pnl.TARGET_FIELD: target_fields[i]}
+    dict_tuple = {fn:(fw,lfw,tf) for fn,fw,lfw,tf in zip(field_names,
+                                                         field_weights,
+                                                         learn_field_weights,
+                                                         target_fields)}
+    test_field_map_and_args_assignment_data = [
+        ('args', None, field_names, field_weights, learn_field_weights, target_fields),
+        ('dict-subdict', dict_subdict, None, None, None, None),
+        ('dict-tuple', dict_tuple, None, None, None, None)]
+    field_arg_names = "format, fields, field_names, field_weights, learn_field_weights, target_fields"
+
+    @pytest.mark.parametrize(field_arg_names, test_field_map_and_args_assignment_data,
+                             ids=[x[0] for x in test_field_map_and_args_assignment_data])
+    def test_field_map_and_args_assignment(self,
+                                           format,
+                                           fields,
+                                           field_names,
+                                           field_weights,
+                                           learn_field_weights,
+                                           target_fields):
         # individual args
         em = EMComposition(memory_template=(5,2),
                            memory_capacity=2,
+                           fields=fields,
                            field_names=field_names,
                            field_weights=field_weights,
                            learn_field_weights=learn_field_weights,
@@ -311,59 +335,101 @@ class TestConstruction:
                 assert actual is None
             else:
                 np.testing.assert_allclose(actual, expected)
-        assert em.learn_field_weights == [True, False, .01, False, False]
+
+        # Validate targets for target_fields
         np.testing.assert_allclose(em.target_fields, [True, False, False, True, True])
+        # learning_components = em.infer_backpropagation_learning_pathways(pnl.ExecutionMode.Python)
         learning_components = em.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
         # FIX:  FOLLOWING LINE SHOULDN'T BE NEEDED
         learning_components = [node for node in em.nodes if 'TARGET' in node.name]
         assert len(learning_components) == 3
+
         assert 'TARGET for KEY A [RETRIEVED]' in learning_components[0].name
         assert 'TARGET for KEY VALUE [RETRIEVED]' in learning_components[1].name
         assert 'TARGET for VALUE LEARN [RETRIEVED]' in learning_components[2].name
-        assert learning_rate == 0.5
-        assert em._field_index_map =={
-em.nodes[0]: 0,
-em.projections[28]: 0,
-(ProcessingMechanism KEY A [RETRIEVED]): 0
-(MappingProjection MEMORY FOR KEY A [RETRIEVE KEY]): 0
-(ProcessingMechanism VALUE A [VALUE]): 1
-(MappingProjection MappingProjection from VALUE A [VALUE][OutputPort-0] to STORE[InputPort-1]): 1
-(ProcessingMechanism VALUE A [RETRIEVED]): 1
-(MappingProjection MEMORY FOR VALUE A [RETRIEVE VALUE]): 1
-(ProcessingMechanism KEY B [QUERY]): 2
-(MappingProjection MappingProjection from KEY B [QUERY][OutputPort-0] to STORE[InputPort-2]): 2
-(ProcessingMechanism KEY B [RETRIEVED]): 2
-(MappingProjection MEMORY FOR KEY B [RETRIEVE KEY]): 2
-(ProcessingMechanism KEY VALUE [QUERY]): 3
-(MappingProjection MappingProjection from KEY VALUE [QUERY][OutputPort-0] to STORE[InputPort-3]): 3
-(ProcessingMechanism KEY VALUE [RETRIEVED]): 3
-(MappingProjection MEMORY FOR KEY VALUE [RETRIEVE KEY]): 3
-(ProcessingMechanism VALUE LEARN [VALUE]): 4
-(MappingProjection MappingProjection from VALUE LEARN [VALUE][OutputPort-0] to STORE[InputPort-4]): 4
-(ProcessingMechanism VALUE LEARN [RETRIEVED]): 4
-(MappingProjection MEMORY FOR VALUE LEARN [RETRIEVE VALUE]): 4
-(ProcessingMechanism KEY A [MATCH to KEYS]): 0
-(MappingProjection MEMORY for KEY A [KEY]): 0
-(MappingProjection MATCH to WEIGHTED MATCH for KEY A): 0
-(ProcessingMechanism KEY A [WEIGHTED MATCH]): 0
-(MappingProjection WEIGHTED MATCH for KEY A to COMBINE MATCHES): 0
-(ProcessingMechanism KEY B [MATCH to KEYS]): 2
-(MappingProjection MEMORY for KEY B [KEY]): 2
-(MappingProjection MATCH to WEIGHTED MATCH for KEY B): 2
-(ProcessingMechanism KEY B [WEIGHTED MATCH]): 2
-(MappingProjection WEIGHTED MATCH for KEY B to COMBINE MATCHES): 2
-(ProcessingMechanism KEY VALUE [MATCH to KEYS]): 3
-(MappingProjection MEMORY for KEY VALUE [KEY]): 3
-(MappingProjection MATCH to WEIGHTED MATCH for KEY VALUE): 3
-(ProcessingMechanism KEY VALUE [WEIGHTED MATCH]): 3
-(MappingProjection WEIGHTED MATCH for KEY VALUE to COMBINE MATCHES): 3
-(ProcessingMechanism KEY A [WEIGHT]): 0
-(ProcessingMechanism KEY B [WEIGHT]): 2
-(ProcessingMechanism KEY VALUE [WEIGHT]): 3}
-        assert True
 
-        # tuple format
-        # dict format
+        # Validate learning specs for field weights
+        # Presence or absence of field weight components based on keys vs. values:
+        assert ['KEY A [WEIGHT]' in node.name for node in em.nodes]
+        assert ['KEY B [WEIGHT]' in node.name for node in em.nodes]
+        assert ['KEY VALUE [WEIGHT]' in node.name for node in em.nodes]
+        assert not any('VALUE A [WEIGHT]' in node.name for node in em.nodes)
+        assert not any('VALUE LEARN [WEIGHT]' in node.name for node in em.nodes)
+        assert not any('WEIGHT to WEIGHTED MATCH for VALUE A' in proj.name for proj in em.projections)
+        assert not any('WEIGHT to WEIGHTED MATCH for VALUE LEARN' in proj.name for proj in em.projections)
+        # Learnability and learning rate for field weights
+        # FIX: ONCE LEARNING IS FULLY IMPLEMENTED FOR FIELD WEIGHTS, VALIDATE THAT:
+        #      KEY A USES COMPOSITION DEFAULT LEARNING RATE OF .5
+        #      KEY B USES INDIVIDUALLY ASSIGNED LEARNING RATE OF .01
+        assert em.learn_field_weights == [True, False, .01, False, False]
+        assert em.projections['WEIGHT to WEIGHTED MATCH for KEY A'].learnable
+        assert not em.projections['WEIGHT to WEIGHTED MATCH for KEY B'].learnable
+        # FIX:
+        # assert not em.projections['WEIGHT to WEIGHTED MATCH for KEY VALUE'].learnable
+
+        # Validate _field_index_map
+        assert em._field_index_map[[k for k in em._field_index_map.keys()
+                                    if ('MappingProjection from KEY A [QUERY][OutputPort-0] to STORE[InputPort-0]')
+                                    in k.name][0]]==0
+        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'KEY A [QUERY]' in k.name][0]]==0
+        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'KEY A [MATCH to KEYS]' in k.name][0]]==0
+        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'KEY A [WEIGHTED MATCH]' in k.name][0]]==0
+        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'KEY A [RETRIEVED]' in k.name][0]]==0
+        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'MEMORY FOR KEY A [RETRIEVE KEY]'
+                                    in k.name][0]]==0
+        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'VALUE A [VALUE]' in k.name][0]] == 1
+        assert em._field_index_map[[k for k in em._field_index_map.keys() if
+                                    ('VALUE A [VALUE][OutputPort-0] to STORE[InputPort-1]') in k.name][0]] == 1
+        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'VALUE A [RETRIEVED]' in k.name][0]] == 1
+        assert em._field_index_map[[k for k in em._field_index_map.keys()
+                                    if 'MEMORY FOR VALUE A' in k.name][0]] == 1
+        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'KEY B [QUERY]' in k.name][0]] == 2
+        assert em._field_index_map[[k for k in em._field_index_map.keys()
+                                    if ('KEY B [QUERY][OutputPort-0] to STORE[InputPort-2]') in k.name][0]] == 2
+        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'KEY B [RETRIEVED]' in k.name][0]] == 2
+        assert (em._field_index_map[[k for k in em._field_index_map.keys()
+                                     if 'MEMORY FOR KEY B [RETRIEVE KEY]' in k.name][0]] == 2)
+        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'KEY VALUE [QUERY]' in k.name][0]] == 3
+        assert em._field_index_map[[k for k in em._field_index_map.keys()
+                                    if 'KEY VALUE [QUERY][OutputPort-0] to STORE[InputPort-3]' in k.name][0]] == 3
+        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'KEY VALUE [RETRIEVED]' in k.name][0]] == 3
+        assert em._field_index_map[[k for k in em._field_index_map.keys()
+                                    if 'MEMORY FOR KEY VALUE [RETRIEVE KEY]' in k.name][0]] == 3
+        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'VALUE LEARN [VALUE]' in k.name][0]] == 4
+        assert em._field_index_map[[k for k in em._field_index_map.keys()
+                                    if 'VALUE LEARN [VALUE][OutputPort-0] to STORE[InputPort-4]' in k.name][0]] == 4
+        assert (em._field_index_map[[k for k in em._field_index_map.keys()
+                                     if 'VALUE LEARN [RETRIEVED]' in k.name][0]] == 4)
+        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'VALUE LEARN [VALUE]' in k.name][0]] == 4
+        assert em._field_index_map[[k for k in em._field_index_map.keys()
+                                    if 'MEMORY FOR VALUE LEARN [RETRIEVE VALUE]' in k.name][0]] == 4
+        assert (em._field_index_map[[k for k in em._field_index_map.keys()
+                                     if 'MEMORY for KEY A [KEY]' in k.name][0]] == 0)
+        assert em._field_index_map[[k for k in em._field_index_map.keys()
+                                    if 'MATCH to WEIGHTED MATCH for KEY A' in k.name][0]] == 0
+        assert em._field_index_map[[k for k in em._field_index_map.keys()
+                                    if 'WEIGHTED MATCH for KEY A to COMBINE MATCHES' in k.name][0]] == 0
+        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'KEY B [MATCH to KEYS]' in k.name][0]] == 2
+        assert em._field_index_map[[k for k in em._field_index_map.keys()
+                                    if 'MEMORY for KEY B [KEY]' in k.name][0]] == 2
+        assert em._field_index_map[[k for k in em._field_index_map.keys()
+                                    if 'MATCH to WEIGHTED MATCH for KEY B' in k.name][0]] == 2
+        assert (em._field_index_map[[k for k in em._field_index_map.keys()
+                                     if 'KEY B [WEIGHTED MATCH]' in k.name][0]] == 2)
+        assert em._field_index_map[[k for k in em._field_index_map.keys()
+                                    if 'WEIGHTED MATCH for KEY B to COMBINE MATCHES' in k.name][0]] == 2
+        assert (em._field_index_map[[k for k in em._field_index_map.keys()
+                                     if 'KEY VALUE [MATCH to KEYS]' in k.name][0]] == 3)
+        assert em._field_index_map[[k for k in em._field_index_map.keys() if
+                                    'MEMORY for KEY VALUE [KEY]' in k.name][0]] == 3
+        assert em._field_index_map[[k for k in em._field_index_map.keys()
+                                    if 'MATCH to WEIGHTED MATCH for KEY VALUE' in k.name][0]] == 3
+        assert (em._field_index_map[[k for k in em._field_index_map.keys()
+                                     if 'KEY VALUE [WEIGHTED MATCH]' in k.name][0]] == 3)
+        assert em._field_index_map[[k for k in em._field_index_map.keys()
+                                    if 'WEIGHTED MATCH for KEY VALUE to COMBINE MATCHES' in k.name][0]] == 3
+        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'KEY B [WEIGHT]' in k.name][0]] == 2
+        assert em._field_index_map[[k for k in em._field_index_map.keys() if 'KEY VALUE [WEIGHT]' in k.name][0]] == 3
 
     def test_field_weights_all_None_and_or_0(self):
         with pytest.raises(EMCompositionError) as error_text:
