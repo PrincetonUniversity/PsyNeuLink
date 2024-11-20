@@ -428,9 +428,9 @@ class OneHot(SelectionFunction):
             sum_ptr = builder.alloca(ctx.float_ty)
             builder.store(sum_ptr.type.pointee(-0.0), sum_ptr)
 
-            random_draw_ptr = builder.alloca(ctx.float_ty)
             rand_state_ptr = ctx.get_random_state_ptr(builder, self, state, params)
             rng_f = ctx.get_uniform_dist_function_by_state(rand_state_ptr)
+            random_draw_ptr = builder.alloca(rng_f.args[-1].type.pointee)
             builder.call(rng_f, [rand_state_ptr, random_draw_ptr])
             random_draw = builder.load(random_draw_ptr)
 
@@ -534,8 +534,20 @@ class OneHot(SelectionFunction):
             extreme_start = num_extremes_ptr.type.pointee(0)
             extreme_stop = builder.load(num_extremes_ptr)
 
+        elif tie == RANDOM:
+            rand_state_ptr = ctx.get_random_state_ptr(builder, self, state, params)
+            rand_f = ctx.get_rand_int_function_by_state(rand_state_ptr)
+            random_draw_ptr = builder.alloca(rand_f.args[-1].type.pointee)
+            num_extremes = builder.load(num_extremes_ptr)
+
+            builder.call(rand_f, [rand_state_ptr, ctx.int32_ty(0), num_extremes, random_draw_ptr])
+
+            extreme_start = builder.load(random_draw_ptr)
+            extreme_start = builder.trunc(extreme_start, ctx.int32_ty)
+            extreme_stop = builder.add(extreme_start, extreme_start.type(1))
+
         else:
-            assert False
+            assert False, "Unknown tie resolution: {}".format(tie)
 
 
         extreme_val = builder.load(extreme_val_ptr)
