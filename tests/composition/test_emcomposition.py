@@ -289,14 +289,90 @@ class TestConstruction:
         assert warning_msg_1 in str(warning[0].message)
         assert warning_msg_2 in str(warning[1].message)
 
+    def test_field_map_and_args_assignment(self):
+
+        field_names = ['KEY A','VALUE A', 'KEY B','KEY VALUE','VALUE LEARN']
+        field_weights = [1, None, 2, 0, None]
+        learn_field_weights = [True, False, .01, False, False]
+        target_fields = [True, False, False, True, True]
+
+        # individual args
+        em = EMComposition(memory_template=(5,2),
+                           memory_capacity=2,
+                           field_names=field_names,
+                           field_weights=field_weights,
+                           learn_field_weights=learn_field_weights,
+                           target_fields=target_fields,
+                           learning_rate=0.5)
+        assert em.num_fields == 5
+        assert em.num_keys == 3
+        for actual, expected in zip(em.field_weights, [0.33333333, None, 0.66666667, 0, None]):
+            if expected is None:
+                assert actual is None
+            else:
+                np.testing.assert_allclose(actual, expected)
+        assert em.learn_field_weights == [True, False, .01, False, False]
+        np.testing.assert_allclose(em.target_fields, [True, False, False, True, True])
+        learning_components = em.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+        # FIX:  FOLLOWING LINE SHOULDN'T BE NEEDED
+        learning_components = [node for node in em.nodes if 'TARGET' in node.name]
+        assert len(learning_components) == 3
+        assert 'TARGET for KEY A [RETRIEVED]' in learning_components[0].name
+        assert 'TARGET for KEY VALUE [RETRIEVED]' in learning_components[1].name
+        assert 'TARGET for VALUE LEARN [RETRIEVED]' in learning_components[2].name
+        assert learning_rate == 0.5
+        assert em._field_index_map =={
+em.nodes[0]: 0,
+em.projections[28]: 0,
+(ProcessingMechanism KEY A [RETRIEVED]): 0
+(MappingProjection MEMORY FOR KEY A [RETRIEVE KEY]): 0
+(ProcessingMechanism VALUE A [VALUE]): 1
+(MappingProjection MappingProjection from VALUE A [VALUE][OutputPort-0] to STORE[InputPort-1]): 1
+(ProcessingMechanism VALUE A [RETRIEVED]): 1
+(MappingProjection MEMORY FOR VALUE A [RETRIEVE VALUE]): 1
+(ProcessingMechanism KEY B [QUERY]): 2
+(MappingProjection MappingProjection from KEY B [QUERY][OutputPort-0] to STORE[InputPort-2]): 2
+(ProcessingMechanism KEY B [RETRIEVED]): 2
+(MappingProjection MEMORY FOR KEY B [RETRIEVE KEY]): 2
+(ProcessingMechanism KEY VALUE [QUERY]): 3
+(MappingProjection MappingProjection from KEY VALUE [QUERY][OutputPort-0] to STORE[InputPort-3]): 3
+(ProcessingMechanism KEY VALUE [RETRIEVED]): 3
+(MappingProjection MEMORY FOR KEY VALUE [RETRIEVE KEY]): 3
+(ProcessingMechanism VALUE LEARN [VALUE]): 4
+(MappingProjection MappingProjection from VALUE LEARN [VALUE][OutputPort-0] to STORE[InputPort-4]): 4
+(ProcessingMechanism VALUE LEARN [RETRIEVED]): 4
+(MappingProjection MEMORY FOR VALUE LEARN [RETRIEVE VALUE]): 4
+(ProcessingMechanism KEY A [MATCH to KEYS]): 0
+(MappingProjection MEMORY for KEY A [KEY]): 0
+(MappingProjection MATCH to WEIGHTED MATCH for KEY A): 0
+(ProcessingMechanism KEY A [WEIGHTED MATCH]): 0
+(MappingProjection WEIGHTED MATCH for KEY A to COMBINE MATCHES): 0
+(ProcessingMechanism KEY B [MATCH to KEYS]): 2
+(MappingProjection MEMORY for KEY B [KEY]): 2
+(MappingProjection MATCH to WEIGHTED MATCH for KEY B): 2
+(ProcessingMechanism KEY B [WEIGHTED MATCH]): 2
+(MappingProjection WEIGHTED MATCH for KEY B to COMBINE MATCHES): 2
+(ProcessingMechanism KEY VALUE [MATCH to KEYS]): 3
+(MappingProjection MEMORY for KEY VALUE [KEY]): 3
+(MappingProjection MATCH to WEIGHTED MATCH for KEY VALUE): 3
+(ProcessingMechanism KEY VALUE [WEIGHTED MATCH]): 3
+(MappingProjection WEIGHTED MATCH for KEY VALUE to COMBINE MATCHES): 3
+(ProcessingMechanism KEY A [WEIGHT]): 0
+(ProcessingMechanism KEY B [WEIGHT]): 2
+(ProcessingMechanism KEY VALUE [WEIGHT]): 3}
+        assert True
+
+        # tuple format
+        # dict format
+
     def test_field_weights_all_None_and_or_0(self):
         with pytest.raises(EMCompositionError) as error_text:
-            em = EMComposition(memory_template=(3,1), memory_capacity=1, field_weights=[None, None, None])
+            EMComposition(memory_template=(3,1), memory_capacity=1, field_weights=[None, None, None])
         assert error_text.value.error_value == (f"The entries in 'field_weights' arg for EM_Composition can't all "
                                                 f"be 'None' since that will preclude the construction of any keys.")
 
         with pytest.warns(UserWarning) as warning:
-            em = EMComposition(memory_template=(3,1), memory_capacity=1, field_weights=[0, None, 0])
+            EMComposition(memory_template=(3,1), memory_capacity=1, field_weights=[0, None, 0])
         warning_msg = (f"All of the entries in the 'field_weights' arg for EM_Composition are either None or set to 0; "
                        f"this will result in no retrievals unless/until the 0(s) is(are) changed to a positive value.")
         assert warning_msg in str(warning[0].message)
