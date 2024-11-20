@@ -1008,7 +1008,7 @@ def field_weights_setter(field_weights, owning_component=None, context=None):
         raise EMCompositionError(f"The number of field_weights ({len(field_weights)}) must match the number of fields "
                                  f"{len(owning_component.field_weights)}")
     if owning_component.normalize_field_weights:
-        denominator = np.sum(np.where(field_weights != None, field_weights, 0))
+        denominator = np.sum(np.where(field_weights is not None, field_weights, 0))
         field_weights = [fw / denominator if fw is not None else None for fw in field_weights]
 
     # Assign new fields_weights to default_variable of field_weight_nodes
@@ -1510,7 +1510,7 @@ class EMComposition(AutodiffComposition):
             if field_weights is not None:
                 if not np.atleast_1d(field_weights).ndim == 1:
                     return f"must be a scalar, list of scalars, or 1d array."
-                if len(field_weights) == 1 and field_weights[0] == None:
+                if len(field_weights) == 1 and field_weights[0] is None:
                     raise EMCompositionError(f"must be a scalar, since there is only one field specified.")
                 if any([field_weight < 0 for field_weight in field_weights if field_weight is not None]):
                     return f"must be all be positive values."
@@ -1776,7 +1776,7 @@ class EMComposition(AutodiffComposition):
                                          f"for {name} must match the number of items in an entry of memory "
                                          f"({num_fields}).")
             # Deal with this here instead of Parameter._validate_field_weights since this is called before super()
-            if all([fw == None for fw in _field_wts]):
+            if all([fw is None for fw in _field_wts]):
                 raise EMCompositionError(f"The entries in 'field_weights' arg for {name} can't all be 'None' "
                                          f"since that will preclude the construction of any keys.")
             if all([fw in {0, None} for fw in _field_wts]):
@@ -2547,7 +2547,7 @@ class EMComposition(AutodiffComposition):
 
             projection_is_field_weight = projection.sender.owner in self.field_weight_nodes
 
-            if self.enable_learning == False or not projection_is_field_weight:
+            if self.enable_learning is False or not projection_is_field_weight:
                 projection.learnable = False
                 continue
 
@@ -2561,10 +2561,10 @@ class EMComposition(AutodiffComposition):
             else:
                 learning_rate = self.learn_field_weights[self.field_weight_nodes.index(projection.sender.owner)]
 
-            if learning_rate == False:
+            if learning_rate is False:
                 projection.learnable = False
                 continue
-            elif learning_rate == True:
+            elif learning_rate is True:
                 # Default (EMComposition's learning_rate) is used for all field_weight Projections:
                 learning_rate = self.learning_rate
             assert isinstance(learning_rate, (int, float)), \
