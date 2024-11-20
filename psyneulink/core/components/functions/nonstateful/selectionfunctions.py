@@ -477,7 +477,16 @@ class OneHot(SelectionFunction):
             return builder
 
         elif self.mode == DETERMINISTIC:
-            assert False, "DETERMINISTIC mode not supported"
+            direction = self.direction
+            tie = self.tie
+            abs_val_ptr = ctx.get_param_or_state_ptr(builder, self, self.parameters.abs_val, param_struct_ptr=params)
+            indicator_ptr = ctx.get_param_or_state_ptr(builder, self, self.parameters.indicator, param_struct_ptr=params)
+
+            abs_val = builder.load(abs_val_ptr)
+            is_abs_val = builder.fcmp_unordered("!=", abs_val, abs_val.type(0))
+
+            indicator = builder.load(indicator_ptr)
+            is_indicator = builder.fcmp_unordered("!=", indicator, indicator.type(0))
 
         else:
             direction, abs_val, indicator, tie = self._parse_mode(self.mode)
@@ -492,9 +501,8 @@ class OneHot(SelectionFunction):
 
         fabs_f = ctx.get_builtin("fabs", [extreme_val_ptr.type.pointee])
 
-        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "count_extremes") as (loop_builder, idx):
+        with pnlvm.helpers.recursive_iterate_arrays(ctx, builder, arg_in, loop_id="count_extremes") as (loop_builder, current_ptr):
 
-            current_ptr = loop_builder.gep(arg_in, [ctx.int32_ty(0), idx])
             current = loop_builder.load(current_ptr)
             current_abs = loop_builder.call(fabs_f, [current])
             current = builder.select(is_abs_val, current_abs, current)
@@ -544,8 +552,7 @@ class OneHot(SelectionFunction):
                              builder.load(num_extremes_ptr),
                              tags={"one_hot"})
 
-        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "mark_extremes") as (loop_builder, idx):
-            current_ptr = loop_builder.gep(arg_in, [ctx.int32_ty(0), idx])
+        with pnlvm.helpers.recursive_iterate_arrays(ctx, builder, arg_in, arg_out, loop_id="mark_extremes") as (loop_builder, current_ptr, out_ptr):
             current = loop_builder.load(current_ptr)
             current_abs = loop_builder.call(fabs_f, [current])
             current = builder.select(is_abs_val, current_abs, current)
@@ -564,7 +571,6 @@ class OneHot(SelectionFunction):
             should_write_extreme = loop_builder.and_(should_write_extreme, is_before_stop)
 
             write_value = loop_builder.select(should_write_extreme, extreme_write_val, extreme_write_val.type(0))
-            out_ptr = loop_builder.gep(arg_out, [ctx.int32_ty(0), idx])
             loop_builder.store(write_value, out_ptr)
 
         return builder

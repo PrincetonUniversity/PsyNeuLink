@@ -85,7 +85,6 @@ test_var3_2d = np.append(np.append(test_var_2d, test_var_2d, axis=0), test_var_2
 
 
 @pytest.mark.benchmark
-@pytest.mark.llvm_not_implemented
 @pytest.mark.parametrize("variable, direction, abs_val, tie, expected",
 [
     # simple
@@ -255,6 +254,8 @@ test_var3_2d = np.append(np.append(test_var_2d, test_var_2d, axis=0), test_var_2
 ], ids=lambda x: x if isinstance(x, str) else str(getattr(x, 'shape', '')) )
 @pytest.mark.parametrize("indicator", ["indicator", "value"])
 def test_one_hot_mode_deterministic(benchmark, variable, tie, indicator, direction, abs_val, expected, func_mode):
+    if func_mode != "Python" and tie == kw.RANDOM:
+        pytest.skip("not implemented")
 
     f = pnl.OneHot(default_variable=np.zeros_like(variable),
                    mode=kw.DETERMINISTIC,
