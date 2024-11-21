@@ -55,7 +55,7 @@ def test_random_int64(benchmark, mode, seed, expected):
 
     # Get >4 samples to force regeneration of Philox buffer
     res = [f(), f(), f(), f(), f(), f()]
-    np.testing.assert_allclose(res, expected)
+    np.testing.assert_array_equal(res, expected)
     benchmark(f)
 
 
@@ -64,7 +64,7 @@ def test_random_int64(benchmark, mode, seed, expected):
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
                                   pytest.helpers.cuda_param('PTX')])
 @pytest.mark.parametrize("bounds, expected",
-    [((0xffffffff,), [582496169, 60417458, 4027530181, 1107101889, 1659784452, 2025357889]),
+    [((0xffffffff,), [582496168, 60417457, 4027530180, 1107101888, 1659784451, 2025357888]),
      ((15,), [2, 0, 14, 3, 5, 7]),
      ((0,15), [2, 0, 14, 3, 5, 7]),
      ((5,0xffff), [8892, 926, 61454, 16896, 25328, 30906]),
@@ -110,7 +110,7 @@ def test_random_int32_bounded(benchmark, mode, bounds, expected):
 
     # Get >4 samples to force regeneration of Philox buffer
     res = [f(), f(), f(), f(), f(), f()]
-    np.testing.assert_allclose(res, expected)
+    np.testing.assert_array_equal(res, expected)
     benchmark(f)
 
 @pytest.mark.benchmark(group="Philox integer PRNG")
@@ -157,7 +157,7 @@ def test_random_int32(benchmark, mode):
 
     # Get >4 samples to force regeneration of Philox buffer
     res = [f(), f(), f(), f(), f(), f()]
-    np.testing.assert_allclose(res, [582496169, 60417458, 4027530181, 1107101889, 1659784452, 2025357889])
+    np.testing.assert_array_equal(res, [582496169, 60417458, 4027530181, 1107101889, 1659784452, 2025357889])
     benchmark(f)
 
 
@@ -257,8 +257,7 @@ def test_random_float(benchmark, mode):
 @pytest.mark.parametrize('mode', ['numpy',
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
                                   pytest.helpers.cuda_param('PTX')])
-@pytest.mark.parametrize('fp_type', [pnlvm.ir.DoubleType(), pnlvm.ir.FloatType()],
-                         ids=str)
+@pytest.mark.parametrize('fp_type', [pnlvm.ir.DoubleType(), pnlvm.ir.FloatType()], ids=str)
 def test_random_normal(benchmark, mode, fp_type):
     if mode != 'numpy':
         # Instantiate builder context with the desired type

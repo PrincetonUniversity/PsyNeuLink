@@ -61,7 +61,7 @@ def test_random_int32_bounded(benchmark, mode, bounds, expected):
         assert False, "Unknown mode: {}".format(mode)
 
     res = [f(), f(), f(), f(), f()]
-    np.testing.assert_allclose(res, expected)
+    np.testing.assert_array_equal(res, expected)
     benchmark(f)
 
 @pytest.mark.benchmark(group="Mersenne Twister integer PRNG")
@@ -116,7 +116,7 @@ def test_random_int32(benchmark, mode):
         assert False, "Unknown mode: {}".format(mode)
 
     res = [f(), f(), f(), f(), f()]
-    np.testing.assert_allclose(res, [3626764237, 1654615998, 3255389356, 3823568514, 1806341205])
+    np.testing.assert_array_equal(res, [3626764237, 1654615998, 3255389356, 3823568514, 1806341205])
     benchmark(f)
 
 
