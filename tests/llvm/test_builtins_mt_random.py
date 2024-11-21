@@ -6,12 +6,70 @@ from psyneulink.core import llvm as pnlvm
 
 SEED = 0
 
+@pytest.mark.benchmark(group="Mersenne Twister bounded integer PRNG")
+@pytest.mark.parametrize('mode', ['numpy',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.helpers.cuda_param('PTX')])
+@pytest.mark.parametrize("bounds, expected",
+    [((0xffffffff,), [3626764237, 1654615998, 3255389356, 3823568514, 1806341205]),
+     ((14,), [13, 12,  2,  5,  4]),
+     ((0,14), [13, 12,  2,  5,  4]),
+     ((5,0xffff), [2002, 28611, 19633,  1671, 37978]),
+    ], ids=lambda x: str(x) if len(x) != 5 else "")
+# Python uses sampling of upper bits (vs. lower bits in Numpy). Skip it in this test.
+def test_random_int32_bounded(benchmark, mode, bounds, expected):
+
+    if mode == 'numpy':
+        # Numpy promotes elements to int64
+        state = np.random.RandomState([SEED])
+
+        def f():
+            return state.randint(*bounds, dtype=np.uint32)
+
+    elif mode == 'LLVM':
+        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
+        state = init_fun.np_buffer_for_arg(0)
+
+        init_fun(state, SEED)
+
+        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_int32_bounded')
+
+        def f():
+            lower, upper = bounds if len(bounds) == 2 else (0, bounds[0])
+            out = gen_fun.np_buffer_for_arg(3)
+            gen_fun(state, lower, upper, out)
+            return out
+
+    elif mode == 'PTX':
+        init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
+
+        state_size = init_fun.np_buffer_for_arg(0).nbytes
+        gpu_state = pnlvm.jit_engine.pycuda.driver.mem_alloc(state_size)
+
+        init_fun.cuda_call(gpu_state, np.int32(SEED))
+
+        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_int32_bounded')
+        out = gen_fun.np_buffer_for_arg(3)
+        gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
+
+        def f():
+            lower, upper = bounds if len(bounds) == 2 else (0, bounds[0])
+            gen_fun.cuda_call(gpu_state, np.uint32(lower), np.uint32(upper), gpu_out)
+            return out.copy()
+
+    else:
+        assert False, "Unknown mode: {}".format(mode)
+
+    res = [f(), f(), f(), f(), f()]
+    np.testing.assert_array_equal(res, expected)
+    benchmark(f)
+
 @pytest.mark.benchmark(group="Mersenne Twister integer PRNG")
 @pytest.mark.parametrize('mode', ['Python', 'numpy',
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
                                   pytest.helpers.cuda_param('PTX')])
-def test_random_int(benchmark, mode):
-    res = []
+def test_random_int32(benchmark, mode):
+
     if mode == 'Python':
         state = random.Random(SEED)
 
@@ -23,7 +81,7 @@ def test_random_int(benchmark, mode):
         state = np.random.RandomState([SEED])
 
         def f():
-            return state.randint(0xffffffff, dtype=np.int64)
+            return state.randint(0xffffffff, dtype=np.uint32)
 
     elif mode == 'LLVM':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
@@ -57,8 +115,8 @@ def test_random_int(benchmark, mode):
     else:
         assert False, "Unknown mode: {}".format(mode)
 
-    res = [f(), f()]
-    np.testing.assert_allclose(res, [3626764237, 1654615998])
+    res = [f(), f(), f(), f(), f()]
+    np.testing.assert_array_equal(res, [3626764237, 1654615998, 3255389356, 3823568514, 1806341205])
     benchmark(f)
 
 
@@ -67,7 +125,7 @@ def test_random_int(benchmark, mode):
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
                                   pytest.helpers.cuda_param('PTX')])
 def test_random_float(benchmark, mode):
-    res = []
+
     if mode == 'Python':
         # Python treats every seed as array
         state = random.Random(SEED)
@@ -124,6 +182,7 @@ def test_random_float(benchmark, mode):
                                   pytest.helpers.cuda_param('PTX')])
 # Python uses different algorithm so skip it in this test
 def test_random_normal(benchmark, mode):
+
     if mode == 'numpy':
         # numpy promotes elements to int64
         state = np.random.RandomState([SEED])

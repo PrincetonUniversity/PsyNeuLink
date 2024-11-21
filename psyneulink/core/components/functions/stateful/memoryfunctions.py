@@ -2372,6 +2372,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         max_entries = len(vals_ptr.type.pointee)
         entries = builder.load(count_ptr)
         entries = pnlvm.helpers.uint_min(builder, entries, max_entries)
+
         # The call to random function needs to be after check to match python
         with builder.if_then(retr_rand):
             rand_ptr = builder.alloca(ctx.float_ty)
@@ -2385,53 +2386,41 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         with builder.if_then(retr, likely=True):
             # Determine distances
             distance_f = ctx.import_llvm_function(self.distance_function)
-            distance_params, distance_state = ctx.get_param_or_state_ptr(builder, self, "distance_function", param_struct_ptr=params, state_struct_ptr=state)
+            distance_params, distance_state = ctx.get_param_or_state_ptr(builder,
+                                                                         self,
+                                                                         "distance_function",
+                                                                         param_struct_ptr=params,
+                                                                         state_struct_ptr=state)
             distance_arg_in = builder.alloca(distance_f.args[2].type.pointee)
-            builder.store(builder.load(var_key_ptr),
-                          builder.gep(distance_arg_in, [ctx.int32_ty(0),
-                                                        ctx.int32_ty(0)]))
+            builder.store(builder.load(var_key_ptr), builder.gep(distance_arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)]))
             selection_arg_in = builder.alloca(pnlvm.ir.ArrayType(distance_f.args[3].type.pointee, max_entries))
             with pnlvm.helpers.for_loop_zero_inc(builder, entries, "distance_loop") as (b, idx):
                 compare_ptr = b.gep(keys_ptr, [ctx.int32_ty(0), idx])
-                b.store(b.load(compare_ptr),
-                        b.gep(distance_arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)]))
+                b.store(b.load(compare_ptr), b.gep(distance_arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)]))
                 distance_arg_out = b.gep(selection_arg_in, [ctx.int32_ty(0), idx])
-                b.call(distance_f, [distance_params, distance_state,
-                                    distance_arg_in, distance_arg_out])
+                b.call(distance_f, [distance_params, distance_state, distance_arg_in, distance_arg_out])
 
-            # MODIFIED 10/13/24 NEW:
-            # IMPLEMENTATION NOTE:
-            #  REPLACE MIN_VAL with ARG_MIN and MIN_INDICATOR with ARG_MIN_INDICATOR
-            #    until the MIN_XXX args are implemented in LLVM
-            #  since, at present, the tests don't seem to distinguish between these (i.e., return of multiple values;
-            #  should add tests that do so once MIN_VAL and related args are implemented in LLVM)
-            if isinstance(self.selection_function, OneHot):
-                mode = self.selection_function.mode
-                if mode == MIN_VAL:
-                    self.selection_function.mode = ARG_MIN
-                elif mode == MIN_INDICATOR:
-                    self.selection_function.mode = ARG_MIN_INDICATOR
-            # MODIFIED 10/13/24 END
             selection_f = ctx.import_llvm_function(self.selection_function)
-            selection_params, selection_state = ctx.get_param_or_state_ptr(builder, self, "selection_function", param_struct_ptr=params, state_struct_ptr=state)
+            selection_params, selection_state = ctx.get_param_or_state_ptr(builder,
+                                                                           self,
+                                                                           "selection_function",
+                                                                           param_struct_ptr=params,
+                                                                           state_struct_ptr=state)
             selection_arg_out = builder.alloca(selection_f.args[3].type.pointee)
-            builder.call(selection_f, [selection_params, selection_state,
-                                       selection_arg_in, selection_arg_out])
+            builder.call(selection_f, [selection_params, selection_state, selection_arg_in, selection_arg_out])
 
             # Find the selected index
             selected_idx_ptr = builder.alloca(ctx.int32_ty)
             builder.store(ctx.int32_ty(0), selected_idx_ptr)
-            with pnlvm.helpers.for_loop_zero_inc(builder, entries, "distance_loop") as (b,idx):
+            with pnlvm.helpers.for_loop_zero_inc(builder, entries, "selection_loop") as (b, idx):
                 selection_val = b.load(b.gep(selection_arg_out, [ctx.int32_ty(0), idx]))
                 non_zero = b.fcmp_ordered('!=', selection_val, selection_val.type(0))
                 with b.if_then(non_zero):
                     b.store(idx, selected_idx_ptr)
 
             selected_idx = builder.load(selected_idx_ptr)
-            selected_key = builder.load(builder.gep(keys_ptr, [ctx.int32_ty(0),
-                                                               selected_idx]))
-            selected_val = builder.load(builder.gep(vals_ptr, [ctx.int32_ty(0),
-                                                               selected_idx]))
+            selected_key = builder.load(builder.gep(keys_ptr, [ctx.int32_ty(0), selected_idx]))
+            selected_val = builder.load(builder.gep(vals_ptr, [ctx.int32_ty(0), selected_idx]))
             builder.store(selected_key, out_key_ptr)
             builder.store(selected_val, out_val_ptr)
 
