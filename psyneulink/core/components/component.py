@@ -931,6 +931,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     componentType = None
 
     standard_constructor_args = {EXECUTE_UNTIL_FINISHED, FUNCTION_PARAMS, MAX_EXECUTIONS_BEFORE_FINISHED, RESET_STATEFUL_FUNCTION_WHEN, INPUT_SHAPES}
+    deprecated_constructor_args = {
+        'size': 'input_shapes',
+    }
 
     # helper attributes for MDF model spec
     _model_spec_id_parameters = 'parameters'
@@ -2150,8 +2153,11 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         conflicting_aliases = []
         unused_constructor_args = {}
+        deprecated_args = {}
         for p in self.parameters:
             if p.name in illegal_passed_args:
+                # p must have a constructor_argument, because otherwise
+                # p.name would not be in illegal_passed_args
                 assert p.constructor_argument is not None
                 unused_constructor_args[p.name] = p.constructor_argument
 
@@ -2164,11 +2170,24 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 if alias_conflicts(p, passed_name):
                     conflicting_aliases.append((p.source.name, passed_name, p.name))
 
+        for arg in illegal_passed_args:
+            try:
+                deprecated_args[arg] = self.deprecated_constructor_args[arg]
+            except KeyError:
+                continue
+
         # raise constructor arg errors
         if len(unused_constructor_args) > 0:
             raise create_illegal_argument_error([
                 f"'{arg}': must use '{constr_arg}' instead"
                 for arg, constr_arg in unused_constructor_args.items()
+            ])
+
+        # raise deprecated argument errors
+        if len(deprecated_args) > 0:
+            raise create_illegal_argument_error([
+                f"'{arg}' is deprecated. Use '{new_arg}' instead"
+                for arg, new_arg in deprecated_args.items()
             ])
 
         # raise generic illegal argument error
