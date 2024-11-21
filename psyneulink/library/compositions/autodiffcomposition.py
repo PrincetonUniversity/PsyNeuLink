@@ -1118,7 +1118,7 @@ class AutodiffComposition(Composition):
             trial_loss = 0
             for i in range(len(curr_tensors_for_trained_outputs[component])):
                 trial_loss += self.loss_function(curr_tensors_for_trained_outputs[component][i],
-                                               curr_target_tensors_for_trained_outputs[component][i])
+                                                 curr_target_tensors_for_trained_outputs[component][i])
             pytorch_rep.minibatch_loss += trial_loss
         pytorch_rep.minibatch_loss_count += 1
 
