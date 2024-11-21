@@ -875,6 +875,7 @@ class TestExecution:
                                                  pnl.LEARN_FIELD_WEIGHT: False,
                                                  pnl.TARGET_FIELD: False}},
                            normalize_field_weights=True,
+                           normalize_memories=False,
                            concatenate_queries=False,
                            enable_learning=True,
                            learning_rate=.5,
