@@ -854,7 +854,8 @@ class TestExecution:
                                           function=pnl.Tanh,
                                           integrator_mode=True,
                                           integration_rate=.69)
-        em = EMComposition(memory_template=[[0] * 11, [0] * 11, [0] * 11],  # context
+        em = EMComposition(name='EM',
+                           memory_template=[[0] * 11, [0] * 11, [0] * 11],  # context
                            memory_fill=(0,.0001),
                            memory_capacity=50,
                            memory_decay_rate=0,
@@ -1046,7 +1047,7 @@ class TestExecution:
         #            [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
         #            [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
         #            [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0]]
-
+        #
         # fig, axes = plt.subplots(3, 1, figsize=(5, 12))
         # axes[0].imshow(EGO.projections[7].parameters.matrix.get(EGO.name), interpolation=None)
         # axes[1].plot((1 - np.abs(EGO.results[1:50,2]-TARGETS[:49])).sum(-1))

@@ -110,10 +110,17 @@ That is, an AutodiffComposition can be `nested in a Composition <Composition_Nes
 AutodiffComposition does not (currently) support the *automatic* construction of separate bias parameters.
 Thus, when constructing a model using an AutodiffComposition that corresponds to one in PyTorch, the `bias
 <https://www.pytorch.org/docs/stable/nn.html#torch.nn.Module>` parameter of PyTorch modules should be set
-to `False`. Trainable biases *can* be specified explicitly in an AutodiffComposition by including a
-TransferMechanism that projects to the relevant Mechanism (i.e., implementing that layer of the network to
-receive the biases) using a `MappingProjection` with a `matrix <MappingProjection.matrix>` parameter that
-implements a diagnoal matrix with values corresponding to the initial value of the biases.
+to `False`.
+
+    .. hint::
+    Trainable biases *can* be specified explicitly in an AutodiffComposition by including a `ProcessingMechanism`
+    that projects to the relevant Mechanism (i.e., implementing that layer of the network to receive the biases)
+    using a `MappingProjection` with a `matrix <MappingProjection.matrix>` parameter that implements a diagnoal
+    matrix with values corresponding to the initial value of the biases, and setting the `default_input
+    <InputPort.default_input>` Parameter of one of the ProcessingMechanism's `input_ports
+    <Mechanism_Base.input_ports>` to *DEFAULT_VARIABLE*, and its `default_variable <Component.default_variable>`
+    equal to 1. ProcessingMechanisms configured in this way are assigned `NodeRole` `BIAS`, and the MappingProjection
+    is subject to learning.
 
 .. _AutodiffComposition_Nesting:
 
@@ -951,8 +958,9 @@ class AutodiffComposition(Composition):
 
             return pathways
 
-        # Construct a pathway for each INPUT Node (except the TARGET Node)
-        pathways = [pathway for node in self.get_nodes_by_role(NodeRole.INPUT)
+        # Construct a pathway for each INPUT Node (including BIAS Nodes), except the TARGET Node)
+        pathways = [pathway
+                    for node in (self.get_nodes_by_role(NodeRole.INPUT) + self.get_nodes_by_role(NodeRole.BIAS))
                     if node not in self.get_nodes_by_role(NodeRole.TARGET)
                     for pathway in _get_pytorch_backprop_pathway(node)]
 
