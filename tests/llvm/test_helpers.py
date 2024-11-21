@@ -447,54 +447,15 @@ def test_helper_numerical(mode, op, var, expected, fp_type):
 
     np.testing.assert_allclose(res, expected)
 
-@pytest.mark.llvm
-@pytest.mark.parametrize('mode', ['CPU', pytest.helpers.cuda_param('PTX')])
-@pytest.mark.parametrize('var,expected', [
-    (np.asfarray([1,2,3]), np.asfarray([2,3,4])),
-    (np.asfarray([[1,2],[3,4]]), np.asfarray([[2,3],[4,5]])),
-], ids=["vector", "matrix"])
-def test_helper_elementwise_op(mode, var, expected):
-    with pnlvm.LLVMBuilderContext.get_current() as ctx:
-        arr_ptr_ty = ctx.convert_python_struct_to_llvm_ir(var).as_pointer()
-
-        func_ty = ir.FunctionType(ir.VoidType(), [arr_ptr_ty, arr_ptr_ty])
-
-        custom_name = ctx.get_unique_name("elementwise_op")
-        function = ir.Function(ctx.module, func_ty, name=custom_name)
-        inp, out = function.args
-        block = function.append_basic_block(name="entry")
-        builder = ir.IRBuilder(block)
-
-        pnlvm.helpers.call_elementwise_operation(ctx, builder, inp,
-            lambda ctx, builder, x: builder.fadd(x.type(1.0), x), out)
-        builder.ret_void()
-
-    bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
-
-    vec = np.asfarray(var, dtype=bin_f.np_arg_dtypes[0].base)
-    res = bin_f.np_buffer_for_arg(1)
-
-    if mode == 'CPU':
-        bin_f(vec, res)
-    else:
-        bin_f.cuda_wrap_call(vec, res)
-
-    assert np.array_equal(res, expected)
 
 @pytest.mark.llvm
 @pytest.mark.parametrize('mode', ['CPU', pytest.helpers.cuda_param('PTX')])
 @pytest.mark.parametrize('var1,var2,expected', [
     (np.array([1.,2.,3.]), np.array([1.,2.,3.]), np.array([2.,4.,6.])),
     (np.array([1.,2.,3.]), np.array([0.,1.,2.]), np.array([1.,3.,5.])),
-    (np.array([[1.,2.,3.],
-               [4.,5.,6.],
-               [7.,8.,9.]]),
-     np.array([[10.,11.,12.],
-               [13.,14.,15.],
-               [16.,17.,18.]]),
-     np.array([[11.,13.,15.],
-               [17.,19.,21.],
-               [23.,25.,27.]])),
+    (np.array([[1.,2.,3.], [4.,5.,6.], [7.,8.,9.]]),
+     np.array([[10.,11.,12.], [13.,14.,15.], [16.,17.,18.]]),
+     np.array([[11.,13.,15.], [17.,19.,21.], [23.,25.,27.]])),
 ])
 def test_helper_recursive_iterate_arrays(mode, var1, var2, expected):
     with pnlvm.LLVMBuilderContext.get_current() as ctx:
@@ -508,10 +469,10 @@ def test_helper_recursive_iterate_arrays(mode, var1, var2, expected):
         block = function.append_basic_block(name="entry")
         builder = ir.IRBuilder(block)
 
-        for (a_ptr, b_ptr, o_ptr) in pnlvm.helpers.recursive_iterate_arrays(ctx, builder, u, v, out):
-            a = builder.load(a_ptr)
-            b = builder.load(b_ptr)
-            builder.store(builder.fadd(a,b), o_ptr)
+        with pnlvm.helpers.recursive_iterate_arrays(ctx, builder, u, v, out) as (loop_builder, a_ptr, b_ptr, o_ptr):
+            a = loop_builder.load(a_ptr)
+            b = loop_builder.load(b_ptr)
+            loop_builder.store(loop_builder.fadd(a, b), o_ptr)
 
         builder.ret_void()
 
