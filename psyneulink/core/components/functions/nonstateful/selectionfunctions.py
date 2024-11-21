@@ -422,8 +422,6 @@ class OneHot(SelectionFunction):
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         if self.mode in {PROB, PROB_INDICATOR}:
-            best_idx_ptr = builder.alloca(ctx.int32_ty)
-            builder.store(best_idx_ptr.type.pointee(0), best_idx_ptr)
 
             sum_ptr = builder.alloca(ctx.float_ty)
             builder.store(sum_ptr.type.pointee(-0.0), sum_ptr)
@@ -438,8 +436,6 @@ class OneHot(SelectionFunction):
             arg_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
             with pnlvm.helpers.array_ptr_loop(builder, arg_in, "search") as (b1, idx):
-                best_idx = b1.load(best_idx_ptr)
-                best_ptr = b1.gep(arg_in, [ctx.int32_ty(0), best_idx])
 
                 current_ptr = b1.gep(arg_in, [ctx.int32_ty(0), idx])
                 current = b1.load(current_ptr)
@@ -454,25 +450,14 @@ class OneHot(SelectionFunction):
                 new_above = b1.fcmp_ordered("<", random_draw, sum_new)
                 cond = b1.and_(new_above, old_below)
 
-                cmp_prev = current.type(1.0)
-                cmp_curr = b1.select(cond, cmp_prev, cmp_prev.type(0.0))
-                cmp_op = "=="
                 if self.mode == PROB:
                     val = current
                 else:
                     val = current.type(1.0)
 
-                prev_res_ptr = b1.gep(arg_out, [ctx.int32_ty(0), best_idx])
+                write_val = b1.select(cond, val, val.type(0.0))
                 cur_res_ptr = b1.gep(arg_out, [ctx.int32_ty(0), idx])
-
-                # Make sure other elements are zeroed
-                builder.store(cur_res_ptr.type.pointee(0), cur_res_ptr)
-
-                cmp_res = builder.fcmp_unordered(cmp_op, cmp_curr, cmp_prev)
-                with builder.if_then(cmp_res):
-                    builder.store(prev_res_ptr.type.pointee(0), prev_res_ptr)
-                    builder.store(val, cur_res_ptr)
-                    builder.store(idx, best_idx_ptr)
+                builder.store(write_val, cur_res_ptr)
 
             return builder
 
