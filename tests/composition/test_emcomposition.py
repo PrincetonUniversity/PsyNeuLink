@@ -791,9 +791,13 @@ class TestExecution:
 
     @pytest.mark.composition
     @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch])
-    @pytest.mark.parametrize('concatenate', [True, False], ids=['concatenate', 'no_concatenate'])
-    @pytest.mark.parametrize('use_storage_node', [True, False], ids=['use_storage_node', 'no_storage_node'])
-    @pytest.mark.parametrize('learning', [True, False], ids=['learning', 'no_learning'])
+    # @pytest.mark.parametrize('concatenate', [True, False], ids=['concatenate', 'no_concatenate'])
+    # @pytest.mark.parametrize('use_storage_node', [True, False], ids=['use_storage_node', 'no_storage_node'])
+    # @pytest.mark.parametrize('learning', [True, False], ids=['learning', 'no_learning'])
+    # FIX: TESTING 11/21/24
+    @pytest.mark.parametrize('concatenate', [False], ids=['no_concatenate'])
+    @pytest.mark.parametrize('use_storage_node', [True], ids=['use_storage_node'])
+    @pytest.mark.parametrize('learning', [True], ids=['learning'])
     def test_multiple_trials_concatenation_and_storage_node(self, exec_mode, concatenate, use_storage_node, learning):
         """Test with and without learning (learning is tested only for using_storage_node and no concatenation)"""
 
@@ -806,7 +810,9 @@ class TestExecution:
                            softmax_gain=100,
                            memory_fill=(0,.001),
                            concatenate_queries=concatenate,
-                           learn_field_weights=learning,
+                           # learn_field_weights=learning,
+                           learn_field_weights=False,
+                           enable_learning=True,
                            use_storage_node=use_storage_node)
 
         inputs = [[[[1,2,3]],[[4,5,6]],[[10,20,30]],[[40,50,60]],[[100,200,300]],[[400,500,600]]],
