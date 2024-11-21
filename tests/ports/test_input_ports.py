@@ -170,3 +170,108 @@ class TestInputPorts:
             A.efferents = ['test']
         assert 'InputPorts are not allowed to have \'efferents\' ' \
                '(assignment attempted for Deferred Init InputPort).' in str(error.value)
+
+
+class TestDefaultInput:
+    def test_default_input_standalone(self):
+        a = pnl.ProcessingMechanism(
+            input_ports=[
+                {pnl.VARIABLE: [2], pnl.PARAMS: {pnl.DEFAULT_INPUT: pnl.DEFAULT_VARIABLE}}
+            ]
+        )
+        np.testing.assert_array_equal(a.execute(), [[2]])
+
+        a.input_ports[0].defaults.variable = [3]
+        np.testing.assert_array_equal(a.execute(), [[3]])
+
+    def test_default_input_standalone_two_ports(self):
+        a = pnl.ProcessingMechanism(default_variable=[[1], [1]])
+        a.input_ports[0].defaults.variable = [2]
+        a.input_ports[1].defaults.variable = [3]
+
+        # no port default_input set, use mechanism.defaults.variable
+        np.testing.assert_array_equal(a.execute(), [[1], [1]])
+
+        # port has default_input set, so get variable from input ports.
+        # second port has no afferents, so it doesn't have a value
+        a.input_ports[0].parameters.default_input.set(pnl.DEFAULT_VARIABLE, override=True)
+        with pytest.raises(
+            pnl.FunctionError, match="may be due to missing afferent projection"
+        ):
+            a.execute()
+
+        # both ports have default_input set, so use it
+        a.input_ports[1].parameters.default_input.set(pnl.DEFAULT_VARIABLE, override=True)
+        np.testing.assert_array_equal(a.execute(), [[2], [3]])
+
+        # as second check above. one port has default_input, other does
+        # not and has no afferents
+        a.input_ports[0].parameters.default_input.set(None, override=True)
+        with pytest.raises(
+            pnl.FunctionError, match="may be due to missing afferent projection"
+        ):
+            a.execute()
+
+        # as first check above. no port default_input set, use
+        # mechanism.defaults.variable
+        a.input_ports[1].parameters.default_input.set(None, override=True)
+        np.testing.assert_array_equal(a.execute(), [[1], [1]])
+
+    def test_default_input_with_projection(self):
+        a = pnl.ProcessingMechanism(default_variable=[[1]])
+        b = pnl.ProcessingMechanism(
+            input_ports=[
+                {pnl.VARIABLE: [2], pnl.PARAMS: {pnl.DEFAULT_INPUT: pnl.DEFAULT_VARIABLE}}
+            ]
+        )
+        comp = pnl.Composition(pathways=[a, b])
+
+        inputs = {a: [[10]]}
+
+        np.testing.assert_array_equal(comp.execute(), [[2]])
+        np.testing.assert_array_equal(comp.run(inputs), [[2]])
+
+        b.input_ports[0].defaults.variable = [3]
+        np.testing.assert_array_equal(comp.execute(), [[3]])
+        np.testing.assert_array_equal(comp.run(inputs), [[3]])
+
+        b.input_ports[0].parameters.default_input.set(None, override=True)
+        np.testing.assert_array_equal(comp.execute(), [[1]])
+        np.testing.assert_array_equal(comp.run(inputs), [[10]])
+
+    def test_default_input_with_projections_two_ports(self):
+        a = pnl.ProcessingMechanism(default_variable=[[1]])
+        b = pnl.ProcessingMechanism(
+            input_ports=[
+                {pnl.VARIABLE: [2]},
+                {pnl.VARIABLE: [3], pnl.PARAMS: {pnl.DEFAULT_INPUT: pnl.DEFAULT_VARIABLE}},
+            ]
+        )
+        comp = pnl.Composition()
+        comp.add_nodes([a, b])
+        comp.add_projection(sender=a, receiver=b.input_ports[0])
+
+        inputs = {a: [[10]]}
+
+        np.testing.assert_array_equal(comp.run(inputs), [[10], [3]])
+
+        b.input_ports[0].parameters.default_input.set(pnl.DEFAULT_VARIABLE, override=True)
+        np.testing.assert_array_equal(comp.run(inputs), [[2], [3]])
+
+        b.input_ports[0].defaults.variable = [4]
+        np.testing.assert_array_equal(comp.run(inputs), [[4], [3]])
+
+        b.input_ports[1].defaults.variable = [5]
+        np.testing.assert_array_equal(comp.run(inputs), [[4], [5]])
+
+        b.input_ports[0].parameters.default_input.set(None, override=True)
+        np.testing.assert_array_equal(comp.run(inputs), [[10], [5]])
+
+        b.input_ports[1].parameters.default_input.set(None, override=True)
+        with pytest.raises(
+            pnl.FunctionError, match="may be due to missing afferent projection"
+        ):
+            with pytest.warns(
+                UserWarning, match="'ProcessingMechanism-1' doesn't have any afferent Projections"
+            ):
+                comp.run(inputs)

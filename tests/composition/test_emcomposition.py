@@ -261,7 +261,7 @@ class TestExecution:
         # NOTE: None => use default value (i.e., don't specify in constructor, rather than forcing None as value of arg)
         # ---------------------------------------- SPECS -----------------------------------  ----- EXPECTED ---------
         #   memory_template         mem    mem  mem  fld   concat  nlz  sm   str    inputs        expected_retrieval
-        #                           fill   cap decay wts    keys       gain  prob
+        #                           fill   cap decay wts    keys   mem gain  prob
         # ----------------------------------------------------------------------------------  ------------------------
         (0, [[[1,2,3],[4,6]],
              [[1,2,5],[4,8]],
@@ -269,26 +269,26 @@ class TestExecution:
                                                                                                  [4., 6.16540637]]),
         (1, [[[1,2,3],[4,6]],
              [[1,2,5],[4,8]],
-             [[1,2,10],[4,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
-                                                                                  [[4, 6]]],    [[1., 2., 3.16585899],
+             [[1,2,10],[4,10]]],  None,   3,  0, [1,0],  None, None,  100,  0,   [[1, 2, 3],
+                                                                                  [4, 6]],      [[1., 2., 3.16585899],
                                                                                                  [4., 6.16540637]]),
         (2, [[[1,2,3],[4,6]],
              [[1,2,5],[4,8]],
-             [[1,2,10],[4,10]]],  None,   3,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
-                                                                                  [[4, 8]]],   [[1., 2., 3.16585899],
+             [[1,2,10],[4,10]]],  None,   3,  0, [1,0],  None, None,  100,  0,   [[1, 2, 3],
+                                                                                  [4, 8]],     [[1., 2., 3.16585899],
                                                                                                 [4., 6.16540637]]),
         (3, [[[1,2,3],[4,6]],
              [[1,2,5],[4,8]],
-             [[1,2,10],[4,10]]], (0,.01), 4,  0, [1,0],  None, None,  100,  0, [[[1, 2, 3]],
-                                                                                   [[4, 8]]],   [[0.99998628,
+             [[1,2,10],[4,10]]], (0,.01), 4,  0, [1,0],  None, None,  100,  0, [[1, 2, 3],
+                                                                                   [4, 8]],      [[0.99998628,
                                                                                                    1.99997247,
                                                                                                    3.1658154 ],
                                                                                                   [3.99994492,
                                                                                                    6.16532141]]),
         (4, [[[1,2,3],[4,6]],     # Equal field_weights (but not concatenated)
              [[1,2,5],[4,6]],
-             [[1,2,10],[4,6]]], (0,.01), 4,  0, [1,1],  None, None,  100,  0, [[[1, 2, 3]],
-                                                                                   [[4, 6]]],   [[0.99750462,
+             [[1,2,10],[4,6]]], (0,.01), 4,  0, [1,1],  None, None,  100,  0, [[1, 2, 3],
+                                                                                   [4, 6]],     [[0.99750462,
                                                                                                   1.99499376,
                                                                                                   3.51623568],
                                                                                                  [3.98998465,
@@ -296,62 +296,67 @@ class TestExecution:
          ),
         (5, [[[1,2,3],[4,6]],     # Equal field_weights with concatenation
              [[1,2,5],[4,8]],
-             [[1,2,10],[4,10]]], (0,.01), 4,  0, [1,1],  True, None,  100,  0, [[[1, 2, 4]],
-                                                                                  [[4, 6]]],    [[0.99898504,
+             [[1,2,10],[4,10]]], (0,.01), 4,  0, [1,1],  True, None,  100,  0, [[1, 2, 4],
+                                                                                  [4, 6]],      [[0.99898504,
                                                                                                   1.99796378,
                                                                                                   4.00175037],
                                                                                                  [3.99592639,
                                                                                                   6.97406456]]),
         (6, [[[1,2,3],[4,6]],        # Unequal field_weights
              [[1,2,5],[4,8]],
-             [[1,2,10],[4,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  0, [[[1, 2, 3]],
-                                                                                  [[4, 6]]],    [[0.99996025,
+             [[1,2,10],[4,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  0, [[1, 2, 3],
+                                                                                  [4, 6]],      [[0.99996025,
                                                                                                   1.99992024,
                                                                                                   3.19317783],
                                                                                                  [3.99984044,
                                                                                                   6.19219795]]),
         (7, [[[1,2,3],[4,6]],        # Store + no decay
              [[1,2,5],[4,8]],
-             [[1,2,10],[4,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
-                                                                                  [[4, 6]]],    [[0.99996025,
+             [[1,2,10],[4,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  1, [[1, 2, 3],
+                                                                                  [4, 6]],      [[0.99996025,
                                                                                                   1.99992024,
                                                                                                   3.19317783],
                                                                                                  [3.99984044,
                                                                                                   6.19219795]]),
         (8, [[[1,2,3],[4,6]],        # Store + default decay (should be AUTO)
              [[1,2,5],[4,8]],
-             [[1,2,10],[4,10]]], (0,.01), 4, None, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
-                                                                                    [[4, 6]]], [[0.99996025,
+             [[1,2,10],[4,10]]], (0,.01), 4, None, [9,1],  None, None,  100,  1,[[1, 2, 3],
+                                                                                    [4, 6]],   [[0.99996025,
                                                                                                  1.99992024,
                                                                                                  3.19317783],
                                                                                                  [3.99984044,
                                                                                                   6.19219795]]),
         (9, [[[1,2,3],[4,6]],        # Store + explicit AUTO decay
              [[1,2,5],[4,8]],
-             [[1,2,10],[4,10]]], (0,.01), 4, AUTO, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
-                                                                                  [[4, 6]]],    [[0.99996025,
+             [[1,2,10],[4,10]]], (0,.01), 4, AUTO, [9,1],  None, None,  100,  1, [[1, 2, 3],
+                                                                                  [4, 6]],      [[0.99996025,
                                                                                                   1.99992024,
                                                                                                   3.19317783],
                                                                                                  [3.99984044,
                                                                                                   6.19219795]]),
         (10, [[[1,2,3],[4,6]],        # Store + numerical decay
               [[1,2,5],[4,8]],
-              [[1,2,10],[4,10]]], (0,.01), 4, .1, [9,1],  None, None,  100,  1, [[[1, 2, 3]],
-                                                                                 [[4, 6]]],     [[0.99996025,
+              [[1,2,10],[4,10]]], (0,.01), 4, .1, [9,1],  None, None,  100,  1, [[1, 2, 3],
+                                                                                 [4, 6]],       [[0.99996025,
                                                                                                   1.99992024,
                                                                                                   3.19317783],
                                                                                                  [3.99984044,
                                                                                                   6.19219795]]),
         (11, [[[1,2,3],[4,6]],    # Same as 10, but with equal weights and concatenate keys
               [[1,2,5],[4,8]],
-              [[1,2,10],[4,10]]], (0,.01), 4, .1, [1,1],  True, None,  100,  1, [[[1, 2, 3]],
-                                                                                 [[4, 6]]],     [[0.99922544,
+              [[1,2,10],[4,10]]], (0,.01), 4, .1, [1,1],  True, None,  100,  1, [[1, 2, 3],
+                                                                                 [4, 6]],       [[0.99922544,
                                                                                                   1.99844608,
                                                                                                   3.38989346],
                                                                                                  [3.99689126,
                                                                                                   6.38682264]]),
-#                                                                                                  [3.99984044,
-#                                                                                                   6.19219795]]),
+
+        (12, [[[1],[2],[3]],    # Scalar keys - exact match  (this tests use of L0 for retreieval in MEMORY matrix)
+              [[10],[0],[100]]], (0,.01), 3, 0, [1,1,0], None, None, pnl.ARG_MAX, 1, [[10],[0],[100]],
+                                                                                                   [[10],[0],[100]]),
+
+        (13, [[[1],[2],[3]],    # Scalar keys - close match  (this tests use of L0 for retreieval in MEMORY matrix
+              [[10],[0],[100]]], (0,.01), 3, 0, [1,1,0], None, None, pnl.ARG_MAX, 1, [[2],[3],[4]], [[1],[2],[3]]),
 ]
 
     args_names = "test_num, memory_template, memory_fill, memory_capacity, memory_decay_rate, field_weights, " \
@@ -361,7 +366,8 @@ class TestExecution:
                              ids=[x[0] for x in test_execution_data])
     @pytest.mark.parametrize('enable_learning', [False, True], ids=['no_learning','learning'])
     @pytest.mark.composition
-    @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch])
+    @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch],
+                             ids=['Python','PyTorch'])
     def test_simple_execution_without_learning(self,
                                                exec_mode,
                                                enable_learning,
@@ -404,7 +410,11 @@ class TestExecution:
         if normalize_memories is not None:
             params.update({'normalize_memories': normalize_memories})
         if softmax_gain is not None:
-            params.update({'softmax_gain': softmax_gain})
+            if softmax_gain == pnl.ARG_MAX:
+                params.update({'softmax_choice': softmax_gain})
+                params.update({'softmax_gain': 100})
+            else:
+                params.update({'softmax_gain': softmax_gain})
         if storage_prob is not None:
             params.update({'storage_prob': storage_prob})
         params.update({'softmax_threshold': None})
@@ -435,7 +445,8 @@ class TestExecution:
 
         # Validate storage
         if storage_prob:
-            for actual, expected in zip(em.memory[-1], [[1,2,3],[4,6]]):
+            # for actual, expected in zip(em.memory[-1], [[1,2,3],[4,6]]):
+            for actual, expected in zip(em.memory[-1], list(inputs.values())):
                 np.testing.assert_array_equal(actual, expected)
 
             if memory_decay_rate in {None, AUTO}:
@@ -459,6 +470,58 @@ class TestExecution:
                 memory_fill = memory_fill or 0
                 assert all(elem == memory_fill for elem in em.memory[-1])
 
+    @pytest.mark.parametrize('data',
+                             (([[[5], [0], [10]],      # 1d template
+                                [[0], [5], [10]],
+                                [[0.1], [0.1], [10]],
+                                [[0.1], [0.1], [10]]],
+                               [[5], [5], [10]],       # 1d query
+                               pnl.L0                  # 1d retrieval operation
+                               ),
+                              ([[[5,0], [0,5], [10]],  # 2d template
+                                [[0,5], [5,0], [10]],
+                                [[0.1, 0.1], [0.1, 0.1], [0.1]],
+                                [[0.1, 0.1], [0.1, 0.1], [0.1]]],
+                                [[5,0], [5,0], [10]],   # 2d query
+                               pnl.DOT_PRODUCT)),      # 2d retrieval operation
+                             ids=['1d', '2d'])
+    @pytest.mark.composition
+    @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch])
+    def test_em_field_weights_assignment(self, exec_mode, data):
+        EM_assign_template = data[0]
+        em = pnl.EMComposition(memory_template=EM_assign_template,
+                               memory_capacity=4,
+                               memory_decay_rate= 0,
+                               memory_fill=0.001,
+                               enable_learning = False,
+                               softmax_choice=pnl.ARG_MAX,
+                               field_weights=(.75,.25,0),
+                               field_names=['A','B','C'])
+        # Confirm initial weight assginments (that favor A)
+        assert em.nodes['A [WEIGHT]'].input_port.defaults.variable == [.75]
+        assert em.nodes['B [WEIGHT]'].input_port.defaults.variable == [.25]
+        # Confirm use of L0 for retrieval since keys for A and B are scalars
+        assert em.projections['MEMORY for A [KEY]'].function.operation == data[2]
+        assert em.projections['MEMORY for B [KEY]'].function.operation == data[2]
+        # Change fields weights to favor B
+        em.field_weights = [0,1,0]
+        # Ensure weights got changed
+        assert em.nodes['A [WEIGHT]'].input_port.defaults.variable == [0]
+        assert em.nodes['B [WEIGHT]'].input_port.defaults.variable == [1]
+        # Note:  The input matches both fields A and B;
+        test_input = {em.nodes['A [QUERY]']: [data[1][0]],
+                      em.nodes['B [QUERY]']: [data[1][1]],
+                      em.nodes['C [VALUE]']: [data[1][2]]}
+        result = em.run(test_input, execution_mode=exec_mode)
+        #  If the weights change DIDN'T get used, it should favor field A and return [5,0,10] as the best match
+        #  If weights change DID get used, it should favor field B and return [0,5,10] as the best match
+        for i,j in zip(result, data[0][1]):
+            assert (i == j).all()
+        #  Change weights back and confirm that it now favors A
+        em.field_weights = [1,0,0]
+        result = em.run(test_input, execution_mode=exec_mode)
+        for i,j in zip(result, data[0][0]):
+            assert (i == j).all()
 
     @pytest.mark.composition
     @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch])
