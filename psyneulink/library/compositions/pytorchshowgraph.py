@@ -12,16 +12,17 @@ from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Literal
 
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.compositions import NodeRole
-from psyneulink.core.compositions.showgraph import ShowGraph, SHOW_JUST_LEARNING_PROJECTIONS
+from psyneulink.core.compositions.showgraph import ShowGraph, SHOW_JUST_LEARNING_PROJECTIONS, SHOW_LEARNING
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.projections.projection import Projection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
-from psyneulink.core.globals.keywords import BOLD, NESTED, INSET
+from psyneulink.core.llvm import ExecutionMode
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
+from psyneulink.core.globals.keywords import BOLD, INSET, NESTED, PNL
 
 __all__ = ['SHOW_PYTORCH']
 
@@ -56,6 +57,11 @@ class PytorchShowGraph(ShowGraph):
     @handle_external_context(source=ContextFlags.COMPOSITION)
     def show_graph(self, *args, **kwargs):
         """Override of show_graph to check if show_pytorch==True and if so build pytorch rep of autofiffcomposition"""
+        # if kwargs.pop(SHOW_PNL, None):
+        if SHOW_LEARNING in kwargs and kwargs[SHOW_LEARNING] == PNL:
+            self.composition.infer_backpropagation_learning_pathways(ExecutionMode.Python)
+            kwargs[SHOW_LEARNING] = True
+            return super().show_graph(*args, **kwargs)
         self.show_pytorch = kwargs.pop(SHOW_PYTORCH, self.show_pytorch)
         context = kwargs.get('context')
         if self.show_pytorch:
