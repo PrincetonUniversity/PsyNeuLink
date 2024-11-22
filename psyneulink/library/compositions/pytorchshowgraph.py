@@ -57,7 +57,6 @@ class PytorchShowGraph(ShowGraph):
     @handle_external_context(source=ContextFlags.COMPOSITION)
     def show_graph(self, *args, **kwargs):
         """Override of show_graph to check if show_pytorch==True and if so build pytorch rep of autofiffcomposition"""
-        # if kwargs.pop(SHOW_PNL, None):
         if SHOW_LEARNING in kwargs and kwargs[SHOW_LEARNING] == PNL:
             self.composition.infer_backpropagation_learning_pathways(ExecutionMode.Python)
             kwargs[SHOW_LEARNING] = True
