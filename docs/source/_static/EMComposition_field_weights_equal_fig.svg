@@ -1,104 +1,209 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Generator: Adobe Illustrator 25.3.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
-<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 1194 498" style="enable-background:new 0 0 1194 498;" xml:space="preserve">
-<style type="text/css">
-	.st0{font-family:'Times-Roman';}
-	.st1{font-size:14px;}
-	.st2{fill:none;stroke:#00FF00;stroke-width:3;stroke-miterlimit:10;}
-	.st3{font-family:'ArialMT';}
-	.st4{font-size:12px;}
-	.st5{fill:none;stroke:#000000;stroke-miterlimit:10;}
-	.st6{fill:none;stroke:#FF0000;stroke-width:3;stroke-miterlimit:10;}
-	.st7{fill:none;stroke:#0000FF;stroke-width:3;stroke-miterlimit:10;}
-	.st8{fill:none;stroke:#0000FF;stroke-miterlimit:10;}
-	.st9{fill:#0000FF;}
-</style>
-<text transform="matrix(1 0 0 1 546.9609 451.2002)" class="st0 st1">EM_Composition</text>
-<ellipse class="st2" cx="105.2" cy="418" rx="65.4" ry="18"/>
-<text transform="matrix(1 0 0 1 61.3154 420.7002)"><tspan x="0" y="0" class="st3 st4">V</tspan><tspan x="7.1" y="0" class="st3 st4">ALUE 1 INPUT</tspan></text>
-<ellipse class="st2" cx="244.2" cy="418" rx="56" ry="18"/>
-<text transform="matrix(1 0 0 1 207.6484 420.7002)"><tspan x="0" y="0" class="st3 st4">KE</tspan><tspan x="16" y="0" class="st3 st4">Y</tspan><tspan x="23.8" y="0" class="st3 st4"> 1 INPUT</tspan></text>
-<ellipse class="st5" cx="244.2" cy="346" rx="59.8" ry="18"/>
-<text transform="matrix(1 0 0 1 204.7627 348.7002)"><tspan x="0" y="0" class="st3 st4">M</tspan><tspan x="10" y="0" class="st3 st4">A</tspan><tspan x="17.1" y="0" class="st3 st4">TCH KE</tspan><tspan x="61.1" y="0" class="st3 st4">Y</tspan><tspan x="68.9" y="0" class="st3 st4"> 1</tspan></text>
-<path class="st5" d="M244.2,399.8c0-7.7,0-16.9,0-25.4"/>
-<polygon points="240.7,374.4 244.2,364.4 247.7,374.4 "/>
-<polygon class="st5" points="240.7,374.4 244.2,364.4 247.7,374.4 "/>
-<ellipse class="st2" cx="748.2" cy="418" rx="56" ry="18"/>
-<text transform="matrix(1 0 0 1 711.6484 420.7002)"><tspan x="0" y="0" class="st3 st4">KE</tspan><tspan x="16" y="0" class="st3 st4">Y</tspan><tspan x="23.8" y="0" class="st3 st4"> 0 INPUT</tspan></text>
-<ellipse class="st5" cx="748.2" cy="346" rx="59.8" ry="18"/>
-<text transform="matrix(1 0 0 1 708.7627 348.7002)"><tspan x="0" y="0" class="st3 st4">M</tspan><tspan x="10" y="0" class="st3 st4">A</tspan><tspan x="17.1" y="0" class="st3 st4">TCH KE</tspan><tspan x="61.1" y="0" class="st3 st4">Y</tspan><tspan x="68.9" y="0" class="st3 st4"> 0</tspan></text>
-<path class="st5" d="M748.2,399.8c0-7.7,0-16.9,0-25.4"/>
-<polygon points="744.7,374.4 748.2,364.4 751.7,374.4 "/>
-<polygon class="st5" points="744.7,374.4 748.2,364.4 751.7,374.4 "/>
-<ellipse class="st2" cx="887.2" cy="418" rx="65.4" ry="18"/>
-<text transform="matrix(1 0 0 1 843.3154 420.7002)"><tspan x="0" y="0" class="st3 st4">V</tspan><tspan x="7.1" y="0" class="st3 st4">ALUE 0 INPUT</tspan></text>
-<ellipse class="st5" cx="496.2" cy="130" rx="51.3" ry="18"/>
-<text transform="matrix(1 0 0 1 463.3193 132.7007)"><tspan x="0" y="0" class="st3 st4">RETRIE</tspan><tspan x="44" y="0" class="st3 st4">V</tspan><tspan x="51.1" y="0" class="st3 st4">AL</tspan></text>
-<ellipse class="st6" cx="231.2" cy="58" rx="86" ry="18"/>
-<text transform="matrix(1 0 0 1 170.9766 60.7007)"><tspan x="0" y="0" class="st3 st4">V</tspan><tspan x="7.1" y="0" class="st3 st4">ALUE 1 RETRIEVED</tspan></text>
-<path class="st5" d="M455.4,118.9C412.2,107.2,343.7,88.6,293.7,75"/>
-<polygon points="292.7,78.3 284,72.3 294.5,71.6 "/>
-<polygon class="st5" points="292.7,78.3 284,72.3 294.5,71.6 "/>
-<ellipse class="st6" cx="411.2" cy="58" rx="76.6" ry="18"/>
-<text transform="matrix(1 0 0 1 358.3096 60.7007)"><tspan x="0" y="0" class="st3 st4">KE</tspan><tspan x="16" y="0" class="st3 st4">Y</tspan><tspan x="23.8" y="0" class="st3 st4"> 1 RETRIEVED</tspan></text>
-<path class="st5" d="M476.5,113.3c-11-9.3-24.9-21.1-37.1-31.4"/>
-<polygon points="437.1,84.5 431.7,75.4 441.6,79.2 "/>
-<polygon class="st5" points="437.1,84.5 431.7,75.4 441.6,79.2 "/>
-<ellipse class="st6" cx="582.2" cy="58" rx="76.6" ry="18"/>
-<text transform="matrix(1 0 0 1 529.3096 60.7007)"><tspan x="0" y="0" class="st3 st4">KE</tspan><tspan x="16" y="0" class="st3 st4">Y</tspan><tspan x="23.8" y="0" class="st3 st4"> 0 RETRIEVED</tspan></text>
-<path class="st5" d="M516.2,113.3c11.2-9.3,25.2-21.1,37.5-31.4"/>
-<polygon points="551.6,79.1 561.5,75.4 556.1,84.5 "/>
-<polygon class="st5" points="551.6,79.1 561.5,75.4 556.1,84.5 "/>
-<ellipse class="st6" cx="762.2" cy="58" rx="86" ry="18"/>
-<text transform="matrix(1 0 0 1 701.9766 60.7007)"><tspan x="0" y="0" class="st3 st4">V</tspan><tspan x="7.1" y="0" class="st3 st4">ALUE 0 RETRIEVED</tspan></text>
-<path class="st5" d="M536.9,119c43.4-11.7,112.6-30.5,162.9-44.1"/>
-<polygon points="699.1,71.5 709.6,72.2 700.9,78.2 "/>
-<polygon class="st5" points="699.1,71.5 709.6,72.2 700.9,78.2 "/>
-<ellipse class="st5" cx="748.2" cy="202" rx="52.6" ry="18"/>
-<text transform="matrix(1 0 0 1 714.2119 204.7007)" class="st3 st4">SOFTMAX 0</text>
-<path class="st5" d="M707.7,190.4c-44-12.6-114.4-32.7-161.8-46.2"/>
-<polygon points="544.8,147.5 536.2,141.4 546.8,140.8 "/>
-<polygon class="st5" points="544.8,147.5 536.2,141.4 546.8,140.8 "/>
-<ellipse class="st5" cx="431.2" cy="202" rx="52.6" ry="18"/>
-<text transform="matrix(1 0 0 1 397.2119 204.7007)" class="st3 st4">SOFTMAX 1</text>
-<path class="st5" d="M447,184.6c8.1-8.9,18-20,26.9-29.8"/>
-<polygon points="471.3,152.3 480.6,147.3 476.5,157 "/>
-<polygon class="st5" points="471.3,152.3 480.6,147.3 476.5,157 "/>
-<path class="st5" d="M222.8,329.1c-21.3-18.9-48.2-49.8-29.6-73.1c21.7-27.2,113.4-41.7,176.4-48.6"/>
-<polygon points="369.6,203.9 379.9,206.3 370.3,210.8 "/>
-<polygon class="st5" points="369.6,203.9 379.9,206.3 370.3,210.8 "/>
-<ellipse class="st7" cx="314.2" cy="274" rx="112" ry="18"/>
-<text transform="matrix(1 0 0 1 233.0967 276.7002)"><tspan x="0" y="0" class="st3 st4">SOFTMAX GAIN CONTRO</tspan><tspan x="146" y="0" class="st3 st4">L</tspan><tspan x="152.2" y="0" class="st3 st4"> 1</tspan></text>
-<path class="st5" d="M261.2,328.6c8.5-8.7,18.9-19.5,28.3-29.1"/>
-<polygon points="287.2,296.8 296.7,292 292.2,301.6 "/>
-<polygon class="st5" points="287.2,296.8 296.7,292 292.2,301.6 "/>
-<path class="st8" d="M342.5,256.6c16.4-10.1,37-22.8,54.3-33.4"/>
-<rect x="398.1" y="215.9" transform="matrix(0.8517 -0.5241 0.5241 0.8517 -55.59 243.3804)" class="st9" width="8" height="8"/>
-<rect x="398.1" y="215.9" transform="matrix(0.8517 -0.5241 0.5241 0.8517 -55.59 243.3804)" class="st8" width="8" height="8"/>
-<line class="st8" x1="398.7" y1="222" x2="397" y2="223"/>
-<path class="st5" d="M725.7,329.1c-10.8-9.6-22.7-22.5-28.5-37.1c-5.9-14.9-5.9-21.1,0-36c4.6-11.5,12.9-22,21.5-30.5"/>
-<polygon points="716.5,222.7 726.2,218.4 721.3,227.8 "/>
-<polygon class="st5" points="716.5,222.7 726.2,218.4 721.3,227.8 "/>
-<ellipse class="st7" cx="818.2" cy="274" rx="112" ry="18"/>
-<text transform="matrix(1 0 0 1 737.0967 276.7002)"><tspan x="0" y="0" class="st3 st4">SOFTMAX GAIN CONTRO</tspan><tspan x="146" y="0" class="st3 st4">L</tspan><tspan x="152.2" y="0" class="st3 st4"> 0</tspan></text>
-<path class="st5" d="M765.2,328.6c8.5-8.7,18.9-19.5,28.3-29.1"/>
-<polygon points="791.2,296.8 800.7,292 796.2,301.6 "/>
-<polygon class="st5" points="791.2,296.8 800.7,292 796.2,301.6 "/>
-<path class="st8" d="M800.9,256.2c-8.8-9-19.6-20.1-29.1-29.9"/>
-<rect x="763.6" y="218" transform="matrix(0.717 -0.6971 0.6971 0.717 62.5143 597.9119)" class="st9" width="8" height="8"/>
-<rect x="763.6" y="218" transform="matrix(0.717 -0.6971 0.6971 0.717 62.5143 597.9119)" class="st8" width="8" height="8"/>
-<line class="st8" x1="770.4" y1="224.8" x2="771.8" y2="226.3"/>
-<ellipse class="st7" cx="1051.2" cy="274" rx="103.1" ry="18"/>
-<text transform="matrix(1 0 0 1 977.207 276.7002)"><tspan x="0" y="0" class="st3 st4">RETRIE</tspan><tspan x="44" y="0" class="st3 st4">V</tspan><tspan x="51.1" y="0" class="st3 st4">A</tspan><tspan x="59.1" y="0" class="st3 st4">L</tspan><tspan x="65.4" y="0" class="st3 st4"> WEIGHTING 0</tspan></text>
-<path class="st8" d="M989.9,259.4c-55.2-13.1-135.6-32.2-188.3-44.7"/>
-<rect x="791.7" y="209.3" transform="matrix(0.2312 -0.9729 0.9729 0.2312 404.2424 938.1226)" class="st9" width="8" height="8"/>
-<rect x="791.7" y="209.3" transform="matrix(0.2312 -0.9729 0.9729 0.2312 404.2424 938.1226)" class="st8" width="8" height="8"/>
-<line class="st8" x1="799.6" y1="214.2" x2="801.5" y2="214.7"/>
-<ellipse class="st7" cx="547.2" cy="274" rx="103.1" ry="18"/>
-<text transform="matrix(1 0 0 1 473.207 276.7002)"><tspan x="0" y="0" class="st3 st4">RETRIE</tspan><tspan x="44" y="0" class="st3 st4">V</tspan><tspan x="51.1" y="0" class="st3 st4">A</tspan><tspan x="59.1" y="0" class="st3 st4">L</tspan><tspan x="65.4" y="0" class="st3 st4"> WEIGHTING 1</tspan></text>
-<path class="st8" d="M519.1,256.6c-16.2-10.1-36.7-22.8-53.9-33.4"/>
-<rect x="456.1" y="215.9" transform="matrix(0.5274 -0.8496 0.8496 0.5274 30.6035 494.8237)" class="st9" width="8" height="8"/>
-<rect x="456.1" y="215.9" transform="matrix(0.5274 -0.8496 0.8496 0.5274 30.6035 494.8237)" class="st8" width="8" height="8"/>
-<line class="st8" x1="463.5" y1="222" x2="465.2" y2="223.1"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1274.27 438.9">
+  <defs>
+    <style>
+      .cls-1, .cls-2, .cls-3, .cls-4 {
+        fill: none;
+      }
+
+      .cls-5 {
+        font-family: ArialMT, Arial;
+        font-size: 12.33px;
+      }
+
+      .cls-6 {
+        font-family: TimesNewRomanPSMT, 'Times New Roman';
+        font-size: 14.39px;
+      }
+
+      .cls-7 {
+        fill: #fff;
+      }
+
+      .cls-2 {
+        stroke: lime;
+      }
+
+      .cls-2, .cls-3, .cls-4 {
+        stroke-miterlimit: 10;
+      }
+
+      .cls-2, .cls-4 {
+        stroke-width: 3px;
+      }
+
+      .cls-3 {
+        stroke: #000;
+      }
+
+      .cls-4 {
+        stroke: red;
+      }
+
+      .cls-8 {
+        clip-path: url(#clippath);
+      }
+    </style>
+    <clipPath id="clippath">
+      <rect class="cls-1" width="1274.27" height="438.9"/>
+    </clipPath>
+  </defs>
+  <g class="cls-8">
+    <rect class="cls-7" width="1274.27" height="438.9"/>
+    <text class="cls-6" transform="translate(585.23 426.77)"><tspan x="0" y="0">EM_Composition</tspan></text>
+    <path class="cls-2" d="M1025.23,392.64c0,10.22-21.43,18.5-47.87,18.5s-47.87-8.28-47.87-18.5,21.43-18.5,47.87-18.5,47.87,8.28,47.87,18.5"/>
+    <text class="cls-5" transform="translate(946.52 395.83)"><tspan x="0" y="0">3</tspan></text>
+    <text class="cls-5" transform="translate(956.81 395.83)"><tspan x="0" y="0">[QUERY]</tspan></text>
+    <path class="cls-3" d="M1148.91,318.64c0,10.22-35.39,18.5-79.04,18.5s-79.04-8.28-79.04-18.5,35.39-18.5,79.04-18.5,79.04,8.28,79.04,18.5"/>
+    <text class="cls-5" transform="translate(1013.85 321.83)"><tspan x="0" y="0">3</tspan></text>
+    <text class="cls-5" transform="translate(1024.13 321.83)"><tspan x="0" y="0">[MATCH</tspan></text>
+    <text class="cls-5" transform="translate(1074.8 321.83)"><tspan x="0" y="0">to</tspan></text>
+    <text class="cls-5" transform="translate(1088.5 321.83)"><tspan x="0" y="0">KEYS]</tspan></text>
+    <path class="cls-3" d="M998.35,375.85c12.19-9.74,27.74-22.19,41.23-32.98"/>
+    <polygon points="1037.39 340.01 1047.67 336.4 1041.89 345.63 1037.39 340.01"/>
+    <polygon class="cls-3" points="1037.39 340.01 1047.67 336.4 1041.89 345.63 1037.39 340.01"/>
+    <path class="cls-3" d="M674.05,318.64c0,10.22-16.53,18.5-36.91,18.5s-36.91-8.28-36.91-18.5,16.53-18.5,36.91-18.5,36.91,8.28,36.91,18.5"/>
+    <text class="cls-5" transform="translate(615.55 321.83)"><tspan x="0" y="0">STORE</tspan></text>
+    <path class="cls-3" d="M931.39,386.78c-58.42-8.09-161.99-24.58-248-49.64-2.71-.79-5.48-1.68-8.25-2.63"/>
+    <polygon points="673.62 337.79 665.21 330.87 676.1 331.03 673.62 337.79"/>
+    <polygon class="cls-3" points="673.62 337.79 665.21 330.87 676.1 331.03 673.62 337.79"/>
+    <path class="cls-2" d="M751.82,392.64c0,10.22-21.43,18.5-47.87,18.5s-47.87-8.28-47.87-18.5,21.43-18.5,47.87-18.5,47.87,8.28,47.87,18.5"/>
+    <text class="cls-5" transform="translate(673.11 395.83)"><tspan x="0" y="0">2</tspan></text>
+    <text class="cls-5" transform="translate(683.4 395.83)"><tspan x="0" y="0">[QUERY]</tspan></text>
+    <path class="cls-3" d="M850.82,318.64c0,10.22-35.39,18.5-79.04,18.5s-79.04-8.28-79.04-18.5,35.39-18.5,79.04-18.5,79.04,8.28,79.04,18.5"/>
+    <text class="cls-5" transform="translate(715.77 321.83)"><tspan x="0" y="0">2</tspan></text>
+    <text class="cls-5" transform="translate(726.05 321.83)"><tspan x="0" y="0">[MATCH</tspan></text>
+    <text class="cls-5" transform="translate(776.72 321.83)"><tspan x="0" y="0">to</tspan></text>
+    <text class="cls-5" transform="translate(790.42 321.83)"><tspan x="0" y="0">KEYS]</tspan></text>
+    <path class="cls-3" d="M720.02,375.11c8.35-9.11,18.71-20.41,27.97-30.51"/>
+    <polygon points="745.52 341.97 755.12 336.82 750.82 346.83 745.52 341.97"/>
+    <polygon class="cls-3" points="745.52 341.97 755.12 336.82 750.82 346.83 745.52 341.97"/>
+    <path class="cls-3" d="M688.11,375.11c-8.61-9.54-19.4-21.49-28.83-31.93"/>
+    <polygon points="656.61 345.58 652.39 335.54 661.95 340.76 656.61 345.58"/>
+    <polygon class="cls-3" points="656.61 345.58 652.39 335.54 661.95 340.76 656.61 345.58"/>
+    <path class="cls-2" d="M593.52,392.64c0,10.22-21.43,18.5-47.87,18.5s-47.87-8.28-47.87-18.5,21.43-18.5,47.87-18.5,47.87,8.28,47.87,18.5"/>
+    <text class="cls-5" transform="translate(514.82 395.83)"><tspan x="0" y="0">1</tspan></text>
+    <text class="cls-5" transform="translate(525.1 395.83)"><tspan x="0" y="0">[QUERY]</tspan></text>
+    <path class="cls-3" d="M581.52,318.64c0,10.22-35.39,18.5-79.04,18.5s-79.04-8.28-79.04-18.5,35.39-18.5,79.04-18.5,79.04,8.28,79.04,18.5"/>
+    <text class="cls-5" transform="translate(446.47 321.83)"><tspan x="0" y="0">1</tspan></text>
+    <text class="cls-5" transform="translate(456.75 321.83)"><tspan x="0" y="0">[MATCH</tspan></text>
+    <text class="cls-5" transform="translate(507.42 321.83)"><tspan x="0" y="0">to</tspan></text>
+    <text class="cls-5" transform="translate(521.12 321.83)"><tspan x="0" y="0">KEYS]</tspan></text>
+    <path class="cls-3" d="M534.98,374.35c-4.98-8.54-11.01-18.88-16.53-28.33"/>
+    <polygon points="515.25 347.67 513.18 336.98 521.47 344.04 515.25 347.67"/>
+    <polygon class="cls-3" points="515.25 347.67 513.18 336.98 521.47 344.04 515.25 347.67"/>
+    <path class="cls-3" d="M566.41,375.85c12.75-10.31,29.23-23.65,43.07-34.84"/>
+    <polygon points="607.46 338.02 617.71 334.35 611.98 343.62 607.46 338.02"/>
+    <polygon class="cls-3" points="607.46 338.02 617.71 334.35 611.98 343.62 607.46 338.02"/>
+    <path class="cls-2" d="M386.92,392.64c0,10.22-21.43,18.5-47.87,18.5s-47.87-8.28-47.87-18.5,21.43-18.5,47.87-18.5,47.87,8.28,47.87,18.5"/>
+    <text class="cls-5" transform="translate(308.22 395.83)"><tspan x="0" y="0">0</tspan></text>
+    <text class="cls-5" transform="translate(318.5 395.83)"><tspan x="0" y="0">[QUERY]</tspan></text>
+    <path class="cls-3" d="M283.44,318.64c0,10.22-35.39,18.5-79.04,18.5s-79.04-8.28-79.04-18.5,35.39-18.5,79.04-18.5,79.04,8.28,79.04,18.5"/>
+    <text class="cls-5" transform="translate(148.39 321.83)"><tspan x="0" y="0">0</tspan></text>
+    <text class="cls-5" transform="translate(158.67 321.83)"><tspan x="0" y="0">[MATCH</tspan></text>
+    <text class="cls-5" transform="translate(209.34 321.83)"><tspan x="0" y="0">to</tspan></text>
+    <text class="cls-5" transform="translate(223.04 321.83)"><tspan x="0" y="0">KEYS]</tspan></text>
+    <path class="cls-3" d="M311.15,377.31c-19.19-10.55-44.98-24.72-66.4-36.5"/>
+    <polygon points="242.84 343.87 235.56 335.76 246.3 337.56 242.84 343.87"/>
+    <polygon class="cls-3" points="242.84 343.87 235.56 335.76 246.3 337.56 242.84 343.87"/>
+    <path class="cls-3" d="M383.29,385.16c50.74-9.1,136.14-26.02,207.59-48.02,2.79-.86,5.65-1.82,8.51-2.82"/>
+    <polygon points="598.13 330.95 609.02 330.73 600.64 337.69 598.13 330.95"/>
+    <polygon class="cls-3" points="598.13 330.95 609.02 330.73 600.64 337.69 598.13 330.95"/>
+    <path class="cls-3" d="M295.67,244.63c0,10.22-40.86,18.5-91.26,18.5s-91.26-8.28-91.26-18.5,40.86-18.5,91.26-18.5,91.26,8.28,91.26,18.5"/>
+    <text class="cls-5" transform="translate(138.62 247.82)"><tspan x="0" y="0">0</tspan></text>
+    <text class="cls-5" transform="translate(148.91 247.82)"><tspan x="0" y="0">[WEIGHTED</tspan></text>
+    <text class="cls-5" transform="translate(222.15 247.82)"><tspan x="0" y="0">MATCH]</tspan></text>
+    <path class="cls-3" d="M204.4,299.96v-26.12"/>
+    <polygon points="200.81 273.84 204.4 263.56 208 273.84 200.81 273.84"/>
+    <polygon class="cls-3" points="200.81 273.84 204.4 263.56 208 273.84 200.81 273.84"/>
+    <path class="cls-3" d="M722.66,170.63c0,10.22-38.29,18.5-85.53,18.5s-85.53-8.28-85.53-18.5,38.29-18.5,85.53-18.5,85.53,8.28,85.53,18.5"/>
+    <text class="cls-5" transform="translate(575.98 173.81)"><tspan x="0" y="0">COMBINE</tspan></text>
+    <text class="cls-5" transform="translate(636.92 173.81)"><tspan x="0" y="0">MATCHES</tspan></text>
+    <path class="cls-3" d="M274.41,232.66c78.22-13.38,204.49-34.97,285.52-48.83"/>
+    <polygon points="559.34 180.28 570.08 182.09 560.55 187.37 559.34 180.28"/>
+    <polygon class="cls-3" points="559.34 180.28 570.08 182.09 560.55 187.37 559.34 180.28"/>
+    <path class="cls-3" d="M106.48,318.64c0,10.22-22.89,18.5-51.11,18.5s-51.11-8.28-51.11-18.5,22.88-18.5,51.11-18.5,51.11,8.28,51.11,18.5"/>
+    <text class="cls-5" transform="translate(21.96 321.83)"><tspan x="0" y="0">0</tspan></text>
+    <text class="cls-5" transform="translate(32.24 321.83)"><tspan x="0" y="0">[WEIGHT]</tspan></text>
+    <path class="cls-3" d="M85.53,303.66c21.55-10.7,50.88-25.27,75.02-37.25"/>
+    <polygon points="159.05 263.14 169.85 261.79 162.25 269.58 159.05 263.14"/>
+    <polygon class="cls-3" points="159.05 263.14 169.85 261.79 162.25 269.58 159.05 263.14"/>
+    <path class="cls-3" d="M685.76,96.62c0,10.22-21.77,18.5-48.62,18.5s-48.62-8.28-48.62-18.5,21.77-18.5,48.62-18.5,48.62,8.28,48.62,18.5"/>
+    <text class="cls-5" transform="translate(605.79 99.81)"><tspan x="0" y="0">RETRIEVE</tspan></text>
+    <path class="cls-3" d="M637.14,151.95v-26.12"/>
+    <polygon points="633.54 125.83 637.14 115.55 640.73 125.83 633.54 125.83"/>
+    <polygon class="cls-3" points="633.54 125.83 637.14 115.55 640.73 125.83 633.54 125.83"/>
+    <path class="cls-3" d="M593.75,244.63c0,10.22-40.86,18.5-91.26,18.5s-91.26-8.28-91.26-18.5,40.86-18.5,91.26-18.5,91.26,8.28,91.26,18.5"/>
+    <text class="cls-5" transform="translate(436.7 247.82)"><tspan x="0" y="0">1</tspan></text>
+    <text class="cls-5" transform="translate(446.99 247.82)"><tspan x="0" y="0">[WEIGHTED</tspan></text>
+    <text class="cls-5" transform="translate(520.23 247.82)"><tspan x="0" y="0">MATCH]</tspan></text>
+    <path class="cls-3" d="M534.39,227.09c18.53-10.19,42.07-23.12,61.93-34.04"/>
+    <polygon points="594.71 189.84 605.45 188.04 598.18 196.14 594.71 189.84"/>
+    <polygon class="cls-3" points="594.71 189.84 605.45 188.04 598.18 196.14 594.71 189.84"/>
+    <path class="cls-3" d="M863.05,244.63c0,10.22-40.86,18.5-91.26,18.5s-91.26-8.28-91.26-18.5,40.86-18.5,91.26-18.5,91.26,8.28,91.26,18.5"/>
+    <text class="cls-5" transform="translate(706 247.82)"><tspan x="0" y="0">2</tspan></text>
+    <text class="cls-5" transform="translate(716.29 247.82)"><tspan x="0" y="0">[WEIGHTED</tspan></text>
+    <text class="cls-5" transform="translate(789.53 247.82)"><tspan x="0" y="0">MATCH]</tspan></text>
+    <path class="cls-3" d="M739.87,227.09c-18.53-10.19-42.06-23.12-61.93-34.04"/>
+    <polygon points="676.09 196.14 668.82 188.04 679.56 189.84 676.09 196.14"/>
+    <polygon class="cls-3" points="676.09 196.14 668.82 188.04 679.56 189.84 676.09 196.14"/>
+    <path class="cls-3" d="M1161.13,244.63c0,10.22-40.86,18.5-91.26,18.5s-91.26-8.28-91.26-18.5,40.86-18.5,91.26-18.5,91.26,8.28,91.26,18.5"/>
+    <text class="cls-5" transform="translate(1004.08 247.82)"><tspan x="0" y="0">3</tspan></text>
+    <text class="cls-5" transform="translate(1014.37 247.82)"><tspan x="0" y="0">[WEIGHTED</tspan></text>
+    <text class="cls-5" transform="translate(1087.61 247.82)"><tspan x="0" y="0">MATCH]</tspan></text>
+    <path class="cls-3" d="M999.86,232.66c-78.22-13.38-204.49-34.97-285.53-48.83"/>
+    <polygon points="713.72 187.37 704.19 182.09 714.93 180.28 713.72 187.37"/>
+    <polygon class="cls-3" points="713.72 187.37 704.19 182.09 714.93 180.28 713.72 187.37"/>
+    <path class="cls-3" d="M502.49,299.96v-26.12"/>
+    <polygon points="498.89 273.84 502.49 263.56 506.08 273.84 498.89 273.84"/>
+    <polygon class="cls-3" points="498.89 273.84 502.49 263.56 506.08 273.84 498.89 273.84"/>
+    <path class="cls-3" d="M404.56,318.64c0,10.22-22.89,18.5-51.11,18.5s-51.11-8.28-51.11-18.5,22.88-18.5,51.11-18.5,51.11,8.28,51.11,18.5"/>
+    <text class="cls-5" transform="translate(320.04 321.83)"><tspan x="0" y="0">1</tspan></text>
+    <text class="cls-5" transform="translate(330.32 321.83)"><tspan x="0" y="0">[WEIGHT]</tspan></text>
+    <path class="cls-3" d="M383.61,303.66c21.55-10.7,50.88-25.27,75.02-37.25"/>
+    <polygon points="457.13 263.14 467.93 261.79 460.33 269.58 457.13 263.14"/>
+    <polygon class="cls-3" points="457.13 263.14 467.93 261.79 460.33 269.58 457.13 263.14"/>
+    <path class="cls-3" d="M771.79,299.96v-26.12"/>
+    <polygon points="768.19 273.84 771.79 263.56 775.38 273.84 768.19 273.84"/>
+    <polygon class="cls-3" points="768.19 273.84 771.79 263.56 775.38 273.84 768.19 273.84"/>
+    <path class="cls-3" d="M971.94,318.64c0,10.22-22.89,18.5-51.11,18.5s-51.11-8.28-51.11-18.5,22.88-18.5,51.11-18.5,51.11,8.28,51.11,18.5"/>
+    <text class="cls-5" transform="translate(887.42 321.83)"><tspan x="0" y="0">2</tspan></text>
+    <text class="cls-5" transform="translate(897.71 321.83)"><tspan x="0" y="0">[WEIGHT]</tspan></text>
+    <path class="cls-3" d="M890.67,303.66c-21.55-10.7-50.88-25.27-75.02-37.25"/>
+    <polygon points="813.95 269.58 806.34 261.79 817.15 263.14 813.95 269.58"/>
+    <polygon class="cls-3" points="813.95 269.58 806.34 261.79 817.15 263.14 813.95 269.58"/>
+    <path class="cls-3" d="M1069.87,299.96v-26.12"/>
+    <polygon points="1066.27 273.84 1069.87 263.56 1073.46 273.84 1066.27 273.84"/>
+    <polygon class="cls-3" points="1066.27 273.84 1069.87 263.56 1073.46 273.84 1066.27 273.84"/>
+    <path class="cls-3" d="M1270.02,318.64c0,10.22-22.89,18.5-51.11,18.5s-51.11-8.28-51.11-18.5,22.88-18.5,51.11-18.5,51.11,8.28,51.11,18.5"/>
+    <text class="cls-5" transform="translate(1185.5 321.83)"><tspan x="0" y="0">3</tspan></text>
+    <text class="cls-5" transform="translate(1195.79 321.83)"><tspan x="0" y="0">[WEIGHT]</tspan></text>
+    <path class="cls-3" d="M1188.75,303.66c-21.55-10.7-50.88-25.27-75.02-37.25"/>
+    <polygon points="1112.03 269.58 1104.42 261.79 1115.23 263.14 1112.03 269.58"/>
+    <polygon class="cls-3" points="1112.03 269.58 1104.42 261.79 1115.23 263.14 1112.03 269.58"/>
+    <path class="cls-4" d="M479.44,22.61c0,10.22-28.8,18.5-64.32,18.5s-64.33-8.28-64.33-18.5,28.8-18.5,64.33-18.5,64.32,8.28,64.32,18.5"/>
+    <text class="cls-5" transform="translate(370.92 25.8)"><tspan x="0" y="0">0</tspan></text>
+    <text class="cls-5" transform="translate(381.2 25.8)"><tspan x="0" y="0">[RETRIEVED]</tspan></text>
+    <path class="cls-3" d="M600.47,84.4c-36.3-12.1-92.22-30.74-133.15-44.38"/>
+    <polygon points="466.14 43.41 457.52 36.75 468.41 36.59 466.14 43.41"/>
+    <polygon class="cls-3" points="466.14 43.41 457.52 36.75 468.41 36.59 466.14 43.41"/>
+    <path class="cls-4" d="M627.45,22.61c0,10.22-28.8,18.5-64.32,18.5s-64.33-8.28-64.33-18.5,28.8-18.5,64.33-18.5,64.32,8.28,64.32,18.5"/>
+    <text class="cls-5" transform="translate(518.93 25.8)"><tspan x="0" y="0">1</tspan></text>
+    <text class="cls-5" transform="translate(529.22 25.8)"><tspan x="0" y="0">[RETRIEVED]</tspan></text>
+    <path class="cls-3" d="M619.6,79.08c-9.27-9.27-20.81-20.81-31.04-31.03"/>
+    <polygon points="585.78 50.35 581.06 40.54 590.87 45.26 585.78 50.35"/>
+    <polygon class="cls-3" points="585.78 50.35 581.06 40.54 590.87 45.26 585.78 50.35"/>
+    <path class="cls-4" d="M775.46,22.61c0,10.22-28.8,18.5-64.32,18.5s-64.33-8.28-64.33-18.5,28.8-18.5,64.33-18.5,64.32,8.28,64.32,18.5"/>
+    <text class="cls-5" transform="translate(666.94 25.8)"><tspan x="0" y="0">2</tspan></text>
+    <text class="cls-5" transform="translate(677.23 25.8)"><tspan x="0" y="0">[RETRIEVED]</tspan></text>
+    <path class="cls-3" d="M654.67,79.08c9.26-9.27,20.81-20.81,31.03-31.03"/>
+    <polygon points="683.4 45.26 693.22 40.54 688.49 50.35 683.4 45.26"/>
+    <polygon class="cls-3" points="683.4 45.26 693.22 40.54 688.49 50.35 683.4 45.26"/>
+    <path class="cls-4" d="M923.48,22.61c0,10.22-28.8,18.5-64.32,18.5s-64.33-8.28-64.33-18.5,28.8-18.5,64.33-18.5,64.32,8.28,64.32,18.5"/>
+    <text class="cls-5" transform="translate(814.96 25.8)"><tspan x="0" y="0">3</tspan></text>
+    <text class="cls-5" transform="translate(825.24 25.8)"><tspan x="0" y="0">[RETRIEVED]</tspan></text>
+    <path class="cls-3" d="M673.8,84.4c36.3-12.1,92.22-30.74,133.15-44.38"/>
+    <polygon points="805.85 36.59 816.74 36.75 808.13 43.41 805.85 36.59"/>
+    <polygon class="cls-3" points="805.85 36.59 816.74 36.75 808.13 43.41 805.85 36.59"/>
+  </g>
 </svg>
