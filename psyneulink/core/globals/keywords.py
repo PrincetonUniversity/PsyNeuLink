@@ -118,6 +118,7 @@ __all__ = [
     'PROCESS_EXECUTE', 'PROCESS_INIT', 'PROCESSES', 'PROCESSES_DIM', 'PROCESSING', 'PROCESSING_MECHANISM',
     'PROCESSING_PATHWAY', 'PRODUCT', 'PROGRESS_BAR_CHAR', 'PROJECTION', 'PROJECTION_DIRECTION', 'PROJECTION_PARAMS',
     'PROJECTION_RECEIVER', 'PROJECTION_SENDER', 'PROJECTION_TYPE', 'PROJECTIONS', 'PROJECTION_COMPONENT_CATEGORY',
+    'PNL',
     'QUOTIENT', 'RANDOM', 'RANDOM_CONNECTIVITY_MATRIX', 'RATE', 'RATIO', 'REARRANGE_FUNCTION', 'RECEIVER',
     'RECEIVER_ARG', 'RECURRENT_TRANSFER_MECHANISM', 'REDUCE_FUNCTION', 'REFERENCE_VALUE', 'RESET',
     'RESET_STATEFUL_FUNCTION_WHEN', 'RELU_FUNCTION', 'REST', 'RESULT', 'RESULT', 'ROLES', 'RL_FUNCTION', 'RUN',
@@ -142,7 +143,6 @@ import operator
 from enum import Enum, auto
 
 from psyneulink._typing import Literal
-
 
 #region ----------------------------------------- MATRICES   -----------------------------------------------------------
 
@@ -462,6 +462,7 @@ MPS = 'mps'
 #region ---------------------------------------------    GENERAL    ----------------------------------------------------
 # General
 
+PNL = 'psyneulink'
 
 ON = True
 OFF = False
