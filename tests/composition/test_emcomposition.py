@@ -340,12 +340,8 @@ class TestConstruction:
 
         # Validate targets for target_fields
         np.testing.assert_allclose(em.target_fields, [True, False, False, True, True])
-        # learning_components = em.infer_backpropagation_learning_pathways(pnl.ExecutionMode.Python)
         learning_components = em.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
-        # FIX:  FOLLOWING LINE SHOULDN'T BE NEEDED
-        learning_components = [node for node in em.nodes if 'TARGET' in node.name]
         assert len(learning_components) == 3
-
         assert 'TARGET for KEY A [RETRIEVED]' in learning_components[0].name
         assert 'TARGET for KEY VALUE [RETRIEVED]' in learning_components[1].name
         assert 'TARGET for VALUE LEARN [RETRIEVED]' in learning_components[2].name
