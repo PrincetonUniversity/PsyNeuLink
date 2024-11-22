@@ -3369,7 +3369,7 @@ class NodeRole(enum.Enum):
     BIAS
         A `Node <Composition_Nodes>` for which one or more of its `InputPorts <InputPort>` is assigned
         *DEFAULT_VARIABLE* as its `default_input <InputPort.default_input>` (which provides it a prespecified
-        input that is constant across executions).  Such a node can also be assigned as an `INPUT` and/or `ORIGIN`,
+        input that is constant across executions). Such a node can also be assigned as an `INPUT` and/or `ORIGIN`,
         if it receives input from outside the Composition and/or does not receive any `Projections <Projection>` from
         other Nodes within the Composition, respectively.  This role cannot be modified programmatically.
 
