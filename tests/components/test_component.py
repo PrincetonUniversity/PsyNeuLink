@@ -130,6 +130,13 @@ class TestComponent:
 
 class TestConstructorArguments:
     class NewTestMech(pnl.Mechanism_Base):
+        deprecated_constructor_args = {
+            **pnl.Mechanism_Base.deprecated_constructor_args,
+            **{
+                'deprecated_param': 'new_param',
+            }
+        }
+
         class Parameters(pnl.Mechanism_Base.Parameters):
             cca_param = pnl.Parameter('A', constructor_argument='cca_constr')
             param_with_alias = pnl.Parameter(None, constructor_argument='pwa_constr_arg', aliases=['pwa_alias'])
@@ -225,6 +232,25 @@ class TestConstructorArguments:
 
         constr_arg = getattr(cls_.parameters, argument_name).constructor_argument
         assert f"'{argument_name}': must use '{constr_arg}' instead" in str(err.value)
+
+    @pytest.mark.parametrize(
+        'cls_, argument_name, new_name',
+        [
+            (NewTestMech, 'deprecated_param', 'new_param'),
+            (NewTestMech, 'size', 'input_shapes'),
+            (pnl.TransferMechanism, 'size', 'input_shapes'),
+        ]
+    )
+    @pytest.mark.parametrize('params_dict_entry', [NotImplemented, 'params'])
+    def test_invalid_argument_deprecated(self, cls_, argument_name, new_name, params_dict_entry):
+        with pytest.raises(
+            pnl.ComponentError,
+            match=(
+                rf".*Illegal argument in constructor \(type: {cls_.__name__}\):"
+                f"\n\t'{argument_name}' is deprecated. Use '{new_name}' instead"
+            )
+        ):
+            cls_(**nest_dictionary({argument_name: new_name}, params_dict_entry))
 
     @pytest.mark.parametrize(
         'cls_, param_name, param_value, alias_name, alias_value',

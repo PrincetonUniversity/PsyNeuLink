@@ -46,16 +46,16 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         # ProjectionWrappers for match nodes
         learning_signals_for_match_nodes = pnl_storage_mech.learning_signals[:num_match_fields]
         pnl_match_projs = [match_node_learning_signal.efferents[0].receiver.owner
-                               for match_node_learning_signal in learning_signals_for_match_nodes]
+                           for match_node_learning_signal in learning_signals_for_match_nodes]
         self.match_projection_wrappers = [self.projections_map[pnl_match_proj]
-                           for pnl_match_proj in pnl_match_projs]
+                                          for pnl_match_proj in pnl_match_projs]
 
         # ProjectionWrappers for retrieve nodes
         learning_signals_for_retrieve_nodes = pnl_storage_mech.learning_signals[num_match_fields:]
         pnl_retrieve_projs = [retrieve_node_learning_signal.efferents[0].receiver.owner
-                               for retrieve_node_learning_signal in learning_signals_for_retrieve_nodes]
+                              for retrieve_node_learning_signal in learning_signals_for_retrieve_nodes]
         self.retrieve_projection_wrappers = [self.projections_map[pnl_retrieve_proj]
-                           for pnl_retrieve_proj in pnl_retrieve_projs]
+                                             for pnl_retrieve_proj in pnl_retrieve_projs]
 
     def execute_node(self, node, variable, optimization_num, context):
         """Override to handle storage of entry to memory_matrix by EMStorage Function"""
@@ -134,19 +134,26 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         idx_of_weakest_memory = torch.argmin(row_norms)
 
         values = []
-        for i, field_projection in enumerate(self.match_projection_wrappers + self.retrieve_projection_wrappers):
-            if i < num_match_fields:
-                # For match projections, get entry to store from value of sender of Projection matrix
-                #   (this is to accomodate concatenation_node)
-                axis = 0
+        for field_projection in self.match_projection_wrappers + self.retrieve_projection_wrappers:
+            field_idx = self._composition._field_index_map[field_projection._pnl_proj]
+            if field_projection in self.match_projection_wrappers:
+                # For match projections:
+                # - get entry to store from value of sender of Projection matrix (to accommodate concatenation_node)
                 entry_to_store = field_projection.sender.output
+                # - store in row
+                axis = 0
                 if concatenation_node is None:
-                    assert (entry_to_store  == memory_to_store[i]).all(), \
-                        f"PROGRAM ERROR: misalignment between inputs and fields for storing them"
+                    # Double check that the memory passed in is the output of the projection for the correct field
+                    assert (entry_to_store  ==
+                            memory_to_store[field_idx]).all(), \
+                        (f"PROGRAM ERROR: misalignment between memory to be stored (input passed to store_memory) "
+                         f"and value of projection to corresponding field.")
             else:
-                # For retrieve projections, get entry to store from memory_to_store (which has inputs to all fields)
+                # For retrieve projections:
+                # - get entry to store from memory_to_store (which has inputs to all fields)
+                entry_to_store = memory_to_store[field_idx]
+                # - store in column
                 axis = 1
-                entry_to_store = memory_to_store[i - num_match_fields]
             # Get matrix containing memories for the field from the Projection
             field_memory_matrix = field_projection.matrix
 
