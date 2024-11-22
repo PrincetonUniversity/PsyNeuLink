@@ -1060,11 +1060,13 @@ class EMCompositionError(CompositionError):
                      index:int=None,
                      weight:float=None,
                      learn_weight:bool=None,
+                     learning_rate:float=None,
                      target:bool=None):
             self.name = name
             self.index = index
             self.weight = weight
             self.learn_weight = learn_weight
+            self.learning_rate = learning_rate
             self.target = target
             self.input_node = None
             self.match_node = None
