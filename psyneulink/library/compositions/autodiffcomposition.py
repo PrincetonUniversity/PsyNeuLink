@@ -1063,7 +1063,7 @@ class AutodiffComposition(Composition):
             # and therefore requires a wrapper function to properly package inputs.
             return lambda x, y: nn.CrossEntropyLoss()(torch.atleast_2d(x), torch.atleast_2d(y.type(x.type())))
         elif loss_spec == Loss.BINARY_CROSS_ENTROPY:
-                return nn.BCELoss()
+            return nn.BCELoss()
         elif loss_spec == Loss.L1:
             return nn.L1Loss(reduction='sum')
         elif loss_spec == Loss.NLL:
