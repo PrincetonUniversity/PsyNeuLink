@@ -2518,9 +2518,16 @@ class Mechanism_Base(Mechanism):
 
                 # UPDATE VARIABLE and InputPort(s)
                 # Executing or simulating Composition, so get input by updating input_ports
-                if (input is None
-                    and (context.execution_phase is not ContextFlags.IDLE)
-                    and (any((p.path_afferents or p.default_input) for p in self.input_ports))):
+                if (
+                    input is None
+                    and (
+                        (
+                            context.execution_phase is not ContextFlags.IDLE
+                            and any(p.path_afferents for p in self.input_ports)
+                        )
+                        or any(p.default_input is not None for p in self.input_ports)
+                    )
+                ):
                     variable = self._update_input_ports(runtime_port_params[INPUT_PORT_PARAMS], context)
 
                 else:

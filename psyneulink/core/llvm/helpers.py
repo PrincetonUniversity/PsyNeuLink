@@ -377,23 +377,23 @@ def array_from_shape(shape, element_ty):
         array_ty = ir.ArrayType(array_ty, dim)
     return array_ty
 
-def recursive_iterate_arrays(ctx, builder, u, *args):
+@contextmanager
+def recursive_iterate_arrays(ctx, builder, *args, loop_id="recursive_iteration"):
     """Recursively iterates over all elements in scalar arrays of the same shape"""
-    assert isinstance(u.type.pointee, ir.ArrayType), "Can only iterate over arrays!"
-    assert all(len(u.type.pointee) == len(v.type.pointee) for v in args), "Tried to iterate over differing lengths!"
-    with array_ptr_loop(builder, u, "recursive_iteration") as (b, idx):
-        u_ptr = b.gep(u, [ctx.int32_ty(0), idx])
-        arg_ptrs = (b.gep(v, [ctx.int32_ty(0), idx]) for v in args)
-        if is_scalar(u_ptr):
-            yield (u_ptr, *arg_ptrs)
-        else:
-            yield from recursive_iterate_arrays(ctx, b, u_ptr, *arg_ptrs)
 
-# TODO: Remove this function. Can be replaced by `recursive_iterate_arrays`
-def call_elementwise_operation(ctx, builder, x, operation, output_ptr):
-    """Recurse through an array structure and call operation on each scalar element of the structure. Store result in output_ptr"""
-    for (inp_ptr, out_ptr) in recursive_iterate_arrays(ctx, builder, x, output_ptr):
-        builder.store(operation(ctx, builder, builder.load(inp_ptr)), out_ptr)
+    assert len(args) > 0, "Need at least one array to iterate over!"
+    assert all(isinstance(arr.type.pointee, ir.ArrayType) for arr in args), "Can only iterate over arrays!"
+
+    u = args[0]
+    assert all(len(u.type.pointee) == len(v.type.pointee) for v in args), "Tried to iterate over differing lengths!"
+
+    with array_ptr_loop(builder, u, loop_id) as (b, idx):
+        arg_ptrs = tuple(b.gep(arr, [ctx.int32_ty(0), idx]) for arr in args)
+        if is_scalar(arg_ptrs[0]):
+            yield (b, *arg_ptrs)
+        else:
+            with recursive_iterate_arrays(ctx, b, *arg_ptrs) as (b, *nested_args):
+                yield (b, *nested_args)
 
 def printf(ctx, builder, fmt, *args, tags:set):
 
