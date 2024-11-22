@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>InputPort &mdash; PsyNeuLink 0.15.2.0+30.gc0f73e280 documentation</title>
+  <title>InputPort &mdash; PsyNeuLink 0.15.2.0+31.gad1e74396 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.2.0+30
+                  0.15.2.0+31
                 </div>
               
             
@@ -734,7 +734,8 @@ any inputs) and the <a class="reference internal" href="Mechanism.html"><span cl
 is executed and its variable is assigned None. If <em>default_input</em> is assigned <em>DEFAULT_VARIABLE</em>, then the
 <a class="reference internal" href="Parameters.html#parameter-defaults"><span class="std std-ref">default value</span></a> for the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is used as its value.
 This  is useful for assignment to a Mechanism that needs a constant (i.e., fixed value) as the input to its
-<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.</p>
+<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> (such as a <a class="reference internal" href="AutodiffComposition.html#autodiffcomposition-bias-parameters"><span class="std std-ref">bias unit</span></a> in an
+<a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a>).</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>If <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.default_input" title="psyneulink.core.components.ports.inputport.InputPort.default_input"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">default_input</span></code></a> is assigned <em>DEFAULT_VARIABLE</em>, then its <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.internal_only" title="psyneulink.core.components.ports.inputport.InputPort.internal_only"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">internal_only</span></code></a> attribute is automatically assigned True. This is so that if the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>
