@@ -1054,6 +1054,49 @@ class EMCompositionError(CompositionError):
         return repr(self.error_value)
 
 
+    class Field():
+        def __init__(self,
+                     name:str=None,
+                     index:int=None,
+                     weight:float=None,
+                     learn_weight:bool=None,
+                     target:bool=None):
+            self.name = name
+            self.index = index
+            self.weight = weight
+            self.learn_weight = learn_weight
+            self.target = target
+            self.input_node = None
+            self.match_node = None
+            self.weighted_match_node = None
+            self.weight_node = None
+            self.weight_projection = None
+            self.retrieve_node = None
+
+        @property
+        def query(self):
+            return self.input_node.variable
+
+        @property
+        def match(self):
+            return self.match_node.value
+
+        @property
+        def weighted_match(self):
+            return self.weighted_match_node.value
+
+        @property
+        def retrieved_memory(self):
+            return self.retrieve_node.value
+
+        @property
+        def memories(self):
+            return self.retrieve_node.path_afferents[0].matrix
+
+        def retrieval_operation(self):
+            return self.retrieve_node.path_afferents[0].function.operation
+
+
 class EMComposition(AutodiffComposition):
     """
     EMComposition(                      \
