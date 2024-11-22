@@ -996,7 +996,6 @@ class TestExecution:
         np.testing.assert_allclose(result, expected)
 
         # Plot (for during debugging):
-        #
         # TARGETS = [[0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
         #            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
         #            [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
