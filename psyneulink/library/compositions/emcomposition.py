@@ -206,8 +206,9 @@ These arguments are used to specify the shape and number of memory entries.
 *Fields*
 ~~~~~~~~
 
-These arguments are used to specify the names of the fields in a memory entry, which are used as keys and how those are
-weighted for retrieval, and whether those weights are learned.
+These arguments are used to specify the names of the fields in a memory entry, which are used for its keys and values,
+how keys are weighted for retrieval, whether those weights are learned, and which fields are used for computing error
+that is propagated through the EMComposition.
 
 .. _EMComposition_Field_Specification_Dict:
 
@@ -508,7 +509,9 @@ The `memory <EMComposition.memory>` attribute contains a record of the entries i
 is in the form of a 3d array, in which rows (axis 0) are entries, columns (axis 1) are fields, and items (axis 2) are
 the values of an entry in a given field.  The number of fields is determined by the `memory_template
 <EMComposition_Memory_Template>` argument of the EMComposition's constructor, and the number of entries is determined
-by the `memory_capacity <EMComposition_Memory_Capacity>` argument.
+by the `memory_capacity <EMComposition_Memory_Capacity>` argument.  Information about the fields is stored in the
+`fields <EMComposition.fields>` attribute, which is a list of `Field` objects containing information about the nodes
+and values associated with each field.
 
   .. _EMComposition_Memory_Storage:
   .. technical_note::
@@ -923,6 +926,7 @@ Class Reference
 """
 import numpy as np
 import warnings
+from enum import Enum
 
 import psyneulink.core.scheduling.condition as conditions
 
@@ -943,14 +947,17 @@ from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     (ADAPTIVE, ALL, ARG_MAX, ARG_MAX_INDICATOR, AUTO, CONTEXT, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, DOT_PRODUCT,
      EM_COMPOSITION, FULL_CONNECTIVITY_MATRIX, GAIN, IDENTITY_MATRIX, INPUT_SHAPES, L0,
-     MULTIPLICATIVE_PARAM, NAME, PARAMS, PROB_INDICATOR, PRODUCT, PROJECTIONS, RANDOM, VARIABLE)
-from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric_scalar
+     MULTIPLICATIVE_PARAM, NAME, PARAMS, PROB_INDICATOR, PRODUCT, PROJECTIONS, RANDOM, VALUE, VARIABLE)
+from psyneulink.core.globals.utilities import \
+    ContentAddressableList, convert_all_elements_to_np_array, is_numeric_scalar
 from psyneulink.core.globals.registry import name_without_suffix
 from psyneulink.core.llvm import ExecutionMode
 
 
-__all__ = ['EMComposition', 'EMCompositionError', 'FIELD_WEIGHT', 'LEARN_FIELD_WEIGHT',
+__all__ = ['EMComposition', 'EMCompositionError', 'FIELD_WEIGHT', 'KEY', 'LEARN_FIELD_WEIGHT',
            'PROBABILISTIC', 'TARGET_FIELD','WEIGHTED_AVG']
+
+KEY = 'key'
 
 # softmax_choice options:
 STORAGE_PROB = 'storage_prob'
@@ -1054,49 +1061,60 @@ class EMCompositionError(CompositionError):
         return repr(self.error_value)
 
 
-    class Field():
-        def __init__(self,
-                     name:str=None,
-                     index:int=None,
-                     weight:float=None,
-                     learn_weight:bool=None,
-                     learning_rate:float=None,
-                     target:bool=None):
-            self.name = name
-            self.index = index
-            self.weight = weight
-            self.learn_weight = learn_weight
-            self.learning_rate = learning_rate
-            self.target = target
-            self.input_node = None
-            self.match_node = None
-            self.weighted_match_node = None
-            self.weight_node = None
-            self.weight_projection = None
-            self.retrieve_node = None
+class FieldType(Enum):
+    KEY = 0
+    VALUE = 1
 
-        @property
-        def query(self):
-            return self.input_node.variable
 
-        @property
-        def match(self):
-            return self.match_node.value
+class Field():
+    """Object that contains information about a field in an EMComposition's `memory <EMComposition.memory>`.
 
-        @property
-        def weighted_match(self):
-            return self.weighted_match_node.value
+    ."""
+    name = None
+    def __init__(self,
+                 name:str=None,
+                 index:int=None,
+                 type:FieldType=None,
+                 weight:float=None,
+                 learn_weight:bool=None,
+                 learning_rate:float=None,
+                 target:bool=None):
+        self.name = name
+        self.index = index
+        self.type = type
+        self.weight = weight
+        self.learn_weight = learn_weight
+        self.learning_rate = learning_rate
+        self.target = target
+        self.input_node = None
+        self.match_node = None
+        self.weighted_match_node = None
+        self.weight_node = None
+        self.weight_projection = None
+        self.retrieved_node = None
 
-        @property
-        def retrieved_memory(self):
-            return self.retrieve_node.value
+    @property
+    def query(self):
+        return self.input_node.variable
 
-        @property
-        def memories(self):
-            return self.retrieve_node.path_afferents[0].matrix
+    @property
+    def match(self):
+        return self.match_node.value
 
-        def retrieval_operation(self):
-            return self.retrieve_node.path_afferents[0].function.operation
+    @property
+    def weighted_match(self):
+        return self.weighted_match_node.value
+
+    @property
+    def retrieved_memory(self):
+        return self.retrieve_node.value
+
+    @property
+    def memories(self):
+        return self.retrieve_node.path_afferents[0].matrix
+
+    def retrieval_operation(self):
+        return self.retrieve_node.path_afferents[0].function.operation
 
 
 class EMComposition(AutodiffComposition):
@@ -1243,6 +1261,10 @@ class EMComposition(AutodiffComposition):
            using its `add_to_memory <EMComposition.add_to_memory>` method, or
            COMMENT
            executing its `run <Composition.run>` or learn methods with the entry as the ``inputs`` argument.
+
+    fields : ContentAddressableList[Field]
+        list of `Field` objects, each of which contains information about the nodes and values of a field in the
+        EMComposition's memory (see `Field`).
 
     .. _EMComposition_Parameters:
 
@@ -1651,6 +1673,8 @@ class EMComposition(AutodiffComposition):
         memory_template, memory_capacity = self._parse_memory_template(memory_template,
                                                                        memory_capacity,
                                                                        memory_fill)
+
+        self.fields = ContentAddressableList(component_type=Field)
         (field_names,
          field_weights,
          learn_field_weights,
@@ -2082,6 +2106,18 @@ class EMComposition(AutodiffComposition):
 
         self.learning_rate = learning_rate
 
+        for i, name, weight, learn_weight, target in zip(range(self.num_fields),
+                                                         parsed_field_names,
+                                                         parsed_field_weights,
+                                                         learn_field_weights,
+                                                         target_fields):
+            self.fields.append(Field(name=name,
+                                     index=i,
+                                     type=FieldType.KEY if weight is not None else FieldType.VALUE,
+                                     weight=weight,
+                                     learn_weight=learn_weight,
+                                     target=target))
+
         return (parsed_field_names,
                 parsed_field_weights,
                 learn_field_weights,
@@ -2130,43 +2166,20 @@ class EMComposition(AutodiffComposition):
 
         field_weighting = len([weight for weight in field_weights if weight]) > 1 and not concatenate_queries
 
-        # First, construct Nodes of Composition with their Projections
-        self.query_input_nodes = self._construct_query_input_nodes(field_weights)
-        self.value_input_nodes = self._construct_value_input_nodes(field_weights)
-        self.query_and_value_input_nodes = self.query_input_nodes + self.value_input_nodes
-
-        # Get list of nodes in order specified in self.field_names
-        self.input_nodes = [None] * len(field_weights)
-        for i in range(self.num_keys):
-            self.input_nodes[self.key_indices[i]] = self.query_input_nodes[i]
-        for i in range(self.num_values):
-            self.input_nodes[self.value_indices[i]] = self.value_input_nodes[i]
-        assert all(self.input_nodes), "PROGRAM ERROR: input_nodes not fully populated."
-
-        self.concatenate_queries_node = self._construct_concatenate_queries_node(concatenate_queries)
-        self.match_nodes = self._construct_match_nodes(memory_template, memory_capacity,
-                                                       concatenate_queries,normalize_memories)
-        self.field_weight_nodes = self._construct_field_weight_nodes(field_weights,
-                                                                     concatenate_queries,
-                                                                     use_gating_for_weighting)
-        self.weighted_match_nodes = self._construct_weighted_match_nodes(memory_capacity, field_weights)
-
-        self.combined_matches_node = self._construct_combined_matches_node(memory_capacity,
-                                                                           field_weighting,
-                                                                           use_gating_for_weighting)
-        self.softmax_node = self._construct_softmax_node(memory_capacity,
-                                                         softmax_gain,
-                                                         softmax_threshold,
-                                                         softmax_choice)
-
-        self.softmax_gain_control_node = self._construct_softmax_gain_control_node(softmax_gain)
-
-        self.retrieved_nodes = self._construct_retrieved_nodes(memory_template)
-
+        self._construct_query_input_nodes(field_weights)
+        self._construct_value_input_nodes(field_weights)
+        self._construct_concatenate_queries_node(concatenate_queries)
+        self._construct_match_nodes(memory_template, memory_capacity, concatenate_queries,normalize_memories)
+        self._construct_field_weight_nodes(field_weights, concatenate_queries, use_gating_for_weighting)
+        self._construct_weighted_match_nodes(memory_capacity, field_weights)
+        self._construct_combined_matches_node(memory_capacity, field_weighting, use_gating_for_weighting)
+        self._construct_softmax_node(memory_capacity, softmax_gain, softmax_threshold, softmax_choice)
+        self._construct_softmax_gain_control_node(softmax_gain)
+        self._construct_retrieved_nodes(memory_template)
         if use_storage_node:
-            self.storage_node = self._construct_storage_node(memory_template, field_weights,
-                                                             self.concatenate_queries_node,
-                                                             memory_decay_rate, storage_prob)
+            self._construct_storage_node(memory_template, field_weights,
+                                         self.concatenate_queries_node,
+                                         memory_decay_rate, storage_prob)
 
         # Do some validation and get singleton softmax and match Nodes for concatenated queries
         if self.concatenate_queries:
@@ -2216,7 +2229,7 @@ class EMComposition(AutodiffComposition):
         # LEARNING NOT ENABLED --------------------------------------------------
         # Set up pathways WITHOUT PsyNeuLink learning pathways
         if not self.enable_learning:
-            self.add_nodes(self.query_input_nodes + self.value_input_nodes)
+            self.add_nodes(self.input_nodes)
             if use_storage_node:
                 self.add_node(self.storage_node)
             if self.concatenate_queries_node:
@@ -2274,7 +2287,7 @@ class EMComposition(AutodiffComposition):
             if use_storage_node:
                 self.add_node(self.storage_node)
 
-    def _construct_query_input_nodes(self, field_weights)->list:
+    def _construct_query_input_nodes(self, field_weights):
         """Create one node for each key to be used as cue for retrieval (and then stored) in memory.
         Used to assign new set of weights for Projection for query_input_node[i] -> match_node[i]
         where i is selected randomly without replacement from (0->memory_capacity)
@@ -2289,9 +2302,11 @@ class EMComposition(AutodiffComposition):
                                              name=f'{self.key_names[i]} [QUERY]')
                        for i in range(self.num_keys)]
 
-        return query_input_nodes
+        for i, query_input_node in enumerate(query_input_nodes):
+            self.fields[self.key_indices[i]].input_node = query_input_node
+            self.fields.type = FieldType.KEY
 
-    def _construct_value_input_nodes(self, field_weights)->list:
+    def _construct_value_input_nodes(self, field_weights):
         """Create one input node for each value to be stored in memory.
         Used to assign new set of weights for Projection for combined_matches_node -> retrieved_node[i]
         where i is selected randomly without replacement from (0->memory_capacity)
@@ -2306,17 +2321,18 @@ class EMComposition(AutodiffComposition):
                                                name= f'{self.value_names[i]} [VALUE]')
                            for i in range(self.num_values)]
 
-        return value_input_nodes
+        for i, value_input_node in enumerate(value_input_nodes):
+            self.fields[self.value_indices[i]].input_node = value_input_node
+            self.fields.type = FieldType.VALUE
 
-    def _construct_concatenate_queries_node(self, concatenate_queries)->ProcessingMechanism:
+    def _construct_concatenate_queries_node(self, concatenate_queries):
         """Create node that concatenates the inputs for all keys into a single vector
         Used to create a matrix for Projectoin from match / memory weights from concatenate_node -> match_node
         """
-        # One node that concatenates inputs from all keys
-        if not concatenate_queries:
-            return None
-        else:
-            return ProcessingMechanism(function=Concatenate,
+        node = None
+        if concatenate_queries:
+            # One node that concatenates inputs from all keys
+            node = ProcessingMechanism(function=Concatenate,
                                        input_ports=[{NAME: 'CONCATENATE',
                                                      INPUT_SHAPES: len(self.query_input_nodes[i].output_port.value),
                                                      PROJECTIONS: MappingProjection(
@@ -2325,8 +2341,9 @@ class EMComposition(AutodiffComposition):
                                                          matrix=IDENTITY_MATRIX)}
                                                     for i in range(self.num_keys)],
                                        name=CONCATENATE_QUERIES_NAME)
+        self.concatenate_queries_node = node
 
-    def _construct_match_nodes(self, memory_template, memory_capacity, concatenate_queries, normalize_memories)->list:
+    def _construct_match_nodes(self, memory_template, memory_capacity, concatenate_queries, normalize_memories):
         """Create nodes that, for each key field, compute the similarity between the input and each item in memory.
         - If self.concatenate_queries is True, then all inputs for keys from concatenated_keys_node are
             assigned a single match_node, and weights from memory_template are assigned to a Projection
@@ -2361,7 +2378,6 @@ class EMComposition(AutodiffComposition):
                                                                     normalize=args[0][NORMALIZE]),
                                                                 name=f'MEMORY')},
                     name='MATCH')]
-            match_nodes[0]._field_idx = 0
 
         # One node for each key
         else:
@@ -2378,14 +2394,12 @@ class EMComposition(AutodiffComposition):
                     name=self.key_names[i] + MATCH_TO_KEYS_AFFIX)
                 for i in range(self.num_keys)
             ]
-
-        return match_nodes
+            for i, match_node in enumerate(match_nodes):
+                self.fields[self.key_indices[i]].match_node = match_node
 
     # FIX: CONVERT TO _construct_weight_control_nodes
-    def _construct_field_weight_nodes(self, field_weights, concatenate_queries, use_gating_for_weighting)->list:
+    def _construct_field_weight_nodes(self, field_weights, concatenate_queries, use_gating_for_weighting):
         """Create ProcessingMechanisms that weight each key's softmax contribution to the retrieved values."""
-
-        field_weight_nodes = []
 
         if not concatenate_queries and self.num_keys > 1:
             if use_gating_for_weighting:
@@ -2406,9 +2420,11 @@ class EMComposition(AutodiffComposition):
                                                           name= WEIGHT if self.num_keys == 1
                                                           else f'{self.key_names[i]}{WEIGHT_AFFIX}')
                                       for i in range(self.num_keys)]
-        return field_weight_nodes
 
-    def _construct_weighted_match_nodes(self, memory_capacity, field_weights)->list:
+            for i, field_weight_node in enumerate(field_weight_nodes):
+                self.fields[self.key_indices[i]].weight_node = field_weight_node
+
+    def _construct_weighted_match_nodes(self, memory_capacity, field_weights):
         """Create nodes that weight the output of the match node for each key."""
 
         weighted_match_nodes = \
@@ -2429,24 +2445,24 @@ class EMComposition(AutodiffComposition):
              for i, match_fw_pair in enumerate(zip(self.match_nodes,
                                                    self.field_weight_nodes))]
 
-        return weighted_match_nodes
+        for i, weighted_match_node in enumerate(weighted_match_nodes):
+            self.fields[self.key_indices[i]].weighted_match_node = weighted_match_node
 
-    def _construct_softmax_gain_control_node(self, softmax_gain)->Optional[ControlMechanism]:
+    def _construct_softmax_gain_control_node(self, softmax_gain):
         """Create nodes that set the softmax gain (inverse temperature) for each softmax_node."""
-
+        node = None
         if softmax_gain == CONTROL:
-            return ControlMechanism(monitor_for_control=self.combined_matches_node,
+            node = ControlMechanism(monitor_for_control=self.combined_matches_node,
                                     control_signals=[(GAIN, self.softmax_node)],
                                     function=get_softmax_gain,
                                     name='SOFTMAX GAIN CONTROL')
-        else:
-            return None
+        self.softmax_gain_control_node = node
 
     def _construct_combined_matches_node(self,
                                          memory_capacity,
                                          field_weighting,
                                          use_gating_for_weighting
-                                         )->ProcessingMechanism:
+                                         ):
         """Create node that combines weighted matches for all keys into one match vector."""
 
         if self.num_keys == 1 or self.concatenate_queries_node:
@@ -2471,9 +2487,9 @@ class EMComposition(AutodiffComposition):
             'PROGRAM ERROR: number of items in combined_matches_node ' \
             f'({len(combined_matches_node.output_port)}) does not match memory_capacity ({self.memory_capacity})'
 
-        return combined_matches_node
+        self.combined_matches_node = combined_matches_node
 
-    def _construct_softmax_node(self, memory_capacity, softmax_gain, softmax_threshold, softmax_choice)->list:
+    def _construct_softmax_node(self, memory_capacity, softmax_gain, softmax_threshold, softmax_choice):
         """Create node that applies softmax to output of combined_matches_node."""
 
         if self.num_keys == 1 or self.concatenate_queries_node:
@@ -2491,18 +2507,16 @@ class EMComposition(AutodiffComposition):
             # ARG_MAX_INDICATOR returns the entry unmodified
             softmax_choice = ARG_MAX_INDICATOR
 
-        softmax_node = ProcessingMechanism(input_ports={INPUT_SHAPES: memory_capacity,
-                                                        PROJECTIONS: MappingProjection(
-                                                            sender=input_source,
-                                                            matrix=IDENTITY_MATRIX,
-                                                            name=proj_name)},
-                                           function=SoftMax(gain=softmax_gain,
-                                                            mask_threshold=softmax_threshold,
-                                                            output=softmax_choice,
-                                                            adapt_entropy_weighting=.95),
-                                           name=SOFTMAX_NODE_NAME)
-
-        return softmax_node
+        self.softmax_node = ProcessingMechanism(input_ports={INPUT_SHAPES: memory_capacity,
+                                                             PROJECTIONS: MappingProjection(
+                                                                 sender=input_source,
+                                                                 matrix=IDENTITY_MATRIX,
+                                                                 name=proj_name)},
+                                                function=SoftMax(gain=softmax_gain,
+                                                                 mask_threshold=softmax_threshold,
+                                                                 output=softmax_choice,
+                                                                 adapt_entropy_weighting=.95),
+                                                name=SOFTMAX_NODE_NAME)
 
     def _validate_options_with_learning(self,
                                         learn_field_weights,
@@ -2523,9 +2537,9 @@ class EMComposition(AutodiffComposition):
     def _construct_retrieved_nodes(self, memory_template)->list:
         """Create nodes that report the value field(s) for the item(s) matched in memory.
         """
-        self.retrieved_key_nodes = \
+        retrieved_key_nodes = \
             [ProcessingMechanism(input_ports={INPUT_SHAPES: len(self.query_input_nodes[i].variable[0]),
-                                            PROJECTIONS:
+                                              PROJECTIONS:
                                                 MappingProjection(
                                                     sender=self.softmax_node,
                                                     matrix=memory_template[:,i],
@@ -2534,7 +2548,7 @@ class EMComposition(AutodiffComposition):
                                name= self.key_names[i] + RETRIEVED_AFFIX)
              for i in range(self.num_keys)]
 
-        self.retrieved_value_nodes = \
+        retrieved_value_nodes = \
             [ProcessingMechanism(input_ports={INPUT_SHAPES: len(self.value_input_nodes[i].variable[0]),
                                             PROJECTIONS:
                                                 MappingProjection(
@@ -2545,20 +2559,29 @@ class EMComposition(AutodiffComposition):
                                name= self.value_names[i] + RETRIEVED_AFFIX)
              for i in range(self.num_values)]
 
-        retrieved_nodes = self.retrieved_key_nodes + self.retrieved_value_nodes
+        # FIX: CONSOLIDATE ONCE MEMORY HAS BEEN REALGINED
+        for i, retrieved_key_node in enumerate(retrieved_key_nodes):
+            self.fields[self.key_indices[i]].retrieved_node = retrieved_key_node
 
-        # Return nodes in order sorted by self.field_names
-        # (use name_without_suffix as reference in case more than one EMComposition is created,
-        #  in which case retrieved_nodes will have "-<int>" appended to their name)
-        return [node for name in self.field_names for node in retrieved_nodes
-                if node in retrieved_nodes if (name + RETRIEVED_AFFIX) == name_without_suffix(node.name)]
+        for i, retrieved_key_node in enumerate(retrieved_value_nodes):
+            self.fields[self.value_indices[i]].retrieved_node = retrieved_key_node
+
+        # MODIFIED 11/23/24 OLD:
+        # retrieved_nodes = retrieved_key_nodes + retrieved_value_nodes
+        #
+        # # Return nodes in order sorted by self.field_names
+        # # (use name_without_suffix as reference in case more than one EMComposition is created,
+        # #  in which case retrieved_nodes will have "-<int>" appended to their name)
+        # return [node for name in self.field_names for node in retrieved_nodes
+        #         if node in retrieved_nodes if (name + RETRIEVED_AFFIX) == name_without_suffix(node.name)]
+        # MODIFIED 11/23/24 END
 
     def _construct_storage_node(self,
                                 memory_template,
                                 field_weights,
                                 concatenate_queries_node,
                                 memory_decay_rate,
-                                storage_prob)->list:
+                                storage_prob):
         """Create EMStorageMechanism that stores the key and value inputs in memory.
         Memories are stored by adding the current input to each field to the corresponding row of the matrix for
         the Projection from the query_input_node (or concatenate_node) to the matching_node and retrieved_node for keys,
@@ -2592,18 +2615,16 @@ class EMComposition(AutodiffComposition):
                            [retrieved_node.input_port.path_afferents[0]
                             for retrieved_node in self.retrieved_nodes]
 
-        storage_node = EMStorageMechanism(default_variable=[self.input_nodes[i].value[0]
-                                                            for i in range(self.num_fields)],
-                                          fields=[self.input_nodes[i] for i in range(self.num_fields)],
-                                          field_types=[0 if weight is None else 1 for weight in field_weights],
-                                          concatenation_node=concatenate_queries_node,
-                                          memory_matrix=memory_template,
-                                          learning_signals=learning_signals,
-                                          storage_prob=storage_prob,
-                                          decay_rate = memory_decay_rate,
-                                          name=STORE_NODE_NAME)
-
-        return storage_node
+        self.storage_node = EMStorageMechanism(default_variable=[self.input_nodes[i].value[0]
+                                                                 for i in range(self.num_fields)],
+                                               fields=[self.input_nodes[i] for i in range(self.num_fields)],
+                                               field_types=[0 if weight is None else 1 for weight in field_weights],
+                                               concatenation_node=concatenate_queries_node,
+                                               memory_matrix=memory_template,
+                                               learning_signals=learning_signals,
+                                               storage_prob=storage_prob,
+                                               decay_rate = memory_decay_rate,
+                                               name=STORE_NODE_NAME)
 
     def _set_learning_attributes(self):
         """Set learning-related attributes for Node and Projections
@@ -2786,5 +2807,39 @@ class EMComposition(AutodiffComposition):
     def do_gradient_optimization(self, retain_in_pnl_options, context, optimization_num=None):
         # 7/10/24 - MAKE THIS CONTEXT DEPENDENT:  CALL super() IF BEING EXECUTED ON ITS OWN?
         pass
+
+    #endregion
+
+    # *****************************************************************************************************************
+    # ***************************************** Properties  **********************************************************
+    # *****************************************************************************************************************
+    # region
+    @property
+    def input_nodes(self):
+        return [field.input_node for field in self.fields]
+
+    @property
+    def query_input_nodes(self):
+        return [field.input_node for field in self.fields if field.type == FieldType.KEY]
+
+    @property
+    def value_input_nodes(self):
+        return [field.input_node for field in self.fields if field.type == FieldType.VALUE]
+
+    @property
+    def match_nodes(self):
+        return [field.match_node for field in self.fields if field.type == FieldType.KEY]
+
+    @property
+    def field_weight_nodes(self):
+        return [field.weight_node for field in self.fields if field.type == FieldType.KEY]
+
+    @property
+    def weighted_match_nodes(self):
+        return [field.weighted_match_node for field in self.fields if field.type == FieldType.KEY]
+
+    @property
+    def retrieved_nodes(self):
+        return [field.retrieved_node for field in self.fields]
 
     #endregion
