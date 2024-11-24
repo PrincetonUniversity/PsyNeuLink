@@ -1093,7 +1093,7 @@ class Field():
         self.retrieved_node = None
         # Projections for all fields:
         self.storage_projection = None       # Projection from input_node to storage_node
-        self.retrieval_projection = None     # Projection from softmax_node to retrieved_node
+        self.retrieve_projection = None     # Projection from softmax_node to retrieved_node
         # Projections for key fields:
         self.memory_projection = None        # Projection from query_input_node to match_node
         self.concatenation_projection = None # Projection from query_input_node to concatenate_queries_node
@@ -1119,7 +1119,7 @@ class Field():
                                   self.match_projection,
                                   self.weight_projection,
                                   self.weight_match_projection,
-                                  self.retrieval_projection]
+                                  self.retrieve_projection]
                                   if proj is not None]
     @property
     def query(self):
@@ -2571,44 +2571,55 @@ class EMComposition(AutodiffComposition):
     def _construct_retrieved_nodes(self, memory_template)->list:
         """Create nodes that report the value field(s) for the item(s) matched in memory.
         """
-        retrieved_key_nodes = \
-            [ProcessingMechanism(input_ports={INPUT_SHAPES: len(self.query_input_nodes[i].variable[0]),
-                                              PROJECTIONS:
-                                                MappingProjection(
-                                                    sender=self.softmax_node,
-                                                    matrix=memory_template[:,i],
-                                                    name=f'MEMORY FOR {self.key_names[i]} [RETRIEVE KEY]')
-                                            },
-                               name= self.key_names[i] + RETRIEVED_AFFIX)
-             for i in range(self.num_keys)]
-
-        retrieved_value_nodes = \
-            [ProcessingMechanism(input_ports={INPUT_SHAPES: len(self.value_input_nodes[i].variable[0]),
-                                            PROJECTIONS:
-                                                MappingProjection(
-                                                    sender=self.softmax_node,
-                                                    matrix=memory_template[:,
-                                                           i + self.num_keys],
-                                                    name=f'MEMORY FOR {self.value_names[i]} [RETRIEVE VALUE]')},
-                               name= self.value_names[i] + RETRIEVED_AFFIX)
-             for i in range(self.num_values)]
-
-        # FIX: CONSOLIDATE ONCE MEMORY HAS BEEN REALGINED
-        for i, retrieved_key_node in enumerate(retrieved_key_nodes):
-            self.fields[self.key_indices[i]].retrieved_node = retrieved_key_node
-
-        for i, retrieved_key_node in enumerate(retrieved_value_nodes):
-            self.fields[self.value_indices[i]].retrieved_node = retrieved_key_node
-
-        # MODIFIED 11/23/24 OLD:
-        # retrieved_nodes = retrieved_key_nodes + retrieved_value_nodes
+        # # MODIFIED 11/24/24 OLD:
+        # retrieved_key_nodes = \
+        #     [ProcessingMechanism(input_ports={INPUT_SHAPES: len(self.query_input_nodes[i].variable[0]),
+        #                                       PROJECTIONS:
+        #                                         MappingProjection(
+        #                                             sender=self.softmax_node,
+        #                                             matrix=memory_template[:,i],
+        #                                             name=f'MEMORY FOR {self.key_names[i]} [RETRIEVE KEY]')
+        #                                     },
+        #                        name= self.key_names[i] + RETRIEVED_AFFIX)
+        #      for i in range(self.num_keys)]
         #
-        # # Return nodes in order sorted by self.field_names
-        # # (use name_without_suffix as reference in case more than one EMComposition is created,
-        # #  in which case retrieved_nodes will have "-<int>" appended to their name)
-        # return [node for name in self.field_names for node in retrieved_nodes
-        #         if node in retrieved_nodes if (name + RETRIEVED_AFFIX) == name_without_suffix(node.name)]
-        # MODIFIED 11/23/24 END
+        # retrieved_value_nodes = \
+        #     [ProcessingMechanism(input_ports={INPUT_SHAPES: len(self.value_input_nodes[i].variable[0]),
+        #                                     PROJECTIONS:
+        #                                         MappingProjection(
+        #                                             sender=self.softmax_node,
+        #                                             matrix=memory_template[:,
+        #                                                    i + self.num_keys],
+        #                                             name=f'MEMORY FOR {self.value_names[i]} [RETRIEVE VALUE]')},
+        #                        name= self.value_names[i] + RETRIEVED_AFFIX)
+        #      for i in range(self.num_values)]
+        #
+        # for i, retrieved_key_node in enumerate(retrieved_key_nodes):
+        #     self.fields[self.key_indices[i]].retrieved_node = retrieved_key_node
+        #
+        # for i, retrieved_key_node in enumerate(retrieved_value_nodes):
+        #     self.fields[self.value_indices[i]].retrieved_node = retrieved_key_node
+        # MODIFIED 11/24/24 NEW:
+        for field in self.fields:
+            # FIX: 11/24/24 - REFACTOR TO USE memory_template[:,self.index] ONCE MEMORY IS REFACTORED BASED ON FIELDS
+            key_idx = 0
+            value_idx = 0
+            if field.type == FieldType.KEY:
+                matrix = memory_template[:,key_idx]
+                key_idx += 1
+            else:
+                matrix = memory_template[:,self.num_keys + value_idx]
+                key_idx += 1
+
+            field.retrieved_node = (
+                ProcessingMechanism(name=field.name + RETRIEVED_AFFIX,
+                                    input_ports={INPUT_SHAPES: len(field.input_node.variable[0]),
+                                                 PROJECTIONS:
+                                                     MappingProjection(
+                                                         sender=self.softmax_node,
+                                                         matrix=matrix,
+                                                         name=f'MEMORY FOR {field.name} [RETRIEVE KEY]')}))
+            field.retrieve_projection = field.retrieved_node.path_afferents[0]
 
     def _construct_storage_node(self,
                                 use_storage_node,
