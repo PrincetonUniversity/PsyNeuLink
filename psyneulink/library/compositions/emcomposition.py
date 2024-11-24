@@ -2214,44 +2214,6 @@ class EMComposition(AutodiffComposition):
             assert not self.field_weight_nodes, \
                 f"PROGRAM ERROR: There should be no field_weight_nodes for concatenated queries."
 
-        # Create field_index map for nodes and projections
-        # # MODIFIED 11/23/24 OLD:
-        # _field_index_map = {}
-        # for i in range(len(self.input_nodes)):
-        #     _field_index_map[self.input_nodes[i]] = i
-        #     if self._use_storage_node:
-        #         _field_index_map[self.storage_node.path_afferents[i]] = i
-        #     _field_index_map[self.retrieved_nodes[i]] = i
-        #     _field_index_map[self.retrieved_nodes[i].path_afferents[0]] = i
-        # if self.concatenate_queries:
-        #     for proj in self.concatenate_queries_node.path_afferents:
-        #         _field_index_map[proj] = _field_index_map[proj.sender.owner]
-        #     _field_index_map[self.concatenate_queries_node] = None
-        #     _field_index_map[self.match_nodes[0]] = None
-        #     _field_index_map[self.match_nodes[0].path_afferents[0]] = None
-        #     _field_index_map[self.match_nodes[0].efferents[0]] = None
-        # else:
-        #     # Input nodes, Projections to storage_node, retrieval Projections and retrieved_nodes
-        #     for match_node in self.match_nodes:
-        #         field_index = _field_index_map[match_node.path_afferents[0].sender.owner]
-        #         # match_node
-        #         _field_index_map[match_node] = field_index
-        #         # afferent MEMORY Projection
-        #         _field_index_map[match_node.path_afferents[0]] = field_index
-        #         # efferent Projection to weighted_match_node
-        #         _field_index_map[match_node.efferents[0]] = field_index
-        #         # weighted_match_node
-        #         _field_index_map[match_node.efferents[0].receiver.owner] = field_index
-        #         # Projection to combined_matches_node
-        #         _field_index_map[match_node.efferents[0].receiver.owner.efferents[0]] = field_index
-        #     for field_weight_node in self.field_weight_nodes:
-        #         # Weight nodes;
-        #         _field_index_map[field_weight_node] = _field_index_map[field_weight_node.efferents[0].receiver.owner]
-        #         # Weight Projections;
-        #         _field_index_map[field_weight_node.efferents[0]] = _field_index_map[field_weight_node]
-        # self._field_index_map = _field_index_map
-
-        # MODIFIED 11/23/24 NEW:
         # Create _field_index_map by first assigning indices for all Field Nodes and their Projections
         self._field_index_map = {node: field.index for field in self.fields for node in field.nodes}
         self._field_index_map.update({proj: field.index for field in self.fields for proj in field.projections})
@@ -2265,7 +2227,6 @@ class EMComposition(AutodiffComposition):
             self._field_index_map[self.match_nodes[0].path_afferents[0]] = None
             self._field_index_map[self.match_nodes[0].efferents[0]] = None
 
-        # MODIFIED 11/23/24 END
 
         # Construct Pathways --------------------------------------------------------------------------------
         # FIX: REFACTOR TO ITERATE OVER Fields
@@ -2571,35 +2532,6 @@ class EMComposition(AutodiffComposition):
     def _construct_retrieved_nodes(self, memory_template)->list:
         """Create nodes that report the value field(s) for the item(s) matched in memory.
         """
-        # # MODIFIED 11/24/24 OLD:
-        # retrieved_key_nodes = \
-        #     [ProcessingMechanism(input_ports={INPUT_SHAPES: len(self.query_input_nodes[i].variable[0]),
-        #                                       PROJECTIONS:
-        #                                         MappingProjection(
-        #                                             sender=self.softmax_node,
-        #                                             matrix=memory_template[:,i],
-        #                                             name=f'MEMORY FOR {self.key_names[i]} [RETRIEVE KEY]')
-        #                                     },
-        #                        name= self.key_names[i] + RETRIEVED_AFFIX)
-        #      for i in range(self.num_keys)]
-        #
-        # retrieved_value_nodes = \
-        #     [ProcessingMechanism(input_ports={INPUT_SHAPES: len(self.value_input_nodes[i].variable[0]),
-        #                                     PROJECTIONS:
-        #                                         MappingProjection(
-        #                                             sender=self.softmax_node,
-        #                                             matrix=memory_template[:,
-        #                                                    i + self.num_keys],
-        #                                             name=f'MEMORY FOR {self.value_names[i]} [RETRIEVE VALUE]')},
-        #                        name= self.value_names[i] + RETRIEVED_AFFIX)
-        #      for i in range(self.num_values)]
-        #
-        # for i, retrieved_key_node in enumerate(retrieved_key_nodes):
-        #     self.fields[self.key_indices[i]].retrieved_node = retrieved_key_node
-        #
-        # for i, retrieved_key_node in enumerate(retrieved_value_nodes):
-        #     self.fields[self.value_indices[i]].retrieved_node = retrieved_key_node
-        # MODIFIED 11/24/24 NEW:
         for field in self.fields:
             # FIX: 11/24/24 - REFACTOR TO USE memory_template[:,self.index] ONCE MEMORY IS REFACTORED BASED ON FIELDS
             key_idx = 0
