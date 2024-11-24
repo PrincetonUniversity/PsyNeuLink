@@ -2451,8 +2451,6 @@ class EMComposition(AutodiffComposition):
                                          use_gating_for_weighting
                                          ):
         """Create node that combines weighted matches for all keys into one match vector."""
-
-        # FIX: 11/24/24 - REFACTOR TO ITERATE OVER Fields
         if self.num_keys == 1 or self.concatenate_queries_node:
             self.combined_matches_node = None
             return
