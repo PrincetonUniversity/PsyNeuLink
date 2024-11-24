@@ -2077,8 +2077,10 @@ class EMComposition(AutodiffComposition):
                 if parsed_field_weights[i] is None and lfw is not False:
                     warnings.warn(f"Learning was specified for field '{field_names[i]}' in the 'learn_field_weights' "
                                   f"arg for '{name}', but it is not allowed for value fields; it will be ignored.")
-        elif learn_field_weights in {None, False}:
-            learn_field_weights = [False] * len(field_weights)
+        elif learn_field_weights in {None, True, False}:
+            learn_field_weights = [False] * len(parsed_field_weights)
+        else:
+            assert False, f"PROGRAM ERROR: learn_field_weights ({learn_field_weights}) is not a list, tuple or bool."
 
         # Memory structure Parameters
         parsed_field_names = field_names.copy() if field_names is not None else None
@@ -2104,7 +2106,12 @@ class EMComposition(AutodiffComposition):
             self.value_names = [parsed_field_names[i] for i in range(self.num_fields) if i not in self.key_indices]
         else:
             self.key_names = [f'{i}' for i in range(self.num_keys)] if self.num_keys > 1 else ['KEY']
-            self.value_names = [f'{i} [VALUE]' for i in range(self.num_values)] if self.num_values > 1 else ['VALUE']
+            if self.num_values > 1:
+                self.value_names = [f'{i} [VALUE]' for i in range(self.num_values)]
+            elif self.num_values == 1:
+                self.value_names = ['VALUE']
+            else:
+                self.value_names = []
             parsed_field_names = self.key_names + self.value_names
 
         user_specified_concatenate_queries = concatenate_queries or False
@@ -2195,8 +2202,7 @@ class EMComposition(AutodiffComposition):
 
         # Construct Nodes --------------------------------------------------------------------------------
 
-        self._construct_query_input_nodes()
-        self._construct_value_input_nodes()
+        self._construct_input_nodes()
         self._construct_concatenate_queries_node(concatenate_queries)
         self._construct_match_nodes(memory_template, memory_capacity, concatenate_queries,normalize_memories)
         self._construct_field_weight_nodes(concatenate_queries, use_gating_for_weighting)
@@ -2213,6 +2219,7 @@ class EMComposition(AutodiffComposition):
                 f"PROGRAM ERROR: Too many match_nodes ({len(self.match_nodes)}) for concatenated queries."
             assert not self.field_weight_nodes, \
                 f"PROGRAM ERROR: There should be no field_weight_nodes for concatenated queries."
+
 
         # Create _field_index_map by first assigning indices for all Field Nodes and their Projections
         self._field_index_map = {node: field.index for field in self.fields for node in field.nodes}
@@ -2292,39 +2299,25 @@ class EMComposition(AutodiffComposition):
             if use_storage_node:
                 self.add_node(self.storage_node)
 
-    def _construct_query_input_nodes(self):
-        """Create one node for each key to be used as cue for retrieval (and then stored) in memory.
-        Used to assign new set of weights for Projection for query_input_node[i] -> match_node[i]
-        where i is selected randomly without replacement from (0->memory_capacity)
+    def _construct_input_nodes(self):
+        """Create one node for each input to EMComposition and identify as key or value
         """
         assert len(self.key_indices) == self.num_keys, \
             f"PROGRAM ERROR: number of keys ({self.num_keys}) does not match number of " \
             f"non-zero values in field_weights ({len(self.key_indices)})."
-
-        query_input_nodes = [ProcessingMechanism(name=f'{self.key_names[i]} [QUERY]',
-                                                 input_shapes=len(self.entry_template[self.key_indices[i]]))
-                             for i in range(self.num_keys)]
-
-        for i, query_input_node in enumerate(query_input_nodes):
-            self.fields[self.key_indices[i]].input_node = query_input_node
-            self.fields.type = FieldType.KEY
-
-    def _construct_value_input_nodes(self):
-        """Create one input node for each value to be stored in memory.
-        Used to assign new set of weights for Projection for combined_matches_node -> retrieved_node[i]
-        where i is selected randomly without replacement from (0->memory_capacity)
-        """
         assert len(self.value_indices) == self.num_values, \
             f"PROGRAM ERROR: number of values ({self.num_values}) does not match number of " \
-            f"non-zero values in field_weights ({len(self.value_indices)})."
+            f"None's in field_weights ({len(self.value_indices)})."
 
-        value_input_nodes = [ProcessingMechanism(name= f'{self.value_names[i]} [VALUE]',
-                                                 input_shapes=len(self.entry_template[self.value_indices[i]]))
-                             for i in range(self.num_values)]
+        for field in [self.fields[i] for i in self.key_indices]:
+            field.input_node = ProcessingMechanism(name=f'{field.name} [QUERY]',
+                                                   input_shapes=len(self.entry_template[field.index]))
+            field.type = FieldType.KEY
 
-        for i, value_input_node in enumerate(value_input_nodes):
-            self.fields[self.value_indices[i]].input_node = value_input_node
-            self.fields.type = FieldType.VALUE
+        for field in [self.fields[i] for i in self.value_indices]:
+            field.input_node = ProcessingMechanism(name=f'{field.name} [VALUE]',
+                                                   input_shapes=len(self.entry_template[field.index]))
+            field.type = FieldType.VALUE
 
     def _construct_concatenate_queries_node(self, concatenate_queries):
         """Create node that concatenates the inputs for all keys into a single vector
@@ -2462,6 +2455,7 @@ class EMComposition(AutodiffComposition):
 
         # FIX: 11/24/24 - REFACTOR TO ITERATE OVER Fields
         if self.num_keys == 1 or self.concatenate_queries_node:
+            self.combined_matches_node = None
             return
 
         field_weighting = len([weight for weight in self.field_weights if weight]) > 1 and not concatenate_queries
@@ -2532,10 +2526,10 @@ class EMComposition(AutodiffComposition):
     def _construct_retrieved_nodes(self, memory_template)->list:
         """Create nodes that report the value field(s) for the item(s) matched in memory.
         """
+        key_idx = 0
+        value_idx = 0
         for field in self.fields:
             # FIX: 11/24/24 - REFACTOR TO USE memory_template[:,self.index] ONCE MEMORY IS REFACTORED BASED ON FIELDS
-            key_idx = 0
-            value_idx = 0
             if field.type == FieldType.KEY:
                 matrix = memory_template[:,key_idx]
                 key_idx += 1
@@ -2810,11 +2804,13 @@ class EMComposition(AutodiffComposition):
 
     @property
     def field_weight_nodes(self):
-            return [field.weight_node for field in self.fields if field.type == FieldType.KEY]
+            return [field.weight_node for field in self.fields
+                    if field.weight_node and field.type == FieldType.KEY]
 
     @property
     def weighted_match_nodes(self):
-        return [field.weighted_match_node for field in self.fields if field.type == FieldType.KEY]
+        return [field.weighted_match_node for field in self.fields
+                if field.weighted_match_node and (field.type == FieldType.KEY)]
 
     @property
     def retrieved_nodes(self):
