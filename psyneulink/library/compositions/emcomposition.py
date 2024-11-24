@@ -1093,13 +1093,13 @@ class Field():
         self.retrieved_node = None
         # Projections for all fields:
         self.storage_projection = None       # Projection from input_node to storage_node
-        self.retrieve_projection = None     # Projection from softmax_node to retrieved_node
+        self.retrieve_projection = None     # Projection from softmax_node ("RETRIEVE" node) to retrieved_node
         # Projections for key fields:
         self.memory_projection = None        # Projection from query_input_node to match_node
         self.concatenation_projection = None # Projection from query_input_node to concatenate_queries_node
         self.match_projection = None         # Projection from match_node to weighted_match_node
         self.weight_projection = None        # Projection from weight_node to weighted_match_node
-        self.weight_match_projection = None  # Projection from weighted_match_node to combined_matches_node
+        self.weighted_match_projection = None  # Projection from weighted_match_node to combined_matches_node
 
     @property
     def nodes(self):
@@ -1118,7 +1118,7 @@ class Field():
                                   self.storage_projection,
                                   self.match_projection,
                                   self.weight_projection,
-                                  self.weight_match_projection,
+                                  self.weighted_match_projection,
                                   self.retrieve_projection]
                                   if proj is not None]
     @property
@@ -2433,7 +2433,7 @@ class EMComposition(AutodiffComposition):
                                                                             sender=field.weight_node,
                                                                             matrix=FULL_CONNECTIVITY_MATRIX)}],
                                         function=LinearCombination(operation=PRODUCT)))
-                field.weighted_match_projection = field.match_node.efferents[0]
+                field.match_projection = field.match_node.efferents[0]
                 field.weight_projection = field.weight_node.efferents[0]
 
     def _construct_softmax_gain_control_node(self, softmax_gain):
@@ -2474,6 +2474,9 @@ class EMComposition(AutodiffComposition):
                                                                                   f'for {self.key_names[i]} to '
                                                                                   f'{COMBINE_MATCHES_NODE_NAME}')
                                                            for i, s in enumerate(input_source)]}]))
+
+        for i, proj in enumerate(self.combined_matches_node.path_afferents):
+            self.fields[self.key_indices[i]].weighted_match_projection = proj
 
         assert len(self.combined_matches_node.output_port.value) == memory_capacity, \
             'PROGRAM ERROR: number of items in combined_matches_node ' \
@@ -2544,7 +2547,8 @@ class EMComposition(AutodiffComposition):
                                                      MappingProjection(
                                                          sender=self.softmax_node,
                                                          matrix=matrix,
-                                                         name=f'MEMORY FOR {field.name} [RETRIEVE KEY]')}))
+                                                         name=f'MEMORY FOR {field.name} '
+                                                              f'[RETRIEVE {field.type.name}]')}))
             field.retrieve_projection = field.retrieved_node.path_afferents[0]
 
     def _construct_storage_node(self,
@@ -2583,17 +2587,18 @@ class EMComposition(AutodiffComposition):
             learning_signals = [match_node.input_port.path_afferents[0]
                                 for match_node in self.match_nodes] + [retrieved_node.input_port.path_afferents[0]
                                 for retrieved_node in self.retrieved_nodes]
-            self.storage_node = EMStorageMechanism(default_variable=[self.input_nodes[i].value[0]
-                                                                     for i in range(self.num_fields)],
-                                                   fields=[self.input_nodes[i] for i in range(self.num_fields)],
-                                                   field_types=[0 if weight is None else 1
-                                                                for weight in self.field_weights],
-                                                   concatenation_node=self.concatenate_queries_node,
-                                                   memory_matrix=memory_template,
-                                                   learning_signals=learning_signals,
-                                                   storage_prob=storage_prob,
-                                                   decay_rate = memory_decay_rate,
-                                                   name=STORE_NODE_NAME)
+            self.storage_node = (
+                EMStorageMechanism(default_variable=[field.input_node.value[0] for field in self.fields],
+                                   fields=[field.input_node for field in self.fields],
+                                   field_types=[1 if field.type is FieldType.KEY else 0 for field in self.fields],
+                                   concatenation_node=self.concatenate_queries_node,
+                                   memory_matrix=memory_template,
+                                   learning_signals=learning_signals,
+                                   storage_prob=storage_prob,
+                                   decay_rate = memory_decay_rate,
+                                   name=STORE_NODE_NAME))
+            for field in self.fields:
+                field.storage_projection = self.storage_node.path_afferents[field.index]
 
     def _set_learning_attributes(self):
         """Set learning-related attributes for Node and Projections
@@ -2613,7 +2618,6 @@ class EMComposition(AutodiffComposition):
                 learning_rate = True
             elif isinstance(self.learn_field_weights, (bool, int, float)):
                 learning_rate = self.learn_field_weights
-
             # Use individually specified learning_rate
             else:
                 # FIX: THIS NEEDS TO USE field_index_map, BUT THAT DOESN'T SEEM TO HAVE THE WEIGHT PROJECTION YET
