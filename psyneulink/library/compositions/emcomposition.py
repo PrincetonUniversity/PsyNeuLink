@@ -1752,8 +1752,7 @@ class EMComposition(AutodiffComposition):
                          **kwargs
                          )
 
-        self._validate_options_with_learning(learn_field_weights,
-                                             use_gating_for_weighting,
+        self._validate_options_with_learning(use_gating_for_weighting,
                                              enable_learning,
                                              softmax_choice)
 
@@ -2487,9 +2486,6 @@ class EMComposition(AutodiffComposition):
         if self.num_keys == 1 or self.concatenate_queries_node:
             input_source = self.match_nodes[0]
             proj_name =f'{MATCH} to {SOFTMAX_NODE_NAME}'
-        # elif self.concatenate_queries_node:
-        #     input_source = self.concatenate_queries_node
-        #     proj_name =f'{CONCATENATE_QUERIES_NAME} to {SOFTMAX_NODE_NAME}'
         else:
             input_source = self.combined_matches_node
             proj_name =f'{COMBINE_MATCHES_NODE_NAME} to {SOFTMAX_NODE_NAME}'
@@ -2509,22 +2505,6 @@ class EMComposition(AutodiffComposition):
                                                                  mask_threshold=softmax_threshold,
                                                                  output=softmax_choice,
                                                                  adapt_entropy_weighting=.95))
-
-    def _validate_options_with_learning(self,
-                                        learn_field_weights,
-                                        use_gating_for_weighting,
-                                        enable_learning,
-                                        softmax_choice):
-        if use_gating_for_weighting and enable_learning:
-            warnings.warn(f"The 'enable_learning' option for '{self.name}' cannot be used with "
-                          f"'use_gating_for_weighting' set to True; this will generate an error if its "
-                          f"'learn' method is called. Set 'use_gating_for_weighting' to True in order "
-                          f"to enable learning of field weights.")
-
-        if softmax_choice in {ARG_MAX, PROBABILISTIC} and enable_learning:
-            warnings.warn(f"The 'softmax_choice' arg of '{self.name}' is set to '{softmax_choice}' with "
-                          f"'enable_learning' set to True; this will generate an error if its "
-                          f"'learn' method is called. Set 'softmax_choice' to WEIGHTED_AVG before learning.")
 
     def _construct_retrieved_nodes(self, memory_template)->list:
         """Create nodes that report the value field(s) for the item(s) matched in memory.
@@ -2635,6 +2615,22 @@ class EMComposition(AutodiffComposition):
             projection.learnable = True
             if projection.learning_mechanism:
                 projection.learning_mechanism.learning_rate = learning_rate
+
+    def _validate_options_with_learning(self,
+                                        use_gating_for_weighting,
+                                        enable_learning,
+                                        softmax_choice):
+        if use_gating_for_weighting and enable_learning:
+            warnings.warn(f"The 'enable_learning' option for '{self.name}' cannot be used with "
+                          f"'use_gating_for_weighting' set to True; this will generate an error if its "
+                          f"'learn' method is called. Set 'use_gating_for_weighting' to True in order "
+                          f"to enable learning of field weights.")
+
+        if softmax_choice in {ARG_MAX, PROBABILISTIC} and enable_learning:
+            warnings.warn(f"The 'softmax_choice' arg of '{self.name}' is set to '{softmax_choice}' with "
+                          f"'enable_learning' set to True; this will generate an error if its "
+                          f"'learn' method is called. Set 'softmax_choice' to WEIGHTED_AVG before learning.")
+
 
     #endregion
 
