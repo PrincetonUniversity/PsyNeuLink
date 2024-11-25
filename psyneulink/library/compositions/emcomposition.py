@@ -2507,29 +2507,6 @@ class EMComposition(AutodiffComposition):
     def _construct_retrieved_nodes(self, memory_template)->list:
         """Create nodes that report the value field(s) for the item(s) matched in memory.
         """
-        # # MODIFIED 11/25/24 OLD:
-        # key_idx = 0
-        # value_idx = 0
-        # for field in self.fields:
-        #     # FIX: 11/24/24 - REFACTOR TO USE memory_template[:,self.index] ONCE MEMORY IS REFACTORED BASED ON FIELDS
-        #     if field.type == FieldType.KEY:
-        #         matrix = memory_template[:,key_idx]
-        #         key_idx += 1
-        #     else:
-        #         matrix = memory_template[:,self.num_keys + value_idx]
-        #         key_idx += 1
-        #
-        #     field.retrieved_node = (
-        #         ProcessingMechanism(name=field.name + RETRIEVED_AFFIX,
-        #                             input_ports={INPUT_SHAPES: len(field.input_node.variable[0]),
-        #                                          PROJECTIONS:
-        #                                              MappingProjection(
-        #                                                  sender=self.softmax_node,
-        #                                                  matrix=matrix,
-        #                                                  name=f'MEMORY FOR {field.name} '
-        #                                                       f'[RETRIEVE {field.type.name}]')}))
-        #     field.retrieve_projection = field.retrieved_node.path_afferents[0]
-        # MODIFIED 11/25/24 NEW:
         for field in self.fields:
             field.retrieved_node = (
                 ProcessingMechanism(name=field.name + RETRIEVED_AFFIX,
@@ -2541,7 +2518,6 @@ class EMComposition(AutodiffComposition):
                                                          name=f'MEMORY FOR {field.name} '
                                                               f'[RETRIEVE {field.type.name}]')}))
             field.retrieve_projection = field.retrieved_node.path_afferents[0]
-        # MODIFIED 11/25/24 END
 
     def _construct_storage_node(self,
                                 use_storage_node,
