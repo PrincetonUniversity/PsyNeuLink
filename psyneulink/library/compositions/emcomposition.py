@@ -1068,7 +1068,7 @@ class FieldType(Enum):
 
 class Field():
     """Object that contains information about a field in an EMComposition's `memory <EMComposition.memory>`.
-    ."""
+    """
     name = None
     def __init__(self,
                  name:str=None,
@@ -1266,7 +1266,7 @@ class EMComposition(AutodiffComposition):
     .. technical_note::
         use_storage_node : bool : default True
             specifies whether to use a `LearningMechanism` to store entries in `memory <EMComposition.memory>`.
-            If False, a method on EMComposition is used rather than a LearningMechanism.  This is meant for
+            If False, a method on EMComposition is used rather than a LearningMechanism. This is meant for
             debugging, and precludes use of `import_composition <Composition.import_composition>` to integrate
             the EMComposition into another Composition;  to do so, use_storage_node must be True (default).
 
