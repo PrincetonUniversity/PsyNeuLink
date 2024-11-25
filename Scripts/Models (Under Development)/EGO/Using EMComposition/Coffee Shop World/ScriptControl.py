@@ -13,7 +13,7 @@ DISPLAY_MODEL =  (                     # Only one of the following can be uncomm
     #     # 'show_pytorch': True,            # show pytorch graph of model
     #     'show_learning': True,
     #     # 'show_nested_args': {'show_learning': pnl.ALL},
-    #     'show_projections_not_in_composition': True,
+    #     # 'show_projections_not_in_composition': True,
     #     # 'show_nested': {'show_node_structure': True},
     #     # 'exclude_from_gradient_calc_style': 'dashed'# show target mechanisms for learning
     #     # 'show_node_structure': True     # show detailed view of node structures and projections
