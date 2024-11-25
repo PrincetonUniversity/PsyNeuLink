@@ -672,13 +672,14 @@ class EMStorageMechanism(LearningMechanism):
                                               f"in its variable ({len(self.variable)}).")
 
         # Ensure shape of learning_signals matches shapes of matrices for match nodes (i.e., either keys or concatenate)
+        key_indices = [i for i, field_type in enumerate(field_types) if field_type == 1]
         for i, learning_signal in enumerate(learning_signals[:num_match_fields]):
             learning_signal_shape = learning_signal.parameters.matrix._get(context).shape
             if concatenate_queries:
                 memory_matrix_field_shape = np.array([np.concatenate(row, dtype=object).flatten()
                                                       for row in memory_matrix[:,0:num_keys]]).T.shape
             else:
-                memory_matrix_field_shape = np.array(memory_matrix[:,i].tolist()).T.shape
+                memory_matrix_field_shape = np.array(memory_matrix[:,key_indices[i]].tolist()).T.shape
             assert learning_signal_shape == memory_matrix_field_shape, \
                 f"The shape ({learning_signal_shape}) of the matrix for the Projection {learning_signal.name} " \
                 f"used to specify learning signal {i} of {self.name} does not match the shape " \
