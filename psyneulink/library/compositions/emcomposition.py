@@ -1021,7 +1021,7 @@ def field_weights_setter(field_weights, owning_component=None, context=None):
         raise EMCompositionError(f"The number of field_weights ({len(field_weights)}) must match the number of fields "
                                  f"{len(owning_component.field_weights)}")
     if owning_component.normalize_field_weights:
-        denominator = np.sum(np.where(field_weights is not None, field_weights, 0))
+        denominator = np.sum(np.where(field_weights is not None, field_weights, 0)) or 1
         field_weights = [fw / denominator if fw is not None else None for fw in field_weights]
 
     # Assign new fields_weights to default_variable of field_weight_nodes
@@ -1898,10 +1898,16 @@ class EMComposition(AutodiffComposition):
             if all([fw is None for fw in _field_wts]):
                 raise EMCompositionError(f"The entries in 'field_weights' arg for {name} can't all be 'None' "
                                          f"since that will preclude the construction of any keys.")
-            if all([fw in {0, None} for fw in _field_wts]):
-                warnings.warn(f"All of the entries in the 'field_weights' arg for {name} are either None or "
-                              f"set to 0; this will result in no retrievals unless/until the 0(s) is(are) changed "
-                              f"to a positive value.")
+
+            if not any(_field_wts):
+                warnings.warn(f"All of the entries in the 'field_weights' arg for {name} "
+                              f"are either None or set to 0; this will result in no retrievals "
+                              f"unless/until one or more of them are changed to a positive value.")
+
+            elif any([fw == 0 for fw in _field_wts if fw is not None]):
+                warnings.warn(f"Some of the entries in the 'field_weights' arg for {name} "
+                              f"are set to 0; those fields will be ignored during retrieval "
+                              f"unless/until they are changed to a positive value.")
 
         # If field_names has more than one value it must match the first dimension (axis 0) of memory_template:
         if field_names and len(field_names) != num_fields:
@@ -2058,7 +2064,7 @@ class EMComposition(AutodiffComposition):
 
         if normalize_field_weights and not all([fw == 0 for fw in field_weights]): # noqa: E127
             fld_wts_0s_for_Nones = [fw if fw is not None else 0 for fw in field_weights]
-            parsed_field_weights = fld_wts_0s_for_Nones / np.sum(fld_wts_0s_for_Nones)
+            parsed_field_weights = list(np.array(fld_wts_0s_for_Nones) / (np.sum(fld_wts_0s_for_Nones) or 1))
             parsed_field_weights = [pfw if fw is not None else None
                                     for pfw, fw in zip(parsed_field_weights, field_weights)]
         else:
@@ -2380,13 +2386,14 @@ class EMComposition(AutodiffComposition):
         else:
             # Assign each key Field its own match_node and "memory" Projection to it
             for i in range(self.num_keys):
-                field = self.fields[self.key_indices[i]]
-                memory_projection = MappingProjection(name=f'MEMORY for {self.key_names[i]} [KEY]',
-                                                      sender=self.query_input_nodes[i].output_port,
-                                                      matrix = np.array(
-                                                          memory_template[:,i].tolist()).transpose().astype(float),
-                                                      function=MatrixTransform(operation=args[i][OPERATION],
-                                                                               normalize=args[i][NORMALIZE]))
+                key_idx = self.key_indices[i]
+                field = self.fields[key_idx]
+                memory_projection = (
+                    MappingProjection(name=f'MEMORY for {self.key_names[i]} [KEY]',
+                                      sender=self.query_input_nodes[i].output_port,
+                                      matrix = np.array(memory_template[:,key_idx].tolist()).transpose().astype(float),
+                                      function=MatrixTransform(operation=args[key_idx][OPERATION],
+                                                               normalize=args[key_idx][NORMALIZE])))
                 field.match_node = (ProcessingMechanism(name=self.key_names[i] + MATCH_TO_KEYS_AFFIX,
                                                         input_ports= {INPUT_SHAPES:memory_capacity,
                                                                       PROJECTIONS: memory_projection}))
@@ -2506,24 +2513,14 @@ class EMComposition(AutodiffComposition):
     def _construct_retrieved_nodes(self, memory_template)->list:
         """Create nodes that report the value field(s) for the item(s) matched in memory.
         """
-        key_idx = 0
-        value_idx = 0
         for field in self.fields:
-            # FIX: 11/24/24 - REFACTOR TO USE memory_template[:,self.index] ONCE MEMORY IS REFACTORED BASED ON FIELDS
-            if field.type == FieldType.KEY:
-                matrix = memory_template[:,key_idx]
-                key_idx += 1
-            else:
-                matrix = memory_template[:,self.num_keys + value_idx]
-                key_idx += 1
-
             field.retrieved_node = (
                 ProcessingMechanism(name=field.name + RETRIEVED_AFFIX,
                                     input_ports={INPUT_SHAPES: len(field.input_node.variable[0]),
                                                  PROJECTIONS:
                                                      MappingProjection(
                                                          sender=self.softmax_node,
-                                                         matrix=matrix,
+                                                         matrix=memory_template[:,field.index],
                                                          name=f'MEMORY FOR {field.name} '
                                                               f'[RETRIEVE {field.type.name}]')}))
             field.retrieve_projection = field.retrieved_node.path_afferents[0]
