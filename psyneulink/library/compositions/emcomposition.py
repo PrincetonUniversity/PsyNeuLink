@@ -2064,7 +2064,7 @@ class EMComposition(AutodiffComposition):
 
         if normalize_field_weights and not all([fw == 0 for fw in field_weights]): # noqa: E127
             fld_wts_0s_for_Nones = [fw if fw is not None else 0 for fw in field_weights]
-            parsed_field_weights = fld_wts_0s_for_Nones / np.sum(fld_wts_0s_for_Nones)
+            parsed_field_weights = list(np.array(fld_wts_0s_for_Nones) / (np.sum(fld_wts_0s_for_Nones) or 1))
             parsed_field_weights = [pfw if fw is not None else None
                                     for pfw, fw in zip(parsed_field_weights, field_weights)]
         else:

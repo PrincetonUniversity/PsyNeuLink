@@ -434,17 +434,44 @@ class TestConstruction:
         assert em._field_index_map[[k for k in em._field_index_map.keys()
                                     if 'WEIGHT to WEIGHTED MATCH for KEY B' in k.name][0]] == 2
 
-    def test_field_weights_all_None_and_or_0(self):
-        with pytest.raises(EMCompositionError) as error_text:
-            EMComposition(memory_template=(3,1), memory_capacity=1, field_weights=[None, None, None])
-        assert error_text.value.error_value == (f"The entries in 'field_weights' arg for EM_Composition can't all "
-                                                f"be 'None' since that will preclude the construction of any keys.")
+    @pytest.mark.parametrize('field_weight_1', ([None], [0], [1]),  ids=['None', '0', '1'])
+    @pytest.mark.parametrize('field_weight_2', ([None], [0], [1]),  ids=['None', '0', '1'])
+    @pytest.mark.parametrize('field_weight_3', ([None], [0], [1]),  ids=['None', '0', '1'])
+    def test_order_fields_in_memory(self, field_weight_1, field_weight_2, field_weight_3):
+        """Test that order of keys and values doesn't matter"""
 
-        with pytest.warns(UserWarning) as warning:
-            EMComposition(memory_template=(3,1), memory_capacity=1, field_weights=[0, None, 0])
-        warning_msg = (f"All of the entries in the 'field_weights' arg for EM_Composition are either None or set to 0; "
-                       f"this will result in no retrievals unless/until the 0(s) is(are) changed to a positive value.")
-        assert warning_msg in str(warning[0].message)
+        # pytest.skip(<UNECESSARY TESTS>>)
+
+        def construct_em(field_weights):
+            return pnl.EMComposition(memory_template=[[[5,0], [5], [5,0,3]], [[20,0], [20], [20,1,199]]],
+                                     memory_capacity=4,
+                                     field_weights=field_weights)
+
+        field_weights = field_weight_1 + field_weight_2 + field_weight_3
+
+        if all([fw is None for fw in field_weights]):
+            with pytest.raises(EMCompositionError) as error_text:
+                construct_em(field_weights)
+            assert ("The entries in 'field_weights' arg for EM_Composition can't all be 'None' "
+                    "since that will preclude the construction of any keys." in str(error_text.value))
+
+        elif not any(field_weights):
+            with pytest.warns(UserWarning) as warning:
+                construct_em(field_weights)
+            warning_msg = ("All of the entries in the 'field_weights' arg for EM_Composition "
+                           "are either None or set to 0; this will result in no retrievals "
+                           "unless/until one or more of them are changed to a positive value.")
+            assert warning_msg in str(warning[0].message)
+
+        elif any([fw == 0 for fw in field_weights]):
+            with pytest.warns(UserWarning) as warning:
+                construct_em(field_weights)
+            warning_msg = ("Some of the entries in the 'field_weights' arg for EM_Composition are set to 0; those "
+                           "fields will be ignored during retrieval unless/until they are changed to a positive value.")
+            assert warning_msg in str(warning[0].message)
+
+        else:
+            construct_em(field_weights)
 
 
 @pytest.mark.pytorch
@@ -1057,45 +1084,3 @@ class TestExecution:
         # axes[2].set_ylabel('Correct Logit')
         # plt.suptitle(f"Blocked Training")
         # plt.show()
-
-    @pytest.mark.parametrize('field_weight_1', ([None], [0], [1]),  ids=['None', '0', '1'])
-    @pytest.mark.parametrize('field_weight_2', ([None], [0], [1]),  ids=['None', '0', '1'])
-    @pytest.mark.parametrize('field_weight_3', ([None], [0], [1]),  ids=['None', '0', '1'])
-    @pytest.mark.composition
-    def test_order_fields_in_memory(self, field_weight_1, field_weight_2, field_weight_3):
-        """Test that order of keys and values doesn't matter"""
-
-        # pytest.skip('All field weights are None')
-
-        def construct_em(field_weights):
-            return pnl.EMComposition(memory_template=[[[5,0], [5], [5,0,3]], [[20,0], [20], [20,1,199]]],
-                                     memory_capacity=4,
-                                     field_weights=field_weights)
-
-        field_weights = field_weight_1 + field_weight_2 + field_weight_3
-
-        if all([fw is None for fw in field_weights]):
-            with pytest.raises(EMCompositionError) as error_text:
-                construct_em(field_weights)
-            assert ("The entries in 'field_weights' arg for EM_Composition can't all be 'None' "
-                    "since that will preclude the construction of any keys." in str(error_text.value))
-
-        elif not any(field_weights):
-            with pytest.warns(UserWarning) as warning:
-                construct_em(field_weights)
-            warning_msg = ("All of the entries in the 'field_weights' arg for EM_Composition "
-                           "are either None or set to 0; this will result in no retrievals "
-                           "unless/until one or more of them are changed to a positive value.")
-            assert warning_msg in str(warning[0].message)
-
-        elif any([fw == 0 for fw in field_weights]):
-            with pytest.warns(UserWarning) as warning:
-                construct_em(field_weights)
-            warning_msg = ("Some of the entries in the 'field_weights' arg for EM_Composition are set to 0; those "
-                           "fields will be ignored during retrieval unless/until they are changed to a positive value.")
-            assert warning_msg in str(warning[0].message)
-
-        else:
-            construct_em(field_weights)
-
-
