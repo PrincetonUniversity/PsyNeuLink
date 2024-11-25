@@ -1898,7 +1898,8 @@ class EMComposition(AutodiffComposition):
             if all([fw is None for fw in _field_wts]):
                 raise EMCompositionError(f"The entries in 'field_weights' arg for {name} can't all be 'None' "
                                          f"since that will preclude the construction of any keys.")
-            if all([fw in {0, None} for fw in _field_wts]):
+            # if all([fw in {0, None} for fw in _field_wts]):
+            if not any(_field_wts):
                 warnings.warn(f"All of the entries in the 'field_weights' arg for {name} are either None or "
                               f"set to 0; this will result in no retrievals unless/until the 0(s) is(are) changed "
                               f"to a positive value.")
