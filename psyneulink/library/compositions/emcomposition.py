@@ -2380,13 +2380,14 @@ class EMComposition(AutodiffComposition):
         else:
             # Assign each key Field its own match_node and "memory" Projection to it
             for i in range(self.num_keys):
-                field = self.fields[self.key_indices[i]]
-                memory_projection = MappingProjection(name=f'MEMORY for {self.key_names[i]} [KEY]',
-                                                      sender=self.query_input_nodes[i].output_port,
-                                                      matrix = np.array(
-                                                          memory_template[:,i].tolist()).transpose().astype(float),
-                                                      function=MatrixTransform(operation=args[i][OPERATION],
-                                                                               normalize=args[i][NORMALIZE]))
+                key_idx = self.key_indices[i]
+                field = self.fields[key_idx]
+                memory_projection = (
+                    MappingProjection(name=f'MEMORY for {self.key_names[i]} [KEY]',
+                                      sender=self.query_input_nodes[i].output_port,
+                                      matrix = np.array(memory_template[:,key_idx].tolist()).transpose().astype(float),
+                                      function=MatrixTransform(operation=args[i][OPERATION],
+                                                               normalize=args[i][NORMALIZE])))
                 field.match_node = (ProcessingMechanism(name=self.key_names[i] + MATCH_TO_KEYS_AFFIX,
                                                         input_ports= {INPUT_SHAPES:memory_capacity,
                                                                       PROJECTIONS: memory_projection}))
@@ -2506,27 +2507,41 @@ class EMComposition(AutodiffComposition):
     def _construct_retrieved_nodes(self, memory_template)->list:
         """Create nodes that report the value field(s) for the item(s) matched in memory.
         """
-        key_idx = 0
-        value_idx = 0
+        # # MODIFIED 11/25/24 OLD:
+        # key_idx = 0
+        # value_idx = 0
+        # for field in self.fields:
+        #     # FIX: 11/24/24 - REFACTOR TO USE memory_template[:,self.index] ONCE MEMORY IS REFACTORED BASED ON FIELDS
+        #     if field.type == FieldType.KEY:
+        #         matrix = memory_template[:,key_idx]
+        #         key_idx += 1
+        #     else:
+        #         matrix = memory_template[:,self.num_keys + value_idx]
+        #         key_idx += 1
+        #
+        #     field.retrieved_node = (
+        #         ProcessingMechanism(name=field.name + RETRIEVED_AFFIX,
+        #                             input_ports={INPUT_SHAPES: len(field.input_node.variable[0]),
+        #                                          PROJECTIONS:
+        #                                              MappingProjection(
+        #                                                  sender=self.softmax_node,
+        #                                                  matrix=matrix,
+        #                                                  name=f'MEMORY FOR {field.name} '
+        #                                                       f'[RETRIEVE {field.type.name}]')}))
+        #     field.retrieve_projection = field.retrieved_node.path_afferents[0]
+        # MODIFIED 11/25/24 NEW:
         for field in self.fields:
-            # FIX: 11/24/24 - REFACTOR TO USE memory_template[:,self.index] ONCE MEMORY IS REFACTORED BASED ON FIELDS
-            if field.type == FieldType.KEY:
-                matrix = memory_template[:,key_idx]
-                key_idx += 1
-            else:
-                matrix = memory_template[:,self.num_keys + value_idx]
-                key_idx += 1
-
             field.retrieved_node = (
                 ProcessingMechanism(name=field.name + RETRIEVED_AFFIX,
                                     input_ports={INPUT_SHAPES: len(field.input_node.variable[0]),
                                                  PROJECTIONS:
                                                      MappingProjection(
                                                          sender=self.softmax_node,
-                                                         matrix=matrix,
+                                                         matrix=memory_template[:,field.index],
                                                          name=f'MEMORY FOR {field.name} '
                                                               f'[RETRIEVE {field.type.name}]')}))
             field.retrieve_projection = field.retrieved_node.path_afferents[0]
+        # MODIFIED 11/25/24 END
 
     def _construct_storage_node(self,
                                 use_storage_node,
