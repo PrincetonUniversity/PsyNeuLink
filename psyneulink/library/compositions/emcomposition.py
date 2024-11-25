@@ -1068,7 +1068,6 @@ class FieldType(Enum):
 
 class Field():
     """Object that contains information about a field in an EMComposition's `memory <EMComposition.memory>`.
-
     ."""
     name = None
     def __init__(self,
@@ -2802,8 +2801,8 @@ class EMComposition(AutodiffComposition):
 
     @property
     def field_weight_nodes(self):
-            return [field.weight_node for field in self.fields
-                    if field.weight_node and field.type == FieldType.KEY]
+        return [field.weight_node for field in self.fields
+                if field.weight_node and field.type == FieldType.KEY]
 
     @property
     def weighted_match_nodes(self):
