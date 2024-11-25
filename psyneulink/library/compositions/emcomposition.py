@@ -1900,9 +1900,9 @@ class EMComposition(AutodiffComposition):
                                          f"since that will preclude the construction of any keys.")
             # if all([fw in {0, None} for fw in _field_wts]):
             if not any(_field_wts):
-                warnings.warn(f"All of the entries in the 'field_weights' arg for {name} are either None or "
-                              f"set to 0; this will result in no retrievals unless/until the 0(s) is(are) changed "
-                              f"to a positive value.")
+                warnings.warn(f"All of the entries in the 'field_weights' arg for {name} "
+                              f"are either None or set to 0; this will result in no retrievals "
+                              f"unless/until the 0(s) is(are) changed to a positive value.")
 
         # If field_names has more than one value it must match the first dimension (axis 0) of memory_template:
         if field_names and len(field_names) != num_fields:

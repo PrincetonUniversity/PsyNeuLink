@@ -1081,11 +1081,12 @@ class TestExecution:
                     "since that will preclude the construction of any keys." in str(error_text.value))
 
         elif not any(field_weights):
-            # warnings.warn("All field weights are 0; this will result in a degenerate memory that will always return the first entry.")
-            ("All of the entries in the 'field_weights' arg for EM_Composition are either None or set to 0; "
-             "this will result in no retrievals unless/until the 0(s) is(are) changed to a positive value.")
-
-            construct_em(field_weights)
+            with pytest.warns(UserWarning) as warning:
+                construct_em(field_weights)
+            warning_msg = ("All of the entries in the 'field_weights' arg for EM_Composition "
+                           "are either None or set to 0; this will result in no retrievals "
+                           "unless/until the 0(s) is(are) changed to a positive value.")
+            assert warning_msg in str(warning[0].message)
 
         else:
             construct_em(field_weights)
