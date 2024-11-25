@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EMComposition &mdash; PsyNeuLink 0.15.2.0+32.gbf1e6b38f documentation</title>
+  <title>EMComposition &mdash; PsyNeuLink 0.15.2.0+33.g7b20f1308 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.2.0+32
+                  0.15.2.0+33
                 </div>
               
             
@@ -403,8 +403,9 @@ an error is generated).  Otherwise, it can be specified using a numerical value,
 </section>
 <section id="fields">
 <span id="emcomposition-fields"></span><h3><em>Fields</em><a class="headerlink" href="#fields" title="Permalink to this headline">¶</a></h3>
-<p>These arguments are used to specify the names of the fields in a memory entry, which are used as keys and how those are
-weighted for retrieval, and whether those weights are learned.</p>
+<p>These arguments are used to specify the names of the fields in a memory entry, which are used for its keys and values,
+how keys are weighted for retrieval, whether those weights are learned, and which fields are used for computing error
+that is propagated through the EMComposition.</p>
 <ul id="emcomposition-field-specification-dict">
 <li><p><strong>fields</strong>: a dict that specifies the names of the fields and their attributes. There must be an entry for each
 field specified in the <strong>memory_template</strong>, and must have the following format:</p>
@@ -662,7 +663,9 @@ and <a class="reference internal" href="#psyneulink.library.compositions.emcompo
 <p>The <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> attribute contains a record of the entries in the EMComposition’s memory. This
 is in the form of a 3d array, in which rows (axis 0) are entries, columns (axis 1) are fields, and items (axis 2) are
 the values of an entry in a given field.  The number of fields is determined by the <a class="reference internal" href="#emcomposition-memory-template"><span class="std std-ref">memory_template</span></a> argument of the EMComposition’s constructor, and the number of entries is determined
-by the <a class="reference internal" href="#emcomposition-memory-capacity"><span class="std std-ref">memory_capacity</span></a> argument.</p>
+by the <a class="reference internal" href="#emcomposition-memory-capacity"><span class="std std-ref">memory_capacity</span></a> argument.  Information about the fields is stored in the
+<a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.fields" title="psyneulink.library.compositions.emcomposition.EMComposition.fields"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">fields</span></code></a> attribute, which is a list of <code class="xref any docutils literal notranslate"><span class="pre">Field</span></code> objects containing information about the nodes
+and values associated with each field.</p>
 <blockquote>
 <div><div class="technical-note docutils container" id="emcomposition-memory-storage">
 <p>The memories are actually stored in the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameters of the`MappingProjections`
@@ -1028,7 +1031,7 @@ this is not necessary and specifying raises an error.</p>
 <li><p><strong>FIX</strong> (<em># 7/10/24</em>) – </p></li>
 <li><p><strong>technical_note::</strong> (<em>.</em>) – <dl class="simple">
 <dt>use_storage_node<span class="classifier">bool</span><span class="classifier">default True</span></dt><dd><p>specifies whether to use a <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a> to store entries in <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.
-If False, a method on EMComposition is used rather than a LearningMechanism.  This is meant for
+If False, a method on EMComposition is used rather than a LearningMechanism. This is meant for
 debugging, and precludes use of <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.import_composition" title="psyneulink.core.compositions.composition.Composition.import_composition"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">import_composition</span></code></a> to integrate
 the EMComposition into another Composition;  to do so, use_storage_node must be True (default).</p>
 </dd>
@@ -1053,6 +1056,18 @@ executing its <a class="reference internal" href="Composition.html#psyneulink.co
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition.fields">
+<span class="sig-name descname"><span class="pre">fields</span></span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition.fields" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of <code class="xref any docutils literal notranslate"><span class="pre">Field</span></code> objects, each of which contains information about the nodes and values of a field in the
+EMComposition’s memory (see <code class="xref any docutils literal notranslate"><span class="pre">Field</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>ContentAddressableList[Field]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1541,41 +1556,16 @@ Assign self.memory_template and self.entry_template attributes</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition._construct_query_input_nodes">
-<span class="sig-name descname"><span class="pre">_construct_query_input_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field_weights</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._construct_query_input_nodes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create one node for each key to be used as cue for retrieval (and then stored) in memory.
-Used to assign new set of weights for Projection for query_input_node[i] -&gt; match_node[i]
-where i is selected randomly without replacement from (0-&gt;memory_capacity)</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition._construct_value_input_nodes">
-<span class="sig-name descname"><span class="pre">_construct_value_input_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field_weights</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._construct_value_input_nodes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create one input node for each value to be stored in memory.
-Used to assign new set of weights for Projection for combined_matches_node -&gt; retrieved_node[i]
-where i is selected randomly without replacement from (0-&gt;memory_capacity)</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition._construct_input_nodes">
+<span class="sig-name descname"><span class="pre">_construct_input_nodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._construct_input_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create one node for each input to EMComposition and identify as key or value</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition._construct_concatenate_queries_node">
 <span class="sig-name descname"><span class="pre">_construct_concatenate_queries_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">concatenate_queries</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._construct_concatenate_queries_node" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create node that concatenates the inputs for all keys into a single vector
-Used to create a matrix for Projectoin from match / memory weights from concatenate_node -&gt; match_node</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="ProcessingMechanism.html#psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism" title="psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProcessingMechanism</span></code></a></p>
-</dd>
-</dl>
+Used to create a matrix for Projection from match / memory weights from concatenate_node -&gt; match_node</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1595,66 +1585,36 @@ from concatenated_keys_node to that match_node.</p>
 </li>
 <li><p>Each element of the output represents the similarity between the query_input and one key in memory.</p></li>
 </ul>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition._construct_field_weight_nodes">
-<span class="sig-name descname"><span class="pre">_construct_field_weight_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concatenate_queries</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gating_for_weighting</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._construct_field_weight_nodes" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_construct_field_weight_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">concatenate_queries</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gating_for_weighting</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._construct_field_weight_nodes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create ProcessingMechanisms that weight each key’s softmax contribution to the retrieved values.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition._construct_weighted_match_nodes">
-<span class="sig-name descname"><span class="pre">_construct_weighted_match_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">memory_capacity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_weights</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._construct_weighted_match_nodes" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_construct_weighted_match_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">concatenate_queries</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._construct_weighted_match_nodes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create nodes that weight the output of the match node for each key.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition._construct_softmax_gain_control_node">
 <span class="sig-name descname"><span class="pre">_construct_softmax_gain_control_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">softmax_gain</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._construct_softmax_gain_control_node" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create nodes that set the softmax gain (inverse temperature) for each softmax_node.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism"><code class="xref py py-class docutils literal notranslate"><span class="pre">ControlMechanism</span></code></a>]</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition._construct_combined_matches_node">
-<span class="sig-name descname"><span class="pre">_construct_combined_matches_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">memory_capacity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_weighting</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gating_for_weighting</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._construct_combined_matches_node" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_construct_combined_matches_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">concatenate_queries</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_capacity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gating_for_weighting</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._construct_combined_matches_node" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create node that combines weighted matches for all keys into one match vector.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="ProcessingMechanism.html#psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism" title="psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProcessingMechanism</span></code></a></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition._construct_softmax_node">
 <span class="sig-name descname"><span class="pre">_construct_softmax_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">memory_capacity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">softmax_gain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">softmax_threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">softmax_choice</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._construct_softmax_node" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create node that applies softmax to output of combined_matches_node.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -1670,7 +1630,7 @@ from concatenated_keys_node to that match_node.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.EMComposition._construct_storage_node">
-<span class="sig-name descname"><span class="pre">_construct_storage_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">memory_template</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concatenate_queries_node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_decay_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storage_prob</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._construct_storage_node" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_construct_storage_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_storage_node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_template</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_decay_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storage_prob</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.EMComposition._construct_storage_node" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create EMStorageMechanism that stores the key and value inputs in memory.
 Memories are stored by adding the current input to each field to the corresponding row of the matrix for
 the Projection from the query_input_node (or concatenate_node) to the matching_node and retrieved_node for keys,
@@ -1692,11 +1652,6 @@ value fields;</p></li>
 <li><p><strong>storage_prob</strong> – probability for storing an entry in <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.EMComposition.memory" title="psyneulink.library.compositions.emcomposition.EMComposition.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.</p></li>
 </ul>
 </div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
