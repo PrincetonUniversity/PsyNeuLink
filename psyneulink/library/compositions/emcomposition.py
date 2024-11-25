@@ -1898,11 +1898,16 @@ class EMComposition(AutodiffComposition):
             if all([fw is None for fw in _field_wts]):
                 raise EMCompositionError(f"The entries in 'field_weights' arg for {name} can't all be 'None' "
                                          f"since that will preclude the construction of any keys.")
-            # if all([fw in {0, None} for fw in _field_wts]):
+
             if not any(_field_wts):
                 warnings.warn(f"All of the entries in the 'field_weights' arg for {name} "
                               f"are either None or set to 0; this will result in no retrievals "
-                              f"unless/until the 0(s) is(are) changed to a positive value.")
+                              f"unless/until one or more of them are changed to a positive value.")
+
+            elif any([fw == 0 for fw in _field_wts if fw is not None]):
+                warnings.warn(f"Some of the entries in the 'field_weights' arg for {name} "
+                              f"are set to 0; those fields will be ignored during retrieval "
+                              f"unless/until they are changed to a positive value.")
 
         # If field_names has more than one value it must match the first dimension (axis 0) of memory_template:
         if field_names and len(field_names) != num_fields:

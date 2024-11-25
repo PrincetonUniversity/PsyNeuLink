@@ -1085,7 +1085,14 @@ class TestExecution:
                 construct_em(field_weights)
             warning_msg = ("All of the entries in the 'field_weights' arg for EM_Composition "
                            "are either None or set to 0; this will result in no retrievals "
-                           "unless/until the 0(s) is(are) changed to a positive value.")
+                           "unless/until one or more of them are changed to a positive value.")
+            assert warning_msg in str(warning[0].message)
+
+        elif any([fw == 0 for fw in field_weights]):
+            with pytest.warns(UserWarning) as warning:
+                construct_em(field_weights)
+            warning_msg = ("Some of the entries in the 'field_weights' arg for EM_Composition are set to 0; those "
+                           "fields will be ignored during retrieval unless/until they are changed to a positive value.")
             assert warning_msg in str(warning[0].message)
 
         else:
