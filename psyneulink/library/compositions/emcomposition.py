@@ -1021,7 +1021,7 @@ def field_weights_setter(field_weights, owning_component=None, context=None):
         raise EMCompositionError(f"The number of field_weights ({len(field_weights)}) must match the number of fields "
                                  f"{len(owning_component.field_weights)}")
     if owning_component.normalize_field_weights:
-        denominator = np.sum(np.where(field_weights is not None, field_weights, 0))
+        denominator = np.sum(np.where(field_weights is not None, field_weights, 0)) or 1
         field_weights = [fw / denominator if fw is not None else None for fw in field_weights]
 
     # Assign new fields_weights to default_variable of field_weight_nodes
@@ -2387,8 +2387,8 @@ class EMComposition(AutodiffComposition):
                     MappingProjection(name=f'MEMORY for {self.key_names[i]} [KEY]',
                                       sender=self.query_input_nodes[i].output_port,
                                       matrix = np.array(memory_template[:,key_idx].tolist()).transpose().astype(float),
-                                      function=MatrixTransform(operation=args[i][OPERATION],
-                                                               normalize=args[i][NORMALIZE])))
+                                      function=MatrixTransform(operation=args[key_idx][OPERATION],
+                                                               normalize=args[key_idx][NORMALIZE])))
                 field.match_node = (ProcessingMechanism(name=self.key_names[i] + MATCH_TO_KEYS_AFFIX,
                                                         input_ports= {INPUT_SHAPES:memory_capacity,
                                                                       PROJECTIONS: memory_projection}))
