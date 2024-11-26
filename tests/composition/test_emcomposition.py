@@ -448,6 +448,7 @@ class TestConstruction:
                                      field_weights=field_weights)
 
         field_weights = field_weight_1 + field_weight_2 + field_weight_3
+        em = None
 
         if all([fw is None for fw in field_weights]):
             with pytest.raises(EMCompositionError) as error_text:
@@ -457,7 +458,7 @@ class TestConstruction:
 
         elif not any(field_weights):
             with pytest.warns(UserWarning) as warning:
-                construct_em(field_weights)
+                em = construct_em(field_weights)
             warning_msg = ("All of the entries in the 'field_weights' arg for EM_Composition "
                            "are either None or set to 0; this will result in no retrievals "
                            "unless/until one or more of them are changed to a positive value.")
@@ -465,13 +466,24 @@ class TestConstruction:
 
         elif any([fw == 0 for fw in field_weights]):
             with pytest.warns(UserWarning) as warning:
-                construct_em(field_weights)
+                em = construct_em(field_weights)
             warning_msg = ("Some of the entries in the 'field_weights' arg for EM_Composition are set to 0; those "
                            "fields will be ignored during retrieval unless/until they are changed to a positive value.")
             assert warning_msg in str(warning[0].message)
 
         else:
-            construct_em(field_weights)
+            em = construct_em(field_weights)
+
+        if em:
+            for field_weight, field in zip(field_weights, em.fields):
+                # Validate proper field-type assignments
+                if field_weight is None:
+                    assert field.type == pnl.FieldType.VALUE
+                else:
+                    assert field.type == pnl.FieldType.KEY
+                # Validate alignment of field with memory
+                assert len(field.memories[0]) == [2,1,3][field.index]
+
 
 
 @pytest.mark.pytorch
