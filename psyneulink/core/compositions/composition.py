@@ -4368,6 +4368,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             self._pre_existing_pathway_components[NODES].append(node)
 
+        # Aux components are being added by Composition, even if main Node being added was from COMMAND_LINE
+        # (this suppresses warnings pertaining to illegal or ill-advised direct addition of some components)
         invalid_aux_components = self._add_node_aux_components(node, context=context)
 
         # Implement required_roles
@@ -4641,11 +4643,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Disallow assignment of NodeRoles by user that are not programmitically modifiable:
         # FIX 4/25/20 [JDC]: CHECK IF ROLE OR EQUIVALENT STATUS HAS ALREADY BEEN ASSIGNED AND, IF SO, ISSUE WARNING
         if context.source == ContextFlags.COMMAND_LINE:
-            if role in {NodeRole.CONTROL_OBJECTIVE, NodeRole.CONTROLLER_OBJECTIVE}:
-                # raise CompositionError(f"{role} cannot be directly assigned to an {ObjectiveMechanism.__name__};"
-                #                        # f"assign 'CONTROL' to 'role' argument of consructor for {node} of {self.name}")
-                #                        f"try assigning {node} to '{OBJECTIVE_MECHANISM}' argument of "
-                #                        f"the constructor for the desired {ControlMechanism.__name__}.")
+            if role in {NodeRole.CONTROL_OBJECTIVE, NodeRole.CONTROLLER_OBJECTIVE} and not node.control_mechanism:
                 warnings.warn(f"{role} should be assigned with caution to {self.name}. "
                               f"{ObjectiveMechanism.__name__}s are generally constructed automatically by a "
                               f"{ControlMechanism.__name__}, or assigned to it in the '{OBJECTIVE_MECHANISM}' "
@@ -5137,10 +5135,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                    "specification (True or False).".format(component, node.name))
                     elif isinstance(component[0], (Mechanism, Composition)):
                         if isinstance(component[1], NodeRole):
-                            self.add_node(node=component[0], required_roles=component[1])
+                            self.add_node(node=component[0], required_roles=component[1], context=context)
                         elif isinstance(component[1], list):
                             if isinstance(component[1][0], NodeRole):
-                                self.add_node(node=component[0], required_roles=component[1])
+                                self.add_node(node=component[0], required_roles=component[1], context=context)
                             else:
                                 raise CompositionError("Invalid Component specification ({}) in {}'s aux_components. "
                                                        "If a tuple is used to specify a Mechanism or Composition, then "

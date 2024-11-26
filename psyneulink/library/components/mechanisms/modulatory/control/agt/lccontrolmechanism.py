@@ -648,7 +648,7 @@ class LCControlMechanism(ControlMechanism):
 
     value : ndarray
         contains four values; the first is the `control_allocation <LCControlMechanism.control_allocation>`,
-        followed by the three values are the `w`, `v`, and `x` terms returned by the LCControlMechanism's
+        followed by the three values -- the `w`, `v`, and `x` terms -- returned by the LCControlMechanism's
         `FitzHughNagumoIntegrator` function.
 
         .. note::
