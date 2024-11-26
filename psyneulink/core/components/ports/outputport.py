@@ -1242,14 +1242,6 @@ class OutputPort(Port_Base):
                                        format(OutputPort.__name__, owner.name, e.args[0]))
 
     @property
-    def variable(self):
-        return _parse_output_port_variable(self._variable, self.owner)
-
-    @variable.setter
-    def variable(self, variable):
-        self._variable = variable
-
-    @property
     def socket_width(self):
         return self.defaults.value.shape[-1]
 
