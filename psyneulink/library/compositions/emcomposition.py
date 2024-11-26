@@ -954,8 +954,8 @@ from psyneulink.core.globals.registry import name_without_suffix
 from psyneulink.core.llvm import ExecutionMode
 
 
-__all__ = ['EMComposition', 'EMCompositionError', 'FIELD_WEIGHT', 'KEY', 'LEARN_FIELD_WEIGHT',
-           'PROBABILISTIC', 'TARGET_FIELD','WEIGHTED_AVG']
+__all__ = ['EMComposition', 'EMCompositionError', 'FieldType', 'FIELD_WEIGHT',
+           'KEY', 'LEARN_FIELD_WEIGHT', 'PROBABILISTIC', 'TARGET_FIELD','WEIGHTED_AVG']
 
 KEY = 'key'
 
@@ -1134,14 +1134,14 @@ class Field():
 
     @property
     def retrieved_memory(self):
-        return self.retrieve_node.value
+        return self.retrieved_node.value
 
     @property
     def memories(self):
-        return self.retrieve_node.path_afferents[0].matrix
+        return self.retrieved_node.path_afferents[0].matrix.modulated
 
     def retrieval_operation(self):
-        return self.retrieve_node.path_afferents[0].function.operation
+        return self.retrieved_node.path_afferents[0].function.operation
 
 
 class EMComposition(AutodiffComposition):
