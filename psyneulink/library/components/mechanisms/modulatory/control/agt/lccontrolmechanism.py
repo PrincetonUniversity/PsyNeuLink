@@ -857,8 +857,8 @@ class LCControlMechanism(ControlMechanism):
         """
         from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 
-        # A Composition is specified for modulated_mechanisms, so assign all Processing Mechanisms in composition
-        #     to its modulated_mechanisms attribute
+        # A Composition is specified for modulated_mechanisms,
+        #   so assign all Processing Mechanisms in Composition to its modulated_mechanisms attribute
         from psyneulink.core.compositions.composition import Composition, NodeRole
         # FIX: 11/27/24 - NEED TO HANDLE "ALL" HERE, BY DEFERRING UNTIL ADDED TO COMPOSITION
         if isinstance(self.modulated_mechanisms, Composition):

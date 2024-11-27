@@ -4368,8 +4368,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             self._pre_existing_pathway_components[NODES].append(node)
 
-        # Aux components are being added by Composition, even if main Node being added was from COMMAND_LINE
-        # (this suppresses warnings pertaining to illegal or ill-advised direct addition of some components)
+        # Aux components are being added by Composition, even if main Node is being added was from COMMAND_LINE
         invalid_aux_components = self._add_node_aux_components(node, context=context)
 
         # Implement required_roles
