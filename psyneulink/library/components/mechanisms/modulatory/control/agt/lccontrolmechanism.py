@@ -322,7 +322,7 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.ports.outputport import OutputPort
-from psyneulink.core.globals.keywords import (INIT_EXECUTE_METHOD_ONLY, MULTIPLICATIVE_PARAM,
+from psyneulink.core.globals.keywords import (ALL, INIT_EXECUTE_METHOD_ONLY, MULTIPLICATIVE_PARAM,
                                               OBJECTIVE_MECHANISM, OWNER_VALUE, PROJECTIONS,VARIABLE, SUM)
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
@@ -728,7 +728,7 @@ class LCControlMechanism(ControlMechanism):
     def __init__(self,
                  default_variable=None,
                  default_allocation: Optional[Union[int, float, list, np.ndarray]] = None,
-                 objective_mechanism: Optional[Union[ObjectiveMechanism, list, bool]] = None,
+                 objective_mechanism: Optional[Union[ObjectiveMechanism, list, bool]] = True,
                  monitor_for_control: Optional[Union[Iterable, Mechanism, OutputPort]] = None,
                  modulated_mechanisms=None,
                  modulation: Optional[str] = None,
@@ -806,16 +806,16 @@ class LCControlMechanism(ControlMechanism):
             spec = target_set[MODULATED_MECHANISMS]
 
             from psyneulink.core.compositions.composition import Composition
-            if isinstance(spec, Composition):
+            if isinstance(spec, Composition) or spec is ALL:
                 pass
             else:
                 if not isinstance(spec, list):
                     spec = [spec]
                     for mech in spec:
                         if not isinstance(mech, Mechanism):
-                            raise LCControlMechanismError("The specification of the {} argument for {} "
-                                                          "contained an item ({}) that is not a Mechanism.".
-                                                          format(repr(MODULATED_MECHANISMS), self.name, mech))
+                            raise LCControlMechanismError(f"The specification of the {repr(MODULATED_MECHANISMS)} "
+                                                          f"argument for {self.name} contained an item ({mech}) "
+                                                          f"that is not a Mechanism.")
                         elif not hasattr(mech.function, MULTIPLICATIVE_PARAM):
                             raise LCControlMechanismError(f"The specification of the {repr(MODULATED_MECHANISMS)} "
                                                           f"argument for {self.name} contained a Mechanism ({mech}) "
@@ -855,9 +855,10 @@ class LCControlMechanism(ControlMechanism):
            Mechanism listed in self.modulated_mechanisms.
         """
 
-        # A Composition is specified for modulated_mechanisms, so assign all Processing Mechanisms in composition
-        #     to its modulated_mechanisms attribute
+        # A Composition is specified for modulated_mechanisms,
+        #   so assign all Processing Mechanisms in Composition to its modulated_mechanisms attribute
         from psyneulink.core.compositions.composition import Composition, NodeRole
+        # FIX: 11/27/24 - NEED TO HANDLE "ALL" HERE, BY DEFERRING UNTIL ADDED TO COMPOSITION
         if isinstance(self.modulated_mechanisms, Composition):
             self.modulated_mechanisms = self.modulated_mechanisms._get_modulable_mechanisms()
 

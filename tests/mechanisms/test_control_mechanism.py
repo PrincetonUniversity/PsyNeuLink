@@ -102,6 +102,9 @@ class TestLCControlMechanism:
         C = pnl.Composition(pathways=[T_1, T_2])
         LC = pnl.LCControlMechanism(monitor_for_control=[T_1, T_2],
                                     modulated_mechanisms=C)
+        # LC = pnl.LCControlMechanism(monitor_for_control=[T_1, T_2])
+        # LC = pnl.LCControlMechanism(monitor_for_control=[T_1, T_2],
+        #                             modulated_mechanisms=pnl.ALL)
         C.add_node(LC)
 
         assert len(LC.control_signals)==1
