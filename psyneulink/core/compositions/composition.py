@@ -5114,7 +5114,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # ignore these for now and try to activate them again during every call to _analyze_graph
             # and, at runtime, if there are still any invalid aux_components left, issue a warning
             projections = []
-            # Add all "nodes" to the composition first (in case projections reference them)
+            # Add all Nodes to the Composition first (in case Projections reference them)
             for i, component in enumerate(node.aux_components):
                 if isinstance(component, (Mechanism, Composition)):
                     if isinstance(component, Composition):

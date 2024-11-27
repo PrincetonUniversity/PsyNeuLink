@@ -93,22 +93,28 @@ class TestLCControlMechanism:
         np.testing.assert_allclose(val, expected)
 
     @pytest.mark.composition
-    def test_lc_control_modulated_mechanisms_all(self):
+    def test_lc_control_monitored_and_modulated_mechanisms_composition(self):
+        """Test default configuration of LCControlMechanism with monitored and modulated mechanisms in a Composition
+        Test that it implements an ObjectiveMechanism by default, that uses CombineMeans
+        Test that ObjectiveMechanism can monitor Mechanisms with values of different lengths,
+             and generate a scalar output.
+        Test that it modulates all of the ProcessingMechanisms in the Composition but not the ObjectiveMechanism
+        """
 
-        T_1 = pnl.TransferMechanism(name='T_1')
-        T_2 = pnl.TransferMechanism(name='T_2')
+        T_1 = pnl.TransferMechanism(name='T_1', input_shapes=2)
+        T_2 = pnl.TransferMechanism(name='T_2', input_shapes=3)
 
-        # S = pnl.System(processes=[pnl.proc(T_1, T_2, LC)])
         C = pnl.Composition(pathways=[T_1, T_2])
         LC = pnl.LCControlMechanism(monitor_for_control=[T_1, T_2],
                                     modulated_mechanisms=C)
-        # LC = pnl.LCControlMechanism(monitor_for_control=[T_1, T_2])
-        # LC = pnl.LCControlMechanism(monitor_for_control=[T_1, T_2],
-        #                             modulated_mechanisms=pnl.ALL)
         C.add_node(LC)
-
         assert len(LC.control_signals)==1
         assert len(LC.control_signals[0].efferents)==2
+        assert LC.path_afferents[0].sender.owner == LC.objective_mechanism
+        assert isinstance(LC.objective_mechanism.function, pnl.CombineMeans)
+        assert len(LC.objective_mechanism.input_ports[0].value) == 2
+        assert len(LC.objective_mechanism.input_ports[1].value) == 3
+        assert len(LC.objective_mechanism.output_ports[pnl.OUTCOME].value) == 1
         assert T_1.parameter_ports[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
         assert T_2.parameter_ports[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
 

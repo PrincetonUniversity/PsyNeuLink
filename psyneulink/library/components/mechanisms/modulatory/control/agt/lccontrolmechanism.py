@@ -82,17 +82,17 @@ constructor. An LCControlMechanism controls a `Mechanism <Mechanism>` by modifyi
 <Function_Modulatory_Params>` of the Mechanism's `function <Mechanism_Base.function>`.  Therefore, any Mechanism
 specified for control by an LCControlMechanism must be either a `ProcessingMechanism`, or a Mechanism that uses as its
 `function <Mechanism_Base.function>` a class of `Function <Function>` that implements a `multiplicative_param
-<Function_Modulatory_Params>`.  The **modulate_mechanisms** argument must be either a list of such Mechanisms, or
-a `Composition` (to modulate all of the `ProcessingMechanisms <ProcessingMechanism>` in a Composition -- see below).
-see below). If a Mechanism specified in the **modulated_mechanisms** argument does not implement a multiplicative_param,
-it is ignored. A `ControlProjection` is automatically created that projects from the LCControlMechanism to the
+<Function_Modulatory_Params>`. If a Mechanism specified in the **modulated_mechanisms** argument does not implement a
+multiplicative_param, it is ignored. The **modulate_mechanisms** argument must be either a list of suitable Mechanisms,
+or a `Composition` (to modulate all of the `ProcessingMechanisms <ProcessingMechanism>` in a Composition -- see below).
+A `ControlProjection` is automatically created that projects from the LCControlMechanism to the
 `ParameterPort` for the `multiplicative_param <Function_Modulatory_Params>` of every Mechanism specified in the
-**modulated_mechanisms** argument.  The Mechanisms modulated by an LCControlMechanism are listed in its
+**modulated_mechanisms** argument. The Mechanisms modulated by an LCControlMechanism are listed in its
 `modulated_mechanisms <LCControlMechanism.modulated_mechanisms>` attribute).
 
-If `Composition` is assigned as the value of **modulate_mechanisms**, then the LCControlMechanism will modulate all
+If a `Composition` is assigned as the value of **modulate_mechanisms**, then the LCControlMechanism will modulate all
 of the `ProcessingMechanisms` in that Composition, with the exception of any `ObjectiveMechanism`\\s that are assigned
-a the `objective_mechanism <ControlMechanism.objective_mechanism>` of another `ControlMechanism`.  Note that only the
+as the `objective_mechanism <ControlMechanism.objective_mechanism>` of another `ControlMechanism`.  Note that only the
 Mechanisms that already belong to that Composition are included at the time the LCControlMechanism is constructed.
 Therefore, to include *all* Mechanisms in the Composition at the time it is run, the LCControlMechanism should be
 constructed and `added to the Composition using the Composition's `add_node <Composition.add_node>` method) after all
@@ -398,8 +398,10 @@ class LCControlMechanism(ControlMechanism):
     modulated_mechanisms : List[`Mechanism <Mechanism>`] or *ALL*
         specifies the Mechanisms to be modulated by the LCControlMechanism. If it is a list, every item must be a
         Mechanism with a `function <Mechanism_Base.function>` that implements a `multiplicative_param
-        <Function_Modulatory_Params>`;  alternatively the keyword *ALL* can be used to specify all of the
-        `ProcessingMechanisms <ProcessingMechanism>` in the Composition(s) to which the LCControlMechanism  belongs.
+        <Function_Modulatory_Params>`;  alternatively a `Composition` can be specified, in which case the
+        LCControlMechanism will modulate all of the suitable `ProcessingMechanisms <ProcessingMechanism>` in the
+        Composition that have been added to it up to the point at which the LCControlMechanism is constructed (see
+        `Mechanisms to Modulate <LCControlMechanism_Modulated_Mechanisms>` for additional information).
 
     initial_w_FitzHughNagumo : float : default 0.0
         sets `initial_w <initial_w.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
@@ -554,9 +556,10 @@ class LCControlMechanism(ControlMechanism):
         <LCControlMechanism.modulated_mechanisms>` attribute.
 
     modulated_mechanisms : List[Mechanism]
-        list of `Mechanisms <Mechanism>` modulated by the LCControlMechanism.
+        list of `Mechanisms <Mechanism>` modulated by the LCControlMechanism (see `Mechanisms to Modulate
+        <LCControlMechanism_Modulated_Mechanisms>` for additional information).
 
-        initial_w_FitzHughNagumo : float : default 0.0
+    initial_w_FitzHughNagumo : float : default 0.0
         sets `initial_w <initial_w.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
         <FitzHughNagumoIntegrator>` function
 
