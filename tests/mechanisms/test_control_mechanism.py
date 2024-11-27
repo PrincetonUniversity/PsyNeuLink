@@ -104,7 +104,7 @@ class TestLCControlMechanism:
         T_1 = pnl.TransferMechanism(name='T_1', input_shapes=2)
         T_2 = pnl.TransferMechanism(name='T_2', input_shapes=3)
 
-        C = pnl.Composition(pathways=[T_1, T_2])
+        C = pnl.Composition(pathways=[T_1, np.array([[1,2,3],[4,5,6]]), T_2])
         LC = pnl.LCControlMechanism(monitor_for_control=[T_1, T_2],
                                     modulated_mechanisms=C)
         C.add_node(LC)
@@ -117,6 +117,9 @@ class TestLCControlMechanism:
         assert len(LC.objective_mechanism.output_ports[pnl.OUTCOME].value) == 1
         assert T_1.parameter_ports[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
         assert T_2.parameter_ports[pnl.SLOPE].mod_afferents[0] in LC.control_signals[0].efferents
+
+        result = C.run(inputs={T_1:[1,2]})#, T_2:[3,4,5]
+        assert LC.objective_mechanism.value == (np.mean(T_1.value) + np.mean(T_2.value))
 
 
 @pytest.mark.composition
