@@ -833,7 +833,6 @@ class LCControlMechanism(ControlMechanism):
                 raise ObjectiveMechanismError(f"Error creating {OBJECTIVE_MECHANISM} for {self.name}: {e}")
         super()._instantiate_objective_mechanism(input_ports=input_ports, context=context)
 
-
     def _instantiate_output_ports(self, context=None):
         """Override to ensure that ControlSignals are instantiated even though self.control is not specified.
          LCControlMechanism automatically assigns ControlSignals, so no control specification is needed in constructor;
@@ -855,19 +854,12 @@ class LCControlMechanism(ControlMechanism):
         Instantiate ControlSignal with Projection to the ParameterPort for the multiplicative_param of every
            Mechanism listed in self.modulated_mechanisms.
         """
-        from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 
         # A Composition is specified for modulated_mechanisms, so assign all Processing Mechanisms in composition
         #     to its modulated_mechanisms attribute
         from psyneulink.core.compositions.composition import Composition, NodeRole
         if isinstance(self.modulated_mechanisms, Composition):
-            comp = self.modulated_mechanisms
-            self.modulated_mechanisms = []
-            for mech in [m for m in comp.nodes if (isinstance(m, ProcessingMechanism_Base) and
-                                                   not (isinstance(m, ObjectiveMechanism)
-                                                        and comp.get_roles_for_node(m) != NodeRole.CONTROL)
-                                                   and hasattr(m.function, MULTIPLICATIVE_PARAM))]:
-                self.modulated_mechanisms.append(mech)
+            self.modulated_mechanisms = self.modulated_mechanisms._get_modulable_mechanisms()
 
         # Get the name of the multiplicative_param of each Mechanism in self.modulated_mechanisms
         if self.modulated_mechanisms:
