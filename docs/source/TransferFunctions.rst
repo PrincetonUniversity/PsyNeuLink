@@ -5,7 +5,7 @@ TransferFunctions
    :maxdepth: 3
 
 .. automodule:: psyneulink.core.components.functions.transferfunctions
-   :members: TransferFunction, Identity, Linear, Exponential, Tanh, ReLU, Angle,
-Gaussian, GaussianDistort, BinomialDistort, Dropout, SoftMax, LinearMatrix, TransferWithCosts, CostFunctions
+   :members: TransferFunction, Identity, Linear, Exponential, ExponentialDecay, AcceleratingDecay, Logistic, Tanh,ReLU, Angle, Gaussian, GaussianDistort, BinomialDistort, Dropout, SoftMax, LinearMatrix, TransferWithCosts,
+CostFunctions
    :private-members:
    :exclude-members: Parameters
