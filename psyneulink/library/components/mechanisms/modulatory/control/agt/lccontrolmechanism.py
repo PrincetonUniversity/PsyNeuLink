@@ -56,11 +56,11 @@ Mechanisms that it controls.
 .. _LCControlMechanism_ObjectiveMechanism_Creation:
 
 *ObjectiveMechanism and Monitored OutputPorts*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If the **objective_mechanism** argument is specified then, as with a standard ControlMechanism, the specified
 `ObjectiveMechanism` is assigned to its `objective_mechanism <ControlMechanism.objective_mechanism>` attribute. The
-`value <OutputPort.value>` of the ObjectiveMechanism's *OUTCOME* `OutputPort` must be a scalar (that is used as the
+`value <OutputPort.value>` of the ObjectiveMechanism's *OUTCOME* `OutputPort` must be a scalar, that is used as the
 input to the LCControlMechanism's `function <LCControlMechanism.function>` to drive its `phasic response
 <LCControlMechanism_Modes_Of_Operation>`.  An ObjectiveMechanism can also be constructed automatically, by specifying
 **objective_mechanism** as True; that is assigned a `CombineMeans` Function  as its `function
@@ -82,17 +82,17 @@ constructor. An LCControlMechanism controls a `Mechanism <Mechanism>` by modifyi
 <Function_Modulatory_Params>` of the Mechanism's `function <Mechanism_Base.function>`.  Therefore, any Mechanism
 specified for control by an LCControlMechanism must be either a `ProcessingMechanism`, or a Mechanism that uses as its
 `function <Mechanism_Base.function>` a class of `Function <Function>` that implements a `multiplicative_param
-<Function_Modulatory_Params>`.  The **modulate_mechanisms** argument must be either a list of such Mechanisms, or
-a `Composition` (to modulate all of the `ProcessingMechanisms <ProcessingMechanism>` in a Composition -- see below).
-see below). If a Mechanism specified in the **modulated_mechanisms** argument does not implement a multiplicative_param,
-it is ignored. A `ControlProjection` is automatically created that projects from the LCControlMechanism to the
+<Function_Modulatory_Params>`. If a Mechanism specified in the **modulated_mechanisms** argument does not implement a
+multiplicative_param, it is ignored. The **modulate_mechanisms** argument must be either a list of suitable Mechanisms,
+or a `Composition` (to modulate all of the `ProcessingMechanisms <ProcessingMechanism>` in a Composition -- see below).
+A `ControlProjection` is automatically created that projects from the LCControlMechanism to the
 `ParameterPort` for the `multiplicative_param <Function_Modulatory_Params>` of every Mechanism specified in the
-**modulated_mechanisms** argument.  The Mechanisms modulated by an LCControlMechanism are listed in its
+**modulated_mechanisms** argument. The Mechanisms modulated by an LCControlMechanism are listed in its
 `modulated_mechanisms <LCControlMechanism.modulated_mechanisms>` attribute).
 
-If `Composition` is assigned as the value of **modulate_mechanisms**, then the LCControlMechanism will modulate all
+If a `Composition` is assigned as the value of **modulate_mechanisms**, then the LCControlMechanism will modulate all
 of the `ProcessingMechanisms` in that Composition, with the exception of any `ObjectiveMechanism`\\s that are assigned
-a the `objective_mechanism <ControlMechanism.objective_mechanism>` of another `ControlMechanism`.  Note that only the
+as the `objective_mechanism <ControlMechanism.objective_mechanism>` of another `ControlMechanism`.  Note that only the
 Mechanisms that already belong to that Composition are included at the time the LCControlMechanism is constructed.
 Therefore, to include *all* Mechanisms in the Composition at the time it is run, the LCControlMechanism should be
 constructed and `added to the Composition using the Composition's `add_node <Composition.add_node>` method) after all
@@ -119,7 +119,7 @@ of the LCControlMechanism's `ObjectiveMechanism`.  That value is used as the inp
 ObjectiveMechanism
 ^^^^^^^^^^^^^^^^^^
 
-If an ObjectiveMechanism is `automatically created <LCControlMechanism_ObjectiveMechanism_Creation> for an
+If an ObjectiveMechanism is `automatically created <LCControlMechanism_ObjectiveMechanism_Creation>` for an
 LCControlMechanism, it receives its inputs from the `OutputPort(s) <OutputPort>` specified the
 **monitor_for_control** argument of the LCControlMechanism constructor, or the **montiored_output_ports** argument
 of the LCControlMechanism's `ObjectiveMechanism <ControlMechanism_ObjectiveMechanism>`.  By default, the
@@ -312,14 +312,18 @@ from beartype import beartype
 from psyneulink._typing import Optional, Union, Iterable
 
 from psyneulink.core import llvm as pnlvm
+from psyneulink.core.components.functions import FunctionError
+from psyneulink.core.components.functions.nonstateful.transformfunctions import CombineMeans
 from psyneulink.core.components.functions.stateful.integratorfunctions import FitzHughNagumoIntegrator
-from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism, ControlMechanismError
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import (
+    ControlMechanism, ControlMechanismError)
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import (
+    ObjectiveMechanism, ObjectiveMechanismError)
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.ports.outputport import OutputPort
-from psyneulink.core.globals.keywords import \
-    INIT_EXECUTE_METHOD_ONLY, MULTIPLICATIVE_PARAM, NAME, OWNER_VALUE, PORT_TYPE, PROJECTIONS, VARIABLE
+from psyneulink.core.globals.keywords import (ALL, INIT_EXECUTE_METHOD_ONLY, MULTIPLICATIVE_PARAM,
+                                              OBJECTIVE_MECHANISM, OWNER_VALUE, PROJECTIONS,VARIABLE, SUM)
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -394,8 +398,10 @@ class LCControlMechanism(ControlMechanism):
     modulated_mechanisms : List[`Mechanism <Mechanism>`] or *ALL*
         specifies the Mechanisms to be modulated by the LCControlMechanism. If it is a list, every item must be a
         Mechanism with a `function <Mechanism_Base.function>` that implements a `multiplicative_param
-        <Function_Modulatory_Params>`;  alternatively the keyword *ALL* can be used to specify all of the
-        `ProcessingMechanisms <ProcessingMechanism>` in the Composition(s) to which the LCControlMechanism  belongs.
+        <Function_Modulatory_Params>`;  alternatively a `Composition` can be specified, in which case the
+        LCControlMechanism will modulate all of the suitable `ProcessingMechanisms <ProcessingMechanism>` in the
+        Composition that have been added to it up to the point at which the LCControlMechanism is constructed (see
+        `Mechanisms to Modulate <LCControlMechanism_Modulated_Mechanisms>` for additional information).
 
     initial_w_FitzHughNagumo : float : default 0.0
         sets `initial_w <initial_w.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
@@ -517,6 +523,12 @@ class LCControlMechanism(ControlMechanism):
         <ObjectiveMechanism.function>` to parametrize the contribution made to its output by each of the values that
         it monitors (see `ObjectiveMechanism Function <ObjectiveMechanism_Function>`).
 
+    objective_mechanism : ObjectiveMechanism
+        `ObjectiveMechanism` that monitors and evaluates the values specified in the LCControlMechanism's
+        **objective_mechanism** argument, and transmits the result to the LCControlMechanism's *OUTCOME*
+        `input_port <Mechanism_Base.input_port>`, that drives its phasic response
+        (see `LCControlMechanism_ObjectiveMechanism` for additional details).
+
     function : FitzHughNagumoIntegrator
         takes the LCControlMechanism's `input <LCControlMechanism_Input>` and generates its response
         <LCControlMechanism_Output>` under
@@ -544,9 +556,10 @@ class LCControlMechanism(ControlMechanism):
         <LCControlMechanism.modulated_mechanisms>` attribute.
 
     modulated_mechanisms : List[Mechanism]
-        list of `Mechanisms <Mechanism>` modulated by the LCControlMechanism.
+        list of `Mechanisms <Mechanism>` modulated by the LCControlMechanism (see `Mechanisms to Modulate
+        <LCControlMechanism_Modulated_Mechanisms>` for additional information).
 
-        initial_w_FitzHughNagumo : float : default 0.0
+    initial_w_FitzHughNagumo : float : default 0.0
         sets `initial_w <initial_w.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
         <FitzHughNagumoIntegrator>` function
 
@@ -718,7 +731,7 @@ class LCControlMechanism(ControlMechanism):
     def __init__(self,
                  default_variable=None,
                  default_allocation: Optional[Union[int, float, list, np.ndarray]] = None,
-                 objective_mechanism: Optional[Union[ObjectiveMechanism, list]] = None,
+                 objective_mechanism: Optional[Union[ObjectiveMechanism, list, bool]] = True,
                  monitor_for_control: Optional[Union[Iterable, Mechanism, OutputPort]] = None,
                  modulated_mechanisms=None,
                  modulation: Optional[str] = None,
@@ -785,12 +798,9 @@ class LCControlMechanism(ControlMechanism):
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate modulated_mechanisms argument.
-
-        Validate that **modulated_mechanisms** is either a Composition or a list of eligible Mechanisms .
-        Eligible Mechanisms are ones with a `function <Mechanism_Base>` that has a multiplicative_param.
-
+        Validate that **modulated_mechanisms** is either a Composition or a list of eligible Mechanisms;
+        eligible Mechanisms are ones with a `function <Mechanism_Base>` that has a multiplicative_param.
         """
-
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
                                  context=context)
@@ -799,26 +809,38 @@ class LCControlMechanism(ControlMechanism):
             spec = target_set[MODULATED_MECHANISMS]
 
             from psyneulink.core.compositions.composition import Composition
-            if isinstance(spec, Composition):
+            if isinstance(spec, Composition) or spec is ALL:
                 pass
             else:
                 if not isinstance(spec, list):
                     spec = [spec]
                     for mech in spec:
                         if not isinstance(mech, Mechanism):
-                            raise LCControlMechanismError("The specification of the {} argument for {} "
-                                                          "contained an item ({}) that is not a Mechanism.".
-                                                          format(repr(MODULATED_MECHANISMS), self.name, mech))
+                            raise LCControlMechanismError(f"The specification of the {repr(MODULATED_MECHANISMS)} "
+                                                          f"argument for {self.name} contained an item ({mech}) "
+                                                          f"that is not a Mechanism.")
                         elif not hasattr(mech.function, MULTIPLICATIVE_PARAM):
                             raise LCControlMechanismError(f"The specification of the {repr(MODULATED_MECHANISMS)} "
                                                           f"argument for {self.name} contained a Mechanism ({mech}) "
                                                           f"that does not have a {repr(MULTIPLICATIVE_PARAM)}.")
 
+    def _instantiate_objective_mechanism(self, input_ports=None, context=None):
+        """Instantiate ObjectiveMechanism with CombineMeans as its function then call super()
+        """
+        # If objective_mechanism is specified, use it; otherwise, instantiate one
+        if not self.objective_mechanism or self.objective_mechanism is True:
+            try:
+                self.objective_mechanism = ObjectiveMechanism(function=CombineMeans(operation=SUM),
+                                                              name=self.name + '_ObjectiveMechanism')
+            except (ObjectiveMechanismError, FunctionError) as e:
+                raise ObjectiveMechanismError(f"Error creating {OBJECTIVE_MECHANISM} for {self.name}: {e}")
+        super()._instantiate_objective_mechanism(input_ports=input_ports, context=context)
+
     def _instantiate_output_ports(self, context=None):
-        """Override to insure that ControlSignals are instantiated even thought self.control is not specified
-         LCControlMechanism automatically assigns ControlSignals, so no control specification is needed in constructor
-         super._instantiate_output_ports does not call _instantiate_control_signals if self.control is not specified;
-         so, override is needed to insure _instantiate_control_signals is called
+        """Override to ensure that ControlSignals are instantiated even though self.control is not specified.
+         LCControlMechanism automatically assigns ControlSignals, so no control specification is needed in constructor;
+         super()._instantiate_output_ports does not call _instantiate_control_signals if self.control is not specified;
+         so, override is needed to ensure _instantiate_control_signals is called.
         """
         self._register_control_signal_type(context=None)
         self._instantiate_control_signals(context=context)
@@ -829,26 +851,19 @@ class LCControlMechanism(ControlMechanism):
         self.aux_components.extend(self.control_projections)
 
     def _instantiate_control_signals(self, context=None):
-        """Instantiate ControlSignals and assign ControlProjections to Mechanisms in self.modulated_mechanisms
-
-        If **modulated_mechanisms** argument of constructor was specified as *ALL*, assign all ProcessingMechanisms
+        """Instantiate ControlSignals and assign ControlProjections to Mechanisms in self.modulated_mechanisms.
+        If **modulated_mechanisms** argument of constructor is specified as *ALL*, assign all ProcessingMechanisms
            in Compositions to which LCControlMechanism belongs to self.modulated_mechanisms.
         Instantiate ControlSignal with Projection to the ParameterPort for the multiplicative_param of every
            Mechanism listed in self.modulated_mechanisms.
         """
-        from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 
-        # A Composition is specified for modulated_mechanisms, so assign all Processing Mechanisms in composition
-        #     to its modulated_mechanisms attribute
+        # A Composition is specified for modulated_mechanisms,
+        #   so assign all Processing Mechanisms in Composition to its modulated_mechanisms attribute
         from psyneulink.core.compositions.composition import Composition, NodeRole
+        # FIX: 11/27/24 - NEED TO HANDLE "ALL" HERE, BY DEFERRING UNTIL ADDED TO COMPOSITION
         if isinstance(self.modulated_mechanisms, Composition):
-            comp = self.modulated_mechanisms
-            self.modulated_mechanisms = []
-            for mech in [m for m in comp.nodes if (isinstance(m, ProcessingMechanism_Base) and
-                                                   not (isinstance(m, ObjectiveMechanism)
-                                                        and comp.get_roles_for_node(m) != NodeRole.CONTROL)
-                                                   and hasattr(m.function, MULTIPLICATIVE_PARAM))]:
-                self.modulated_mechanisms.append(mech)
+            self.modulated_mechanisms = self.modulated_mechanisms._get_modulable_mechanisms()
 
         # Get the name of the multiplicative_param of each Mechanism in self.modulated_mechanisms
         if self.modulated_mechanisms:
