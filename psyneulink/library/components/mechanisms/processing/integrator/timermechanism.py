@@ -17,7 +17,7 @@ Contents
   * `TimerMechanism_Creation`
   * `TimerMechanism_Structure`
   * `TimerMechanism_Execution`
-    - `TimerMechanism_Functions`
+    - `TimerMechanism_Processing`
     - `TimerMechanism_Reset`
   * `TimerMechanism_Examples`
   * `TimerMechanism_Class_Reference`
@@ -29,7 +29,11 @@ Overview
 --------
 
 A TimerMechanism is a form of `IntegratorMechanism` that advances its output until it reaches a specified value. It's
-starting and ending values, as well as the direction, rate, and functional form of its progression can be specified.
+starting and ending values, as well as the
+COMMENT:
+direction,
+COMMENT
+rate and trajectory of its progression can be specified.
 If an input is provided, the timer is advanced by that ammount; otherwise it is advanced by the value of its `increment
 <TimerMechanism.increment>` parameter. A TimerMechanism can be reset to its starting value by calling its `reset
 <TimerMechanism.reset>` method, or by modulating its `reset <TimerMechanism.reset>` Parameter with a `ControlSignal`.
@@ -37,7 +41,7 @@ If an input is provided, the timer is advanced by that ammount; otherwise it is 
 A TimerMechanism can be used to implement a variety of time-based processes, such as the collapse of a boundary over
 time, or the rise of a value to a threshold. It can also be configured to execute multiple such processes in parallel,
 each with its own starting and ending values, as well as direction, increment and input (on a given execution), all of
-which use the same functional form.
+which use the trajectory.
 
 .. _TimerMechanism_Creation:
 
@@ -45,12 +49,15 @@ Creating a TimerMechanism
 -------------------------
 
 A TimerMechanism can be created directly by calling its constructor, or using the `mechanism` command and specifying
-*TIMER_MECHANISM* as its **mech_spec** argument. It can be created with or without a source of input. The functional
-form of the timer is specified by it **form** argument, which can be *LINEAR*, *ACCELERATING*, or *DECELLERATING*,
-as well as its **direction** argument, which can be *INCREASING* or *DECREASING* (see `TimerMechanism_Execution` below
-for more details).The starting and ending values of the timer are specified by its **start** and **end** arguments,
-respectively, and the ammount it progresses (in the absence of input) each time the Mechanimsm is executed can be
-specified by its **increment** argument.
+*TIMER_MECHANISM* as its **mech_spec** argument. It can be created with or without a source of input. The shape of the
+timer's trajectory is specified by it **trajecotry** argument, which must be a `TransferFunction`
+COMMENT:
+TBI
+as well as its **direction** argument, which can be *INCREASING* or *DECREASING*
+COMMENT
+(see `TimerMechanism_Processing` below for more details).The starting and ending values of the timer are specified by
+its **start** and **end** arguments, respectively, and the ammount it progresses (in the absence of input) each time
+the Mechanimsm is executed can be specified by its **increment** argument.
 
 .. _TimerMechanism_Structure:
 
@@ -62,45 +69,51 @@ A TimerMechanism may or may not have a source of input, and has a single `Output
 <ModulatorySignal_Modulation>` by a `ControlMechanism` to change its rate of
 
 .. technical_note::
-   A TimerMechanism is an `IntegratorMechanism` that uses a `SimpleIntegrator` as its `function
-   <TimerMechanism.function>` as well as an auxilliary `TransferFunction` --  its `form <TimerMechanism.form>`
-   Parameter -- that takes the result of the `SimpleIntegrator` and transforms to implement the desired progression
-   of the timer.  The value of the `start <TimerMechanism.start>` parameter is assigned as the `initializer
-   <IntegratorFunction.initializer>` of the TimerMechanism's `function <TimerMechanism.function>`, and its `increment
-   <TimerMechanism.increment>` parameter is assigned as the `rate <IntegratorFunction.rate>` of the TimerMechanism's
-   `function <TimerMechanism.function>`.
+   A TimerMechanism is an `IntegratorMechanism` that, in addition to its `function <TimerMechanism.function>`, has an
+   auxilliary `TransferFunction` -- its `trajectory <TimerMechanism.trajectory>` Parameter -- that takes the result of
+   its `function <TimerMechanism.function>` and transforms it to implement the specified trajectory of the timer's
+   `value <Mechanism_Base.value>`. The value of the `start <TimerMechanism.start>` parameter is assigned as the
+   `initializer <IntegratorFunction.initializer>` of the TimerMechanism's `function <TimerMechanism.function>`; its
+   `increment <TimerMechanism.increment>` parameter is assigned as the `rate <IntegratorFunction.rate>` of the
+   TimerMechanism's `function <TimerMechanism.function>`; and its `end <TimerMechanism.end>` parameter is used to set
+   the `is_finished <TimerMechanism.is_finished>` attribute of the TimerMechanism.
 
 .. _TimerMechanism_Execution:
 
 Execution
 ---------
 
-When a TimerMechanism is executed, it advances its value by adding either its `input <TimerMechanism.input>` or its
-`increment <TimerMechanism.increment>` Parameter to the `previous_value <IntegratorFunction.previous_value>` of its
-`function <TimerMechanism.function>`, and then passed to the `Function` specified by its `form <TimerMechanism.form>`
-Parameter, the result of which is assigned to the `value <Mechanism_Base.value>` of the TimerMechansim's `primary
-OutputPort <OutputPort_Primary>`. If the `default_variable <TimerMechanism.default_variable>` is a scalar, the
-TimerMechanism generates a single value as its output; if `default_variable` is a list or array, or **input_shapes**
-is greater than 1, each element of the array is independently integrated.  If its `increment <TimerMechanism.increment>`
-Parameter is a single value, that is used for advancing each element. If the `increment <TimerMechanism.increment>`
-Parameter is a list or array, then each element is used to increment the corresponding element of the timer array
-(in this case, `increment <TimerMechanism.increment>` must be the same length as the value specified for
-**default_variable** or **input_shapes**). The Timer can be reset to its `start <TimerMechanism.start>` value by
-setting its `reset <TimerMechanism.reset>` parameter to a non-zero value, as described below.
+.. _TimerMechanism_Processing:
 
-.. _TimerMechanism_Functions:
+*Processing*
+~~~~~~~~~~~~
 
-*Functions*
-~~~~~~~~~~~
+When a TimerMechanism is executed, it advances its value by adding either its `input <TimerMechanism.input>`
+or its `increment <TimerMechanism.increment>` Parameter to the `previous_value <IntegratorFunction.previous_value>`
+of its `function <TimerMechanism.function>`, that is then passed to the `Function` specified by its `trajectory
+<TimerMechanism.trajectory>` Parameter, the result of which is assigned to the `value <Mechanism_Base.value>` of the
+TimerMechansim's `primary OutputPort <OutputPort_Primary>`. If its `default_variable <TimerMechanism.default_variable>`
+is a scalar or of length 1, or  its **input_shapes** is specified as 1, the TimerMechanism generates a scalar value
+as its output; otherwise, it generates an array of values, each element of which is independently advanced. If its
+`increment <TimerMechanism.increment>` Parameter is a single value, that is used for advancing all elements; if the
+`increment <TimerMechanism.increment>` Parameter is a list or array, then each element is used to increment the
+corresponding element of the timer array.  The TimerMechanism stop advancing when its value reaches its `end
+<TimerMechanism.end>` Parameter, at which point it sets its `is_finished <TimerMechanism.is_finished>` attribute to
+`True`, and stops advancing its value. This can be used together with the  `WhenFinished` `Condition` to make the
+processing of other `Mechanisms <Mechanism>` contingent on the TimerMechanism reaching its end value. The Timer can be
+reset to its `start <TimerMechanism.start>` value by setting  its `reset <TimerMechanism.reset>` parameter to a
+non-zero value, as described below.
 
-EXPONENTIAL GROWTH: **form** = EXPONENTIAL;  **direction** = *INCREASING*
+COMMENT:
+FIX: ADD ADVICE SECTION HERE OR EXAMPLES FOR TIMERS THAT IMPLEMENT RISING TO A THRESHOLD AND COLLAPSING TO BOUND
+EXPONENTIAL GROWTH: **trajectory** = EXPONENTIAL;  **direction** = *INCREASING*
 :math: s-1\ +\ e^{\frac{-\ln\left(1-\frac{d}{s}\right)}{f}x}
 python: start -1 np.exp(-np.ln(1-threhold/start)/end)
 start = offset (y value at which growth begins)
 threshold = distance above starting y at end
 end = scale (x value at which end should occur
 
-DECELLERATING GROWTH: **form** = EXPONENTIAL;  **direction** = *INCREASING*
+DECELLERATING GROWTH: **trajectory** = EXPONENTIAL;  **direction** = *INCREASING*
 # :math: s+r\left(1-e^{\frac{\ln\left(1-\frac{d}{r}\right)}{f}x}\right)
 # python: start + rate * (1 - np.exp(np.ln(1 - threshold / rate) / end) * x))
 # start = offset (y value at which growth begins)
@@ -113,7 +126,7 @@ end = scale (y = tolerance * start at x = end)
 threshold = distance above starting y at end
 tolerance = 0.01 (default) (i.e., y = within 1% of threshold at x = end)
 
-EXPONENTIAL DECAY:   **form** = EXPONENTIAL; **direction** = *DECREASING*
+EXPONENTIAL DECAY:   **trajectory** = EXPONENTIAL; **direction** = *DECREASING*
 :math:   offset\ + bias e^{-\left(\frac{variable\ln\left(\frac{1}{tolerance}\right)}{scale}\right)}
 [DESMOS: o\ +se^{-\left(\frac{x\ln\left(\frac{1}{t}\right)}{f}\right)}]
 python: offset + bias * np.exp(-variable * np.ln(1/tolerance) / scale)
@@ -124,12 +137,13 @@ start = bias (starting y value relative to offset: s + o = y for x = 0)
 end = scale (y = (tolerance * start + offset) at x = end)
 tolerance = 0.01 (default) (i.e., y = (1% of start) + offset at x = end)
 
-ACCELERATING DECAY:  **form** = EXPONENTIAL; **direction** = *INCREASING*
+ACCELERATING DECAY:  **trajectory** = EXPONENTIAL; **direction** = *INCREASING*
 AcceleratingDecay Function
 :math: start + e^{-e}(1-e^x)\frac{n}{e^{end-e-0.4^{end}}}
 python: start + np.exp(-e)*(1-np.exp(x))*n/np.exp(end-e-0.4**end)
 start = offset (y value at which decay begins)
 end = scale (x value at which y=0)
+
 .. technical_note::
    This is an empirically-derived function;  the value of 0.4 is used to ensure that the function reaches 0 at the
     specified end value. If anyone has an analytic solution, please add it here.
@@ -139,7 +153,7 @@ end = scale (x value at which y=0)
 <AcceleratingDecay.offset>` at `variable <AcceleratingDecay.variable>` = 0, and a value of `threshold
 <AcceleratingDecay.end>` * `start <AcceleratingDecay.start>` + `offset <AcceleratingDecay.offset>` at
 `variable at `variable <AcceleratingDecay.variable>` = `end <AcceleratingDecay.end>`:
-
+COMMENT
 
 .. _TimerMechanism_Reset:
 
@@ -183,7 +197,7 @@ Examples
 The following example creates a TimerMechanism with a linear decay from 1 to 0:
 
     >>> import psyneulink as pnl
-    >>> my_timer_mechanism = pnl.TimerMechanism(decay=LINEAR, start=1, end=0))
+    >>> my_timer_mechanism = pnl.TimerMechanism(trajectory=LINEAR, start=1, end=0))
 
 
 .. _TimerMechanism_Class_Reference:
@@ -200,7 +214,8 @@ from psyneulink._typing import Optional, Union
 import numpy as np
 
 from psyneulink.core.components.functions.function import Function
-from psyneulink.core.components.functions.stateful.integratorfunctions import AdaptiveIntegrator
+from psyneulink.core.components.functions.nonstateful.transferfunctions import TransferFunction, Linear
+from psyneulink.core.components.functions.stateful.integratorfunctions import IntegratorFunction, SimpleIntegrator
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, TIMER_MECHANISM, VARIABLE, PREFERENCE_SET_NAME, RESET
@@ -213,7 +228,7 @@ __all__ = [
 ]
 
 # TimerMechanism parameter keywords:
-DEFAULT_RATE = 0.5
+DEFAULT_RATE = 1
 
 class TimerMechanismError(MechanismError):
     pass
@@ -224,27 +239,41 @@ class TimerMechanism(IntegratorMechanism):
     TimerMechanism( \
         function=AdaptiveIntegrator(rate=0.5))
 
-    Subclass of `ProcessingMechanism <ProcessingMechanism>` that integrates its input.
-    See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes.
+    Subclass of `IntegratorMechanism` that advances its input until it reaches a specified value.
+    See `IntegratorMechanism <IntegratorMechanism_Class_Reference>` for additional arguments and attributes.
 
     Arguments
     ---------
 
-    start : number : default 0
+    start : scalar, list or array : default 0
+        specifies the starting value of the timer; if a list or array, the length must be the same as specified
+        for **default_variable** or **input_shapes** (see `TimerMechanism_Processing` for additional details).
 
-    increment :
+    increment : scalar, list or array : default 1
+        specifies the amount by which the `previous_value <IntegratorFunction.previous_value>` of the
+        TimerMechanism's `function <TimerMechanism.function>` is incremented each time the TimerMechanism is
+        executed in the absence of input; if a list or array, the length must be the same as specified for
+        **default_variable** or **input_shapes** (see `TimerMechanism_Processing` for additional details).
 
-    direction : INCREASING or DECREASING : default INCREASING
+    COMMENT:
+    TBI
+    direction : INCREASING, DECREASING, or list of either/both : default INCREASING
+        specifies whether the timer progresses in the direction of increasing or decreasing values; if a list or
+        array, the length must be the same as specified for **default_variable** or **input_shapes**
+        (see `TimerMechanism_Processing` for additional details).
+    COMMENT
 
-    end :
+    end : scalar, list or array : default 1
+        specifies the value at which the timer stops advancing; if a list or array, the length must be the same as
+        specified for **default_variable** or **input_shapes** (see `TimerMechanism_Processing` for additional details).
 
     function : IntegratorFunction : default SimpleIntegrator(rate=1)
         specifies the function used to increment the input; must take a single numeric value, or a list or np.array
-        of values, and return one of the same form.
+        of values, and return one of the same shape.
 
-    form : EXPONENTIAL, LINEAR, or S-CURVE : default LINEAR
-        specifies the functional form of the timer; must be a TranserFunction that takes a single numeric value, or a
-        list or np.array of values, and returns one of the same form.
+    trajectory : TransferFunction : default LINEAR
+        specifies the shape of the timer's trajectory; must be a TransferFunction that takes a single numeric value,
+        or a list or np.array of values, and returns one of the same shape.
 
     reset_default : number, list or np.ndarray : default 0
         specifies the default value used for the `reset <TimerMechanism.reset>` parameter.
@@ -252,13 +281,43 @@ class TimerMechanism(IntegratorMechanism):
     Attributes
     ----------
 
+    start : scalar, list or array
+        determines the starting value of the timer; assigned as the `initializer <IntegratorFunction.initializer>`
+        Parameter of the TimerMechanism's `function <TimerMechanism.function>` (see `TimerMechanism_Processing` for
+        additional details).
+
+    increment : scalar, list or array
+        determines the amount by which the `previous_value <IntegratorFunction.previous_value>` of the
+        TimerMechanism's `function <TimerMechanism.function>` is incremented each time the TimerMechanism is
+        executed in the absence of input; assigned as the `rate <IntegratorFunction.rate>` of the TimerMechanism's
+        `function <TimerMechanism.function>` (see `TimerMechanism_Processing` for additional details).
+
+    COMMENT:
+    direction : INCREASING, DECREASING, or list of either/both
+        determines whether the timer progresses in the direction of increasing or decreasing values.
+        (see `TimerMechanism_Processing` for additional details).
+    COMMENT
+
+    end : scalar, list or array
+        determines the value at which the timer stops advancing, after which it maintains that value;
+        (see `TimerMechanism_Processing` for additional details).
+
+    function : IntegratorFunction
+        determines the function used to advance the input to the TimerMechanism's `trajectorytrajectory
+        <TimerMechanism.trajectory>` Function; if the TimerMechanism receives an external input, that is
+        used to advance the timer; otherwise, the `increment <TimerMechanism.increment>` Parameter is used.
+
+    trajectory : TransferFunction
+        determines the `Function` used to transform the ouput of the TimerMechanism's `function
+        <TimerMechanism.function>` to generate its output; this determines the shape of the trajectory
+        of the TimerMechanism's `value <TimerMechanism.value>`.
+
     reset : int, float or 1d array of length 1 : default 0
         if non-zero, the TimerMechanism's `reset <Mechanism_Base.reset>` method is called, which resets the
         `value <TimerMechanism.value>` of the TimerMechanism to its initial value (see
         `TimerMechanism_Reset` for additional details).
 
     """
-
     componentType = TIMER_MECHANISM
 
     classPreferenceLevel = PreferenceLevel.TYPE
@@ -272,20 +331,41 @@ class TimerMechanism(IntegratorMechanism):
             Attributes
             ----------
 
+                end
+                    see `end <TimerMechanism.end>`
+
+                    :default value: `AdaptiveIntegrator`(initializer=numpy.array([0]), rate=0.5)
+                    :type: `float`
+
                 function
                     see `function <TimerMechanism.function>`
 
-                    :default value: `AdaptiveIntegrator`(initializer=numpy.array([0]), rate=0.5)
+                    :default value: `SimpleIntegrator`(initializer=numpy.array([0]), rate=1)
                     :type: `Function`
 
-                reset
-                    see `reset <TimerMechanism.reset>`
+                increment
+                    see `increment <TimerMechanism.increment>`
 
-                    :default value: None
-                    :type: 'list or np.ndarray'
+                    :default value: 1
+                    :type: `float`
+
+                start
+                    see `start <TimerMechanism.start>`
+
+                    :default value: `AdaptiveIntegrator`(initializer=numpy.array([0]), rate=0.5)
+                    :type: `float`
+
+                trajectory
+                    see `trajectory <TimerMechanism.trajectory>`
+
+                    :default value: `Linear`
+                    :type: `Function`
         """
-        function = Parameter(AdaptiveIntegrator(rate=0.5), stateful=False, loggable=False)
-        reset = Parameter([0], modulable=True, constructor_argument='reset_default')
+        start = Parameter(0, stateful=True, loggable=False)
+        increment = Parameter(1, stateful=True, loggable=False)
+        end = Parameter(1, stateful=True, loggable=False)
+        function = Parameter(SimpleIntegrator(rate=1), stateful=False, loggable=False)
+        trajectory = Parameter(Linear(), stateful=False, loggable=False)
 
         #
     @check_user_specified
@@ -293,8 +373,13 @@ class TimerMechanism(IntegratorMechanism):
     def __init__(self,
                  default_variable=None,
                  input_shapes=None,
+                 # FIX: TYPE HINTS NEEDED HERE OR HANDLED BY Parameters?
+                 start:Optional[Union[int, float, list, np.ndarray]]=None,
+                 increment:Optional[Union[int, float, list, np.ndarray]]=1,
+                 end:Optional[Union[int, float, list, np.ndarray]]=1,
                  input_ports:Optional[Union[list, dict]]=None,
-                 function=None,
+                 function:Optional[IntegratorFunction]=SimpleIntegrator(rate=1),
+                 trajectory:Optional[TransferFunction]=Linear(),
                  reset_default=0,
                  output_ports:Optional[Union[str, Iterable]]=None,
                  params=None,
@@ -305,15 +390,19 @@ class TimerMechanism(IntegratorMechanism):
         """
 
         super(TimerMechanism, self).__init__(default_variable=default_variable,
-                                                  input_shapes=input_shapes,
-                                                  function=function,
-                                                  reset_default=reset_default,
-                                                  params=params,
-                                                  name=name,
-                                                  prefs=prefs,
-                                                  input_ports=input_ports,
-                                                  output_ports=output_ports,
-                                                  **kwargs)
+                                             input_shapes=input_shapes,
+                                             start=start,
+                                             increment=increment,
+                                             end=end,
+                                             function=function,
+                                             trajectory=trajectory,
+                                             reset_default=reset_default,
+                                             params=params,
+                                             name=name,
+                                             prefs=prefs,
+                                             input_ports=input_ports,
+                                             output_ports=output_ports,
+                                             **kwargs)
 
         # IMPLEMENT: INITIALIZE LOG ENTRIES, NOW THAT ALL PARTS OF THE MECHANISM HAVE BEEN INSTANTIATED
 
