@@ -26,15 +26,12 @@ Contents
 Overview
 --------
 
-A TimerMechanism is a form of `IntegratorMechanism` that advances its output monotonically until it reaches a specified
-value. It's starting and ending `values <Mechanism_Base.value>`, as well as the trajectory and rate
-COMMENT:
-and direction,
-COMMENT
-of its progerssion progression can all be specified. If an input is provided, the timer is advanced by that ammount;
-otherwise it is advanced by the value of its `increment <TimerMechanism.increment>` parameter. A TimerMechanism can
-be reset to its starting value by calling its `reset <TimerMechanism.reset>` method, or by modulating its `reset
-<TimerMechanism.reset>` Parameter with a `ControlSignal`.
+A TimerMechanism is a form of `IntegratorMechanism` that starts at a specified `value <Mechanism_Base.value>`, that
+is changed monotonically each time it is executed, until it reaches a specified end value. The path that its change
+in `value <Mechanism_Base.value>` takes is specified by its `trajectory <TimerMechanism.trajectory>` Function. If
+it receives an imput, the timer is advanced by that ammount; otherwise it is advanced by the value of its `increment
+<TimerMechanism.increment>` parameter. It can be reset to its starting value by calling its `reset
+<TimerMechanism.reset>` method, or by modulating its `reset <TimerMechanism.reset>` Parameter with a `ControlSignal`.
 
 A TimerMechanism can be used to implement a variety of time-based processes, such as the collapse of a boundary over
 time, or the rise of a value to a threshold. It can also be configured to execute multiple such processes in parallel,
@@ -67,29 +64,37 @@ COMMENT
 Structure
 ---------
 
-A TimerMechanism may or may not have a source of input, and has a single `OutputPort`.
+A TimerMechanism may or may not have a source of input, and has a single `OutputPort`.  Its `function
+<TimerMechanism.function>` is an `SimpleIntegrator` `Function` that always starts at 0 and, each time it is executed,
+increments by the value of the TimerMechanism based either on its input or, if it receives none, then its `increment
+<TimerMechanism.increment>` Parameter (see `TimerMechanism_Execution` for additional details).
+
+    .. technical_note::
+       The TimerMechanism's `function <TimerMechanism.function>` cannot be modified; its `rate
+       <SimpleIntegrator.rate>` is set to the value specified for the TimerMechanism's `increment
+       <TimerMechanism.increment>` Parameter, and its `initializer <SimpleIntegrator.initializer>`,
+       `noise <SimpleIntegrator.noise>` and `offset <SimpleIntegrator.offset>` Parameters are fixed at 0.
 
 .. _TimerMechanism_Trajectory_Function:
 
-Its `trajectory <TimerMechanism.trajectory>` must be either a `TimerFunction` or a `UserDefinedFunction` that 
+Its `trajectory <TimerMechanism.trajectory>` must be either a `TimerFunction` or a `UserDefinedFunction` that
 has **start** and **end** parameters, and takes a single numeric value, a list or an np.array as its `variable
 <Function_Base.variable>`.
+
+    .. technical_note::
+       The `trajectory <TimerMechanism.trajectory>` Function is an auxilliary function that takes the result of the
+       TimerMechanism's `function <TimerMechanism.function>` and transforms it to implement the specified trajectory
+       of the timer's `value <Mechanism_Base.value>`. The value of the `start <TimerMechanism.start>` parameter is
+       assigned as the `start <TimerFunction.start>` Parameter of its `trajectory <TimerMechanism.trajectory>`
+       Function; its `increment <TimerMechanism.increment>` Parameter is assigned as the `rate <TimerFunction.rate>`
+       Parameter of the `trajectory <TimerMechanism.trajectory>` Function; and its `end <TimerMechanism.end>` Parameter
+       is assigned as the `end <TimerFunction.end>` Parameter of the `trajectory <TimerMechanism.trajectory>` Function,
+       which is also used to set the TimerMechanism's `complete <TImeMechanism.complete>` attribute.
 
 .. _TimerMechanism_Modulation:
 
 A TimerMechanism's `start <TimerMechanism.start>`, `end <TimerMechanism.end>` and `increment <TimerMechanism.increment>`
 parameters can be `modulated <ModulatorySignal_Modulation>` by a `ControlMechanism`.
-
-.. technical_note::
-   A TimerMechanism is an `IntegratorMechanism` that, in addition to its `function <TimerMechanism.function>`, has an
-   auxilliary `TimerFunction` -- its `trajectory <TimerMechanism.trajectory>` Parameter -- that takes the result of
-   its `function <TimerMechanism.function>` and transforms it to implement the specified trajectory of the timer's
-   `value <Mechanism_Base.value>`. The value of the `start <TimerMechanism.start>` parameter is assigned as the `start`
-   Parameter of its `trajectory <TimerMechanism.trajectory>` Function if that has one, otherwise an attempt is mame to
-   compute it; if that is not possible, an error is raised. The value of the `increment <TimerMechanism.increment>`
-   parameter is assigned as the `rate <IntegratorFunction.rate>` of the TimerMechanism's `function
-   <TimerMechanism.function>`. Its `end <TimerMechanism.end>` parameter is used to set the TimerMechanism's `complete
-   <TImeMechanism.complete>` attribute.
 
 .. _TimerMechanism_Execution:
 
