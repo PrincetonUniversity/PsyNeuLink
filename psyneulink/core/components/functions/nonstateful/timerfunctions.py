@@ -102,31 +102,19 @@ class TimerFunction(TransferFunction):  # --------------------------------------
                     :default value: None
                     :type: 'float'
         """
-        bounds = None
+        start = Parameter(1.0, modulable=True)
+        end = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+
+        def _validate_start(self, start):
+            if start < 0:
+                return f"must be greater than 0."
+
+        def _validate_end(self, end):
+            if end < 0:
+                return f"must be greater than 0."
 
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
-        assert arg_in.type == arg_out.type
-
-        is_2d = isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
-
-        assert arg_in.type == arg_out.type
-        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "transfer_loop") as (b, idx):
-            if is_2d:
-                vi = b.gep(arg_in, [ctx.int32_ty(0), idx])
-                vo = b.gep(arg_out, [ctx.int32_ty(0), idx])
-                with pnlvm.helpers.array_ptr_loop(b, vi, "nested_transfer_loop") as args:
-                    self._gen_llvm_transfer(ctx=ctx, vi=vi, vo=vo,
-                                            params=params, state=state, *args, tags=tags)
-            else:
-                self._gen_llvm_transfer(b, idx, ctx=ctx, vi=arg_in, vo=arg_out,
-                                        params=params, state=state, tags=tags)
-
-        return builder
-
-
-class ExponentialDecay(TransferFunction):  # ---------------------------------------------------------------------------
+class ExponentialDecay(TimerFunction):  # ---------------------------------------------------------------------------
     """
     ExponentialDecay(      \
          default_variable, \
@@ -265,27 +253,15 @@ class ExponentialDecay(TransferFunction):  # -----------------------------------
 
     componentName = EXPONENTIAL_DECAY_FUNCTION
 
-    class Parameters(TransferFunction.Parameters):
+    class Parameters(TimerFunction.Parameters):
         """
             Attributes
             ----------
-
-                start
-                    see `start <ExponentialDecay.start>`
-
-                    :default value: 1.0
-                    :type: ``float``
 
                 offset
                     see `offset <ExponentialDecay.offset>`
 
                     :default value: 0.0
-                    :type: ``float``
-
-                end
-                    see `end <ExponentialDecay.end>`
-
-                    :default value: 1.0
                     :type: ``float``
 
                 tolerance
@@ -294,19 +270,8 @@ class ExponentialDecay(TransferFunction):  # -----------------------------------
                     :default value: 0.01
                     :type: ``float``
         """
-        start = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        end = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         tolerance = Parameter(0.01, modulable=True, aliases=[SCALE])
-        bounds = (None, None)
-
-        def _validate_start(self, start):
-            if start < 0:
-                return f"must be greater than 0."
-
-        def _validate_end(self, end):
-            if end < 0:
-                return f"must be greater than 0."
 
         def _validate_tolerance(self, tolerance):
             if tolerance < 0:
@@ -436,7 +401,7 @@ class ExponentialDecay(TransferFunction):  # -----------------------------------
         return lambda x : offset + start * torch.exp(-x * torch.log(1 / tolerance) / end)
 
 
-class LogarithmicDecay(TransferFunction): # ---------------------------------------------------------------------------
+class LogarithmicDecay(TimerFunction): # ---------------------------------------------------------------------------
     """
     LogarithmicDecay(     \
          default_variable, \
@@ -543,7 +508,7 @@ class LogarithmicDecay(TransferFunction): # ------------------------------------
 
     componentName = LOGARITHMIC_DECAY_FUNCTION
 
-    class Parameters(TransferFunction.Parameters):
+    class Parameters(TimerFunction.Parameters):
         """
             Attributes
             ----------
@@ -567,8 +532,6 @@ class LogarithmicDecay(TransferFunction): # ------------------------------------
                     :type: ``float``
 
         """
-        start = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        end = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         k = Parameter(0.4, modulable=True)
         bounds = (None, None)
 
