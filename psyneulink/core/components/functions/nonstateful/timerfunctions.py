@@ -65,7 +65,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import \
 from psyneulink.core.globals.keywords import \
     (ADDITIVE_PARAM, END, EXPONENTIAL_DECAY_FUNCTION, EXPONENTIAL_RISE_FUNCTION,
      LINEAR_RISE_FUNCTION, LINEAR_DECAY_FUNCTION, LOGARITHMIC_DECAY_FUNCTION, MULTIPLICATIVE_PARAM,
-     PREFERENCE_SET_NAME, SCALE, START, TIMER_FUNCTION_TYPE, TOLERANCE)
+     OFFSET, PREFERENCE_SET_NAME, SCALE, START, TIMER_FUNCTION_TYPE, TOLERANCE)
 
 __all__ = ['ExponentialDecay', 'ExponentialRise', 'LinearDecay', 'LinearRise', 'LogarithmicDecay', 'LogarithmicRise']
 
@@ -252,6 +252,13 @@ class ExponentialDecay(TimerFunction):  # --------------------------------------
     """
 
     componentName = EXPONENTIAL_DECAY_FUNCTION
+
+    classPreferences = {
+        PREFERENCE_SET_NAME: 'ExponentialDecayClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+    }
+
+    _model_spec_class_name_is_generic = True
 
     class Parameters(TimerFunction.Parameters):
         """
@@ -507,6 +514,14 @@ class LogarithmicDecay(TimerFunction): # ---------------------------------------
     """
 
     componentName = LOGARITHMIC_DECAY_FUNCTION
+
+    classPreferences = {
+        PREFERENCE_SET_NAME: 'LogarithmicDecayClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+    }
+
+    _model_spec_class_name_is_generic = True
+
 
     class Parameters(TimerFunction.Parameters):
         """

@@ -194,8 +194,7 @@ import numpy as np
 
 from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.functions.nonstateful.transferfunctions import TransferFunction, Linear, Exponential
-from psyneulink.core.components.functions.nonstateful.timerfunctions import \
-    ExponentialDecay, ExponentialRise, LinearDecay, LinearRise, LogarithmicDecay, LogarithmicRise
+from psyneulink.core.components.functions.nonstateful.timerfunctions import TimerFunction
 from psyneulink.core.components.functions.stateful.integratorfunctions import IntegratorFunction, SimpleIntegrator
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismError
@@ -360,7 +359,7 @@ class TimerMechanism(IntegratorMechanism):
         function = Parameter(SimpleIntegrator, stateful=False, loggable=False)
         trajectory = Parameter(Linear, stateful=False, loggable=False)
         start = FunctionParameter(0, function_name='trajectory', function_parameter_name='start', primary=True)
-        increment = FunctionParameter(1, function_name='trajectory', function_parameter_name='rate', primary=True)
+        increment = FunctionParameter(1, function_name='function', function_parameter_name='rate', primary=True)
         end = FunctionParameter(1, function_name='trajectory', function_parameter_name='end', primary=True )
         complete = Parameter(False, stateful=True, loggable=True)
 
@@ -373,12 +372,9 @@ class TimerMechanism(IntegratorMechanism):
                  input_shapes=None,
                  start:Optional[Union[int, float, list, np.ndarray]]=None,
                  increment:Optional[Union[int, float, list, np.ndarray]]=None,
-                 input_ports:Optional[Union[list, dict]]=None,
                  function:Optional[IntegratorFunction]=None,
-                 trajectory:Optional[TransferFunction]=None,
-                 output_ports:Optional[Union[str, Iterable]]=None,
+                 trajectory:Optional[TimerFunction]=None,
                  end:Optional[Union[int, float, list, np.ndarray]]=None,
-                 reset_default=None,
                  params=None,
                  name=None,
                  prefs:   Optional[ValidPrefSet] = None,
@@ -396,80 +392,17 @@ class TimerMechanism(IntegratorMechanism):
                                              trajectory=trajectory,
                                              end=end,
                                              complete=False,
-                                             reset_default=reset_default,
                                              params=params,
                                              name=name,
                                              prefs=prefs,
-                                             input_ports=input_ports,
-                                             output_ports=output_ports,
                                              **kwargs)
         assert True
-
-    # def _parse_function_variable(self, variable, context=None, context=None):
-    #     super()._parse_function_variable(variable, context, context)
-
-    def _handle_default_variable(self, default_variable=None, input_shapes=None, input_ports=None, function=None, params=None):
-        """If any parameters with len>1 have been specified for the Mechanism's function, and Mechanism's
-        default_variable has not been specified, reshape Mechanism's variable to match function's,
-        but make sure function's has the same outer dimensionality as the Mechanism's
-        """
-
-        # Get variable for Mechanism
-        user_specified = False
-        if default_variable is not None:
-            variable = np.atleast_1d(default_variable)
-            user_specified = True
-        else:
-            variable = self.parameters.variable.default_value
-            user_specified = self.parameters.variable._user_specified
-
-        # Only bother if an instantiated function was specified for the Mechanism
-        if isinstance(function, Function):
-            function_variable = function.parameters.variable.default_value
-            function_variable_len = function_variable.shape[-1]
-            variable_len = variable.shape[-1]
-
-            # Raise error if:
-            # - the length of both Mechanism and function variable are greater than 1 and they don't match, or
-            # - the Mechanism's variable length is 1 and the function's is > 1 (in which case would like to assign
-            #   shape of function's variable to that of Mechanism) but Mechanism's variable is user-specified.
-            if ((variable_len>1 and function_variable_len>1 and variable_len!=function_variable_len) or
-                (function_variable_len>1 and variable_len==1 and user_specified)):
-                raise TimerMechanismError(f"Shape of {repr(VARIABLE)} for function specified for {self.name} "
-                                               f"({function.name}: {function.variable.shape}) does not match "
-                                               f"the shape of the {repr(DEFAULT_VARIABLE)} specified for the "
-                                               f"{repr(Mechanism.__name__)}.")
-
-            # If length of Mechanism's variable is 1 but the function's is longer,
-            #     reshape Mechanism's inner dimension to match function
-            elif variable_len==1 and function_variable_len>1:
-                variable_shape = list(variable.shape)
-                variable_shape[-1] = function_variable.shape[-1]
-                # self.parameters.variable.default_value = np.zeros(tuple(variable_shape))
-                variable = np.zeros(tuple(variable_shape))
-            else:
-                variable = default_variable
-        else:
-            variable = default_variable
-
-            # IMPLEMENTATION NOTE:
-            #    Don't worry about case in which length of function's variable is 1 and Mechanism's is > 1
-            #    as the reshaping of the function's variable will be taken care of in _instantiate_function
-
-        return super()._handle_default_variable(default_variable=variable,
-                                                input_shapes=input_shapes,
-                                                input_ports=input_ports,
-                                                function=function,
-                                                params=params)
 
     def _execute(self, variable=None, context=None, runtime_params=None, **kwargs):
         """Override to check for call to reset by ControlSignal"""
         if not self.is_initializing and self.parameters.complete.get(context):
             return self.parameters.previous_value._get(context)
 
-        # IMPLEMENTATION NOTE:
-        #  This could be augmented to use reset parameter value as argument to reset()
-        #  if it is the same shape an an initializer for the Mechanism
         value = super()._execute(variable=variable, context=context, runtime_params=runtime_params, **kwargs)
         value = self.trajectory(value)
 
