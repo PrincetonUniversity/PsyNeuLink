@@ -442,7 +442,7 @@ class LogarithmicDecay(TimerFunction): # ---------------------------------------
     <LogarithmicDecay.variable>`
 
     .. math::
-       start \\left(1-\\frac{e^{variable}-1}{e^{end}}-\\frac{variable}{end*e^{end}}\\right)
+       start \\left(1-\\frac{variable + (end * e^{variable}) - end}{end*e^{end}}\\right)
 
     such that:
 
@@ -460,7 +460,7 @@ class LogarithmicDecay(TimerFunction): # ---------------------------------------
     `derivative <LogarithmicDecay.derivative>` returns the derivative of the LogarithmicDecay Function:
 
       .. math::
-       start * (-\\frac{e^{variable}}{e^{end}} - \\frac{1}{end*e^{end}})
+       start * \\left(1-\\frac{end*e^{variable}}{end*e^{end}}\\right)
 
     Arguments
     ---------
@@ -600,7 +600,8 @@ class LogarithmicDecay(TimerFunction): # ---------------------------------------
         start = self._get_current_parameter_value(START, context)
         end = self._get_current_parameter_value(END, context)
 
-        result = start * (1 - ((np.exp(variable) - 1) / np.exp(end)) - (variable / (end * np.exp(end))))
+        # result = start * (1 - ((np.exp(variable) - 1) / np.exp(end)) - (variable / end * np.exp(end)))
+        result = start * (1 - (variable + (end * np.exp(variable) - end) / (end * np.exp(end))))
 
         return self.convert_output_type(result)
 
@@ -609,7 +610,7 @@ class LogarithmicDecay(TimerFunction): # ---------------------------------------
         """Derivative of `function <LogarithmicDecay._function>` at **input**:
 
         .. math::
-           start * (-\\frac{e^{input}}{e^{end}} - \\frac{1}{end*e^{end}})
+           start * \\left(1-\\frac{end*e^{variable}}{end*e^{end}}\\right)
 
         Arguments
         ---------
