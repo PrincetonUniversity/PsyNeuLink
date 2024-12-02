@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.15.2.0+42.gcd06c82ae documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.15.2.0+43.g9ffdc58e4 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.2.0+42
+                  0.15.2.0+43
                 </div>
               
             
@@ -5416,30 +5416,34 @@ that may need to do this less frequently for scallable exeuction</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_unspecified_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">NotImplemented</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.reset" title="Permalink to this definition">¶</a></dt>
-<dd><p>If the component’s execute method involves execution of an <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">IntegratorFunction</span></code></a> Function, this method
-effectively begins the function’s accumulation over again at the specified value, and may update related
-values on the component, depending on the component type.  Otherwise, it simply reassigns the Component’s
-value based on its default_variable.</p>
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_unspecified_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clear_results</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">NotImplemented</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset all stateful functions in the Composition to their initial values.</p>
+<p>If <strong>values</strong> is provided, the <a class="reference internal" href="StatefulFunction.html#psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> of the corresponding
+<a class="reference internal" href="StatefulFunction.html"><span class="doc">stateful functions</span></a> are set to the values specified. If a value is not provided for a
+given node, the <a class="reference internal" href="StatefulFunction.html#psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> is set to the value of its <a class="reference internal" href="StatefulFunction.html#psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.initializer" title="psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.initializer"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initializer</span></code></a>.</p>
+<p>If <strong>include_unspecified_nodes</strong> is False, then all nodes must have corresponding reset values.
+The <code class="xref any docutils literal notranslate"><span class="pre">DEFAULT</span></code> keyword can be used in lieu of a numerical value to reset a node’s value to its default.</p>
+<p>If <strong>clear_results</strong> is True, the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.results" title="psyneulink.core.compositions.composition.Composition.results"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">results</span></code></a> attribute is set to an empty list.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition.initialize">
 <span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_unspecified_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.initialize" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initializes the values of nodes within cycles. If <code class="xref any docutils literal notranslate"><span class="pre">include_unspecified_nodes</span></code> is True and a value is
-provided for a given node, the node will be initialized to that value. If <code class="xref any docutils literal notranslate"><span class="pre">include_unspecified_nodes</span></code> is
-True and a value is not provided, the node will be initialized to its default value. If
-<code class="xref any docutils literal notranslate"><span class="pre">include_unspecified_nodes</span></code> is False, then all nodes must have corresponding initialization values. The
-<code class="xref any docutils literal notranslate"><span class="pre">DEFAULT</span></code> keyword can be used in lieu of a numerical value to reset a node’s value to its default.</p>
-<p>If a context is not provided, the most recent context under which the Composition has executed will be used.</p>
+<dd><p>Initialize the values of nodes within cycles.
+If <code class="xref any docutils literal notranslate"><span class="pre">include_unspecified_nodes</span></code> is True and a value is provided for a given node, the node is initialized to
+that value. If <code class="xref any docutils literal notranslate"><span class="pre">include_unspecified_nodes</span></code> is  True and a value is not provided, the node is initialized to
+its default value. If <code class="xref any docutils literal notranslate"><span class="pre">include_unspecified_nodes</span></code> is False, then all nodes must have corresponding
+initialization values. The <code class="xref any docutils literal notranslate"><span class="pre">DEFAULT</span></code> keyword can be used in lieu of a numerical value to reset a node’s value
+to its default.</p>
+<p>If a context is not provided, the most recent context under which the Composition has executed is used.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>values</strong> (<em>Dict { Node: Node Value }</em>) – A dictionary contaning key-value pairs of Nodes and initialization values. Nodes within cycles that are
-not included in this dict will be initialized to their default values.</p></li>
+<li><p><strong>values</strong> (<em>Dict { Node: Node Value }</em>) – A dictionary containing key-value pairs of Nodes and initialization values. Nodes within cycles that are
+not included in this dict are initialized to their default values.</p></li>
 <li><p><strong>include_unspecified_nodes</strong> (<em>bool</em>) – Specifies whether all nodes within cycles should be initialized or only ones specified in the provided
 values dictionary.</p></li>
-<li><p><strong>context</strong> (<a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context" title="psyneulink.core.globals.context.Context"><em>Context</em></a>) – The context under which the nodes should be initialized. context will be set to
+<li><p><strong>context</strong> (<a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context" title="psyneulink.core.globals.context.Context"><em>Context</em></a>) – The context under which the nodes should be initialized. context are set to
 self.most_recent_execution_context if one is not specified.</p></li>
 </ul>
 </dd>
