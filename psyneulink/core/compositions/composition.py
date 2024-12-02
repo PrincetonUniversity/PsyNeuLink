@@ -12880,7 +12880,7 @@ _
         pass
 
     @handle_external_context(fallback_most_recent=True)
-    def reset(self, values=None, include_unspecified_nodes=True, context=NotImplemented):
+    def reset(self, values=None, include_unspecified_nodes=True, clear_results=False, context=NotImplemented):
         if not values:
             values = {}
 
@@ -12889,6 +12889,9 @@ _
                 continue
             reset_val = values.get(node)
             node.reset(reset_val, context=context)
+
+        if clear_results:
+            self.parameters.results._set([], context)
 
     @handle_external_context(fallback_most_recent=True)
     def initialize(self, values=None, include_unspecified_nodes=True, context=None):
