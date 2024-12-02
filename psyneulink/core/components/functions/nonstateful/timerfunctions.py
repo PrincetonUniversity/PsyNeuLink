@@ -20,8 +20,8 @@
 Overview
 --------
 
-Functions for which a `start <TimerFunction.start>` and `end <TimerFunction.end>` value can be specified, for
-use with a `TimerMechanism`.
+Functions for which a `start <TimerFunction.start>`, `threshold <TimerFunction.threshold>`, and `end
+<TimerFunction.end>` value can be specified, for use with a `TimerMechanism`.
 
 .. _TimerFunction_StandardAttributes:
 
@@ -82,8 +82,11 @@ class TimerFunction(TransferFunction):  # --------------------------------------
     `start` -- specifies the `value <Function_Base.value>` that the function should have when its `variable
     <Function_Base.variable>` is 0.
 
+    `threshold` -- specifies the `value <Function_Base.value>` that the function should have when its `variable
+    <Function_Base.variable>` equals its `threshold <TimerFunction.threshold>`.
+
     `end` -- specifies the value of the `variable <Function_Base.variable>` at which the `value <Function_Base.value>`
-    of the function should be equal to 0.
+    of the function should be equal to its `threshold <TimerFunction.threshold>`.
 
     """
     componentType = TIMER_FUNCTION_TYPE
@@ -159,9 +162,9 @@ class AcceleratingDecay(TimerFunction): # --------------------------------------
     such that:
 
     .. math::
-        value = start \ for\ variable=0
+        value=start \ for\ variable=0
 
-        value = 0\ for\ variable=end
+        value=threshold\ for\ variable=end
 
     where:
 
@@ -250,43 +253,43 @@ class AcceleratingDecay(TimerFunction): # --------------------------------------
     _model_spec_class_name_is_generic = True
 
 
-    class Parameters(TimerFunction.Parameters):
-        """
-            Attributes
-            ----------
-
-                start
-                    see `start <AcceleratingDecay.start>`
-
-                    :default value: 1.0
-                    :type: ``float``
-
-                threshold
-                    see `threshold <AcceleratingDecay.threshold>`
-
-                    :default value: 0.0
-                    :type: ``float``
-
-                end
-                    see `end <AcceleratingDecay.end>`
-
-                    :default value: 1.0
-                    :type: ``float``
-
-        """
-        bounds = (None, None)
-
-        def _validate_start(self, start):
-            if start <= 0:
-                return f"must be greater than 0."
-
-        def _validate_threshold(self, start):
-            if start < 0:
-                return f"must be greater than or equal to 0."
-
-        def _validate_end(self, end):
-            if end <= 0:
-                return f"must be greater than 0."
+    # class Parameters(TimerFunction.Parameters):
+    #     """
+    #         Attributes
+    #         ----------
+    #
+    #             start
+    #                 see `start <AcceleratingDecay.start>`
+    #
+    #                 :default value: 1.0
+    #                 :type: ``float``
+    #
+    #             threshold
+    #                 see `threshold <AcceleratingDecay.threshold>`
+    #
+    #                 :default value: 0.0
+    #                 :type: ``float``
+    #
+    #             end
+    #                 see `end <AcceleratingDecay.end>`
+    #
+    #                 :default value: 1.0
+    #                 :type: ``float``
+    #
+    #     """
+    #     bounds = (None, None)
+    #
+    #     def _validate_start(self, start):
+    #         if start <= 0:
+    #             return f"must be greater than 0."
+    #
+    #     def _validate_threshold(self, start):
+    #         if start < 0:
+    #             return f"must be greater than or equal to 0."
+    #
+    #     def _validate_end(self, end):
+    #         if end <= 0:
+    #             return f"must be greater than 0."
 
     @check_user_specified
     @beartype
@@ -397,6 +400,7 @@ class AcceleratingDecay(TimerFunction): # --------------------------------------
 
         builder.store(val, ptro)
 
+    # FIX:
     def _gen_pytorch_fct(self, device, context=None):
         start = self._get_pytorch_fct_param_value(START, device, context)
         end = self._get_pytorch_fct_param_value(END, device, context)
