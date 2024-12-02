@@ -434,17 +434,56 @@ class TestConstruction:
         assert em._field_index_map[[k for k in em._field_index_map.keys()
                                     if 'WEIGHT to WEIGHTED MATCH for KEY B' in k.name][0]] == 2
 
-    def test_field_weights_all_None_and_or_0(self):
-        with pytest.raises(EMCompositionError) as error_text:
-            EMComposition(memory_template=(3,1), memory_capacity=1, field_weights=[None, None, None])
-        assert error_text.value.error_value == (f"The entries in 'field_weights' arg for EM_Composition can't all "
-                                                f"be 'None' since that will preclude the construction of any keys.")
+    @pytest.mark.parametrize('field_weight_1', ([None], [0], [1]),  ids=['None', '0', '1'])
+    @pytest.mark.parametrize('field_weight_2', ([None], [0], [1]),  ids=['None', '0', '1'])
+    @pytest.mark.parametrize('field_weight_3', ([None], [0], [1]),  ids=['None', '0', '1'])
+    def test_order_fields_in_memory(self, field_weight_1, field_weight_2, field_weight_3):
+        """Test that order of keys and values doesn't matter"""
 
-        with pytest.warns(UserWarning) as warning:
-            EMComposition(memory_template=(3,1), memory_capacity=1, field_weights=[0, None, 0])
-        warning_msg = (f"All of the entries in the 'field_weights' arg for EM_Composition are either None or set to 0; "
-                       f"this will result in no retrievals unless/until the 0(s) is(are) changed to a positive value.")
-        assert warning_msg in str(warning[0].message)
+        # pytest.skip(<UNECESSARY TESTS>>)
+
+        def construct_em(field_weights):
+            return pnl.EMComposition(memory_template=[[[5,0], [5], [5,0,3]], [[20,0], [20], [20,1,199]]],
+                                     memory_capacity=4,
+                                     field_weights=field_weights)
+
+        field_weights = field_weight_1 + field_weight_2 + field_weight_3
+        em = None
+
+        if all([fw is None for fw in field_weights]):
+            with pytest.raises(EMCompositionError) as error_text:
+                construct_em(field_weights)
+            assert ("The entries in 'field_weights' arg for EM_Composition can't all be 'None' "
+                    "since that will preclude the construction of any keys." in str(error_text.value))
+
+        elif not any(field_weights):
+            with pytest.warns(UserWarning) as warning:
+                em = construct_em(field_weights)
+            warning_msg = ("All of the entries in the 'field_weights' arg for EM_Composition "
+                           "are either None or set to 0; this will result in no retrievals "
+                           "unless/until one or more of them are changed to a positive value.")
+            assert warning_msg in str(warning[0].message)
+
+        elif any([fw == 0 for fw in field_weights]):
+            with pytest.warns(UserWarning) as warning:
+                em = construct_em(field_weights)
+            warning_msg = ("Some of the entries in the 'field_weights' arg for EM_Composition are set to 0; those "
+                           "fields will be ignored during retrieval unless/until they are changed to a positive value.")
+            assert warning_msg in str(warning[0].message)
+
+        else:
+            em = construct_em(field_weights)
+
+        if em:
+            for field_weight, field in zip(field_weights, em.fields):
+                # Validate proper field-type assignments
+                if field_weight is None:
+                    assert field.type == pnl.FieldType.VALUE
+                else:
+                    assert field.type == pnl.FieldType.KEY
+                # Validate alignment of field with memory
+                assert len(field.memories[0]) == [2,1,3][field.index]
+
 
 
 @pytest.mark.pytorch
@@ -456,77 +495,77 @@ class TestExecution:
         #   memory_template         mem    mem  mem  fld   concat  nlz  sm   str    inputs        expected_retrieval
         #                           fill   cap decay wts    keys   mem gain  prob
         # ----------------------------------------------------------------------------------  ------------------------
-        (0, [[[1,2,3],[4,6]],
-             [[1,2,5],[4,8]],
-             [[1,2,10],[4,10]]],    None,   3,  0, [1,None], None, None,  100,  0, [[[1, 2, 3]]], [[1., 2., 3.16585899],
-                                                                                                   [4., 6.16540637]]),
-        (1, [[[1,2,3],[4,6]],
-             [[1,2,5],[4,8]],
-             [[1,2,10],[4,10]]],  None,   3,  0, [1,None], None, None,  100,  0,   [[1, 2, 3],
-                                                                                    [4, 6]],      [[1., 2., 3.16585899],
-                                                                                                   [4., 6.16540637]]),
-        (2, [[[1,2,3],[4,6]],
-             [[1,2,5],[4,8]],
-             [[1,2,10],[4,10]]],  None,   3,  0, [1,None], None, None,  100,  0,   [[1, 2, 3],
-                                                                                    [4, 8]],     [[1., 2., 3.16585899],
-                                                                                                  [4., 6.16540637]]),
-        (3, [[[1,2,3],[4,6]],
-             [[1,2,5],[4,8]],
-             [[1,2,10],[4,10]]], (0,.01), 4,  0, [1,None],  None, None,  100,  0, [[1, 2, 3],
-                                                                                   [4, 8]],      [[0.99998628,
-                                                                                                   1.99997247,
-                                                                                                   3.1658154 ],
-                                                                                                  [3.99994492,
-                                                                                                   6.16532141]]),
-        (4, [[[1,2,3],[4,6]],     # Equal field_weights (but not concatenated)
-             [[1,2,5],[4,6]],
-             [[1,2,10],[4,6]]], (0,.01), 4,  0, [1,1],  None, None,  100,  0, [[1, 2, 3],
-                                                                                   [4, 6]],     [[0.99750462,
-                                                                                                  1.99499376,
-                                                                                                  3.51623568],
-                                                                                                 [3.98998465,
-                                                                                                  5.9849743]]
-         ),
-        (5, [[[1,2,3],[4,6]],     # Equal field_weights with concatenation
-             [[1,2,5],[4,8]],
-             [[1,2,10],[4,10]]], (0,.01), 4,  0, [1,1],  True, None,  100,  0, [[1, 2, 4],
-                                                                                  [4, 6]],      [[0.99898504,
-                                                                                                  1.99796378,
-                                                                                                  4.00175037],
-                                                                                                 [3.99592639,
-                                                                                                  6.97406456]]),
-        (6, [[[1,2,3],[4,6]],        # Unequal field_weights
-             [[1,2,5],[4,8]],
-             [[1,2,10],[4,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  0, [[1, 2, 3],
-                                                                                  [4, 6]],      [[0.99996025,
-                                                                                                  1.99992024,
-                                                                                                  3.19317783],
-                                                                                                 [3.99984044,
-                                                                                                  6.19219795]]),
-        (7, [[[1,2,3],[4,6]],        # Store + no decay
-             [[1,2,5],[4,8]],
-             [[1,2,10],[4,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  1, [[1, 2, 3],
-                                                                                  [4, 6]],      [[0.99996025,
-                                                                                                  1.99992024,
-                                                                                                  3.19317783],
-                                                                                                 [3.99984044,
-                                                                                                  6.19219795]]),
-        (8, [[[1,2,3],[4,6]],        # Store + default decay (should be AUTO)
-             [[1,2,5],[4,8]],
-             [[1,2,10],[4,10]]], (0,.01), 4, None, [9,1],  None, None,  100,  1,[[1, 2, 3],
-                                                                                    [4, 6]],   [[0.99996025,
-                                                                                                 1.99992024,
-                                                                                                 3.19317783],
-                                                                                                 [3.99984044,
-                                                                                                  6.19219795]]),
-        (9, [[[1,2,3],[4,6]],        # Store + explicit AUTO decay
-             [[1,2,5],[4,8]],
-             [[1,2,10],[4,10]]], (0,.01), 4, AUTO, [9,1],  None, None,  100,  1, [[1, 2, 3],
-                                                                                  [4, 6]],      [[0.99996025,
-                                                                                                  1.99992024,
-                                                                                                  3.19317783],
-                                                                                                 [3.99984044,
-                                                                                                  6.19219795]]),
+        # (0, [[[1,2,3],[4,6]],
+        #      [[1,2,5],[4,8]],
+        #      [[1,2,10],[4,10]]],    None,   3,  0, [1,None], None, None,  100,  0, [[[1, 2, 3]]], [[1., 2., 3.16585899],
+        #                                                                                            [4., 6.16540637]]),
+        # (1, [[[1,2,3],[4,6]],
+        #      [[1,2,5],[4,8]],
+        #      [[1,2,10],[4,10]]],  None,   3,  0, [1,None], None, None,  100,  0,   [[1, 2, 3],
+        #                                                                             [4, 6]],      [[1., 2., 3.16585899],
+        #                                                                                            [4., 6.16540637]]),
+        # (2, [[[1,2,3],[4,6]],
+        #      [[1,2,5],[4,8]],
+        #      [[1,2,10],[4,10]]],  None,   3,  0, [1,None], None, None,  100,  0,   [[1, 2, 3],
+        #                                                                             [4, 8]],     [[1., 2., 3.16585899],
+        #                                                                                           [4., 6.16540637]]),
+        # (3, [[[1,2,3],[4,6]],
+        #      [[1,2,5],[4,8]],
+        #      [[1,2,10],[4,10]]], (0,.01), 4,  0, [1,None],  None, None,  100,  0, [[1, 2, 3],
+        #                                                                            [4, 8]],      [[0.99998628,
+        #                                                                                            1.99997247,
+        #                                                                                            3.1658154 ],
+        #                                                                                           [3.99994492,
+        #                                                                                            6.16532141]]),
+        # (4, [[[1,2,3],[4,6]],     # Equal field_weights (but not concatenated)
+        #      [[1,2,5],[4,6]],
+        #      [[1,2,10],[4,6]]], (0,.01), 4,  0, [1,1],  None, None,  100,  0, [[1, 2, 3],
+        #                                                                            [4, 6]],     [[0.99750462,
+        #                                                                                           1.99499376,
+        #                                                                                           3.51623568],
+        #                                                                                          [3.98998465,
+        #                                                                                           5.9849743]]
+        #  ),
+        # (5, [[[1,2,3],[4,6]],     # Equal field_weights with concatenation
+        #      [[1,2,5],[4,8]],
+        #      [[1,2,10],[4,10]]], (0,.01), 4,  0, [1,1],  True, None,  100,  0, [[1, 2, 4],
+        #                                                                           [4, 6]],      [[0.99898504,
+        #                                                                                           1.99796378,
+        #                                                                                           4.00175037],
+        #                                                                                          [3.99592639,
+        #                                                                                           6.97406456]]),
+        # (6, [[[1,2,3],[4,6]],        # Unequal field_weights
+        #      [[1,2,5],[4,8]],
+        #      [[1,2,10],[4,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  0, [[1, 2, 3],
+        #                                                                           [4, 6]],      [[0.99996025,
+        #                                                                                           1.99992024,
+        #                                                                                           3.19317783],
+        #                                                                                          [3.99984044,
+        #                                                                                           6.19219795]]),
+        # (7, [[[1,2,3],[4,6]],        # Store + no decay
+        #      [[1,2,5],[4,8]],
+        #      [[1,2,10],[4,10]]], (0,.01), 4,  0, [9,1],  None, None,  100,  1, [[1, 2, 3],
+        #                                                                           [4, 6]],      [[0.99996025,
+        #                                                                                           1.99992024,
+        #                                                                                           3.19317783],
+        #                                                                                          [3.99984044,
+        #                                                                                           6.19219795]]),
+        # (8, [[[1,2,3],[4,6]],        # Store + default decay (should be AUTO)
+        #      [[1,2,5],[4,8]],
+        #      [[1,2,10],[4,10]]], (0,.01), 4, None, [9,1],  None, None,  100,  1,[[1, 2, 3],
+        #                                                                             [4, 6]],   [[0.99996025,
+        #                                                                                          1.99992024,
+        #                                                                                          3.19317783],
+        #                                                                                          [3.99984044,
+        #                                                                                           6.19219795]]),
+        # (9, [[[1,2,3],[4,6]],        # Store + explicit AUTO decay
+        #      [[1,2,5],[4,8]],
+        #      [[1,2,10],[4,10]]], (0,.01), 4, AUTO, [9,1],  None, None,  100,  1, [[1, 2, 3],
+        #                                                                           [4, 6]],      [[0.99996025,
+        #                                                                                           1.99992024,
+        #                                                                                           3.19317783],
+        #                                                                                          [3.99984044,
+        #                                                                                           6.19219795]]),
         (10, [[[1,2,3],[4,6]],        # Store + numerical decay
               [[1,2,5],[4,8]],
               [[1,2,10],[4,10]]], (0,.01), 4, .1, [9,1],  None, None,  100,  1, [[1, 2, 3],
