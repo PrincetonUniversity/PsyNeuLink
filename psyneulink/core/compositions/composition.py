@@ -12881,6 +12881,18 @@ _
 
     @handle_external_context(fallback_most_recent=True)
     def reset(self, values=None, include_unspecified_nodes=True, clear_results=False, context=NotImplemented):
+        """Reset all stateful functions in the Composition to their initial values.
+
+        If **values** is provided, the `previous_value <StatefulFunction.previous_value>` of the corresponding
+        `stateful functions <StatefulFunction>` are set to the values specified. If a value is not provided for a
+        given node, the `previous_value <StatefulFunction.previous_value>` is set to the value of its `initializer
+        <StatefulFunction.initializer>`.
+
+        If **include_unspecified_nodes** is False, then all nodes must have corresponding reset values.
+        The `DEFAULT` keyword can be used in lieu of a numerical value to reset a node's value to its default.
+
+        If **clear_results** is True, the `results <Composition.results>` attribute is set to an empty list.
+        """
         if not values:
             values = {}
 
@@ -12895,28 +12907,28 @@ _
 
     @handle_external_context(fallback_most_recent=True)
     def initialize(self, values=None, include_unspecified_nodes=True, context=None):
-        """
-            Initializes the values of nodes within cycles. If `include_unspecified_nodes` is True and a value is
-            provided for a given node, the node will be initialized to that value. If `include_unspecified_nodes` is
-            True and a value is not provided, the node will be initialized to its default value. If
-            `include_unspecified_nodes` is False, then all nodes must have corresponding initialization values. The
-            `DEFAULT` keyword can be used in lieu of a numerical value to reset a node's value to its default.
+        """Initialize the values of nodes within cycles.
+        If `include_unspecified_nodes` is True and a value is provided for a given node, the node is initialized to
+        that value. If `include_unspecified_nodes` is  True and a value is not provided, the node is initialized to
+        its default value. If `include_unspecified_nodes` is False, then all nodes must have corresponding
+        initialization values. The `DEFAULT` keyword can be used in lieu of a numerical value to reset a node's value
+        to its default.
 
-            If a context is not provided, the most recent context under which the Composition has executed will be used.
+        If a context is not provided, the most recent context under which the Composition has executed is used.
 
-            Arguments
-            ----------
-            values: Dict { Node: Node Value }
-                A dictionary contaning key-value pairs of Nodes and initialization values. Nodes within cycles that are
-                not included in this dict will be initialized to their default values.
+        Arguments
+        ----------
+        values: Dict { Node: Node Value }
+            A dictionary containing key-value pairs of Nodes and initialization values. Nodes within cycles that are
+            not included in this dict are initialized to their default values.
 
-            include_unspecified_nodes: bool
-                Specifies whether all nodes within cycles should be initialized or only ones specified in the provided
-                values dictionary.
+        include_unspecified_nodes: bool
+            Specifies whether all nodes within cycles should be initialized or only ones specified in the provided
+            values dictionary.
 
-            context: Context
-                The context under which the nodes should be initialized. context will be set to
-                self.most_recent_execution_context if one is not specified.
+        context: Context
+            The context under which the nodes should be initialized. context are set to
+            self.most_recent_execution_context if one is not specified.
 
         """
         # comp must be initialized from context before cycle values are initialized
