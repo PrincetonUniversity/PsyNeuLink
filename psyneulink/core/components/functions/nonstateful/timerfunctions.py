@@ -12,10 +12,10 @@
 
 * `LinearRise`
 * `LinearDecay`
-* `ExponentialRise`
+* `AcceleratingRise`
 * `ExponentialDecay`
-* `LogarithmicRise`
-* `LogarithmicDecay`
+* `DeceleratingRise`
+* `AcceleratingDecay`
 
 Overview
 --------
@@ -63,11 +63,11 @@ from psyneulink.core.globals.utilities import (
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, ValidPrefSet
 from psyneulink.core.globals.keywords import \
-    (ADDITIVE_PARAM, END, EXPONENTIAL_DECAY_FUNCTION, EXPONENTIAL_RISE_FUNCTION,
-     LINEAR_DECAY_FUNCTION, LINEAR_RISE_FUNCTION, LOGARITHMIC_DECAY_FUNCTION, LOGARITHMIC_RISE_FUNCTION,
+    (ADDITIVE_PARAM, END, EXPONENTIA_DECAY_FUNCTION, ACCELERATING_RISE_FUNCTION,
+     LINEAR_DECAY_FUNCTION, LINEAR_RISE_FUNCTION, ACCELERATING_DECAY_FUNCTION, DECELERATING_RISE_FUNCTION,
      MULTIPLICATIVE_PARAM, OFFSET, PREFERENCE_SET_NAME, SCALE, START, TIMER_FUNCTION_TYPE, TOLERANCE)
 
-__all__ = ['ExponentialDecay', 'ExponentialRise', 'LinearDecay', 'LinearRise', 'LogarithmicDecay', 'LogarithmicRise']
+__all__ = ['ExponentialDecay', 'AcceleratingRise', 'LinearDecay', 'LinearRise', 'AcceleratingDecay', 'DeceleratingRise']
 
 
 class TimerFunction(TransferFunction):  # --------------------------------------------------------------------------------
@@ -122,7 +122,7 @@ class LinearRise(TimerFunction):
     pass
 
 
-class ExponentialRise(TimerFunction):
+class AcceleratingRise(TimerFunction):
     pass
 
 
@@ -263,7 +263,7 @@ class ExponentialDecay(TimerFunction):  # --------------------------------------
         for details).
     """
 
-    componentName = EXPONENTIAL_DECAY_FUNCTION
+    componentName = EXPONENTIA_DECAY_FUNCTION
 
     classPreferences = {
         PREFERENCE_SET_NAME: 'ExponentialDecayClassPreferences',
@@ -420,13 +420,13 @@ class ExponentialDecay(TimerFunction):  # --------------------------------------
         return lambda x : offset + start * torch.exp(-x * torch.log(1 / tolerance) / end)
 
 
-class LogarithmicRise(TimerFunction):
+class DeceleratingRise(TimerFunction):
     pass
 
 
-class LogarithmicDecay(TimerFunction): # ---------------------------------------------------------------------------
+class AcceleratingDecay(TimerFunction): # ---------------------------------------------------------------------------
     """
-    LogarithmicDecay(      \
+    AcceleratingDecay(      \
          default_variable, \
          start=1.0,        \
          end=1.0,          \
@@ -436,10 +436,10 @@ class LogarithmicDecay(TimerFunction): # ---------------------------------------
          prefs=None        \
          )
 
-    .. _LogarithmicDecay:
+    .. _AcceleratingDecay:
     |
-    `function <LogarithmicDecay._function>` returns logarthmically decaying transform of `variable
-    <LogarithmicDecay.variable>`
+    `function <AcceleratingDecay._function>` returns logarthmically decaying transform of `variable
+    <AcceleratingDecay.variable>`
 
     .. math::
        start \\left(1-\\frac{variable + (end * e^{variable}) - end}{end*e^{end}}\\right)
@@ -453,11 +453,11 @@ class LogarithmicDecay(TimerFunction): # ---------------------------------------
 
     where:
 
-        **start** determines the value of the function when `variable <LogarithmicDecay.variable>` = 0.
+        **start** determines the value of the function when `variable <AcceleratingDecay.variable>` = 0.
 
-        **end** determines the value of `variable <LogarithmicDecay.variable>` at which the value of the function = 0.
+        **end** determines the value of `variable <AcceleratingDecay.variable>` at which the value of the function = 0.
 
-    `derivative <LogarithmicDecay.derivative>` returns the derivative of the LogarithmicDecay Function:
+    `derivative <AcceleratingDecay.derivative>` returns the derivative of the AcceleratingDecay Function:
 
       .. math::
        start * \\left(1-\\frac{end*e^{variable}}{end*e^{end}}\\right)
@@ -469,11 +469,11 @@ class LogarithmicDecay(TimerFunction): # ---------------------------------------
         specifies a template for the value to be transformed.
 
     start : float : default 1.0
-        specifies the value function should have when `variable <LogarithmicDecay.variable>` = 0;
+        specifies the value function should have when `variable <AcceleratingDecay.variable>` = 0;
         must be greater than 0.
 
     end : float : default 1.0
-        specifies the value of `variable <LogarithmicDecay.variable>` at which the value of the function
+        specifies the value of `variable <AcceleratingDecay.variable>` at which the value of the function
         should equal 0; must be greater than 0.
 
     params : Dict[param keyword: param value] : default None
@@ -497,10 +497,10 @@ class LogarithmicDecay(TimerFunction): # ---------------------------------------
         contains value to be transformed.
 
     start : float (>0)
-        determines the value the function should have when `variable <LogarithmicDecay.variable>` = 0.
+        determines the value the function should have when `variable <AcceleratingDecay.variable>` = 0.
 
     end : float (>0)
-        determines the value of `variable <LogarithmicDecay.variable>` at which the value of the function equals 0.
+        determines the value of `variable <AcceleratingDecay.variable>` at which the value of the function equals 0.
 
     bounds : (None, None)
 
@@ -517,10 +517,10 @@ class LogarithmicDecay(TimerFunction): # ---------------------------------------
         for details).
     """
 
-    componentName = LOGARITHMIC_DECAY_FUNCTION
+    componentName = ACCELERATING_DECAY_FUNCTION
 
     classPreferences = {
-        PREFERENCE_SET_NAME: 'LogarithmicDecayClassPreferences',
+        PREFERENCE_SET_NAME: 'AcceleratingDecayClassPreferences',
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
@@ -533,13 +533,13 @@ class LogarithmicDecay(TimerFunction): # ---------------------------------------
             ----------
 
                 start
-                    see `start <LogarithmicDecay.start>`
+                    see `start <AcceleratingDecay.start>`
 
                     :default value: 1.0
                     :type: ``float``
 
                 end
-                    see `end <LogarithmicDecay.end>`
+                    see `end <AcceleratingDecay.end>`
 
                     :default value: 1.0
                     :type: ``float``
@@ -607,7 +607,7 @@ class LogarithmicDecay(TimerFunction): # ---------------------------------------
 
     @handle_external_context()
     def derivative(self, input, output=None, context=None):
-        """Derivative of `function <LogarithmicDecay._function>` at **input**:
+        """Derivative of `function <AcceleratingDecay._function>` at **input**:
 
         .. math::
            start * \\left(1-\\frac{end*e^{variable}}{end*e^{end}}\\right)
@@ -616,7 +616,7 @@ class LogarithmicDecay(TimerFunction): # ---------------------------------------
         ---------
 
         input : number
-            value of the input to the LogarithmicDecay transform at which derivative is to be taken.
+            value of the input to the AcceleratingDecay transform at which derivative is to be taken.
 
         Returns
         -------

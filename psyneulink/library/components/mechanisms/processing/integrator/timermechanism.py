@@ -151,7 +151,7 @@ end = scale (y = (tolerance * start + offset) at x = end)
 tolerance = 0.01 (default) (i.e., y = (1% of start) + offset at x = end)
 
 ACCELERATING DECAY:  **trajectory** = EXPONENTIAL; **direction** = *INCREASING*
-LogarithmicDecay Function
+AcceleratingDecay Function
 :math: start + e^{-e}(1-e^x)\frac{n}{e^{end-e-0.4^{end}}}
 python: start + np.exp(-e)*(1-np.exp(x))*n/np.exp(end-e-0.4**end)
 start = offset (y value at which decay begins)
@@ -161,11 +161,11 @@ end = scale (x value at which y=0)
    This is an empirically-derived function;  the value of 0.4 is used to ensure that the function reaches 0 at the
     specified end value. If anyone has an analytic solution, please add it here.
 
-`function <LogarithmicDecay._function>` returns exponentially decaying transform of `variable
-<LogarithmicDecay.variable>`, that has a value of `start <LogarithmicDecay.start>` + `offset
-<LogarithmicDecay.offset>` at `variable <LogarithmicDecay.variable>` = 0, and a value of `threshold
-<LogarithmicDecay.end>` * `start <LogarithmicDecay.start>` + `offset <LogarithmicDecay.offset>` at
-`variable at `variable <LogarithmicDecay.variable>` = `end <LogarithmicDecay.end>`:
+`function <AcceleratingDecay._function>` returns exponentially decaying transform of `variable
+<AcceleratingDecay.variable>`, that has a value of `start <AcceleratingDecay.start>` + `offset
+<AcceleratingDecay.offset>` at `variable <AcceleratingDecay.variable>` = 0, and a value of `threshold
+<AcceleratingDecay.end>` * `start <AcceleratingDecay.start>` + `offset <AcceleratingDecay.offset>` at
+`variable at `variable <AcceleratingDecay.variable>` = `end <AcceleratingDecay.end>`:
 COMMENT
 
 .. _TimerMechanism_Examples:
