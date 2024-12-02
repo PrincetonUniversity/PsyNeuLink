@@ -601,7 +601,7 @@ class AcceleratingDecay(TimerFunction): # --------------------------------------
         end = self._get_current_parameter_value(END, context)
 
         # result = start * (1 - ((np.exp(variable) - 1) / np.exp(end)) - (variable / end * np.exp(end)))
-        result = start * (1 - (variable + (end * np.exp(variable) - end) / (end * np.exp(end))))
+        result = start * (1 - (variable + (end * np.exp(variable)) - end) / (end * np.exp(end)))
 
         return self.convert_output_type(result)
 
