@@ -5,6 +5,6 @@ TimerFunctions
    :maxdepth: 3
 
 .. automodule:: psyneulink.core.components.functions.nonstateful.timerfunctions
-   :members: ExponentialRise, ExponentialDecay, LinearRise, LinearDecay, LogarithmicRise LogarithmicDecay
+   :members: LinearRise, LinearDecay, ExponentialRise, ExponentialDecay, LogarithmicRise, LogarithmicDecay
    :private-members:
    :exclude-members: Parameters

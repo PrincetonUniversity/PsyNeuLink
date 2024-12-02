@@ -64,8 +64,8 @@ from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, ValidPrefSet
 from psyneulink.core.globals.keywords import \
     (ADDITIVE_PARAM, END, EXPONENTIAL_DECAY_FUNCTION, EXPONENTIAL_RISE_FUNCTION,
-     LINEAR_RISE_FUNCTION, LINEAR_DECAY_FUNCTION, LOGARITHMIC_DECAY_FUNCTION, MULTIPLICATIVE_PARAM,
-     OFFSET, PREFERENCE_SET_NAME, SCALE, START, TIMER_FUNCTION_TYPE, TOLERANCE)
+     LINEAR_DECAY_FUNCTION, LINEAR_RISE_FUNCTION, LOGARITHMIC_DECAY_FUNCTION, LOGARITHMIC_RISE_FUNCTION,
+     MULTIPLICATIVE_PARAM, OFFSET, PREFERENCE_SET_NAME, SCALE, START, TIMER_FUNCTION_TYPE, TOLERANCE)
 
 __all__ = ['ExponentialDecay', 'ExponentialRise', 'LinearDecay', 'LinearRise', 'LogarithmicDecay', 'LogarithmicRise']
 
@@ -112,6 +112,18 @@ class TimerFunction(TransferFunction):  # --------------------------------------
         def _validate_end(self, end):
             if end < 0:
                 return f"must be greater than 0."
+
+
+class LinearDecay(TimerFunction):
+    pass
+
+
+class LinearRise(TimerFunction):
+    pass
+
+
+class ExponentialRise(TimerFunction):
+    pass
 
 
 class ExponentialDecay(TimerFunction):  # ---------------------------------------------------------------------------
@@ -342,11 +354,11 @@ class ExponentialDecay(TimerFunction):  # --------------------------------------
 
     @handle_external_context()
     def derivative(self, input, output=None, context=None):
-        """
-        derivative(input)
+        """Derivative of `function <ExponentialDecay._function>` at **input**:
+
         .. math::
-            \frac{start\ln\left(\frac{1}{tolerance}\right)e^{-\left(\frac{variable\ln
-            \left(\frac{1}{tolerance}\right)}{end}\right)}}{end}
+           \\frac{start * \\ln\\left(\\frac{1}{tolerance}\\right) * e^{-\\left(\\frac{variable\\ln\\left(\\frac{1}{
+           tolerance}\\right)}{end}\\right)}}{end}
 
         Arguments
         ---------
@@ -408,9 +420,13 @@ class ExponentialDecay(TimerFunction):  # --------------------------------------
         return lambda x : offset + start * torch.exp(-x * torch.log(1 / tolerance) / end)
 
 
+class LogarithmicRise(TimerFunction):
+    pass
+
+
 class LogarithmicDecay(TimerFunction): # ---------------------------------------------------------------------------
     """
-    LogarithmicDecay(     \
+    LogarithmicDecay(      \
          default_variable, \
          start=1.0,        \
          end=1.0,          \
@@ -422,11 +438,11 @@ class LogarithmicDecay(TimerFunction): # ---------------------------------------
 
     .. _LogarithmicDecay:
     |
-    `function <LogarithmicDecay._function>` returns exponentially decaying transform of `variable
+    `function <LogarithmicDecay._function>` returns logarthmically decaying transform of `variable
     <LogarithmicDecay.variable>`
 
     .. math::
-       start + start \\frac{e^{-e}}{e^{\\left(end-e-k^{end}\\right)}} \\left(1-e^{variable}\\right)
+       start \\left(1-\\frac{e^{variable}-1}{e^{end}}-\\frac{variable}{end*e^{end}}\\right)
 
     such that:
 
@@ -441,13 +457,10 @@ class LogarithmicDecay(TimerFunction): # ---------------------------------------
 
         **end** determines the value of `variable <LogarithmicDecay.variable>` at which the value of the function = 0.
 
-        **k** is a constant used to enforce that the value of the function when `variable
-        <LogarithmicDecay.variable>` = `end <LogarithmicDecay.end>` is as close to 0 as possible.
-
     `derivative <LogarithmicDecay.derivative>` returns the derivative of the LogarithmicDecay Function:
 
       .. math::
-       - start \\frac{e^{\\left(variable-e\\right)}}{e^{\\left(end-e-k^{end}\\right)}}
+       start * (-\\frac{e^{variable}}{e^{end}} - \\frac{1}{end*e^{end}})
 
     Arguments
     ---------
@@ -462,11 +475,6 @@ class LogarithmicDecay(TimerFunction): # ---------------------------------------
     end : float : default 1.0
         specifies the value of `variable <LogarithmicDecay.variable>` at which the value of the function
         should equal 0; must be greater than 0.
-
-    k : float : default 0.4
-        specifies the constant used to ensure that value of the function when `variable
-        <LogarithmicDecay.variable>` = `end <LogarithmicDecay.end>` is as close to 0 as possible;
-        must be beetween 0 and 1.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -493,10 +501,6 @@ class LogarithmicDecay(TimerFunction): # ---------------------------------------
 
     end : float (>0)
         determines the value of `variable <LogarithmicDecay.variable>` at which the value of the function equals 0.
-
-    k : float (0,1)
-        determines the constant used to ensure that value of the function when `variable
-        <LogarithmicDecay.variable>` = `end <LogarithmicDecay.end>` is as close to 0 as possible.
 
     bounds : (None, None)
 
@@ -540,14 +544,7 @@ class LogarithmicDecay(TimerFunction): # ---------------------------------------
                     :default value: 1.0
                     :type: ``float``
 
-                k
-                    see `end <LogarithmicDecay.k>`
-
-                    :default value: 0.4
-                    :type: ``float``
-
         """
-        k = Parameter(0.4, modulable=True)
         bounds = (None, None)
 
         def _validate_start(self, start):
@@ -557,9 +554,6 @@ class LogarithmicDecay(TimerFunction): # ---------------------------------------
         def _validate_end(self, end):
             if end < 0:
                 return f"must be greater than 0."
-        def _validate_k(self, k):
-            if k <= 0 or k >= 1:
-                return f"must be greater than 0 and less than 1."
 
     @check_user_specified
     @beartype
@@ -567,7 +561,6 @@ class LogarithmicDecay(TimerFunction): # ---------------------------------------
                  default_variable=None,
                  start: Optional[ValidParamSpecType] = None,
                  end: Optional[ValidParamSpecType] = None,
-                 k: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
@@ -575,7 +568,6 @@ class LogarithmicDecay(TimerFunction): # ---------------------------------------
             default_variable=default_variable,
             start=start,
             end=end,
-            k=k,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -607,18 +599,17 @@ class LogarithmicDecay(TimerFunction): # ---------------------------------------
         """
         start = self._get_current_parameter_value(START, context)
         end = self._get_current_parameter_value(END, context)
-        k = self._get_current_parameter_value('k', context)
 
-        result = start + start * np.exp(-e)/np.exp(end - e - k**end) * (1 - np.exp(variable))
+        result = start * (1 - ((np.exp(variable) - 1) / np.exp(end)) - (variable / (end * np.exp(end))))
 
         return self.convert_output_type(result)
 
     @handle_external_context()
     def derivative(self, input, output=None, context=None):
-        """
-        derivative(input)
+        """Derivative of `function <LogarithmicDecay._function>` at **input**:
+
         .. math::
-         - start \\frac{e^{\\left(variable-e\\right)}}{e^{\\left(end-e-k^{end}\\right)}}
+           start * (-\\frac{e^{input}}{e^{end}} - \\frac{1}{end*e^{end}})
 
         Arguments
         ---------
@@ -626,18 +617,14 @@ class LogarithmicDecay(TimerFunction): # ---------------------------------------
         input : number
             value of the input to the LogarithmicDecay transform at which derivative is to be taken.
 
-        Derivative of `function <LogarithmicDecay._function>` at **input**.
-
         Returns
         -------
         derivative :  number or array
         """
-
         start = self._get_current_parameter_value(START, context)
         end = self._get_current_parameter_value(END, context)
-        k = self._get_current_parameter_value('k', context)
 
-        return -start * np.exp(input - e) / np.exp(end - e - k**end)
+        return start * -(np.exp(input) / np.exp(end)) - (1 / end * np.exp(end))
 
     # FIX:
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
@@ -679,17 +666,3 @@ class LogarithmicDecay(TimerFunction): # ---------------------------------------
         return lambda x : start + start * torch.exp(-e)/torch.exp(end - e - k**end) * (1 - np.exp(x))
 
 
-class ExponentialRise(TransferFunction):
-    pass
-
-
-class LogarithmicRise(TransferFunction):
-    pass
-
-
-class LinearRise(TransferFunction):
-    pass
-
-
-class LinearDecay(TransferFunction):
-    pass

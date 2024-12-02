@@ -401,20 +401,20 @@ class TimerMechanism(IntegratorMechanism):
     def _execute(self, variable=None, context=None, runtime_params=None, **kwargs):
         """Override to check for call to reset by ControlSignal"""
         if not self.is_initializing and self.parameters.complete.get(context):
-            return self.parameters.previous_value._get(context)
+            return self.trajectory(self.function.parameters.previous_value._get(context))
 
-        value = super()._execute(variable=variable, context=context, runtime_params=runtime_params, **kwargs)
-        value = self.trajectory(value)
+        x = super()._execute(variable=variable, context=context, runtime_params=runtime_params, **kwargs)
+        y = self.trajectory(x)
 
         # FIX: WHY IS THIS AFTER RATHER THAN BEFORE EXECUTION?
         # No need to reset during initialization (which will occur if **reset_default** != 0)
         if not self.is_initializing:
 
-            if value == self.parameters.end.get(context):
+            if x == self.parameters.end.get(context):
                 self.parameters.complete._set(True, context)
 
             if np.array(self._get_current_parameter_value(RESET,context)).squeeze():
                 self.reset(context=context)
-                value = self.parameters.value._get(context).reshape(value.shape)
+                y = self.parameters.value._get(context).reshape(y.shape)
 
-        return value
+        return y
