@@ -180,6 +180,8 @@ class AcceleratingDecay(TimerFunction): # --------------------------------------
       .. math::
        (start - threshold) * \\left(1-\\frac{end*e^{variable}}{end*e^{end}}\\right)
 
+    See `graph <https://www.desmos.com/calculator/keo5d328gn>`_ for interactive plot of the function.
+
     Arguments
     ---------
 
