@@ -68,7 +68,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import \
 from psyneulink.core.globals.keywords import \
     (ADDITIVE_PARAM, ACCELERATING_DECAY_FUNCTION, ACCELERATING_RISE_FUNCTION, DECELERATING_DECAY_FUNCTION,
      DECELERATING_RISE_FUNCTION, END, LINEAR_DECAY_FUNCTION, LINEAR_RISE_FUNCTION,
-     MULTIPLICATIVE_PARAM, OFFSET, PREFERENCE_SET_NAME, SCALE, START, THRESHOLD, TIMER_FUNCTION_TYPE, TOLERANCE)
+     MULTIPLICATIVE_PARAM, OFFSET, PREFERENCE_SET_NAME, SCALE, START, THRESHOLD, TIMER_FUNCTION_TYPE)
 
 __all__ = ['LinearDecay','LinearRise','AcceleratingDecay','AcceleratingRise','DeceleratingDecay','DeceleratingRise']
 
@@ -180,7 +180,8 @@ class AcceleratingDecay(TimerFunction): # --------------------------------------
       .. math::
        (start - threshold) * \\left(1-\\frac{end*e^{variable}}{end*e^{end}}\\right)
 
-    See `graph <https://www.desmos.com/calculator/keo5d328gn>`_ for interactive plot of the function.
+    See `graph <https://www.desmos.com/calculator/keo5d328gn>`_ for interactive plot of the function using `Desmos
+    <https://www.desmos.com>`_.
 
     Arguments
     ---------
@@ -377,12 +378,12 @@ class AcceleratingDecay(TimerFunction): # --------------------------------------
 
         end_ptr = ctx.get_param_or_state_ptr(builder, self, END, param_struct_ptr=params)
         start_ptr = ctx.get_param_or_state_ptr(builder, self, START, param_struct_ptr=params)
-        tolerance_ptr = ctx.get_param_or_state_ptr(builder, self, TOLERANCE, param_struct_ptr=params)
+        threshold_ptr = ctx.get_param_or_state_ptr(builder, self, THRESHOLD, param_struct_ptr=params)
         offset_ptr = ctx.get_param_or_state_ptr(builder, self, OFFSET, param_struct_ptr=params)
 
         end = pnlvm.helpers.load_extract_scalar_array_one(builder, end_ptr)
         start = pnlvm.helpers.load_extract_scalar_array_one(builder, start_ptr)
-        tolerance = pnlvm.helpers.load_extract_scalar_array_one(builder, tolerance_ptr)
+        threshold = pnlvm.helpers.load_extract_scalar_array_one(builder, threshold_ptr)
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
@@ -393,11 +394,11 @@ class AcceleratingDecay(TimerFunction): # --------------------------------------
 
         if "derivative" in tags:
             # f'(x) = s*r*e^(r*x + b)
-            val = builder.fmul(val, tolerance)
+            val = builder.fmul(val, threshold)
             val = builder.fmul(val, end)
         else:
             # f(x) = s*e^(r*x + b) + o
-            val = builder.fmul(val, tolerance)
+            val = builder.fmul(val, threshold)
             val = builder.fadd(val, offset)
 
         builder.store(val, ptro)
@@ -422,7 +423,7 @@ class DeceleratingDecay(TimerFunction):  # -------------------------------------
          start=1.0,        \
          offset=0.0,       \
          end=1.0,          \
-         tolerance=0.01,   \
+         threshold=0.01,   \
          params=None,      \
          owner=None,       \
          name=None,        \
@@ -435,19 +436,19 @@ class DeceleratingDecay(TimerFunction):  # -------------------------------------
     <DeceleratingDecay.variable>`
 
     .. math::
-       offset + start*e^{-\\frac{variable\ *\ \\ln\\left(\\frac{1}{tolerance}\\right)}{end}}
+       offset + start*e^{-\\frac{variable\ *\ \\ln\\left(\\frac{1}{threshold}\\right)}{end}}
 
     such that:
 
     .. math::
         value = start + offset\ for\ variable=0
 
-        value = (start * tolerance) + offset\ for\ variable=end
+        value = (start * threshold) + offset\ for\ variable=end
 
     where:
 
         **start**, together with `offset <DeceleratingDecay.offset>`, determines the value of the function when
-        `variable <DeceleratingDecay.variable>` = 0, and is used together with `tolerance <DeceleratingDecay.tolerance>`
+        `variable <DeceleratingDecay.variable>` = 0, and is used together with `threshold <DeceleratingDecay.threshold>`
         to determine the value of the function when `variable <DeceleratingDecay.variable>` = `end
         <DeceleratingDecay.end>`.
 
@@ -455,17 +456,17 @@ class DeceleratingDecay(TimerFunction):  # -------------------------------------
         when `variable <DeceleratingDecay.variable>` = 0, and its linear offset from 0 for all other values;
 
         **end** determines the value of `variable <DeceleratingDecay.variable>` at which
-        the value of the function should equal :math:`start * tolerance + offset`.
+        the value of the function should equal :math:`start * threshold + offset`.
 
-        **tolerance** is the fraction of `start <DeceleratingDecay.start>` when, added to `offset
+        **threshold** is the fraction of `start <DeceleratingDecay.start>` when, added to `offset
         <DeceleratingDecay.offset>`, is used to determine the value of the function when `variable
         <DeceleratingDecay.variable>` should equal `end <DeceleratingDecay.end>`.
 
     `derivative <DeceleratingDecay.derivative>` returns the derivative of the DeceleratingDecay Function:
 
       .. math::
-        \\frac{start * \\ln\\left(\\frac{1}{tolerance}\\right) *
-        e^{-\\frac{variable * \\ln\\left(\\frac{1}{tolerance}\\right)}{end}}}{end}
+        \\frac{start * \\ln\\left(\\frac{1}{threshold}\\right) *
+        e^{-\\frac{variable * \\ln\\left(\\frac{1}{threshold}\\right)}{end}}}{end}
 
     COMMENT:
     FOR TIMER VERSION:
@@ -492,10 +493,10 @@ class DeceleratingDecay(TimerFunction):  # -------------------------------------
 
     end : float : default 1.0
         specifies the value of `variable <DeceleratingDecay.variable>` at which the `value of the function
-        should equal `start <DeceleratingDecay.start>` * `tolerance <DeceleratingDecay.tolerance>` + `offset
+        should equal `start <DeceleratingDecay.start>` * `threshold <DeceleratingDecay.threshold>` + `offset
         <DeceleratingDecay.offset>`; must be greater than 0.
 
-    tolerance : float : default 0.01
+    threshold : float : default 0.01
         specifies the fraction of `start <DeceleratingDecay.start>` when added to `offset <DeceleratingDecay.offset>`,
         that determines the value of the function when `variable <DeceleratingDecay.variable>` = `end
         <DeceleratingDecay.end>`; must be between 0 and 1.
@@ -530,9 +531,9 @@ class DeceleratingDecay(TimerFunction):  # -------------------------------------
 
     end : float (>0)
         determines the value of `variable <DeceleratingDecay.variable>` at which the value of the function should
-        equal `start <DeceleratingDecay.start>` * `tolerance <DeceleratingDecay.tolerance>` + `offset <DeceleratingDecay.offset>`.
+        equal `start <DeceleratingDecay.start>` * `threshold <DeceleratingDecay.threshold>` + `offset <DeceleratingDecay.offset>`.
 
-    tolerance : float (0,1)
+    threshold : float (0,1)
         determines the fraction of `start <DeceleratingDecay.start>` when added to `offset <DeceleratingDecay.offset>`,
         that determines the value of the function when `variable <DeceleratingDecay.variable>` = `end
         <DeceleratingDecay.end>`.
@@ -572,17 +573,17 @@ class DeceleratingDecay(TimerFunction):  # -------------------------------------
                     :default value: 0.0
                     :type: ``float``
 
-                tolerance
-                    see `tolerance <DeceleratingDecay.tolerance>`
+                threshold
+                    see `threshold <DeceleratingDecay.threshold>`
 
                     :default value: 0.01
                     :type: ``float``
         """
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        tolerance = Parameter(0.01, modulable=True, aliases=[SCALE])
+        threshold = Parameter(0.01, modulable=True, aliases=[SCALE])
 
-        def _validate_tolerance(self, tolerance):
-            if tolerance < 0:
+        def _validate_threshold(self, threshold):
+            if threshold < 0:
                 return f"must be between 0 and 1."
 
     @check_user_specified
@@ -592,7 +593,7 @@ class DeceleratingDecay(TimerFunction):  # -------------------------------------
                  start: Optional[ValidParamSpecType] = None,
                  offset: Optional[ValidParamSpecType] = None,
                  end: Optional[ValidParamSpecType] = None,
-                 tolerance: Optional[ValidParamSpecType] = None,
+                 threshold: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
@@ -601,7 +602,7 @@ class DeceleratingDecay(TimerFunction):  # -------------------------------------
             start=start,
             offset=offset,
             end=end,
-            tolerance=tolerance,
+            threshold=threshold,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -635,9 +636,9 @@ class DeceleratingDecay(TimerFunction):  # -------------------------------------
         start = self._get_current_parameter_value(START, context)
         offset = self._get_current_parameter_value(OFFSET, context)
         end = self._get_current_parameter_value(END, context)
-        tolerance = self._get_current_parameter_value(TOLERANCE, context)
+        threshold = self._get_current_parameter_value(THRESHOLD, context)
 
-        result = offset + start * np.exp(-variable * np.log(1 / tolerance) / end)
+        result = offset + start * np.exp(-variable * np.log(1 / threshold) / end)
 
         return self.convert_output_type(result)
 
@@ -646,8 +647,8 @@ class DeceleratingDecay(TimerFunction):  # -------------------------------------
         """Derivative of `function <DeceleratingDecay._function>` at **input**:
 
         .. math::
-           \\frac{start * \\ln\\left(\\frac{1}{tolerance}\\right) * e^{-\\left(\\frac{variable\\ln\\left(\\frac{1}{
-           tolerance}\\right)}{end}\\right)}}{end}
+           \\frac{start * \\ln\\left(\\frac{1}{threshold}\\right) * e^{-\\left(\\frac{variable\\ln\\left(\\frac{1}{
+           threshold}\\right)}{end}\\right)}}{end}
 
         Arguments
         ---------
@@ -664,9 +665,9 @@ class DeceleratingDecay(TimerFunction):  # -------------------------------------
 
         start = self._get_current_parameter_value(START, context)
         end = self._get_current_parameter_value(END, context)
-        tolerance = self._get_current_parameter_value(TOLERANCE, context)
+        threshold = self._get_current_parameter_value(THRESHOLD, context)
 
-        return (start * np.log(1/tolerance) / end) * np.exp(-input * np.log(tolerance) / end)
+        return (start * np.log(1/threshold) / end) * np.exp(-input * np.log(threshold) / end)
 
     # FIX:
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
@@ -675,12 +676,12 @@ class DeceleratingDecay(TimerFunction):  # -------------------------------------
 
         end_ptr = ctx.get_param_or_state_ptr(builder, self, END, param_struct_ptr=params)
         start_ptr = ctx.get_param_or_state_ptr(builder, self, START, param_struct_ptr=params)
-        tolerance_ptr = ctx.get_param_or_state_ptr(builder, self, TOLERANCE, param_struct_ptr=params)
+        threshold_ptr = ctx.get_param_or_state_ptr(builder, self, THRESHOLD, param_struct_ptr=params)
         offset_ptr = ctx.get_param_or_state_ptr(builder, self, OFFSET, param_struct_ptr=params)
 
         end = pnlvm.helpers.load_extract_scalar_array_one(builder, end_ptr)
         start = pnlvm.helpers.load_extract_scalar_array_one(builder, start_ptr)
-        tolerance = pnlvm.helpers.load_extract_scalar_array_one(builder, tolerance_ptr)
+        threshold = pnlvm.helpers.load_extract_scalar_array_one(builder, threshold_ptr)
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
@@ -691,11 +692,11 @@ class DeceleratingDecay(TimerFunction):  # -------------------------------------
 
         if "derivative" in tags:
             # f'(x) = s*r*e^(r*x + b)
-            val = builder.fmul(val, tolerance)
+            val = builder.fmul(val, threshold)
             val = builder.fmul(val, end)
         else:
             # f(x) = s*e^(r*x + b) + o
-            val = builder.fmul(val, tolerance)
+            val = builder.fmul(val, threshold)
             val = builder.fadd(val, offset)
 
         builder.store(val, ptro)
@@ -703,10 +704,10 @@ class DeceleratingDecay(TimerFunction):  # -------------------------------------
     def _gen_pytorch_fct(self, device, context=None):
         offset = self._get_pytorch_fct_param_value(OFFSET, device, context)
         end = self._get_pytorch_fct_param_value(END, device, context)
-        tolerance = self._get_pytorch_fct_param_value(TOLERANCE, device, context)
+        threshold = self._get_pytorch_fct_param_value(THRESHOLD, device, context)
         start = self._get_pytorch_fct_param_value(START, device, context)
 
-        return lambda x : offset + start * torch.exp(-x * torch.log(1 / tolerance) / end)
+        return lambda x : offset + start * torch.exp(-x * torch.log(1 / threshold) / end)
 
 
 class DeceleratingRise(TimerFunction):
