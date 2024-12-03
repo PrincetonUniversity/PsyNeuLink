@@ -23,6 +23,36 @@ Overview
 Functions for which a `start <TimerFunction.start>`, `threshold <TimerFunction.threshold>`, and `end
 <TimerFunction.end>` value can be specified, for use with a `TimerMechanism`.
 
+.. _TimerFunction_Types:
+
+Types
+~~~~~
+
+There are three types that implement different functional forms, with rising and decaying versions of each,
+and default behaviors as summarized below:
+
+**Linear**
+
+  * `LinearRising` - starts at 0 and rises to a threshold of 10 in increments of 1
+
+  * `LinearDecaying` - starts at 10 and decays to a threshold of 0 in decrements of 1
+
+**Accelerating**:
+
+  * `AcceleratingRise` - implements a form of "urgency signal,"  starting at 0 and rising to a threshold of 10 in
+    progressively greater increments (see `interactive graph <DESMOS XXX>`_)
+
+  * `AcceleratingDecay` - implements a form of "collapsing bound,"  starting at 10 and decaying to a threshold of
+    0 in progressively greater increments (see `interactive graph <DESMOS XXX>`_)
+
+**Decelerating**:
+
+  * `DeceleratingRise` - qualitatively logarithmic form,  starting at 0 and rising toward a threshold of 10 in
+    progressively smaller increments; ends when it reaches 9.99
+
+  * `DeceleratingDecay` - qualitatively exponential form,  starting at 10 and decaying toward 0 in progressively
+     smaller increments; ends when it reaches .01
+
 .. _TimerFunction_StandardAttributes:
 
 Standard Attributes
@@ -38,6 +68,7 @@ All TimerFunctions have the following attributes:
 
 * **end**: specifies the value of the `variable <Function_Base.variable>` at which the`value <Function_Base.value>` of
     the function should be equal to `threshold <TimerFunction.threshold>`.
+
 
 TimerFunction Class References
 ------------------------------
@@ -74,20 +105,8 @@ __all__ = ['LinearRise','LinearDecay','AcceleratingRise','AcceleratingDecay','De
 
 
 class TimerFunction(TransferFunction):  # --------------------------------------------------------------------------------
-    """Subclass of TransferFunction that allows a start and end value to be specified.
-
-    In addition to the required attributes of a `TransferFunction `,
-    all TimerFunctions MUST have the following attributes:
-
-    `start` -- specifies the `value <Function_Base.value>` that the function should have when its `variable
-    <Function_Base.variable>` is 0.
-
-    `threshold` -- specifies the `value <Function_Base.value>` that the function should have when its `variable
-    <Function_Base.variable>` equals its `threshold <TimerFunction.threshold>`.
-
-    `end` -- specifies the value of the `variable <Function_Base.variable>` at which the `value <Function_Base.value>`
-    of the function should be equal to its `threshold <TimerFunction.threshold>`.
-
+    """Subclass of TransferFunction that allows a start, threshold and end value to be specified;
+    for use with a `TimerMechanism`.
     """
     componentType = TIMER_FUNCTION_TYPE
 
@@ -141,7 +160,7 @@ class LinearDecay(TimerFunction):
 
 class AcceleratingRise(TimerFunction):
     """
-    AcceleratingRise(     \
+    AcceleratingRise(      \
          default_variable, \
          start=0.0,        \
          threshold=1.0,    \
@@ -169,19 +188,21 @@ class AcceleratingRise(TimerFunction):
 
     where:
 
-        **start** determines the value of the function when `variable <AcceleratingRise.variable>` = 0.
+        **start** determines the `value <Function_Base.value>` of the function
+        when its `variable <AcceleratingRise.variable>` = 0.
 
-        **threshold** determines the value of the function when `variable <AcceleratingRise.variable>` = end.
+        **threshold** determines the `value <Function_Base.value>` of the function
+        when its `variable <AcceleratingRise.variable>` = end.
 
-        **end** determines the value of `variable <AcceleratingRise.variable>` at which the value of the function =
-        threshold.
+        **end** determines the value of `variable <AcceleratingRise.variable>`
+        at which the value of the function = threshold.
 
     `derivative <AcceleratingRise.derivative>` returns the derivative of the AcceleratingRise Function:
 
       .. math::
          (threshold - start) * \\left(\\frac{(1 + end * e^{variable})}{end * e^{end}}\\right)
 
-    See `graph <https://www.desmos.com/calculator/g2taqunyiq>`_ for interactive plot of the function using `Desmos
+    See `graph <https://www.desmos.com/calculator/nswq3hipd8>`_ for interactive plot of the function using `Desmos
     <https://www.desmos.com>`_.
 
     Arguments
@@ -404,19 +425,21 @@ class AcceleratingDecay(TimerFunction): # --------------------------------------
 
     where:
 
-        **start** determines the value of the function when `variable <AcceleratingDecay.variable>` = 0.
+        **start** determines the `value <Function_Base.value>` of the function
+        when its `variable <AcceleratingDecay.variable>` = 0.
 
-        **threshold** determines the value of the function when `variable <AcceleratingDecay.variable>` = end.
+        **threshold** determines the `value <Function_Base.value>` of the function
+        when its `variable <AcceleratingDecay.variable>` = end.
 
-        **end** determines the value of `variable <AcceleratingDecay.variable>` at which the value of the function =
-        threshold.
+        **end** determines the value of `variable <AcceleratingDecay.variable>`
+        at which the value of the function = threshold.
 
     `derivative <AcceleratingDecay.derivative>` returns the derivative of the AcceleratingDecay Function:
 
       .. math::
        (start - threshold) * \\left(1-\\frac{end*e^{variable}}{end*e^{end}}\\right)
 
-    See `graph <https://www.desmos.com/calculator/keo5d328gn>`_ for interactive plot of the function using `Desmos
+    See `graph <https://www.desmos.com/calculator/wqiz721b0t>`_ for interactive plot of the function using `Desmos
     <https://www.desmos.com>`_.
 
     Arguments
