@@ -221,6 +221,7 @@ class TimerMechanism(IntegratorMechanism):
         increment=1,                            \
         function=SimpleIntegrator(rate=1),      \
         trajectory=Linear,                      \
+        threshold=1,                            \
         end=1)
 
     Subclass of `IntegratorMechanism` that advances its input until it reaches a specified value.
@@ -240,24 +241,23 @@ class TimerMechanism(IntegratorMechanism):
         executed in the absence of input; if a list or array, the length must be the same as specified for
         **default_variable** or **input_shapes** (see `TimerMechanism_Execution` for additional details).
 
-    COMMENT:
-    TBI
-    direction : INCREASING, DECREASING, or list of either/both : default INCREASING
-        specifies whether the timer progresses in the direction of increasing or decreasing values; if a list or
-        array, the length must be the same as specified for **default_variable** or **input_shapes**
-        (see `TimerMechanism_Execution` for additional details).
-    COMMENT
-
-    end : scalar, list or array : default 1
-        specifies the value at which the timer stops advancing; if a list or array, the length must be the same as
-        specified for **default_variable** or **input_shapes** (see `TimerMechanism_Execution` for additional details).
-
     function : IntegratorFunction : default SimpleIntegrator(rate=1)
-        specifies the function used to increment the input; must take a single numeric value, or a list or np.array
+        specifies the function used to increment the input to the ; must take a single numeric value, or a list or
+        np.array
         of values, and return one of the same shape.
 
     trajectory : TransferFunction or UserDefinedFunction : default LINEAR
         specifies the shape of the timer's trajectory; must be a supported `TransferFunction` (see XXX
+
+    threshold : scalar, list or array : default 1
+        specifies the value of its `trajectory <TimerMechamism.trajectory>` function at which the timer stops advancing;
+        if a list or array, the length must be the same as specified for **default_variable** or **input_shapes** (see
+        `TimerMechanism_Execution` for additional details).
+
+    end : scalar, list or array : default 1
+        specifies the value of its `variable <Mechanism_Base.variable>` at which the timer stops advancing; if a list
+        or array, the length must be the same as specified for **default_variable** or **input_shapes** (see
+        `TimerMechanism_Execution` for additional details).
 
     reset_default : number, list or np.ndarray : default 0
         specifies the default value used for the `reset <TimerMechanism.reset>` parameter.
@@ -276,21 +276,20 @@ class TimerMechanism(IntegratorMechanism):
         executed in the absence of input; assigned as the `rate <IntegratorFunction.rate>` of the TimerMechanism's
         `function <TimerMechanism.function>` (see `TimerMechanism_Execution` for additional details).
 
-    COMMENT:
-    direction : INCREASING, DECREASING, or list of either/both
-        determines whether the timer progresses in the direction of increasing or decreasing values.
-        (see `TimerMechanism_Execution` for additional details).
-    COMMENT
-
     function : IntegratorFunction
         determines the function used to advance the input to the TimerMechanism's `trajectorytrajectory
         <TimerMechanism.trajectory>` Function; if the TimerMechanism receives an external input, that is
         used to advance the timer; otherwise, the `increment <TimerMechanism.increment>` Parameter is used.
 
-    trajectory : TransferFunction or UserDefinedFunction
+    trajectory : TimerFunction or UserDefinedFunction
         determines the `Function` used to transform the ouput of the TimerMechanism's `function
         <TimerMechanism.function>` to generate its output; this determines the shape of the trajectory
         of the TimerMechanism's `value <Mechanism_Base.value>`.
+
+    threshold : scalar, list or array : default 1
+        determines the value of its `trajectory <TimerMechamism.trajectory>` function at which the timer stops
+        advancing; if a list or array, the length must be the same as specified for **default_variable** or
+        **input_shapes** (see `TimerMechanism_Execution` for additional details).
 
     end : scalar, list or array
         determines the value at which the timer stops advancing, after which it sets its `complete
@@ -323,13 +322,13 @@ class TimerMechanism(IntegratorMechanism):
                 complete
                     see `complete <TimerMechanism.complete>`
 
-                    :default value: `False
+                    :default value: False
                     :type: `bool`
 
                 end
                     see `end <TimerMechanism.end>`
 
-                    :default value: `AdaptiveIntegrator`(initializer=numpy.array([0]), rate=0.5)
+                    :default value: 1
                     :type: `float`
 
                 function
@@ -347,19 +346,26 @@ class TimerMechanism(IntegratorMechanism):
                 start
                     see `start <TimerMechanism.start>`
 
-                    :default value: `AdaptiveIntegrator`(initializer=numpy.array([0]), rate=0.5)
+                    :default value: 0
+                    :type: `float`
+
+                threshold
+                    see `threshold <TimerMechanism.threshold>`
+
+                    :default value: 1
                     :type: `float`
 
                 trajectory
                     see `trajectory <TimerMechanism.trajectory>`
 
-                    :default value: `Linear`
+                    :default value: `LinearRising`
                     :type: `Function`
         """
         function = Parameter(SimpleIntegrator, stateful=False, loggable=False)
         trajectory = Parameter(Linear, stateful=False, loggable=False)
         start = FunctionParameter(0, function_name='trajectory', function_parameter_name='start', primary=True)
         increment = FunctionParameter(1, function_name='function', function_parameter_name='rate', primary=True)
+        threshold = FunctionParameter(1, function_name='trajectory', function_parameter_name='threshold', primary=True )
         end = FunctionParameter(1, function_name='trajectory', function_parameter_name='end', primary=True )
         complete = Parameter(False, stateful=True, loggable=True)
 
@@ -374,6 +380,7 @@ class TimerMechanism(IntegratorMechanism):
                  increment:Optional[Union[int, float, list, np.ndarray]]=None,
                  function:Optional[IntegratorFunction]=None,
                  trajectory:Optional[TimerFunction]=None,
+                 threshold:Optional[Union[int, float, list, np.ndarray]]=None,
                  end:Optional[Union[int, float, list, np.ndarray]]=None,
                  params=None,
                  name=None,
@@ -390,6 +397,7 @@ class TimerMechanism(IntegratorMechanism):
                                              increment=increment,
                                              function=function,
                                              trajectory=trajectory,
+                                             threshold=threshold,
                                              end=end,
                                              complete=False,
                                              params=params,

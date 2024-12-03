@@ -181,8 +181,7 @@ class AcceleratingRise(TimerFunction):
       .. math::
          (threshold - start) * \\left(\\frac{(1 + end * e^{variable})}{end * e^{end}}\\right)
 
-    # FIX:
-    See `graph <https://www.desmos.com/calculator/keo5d328gn>`_ for interactive plot of the function using `Desmos
+    See `graph <https://www.desmos.com/calculator/g2taqunyiq>`_ for interactive plot of the function using `Desmos
     <https://www.desmos.com>`_.
 
     Arguments
