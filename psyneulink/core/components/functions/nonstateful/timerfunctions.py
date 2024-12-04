@@ -39,19 +39,25 @@ and default behaviors as summarized below:
 
 **Accelerating**:
 
-  * `AcceleratingRise` - implements a form of "urgency signal,"  starting at 0 and rising to a threshold of 10 in
+  * `AcceleratingRise` - implements a form of "urgency signal," starting at 0 and rising to a threshold of 10 in
     progressively greater increments (see `interactive graph <DESMOS XXX>`_)
 
-  * `AcceleratingDecay` - implements a form of "collapsing bound,"  starting at 10 and decaying to a threshold of
+  * `AcceleratingDecay` - implements a form of "collapsing bound," starting at 10 and decaying to a threshold of
     0 in progressively greater increments (see `interactive graph <DESMOS XXX>`_)
 
 **Decelerating**:
 
-  * `DeceleratingRise` - qualitatively logarithmic form,  starting at 0 and rising toward a threshold of 10 in
-    progressively smaller increments; ends when it reaches 9.99
+  * `DeceleratingDecay` - exponential, starting at 10 and decaying to a threshold of 0
+    in progressively smaller increments  (see `interactive graph <https://www.desmos.com/calculator/e6ei7o0woq>`_)
 
-  * `DeceleratingDecay` - qualitatively exponential form,  starting at 10 and decaying toward 0 in progressively
-     smaller increments; ends when it reaches .01
+  COMMENT:
+  * `AsymptoticDeceleratingRise` - qualitatively logarithmic form,  starting at 0
+    and rising toward a threshold of 10 in progressively smaller increments; ends when it reaches 9.99
+
+  * `AsymptoticDeceleratingDecay` - qualitatively exponential form,  starting at 10
+    and decaying toward 0 in progressively smaller increments; ends when it reaches .01
+  COMMENT
+
 
 .. _TimerFunction_StandardAttributes:
 
@@ -656,7 +662,7 @@ class DeceleratingDecay(TimerFunction):  # -------------------------------------
     <DeceleratingDecay.variable>`
 
     .. math::
-       offset + start*e^{-\\frac{variable\ *\ \\ln\\left(\\frac{1}{threshold}\\right)}{end}}
+       \\frac{start+1-threshold}{e^{\\ln(s+1-threshold)\\left(\\frac{variable}{end}\\right)^{rate}}-1+threshold}
 
     such that:
 
@@ -685,8 +691,10 @@ class DeceleratingDecay(TimerFunction):  # -------------------------------------
     `derivative <DeceleratingDecay.derivative>` returns the derivative of the DeceleratingDecay Function:
 
       .. math::
-        \\frac{start * \\ln\\left(\\frac{1}{threshold}\\right) *
-        e^{-\\frac{variable * \\ln\\left(\\frac{1}{threshold}\\right)}{end}}}{end}
+        \\frac{start+1-threshold}{e^{\\ln(s+1-threshold)\\left(\\frac{variable}{end}\\right)^{rate}}-1+threshold}
+
+    See `graph <https://www.desmos.com/calculator/e6ei7o0woq>`_ for interactive plot of the function using `Desmos
+    <https://www.desmos.com>`_.
 
     COMMENT:
     FOR TIMER VERSION:
