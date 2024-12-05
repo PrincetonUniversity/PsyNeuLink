@@ -2102,14 +2102,14 @@ class Port_Base(Port):
 
     def _execute(self, variable=None, context=None, runtime_params=None):
         if variable is None:
+            if hasattr(self, DEFAULT_INPUT) and self.default_input == DEFAULT_VARIABLE:
+                return copy_parameter_value(self.defaults.variable)
+
             variable = self._get_variable_from_projections(context)
 
             # if the fallback is also None
             # return None, so that this port is ignored
-            # KDM 8/2/19: double check the relevance of this branch
             if variable is None:
-                if hasattr(self, DEFAULT_INPUT) and self.default_input == DEFAULT_VARIABLE:
-                    return copy_parameter_value(self.defaults.variable)
                 return None
 
         return super()._execute(

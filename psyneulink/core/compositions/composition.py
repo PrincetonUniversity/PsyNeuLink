@@ -2912,7 +2912,7 @@ from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism, ProcessingMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort, InputPortError
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.modulatorysignals.learningsignal import LearningSignal
@@ -2939,7 +2939,8 @@ from psyneulink.core.globals.keywords import \
     INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
     LEARNABLE, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     LEARNING_SIGNAL, Loss, \
-    MATRIX, MAYBE, MODEL_SPEC_ID_METADATA, MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, NODES, \
+    MATRIX, MAYBE, MODEL_SPEC_ID_METADATA, MONITOR, MONITOR_FOR_CONTROL, MULTIPLICATIVE_PARAM, \
+    NAME, NESTED, NO_CLAMP, NODE, NODES, \
     OBJECTIVE_MECHANISM, ONLINE, ONLY, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PORT, \
     PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP, RECEIVER, \
@@ -3369,7 +3370,7 @@ class NodeRole(enum.Enum):
     BIAS
         A `Node <Composition_Nodes>` for which one or more of its `InputPorts <InputPort>` is assigned
         *DEFAULT_VARIABLE* as its `default_input <InputPort.default_input>` (which provides it a prespecified
-        input that is constant across executions).  Such a node can also be assigned as an `INPUT` and/or `ORIGIN`,
+        input that is constant across executions). Such a node can also be assigned as an `INPUT` and/or `ORIGIN`,
         if it receives input from outside the Composition and/or does not receive any `Projections <Projection>` from
         other Nodes within the Composition, respectively.  This role cannot be modified programmatically.
 
@@ -4368,6 +4369,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             self._pre_existing_pathway_components[NODES].append(node)
 
+        # Aux components are being added by Composition, even if main Node is being added was from COMMAND_LINE
         invalid_aux_components = self._add_node_aux_components(node, context=context)
 
         # Implement required_roles
@@ -4639,13 +4641,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError('Invalid NodeRole: {0}'.format(role))
 
         # Disallow assignment of NodeRoles by user that are not programmitically modifiable:
-        # FIX 4/25/20 [JDC]: CHECK IF ROLE OR EQUIVALENT STATUS HAS ALREADY BEEN ASSIGNED AND, IF SO, ISSUE WARNING
+        # FIX 4/25/20 [JDC] - CHECK IF ROLE OR EQUIVALENT STATUS HAS ALREADY BEEN ASSIGNED AND, IF SO, ISSUE WARNING
         if context.source == ContextFlags.COMMAND_LINE:
-            if role in {NodeRole.CONTROL_OBJECTIVE, NodeRole.CONTROLLER_OBJECTIVE}:
-                # raise CompositionError(f"{role} cannot be directly assigned to an {ObjectiveMechanism.__name__};"
-                #                        # f"assign 'CONTROL' to 'role' argument of consructor for {node} of {self.name}")
-                #                        f"try assigning {node} to '{OBJECTIVE_MECHANISM}' argument of "
-                #                        f"the constructor for the desired {ControlMechanism.__name__}.")
+            if role in {NodeRole.CONTROL_OBJECTIVE, NodeRole.CONTROLLER_OBJECTIVE} and not node.control_mechanism:
                 warnings.warn(f"{role} should be assigned with caution to {self.name}. "
                               f"{ObjectiveMechanism.__name__}s are generally constructed automatically by a "
                               f"{ControlMechanism.__name__}, or assigned to it in the '{OBJECTIVE_MECHANISM}' "
@@ -5116,7 +5114,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # ignore these for now and try to activate them again during every call to _analyze_graph
             # and, at runtime, if there are still any invalid aux_components left, issue a warning
             projections = []
-            # Add all "nodes" to the composition first (in case projections reference them)
+            # Add all Nodes to the Composition first (in case Projections reference them)
             for i, component in enumerate(node.aux_components):
                 if isinstance(component, (Mechanism, Composition)):
                     if isinstance(component, Composition):
@@ -5137,10 +5135,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                    "specification (True or False).".format(component, node.name))
                     elif isinstance(component[0], (Mechanism, Composition)):
                         if isinstance(component[1], NodeRole):
-                            self.add_node(node=component[0], required_roles=component[1])
+                            self.add_node(node=component[0], required_roles=component[1], context=context)
                         elif isinstance(component[1], list):
                             if isinstance(component[1][0], NodeRole):
-                                self.add_node(node=component[0], required_roles=component[1])
+                                self.add_node(node=component[0], required_roles=component[1], context=context)
                             else:
                                 raise CompositionError("Invalid Component specification ({}) in {}'s aux_components. "
                                                        "If a tuple is used to specify a Mechanism or Composition, then "
@@ -9803,6 +9801,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return total_cost
 
+    def _get_modulable_mechanisms(self):
+        modulated_mechanisms = []
+        for mech in [m for m in self.nodes if (isinstance(m, ProcessingMechanism_Base) and
+                                                      not (isinstance(m, ObjectiveMechanism)
+                                                           and self.get_roles_for_node(m) != NodeRole.CONTROL)
+                                                      and hasattr(m.function, MULTIPLICATIVE_PARAM))]:
+            modulated_mechanisms.append(mech)
+        return modulated_mechanisms
+
     # endregion CONTROL
 
     # ******************************************************************************************************************
@@ -12873,7 +12880,19 @@ _
         pass
 
     @handle_external_context(fallback_most_recent=True)
-    def reset(self, values=None, include_unspecified_nodes=True, context=NotImplemented):
+    def reset(self, values=None, include_unspecified_nodes=True, clear_results=False, context=NotImplemented):
+        """Reset all stateful functions in the Composition to their initial values.
+
+        If **values** is provided, the `previous_value <StatefulFunction.previous_value>` of the corresponding
+        `stateful functions <StatefulFunction>` are set to the values specified. If a value is not provided for a
+        given node, the `previous_value <StatefulFunction.previous_value>` is set to the value of its `initializer
+        <StatefulFunction.initializer>`.
+
+        If **include_unspecified_nodes** is False, then all nodes must have corresponding reset values.
+        The `DEFAULT` keyword can be used in lieu of a numerical value to reset a node's value to its default.
+
+        If **clear_results** is True, the `results <Composition.results>` attribute is set to an empty list.
+        """
         if not values:
             values = {}
 
@@ -12883,30 +12902,33 @@ _
             reset_val = values.get(node)
             node.reset(reset_val, context=context)
 
+        if clear_results:
+            self.parameters.results._set([], context)
+
     @handle_external_context(fallback_most_recent=True)
     def initialize(self, values=None, include_unspecified_nodes=True, context=None):
-        """
-            Initializes the values of nodes within cycles. If `include_unspecified_nodes` is True and a value is
-            provided for a given node, the node will be initialized to that value. If `include_unspecified_nodes` is
-            True and a value is not provided, the node will be initialized to its default value. If
-            `include_unspecified_nodes` is False, then all nodes must have corresponding initialization values. The
-            `DEFAULT` keyword can be used in lieu of a numerical value to reset a node's value to its default.
+        """Initialize the values of nodes within cycles.
+        If `include_unspecified_nodes` is True and a value is provided for a given node, the node is initialized to
+        that value. If `include_unspecified_nodes` is  True and a value is not provided, the node is initialized to
+        its default value. If `include_unspecified_nodes` is False, then all nodes must have corresponding
+        initialization values. The `DEFAULT` keyword can be used in lieu of a numerical value to reset a node's value
+        to its default.
 
-            If a context is not provided, the most recent context under which the Composition has executed will be used.
+        If a context is not provided, the most recent context under which the Composition has executed is used.
 
-            Arguments
-            ----------
-            values: Dict { Node: Node Value }
-                A dictionary contaning key-value pairs of Nodes and initialization values. Nodes within cycles that are
-                not included in this dict will be initialized to their default values.
+        Arguments
+        ----------
+        values: Dict { Node: Node Value }
+            A dictionary containing key-value pairs of Nodes and initialization values. Nodes within cycles that are
+            not included in this dict are initialized to their default values.
 
-            include_unspecified_nodes: bool
-                Specifies whether all nodes within cycles should be initialized or only ones specified in the provided
-                values dictionary.
+        include_unspecified_nodes: bool
+            Specifies whether all nodes within cycles should be initialized or only ones specified in the provided
+            values dictionary.
 
-            context: Context
-                The context under which the nodes should be initialized. context will be set to
-                self.most_recent_execution_context if one is not specified.
+        context: Context
+            The context under which the nodes should be initialized. context are set to
+            self.most_recent_execution_context if one is not specified.
 
         """
         # comp must be initialized from context before cycle values are initialized

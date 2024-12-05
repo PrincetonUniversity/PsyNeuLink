@@ -2708,10 +2708,12 @@ class ShowGraph():
                 raise ShowGraphError(f"Bad arg in call to {composition.name}.show_graph: '{output_fmt}'.")
 
         except ShowGraphError as e:
-            raise ShowGraphError(str(e.error_value))
-
-        except:
-            raise ShowGraphError(f"Problem displaying graph for {composition.name}")
+            # raise ShowGraphError(str(e.error_value))
+            raise ShowGraphError(str(e.error_value)) from e
+        # except:
+        #     raise ShowGraphError(f"Problem displaying graph for {composition.name}")
+        except Exception as e:
+            raise ShowGraphError(f"Problem displaying graph for {composition.name}: {e}") from e
 
     def _is_composition_controller(self, mech, context, enclosing_comp=None):
         # FIX 6/12/20: REPLACE WITH TEST FOR NodeRole.CONTROLLER ONCE THAT IS IMPLEMENTED
