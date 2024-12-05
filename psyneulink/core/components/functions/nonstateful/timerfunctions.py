@@ -943,7 +943,7 @@ class DeceleratingDecay(TimerFunction):  # -------------------------------------
 
 class AsymptoticDecay(TimerFunction):  # ---------------------------------------------------------------------------
     """
-    DeceleratingDecay(     \
+    AsymptoticDecay(     \
          default_variable, \
          start=1.0,        \
          offset=0.0,       \
@@ -956,20 +956,22 @@ class AsymptoticDecay(TimerFunction):  # ---------------------------------------
          prefs=None        \
          )
 
-    .. _DeceleratingDecay:
+    .. AsymptoticDecay:
     |
-    `function <DeceleratingDecay._function>` returns exponentially decaying transform of `variable
-    <DeceleratingDecay.variable>` toward an asymptotic value:
+    `function <AsymptoticDecay._function>` returns exponentially decaying transform of `variable
+    <DeceleratingDecay.variable>` toward an asymptotic value that reaches `end <DeceleratingDecay.end>`
+    at `start <DeceleratingDecay.start>` * `threshold <DeceleratingDecay.threshold>` + `offset:
 
     .. math::
-       XXX
+           offset + start*e^{-\\frac{variable\ *\ \\ln\\left(\\frac{1}{tolerance}\\right)}{end}}
+
 
     such that:
 
     .. math::
         value = start + offset\ for\ variable=0
 
-        value = (start * threshold) + offset\ for\ variable=end
+        value = (start * tolerance) + offset\ for\ variable=end
 
     where:
 
@@ -1187,8 +1189,9 @@ class AsymptoticDecay(TimerFunction):  # ---------------------------------------
         offset = self._get_current_parameter_value(OFFSET, context)
         end = self._get_current_parameter_value(END, context)
         threshold = self._get_current_parameter_value(THRESHOLD, context)
+        tolerance = self._get_current_parameter_value(TOLERANCE, context)
 
-        result = offset + start * np.exp(-variable * np.log(1 / threshold) / end)
+        result = offset + start * np.exp(-variable * np.log(1 / tolerance) / end)
 
         return self.convert_output_type(result)
 
@@ -1197,9 +1200,9 @@ class AsymptoticDecay(TimerFunction):  # ---------------------------------------
         """Derivative of `function <DeceleratingDecay._function>` at **input**:
 
         .. math::
-           \\frac{(start-threshold+1)}{\\left(e^{\\ln(start-threshold+1)\\left(\\frac{variable}{end}\\right)^{
-           rate}}-1+threshold\\right)^2} \\cdot e^{\\ln(start-threshold+1)\\left(\\frac{variable}{end}\\right)^{rate}}
-           \\cdot \\ln(start-threshold+1) \\cdot \\frac{rate}{end}
+           \\frac{(start-tolerance+1)}{\\left(e^{\\ln(start-tolerance+1)\\left(\\frac{variable}{end}\\right)^{
+           rate}}-1+tolerance\\right)^2} \\cdot e^{\\ln(start-tolerance+1)\\left(\\frac{variable}{end}\\right)^{rate}}
+           \\cdot \\ln(start-tolerance+1) \\cdot \\frac{rate}{end}
 
         Arguments
         ---------
