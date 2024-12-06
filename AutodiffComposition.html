@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.15.2.0 documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.15.3.0 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.2.0
+                  0.15.3.0
                 </div>
               
             
@@ -285,10 +285,15 @@ That is, an AutodiffComposition can be <a class="reference internal" href="Compo
 <span id="autodiffcomposition-bias-parameters"></span><h3><em>No Bias Parameters</em><a class="headerlink" href="#no-bias-parameters" title="Permalink to this headline">¶</a></h3>
 <p>AutodiffComposition does not (currently) support the <em>automatic</em> construction of separate bias parameters.
 Thus, when constructing a model using an AutodiffComposition that corresponds to one in PyTorch, the <code class="xref any docutils literal notranslate"><span class="pre">bias</span></code> parameter of PyTorch modules should be set
-to <code class="xref any docutils literal notranslate"><span class="pre">False</span></code>. Trainable biases <em>can</em> be specified explicitly in an AutodiffComposition by including a
-TransferMechanism that projects to the relevant Mechanism (i.e., implementing that layer of the network to
-receive the biases) using a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> with a <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter that
-implements a diagnoal matrix with values corresponding to the initial value of the biases.</p>
+to <code class="xref any docutils literal notranslate"><span class="pre">False</span></code>.</p>
+<blockquote>
+<div><p>Trainable biases <em>can</em> be specified explicitly in an AutodiffComposition by including a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>
+that projects to the relevant Mechanism (i.e., implementing that layer of the network to receive the biases)
+using a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> with a <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter that implements a diagnoal
+matrix with values corresponding to the initial value of the biases, and setting the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.default_input" title="psyneulink.core.components.ports.inputport.InputPort.default_input"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">default_input</span></code></a> Parameter of one of the ProcessingMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a> to <em>DEFAULT_VARIABLE</em>, and its <code class="xref any docutils literal notranslate"><span class="pre">default_variable</span></code>
+equal to 1. ProcessingMechanisms configured in this way are assigned <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRole</span></code></a> <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.BIAS" title="psyneulink.core.compositions.composition.NodeRole.BIAS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">BIAS</span></code></a>, and the MappingProjection
+is subject to learning.</p>
+</div></blockquote>
 </section>
 <section id="nesting">
 <span id="autodiffcomposition-nesting"></span><h3><em>Nesting</em><a class="headerlink" href="#nesting" title="Permalink to this headline">¶</a></h3>

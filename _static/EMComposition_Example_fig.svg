@@ -1,56 +1,94 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Generator: Adobe Illustrator 25.3.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
-<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 439 498" style="enable-background:new 0 0 439 498;" xml:space="preserve">
-<style type="text/css">
-	.st0{font-family:'Times-Roman';}
-	.st1{font-size:14px;}
-	.st2{fill:none;stroke:#00FF00;stroke-width:3;stroke-miterlimit:10;}
-	.st3{font-family:'ArialMT';}
-	.st4{font-size:12px;}
-	.st5{fill:none;stroke:#000000;stroke-miterlimit:10;}
-	.st6{fill:none;stroke:#FF0000;stroke-width:3;stroke-miterlimit:10;}
-	.st7{fill:none;stroke:#0000FF;stroke-width:3;stroke-miterlimit:10;}
-	.st8{fill:none;stroke:#0000FF;stroke-miterlimit:10;}
-	.st9{fill:#0000FF;}
-</style>
-<text transform="matrix(1 0 0 1 169.2803 451.2002)" class="st0 st1">EM_Composition</text>
-<ellipse class="st2" cx="98.9" cy="418" rx="58.9" ry="18"/>
-<text transform="matrix(1 0 0 1 60.0317 420.7002)"><tspan x="0" y="0" class="st3 st4">V</tspan><tspan x="7.1" y="0" class="st3 st4">ALUE INPUT</tspan></text>
-<ellipse class="st2" cx="225.9" cy="418" rx="49.9" ry="18"/>
-<text transform="matrix(1 0 0 1 194.3647 420.7002)"><tspan x="0" y="0" class="st3 st4">KE</tspan><tspan x="16" y="0" class="st3 st4">Y</tspan><tspan x="23.8" y="0" class="st3 st4"> INPUT</tspan></text>
-<ellipse class="st5" cx="225.9" cy="346" rx="53.5" ry="18"/>
-<text transform="matrix(1 0 0 1 191.3706 348.7002)"><tspan x="0" y="0" class="st3 st4">M</tspan><tspan x="10" y="0" class="st3 st4">A</tspan><tspan x="17.1" y="0" class="st3 st4">TCH KEY</tspan></text>
-<path class="st5" d="M225.9,399.8c0-7.7,0-16.9,0-25.4"/>
-<polygon points="222.4,374.4 225.9,364.4 229.4,374.4 "/>
-<polygon class="st5" points="222.4,374.4 225.9,364.4 229.4,374.4 "/>
-<ellipse class="st5" cx="225.9" cy="130" rx="51.3" ry="18"/>
-<text transform="matrix(1 0 0 1 193.0317 132.7007)"><tspan x="0" y="0" class="st3 st4">RETRIE</tspan><tspan x="44" y="0" class="st3 st4">V</tspan><tspan x="51.1" y="0" class="st3 st4">AL</tspan></text>
-<ellipse class="st6" cx="141.9" cy="58" rx="79.4" ry="18"/>
-<text transform="matrix(1 0 0 1 86.6929 60.7007)"><tspan x="0" y="0" class="st3 st4">V</tspan><tspan x="7.1" y="0" class="st3 st4">ALUE RETRIEVED</tspan></text>
-<path class="st5" d="M206.4,113.3c-10.7-9.2-24.2-20.7-36.1-30.9"/>
-<polygon points="167.8,84.8 162.5,75.6 172.3,79.5 "/>
-<polygon class="st5" points="167.8,84.8 162.5,75.6 172.3,79.5 "/>
-<ellipse class="st6" cx="309.9" cy="58" rx="70.5" ry="18"/>
-<text transform="matrix(1 0 0 1 262.0254 60.7007)"><tspan x="0" y="0" class="st3 st4">KE</tspan><tspan x="16" y="0" class="st3 st4">Y</tspan><tspan x="23.8" y="0" class="st3 st4"> RETRIEVED</tspan></text>
-<path class="st5" d="M245.4,113.3c10.9-9.3,24.7-21.1,36.7-31.4"/>
-<polygon points="279.8,79.2 289.7,75.4 284.4,84.5 "/>
-<polygon class="st5" points="279.8,79.2 289.7,75.4 284.4,84.5 "/>
-<ellipse class="st5" cx="225.9" cy="202" rx="46.5" ry="18"/>
-<text transform="matrix(1 0 0 1 196.9282 204.7007)" class="st3 st4">SOFTMAX</text>
-<path class="st5" d="M225.9,183.8c0-7.7,0-16.9,0-25.4"/>
-<polygon points="222.4,158.4 225.9,148.4 229.4,158.4 "/>
-<polygon class="st5" points="222.4,158.4 225.9,148.4 229.4,158.4 "/>
-<path class="st5" d="M205.2,329.3c-10.3-9.7-21.8-22.8-27.3-37.3c-5.7-15-5.7-21,0-36c4.3-11.2,12.1-21.6,20.2-30.3"/>
-<polygon points="195.7,223.2 205.2,218.7 200.6,228.2 "/>
-<polygon class="st5" points="195.7,223.2 205.2,218.7 200.6,228.2 "/>
-<ellipse class="st7" cx="292.9" cy="274" rx="106" ry="18"/>
-<text transform="matrix(1 0 0 1 216.5903 276.7002)" class="st3 st4">SOFTMAX GAIN CONTROL</text>
-<path class="st5" d="M242.1,328.6c8.1-8.7,18.1-19.5,27.1-29.1"/>
-<polygon points="266.8,297 276.2,292 271.9,301.7 "/>
-<polygon class="st5" points="266.8,297 276.2,292 271.9,301.7 "/>
-<path class="st8" d="M276.4,256.2c-8.3-8.9-18.5-19.9-27.6-29.6"/>
-<rect x="240.6" y="218" transform="matrix(0.7321 -0.6812 0.6812 0.7321 -85.7243 226.0921)" class="st9" width="8" height="8"/>
-<rect x="240.6" y="218" transform="matrix(0.7321 -0.6812 0.6812 0.7321 -85.7243 226.0921)" class="st8" width="8" height="8"/>
-<line class="st8" x1="247.3" y1="225" x2="248.7" y2="226.4"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 440.69 325">
+  <defs>
+    <style>
+      .cls-1, .cls-2, .cls-3, .cls-4 {
+        fill: none;
+      }
+
+      .cls-5 {
+        font-family: ArialMT, Arial;
+        font-size: 13.78px;
+      }
+
+      .cls-6 {
+        font-family: TimesNewRomanPSMT, 'Times New Roman';
+        font-size: 16.08px;
+      }
+
+      .cls-7 {
+        fill: #fff;
+      }
+
+      .cls-2 {
+        stroke: lime;
+      }
+
+      .cls-2, .cls-3, .cls-4 {
+        stroke-miterlimit: 10;
+      }
+
+      .cls-2, .cls-4 {
+        stroke-width: 3px;
+      }
+
+      .cls-3 {
+        stroke: #000;
+      }
+
+      .cls-4 {
+        stroke: red;
+      }
+
+      .cls-8 {
+        clip-path: url(#clippath);
+      }
+    </style>
+    <clipPath id="clippath">
+      <rect class="cls-1" width="440.69" height="325"/>
+    </clipPath>
+  </defs>
+  <g class="cls-8">
+    <rect class="cls-7" width="440.69" height="325"/>
+    <text class="cls-6" transform="translate(162.35 311.45)"><tspan x="0" y="0">EM_Composition</tspan></text>
+    <path class="cls-2" d="M153.21,273.32c0,11.42-33.3,20.67-74.39,20.67s-74.39-9.26-74.39-20.67,33.3-20.67,74.39-20.67,74.39,9.26,74.39,20.67"/>
+    <text class="cls-5" transform="translate(27.72 276.88)"><tspan x="0" y="0">VALUE</tspan></text>
+    <text class="cls-5" transform="translate(76.69 276.88)"><tspan x="0" y="0">[VALUE]</tspan></text>
+    <path class="cls-3" d="M120.06,190.64c0,11.42-18.46,20.67-41.24,20.67s-41.24-9.26-41.24-20.67,18.46-20.67,41.24-20.67,41.24,9.26,41.24,20.67"/>
+    <text class="cls-5" transform="translate(54.71 194.2)"><tspan x="0" y="0">STORE</tspan></text>
+    <path class="cls-3" d="M78.82,252.46v-29.19"/>
+    <polygon points="74.8 223.27 78.82 211.78 82.84 223.27 74.8 223.27"/>
+    <polygon class="cls-3" points="74.8 223.27 78.82 211.78 82.84 223.27 74.8 223.27"/>
+    <path class="cls-2" d="M305.63,273.32c0,11.42-29.56,20.67-66.03,20.67s-66.03-9.26-66.03-20.67,29.56-20.67,66.03-20.67,66.03,9.26,66.03,20.67"/>
+    <text class="cls-5" transform="translate(195.39 276.88)"><tspan x="0" y="0">KEY</tspan></text>
+    <text class="cls-5" transform="translate(226.75 276.88)"><tspan x="0" y="0">[QUERY]</tspan></text>
+    <path class="cls-3" d="M341.04,190.64c0,11.42-44.9,20.67-100.29,20.67s-100.29-9.26-100.29-20.67,44.9-20.67,100.29-20.67,100.29,9.26,100.29,20.67"/>
+    <text class="cls-5" transform="translate(168.4 194.2)"><tspan x="0" y="0">KEY</tspan></text>
+    <text class="cls-5" transform="translate(199.76 194.2)"><tspan x="0" y="0">[MATCH</tspan></text>
+    <text class="cls-5" transform="translate(256.37 194.2)"><tspan x="0" y="0">to</tspan></text>
+    <text class="cls-5" transform="translate(271.68 194.2)"><tspan x="0" y="0">KEYS]</tspan></text>
+    <path class="cls-3" d="M239.89,252.46c.12-8.84.27-19.36.4-29.19"/>
+    <polygon points="236.28 223.21 240.46 211.78 244.32 223.32 236.28 223.21"/>
+    <polygon class="cls-3" points="236.28 223.21 240.46 211.78 244.32 223.32 236.28 223.21"/>
+    <path class="cls-3" d="M205.11,255.58c-25.46-13.1-60.17-30.95-86.75-44.62"/>
+    <polygon points="116.25 214.4 107.87 205.58 119.93 207.26 116.25 214.4"/>
+    <polygon class="cls-3" points="116.25 214.4 107.87 205.58 119.93 207.26 116.25 214.4"/>
+    <path class="cls-3" d="M295.07,107.95c0,11.42-24.32,20.67-54.32,20.67s-54.32-9.26-54.32-20.67,24.32-20.67,54.32-20.67,54.32,9.26,54.32,20.67"/>
+    <text class="cls-5" transform="translate(205.72 111.51)"><tspan x="0" y="0">RETRIEVE</tspan></text>
+    <path class="cls-3" d="M240.75,169.77v-29.19"/>
+    <polygon points="236.73 140.58 240.75 129.1 244.77 140.58 236.73 140.58"/>
+    <polygon class="cls-3" points="236.73 140.58 240.75 129.1 244.77 140.58 236.73 140.58"/>
+    <path class="cls-4" d="M224.68,25.27c0,11.42-37.54,20.67-83.85,20.67s-83.85-9.26-83.85-20.67S94.53,4.59,140.84,4.59s83.85,9.26,83.85,20.67"/>
+    <text class="cls-5" transform="translate(81.69 28.83)"><tspan x="0" y="0">KEY</tspan></text>
+    <text class="cls-5" transform="translate(113.06 28.83)"><tspan x="0" y="0">[RETRIEVED]</tspan></text>
+    <path class="cls-3" d="M217.57,88.77c-12.96-10.72-29.32-24.27-43.61-36.09"/>
+    <polygon points="171.21 55.62 164.93 45.2 176.34 49.43 171.21 55.62"/>
+    <polygon class="cls-3" points="171.21 55.62 164.93 45.2 176.34 49.43 171.21 55.62"/>
+    <path class="cls-4" d="M436.22,25.27c0,11.42-42.78,20.67-95.56,20.67s-95.56-9.26-95.56-20.67,42.78-20.67,95.56-20.67,95.56,9.26,95.56,20.67"/>
+    <text class="cls-5" transform="translate(272.33 28.83)"><tspan x="0" y="0">VALUE</tspan></text>
+    <text class="cls-5" transform="translate(321.31 28.83)"><tspan x="0" y="0">[RETRIEVED]</tspan></text>
+    <path class="cls-3" d="M263.92,88.77c12.86-10.65,29.09-24.07,43.3-35.84"/>
+    <polygon points="304.81 49.72 316.22 45.49 309.94 55.91 304.81 49.72"/>
+    <polygon class="cls-3" points="304.81 49.72 316.22 45.49 309.94 55.91 304.81 49.72"/>
+  </g>
 </svg>
