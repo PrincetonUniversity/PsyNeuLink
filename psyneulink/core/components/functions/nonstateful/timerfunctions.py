@@ -16,6 +16,7 @@
 * `AcceleratingDecay`
 * `DeceleratingRise`
 * `DeceleratingDecay`
+* `AsymptoticDecay`
 
 Overview
 --------
@@ -103,8 +104,8 @@ from psyneulink.core.globals.utilities import (
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, ValidPrefSet
 from psyneulink.core.globals.keywords import \
-    (ADDITIVE_PARAM, ACCELERATING_DECAY_FUNCTION, ACCELERATING_RISE_FUNCTION, DECELERATING_DECAY_FUNCTION,
-     DECELERATING_RISE_FUNCTION, END, LINEAR_DECAY_FUNCTION, LINEAR_RISE_FUNCTION,
+    (ADDITIVE_PARAM, ACCELERATING_DECAY_FUNCTION, ACCELERATING_RISE_FUNCTION, ASYMPTOTIC_DECAY_FUNCTION,
+     DECELERATING_DECAY_FUNCTION, DECELERATING_RISE_FUNCTION, END, LINEAR_DECAY_FUNCTION, LINEAR_RISE_FUNCTION,
      MULTIPLICATIVE_PARAM, OFFSET, PREFERENCE_SET_NAME, SCALE, START, THRESHOLD, TIMER_FUNCTION_TYPE)
 
 __all__ = ['LinearRise','LinearDecay','AcceleratingRise','AcceleratingDecay','DeceleratingRise','DeceleratingDecay']
@@ -943,7 +944,7 @@ class DeceleratingDecay(TimerFunction):  # -------------------------------------
 
 class AsymptoticDecay(TimerFunction):  # ---------------------------------------------------------------------------
     """
-    AsymptoticDecay(     \
+    AsymptoticDecay(       \
          default_variable, \
          start=1.0,        \
          offset=0.0,       \
@@ -963,15 +964,14 @@ class AsymptoticDecay(TimerFunction):  # ---------------------------------------
     at `start <DeceleratingDecay.start>` * `threshold <DeceleratingDecay.threshold>` + `offset:
 
     .. math::
-           offset + start*e^{-\\frac{variable\ *\ \\ln\\left(\\frac{1}{tolerance}\\right)}{end}}
-
+           offset + start \\cdot e^{\\left(\\frac{variable \\cdot \\ln(tolerance)}{end}\\right)}
 
     such that:
 
     .. math::
         value = start + offset\ for\ variable=0
 
-        value = (start * tolerance) + offset\ for\ variable=end
+        value = (start \\cdot tolerance) + offset\ for\ variable=end
 
     where:
 
@@ -990,16 +990,14 @@ class AsymptoticDecay(TimerFunction):  # ---------------------------------------
         <DeceleratingDecay.variable>` should equal `end <DeceleratingDecay.end>`.
 
         **end** determines the value of `variable <DeceleratingDecay.variable>` at which
-        the value of the function should equal :math:`start * threshold + offset`.
+        the value of the function should equal :math:`start \\cdot threshold + offset`.
 
     `derivative <DeceleratingDecay.derivative>` returns the derivative of the DeceleratingDecay Function:
 
       .. math::
-        \\frac{(start-threshold+1)}{\\left(e^{\\ln(start-threshold+1)\\left(\\frac{variable}{end}\\right)^{
-        rate}}-1+threshold\\right)^2} \\cdot e^{\\ln(start-threshold+1)\\left(\\frac{variable}{end}\\right)^{rate}}
-        \\cdot \\ln(start-threshold+1) \\cdot \\frac{rate}{end}
+         \\frac{s\\cdot\\ln(t)}{f}\\cdot e^{\\frac{x\\cdot\\ln(t)}{f}}
 
-    See `graph <https://www.desmos.com/calculator/e6ei7o0woq>`_ for interactive plot of the function using `Desmos
+    See `graph <https://www.desmos.com/calculator/xjlobd7acp>`_ for interactive plot of the function using `Desmos
     <https://www.desmos.com>`_.
 
     COMMENT:
@@ -1200,9 +1198,7 @@ class AsymptoticDecay(TimerFunction):  # ---------------------------------------
         """Derivative of `function <DeceleratingDecay._function>` at **input**:
 
         .. math::
-           \\frac{(start-tolerance+1)}{\\left(e^{\\ln(start-tolerance+1)\\left(\\frac{variable}{end}\\right)^{
-           rate}}-1+tolerance\\right)^2} \\cdot e^{\\ln(start-tolerance+1)\\left(\\frac{variable}{end}\\right)^{rate}}
-           \\cdot \\ln(start-tolerance+1) \\cdot \\frac{rate}{end}
+           \\frac{s\\cdot\\ln(t)}{f}\\cdot e^{\\frac{x\\cdot\\ln(t)}{f}}
 
         Arguments
         ---------
