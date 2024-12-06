@@ -16,13 +16,13 @@
 * `AcceleratingDecay`
 * `DeceleratingRise`
 * `DeceleratingDecay`
-* `AsymptoticDecay`
+* `AsymptoticExponential`
 
 Overview
 --------
 
 Functions for which a `start <TimerFunction.start>`, `threshold <TimerFunction.threshold>`, and `end
-<TimerFunction.end>` value can be specified, for use with a `TimerMechanism`.
+<TimerFunction.end>` value can be specified (and for use with a `TimerMechanism`).
 
 .. _TimerFunction_Types:
 
@@ -63,9 +63,9 @@ and default behaviors as summarized below:
     and rising toward a threshold of 10 in progressively smaller increments; ends when it reaches 9.99
   COMMENT
 
-  * `AsymptoticDecay` - qualitatively exponential form,  starting at 10
+  * `AsymptoticExponential` - qualitatively exponential form,  starting at 10
     and decaying toward 0 in progressively smaller increments; ends when it reaches .01
-    (see `interactive graph <https://www.desmos.com/calculator/uzflys6qo4>`_)
+    (see `interactive graph <https://www.desmos.com/calculator/grgvkugynz>`_)
 
 
 .. _TimerFunction_StandardAttributes:
@@ -73,16 +73,18 @@ and default behaviors as summarized below:
 Standard Attributes
 ~~~~~~~~~~~~~~~~~~~
 
-All TimerFunctions have the following attributes:
+All TimerFunctions have the following Parameters:
 
-* **start**: specifies the `value <Function_Base.value>` that the function should have when its `variable
+* **start**: specifies the `value <Function_Base.value>` that the function has when its `variable
   <Function_Base.variable>` is 0.
 
-* **threshold**: specifies the `value <Function_Base.value>` that the function should have when its `variable
+* **threshold**: specifies the `value <Function_Base.value>` that the function has when its `variable
   <Function_Base.variable>` is equal to `end <TimerFunction.end>`.
 
 * **end**: specifies the value of the `variable <Function_Base.variable>` at which the`value <Function_Base.value>` of
-    the function should be equal to `threshold <TimerFunction.threshold>`.
+    the function is equal to `threshold <TimerFunction.threshold>`.
+
+In addition, some TimerFunctions have additional Parameters, that can be specified at construction.
 
 
 TimerFunction Class References
@@ -112,7 +114,7 @@ from psyneulink.core.globals.utilities import (
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, ValidPrefSet
 from psyneulink.core.globals.keywords import \
-    (ADDITIVE_PARAM, ACCELERATING_DECAY_FUNCTION, ACCELERATING_RISE_FUNCTION, ASYMPTOTIC_DECAY_FUNCTION,
+    (ADDITIVE_PARAM, ACCELERATING_DECAY_FUNCTION, ACCELERATING_RISE_FUNCTION, ASYMPTOTIC_EXPONENTIAL_FUNCTION,
      DECELERATING_DECAY_FUNCTION, DECELERATING_RISE_FUNCTION, END, LINEAR_DECAY_FUNCTION, LINEAR_RISE_FUNCTION,
      MULTIPLICATIVE_PARAM, OFFSET, PREFERENCE_SET_NAME, SCALE, START, THRESHOLD, TIMER_FUNCTION_TYPE, TOLERANCE)
 
@@ -950,12 +952,12 @@ class DeceleratingDecay(TimerFunction):  # -------------------------------------
         return lambda x : offset + start * torch.exp(-x * torch.log(1 / threshold) / end)
 
 
-class AsymptoticDecay(TimerFunction):  # ---------------------------------------------------------------------------
+
+class AsymptoticExponential(TimerFunction):  # ---------------------------------------------------------------------------
     """
-    AsymptoticDecay(       \
+    AsymptoticExponential( \
          default_variable, \
          start=1.0,        \
-         offset=0.0,       \
          end=1.0,          \
          threshold=0,      \
          tolerance=0.01,   \
@@ -965,48 +967,44 @@ class AsymptoticDecay(TimerFunction):  # ---------------------------------------
          prefs=None        \
          )
 
-    .. AsymptoticDecay:
+    .. AsymptoticExponential:
     |
-    `function <AsymptoticDecay._function>` returns exponentially decaying transform of `variable
-    <DeceleratingDecay.variable>` toward an asymptotic value that reaches `end <DeceleratingDecay.end>`
-    at `start <DeceleratingDecay.start>` * `threshold <DeceleratingDecay.threshold>` + `offset:
+    `function <AsymptoticExponential._function>` returns exponentially decaying transform of `variable
+    <AsymptoticExponential.variable>` toward an asymptotic value that reaches `end <AsymptoticExponential.end>`
+    at `start <AsymptoticExponential.start>` * `threshold <AsymptoticExponential.threshold>`:
 
     .. math::
-       offset + (start - threshold) * \\frac{\\ln(tolerance)}{end} *e^{\\left(\\frac{variable * \\ln(tolerance)}
+       (start - threshold) * \\frac{\\ln(tolerance)}{end} *e^{\\left(\\frac{variable * \\ln(tolerance)}
        {end}\\right)} + threshold
 
     such that:
 
     .. math::
-        value = start + offset\ for\ variable=0
+        value = start for\ variable=0
 
-        value = ((start - threshold) \\cdot tolerance) + offset\ for\ variable=end
+        value = ((start - threshold) \\cdot tolerance) for\ variable=end
 
     where:
 
-        **start**, together with `offset <DeceleratingDecay.offset>`, determines the value of the function when
-        `variable <DeceleratingDecay.variable>` = 0, and is used together with `threshold <DeceleratingDecay.threshold>`
-        to determine the value of the function when `variable <DeceleratingDecay.variable>` = `end
-        <DeceleratingDecay.end>`.
-
-        **offset**, together with `start <DeceleratingDecay.start>`, determines the value of the function
-        when `variable <DeceleratingDecay.variable>` = 0, and its linear offset from 0 for all other values;
+        **start**, determines the value of the function when `variable <AsymptoticExponential.variable>` = 0, and is use
+        together with `threshold <AsymptoticExponential.threshold>` to determine the value of the function when `variable
+        <AsymptoticExponential.variable>` = `end <AsymptoticExponential.end>`.
 
         **threshold** is asymptotic value toward which the function decays.
 
-        **tolerance** is the fraction of `start <DeceleratingDecay.start>` when, added to `offset
-        <DeceleratingDecay.offset>`, is used to determine the value of the function when `variable
-        <DeceleratingDecay.variable>` should equal `end <DeceleratingDecay.end>`.
+        **tolerance** is the fraction of `start <AsymptoticExponential.start>` - `threshold
+        <AsymptoticExponential.threshold>` used to determine the value of the function when `variable
+        <AsymptoticExponential.variable>` should equal `end <AsymptoticExponential.end>`.
 
-        **end** determines the value of `variable <DeceleratingDecay.variable>` at which
-        the value of the function should equal :math:`start \\cdot threshold + offset`.
+        **end** determines the value of `variable <AsymptoticExponential.variable>` at which
+        the value of the function should equal :math:`start \\cdot threshold`.
 
-    `derivative <DeceleratingDecay.derivative>` returns the derivative of the DeceleratingDecay Function:
+    `derivative <AsymptoticExponential.derivative>` returns the derivative of the AsymptoticExponential Function:
 
       .. math::
          \\frac{start\\cdot\\ln(tolerance)}{end}\\cdot e^{\\frac{variable\\cdot\\ln(tolerance)}{end}}
 
-    See `graph <https://www.desmos.com/calculator/uzflys6qo4>`_ for interactive plot of the function using `Desmos
+    See `graph <https://www.desmos.com/calculator/grgvkugynz>`_ for interactive plot of the function using `Desmos
     <https://www.desmos.com>`_.
 
     Arguments
@@ -1016,25 +1014,20 @@ class AsymptoticDecay(TimerFunction):  # ---------------------------------------
         specifies a template for the value to be transformed.
 
     start : float : default 1.0
-        specifies, together with `offset <DeceleratingDecay.offset>`, the value of the function when `variable
-        <DeceleratingDecay.variable>` = 0; must be greater than 0.
-
-    offset : float : default 0.0
-        specifies, together with `start <DeceleratingDecay.start>`, the value of the function when `variable
-        <DeceleratingDecay.variable>` = 0, and its linear offset for all other values.
+        specifies the value of the function when `variable<AsymptoticExponential.variable>`=0; must be greater than 0.
 
     threshold : float : default 0.0
         specifies the asymptotic value toward which the function decays.
 
     tolerance : float : default 0.01
-        specifies the fraction of `start <DeceleratingDecay.start>`-`threshold <DeceleratingDecay.threshold>`
-        when added to `offset <DeceleratingDecay.offset>`,that determines the value of the function when `variable
-        <DeceleratingDecay.variable>` = `end; must be between 0 and 1.
+        specifies the fraction of `start <AsymptoticExponential.start>`-`threshold <AsymptoticExponential.threshold>`
+        that determines the value of the function when `variable <AsymptoticExponential.variable>` = `end; must be
+        between 0 and 1.
 
     end : float : default 1.0
-        specifies the value of `variable <DeceleratingDecay.variable>` at which the `value of the function
-        should equal `start <DeceleratingDecay.start>` * `threshold <DeceleratingDecay.threshold>` + `offset
-        <DeceleratingDecay.offset>`; must be greater than 0.
+        specifies the value of `variable <AsymptoticExponential.variable>` at which the `value of the function
+        should equal `start <AsymptoticExponential.start>` * `threshold <AsymptoticExponential.threshold>`;
+        must be greater than 0.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -1057,24 +1050,19 @@ class AsymptoticDecay(TimerFunction):  # ---------------------------------------
         contains value to be transformed.
 
     start : float (>0)
-        determines, together with `offset <DeceleratingDecay.offset>`, the value of the function when `variable
-        <DeceleratingDecay.variable>` = 0.
-
-    offset : float
-        determines, together with `start <DeceleratingDecay.start>`, the value of the function when `variable
-        <DeceleratingDecay.variable>` = 0, and its linear offset for all other values.
+        determines the value of the function when `variable <AsymptoticExponential.variable>` = 0.
 
     threshold : float
         determines the asymptotic value toward which the function decays.
 
     tolerance : float (0,1)
-        determines the fraction of `start <DeceleratingDecay.start>` when added to `offset <DeceleratingDecay.offset>`,
-        that determines the value of the function when `variable <DeceleratingDecay.variable>` = `end
-        <DeceleratingDecay.end>`.
+        determines the fraction of `start <AsymptoticExponential.start>` - threshold <AsymptoticExponential.threshold>
+        that determines the value of the function when `variable <AsymptoticExponential.variable>` = `end
+        <AsymptoticExponential.end>`.
 
     end : float (>0)
-        determines the value of `variable <DeceleratingDecay.variable>` at which the value of the function should
-        equal `start <DeceleratingDecay.start>` * `threshold <DeceleratingDecay.threshold>` + `offset <DeceleratingDecay.offset>`.
+        determines the value of `variable <AsymptoticExponential.variable>` at which the value of the function should
+        equal `start <AsymptoticExponential.start>` * `threshold <AsymptoticExponential.threshold>`.
 
     bounds : (None, None)
 
@@ -1091,10 +1079,10 @@ class AsymptoticDecay(TimerFunction):  # ---------------------------------------
         for details).
     """
 
-    componentName = ASYMPTOTIC_DECAY_FUNCTION
+    componentName = ASYMPTOTIC_EXPONENTIAL_FUNCTION
 
     classPreferences = {
-        PREFERENCE_SET_NAME: 'AsymptoticDecayClassPreferences',
+        PREFERENCE_SET_NAME: 'AsymptoticExponentialClassPreferences',
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
@@ -1105,19 +1093,12 @@ class AsymptoticDecay(TimerFunction):  # ---------------------------------------
             Attributes
             ----------
 
-                offset
-                    see `offset <DeceleratingDecay.offset>`
-
-                    :default value: 0.0
-                    :type: ``float``
-
                 tolerance
-                    see `tolerance <DeceleratingDecay.tolerance>`
+                    see `tolerance <AsymptoticExponential.tolerance>`
 
                     :default value: 0.01
                     :type: ``float``
         """
-        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         tolerance = Parameter(0.01, modulable=True)
 
         def _validate_tolerance(self, tolerance):
@@ -1128,7 +1109,6 @@ class AsymptoticDecay(TimerFunction):  # ---------------------------------------
     @beartype
     def __init__(self,
                  default_variable=None,
-                 offset: Optional[ValidParamSpecType] = None,
                  start: Optional[ValidParamSpecType] = None,
                  threshold: Optional[ValidParamSpecType] = None,
                  tolerance: Optional[ValidParamSpecType] = None,
@@ -1139,7 +1119,6 @@ class AsymptoticDecay(TimerFunction):  # ---------------------------------------
         super().__init__(
             default_variable=default_variable,
             start=start,
-            offset=offset,
             end=end,
             threshold=threshold,
             tolerance=tolerance,
@@ -1160,7 +1139,7 @@ class AsymptoticDecay(TimerFunction):  # ---------------------------------------
 
         variable : number or array : default class_defaults.variable
            amount by which to increment timer on current execution;  if this is not specified, the timer is incremented
-           by the value of `increment <DeceleratingDecay.increment>`.
+           by the value of `increment <AsymptoticExponential.increment>`.
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -1174,18 +1153,17 @@ class AsymptoticDecay(TimerFunction):  # ---------------------------------------
 
         """
         start = self._get_current_parameter_value(START, context)
-        offset = self._get_current_parameter_value(OFFSET, context)
         end = self._get_current_parameter_value(END, context)
         tolerance = self._get_current_parameter_value(TOLERANCE, context)
         threshold = self._get_current_parameter_value(THRESHOLD, context)
 
-        result = offset + (start - threshold) * np.exp(variable * np.log(tolerance) / end) + threshold
+        result = (start - threshold) * np.exp(variable * np.log(tolerance) / end) + threshold
 
         return self.convert_output_type(result)
 
     @handle_external_context()
     def derivative(self, input, output=None, context=None):
-        """Derivative of `function <DeceleratingDecay._function>` at **input**:
+        """Derivative of `function <AsymptoticExponential._function>` at **input**:
 
         .. math::
            \\frac{start\\cdot\\ln(tolerance)}{end}\\cdot e^{\\frac{variable\\cdot\\ln(tolerance)}{end}}
@@ -1194,9 +1172,9 @@ class AsymptoticDecay(TimerFunction):  # ---------------------------------------
         ---------
 
         input : number
-            value of the input to the DeceleratingDecay transform at which derivative is to be taken.
+            value of the input to the AsymptoticExponential transform at which derivative is to be taken.
 
-        Derivative of `function <DeceleratingDecay._function>` at **input**.
+        Derivative of `function <AsymptoticExponential._function>` at **input**.
 
         Returns
         -------
@@ -1218,12 +1196,10 @@ class AsymptoticDecay(TimerFunction):  # ---------------------------------------
         end_ptr = ctx.get_param_or_state_ptr(builder, self, END, param_struct_ptr=params)
         start_ptr = ctx.get_param_or_state_ptr(builder, self, START, param_struct_ptr=params)
         threshold_ptr = ctx.get_param_or_state_ptr(builder, self, THRESHOLD, param_struct_ptr=params)
-        offset_ptr = ctx.get_param_or_state_ptr(builder, self, OFFSET, param_struct_ptr=params)
 
         end = pnlvm.helpers.load_extract_scalar_array_one(builder, end_ptr)
         start = pnlvm.helpers.load_extract_scalar_array_one(builder, start_ptr)
         threshold = pnlvm.helpers.load_extract_scalar_array_one(builder, threshold_ptr)
-        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
         val = builder.load(ptri)
@@ -1238,17 +1214,15 @@ class AsymptoticDecay(TimerFunction):  # ---------------------------------------
         else:
             # f(x) = s*e^(r*x + b) + o
             val = builder.fmul(val, threshold)
-            val = builder.fadd(val, offset)
 
         builder.store(val, ptro)
 
     def _gen_pytorch_fct(self, device, context=None):
-        offset = self._get_pytorch_fct_param_value(OFFSET, device, context)
         start = self._get_pytorch_fct_param_value(START, device, context)
         tolerance = self._get_pytorch_fct_param_value(TOLERANCE, device, context)
         threshold = self._get_pytorch_fct_param_value(THRESHOLD, device, context)
         end = self._get_pytorch_fct_param_value(END, device, context)
 
-        return lambda x : offset + (start - threshold) * torch.exp(x * torch.log(tolerance) / end) + threshold
+        return lambda x : (start - threshold) * torch.exp(x * torch.log(tolerance) / end) + threshold
 
 
