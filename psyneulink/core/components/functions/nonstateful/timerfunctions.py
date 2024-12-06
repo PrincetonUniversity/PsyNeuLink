@@ -29,7 +29,7 @@ Functions for which a `start <TimerFunction.start>`, `threshold <TimerFunction.t
 Types
 ~~~~~
 
-There are three types that implement different functional forms, with rising and decaying versions of each,
+There are four types that implement different functional forms, with rising and decaying versions of each,
 and default behaviors as summarized below:
 
 **Linear**
@@ -48,16 +48,24 @@ and default behaviors as summarized below:
 
 **Decelerating**:
 
-  * `DeceleratingDecay` - exponential, starting at 10 and decaying to a threshold of 0
+  COMMENT:
+  * `DeceleratingRise` - logarithmic, starting at 0 and rising to a threshold of 10
     in progressively smaller increments  (see `interactive graph <https://www.desmos.com/calculator/e6ei7o0woq>`_)
+  COMMENT
+
+  * `DeceleratingDecay` - exponential, starting at 10 and decaying to a threshold of 0
+    in progressively smaller increments  (see `interactive graph <https://www.desmos.com/calculator/vxmhtydxwv>`_)
+
+**Asymptotic**:
 
   COMMENT:
   * `AsymptoticDeceleratingRise` - qualitatively logarithmic form,  starting at 0
     and rising toward a threshold of 10 in progressively smaller increments; ends when it reaches 9.99
-
-  * `AsymptoticDeceleratingDecay` - qualitatively exponential form,  starting at 10
-    and decaying toward 0 in progressively smaller increments; ends when it reaches .01
   COMMENT
+
+  * `AsymptoticDecay` - qualitatively exponential form,  starting at 10
+    and decaying toward 0 in progressively smaller increments; ends when it reaches .01
+    (see `interactive graph <https://www.desmos.com/calculator/uzflys6qo4>`_)
 
 
 .. _TimerFunction_StandardAttributes:
@@ -106,7 +114,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import \
 from psyneulink.core.globals.keywords import \
     (ADDITIVE_PARAM, ACCELERATING_DECAY_FUNCTION, ACCELERATING_RISE_FUNCTION, ASYMPTOTIC_DECAY_FUNCTION,
      DECELERATING_DECAY_FUNCTION, DECELERATING_RISE_FUNCTION, END, LINEAR_DECAY_FUNCTION, LINEAR_RISE_FUNCTION,
-     MULTIPLICATIVE_PARAM, OFFSET, PREFERENCE_SET_NAME, SCALE, START, THRESHOLD, TIMER_FUNCTION_TYPE)
+     MULTIPLICATIVE_PARAM, OFFSET, PREFERENCE_SET_NAME, SCALE, START, THRESHOLD, TIMER_FUNCTION_TYPE, TOLERANCE)
 
 __all__ = ['LinearRise','LinearDecay','AcceleratingRise','AcceleratingDecay','DeceleratingRise','DeceleratingDecay']
 
@@ -696,7 +704,7 @@ class DeceleratingDecay(TimerFunction):  # -------------------------------------
         rate}}-1+threshold\\right)^2} \\cdot e^{\\ln(start-threshold+1)\\left(\\frac{variable}{end}\\right)^{rate}}
         \\cdot \\ln(start-threshold+1) \\cdot \\frac{rate}{end}
 
-    See `graph <https://www.desmos.com/calculator/e6ei7o0woq>`_ for interactive plot of the function using `Desmos
+    See `graph <https://www.desmos.com/calculator/vxmhtydxwv>`_ for interactive plot of the function using `Desmos
     <https://www.desmos.com>`_.
 
     COMMENT:
@@ -964,14 +972,15 @@ class AsymptoticDecay(TimerFunction):  # ---------------------------------------
     at `start <DeceleratingDecay.start>` * `threshold <DeceleratingDecay.threshold>` + `offset:
 
     .. math::
-           offset + start \\cdot e^{\\left(\\frac{variable \\cdot \\ln(tolerance)}{end}\\right)}
+       offset + (start - threshold) * \\frac{\\ln(tolerance)}{end} *e^{\\left(\\frac{variable * \\ln(tolerance)}
+       {end}\\right)} + threshold
 
     such that:
 
     .. math::
         value = start + offset\ for\ variable=0
 
-        value = (start \\cdot tolerance) + offset\ for\ variable=end
+        value = ((start - threshold) \\cdot tolerance) + offset\ for\ variable=end
 
     where:
 
@@ -995,19 +1004,10 @@ class AsymptoticDecay(TimerFunction):  # ---------------------------------------
     `derivative <DeceleratingDecay.derivative>` returns the derivative of the DeceleratingDecay Function:
 
       .. math::
-         \\frac{s\\cdot\\ln(t)}{f}\\cdot e^{\\frac{x\\cdot\\ln(t)}{f}}
+         \\frac{start\\cdot\\ln(tolerance)}{end}\\cdot e^{\\frac{variable\\cdot\\ln(tolerance)}{end}}
 
-    See `graph <https://www.desmos.com/calculator/xjlobd7acp>`_ for interactive plot of the function using `Desmos
+    See `graph <https://www.desmos.com/calculator/uzflys6qo4>`_ for interactive plot of the function using `Desmos
     <https://www.desmos.com>`_.
-
-    COMMENT:
-    FOR TIMER VERSION:
-    `function <DeceleratingDecay._function>` returns exponentially decaying transform of `variable
-    <DeceleratingDecay.variable>`, that has a value of `start <DeceleratingDecay.start>` + `offset
-    <DeceleratingDecay.offset>` at `variable <DeceleratingDecay.variable>` = 0, and a value of `threshold
-    <DeceleratingDecay.end>` * `start <DeceleratingDecay.start>` + `offset <DeceleratingDecay.offset>` at
-    `variable at `variable <DeceleratingDecay.variable>` = `end <DeceleratingDecay.end>`:
-    COMMENT
 
     Arguments
     ---------
@@ -1027,9 +1027,9 @@ class AsymptoticDecay(TimerFunction):  # ---------------------------------------
         specifies the asymptotic value toward which the function decays.
 
     tolerance : float : default 0.01
-        specifies the fraction of `start <DeceleratingDecay.start>` when added to `offset <DeceleratingDecay.offset>`,
-        that determines the value of the function when `variable <DeceleratingDecay.variable>` = `end
-        <DeceleratingDecay.end>`; must be between 0 and 1.
+        specifies the fraction of `start <DeceleratingDecay.start>`-`threshold <DeceleratingDecay.threshold>`
+        when added to `offset <DeceleratingDecay.offset>`,that determines the value of the function when `variable
+        <DeceleratingDecay.variable>` = `end; must be between 0 and 1.
 
     end : float : default 1.0
         specifies the value of `variable <DeceleratingDecay.variable>` at which the `value of the function
@@ -1111,12 +1111,6 @@ class AsymptoticDecay(TimerFunction):  # ---------------------------------------
                     :default value: 0.0
                     :type: ``float``
 
-                threshold
-                    see `threshold <DeceleratingDecay.threshold>`
-
-                    :default value: 0.0
-                    :type: ``float``
-
                 tolerance
                     see `tolerance <DeceleratingDecay.tolerance>`
 
@@ -1124,11 +1118,7 @@ class AsymptoticDecay(TimerFunction):  # ---------------------------------------
                     :type: ``float``
         """
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        threshold = Parameter(0.01, modulable=True, aliases=[SCALE])
-
-        def _validate_threshold(self, threshold):
-            if threshold < 0:
-                return f"must be greater than or equal to 0."
+        tolerance = Parameter(0.01, modulable=True)
 
         def _validate_tolerance(self, tolerance):
             if tolerance <= 0 or tolerance >= 1:
@@ -1138,11 +1128,11 @@ class AsymptoticDecay(TimerFunction):  # ---------------------------------------
     @beartype
     def __init__(self,
                  default_variable=None,
-                 start: Optional[ValidParamSpecType] = None,
                  offset: Optional[ValidParamSpecType] = None,
-                 end: Optional[ValidParamSpecType] = None,
+                 start: Optional[ValidParamSpecType] = None,
                  threshold: Optional[ValidParamSpecType] = None,
                  tolerance: Optional[ValidParamSpecType] = None,
+                 end: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
@@ -1186,10 +1176,10 @@ class AsymptoticDecay(TimerFunction):  # ---------------------------------------
         start = self._get_current_parameter_value(START, context)
         offset = self._get_current_parameter_value(OFFSET, context)
         end = self._get_current_parameter_value(END, context)
-        threshold = self._get_current_parameter_value(THRESHOLD, context)
         tolerance = self._get_current_parameter_value(TOLERANCE, context)
+        threshold = self._get_current_parameter_value(THRESHOLD, context)
 
-        result = offset + start * np.exp(-variable * np.log(1 / tolerance) / end)
+        result = offset + (start - threshold) * np.exp(variable * np.log(tolerance) / end) + threshold
 
         return self.convert_output_type(result)
 
@@ -1198,7 +1188,7 @@ class AsymptoticDecay(TimerFunction):  # ---------------------------------------
         """Derivative of `function <DeceleratingDecay._function>` at **input**:
 
         .. math::
-           \\frac{s\\cdot\\ln(t)}{f}\\cdot e^{\\frac{x\\cdot\\ln(t)}{f}}
+           \\frac{start\\cdot\\ln(tolerance)}{end}\\cdot e^{\\frac{variable\\cdot\\ln(tolerance)}{end}}
 
         Arguments
         ---------
@@ -1214,10 +1204,11 @@ class AsymptoticDecay(TimerFunction):  # ---------------------------------------
         """
 
         start = self._get_current_parameter_value(START, context)
-        end = self._get_current_parameter_value(END, context)
+        tolerance = self._get_current_parameter_value(TOLERANCE, context)
         threshold = self._get_current_parameter_value(THRESHOLD, context)
+        end = self._get_current_parameter_value(END, context)
 
-        return (start * np.log(1/threshold) / end) * np.exp(-input * np.log(threshold) / end)
+        return (start * np.log(tolerance) / end) * np.exp(input * np.log(tolerance) / end)
 
     # FIX:
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
@@ -1253,10 +1244,11 @@ class AsymptoticDecay(TimerFunction):  # ---------------------------------------
 
     def _gen_pytorch_fct(self, device, context=None):
         offset = self._get_pytorch_fct_param_value(OFFSET, device, context)
-        end = self._get_pytorch_fct_param_value(END, device, context)
-        threshold = self._get_pytorch_fct_param_value(THRESHOLD, device, context)
         start = self._get_pytorch_fct_param_value(START, device, context)
+        tolerance = self._get_pytorch_fct_param_value(TOLERANCE, device, context)
+        threshold = self._get_pytorch_fct_param_value(THRESHOLD, device, context)
+        end = self._get_pytorch_fct_param_value(END, device, context)
 
-        return lambda x : offset + start * torch.exp(-x * torch.log(1 / threshold) / end)
+        return lambda x : offset + (start - threshold) * torch.exp(x * torch.log(tolerance) / end) + threshold
 
 
