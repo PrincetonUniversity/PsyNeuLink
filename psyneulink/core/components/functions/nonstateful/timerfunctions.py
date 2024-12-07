@@ -34,38 +34,32 @@ and default behaviors as summarized below:
 
 **Linear**
 
-  * `LinearRising` - starts at 0 and rises to a threshold of 10 in increments of 1
+  * `LinearRising` - starts at 0 and rises to a threshold of 10 in increments of 1.
 
-  * `LinearDecaying` - starts at 10 and decays to a threshold of 0 in decrements of 1
+  * `LinearDecaying` - starts at 10 and decays to a threshold of 0 in decrements of 1.
 
 **Accelerating**:
 
   * `AcceleratingRise` - implements a form of "urgency signal," starting at 0 and rising to a threshold of 10 in
-    progressively greater increments (see `interactive graph <DESMOS XXX>`_)
+    progressively greater increments (see `interactive graph <DESMOS XXX>`_).
 
   * `AcceleratingDecay` - implements a form of "collapsing bound," starting at 10 and decaying to a threshold of
-    0 in progressively greater increments (see `interactive graph <DESMOS XXX>`_)
+    0 in progressively greater increments (see `interactive graph <DESMOS XXX>`_).
 
 **Decelerating**:
 
   COMMENT:
   * `DeceleratingRise` - logarithmic, starting at 0 and rising to a threshold of 10
-    in progressively smaller increments  (see `interactive graph <https://www.desmos.com/calculator/e6ei7o0woq>`_)
+    in progressively smaller increments  (see `interactive graph <https://www.desmos.com/calculator/e6ei7o0woq>`_).
   COMMENT
 
   * `DeceleratingDecay` - exponential, starting at 10 and decaying to a threshold of 0
-    in progressively smaller increments  (see `interactive graph <https://www.desmos.com/calculator/vxmhtydxwv>`_)
+    in progressively smaller increments  (see `interactive graph <https://www.desmos.com/calculator/vxmhtydxwv>`_).
 
 **Asymptotic**:
 
-  COMMENT:
-  * `AsymptoticDeceleratingRise` - qualitatively logarithmic form,  starting at 0
-    and rising toward a threshold of 10 in progressively smaller increments; ends when it reaches 9.99
-  COMMENT
-
-  * `AsymptoticExponential` - qualitatively exponential form,  starting at 10
-    and decaying toward 0 in progressively smaller increments; ends when it reaches .01
-    (see `interactive graph <https://www.desmos.com/calculator/grgvkugynz>`_)
+  * `AsymptoticExponential` - exponential form rise or decay, depending on whether the threshold is greater or less
+    than the start value, respectively (see `interactive graph <https://www.desmos.com/calculator/grgvkugynz>`_).
 
 
 .. _TimerFunction_StandardAttributes:
@@ -969,9 +963,10 @@ class AsymptoticExponential(TimerFunction):  # ---------------------------------
 
     .. AsymptoticExponential:
     |
-    `function <AsymptoticExponential._function>` returns exponentially decaying transform of `variable
+    `function <AsymptoticExponential._function>` returns exponentially progressing transform of `variable
     <AsymptoticExponential.variable>` toward an asymptotic value that reaches `end <AsymptoticExponential.end>`
-    at `start <AsymptoticExponential.start>` * `threshold <AsymptoticExponential.threshold>`:
+    when it falls within the specified `tolerance <AsymptoticExponential.tolerance>` of `threshold
+    <AsymptoticExponential.threshold>`:
 
     .. math::
        (start - threshold) * \\frac{\\ln(tolerance)}{end} *e^{\\left(\\frac{variable * \\ln(tolerance)}
@@ -986,18 +981,23 @@ class AsymptoticExponential(TimerFunction):  # ---------------------------------
 
     where:
 
-        **start**, determines the value of the function when `variable <AsymptoticExponential.variable>` = 0, and is use
-        together with `threshold <AsymptoticExponential.threshold>` to determine the value of the function when `variable
+        **start**, determines the value of the function when `variable <AsymptoticExponential.variable>` = 0,
+        and is used together with `threshold <AsymptoticExponential.threshold>` and `tolerance
+        <AsymptoticExponential.tolerance>` to determine the value of the function at which `variable
         <AsymptoticExponential.variable>` = `end <AsymptoticExponential.end>`.
 
-        **threshold** is asymptotic value toward which the function decays.
+        **threshold** is the asymptotic value toward which the function decays.
 
         **tolerance** is the fraction of `start <AsymptoticExponential.start>` - `threshold
         <AsymptoticExponential.threshold>` used to determine the value of the function when `variable
-        <AsymptoticExponential.variable>` should equal `end <AsymptoticExponential.end>`.
+        <AsymptoticExponential.variable>` is equal to `end <AsymptoticExponential.end>`.
 
         **end** determines the value of `variable <AsymptoticExponential.variable>` at which
-        the value of the function should equal :math:`start \\cdot threshold`.
+        the value of the function is equal to :math:`start \\cdot threshold`.
+
+    .. _note::
+       The function rises if `threshold <AsymptoticExponential.threshold>` > `start <AsymptoticExponential.start>` >,
+       and decays if `threshold <AsymptoticExponential.threshold>` < `start <AsymptoticExponential.start>`.
 
     `derivative <AsymptoticExponential.derivative>` returns the derivative of the AsymptoticExponential Function:
 
