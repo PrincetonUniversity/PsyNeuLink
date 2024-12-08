@@ -10,56 +10,38 @@
 # *******************************************  TIMER FUNCTIONS  *****************************************************
 """
 
-* `LinearRise`
-* `LinearDecay`
-* `AcceleratingRise`
-* `AcceleratingDecay`
-* `DeceleratingRise`
-* `DeceleratingDecay`
-* `AsymptoticExponential`
+* `LinearTimer`
+* `AcceleratingTimer`
+* `DeceleratingTimer`
+* `AsymptoticTimer`
 
 Overview
 --------
 
-Functions for which a `start <TimerFunction.start>`, `threshold <TimerFunction.threshold>`, and `end
-<TimerFunction.end>` value can be specified (and for use with a `TimerMechanism`).
+Functions for which `initial <TimerFunction.initial>` and `final <TimerFunction.final>`values and a `duration
+<TimerFunction.duration>` can be specified, for use with a `TimerMechanism`.
 
 .. _TimerFunction_Types:
 
 Types
 ~~~~~
 
-There are four types that implement different functional forms, with rising and decaying versions of each,
-and default behaviors as summarized below:
+There are four types that implement different functional forms, each of which is rising if `initial
+<TimerFunction.initial>` is less than `final <TimerFunction.final>` and declining for the reverse:
 
-**Linear**
+* **LinearTimer** - progresses linearly from `initial <TimerFunction.initial>` to `final <TimerFunction.final>` value.
 
-  * `LinearRising` - starts at 0 and rises to a threshold of 10 in increments of 1.
+* **AcceleratingTimer** - advances from initial <TimerFunction.initial> to `final <TimerFunction.final>` value
+  by progressively larger amounts at an adjustable exponential `rate <AcceleratingTimerRise.rate>`
+  (see `interactive graph <https://www.desmos.com/calculator/9ghsowtxzk>`_).
+ 
+* **DeceleratingTimer** - advances from initial <TimerFunction.initial> to `final <TimerFunction.final>` value
+  by progressively smaller amounts at an adjustable exponential `rate <DeceleratingTimer.rate>`
+  (see `interactive graph <https://www.desmos.com/calculator/hnpkze66pm>`_).
 
-  * `LinearDecaying` - starts at 10 and decays to a threshold of 0 in decrements of 1.
-
-**Accelerating**:
-
-  * `AcceleratingRise` - implements a form of "urgency signal," starting at 0 and rising to a threshold of 10 in
-    progressively greater increments (see `interactive graph <DESMOS XXX>`_).
-
-  * `AcceleratingDecay` - implements a form of "collapsing bound," starting at 10 and decaying to a threshold of
-    0 in progressively greater increments (see `interactive graph <DESMOS XXX>`_).
-
-**Decelerating**:
-
-  COMMENT:
-  * `DeceleratingRise` - logarithmic, starting at 0 and rising to a threshold of 10
-    in progressively smaller increments  (see `interactive graph <https://www.desmos.com/calculator/e6ei7o0woq>`_).
-  COMMENT
-
-  * `DeceleratingDecay` - exponential, starting at 10 and decaying to a threshold of 0
-    in progressively smaller increments  (see `interactive graph <https://www.desmos.com/calculator/vxmhtydxwv>`_).
-
-**Asymptotic**:
-
-  * `AsymptoticExponential` - exponential form rise or decay, depending on whether the threshold is greater or less
-    than the start value, respectively (see `interactive graph <https://www.desmos.com/calculator/grgvkugynz>`_).
+* **AsymptoticTimer** - progresses at a fixed exponential `rate <AsymptoticTimer.rate>` from `initial
+  <TimerFunction.initial>` to within `tolerance <AsymptoticTimer.tolerance>` of `final <TimerFunction.final>`
+    (see `interactive graph <https://www.desmos.com/calculator/grgvkugynz>`_).
 
 
 .. _TimerFunction_StandardAttributes:
@@ -69,16 +51,16 @@ Standard Attributes
 
 All TimerFunctions have the following Parameters:
 
-* **start**: specifies the `value <Function_Base.value>` that the function has when its `variable
+* **initial**: specifies the `value <Function_Base.value>` that the function has when its `variable
   <Function_Base.variable>` is 0.
 
-* **threshold**: specifies the `value <Function_Base.value>` that the function has when its `variable
-  <Function_Base.variable>` is equal to `end <TimerFunction.end>`.
+* **final**: specifies the `value <Function_Base.value>` that the function has when its `variable
+  <Function_Base.variable>` is equal to `duration <TimerFunction.duration>`.
 
-* **end**: specifies the value of the `variable <Function_Base.variable>` at which the`value <Function_Base.value>` of
-    the function is equal to `threshold <TimerFunction.threshold>`.
+* **duration**: specifies the value of the `variable <Function_Base.variable>` at which the`value
+  <Function_Base.value>` of the function is equal to `final <TimerFunction.final>`.
 
-In addition, some TimerFunctions have additional Parameters, that can be specified at construction.
+In addition, some TimerFunctions have additional Parameters, that are described under the corresponding class.
 
 
 TimerFunction Class References
@@ -108,15 +90,15 @@ from psyneulink.core.globals.utilities import (
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, ValidPrefSet
 from psyneulink.core.globals.keywords import \
-    (ADDITIVE_PARAM, ACCELERATING_DECAY_FUNCTION, ACCELERATING_RISE_FUNCTION, ASYMPTOTIC_EXPONENTIAL_FUNCTION,
-     DECELERATING_DECAY_FUNCTION, DECELERATING_RISE_FUNCTION, END, LINEAR_DECAY_FUNCTION, LINEAR_RISE_FUNCTION,
-     MULTIPLICATIVE_PARAM, OFFSET, PREFERENCE_SET_NAME, SCALE, START, THRESHOLD, TIMER_FUNCTION_TYPE, TOLERANCE)
+    (ADDITIVE_PARAM, ACCELERATING_TIMER_FUNCTION, ASYMPTOTIC_TIMER_FUNCTION, DECELERATING_TIMER_FUNCTION,
+     DURATION, FINAL, INITIAL, LINEAR_TIMER_FUNCTION, MULTIPLICATIVE_PARAM, OFFSET, PREFERENCE_SET_NAME,
+     SCALE, TIMER_FUNCTION_TYPE, TOLERANCE)
 
-__all__ = ['LinearRise','LinearDecay','AcceleratingRise','AcceleratingDecay','DeceleratingRise','DeceleratingDecay']
+__all__ = ['LinearTimer','AcceleratingTimer','DeceleratingTimer','AsymptoticTimer']
 
 
 class TimerFunction(TransferFunction):  # --------------------------------------------------------------------------------
-    """Subclass of TransferFunction that allows a start, threshold and end value to be specified;
+    """Subclass of TransferFunction that allows a initial, final and duration value to be specified;
     for use with a `TimerMechanism`.
     """
     componentType = TIMER_FUNCTION_TYPE
@@ -126,94 +108,97 @@ class TimerFunction(TransferFunction):  # --------------------------------------
             Attributes
             ----------
 
-                end
-                    see `end <TimerFunction.start>`
+                duration
+                    see `duration <TimerFunction.initial>`
 
                     :default value: None
                     :type: 'float'
 
-                start
-                    see `start <TimerFunction.start>`
+                final
+                    see `final <TimerFunction.final>`
 
                     :default value: None
                     :type: 'float'
 
-                threshold
-                    see `threshold <TimerFunction.threshold>`
+                initial
+                    see `initial <TimerFunction.initial>`
 
                     :default value: None
                     :type: 'float'
         """
-        start = Parameter(1.0, modulable=True)
-        threshold = Parameter(0.0, modulable=True)
-        end = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        initial = Parameter(1.0, modulable=True)
+        final = Parameter(0.0, modulable=True)
+        duration = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
 
-        def _validate_start(self, start):
-            if start <= 0:
-                return f"must be greater than 0."
-
-        def _validate_threshold(self, threshold):
-            if threshold < 0:
+        def _validate_initial(self, initial):
+            if initial < 0:
                 return f"must be greater than or equal to 0."
 
-        def _validate_end(self, end):
-            if end <= 0:
+        def _validate_final(self, final):
+            if final < 0:
+                return f"must be greater than or equal to 0."
+
+        def _validate_duration(self, duration):
+            if duration <= 0:
                 return f"must be greater than 0."
 
 
-class LinearRise(TimerFunction):
+class LinearTimer(TimerFunction):
     pass
 
 
-class LinearDecay(TimerFunction):
-    pass
-
-
-class AcceleratingRise(TimerFunction):
+class AcceleratingTimer(TimerFunction):
     """
-    AcceleratingRise(      \
+    AcceleratingTimer(     \
          default_variable, \
-         start=0.0,        \
-         threshold=1.0,    \
-         end=1.0,          \
+         initial=0.0,      \
+         final=1.0,        \
+         duration=1.0,     \
          params=None,      \
          owner=None,       \
          name=None,        \
          prefs=None        \
          )
 
-    .. _AcceleratingRise:
+    .. _AcceleratingTimer:
     |
-    `function <AcceleratingRise._function>` returns accelerating rise transform of `variable
-    <AcceleratingRise.variable>`; this is the inverse of the `AcceleratingDecay` Function.
+    `function <AcceleratingTimer._function>` returns acceleratingTimer rise transform of `variable
+    <AcceleratingTimer.variable>`; this is the inverse of the `AcceleratingTimer` Function.
 
     .. math::
-       start + (threshold - start) \\left(\\frac{variable + (end * e^{variable}) - end}{end*e^{end}}\\right)
+       initial+\\left(final-initial\\right)\\left(\\frac{variable}{duration}\\right)^{rate}e^{\\left(\\left(
+       \\frac{variable}{duration}\\right)^{rate}-1\\right)}
 
     such that:
 
     .. math::
-        value=start \ for\ variable=0
+        value=initial \ for\ variable=0
 
-        value=threshold\ for\ variable=end
+        value=final\ for\ variable=duration
 
     where:
 
-        **start** determines the `value <Function_Base.value>` of the function
-        when its `variable <AcceleratingRise.variable>` = 0.
+        **initial** determines the `value <Function_Base.value>` of the function
+        when its `variable <AcceleratingTimer.variable>` = 0.
 
-        **threshold** determines the `value <Function_Base.value>` of the function
-        when its `variable <AcceleratingRise.variable>` = end.
+        **final** determines the `value <Function_Base.value>` of the function
+        when its `variable <AcceleratingTimer.variable>` = duration.
 
-        **end** determines the value of `variable <AcceleratingRise.variable>`
-        at which the value of the function = threshold.
+        **duration** determines the value of `variable <AcceleratingTimer.variable>`
+        at which the value of the function = final.
 
-    `derivative <AcceleratingRise.derivative>` returns the derivative of the AcceleratingRise Function:
+    `derivative <AcceleratingTimer.derivative>` returns the derivative of the AcceleratingTimer Function:
 
       .. math::
-         (threshold - start) * \\left(\\frac{(1 + end * e^{variable})}{end * e^{end}}\\right)
 
-    See `graph <https://www.desmos.com/calculator/nswq3hipd8>`_ for interactive plot of the function using `Desmos
+       (final-initial) \\cdot \\left[ rate \\cdot \\left(\\frac{variable}{duration}\\right)^{rate-1}
+       \\cdot \\frac{1}{duration} \\cdot e^{\\left(\\left(\\frac{variable}{duration}\\right)^{rate}-1\\right)} +
+       \\left(\\frac{variable}{duration}\\right)^{rate} \\cdot e^{\\left(\\left(\\frac{variable}{duration}\\right)^{
+       rate}-1\\right)} \\cdot rate \\cdot \\frac{1}{duration}\\right]
+
+    #(final - initial) * \\left(\\frac{(1 + duration * e^{variable})}{duration * e^{duration}}\\right)
+
+    See `graph <https://www.desmos.com/calculator/9ghsowtxzk>`_ for interactive plot of the function using `Desmos
     <https://www.desmos.com>`_.
 
     Arguments
@@ -222,17 +207,17 @@ class AcceleratingRise(TimerFunction):
     default_variable : number or array : default class_defaults.variable
         specifies a template for the value to be transformed.
 
-    start : float : default 1.0
-        specifies the value the function should have when `variable <AcceleratingRise.variable>` = 0;
+    initial : float : default 1.0
+        specifies the value the function should have when `variable <AcceleratingTimer.variable>` = 0;
         must be greater than or equal to 0.
 
-    threshold : float : default 1.0
-        specifies the value the function should have when `variable <AcceleratingRise.variable>` = `end
-        <TimerFunction.end>`; must be greater than `start <AcceleratingRise.start>`.
+    final : float : default 1.0
+        specifies the value the function should have when `variable <AcceleratingTimer.variable>` = `duration
+        <TimerFunction.duration>`; must be greater than `initial <AcceleratingTimer.initial>`.
 
-    end : float : default 1.0
-        specifies the value of `variable <AcceleratingRise.variable>` at which the value of the function
-        should equal `threshold <AcceleratingRise.threshold>`; must be greater than 0.
+    duration : float : default 1.0
+        specifies the value of `variable <AcceleratingTimer.variable>` at which the value of the function
+        should equal `final <AcceleratingTimer.final>`; must be greater than 0.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -254,15 +239,15 @@ class AcceleratingRise(TimerFunction):
     variable : number or array
         contains value to be transformed.
 
-    start : float (>0)
-        determines the value of the function when `variable <AcceleratingRise.variable>` = 0.
+    initial : float (>0)
+        determines the value of the function when `variable <AcceleratingTimer.variable>` = 0.
 
-    threshold : float
-        determines the value of the function when `variable <AcceleratingRise.variable>` = `end <TimerFunction.end>`.
+    final : float
+        determines the value of the function when `variable <AcceleratingTimer.variable>` = `duration <TimerFunction.duration>`.
 
-    end : float (>0)
-        determines the value of `variable <AcceleratingRise.variable>` at which the value of the function is equal
-        to `threshold <AcceleratingRise.threshold>`.
+    duration : float (>0)
+        determines the value of `variable <AcceleratingTimer.variable>` at which the value of the function is equal
+        to `final <AcceleratingTimer.final>`.
 
     bounds : (None, None)
 
@@ -279,32 +264,32 @@ class AcceleratingRise(TimerFunction):
         for details).
     """
 
-    componentName = ACCELERATING_RISE_FUNCTION
+    componentName = ACCELERATING_TIMER_FUNCTION
 
     classPreferences = {
-        PREFERENCE_SET_NAME: 'AcceleratingRiseClassPreferences',
+        PREFERENCE_SET_NAME: 'AcceleratingTimerClassPreferences',
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
     _model_spec_class_name_is_generic = True
 
-    # FIX: REINSTATE Parameters AND VALIDATE START, THRESHOLD AND END
+    # FIX: REINSTATE Parameters AND VALIDATE INITIAL, FINAL AND DURATION
 
     @check_user_specified
     @beartype
     def __init__(self,
                  default_variable=None,
-                 start: Optional[ValidParamSpecType] = None,
-                 threshold: Optional[ValidParamSpecType] = None,
-                 end: Optional[ValidParamSpecType] = None,
+                 initial: Optional[ValidParamSpecType] = None,
+                 final: Optional[ValidParamSpecType] = None,
+                 duration: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
-            start=start,
-            threshold=threshold,
-            end=end,
+            initial=initial,
+            final=final,
+            duration=duration,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -331,385 +316,150 @@ class AcceleratingRise(TimerFunction):
         Returns
         -------
 
-        Accelerating rise transform of variable : number or array
+        AcceleratingTimer rise transform of variable : number or array
 
         """
-        start = self._get_current_parameter_value(START, context)
-        threshold = self._get_current_parameter_value(THRESHOLD, context)
-        end = self._get_current_parameter_value(END, context)
+        initial = self._get_current_parameter_value(INITIAL, context)
+        final = self._get_current_parameter_value(FINAL, context)
+        duration = self._get_current_parameter_value(DURATION, context)
 
-        result = start + (threshold - start) * ((variable + (end * np.exp(variable)) - end) / (end * np.exp(end)))
+        result = initial + (final - initial) * ((variable + (duration * np.exp(variable)) - duration) / (duration * np.exp(duration)))
 
         return self.convert_output_type(result)
 
     @handle_external_context()
     def derivative(self, input, output=None, context=None):
-        """Derivative of `function <AcceleratingRise._function>` at **input**:
+        """Derivative of `function <AcceleratingTimer._function>` at **input**:
 
         .. math::
-           (threshold - start) * \\left(\\frac{(1 + end * e^{variable})}{end * e^{end}}\\right)
+           (final - initial) * \\left(\\frac{(1 + duration * e^{variable})}{duration * e^{duration}}\\right)
 
         Arguments
         ---------
 
         input : number
-            value of the input to the AcceleratingRise transform at which derivative is to be taken.
+            value of the input to the AcceleratingTimer transform at which derivative is to be taken.
 
         Returns
         -------
         derivative :  number or array
         """
-        start = self._get_current_parameter_value(START, context)
-        threshold = self._get_current_parameter_value(THRESHOLD, context)
-        end = self._get_current_parameter_value(END, context)
+        initial = self._get_current_parameter_value(INITIAL, context)
+        final = self._get_current_parameter_value(FINAL, context)
+        duration = self._get_current_parameter_value(DURATION, context)
 
-        return (threshold - start) * (1 + end * np.exp(input) / end * np.exp(end))
+        return (final - initial) * (1 + duration * np.exp(input) / duration * np.exp(duration))
 
     # FIX:
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        end_ptr = ctx.get_param_or_state_ptr(builder, self, END, param_struct_ptr=params)
-        start_ptr = ctx.get_param_or_state_ptr(builder, self, START, param_struct_ptr=params)
-        threshold_ptr = ctx.get_param_or_state_ptr(builder, self, THRESHOLD, param_struct_ptr=params)
+        duration_ptr = ctx.get_param_or_state_ptr(builder, self, DURATION, param_struct_ptr=params)
+        initial_ptr = ctx.get_param_or_state_ptr(builder, self, INITIAL, param_struct_ptr=params)
+        final_ptr = ctx.get_param_or_state_ptr(builder, self, FINAL, param_struct_ptr=params)
         offset_ptr = ctx.get_param_or_state_ptr(builder, self, OFFSET, param_struct_ptr=params)
 
-        end = pnlvm.helpers.load_extract_scalar_array_one(builder, end_ptr)
-        start = pnlvm.helpers.load_extract_scalar_array_one(builder, start_ptr)
-        threshold = pnlvm.helpers.load_extract_scalar_array_one(builder, threshold_ptr)
+        duration = pnlvm.helpers.load_extract_scalar_array_one(builder, duration_ptr)
+        initial = pnlvm.helpers.load_extract_scalar_array_one(builder, initial_ptr)
+        final = pnlvm.helpers.load_extract_scalar_array_one(builder, final_ptr)
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
         val = builder.load(ptri)
-        val = builder.fmul(val, end)
-        val = builder.fadd(val, start)
+        val = builder.fmul(val, duration)
+        val = builder.fadd(val, initial)
         val = builder.call(exp_f, [val])
 
         if "derivative" in tags:
             # f'(x) = s*r*e^(r*x + b)
-            val = builder.fmul(val, threshold)
-            val = builder.fmul(val, end)
+            val = builder.fmul(val, final)
+            val = builder.fmul(val, duration)
         else:
             # f(x) = s*e^(r*x + b) + o
-            val = builder.fmul(val, threshold)
+            val = builder.fmul(val, final)
             val = builder.fadd(val, offset)
 
         builder.store(val, ptro)
 
     # FIX:
     def _gen_pytorch_fct(self, device, context=None):
-        start = self._get_pytorch_fct_param_value(START, device, context)
-        end = self._get_pytorch_fct_param_value(END, device, context)
+        initial = self._get_pytorch_fct_param_value(INITIAL, device, context)
+        duration = self._get_pytorch_fct_param_value(DURATION, device, context)
         k = self._get_pytorch_fct_param_value('k', device, context)
 
-        return lambda x : start + start * torch.exp(-e)/torch.exp(end - e - k**end) * (1 - np.exp(x))
+        return lambda x : initial + initial * torch.exp(-e)/torch.exp(duration - e - k**duration) * (1 - np.exp(x))
 
 
-class AcceleratingDecay(TimerFunction): # ---------------------------------------------------------------------------
+
+class DeceleratingTimer(TimerFunction):  # ---------------------------------------------------------------------------
     """
-    AcceleratingDecay(     \
+    DeceleratingTimer(      \
          default_variable, \
-         start=1.0,        \
-         threshold=0.0,    \
-         end=1.0,          \
-         params=None,      \
-         owner=None,       \
-         name=None,        \
-         prefs=None        \
-         )
-
-    .. _AcceleratingDecay:
-    |
-    `function <AcceleratingDecay._function>` returns accelerating decay transform of `variable
-    <AcceleratingDecay.variable>`; this is the inverse of the `AcceleratingRise` Function.
-
-    .. math::
-       threshold + (start - threshold) \\left(1-\\frac{variable + (end * e^{variable}) - end}{end*e^{end}}\\right)
-
-    such that:
-
-    .. math::
-        value=start \ for\ variable=0
-
-        value=threshold\ for\ variable=end
-
-    where:
-
-        **start** determines the `value <Function_Base.value>` of the function
-        when its `variable <AcceleratingDecay.variable>` = 0.
-
-        **threshold** determines the `value <Function_Base.value>` of the function
-        when its `variable <AcceleratingDecay.variable>` = end.
-
-        **end** determines the value of `variable <AcceleratingDecay.variable>`
-        at which the value of the function = threshold.
-
-    `derivative <AcceleratingDecay.derivative>` returns the derivative of the AcceleratingDecay Function:
-
-      .. math::
-       (start - threshold) * \\left(1-\\frac{end*e^{variable}}{end*e^{end}}\\right)
-
-    See `graph <https://www.desmos.com/calculator/wqiz721b0t>`_ for interactive plot of the function using `Desmos
-    <https://www.desmos.com>`_.
-
-    Arguments
-    ---------
-
-    default_variable : number or array : default class_defaults.variable
-        specifies a template for the value to be transformed.
-
-    start : float : default 1.0
-        specifies the value function should have when `variable <AcceleratingDecay.variable>` = 0;
-        must be greater than 0.
-
-    threshold : float : default 1.0
-        specifies the value the function should have when `variable <AcceleratingDecay.variable>` = `end
-        <TimerFunction.end>`; must be greater than or equal to 0.
-
-    end : float : default 1.0
-        specifies the value of `variable <AcceleratingDecay.variable>` at which the value of the function
-        should equal `threshold <AcceleratingDecay.threshold>`; must be greater than 0.
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
-        function.  Values specified for parameters in the dictionary override any assigned to those parameters
-        in arguments of the constructor.
-
-    owner : Component
-        `component <Component>` to which to assign the Function.
-
-    name : str : default see `name <Function.name>`
-        specifies the name of the Function.
-
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
-
-    Attributes
-    ----------
-
-    variable : number or array
-        contains value to be transformed.
-
-    start : float (>0)
-        determines the value of the function when `variable <AcceleratingDecay.variable>` = 0.
-
-    threshold : float
-        determines the value of the function when `variable <AcceleratingDecay.variable>` = `end <TimerFunction.end>`.
-
-    end : float (>0)
-        determines the value of `variable <AcceleratingDecay.variable>` at which the value of the function is equal
-        to `threshold <AcceleratingDecay.threshold>`.
-
-    bounds : (None, None)
-
-    owner : Component
-        `component <Component>` to which the Function has been assigned.
-
-    name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
-        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict : Function.classPreferences
-        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
-        for details).
-    """
-
-    componentName = ACCELERATING_DECAY_FUNCTION
-
-    classPreferences = {
-        PREFERENCE_SET_NAME: 'AcceleratingDecayClassPreferences',
-        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-    }
-
-    _model_spec_class_name_is_generic = True
-
-    @check_user_specified
-    @beartype
-    def __init__(self,
-                 default_variable=None,
-                 start: Optional[ValidParamSpecType] = None,
-                 threshold: Optional[ValidParamSpecType] = None,
-                 end: Optional[ValidParamSpecType] = None,
-                 params=None,
-                 owner=None,
-                 prefs:  Optional[ValidPrefSet] = None):
-        super().__init__(
-            default_variable=default_variable,
-            start=start,
-            threshold=threshold,
-            end=end,
-            params=params,
-            owner=owner,
-            prefs=prefs,
-        )
-
-    def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
-        """
-
-        Arguments
-        ---------
-
-        variable : number or array : default class_defaults.variable
-           a single value or array to be exponentiated.
-
-        params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
-            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-            arguments of the constructor.
-
-        Returns
-        -------
-
-        Exponentially decayed transformation of variable : number or array
-
-        """
-        start = self._get_current_parameter_value(START, context)
-        threshold = self._get_current_parameter_value(THRESHOLD, context)
-        end = self._get_current_parameter_value(END, context)
-
-        # result = start * (1 - ((np.exp(variable) - 1) / np.exp(end)) - (variable / end * np.exp(end)))
-        result = (threshold + (start - threshold) *
-                  (1 - (variable + (end * np.exp(variable)) - end) / (end * np.exp(end))))
-
-        return self.convert_output_type(result)
-
-    @handle_external_context()
-    def derivative(self, input, output=None, context=None):
-        """Derivative of `function <AcceleratingDecay._function>` at **input**:
-
-        .. math::
-           (start - threshold) * \\left(1-\\frac{end*e^{variable}}{end*e^{end}}\\right)
-
-        Arguments
-        ---------
-
-        input : number
-            value of the input to the AcceleratingDecay transform at which derivative is to be taken.
-
-        Returns
-        -------
-        derivative :  number or array
-        """
-        start = self._get_current_parameter_value(START, context)
-        threshold = self._get_current_parameter_value(THRESHOLD, context)
-        end = self._get_current_parameter_value(END, context)
-
-        return (start - threshold) * -(np.exp(input) / np.exp(end)) - (1 / end * np.exp(end))
-
-    # FIX:
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
-        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-
-        end_ptr = ctx.get_param_or_state_ptr(builder, self, END, param_struct_ptr=params)
-        start_ptr = ctx.get_param_or_state_ptr(builder, self, START, param_struct_ptr=params)
-        threshold_ptr = ctx.get_param_or_state_ptr(builder, self, THRESHOLD, param_struct_ptr=params)
-        offset_ptr = ctx.get_param_or_state_ptr(builder, self, OFFSET, param_struct_ptr=params)
-
-        end = pnlvm.helpers.load_extract_scalar_array_one(builder, end_ptr)
-        start = pnlvm.helpers.load_extract_scalar_array_one(builder, start_ptr)
-        threshold = pnlvm.helpers.load_extract_scalar_array_one(builder, threshold_ptr)
-        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
-
-        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
-        val = builder.load(ptri)
-        val = builder.fmul(val, end)
-        val = builder.fadd(val, start)
-        val = builder.call(exp_f, [val])
-
-        if "derivative" in tags:
-            # f'(x) = s*r*e^(r*x + b)
-            val = builder.fmul(val, threshold)
-            val = builder.fmul(val, end)
-        else:
-            # f(x) = s*e^(r*x + b) + o
-            val = builder.fmul(val, threshold)
-            val = builder.fadd(val, offset)
-
-        builder.store(val, ptro)
-
-    # FIX:
-    def _gen_pytorch_fct(self, device, context=None):
-        start = self._get_pytorch_fct_param_value(START, device, context)
-        end = self._get_pytorch_fct_param_value(END, device, context)
-        k = self._get_pytorch_fct_param_value('k', device, context)
-
-        return lambda x : start + start * torch.exp(-e)/torch.exp(end - e - k**end) * (1 - np.exp(x))
-
-
-class DeceleratingRise(TimerFunction):
-    pass
-
-
-class DeceleratingDecay(TimerFunction):  # ---------------------------------------------------------------------------
-    """
-    DeceleratingDecay(      \
-         default_variable, \
-         start=1.0,        \
+         initial=1.0,        \
          offset=0.0,       \
-         end=1.0,          \
-         threshold=0.01,   \
+         duration=1.0,          \
+         final=0.01,   \
          params=None,      \
          owner=None,       \
          name=None,        \
          prefs=None        \
          )
 
-    .. _DeceleratingDecay:
+    .. _DeceleratingTimer:
     |
-    `function <DeceleratingDecay._function>` returns exponentially decaying transform of `variable
-    <DeceleratingDecay.variable>`:
+    `function <DeceleratingTimer._function>` returns exponentially decaying transform of `variable
+    <DeceleratingTimer.variable>`:
 
     .. math::
-       \\frac{start-threshold+1}{e^{\\ln(start-threshold+1)\\left(\\frac{variable}{end}\\right)^{rate}}-1+threshold}
+       \\frac{\\left(initial-final\\ -\\ sign\\right)}{e^{\\ln\\left(-sign\\left(initial\ -\\
+       final-sign\\right)\\right)\\left(\\frac{variable}{duration}\\right)^{
+       rate}}}+final+sign
 
     such that:
 
     .. math::
-        value = start + offset\ for\ variable=0
+        value = initial + offset\ for\ variable=0
 
-        value = (start * threshold) + offset\ for\ variable=end
+        value = (initial * final) + offset\ for\ variable=duration
 
     where:
 
-        **start**, together with `offset <DeceleratingDecay.offset>`, determines the value of the function when
-        `variable <DeceleratingDecay.variable>` = 0, and is used together with `threshold <DeceleratingDecay.threshold>`
-        to determine the value of the function when `variable <DeceleratingDecay.variable>` = `end
-        <DeceleratingDecay.end>`.
+        **initial**, together with `offset <DeceleratingTimer.offset>`, determines the value of the function when
+        `variable <DeceleratingTimer.variable>` = 0, and is used together with `final <DeceleratingTimer.final>`
+        to determine the value of the function when `variable <DeceleratingTimer.variable>` = `duration
+        <DeceleratingTimer.duration>`.
 
-        **offset**, together with `start <DeceleratingDecay.start>`, determines the value of the function
-        when `variable <DeceleratingDecay.variable>` = 0, and its linear offset from 0 for all other values;
+        **offset**, together with `initial <DeceleratingTimer.initial>`, determines the value of the function
+        when `variable <DeceleratingTimer.variable>` = 0, and its linearTimer offset from 0 for all other values;
 
-        **end** determines the value of `variable <DeceleratingDecay.variable>` at which
-        the value of the function should equal :math:`start * threshold + offset`.
+        **duration** determines the value of `variable <DeceleratingTimer.variable>` at which
+        the value of the function should equal :math:`initial * final + offset`.
 
-        **threshold** is the fraction of `start <DeceleratingDecay.start>` when, added to `offset
-        <DeceleratingDecay.offset>`, is used to determine the value of the function when `variable
-        <DeceleratingDecay.variable>` should equal `end <DeceleratingDecay.end>`.
+        **final** is the fraction of `initial <DeceleratingTimer.initial>` when, added to `offset
+        <DeceleratingTimer.offset>`, is used to determine the value of the function when `variable
+        <DeceleratingTimer.variable>` should equal `duration <DeceleratingTimer.duration>`.
 
-    `derivative <DeceleratingDecay.derivative>` returns the derivative of the DeceleratingDecay Function:
+        **sign** is positive if final > initial, and negative otherwise, and is used to determine the direction of the
+        progression (rising or decaying) of the TimerFunction.
+
+    `derivative <DeceleratingTimer.derivative>` returns the derivative of the DeceleratingTimer Function:
 
       .. math::
-        \\frac{(start-threshold+1)}{\\left(e^{\\ln(start-threshold+1)\\left(\\frac{variable}{end}\\right)^{
-        rate}}-1+threshold\\right)^2} \\cdot e^{\\ln(start-threshold+1)\\left(\\frac{variable}{end}\\right)^{rate}}
-        \\cdot \\ln(start-threshold+1) \\cdot \\frac{rate}{end}
+         \\frac{sign \\cdot rate \\cdot(initial-final-sign)\\cdot\\ln(sign(final-initial+sign)) \\cdot \\left(\\frac{
+         variable}{duration}\\right)^{rate-1}}{duration\\cdot e^{\\ln(sign(final-initial+sign))\\left(\\frac{variable}{
+         duration}\\right)^{rate}}}
 
-    See `graph <https://www.desmos.com/calculator/vxmhtydxwv>`_ for interactive plot of the function using `Desmos
+    See `graph <https://www.desmos.com/calculator/hnpkze66pm>`_ for interactive plot of the function using `Desmos
     <https://www.desmos.com>`_.
 
     COMMENT:
     FOR TIMER VERSION:
-    `function <DeceleratingDecay._function>` returns exponentially decaying transform of `variable
-    <DeceleratingDecay.variable>`, that has a value of `start <DeceleratingDecay.start>` + `offset
-    <DeceleratingDecay.offset>` at `variable <DeceleratingDecay.variable>` = 0, and a value of `threshold
-    <DeceleratingDecay.end>` * `start <DeceleratingDecay.start>` + `offset <DeceleratingDecay.offset>` at
-    `variable at `variable <DeceleratingDecay.variable>` = `end <DeceleratingDecay.end>`:
+    `function <DeceleratingTimer._function>` returns exponentially decaying transform of `variable
+    <DeceleratingTimer.variable>`, that has a value of `initial <DeceleratingTimer.initial>` + `offset
+    <DeceleratingTimer.offset>` at `variable <DeceleratingTimer.variable>` = 0, and a value of `final
+    <DeceleratingTimer.duration>` * `initial <DeceleratingTimer.initial>` + `offset <DeceleratingTimer.offset>` at
+    `variable at `variable <DeceleratingTimer.variable>` = `duration <DeceleratingTimer.duration>`:
     COMMENT
 
     Arguments
@@ -718,23 +468,23 @@ class DeceleratingDecay(TimerFunction):  # -------------------------------------
     default_variable : number or array : default class_defaults.variable
         specifies a template for the value to be transformed.
 
-    start : float : default 1.0
-        specifies, together with `offset <DeceleratingDecay.offset>`, the value of the function when `variable
-        <DeceleratingDecay.variable>` = 0; must be greater than 0.
+    initial : float : default 1.0
+        specifies, together with `offset <DeceleratingTimer.offset>`, the value of the function when `variable
+        <DeceleratingTimer.variable>` = 0; must be greater than 0.
 
     offset : float : default 0.0
-        specifies, together with `start <DeceleratingDecay.start>`, the value of the function when `variable
-        <DeceleratingDecay.variable>` = 0, and its linear offset for all other values.
+        specifies, together with `initial <DeceleratingTimer.initial>`, the value of the function when `variable
+        <DeceleratingTimer.variable>` = 0, and its linearTimer offset for all other values.
 
-    end : float : default 1.0
-        specifies the value of `variable <DeceleratingDecay.variable>` at which the `value of the function
-        should equal `start <DeceleratingDecay.start>` * `threshold <DeceleratingDecay.threshold>` + `offset
-        <DeceleratingDecay.offset>`; must be greater than 0.
+    duration : float : default 1.0
+        specifies the value of `variable <DeceleratingTimer.variable>` at which the `value of the function
+        should equal `initial <DeceleratingTimer.initial>` * `final <DeceleratingTimer.final>` + `offset
+        <DeceleratingTimer.offset>`; must be greater than 0.
 
-    threshold : float : default 0.01
-        specifies the fraction of `start <DeceleratingDecay.start>` when added to `offset <DeceleratingDecay.offset>`,
-        that determines the value of the function when `variable <DeceleratingDecay.variable>` = `end
-        <DeceleratingDecay.end>`; must be between 0 and 1.
+    final : float : default 0.01
+        specifies the fraction of `initial <DeceleratingTimer.initial>` when added to `offset <DeceleratingTimer.offset>`,
+        that determines the value of the function when `variable <DeceleratingTimer.variable>` = `duration
+        <DeceleratingTimer.duration>`; must be between 0 and 1.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -756,22 +506,22 @@ class DeceleratingDecay(TimerFunction):  # -------------------------------------
     variable : number or array
         contains value to be transformed.
 
-    start : float (>0)
-        determines, together with `offset <DeceleratingDecay.offset>`, the value of the function when `variable
-        <DeceleratingDecay.variable>` = 0.
+    initial : float (>0)
+        determines, together with `offset <DeceleratingTimer.offset>`, the value of the function when `variable
+        <DeceleratingTimer.variable>` = 0.
 
     offset : float
-        determines, together with `start <DeceleratingDecay.start>`, the value of the function when `variable
-        <DeceleratingDecay.variable>` = 0, and its linear offset for all other values.
+        determines, together with `initial <DeceleratingTimer.initial>`, the value of the function when `variable
+        <DeceleratingTimer.variable>` = 0, and its linearTimer offset for all other values.
 
-    end : float (>0)
-        determines the value of `variable <DeceleratingDecay.variable>` at which the value of the function should
-        equal `start <DeceleratingDecay.start>` * `threshold <DeceleratingDecay.threshold>` + `offset <DeceleratingDecay.offset>`.
+    duration : float (>0)
+        determines the value of `variable <DeceleratingTimer.variable>` at which the value of the function should
+        equal `initial <DeceleratingTimer.initial>` * `final <DeceleratingTimer.final>` + `offset <DeceleratingTimer.offset>`.
 
-    threshold : float (0,1)
-        determines the fraction of `start <DeceleratingDecay.start>` when added to `offset <DeceleratingDecay.offset>`,
-        that determines the value of the function when `variable <DeceleratingDecay.variable>` = `end
-        <DeceleratingDecay.end>`.
+    final : float (0,1)
+        determines the fraction of `initial <DeceleratingTimer.initial>` when added to `offset <DeceleratingTimer.offset>`,
+        that determines the value of the function when `variable <DeceleratingTimer.variable>` = `duration
+        <DeceleratingTimer.duration>`.
 
     bounds : (None, None)
 
@@ -788,10 +538,10 @@ class DeceleratingDecay(TimerFunction):  # -------------------------------------
         for details).
     """
 
-    componentName = DECELERATING_DECAY_FUNCTION
+    componentName = DECELERATING_TIMER_FUNCTION
 
     classPreferences = {
-        PREFERENCE_SET_NAME: 'DeceleratingDecayClassPreferences',
+        PREFERENCE_SET_NAME: 'DeceleratingTimerClassPreferences',
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
@@ -803,41 +553,41 @@ class DeceleratingDecay(TimerFunction):  # -------------------------------------
             ----------
 
                 offset
-                    see `offset <DeceleratingDecay.offset>`
+                    see `offset <DeceleratingTimer.offset>`
 
                     :default value: 0.0
                     :type: ``float``
 
-                threshold
-                    see `threshold <DeceleratingDecay.threshold>`
+                final
+                    see `final <DeceleratingTimer.final>`
 
                     :default value: 0.01
                     :type: ``float``
         """
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        threshold = Parameter(0.01, modulable=True, aliases=[SCALE])
+        final = Parameter(0.01, modulable=True, aliases=[SCALE])
 
-        def _validate_threshold(self, threshold):
-            if threshold < 0:
+        def _validate_final(self, final):
+            if final < 0:
                 return f"must be between 0 and 1."
 
     @check_user_specified
     @beartype
     def __init__(self,
                  default_variable=None,
-                 start: Optional[ValidParamSpecType] = None,
+                 initial: Optional[ValidParamSpecType] = None,
                  offset: Optional[ValidParamSpecType] = None,
-                 end: Optional[ValidParamSpecType] = None,
-                 threshold: Optional[ValidParamSpecType] = None,
+                 duration: Optional[ValidParamSpecType] = None,
+                 final: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
-            start=start,
+            initial=initial,
             offset=offset,
-            end=end,
-            threshold=threshold,
+            duration=duration,
+            final=final,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -855,7 +605,7 @@ class DeceleratingDecay(TimerFunction):  # -------------------------------------
 
         variable : number or array : default class_defaults.variable
            amount by which to increment timer on current execution;  if this is not specified, the timer is incremented
-           by the value of `increment <DeceleratingDecay.increment>`.
+           by the value of `increment <DeceleratingTimer.increment>`.
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -868,92 +618,92 @@ class DeceleratingDecay(TimerFunction):  # -------------------------------------
         Exponentially decayed value of variable : number or array
 
         """
-        start = self._get_current_parameter_value(START, context)
+        initial = self._get_current_parameter_value(INITIAL, context)
         offset = self._get_current_parameter_value(OFFSET, context)
-        end = self._get_current_parameter_value(END, context)
-        threshold = self._get_current_parameter_value(THRESHOLD, context)
+        duration = self._get_current_parameter_value(DURATION, context)
+        final = self._get_current_parameter_value(FINAL, context)
 
-        result = offset + start * np.exp(-variable * np.log(1 / threshold) / end)
+        result = offset + initial * np.exp(-variable * np.log(1 / final) / duration)
 
         return self.convert_output_type(result)
 
     @handle_external_context()
     def derivative(self, input, output=None, context=None):
-        """Derivative of `function <DeceleratingDecay._function>` at **input**:
+        """Derivative of `function <DeceleratingTimer._function>` at **input**:
 
         .. math::
-           \\frac{(start-threshold+1)}{\\left(e^{\\ln(start-threshold+1)\\left(\\frac{variable}{end}\\right)^{
-           rate}}-1+threshold\\right)^2} \\cdot e^{\\ln(start-threshold+1)\\left(\\frac{variable}{end}\\right)^{rate}}
-           \\cdot \\ln(start-threshold+1) \\cdot \\frac{rate}{end}
+           \\frac{(initial-final+1)}{\\left(e^{\\ln(initial-final+1)\\left(\\frac{variable}{duration}\\right)^{
+           rate}}-1+final\\right)^2} \\cdot e^{\\ln(initial-final+1)\\left(\\frac{variable}{duration}\\right)^{rate}}
+           \\cdot \\ln(initial-final+1) \\cdot \\frac{rate}{duration}
 
         Arguments
         ---------
 
         input : number
-            value of the input to the DeceleratingDecay transform at which derivative is to be taken.
+            value of the input to the DeceleratingTimer transform at which derivative is to be taken.
 
-        Derivative of `function <DeceleratingDecay._function>` at **input**.
+        Derivative of `function <DeceleratingTimer._function>` at **input**.
 
         Returns
         -------
         derivative :  number or array
         """
 
-        start = self._get_current_parameter_value(START, context)
-        end = self._get_current_parameter_value(END, context)
-        threshold = self._get_current_parameter_value(THRESHOLD, context)
+        initial = self._get_current_parameter_value(INITIAL, context)
+        duration = self._get_current_parameter_value(DURATION, context)
+        final = self._get_current_parameter_value(FINAL, context)
 
-        return (start * np.log(1/threshold) / end) * np.exp(-input * np.log(threshold) / end)
+        return (initial * np.log(1/final) / duration) * np.exp(-input * np.log(final) / duration)
 
     # FIX:
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        end_ptr = ctx.get_param_or_state_ptr(builder, self, END, param_struct_ptr=params)
-        start_ptr = ctx.get_param_or_state_ptr(builder, self, START, param_struct_ptr=params)
-        threshold_ptr = ctx.get_param_or_state_ptr(builder, self, THRESHOLD, param_struct_ptr=params)
+        duration_ptr = ctx.get_param_or_state_ptr(builder, self, DURATION, param_struct_ptr=params)
+        initial_ptr = ctx.get_param_or_state_ptr(builder, self, INITIAL, param_struct_ptr=params)
+        final_ptr = ctx.get_param_or_state_ptr(builder, self, FINAL, param_struct_ptr=params)
         offset_ptr = ctx.get_param_or_state_ptr(builder, self, OFFSET, param_struct_ptr=params)
 
-        end = pnlvm.helpers.load_extract_scalar_array_one(builder, end_ptr)
-        start = pnlvm.helpers.load_extract_scalar_array_one(builder, start_ptr)
-        threshold = pnlvm.helpers.load_extract_scalar_array_one(builder, threshold_ptr)
+        duration = pnlvm.helpers.load_extract_scalar_array_one(builder, duration_ptr)
+        initial = pnlvm.helpers.load_extract_scalar_array_one(builder, initial_ptr)
+        final = pnlvm.helpers.load_extract_scalar_array_one(builder, final_ptr)
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
         val = builder.load(ptri)
-        val = builder.fmul(val, end)
-        val = builder.fadd(val, start)
+        val = builder.fmul(val, duration)
+        val = builder.fadd(val, initial)
         val = builder.call(exp_f, [val])
 
         if "derivative" in tags:
             # f'(x) = s*r*e^(r*x + b)
-            val = builder.fmul(val, threshold)
-            val = builder.fmul(val, end)
+            val = builder.fmul(val, final)
+            val = builder.fmul(val, duration)
         else:
             # f(x) = s*e^(r*x + b) + o
-            val = builder.fmul(val, threshold)
+            val = builder.fmul(val, final)
             val = builder.fadd(val, offset)
 
         builder.store(val, ptro)
 
     def _gen_pytorch_fct(self, device, context=None):
         offset = self._get_pytorch_fct_param_value(OFFSET, device, context)
-        end = self._get_pytorch_fct_param_value(END, device, context)
-        threshold = self._get_pytorch_fct_param_value(THRESHOLD, device, context)
-        start = self._get_pytorch_fct_param_value(START, device, context)
+        duration = self._get_pytorch_fct_param_value(DURATION, device, context)
+        final = self._get_pytorch_fct_param_value(FINAL, device, context)
+        initial = self._get_pytorch_fct_param_value(INITIAL, device, context)
 
-        return lambda x : offset + start * torch.exp(-x * torch.log(1 / threshold) / end)
+        return lambda x : offset + initial * torch.exp(-x * torch.log(1 / final) / duration)
 
 
 
-class AsymptoticExponential(TimerFunction):  # ---------------------------------------------------------------------------
+class AsymptoticTimer(TimerFunction):  # ---------------------------------------------------------------------------
     """
-    AsymptoticExponential( \
+    AsymptoticTimer( \
          default_variable, \
-         start=1.0,        \
-         end=1.0,          \
-         threshold=0,      \
+         initial=1.0,        \
+         duration=1.0,          \
+         final=0,      \
          tolerance=0.01,   \
          params=None,      \
          owner=None,       \
@@ -961,48 +711,48 @@ class AsymptoticExponential(TimerFunction):  # ---------------------------------
          prefs=None        \
          )
 
-    .. AsymptoticExponential:
+    .. AsymptoticTimer:
     |
-    `function <AsymptoticExponential._function>` returns exponentially progressing transform of `variable
-    <AsymptoticExponential.variable>` toward an asymptotic value that reaches `end <AsymptoticExponential.end>`
-    when it falls within the specified `tolerance <AsymptoticExponential.tolerance>` of `threshold
-    <AsymptoticExponential.threshold>`:
+    `function <AsymptoticTimer._function>` returns exponentially progressing transform of `variable
+    <AsymptoticTimer.variable>` toward an asymptoticTimer value that reaches `duration <AsymptoticTimer.duration>`
+    when it falls within the specified `tolerance <AsymptoticTimer.tolerance>` of `final
+    <AsymptoticTimer.final>`:
 
     .. math::
-       (start - threshold) * \\frac{\\ln(tolerance)}{end} *e^{\\left(\\frac{variable * \\ln(tolerance)}
-       {end}\\right)} + threshold
+       (initial - final) * \\frac{\\ln(tolerance)}{duration} *e^{\\left(\\frac{variable * \\ln(tolerance)}
+       {duration}\\right)} + final
 
     such that:
 
     .. math::
-        value = start for\ variable=0
+        value = initial for\ variable=0
 
-        value = ((start - threshold) \\cdot tolerance) for\ variable=end
+        value = ((initial - final) \\cdot tolerance) for\ variable=duration
 
     where:
 
-        **start**, determines the value of the function when `variable <AsymptoticExponential.variable>` = 0,
-        and is used together with `threshold <AsymptoticExponential.threshold>` and `tolerance
-        <AsymptoticExponential.tolerance>` to determine the value of the function at which `variable
-        <AsymptoticExponential.variable>` = `end <AsymptoticExponential.end>`.
+        **initial**, determines the value of the function when `variable <AsymptoticTimer.variable>` = 0,
+        and is used together with `final <AsymptoticTimer.final>` and `tolerance
+        <AsymptoticTimer.tolerance>` to determine the value of the function at which `variable
+        <AsymptoticTimer.variable>` = `duration <AsymptoticTimer.duration>`.
 
-        **threshold** is the asymptotic value toward which the function decays.
+        **final** is the asymptoticTimer value toward which the function decays.
 
-        **tolerance** is the fraction of `start <AsymptoticExponential.start>` - `threshold
-        <AsymptoticExponential.threshold>` used to determine the value of the function when `variable
-        <AsymptoticExponential.variable>` is equal to `end <AsymptoticExponential.end>`.
+        **tolerance** is the fraction of `initial <AsymptoticTimer.initial>` - `final
+        <AsymptoticTimer.final>` used to determine the value of the function when `variable
+        <AsymptoticTimer.variable>` is equal to `duration <AsymptoticTimer.duration>`.
 
-        **end** determines the value of `variable <AsymptoticExponential.variable>` at which
-        the value of the function is equal to :math:`start \\cdot threshold`.
+        **duration** determines the value of `variable <AsymptoticTimer.variable>` at which
+        the value of the function is equal to :math:`initial \\cdot final`.
 
     .. _note::
-       The function rises if `threshold <AsymptoticExponential.threshold>` > `start <AsymptoticExponential.start>` >,
-       and decays if `threshold <AsymptoticExponential.threshold>` < `start <AsymptoticExponential.start>`.
+       The function rises if `final <AsymptoticTimer.final>` > `initial <AsymptoticTimer.initial>` >,
+       and decays if `final <AsymptoticTimer.final>` < `initial <AsymptoticTimer.initial>`.
 
-    `derivative <AsymptoticExponential.derivative>` returns the derivative of the AsymptoticExponential Function:
+    `derivative <AsymptoticTimer.derivative>` returns the derivative of the AsymptoticTimer Function:
 
       .. math::
-         \\frac{start\\cdot\\ln(tolerance)}{end}\\cdot e^{\\frac{variable\\cdot\\ln(tolerance)}{end}}
+         \\frac{initial\\cdot\\ln(tolerance)}{duration}\\cdot e^{\\frac{variable\\cdot\\ln(tolerance)}{duration}}
 
     See `graph <https://www.desmos.com/calculator/grgvkugynz>`_ for interactive plot of the function using `Desmos
     <https://www.desmos.com>`_.
@@ -1013,20 +763,20 @@ class AsymptoticExponential(TimerFunction):  # ---------------------------------
     default_variable : number or array : default class_defaults.variable
         specifies a template for the value to be transformed.
 
-    start : float : default 1.0
-        specifies the value of the function when `variable<AsymptoticExponential.variable>`=0; must be greater than 0.
+    initial : float : default 1.0
+        specifies the value of the function when `variable<AsymptoticTimer.variable>`=0; must be greater than 0.
 
-    threshold : float : default 0.0
-        specifies the asymptotic value toward which the function decays.
+    final : float : default 0.0
+        specifies the asymptoticTimer value toward which the function decays.
 
     tolerance : float : default 0.01
-        specifies the fraction of `start <AsymptoticExponential.start>`-`threshold <AsymptoticExponential.threshold>`
-        that determines the value of the function when `variable <AsymptoticExponential.variable>` = `end; must be
+        specifies the fraction of `initial <AsymptoticTimer.initial>`-`final <AsymptoticTimer.final>`
+        that determines the value of the function when `variable <AsymptoticTimer.variable>` = `duration; must be
         between 0 and 1.
 
-    end : float : default 1.0
-        specifies the value of `variable <AsymptoticExponential.variable>` at which the `value of the function
-        should equal `start <AsymptoticExponential.start>` * `threshold <AsymptoticExponential.threshold>`;
+    duration : float : default 1.0
+        specifies the value of `variable <AsymptoticTimer.variable>` at which the `value of the function
+        should equal `initial <AsymptoticTimer.initial>` * `final <AsymptoticTimer.final>`;
         must be greater than 0.
 
     params : Dict[param keyword: param value] : default None
@@ -1049,20 +799,20 @@ class AsymptoticExponential(TimerFunction):  # ---------------------------------
     variable : number or array
         contains value to be transformed.
 
-    start : float (>0)
-        determines the value of the function when `variable <AsymptoticExponential.variable>` = 0.
+    initial : float (>0)
+        determines the value of the function when `variable <AsymptoticTimer.variable>` = 0.
 
-    threshold : float
-        determines the asymptotic value toward which the function decays.
+    final : float
+        determines the asymptoticTimer value toward which the function decays.
 
     tolerance : float (0,1)
-        determines the fraction of `start <AsymptoticExponential.start>` - threshold <AsymptoticExponential.threshold>
-        that determines the value of the function when `variable <AsymptoticExponential.variable>` = `end
-        <AsymptoticExponential.end>`.
+        determines the fraction of `initial <AsymptoticTimer.initial>` - final <AsymptoticTimer.final>
+        that determines the value of the function when `variable <AsymptoticTimer.variable>` = `duration
+        <AsymptoticTimer.duration>`.
 
-    end : float (>0)
-        determines the value of `variable <AsymptoticExponential.variable>` at which the value of the function should
-        equal `start <AsymptoticExponential.start>` * `threshold <AsymptoticExponential.threshold>`.
+    duration : float (>0)
+        determines the value of `variable <AsymptoticTimer.variable>` at which the value of the function should
+        equal `initial <AsymptoticTimer.initial>` * `final <AsymptoticTimer.final>`.
 
     bounds : (None, None)
 
@@ -1079,10 +829,10 @@ class AsymptoticExponential(TimerFunction):  # ---------------------------------
         for details).
     """
 
-    componentName = ASYMPTOTIC_EXPONENTIAL_FUNCTION
+    componentName = ASYMPTOTIC_TIMER_FUNCTION
 
     classPreferences = {
-        PREFERENCE_SET_NAME: 'AsymptoticExponentialClassPreferences',
+        PREFERENCE_SET_NAME: 'AsymptoticTimerClassPreferences',
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
@@ -1094,7 +844,7 @@ class AsymptoticExponential(TimerFunction):  # ---------------------------------
             ----------
 
                 tolerance
-                    see `tolerance <AsymptoticExponential.tolerance>`
+                    see `tolerance <AsymptoticTimer.tolerance>`
 
                     :default value: 0.01
                     :type: ``float``
@@ -1109,18 +859,18 @@ class AsymptoticExponential(TimerFunction):  # ---------------------------------
     @beartype
     def __init__(self,
                  default_variable=None,
-                 start: Optional[ValidParamSpecType] = None,
-                 threshold: Optional[ValidParamSpecType] = None,
+                 initial: Optional[ValidParamSpecType] = None,
+                 final: Optional[ValidParamSpecType] = None,
                  tolerance: Optional[ValidParamSpecType] = None,
-                 end: Optional[ValidParamSpecType] = None,
+                 duration: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
-            start=start,
-            end=end,
-            threshold=threshold,
+            initial=initial,
+            duration=duration,
+            final=final,
             tolerance=tolerance,
             params=params,
             owner=owner,
@@ -1139,7 +889,7 @@ class AsymptoticExponential(TimerFunction):  # ---------------------------------
 
         variable : number or array : default class_defaults.variable
            amount by which to increment timer on current execution;  if this is not specified, the timer is incremented
-           by the value of `increment <AsymptoticExponential.increment>`.
+           by the value of `increment <AsymptoticTimer.increment>`.
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -1152,77 +902,77 @@ class AsymptoticExponential(TimerFunction):  # ---------------------------------
         Exponentially decayed value of variable : number or array
 
         """
-        start = self._get_current_parameter_value(START, context)
-        end = self._get_current_parameter_value(END, context)
+        initial = self._get_current_parameter_value(INITIAL, context)
+        duration = self._get_current_parameter_value(DURATION, context)
         tolerance = self._get_current_parameter_value(TOLERANCE, context)
-        threshold = self._get_current_parameter_value(THRESHOLD, context)
+        final = self._get_current_parameter_value(FINAL, context)
 
-        result = (start - threshold) * np.exp(variable * np.log(tolerance) / end) + threshold
+        result = (initial - final) * np.exp(variable * np.log(tolerance) / duration) + final
 
         return self.convert_output_type(result)
 
     @handle_external_context()
     def derivative(self, input, output=None, context=None):
-        """Derivative of `function <AsymptoticExponential._function>` at **input**:
+        """Derivative of `function <AsymptoticTimer._function>` at **input**:
 
         .. math::
-           \\frac{start\\cdot\\ln(tolerance)}{end}\\cdot e^{\\frac{variable\\cdot\\ln(tolerance)}{end}}
+           \\frac{initial\\cdot\\ln(tolerance)}{duration}\\cdot e^{\\frac{variable\\cdot\\ln(tolerance)}{duration}}
 
         Arguments
         ---------
 
         input : number
-            value of the input to the AsymptoticExponential transform at which derivative is to be taken.
+            value of the input to the AsymptoticTimer transform at which derivative is to be taken.
 
-        Derivative of `function <AsymptoticExponential._function>` at **input**.
+        Derivative of `function <AsymptoticTimer._function>` at **input**.
 
         Returns
         -------
         derivative :  number or array
         """
 
-        start = self._get_current_parameter_value(START, context)
+        initial = self._get_current_parameter_value(INITIAL, context)
         tolerance = self._get_current_parameter_value(TOLERANCE, context)
-        threshold = self._get_current_parameter_value(THRESHOLD, context)
-        end = self._get_current_parameter_value(END, context)
+        final = self._get_current_parameter_value(FINAL, context)
+        duration = self._get_current_parameter_value(DURATION, context)
 
-        return (start * np.log(tolerance) / end) * np.exp(input * np.log(tolerance) / end)
+        return (initial * np.log(tolerance) / duration) * np.exp(input * np.log(tolerance) / duration)
 
     # FIX:
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        end_ptr = ctx.get_param_or_state_ptr(builder, self, END, param_struct_ptr=params)
-        start_ptr = ctx.get_param_or_state_ptr(builder, self, START, param_struct_ptr=params)
-        threshold_ptr = ctx.get_param_or_state_ptr(builder, self, THRESHOLD, param_struct_ptr=params)
+        duration_ptr = ctx.get_param_or_state_ptr(builder, self, DURATION, param_struct_ptr=params)
+        initial_ptr = ctx.get_param_or_state_ptr(builder, self, INITIAL, param_struct_ptr=params)
+        final_ptr = ctx.get_param_or_state_ptr(builder, self, FINAL, param_struct_ptr=params)
 
-        end = pnlvm.helpers.load_extract_scalar_array_one(builder, end_ptr)
-        start = pnlvm.helpers.load_extract_scalar_array_one(builder, start_ptr)
-        threshold = pnlvm.helpers.load_extract_scalar_array_one(builder, threshold_ptr)
+        duration = pnlvm.helpers.load_extract_scalar_array_one(builder, duration_ptr)
+        initial = pnlvm.helpers.load_extract_scalar_array_one(builder, initial_ptr)
+        final = pnlvm.helpers.load_extract_scalar_array_one(builder, final_ptr)
 
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
         val = builder.load(ptri)
-        val = builder.fmul(val, end)
-        val = builder.fadd(val, start)
+        val = builder.fmul(val, duration)
+        val = builder.fadd(val, initial)
         val = builder.call(exp_f, [val])
 
         if "derivative" in tags:
             # f'(x) = s*r*e^(r*x + b)
-            val = builder.fmul(val, threshold)
-            val = builder.fmul(val, end)
+            val = builder.fmul(val, final)
+            val = builder.fmul(val, duration)
         else:
             # f(x) = s*e^(r*x + b) + o
-            val = builder.fmul(val, threshold)
+            val = builder.fmul(val, final)
 
         builder.store(val, ptro)
 
     def _gen_pytorch_fct(self, device, context=None):
-        start = self._get_pytorch_fct_param_value(START, device, context)
+        initial = self._get_pytorch_fct_param_value(INITIAL, device, context)
         tolerance = self._get_pytorch_fct_param_value(TOLERANCE, device, context)
-        threshold = self._get_pytorch_fct_param_value(THRESHOLD, device, context)
-        end = self._get_pytorch_fct_param_value(END, device, context)
+        final = self._get_pytorch_fct_param_value(FINAL, device, context)
+        duration = self._get_pytorch_fct_param_value(DURATION, device, context)
 
-        return lambda x : (start - threshold) * torch.exp(x * torch.log(tolerance) / end) + threshold
+        return lambda x : (initial - final) * torch.exp(x * torch.log(tolerance) / duration) + final
 
 
