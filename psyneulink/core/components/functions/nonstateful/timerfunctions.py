@@ -394,12 +394,12 @@ class AcceleratingTimer(TimerFunction):
 
 class DeceleratingTimer(TimerFunction):  # ---------------------------------------------------------------------------
     """
-    DeceleratingTimer(      \
+    DeceleratingTimer(     \
          default_variable, \
-         initial=1.0,        \
-         offset=0.0,       \
-         duration=1.0,          \
-         final=0.01,   \
+         initial=1.0,      \
+         duration=1.0,     \
+         final=0.01,       \
+         rate=1.0,         \
          params=None,      \
          owner=None,       \
          name=None,        \
@@ -440,13 +440,12 @@ class DeceleratingTimer(TimerFunction):  # -------------------------------------
         <DeceleratingTimer.offset>`, is used to determine the value of the function when `variable
         <DeceleratingTimer.variable>` should equal `duration <DeceleratingTimer.duration>`.
 
-        **sign** is positive if final > initial, and negative otherwise, and is used to determine the direction of the
+        **sign** is +1 if final > initial, otherwise -1, and is used to determine the direction of the
         progression (rising or decaying) of the TimerFunction.
 
     `derivative <DeceleratingTimer.derivative>` returns the derivative of the DeceleratingTimer Function:
 
       .. math::
-
          \\frac{sign \\cdot rate \\cdot(initial-final-sign)\\cdot\\ln(sign(final-initial+sign)) \\cdot \\left(\\frac{
          variable}{duration}\\right)^{rate-1}}{duration\\cdot e^{\\ln(sign(final-initial+sign))\\left(\\frac{variable}{
          duration}\\right)^{rate}}}
@@ -632,10 +631,10 @@ class DeceleratingTimer(TimerFunction):  # -------------------------------------
     def derivative(self, input, output=None, context=None):
         """Derivative of `function <DeceleratingTimer._function>` at **input**:
 
-        .. math::
-           \\frac{(initial-final+1)}{\\left(e^{\\ln(initial-final+1)\\left(\\frac{variable}{duration}\\right)^{
-           rate}}-1+final\\right)^2} \\cdot e^{\\ln(initial-final+1)\\left(\\frac{variable}{duration}\\right)^{rate}}
-           \\cdot \\ln(initial-final+1) \\cdot \\frac{rate}{duration}
+      .. math::
+         \\frac{sign \\cdot rate \\cdot(initial-final-sign)\\cdot\\ln(sign(final-initial+sign)) \\cdot \\left(\\frac{
+         variable}{duration}\\right)^{rate-1}}{duration\\cdot e^{\\ln(sign(final-initial+sign))\\left(\\frac{variable}{
+         duration}\\right)^{rate}}}
 
         Arguments
         ---------
