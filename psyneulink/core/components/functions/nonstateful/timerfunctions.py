@@ -37,7 +37,7 @@ There are four types that implement different functional forms, each of which is
  
 * **DeceleratingTimer** - advances from initial <TimerFunction.initial> to `final <TimerFunction.final>` value
   by progressively smaller amounts at an adjustable exponential `rate <DeceleratingTimer.rate>`
-  (see `interactive graph <https://www.desmos.com/calculator/hnpkze66pm>`_).
+  (see `interactive graph <https://www.desmos.com/calculator/p7yhhz1wro>`_).
 
 * **AsymptoticTimer** - progresses at a fixed exponential `rate <AsymptoticTimer.rate>` from `initial
   <TimerFunction.initial>` to within `tolerance <AsymptoticTimer.tolerance>` of `final <TimerFunction.final>`
@@ -446,11 +446,12 @@ class DeceleratingTimer(TimerFunction):  # -------------------------------------
     `derivative <DeceleratingTimer.derivative>` returns the derivative of the DeceleratingTimer Function:
 
       .. math::
+
          \\frac{sign \\cdot rate \\cdot(initial-final-sign)\\cdot\\ln(sign(final-initial+sign)) \\cdot \\left(\\frac{
          variable}{duration}\\right)^{rate-1}}{duration\\cdot e^{\\ln(sign(final-initial+sign))\\left(\\frac{variable}{
          duration}\\right)^{rate}}}
 
-    See `graph <https://www.desmos.com/calculator/hnpkze66pm>`_ for interactive plot of the function using `Desmos
+    See `graph <https://www.desmos.com/calculator/p7yhhz1wro>`_ for interactive plot of the function using `Desmos
     <https://www.desmos.com>`_.
 
     COMMENT:
