@@ -1143,7 +1143,10 @@ class AutodiffComposition(Composition):
                 f"PROGRAM ERROR: {input_port.name} of ouput_CIM for '{self.name}' has more than one afferent."
             port, component, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
             idx = component.output_ports.index(port)
-            all_output_values += [curr_tensors_for_outputs[component][idx].detach().cpu().numpy().copy().tolist()]
+            t = curr_tensors_for_outputs[component][idx]
+            # t = torch.atleast_1d(t.squeeze())
+            t = t.detach().cpu().numpy().copy().tolist()
+            all_output_values += [t]
         pytorch_rep.all_output_values = all_output_values
 
         # Get values of TARGET nodes
