@@ -1,5 +1,5 @@
 import json
-import os
+import pathlib
 import runpy
 import sys
 
@@ -80,23 +80,15 @@ def test_documentation_models(
     additional_args,
     variant,
 ):
-    models_dir = os.path.join(
-        os.path.dirname(__file__),
-        '..',
-        '..',
-        'psyneulink',
-        'library',
-        'models'
-    )
-    model_file = os.path.join(models_dir, f'{model_name}.py')
+    models_dir = pathlib.Path(pnl.__file__).parent.joinpath('library', 'models')
+    model_file = models_dir.joinpath(f'{model_name}.py')
     old_argv = sys.argv
     sys.argv = [model_file] + additional_args
     script_globals = runpy.run_path(model_file)
     sys.argv = old_argv
 
     suffix = f'-{variant}' if variant is not None else ''
-    expected_results_file = os.path.join(
-        models_dir,
+    expected_results_file = models_dir.joinpath(
         'results',
         f'{model_name}-{composition_name}{suffix}.json'
     )
