@@ -5,6 +5,6 @@ TimerFunctions
    :maxdepth: 3
 
 .. automodule:: psyneulink.core.components.functions.nonstateful.timerfunctions
-   :members: LinearTimer, AcceleratingTimer, DeceleratingTimer, AsymptoticTimer
+   :members: TimerFunction, LinearTimer, AcceleratingTimer, DeceleratingTimer, AsymptoticTimer
    :private-members:
    :exclude-members: Parameters

@@ -10,6 +10,7 @@
 # *******************************************  TIMER FUNCTIONS  *****************************************************
 """
 
+* `TimerFunction`
 * `LinearTimer`
 * `AcceleratingTimer`
 * `DeceleratingTimer`
@@ -18,7 +19,7 @@
 Overview
 --------
 
-Functions for which `initial <TimerFunction.initial>` and `final <TimerFunction.final>`values and a `duration
+Functions for which `initial <TimerFunction.initial>` and `final <TimerFunction.final>` values and a `duration
 <TimerFunction.duration>` can be specified, for use with a `TimerMechanism`.
 
 .. _TimerFunction_Types:
@@ -32,11 +33,11 @@ There are four types that implement different functional forms, each of which is
 * **LinearTimer** - progresses linearly from `initial <TimerFunction.initial>` to `final <TimerFunction.final>` value.
   (see `interactive graph <https://www.desmos.com/calculator/i0knnnozcs>`_).
 
-* **AcceleratingTimer** - advances from initial <TimerFunction.initial> to `final <TimerFunction.final>` value
+* **AcceleratingTimer** - advances from initial <TimerFunction.initial>` to `final <TimerFunction.final>` value
   by progressively larger amounts at an adjustable exponential `rate <AcceleratingTimerRise.rate>`
   (see `interactive graph <https://www.desmos.com/calculator/rms6z2ji8g>`_).
  
-* **DeceleratingTimer** - advances from initial <TimerFunction.initial> to `final <TimerFunction.final>` value
+* **DeceleratingTimer** - advances from initial <TimerFunction.initial>` to `final <TimerFunction.final>` value
   by progressively smaller amounts at an adjustable exponential `rate <DeceleratingTimer.rate>`
   (see `interactive graph <https://www.desmos.com/calculator/cshkzip0ai>`_).
 
@@ -52,17 +53,20 @@ Standard Attributes
 
 TimerFunctions have the following Parameters:
 
+.. _TimerFunction_Initial:
 * **initial**: specifies the `value <Function_Base.value>` that the function has when its `variable
   <Function_Base.variable>` is 0.
 
+.. _TimerFunction_Final:
 * **final**: specifies the `value <Function_Base.value>` that the function has when its `variable
   <Function_Base.variable>` is equal to `duration <TimerFunction.duration>`.
 
+.. _TimerFunction_Duration:
 * **duration**: specifies the value of the `variable <Function_Base.variable>` at which the`value
   <Function_Base.value>` of the function is equal to `final <TimerFunction.final>`.
 
+.. _TimerFunction_Rate:
 * **rate**: specifies the rate at which the progression of the `value <Function_Base.value>` of the function changes.
-
 
 TimerFunction Class References
 ------------------------------
@@ -99,6 +103,26 @@ __all__ = ['LinearTimer','AcceleratingTimer','DeceleratingTimer','AsymptoticTime
 class TimerFunction(TransferFunction):  # --------------------------------------------------------------------------------
     """Subclass of TransferFunction that allows a initial, final and duration value to be specified;
     for use with a `TimerMechanism`.
+
+    Attributes
+    ----------
+
+    variable : number or array
+        contains value to be transformed.
+
+    initial : float (>0)
+        determines the value of the function when `variable <TimerFunction.variable>` = 0.
+
+    final : float
+        determines the value of the function when `variable <TimerFunction.variable>` = `duration <TimerFunction.duration>`.
+
+    duration : float (>0)
+        determines the value of `variable <TimerFunction.variable>` at which the value of the function is equal
+        to `final <TimerFunction.final>`.
+
+    rate : float (>1.0)
+        determines the rate at which the value of the function accelerates.
+
     """
     componentType = TIMER_FUNCTION_TYPE
 
@@ -148,8 +172,8 @@ class TimerFunction(TransferFunction):  # --------------------------------------
             if duration <= 0:
                 return f"must be greater than 0."
 
-        def _validate_rate(self, duration):
-            if rate <= 1:
+        def _validate_rate(self, rate):
+            if rate < 1:
                 return f"must be greater than or equal to 1.0."
 
 
@@ -380,6 +404,7 @@ class LinearTimer(TimerFunction):
         initial = self._get_pytorch_fct_param_value(INITIAL, device, context)
         duration = self._get_pytorch_fct_param_value(DURATION, device, context)
         return lambda x : ((final - initial) / duration) * x + initial
+
 
 class AcceleratingTimer(TimerFunction):
     """
@@ -1073,6 +1098,7 @@ class AsymptoticTimer(TimerFunction):  # ---------------------------------------
                     :default value: 0.01
                     :type: ``float``
         """
+        rate = Parameter(None)
         tolerance = Parameter(0.01, modulable=True)
 
         def _validate_rate(self, rate):
