@@ -30,18 +30,19 @@ There are four types that implement different functional forms, each of which is
 <TimerFunction.initial>` is less than `final <TimerFunction.final>` and declining for the reverse:
 
 * **LinearTimer** - progresses linearly from `initial <TimerFunction.initial>` to `final <TimerFunction.final>` value.
+  (see `interactive graph <https://www.desmos.com/calculator/i0knnnozcs>`_).
 
 * **AcceleratingTimer** - advances from initial <TimerFunction.initial> to `final <TimerFunction.final>` value
   by progressively larger amounts at an adjustable exponential `rate <AcceleratingTimerRise.rate>`
-  (see `interactive graph <https://www.desmos.com/calculator/9ghsowtxzk>`_).
+  (see `interactive graph <https://www.desmos.com/calculator/rms6z2ji8g>`_).
  
 * **DeceleratingTimer** - advances from initial <TimerFunction.initial> to `final <TimerFunction.final>` value
   by progressively smaller amounts at an adjustable exponential `rate <DeceleratingTimer.rate>`
-  (see `interactive graph <https://www.desmos.com/calculator/ifrpg2gqdl>`_).
+  (see `interactive graph <https://www.desmos.com/calculator/cshkzip0ai>`_).
 
 * **AsymptoticTimer** - progresses at a fixed exponential `rate <AsymptoticTimer.rate>` from `initial
   <TimerFunction.initial>` to within `tolerance <AsymptoticTimer.tolerance>` of `final <TimerFunction.final>`
-    (see `interactive graph <https://www.desmos.com/calculator/grgvkugynz>`_).
+    (see `interactive graph <https://www.desmos.com/calculator/tmfs4ps9cp>`_).
 
 
 .. _TimerFunction_StandardAttributes:
@@ -195,7 +196,7 @@ class LinearTimer(TimerFunction):
       .. math::
          \\frac{final-initial}{duration}
 
-    See `graph <https://www.desmos.com/calculator/hoym2tmvev>`_ for interactive plot of the function using `Desmos
+    See `graph <https://www.desmos.com/calculator/i0knnnozcs>`_ for interactive plot of the function using `Desmos
     <https://www.desmos.com>`_.
 
     Arguments
@@ -431,7 +432,7 @@ class AcceleratingTimer(TimerFunction):
          \\left(\\frac{variable}{duration}\\right)^{rate} \\cdot e^{\\left(\\left(\\frac{variable}{duration}\\right)^{
          rate}-1\\right)} \\cdot rate \\cdot \\frac{1}{duration}\\right]
 
-    See `graph <https://www.desmos.com/calculator/9ghsowtxzk>`_ for interactive plot of the function using `Desmos
+    See `graph <https://www.desmos.com/calculator/rms6z2ji8g>`_ for interactive plot of the function using `Desmos
     <https://www.desmos.com>`_.
 
     Arguments
@@ -693,7 +694,7 @@ class DeceleratingTimer(TimerFunction):  # -------------------------------------
          variable}{duration}\\right)^{rate-1}}{duration\\cdot e^{\\ln(direction(final-initial+direction))\\left(\\frac{variable}{
          duration}\\right)^{rate}}}
 
-    See `graph <https://www.desmos.com/calculator/ifrpg2gqdl>`_ for interactive plot of the function using `Desmos
+    See `graph <https://www.desmos.com/calculator/cshkzip0ai>`_ for interactive plot of the function using `Desmos
     <https://www.desmos.com>`_.
 
 
@@ -972,7 +973,7 @@ class AsymptoticTimer(TimerFunction):  # ---------------------------------------
       .. math::
          \\frac{initial\\cdot\\ln(tolerance)}{duration}\\cdot e^{\\frac{variable\\cdot\\ln(tolerance)}{duration}}
 
-    See `graph <https://www.desmos.com/calculator/grgvkugynz>`_ for interactive plot of the function using `Desmos
+    See `graph <https://www.desmos.com/calculator/tmfs4ps9cp>`_ for interactive plot of the function using `Desmos
     <https://www.desmos.com>`_.
 
     Arguments
