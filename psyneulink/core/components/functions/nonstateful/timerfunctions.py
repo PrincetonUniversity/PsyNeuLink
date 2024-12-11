@@ -37,7 +37,7 @@ There are four types that implement different functional forms, each of which is
  
 * **DeceleratingTimer** - advances from initial <TimerFunction.initial> to `final <TimerFunction.final>` value
   by progressively smaller amounts at an adjustable exponential `rate <DeceleratingTimer.rate>`
-  (see `interactive graph <https://www.desmos.com/calculator/p7yhhz1wro>`_).
+  (see `interactive graph <https://www.desmos.com/calculator/ifrpg2gqdl>`_).
 
 * **AsymptoticTimer** - progresses at a fixed exponential `rate <AsymptoticTimer.rate>` from `initial
   <TimerFunction.initial>` to within `tolerance <AsymptoticTimer.tolerance>` of `final <TimerFunction.final>`
@@ -49,7 +49,7 @@ There are four types that implement different functional forms, each of which is
 Standard Attributes
 ~~~~~~~~~~~~~~~~~~~
 
-All TimerFunctions have the following Parameters:
+TimerFunctions have the following Parameters:
 
 * **initial**: specifies the `value <Function_Base.value>` that the function has when its `variable
   <Function_Base.variable>` is 0.
@@ -60,7 +60,7 @@ All TimerFunctions have the following Parameters:
 * **duration**: specifies the value of the `variable <Function_Base.variable>` at which the`value
   <Function_Base.value>` of the function is equal to `final <TimerFunction.final>`.
 
-In addition, some TimerFunctions have additional Parameters, that are described under the corresponding class.
+* **rate**: specifies the rate at which the progression of the `value <Function_Base.value>` of the function changes.
 
 
 TimerFunction Class References
@@ -77,22 +77,20 @@ except ImportError:
     torch = None
 from beartype import beartype
 
-from psyneulink._typing import Optional, Union
+from psyneulink._typing import Optional
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.functions.nonstateful.transferfunctions import TransferFunction
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.parameters import \
-    FunctionParameter, Parameter, get_validator_by_function, check_user_specified, copy_parameter_value
-from psyneulink.core.globals.utilities import (
-    ValidParamSpecType, convert_all_elements_to_np_array, safe_len, is_matrix_keyword)
+from psyneulink.core.globals.context import handle_external_context
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
+from psyneulink.core.globals.utilities import (ValidParamSpecType)
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, ValidPrefSet
 from psyneulink.core.globals.keywords import \
     (ADDITIVE_PARAM, ACCELERATING_TIMER_FUNCTION, ASYMPTOTIC_TIMER_FUNCTION, DECELERATING_TIMER_FUNCTION,
      DURATION, FINAL, INITIAL, LINEAR_TIMER_FUNCTION, MULTIPLICATIVE_PARAM, OFFSET, PREFERENCE_SET_NAME,
-     SCALE, TIMER_FUNCTION_TYPE, TOLERANCE)
+     RATE, TIMER_FUNCTION_TYPE, TOLERANCE)
 
 __all__ = ['LinearTimer','AcceleratingTimer','DeceleratingTimer','AsymptoticTimer']
 
@@ -125,10 +123,17 @@ class TimerFunction(TransferFunction):  # --------------------------------------
 
                     :default value: None
                     :type: 'float'
+
+                rate
+                    see `rate <TimerFunction.rate>`
+
+                    :default value: None
+                    :type: 'float'
         """
         initial = Parameter(1.0, modulable=True)
         final = Parameter(0.0, modulable=True)
         duration = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        rate = Parameter(1.0, modulable=True)
 
         def _validate_initial(self, initial):
             if initial < 0:
@@ -142,10 +147,238 @@ class TimerFunction(TransferFunction):  # --------------------------------------
             if duration <= 0:
                 return f"must be greater than 0."
 
+        def _validate_rate(self, duration):
+            if rate <= 1:
+                return f"must be greater than or equal to 1.0."
+
 
 class LinearTimer(TimerFunction):
-    pass
+    """
+    LinearTimer(           \
+         default_variable, \
+         initial=0.0,      \
+         final=1.0,        \
+         duration=1.0,     \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
+         )
 
+    .. _LinearTimer:
+    |
+    `function <LinearTimer._function>` returns linear transform of `variable <LinearTimer.variable>`.
+
+    .. math::
+       \\left(\\frac{final-initial}{duration}\\right) \\cdot variable + initial
+
+    such that:
+
+    .. math::
+        value=initial \ for\ variable=0
+
+        value=final\ for\ variable=duration
+
+    where:
+
+        **initial** determines the `value <Function_Base.value>` of the function
+        when its `variable <LinearTimer.variable>` = 0.
+
+        **final** determines the `value <Function_Base.value>` of the function
+        when its `variable <LinearTimer.variable>` = duration.
+
+        **duration** determines the value of `variable <LinearTimer.variable>`
+        at which the value of the function = final.
+
+    `derivative <LinearTimer.derivative>` returns the derivative of the LinearTimer Function:
+
+      .. math::
+         \\frac{final-initial}{duration}
+
+    See `graph <https://www.desmos.com/calculator/hoym2tmvev>`_ for interactive plot of the function using `Desmos
+    <https://www.desmos.com>`_.
+
+    Arguments
+    ---------
+
+    default_variable : number or array : default class_defaults.variable
+        specifies a template for the value to be transformed.
+
+    initial : float : default 1.0
+        specifies the value the function should have when `variable <LinearTimer.variable>` = 0;
+        must be greater than or equal to 0.
+
+    final : float : default 1.0
+        specifies the value the function should have when `variable <LinearTimer.variable>` = `duration
+        <TimerFunction.duration>`; must be greater than `initial <LinearTimer.initial>`.
+
+    duration : float : default 1.0
+        specifies the value of `variable <LinearTimer.variable>` at which the value of the function
+        should equal `final <LinearTimer.final>`; must be greater than 0.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters
+        in arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : number or array
+        contains value to be transformed.
+
+    initial : float (>0)
+        determines the value of the function when `variable <LinearTimer.variable>` = 0.
+
+    final : float
+        determines the value of the function when `variable <LinearTimer.variable>` = `duration <TimerFunction.duration>`.
+
+    duration : float (>0)
+        determines the value of `variable <LinearTimer.variable>` at which the value of the function is equal
+        to `final <LinearTimer.final>`.
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
+    """
+
+    componentName = ACCELERATING_TIMER_FUNCTION
+
+    classPreferences = {
+        PREFERENCE_SET_NAME: 'LinearTimerClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+    }
+
+    _model_spec_class_name_is_generic = True
+
+    # FIX: REINSTATE Parameters AND VALIDATE INITIAL, FINAL AND DURATION
+
+    @check_user_specified
+    @beartype
+    def __init__(self,
+                 default_variable=None,
+                 initial: Optional[ValidParamSpecType] = None,
+                 final: Optional[ValidParamSpecType] = None,
+                 duration: Optional[ValidParamSpecType] = None,
+                 params=None,
+                 owner=None,
+                 prefs:  Optional[ValidPrefSet] = None):
+        super().__init__(
+            default_variable=default_variable,
+            initial=initial,
+            final=final,
+            duration=duration,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
+
+    def _function(self,
+                 variable=None,
+                 context=None,
+                 params=None,
+                 ):
+        """
+
+        Arguments
+        ---------
+
+        variable : number or array : default class_defaults.variable
+           a single value or array to be exponentiated.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        Returns
+        -------
+
+        LinearTimer rise transform of variable : number or array
+
+        """
+        initial = self._get_current_parameter_value(INITIAL, context)
+        final = self._get_current_parameter_value(FINAL, context)
+        duration = self._get_current_parameter_value(DURATION, context)
+        result = ((final - initial) / duration) * variable + initial
+        return self.convert_output_type(result)
+
+    @handle_external_context()
+    def derivative(self, input, output=None, context=None):
+        """Derivative of `function <LinearTimer._function>` at **input**:
+
+        .. math::
+           (final - initial) * \\left(\\frac{(1 + duration * e^{variable})}{duration * e^{duration}}\\right)
+
+        Arguments
+        ---------
+
+        input : number
+            value of the input to the LinearTimer transform at which derivative is to be taken.
+
+        Returns
+        -------
+        derivative :  number or array
+        """
+        initial = self._get_current_parameter_value(INITIAL, context)
+        final = self._get_current_parameter_value(FINAL, context)
+        duration = self._get_current_parameter_value(DURATION, context)
+        return (final - initial) / duration
+
+    # FIX:
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        duration_ptr = ctx.get_param_or_state_ptr(builder, self, DURATION, param_struct_ptr=params)
+        initial_ptr = ctx.get_param_or_state_ptr(builder, self, INITIAL, param_struct_ptr=params)
+        final_ptr = ctx.get_param_or_state_ptr(builder, self, FINAL, param_struct_ptr=params)
+        offset_ptr = ctx.get_param_or_state_ptr(builder, self, OFFSET, param_struct_ptr=params)
+
+        initial = pnlvm.helpers.load_extract_scalar_array_one(builder, initial_ptr)
+        final = pnlvm.helpers.load_extract_scalar_array_one(builder, final_ptr)
+        duration = pnlvm.helpers.load_extract_scalar_array_one(builder, duration_ptr)
+
+        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
+        val = builder.load(ptri)
+        val = builder.fmul(val, duration)
+        val = builder.fadd(val, initial)
+        val = builder.call(exp_f, [val])
+
+        if "derivative" in tags:
+            # f'(x) = s*r*e^(r*x + b)
+            val = builder.fmul(val, final)
+            val = builder.fmul(val, duration)
+        else:
+            # f(x) = s*e^(r*x + b) + o
+            val = builder.fmul(val, final)
+            val = builder.fadd(val, offset)
+
+        builder.store(val, ptro)
+
+    # FIX:
+    def _gen_pytorch_fct(self, device, context=None):
+        final = self._get_pytorch_fct_param_value(FINAL, device, context)
+        initial = self._get_pytorch_fct_param_value(INITIAL, device, context)
+        duration = self._get_pytorch_fct_param_value(DURATION, device, context)
+        return lambda x : ((final - initial) / duration) * x + initial
 
 class AcceleratingTimer(TimerFunction):
     """
@@ -154,6 +387,7 @@ class AcceleratingTimer(TimerFunction):
          initial=0.0,      \
          final=1.0,        \
          duration=1.0,     \
+         rate=1.0,         \
          params=None,      \
          owner=None,       \
          name=None,        \
@@ -187,16 +421,15 @@ class AcceleratingTimer(TimerFunction):
         **duration** determines the value of `variable <AcceleratingTimer.variable>`
         at which the value of the function = final.
 
+        **rate** determines the `rate <AcceleratingTimer.rate>` of acceleration of the function.
+
     `derivative <AcceleratingTimer.derivative>` returns the derivative of the AcceleratingTimer Function:
 
       .. math::
-
-       (final-initial) \\cdot \\left[ rate \\cdot \\left(\\frac{variable}{duration}\\right)^{rate-1}
-       \\cdot \\frac{1}{duration} \\cdot e^{\\left(\\left(\\frac{variable}{duration}\\right)^{rate}-1\\right)} +
-       \\left(\\frac{variable}{duration}\\right)^{rate} \\cdot e^{\\left(\\left(\\frac{variable}{duration}\\right)^{
-       rate}-1\\right)} \\cdot rate \\cdot \\frac{1}{duration}\\right]
-
-    #(final - initial) * \\left(\\frac{(1 + duration * e^{variable})}{duration * e^{duration}}\\right)
+         (final-initial) \\cdot \\left[ rate \\cdot \\left(\\frac{variable}{duration}\\right)^{rate-1}
+         \\cdot \\frac{1}{duration} \\cdot e^{\\left(\\left(\\frac{variable}{duration}\\right)^{rate}-1\\right)} +
+         \\left(\\frac{variable}{duration}\\right)^{rate} \\cdot e^{\\left(\\left(\\frac{variable}{duration}\\right)^{
+         rate}-1\\right)} \\cdot rate \\cdot \\frac{1}{duration}\\right]
 
     See `graph <https://www.desmos.com/calculator/9ghsowtxzk>`_ for interactive plot of the function using `Desmos
     <https://www.desmos.com>`_.
@@ -218,6 +451,9 @@ class AcceleratingTimer(TimerFunction):
     duration : float : default 1.0
         specifies the value of `variable <AcceleratingTimer.variable>` at which the value of the function
         should equal `final <AcceleratingTimer.final>`; must be greater than 0.
+
+    rate : float : default 1.0
+        specifies the rate at which the value of the function accelerates; must be greater than 0.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -249,7 +485,8 @@ class AcceleratingTimer(TimerFunction):
         determines the value of `variable <AcceleratingTimer.variable>` at which the value of the function is equal
         to `final <AcceleratingTimer.final>`.
 
-    bounds : (None, None)
+    rate : float (>1.0)
+        determines the rate at which the value of the function accelerates.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -322,8 +559,9 @@ class AcceleratingTimer(TimerFunction):
         initial = self._get_current_parameter_value(INITIAL, context)
         final = self._get_current_parameter_value(FINAL, context)
         duration = self._get_current_parameter_value(DURATION, context)
+        rate = self._get_current_parameter_value(RATE, context)
 
-        result = initial + (final - initial) * ((variable + (duration * np.exp(variable)) - duration) / (duration * np.exp(duration)))
+        result = initial + (final - initial) * (variable / duration)^rate * np.exp((variable / duration)^rate - 1)
 
         return self.convert_output_type(result)
 
@@ -347,8 +585,14 @@ class AcceleratingTimer(TimerFunction):
         initial = self._get_current_parameter_value(INITIAL, context)
         final = self._get_current_parameter_value(FINAL, context)
         duration = self._get_current_parameter_value(DURATION, context)
+        rate = self._get_current_parameter_value(RATE, context)
 
-        return (final - initial) * (1 + duration * np.exp(input) / duration * np.exp(duration))
+        return  ((final - initial) *
+                 (rate * (input / duration)^(rate - 1)
+                  * ((1 / duration)
+                     * (np.exp((input / duration)^rate - 1)
+                        + ((input / duration)^rate)
+                        * np.exp((input / duration)^rate - 1) * rate * 1 / duration))))
 
     # FIX:
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
@@ -384,12 +628,12 @@ class AcceleratingTimer(TimerFunction):
 
     # FIX:
     def _gen_pytorch_fct(self, device, context=None):
+        final = self._get_pytorch_fct_param_value(FINAL, device, context)
         initial = self._get_pytorch_fct_param_value(INITIAL, device, context)
         duration = self._get_pytorch_fct_param_value(DURATION, device, context)
-        k = self._get_pytorch_fct_param_value('k', device, context)
+        rate = self._get_pytorch_fct_param_value(RATE, device, context)
 
-        return lambda x : initial + initial * torch.exp(-e)/torch.exp(duration - e - k**duration) * (1 - np.exp(x))
-
+        return lambda x : initial + (final - initial) * (x / duration)^rate * torch.exp((x / duration)^rate - 1)
 
 
 class DeceleratingTimer(TimerFunction):  # ---------------------------------------------------------------------------
@@ -412,9 +656,9 @@ class DeceleratingTimer(TimerFunction):  # -------------------------------------
     <DeceleratingTimer.variable>`:
 
     .. math::
-       \\frac{\\left(initial-final\\ -\\ sign\\right)}{e^{\\ln\\left(-sign\\left(initial\ -\\
-       final-sign\\right)\\right)\\left(\\frac{variable}{duration}\\right)^{
-       rate}}}+final+sign
+       \\frac{\\left(initial-final-direction\\right)}{e^{\\ln\\left(-direction\\left(initial\ -\\
+       final-direction\\right)\\right)\\left(\\frac{variable}{duration}\\right)^{
+       rate}}}+final+direction
 
     such that:
 
@@ -430,9 +674,6 @@ class DeceleratingTimer(TimerFunction):  # -------------------------------------
         to determine the value of the function when `variable <DeceleratingTimer.variable>` = `duration
         <DeceleratingTimer.duration>`.
 
-        **offset**, together with `initial <DeceleratingTimer.initial>`, determines the value of the function
-        when `variable <DeceleratingTimer.variable>` = 0, and its linearTimer offset from 0 for all other values;
-
         **duration** determines the value of `variable <DeceleratingTimer.variable>` at which
         the value of the function should equal :math:`initial * final + offset`.
 
@@ -440,27 +681,21 @@ class DeceleratingTimer(TimerFunction):  # -------------------------------------
         <DeceleratingTimer.offset>`, is used to determine the value of the function when `variable
         <DeceleratingTimer.variable>` should equal `duration <DeceleratingTimer.duration>`.
 
-        **sign** is +1 if final > initial, otherwise -1, and is used to determine the direction of the
+        **rate** determines the `rate <DeceleratingTimer.rate>` of deceleration of the function.
+
+        **direction** is +1 if final > initial, otherwise -1, and is used to determine the direction of the
         progression (rising or decaying) of the TimerFunction.
 
     `derivative <DeceleratingTimer.derivative>` returns the derivative of the DeceleratingTimer Function:
 
       .. math::
-         \\frac{sign \\cdot rate \\cdot(initial-final-sign)\\cdot\\ln(sign(final-initial+sign)) \\cdot \\left(\\frac{
-         variable}{duration}\\right)^{rate-1}}{duration\\cdot e^{\\ln(sign(final-initial+sign))\\left(\\frac{variable}{
+         \\frac{direction \\cdot rate \\cdot(initial-final-direction)\\cdot\\ln(direction(final-initial+direction)) \\cdot \\left(\\frac{
+         variable}{duration}\\right)^{rate-1}}{duration\\cdot e^{\\ln(direction(final-initial+direction))\\left(\\frac{variable}{
          duration}\\right)^{rate}}}
 
-    See `graph <https://www.desmos.com/calculator/p7yhhz1wro>`_ for interactive plot of the function using `Desmos
+    See `graph <https://www.desmos.com/calculator/ifrpg2gqdl>`_ for interactive plot of the function using `Desmos
     <https://www.desmos.com>`_.
 
-    COMMENT:
-    FOR TIMER VERSION:
-    `function <DeceleratingTimer._function>` returns exponentially decaying transform of `variable
-    <DeceleratingTimer.variable>`, that has a value of `initial <DeceleratingTimer.initial>` + `offset
-    <DeceleratingTimer.offset>` at `variable <DeceleratingTimer.variable>` = 0, and a value of `final
-    <DeceleratingTimer.duration>` * `initial <DeceleratingTimer.initial>` + `offset <DeceleratingTimer.offset>` at
-    `variable at `variable <DeceleratingTimer.variable>` = `duration <DeceleratingTimer.duration>`:
-    COMMENT
 
     Arguments
     ---------
@@ -472,19 +707,18 @@ class DeceleratingTimer(TimerFunction):  # -------------------------------------
         specifies, together with `offset <DeceleratingTimer.offset>`, the value of the function when `variable
         <DeceleratingTimer.variable>` = 0; must be greater than 0.
 
-    offset : float : default 0.0
-        specifies, together with `initial <DeceleratingTimer.initial>`, the value of the function when `variable
-        <DeceleratingTimer.variable>` = 0, and its linearTimer offset for all other values.
+    final : float : default 0.01
+        specifies the fraction of `initial <DeceleratingTimer.initial>` when added to `offset <DeceleratingTimer.offset>`,
+        that determines the value of the function when `variable <DeceleratingTimer.variable>` = `duration
+        <DeceleratingTimer.duration>`; must be between 0 and 1.
 
     duration : float : default 1.0
         specifies the value of `variable <DeceleratingTimer.variable>` at which the `value of the function
         should equal `initial <DeceleratingTimer.initial>` * `final <DeceleratingTimer.final>` + `offset
         <DeceleratingTimer.offset>`; must be greater than 0.
 
-    final : float : default 0.01
-        specifies the fraction of `initial <DeceleratingTimer.initial>` when added to `offset <DeceleratingTimer.offset>`,
-        that determines the value of the function when `variable <DeceleratingTimer.variable>` = `duration
-        <DeceleratingTimer.duration>`; must be between 0 and 1.
+    rate : float : default 1.0
+        specifies the rate at which the value of the function decelerates; must be greater than 0.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -506,24 +740,21 @@ class DeceleratingTimer(TimerFunction):  # -------------------------------------
     variable : number or array
         contains value to be transformed.
 
-    initial : float (>0)
+    initial : float
         determines, together with `offset <DeceleratingTimer.offset>`, the value of the function when `variable
         <DeceleratingTimer.variable>` = 0.
 
-    offset : float
-        determines, together with `initial <DeceleratingTimer.initial>`, the value of the function when `variable
-        <DeceleratingTimer.variable>` = 0, and its linearTimer offset for all other values.
+    final : float
+        determines the fraction of `initial <DeceleratingTimer.initial>` when added to `offset <DeceleratingTimer.offset>`,
+        that determines the value of the function when `variable <DeceleratingTimer.variable>` = `duration
+        <DeceleratingTimer.duration>`.
 
     duration : float (>0)
         determines the value of `variable <DeceleratingTimer.variable>` at which the value of the function should
         equal `initial <DeceleratingTimer.initial>` * `final <DeceleratingTimer.final>` + `offset <DeceleratingTimer.offset>`.
 
-    final : float (0,1)
-        determines the fraction of `initial <DeceleratingTimer.initial>` when added to `offset <DeceleratingTimer.offset>`,
-        that determines the value of the function when `variable <DeceleratingTimer.variable>` = `duration
-        <DeceleratingTimer.duration>`.
-
-    bounds : (None, None)
+    rate : float (>1.0)
+        determines the rate at which the value of the function decelerates.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -547,47 +778,23 @@ class DeceleratingTimer(TimerFunction):  # -------------------------------------
 
     _model_spec_class_name_is_generic = True
 
-    class Parameters(TimerFunction.Parameters):
-        """
-            Attributes
-            ----------
-
-                offset
-                    see `offset <DeceleratingTimer.offset>`
-
-                    :default value: 0.0
-                    :type: ``float``
-
-                final
-                    see `final <DeceleratingTimer.final>`
-
-                    :default value: 0.01
-                    :type: ``float``
-        """
-        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        final = Parameter(0.01, modulable=True, aliases=[SCALE])
-
-        def _validate_final(self, final):
-            if final < 0:
-                return f"must be between 0 and 1."
-
     @check_user_specified
     @beartype
     def __init__(self,
                  default_variable=None,
                  initial: Optional[ValidParamSpecType] = None,
-                 offset: Optional[ValidParamSpecType] = None,
-                 duration: Optional[ValidParamSpecType] = None,
                  final: Optional[ValidParamSpecType] = None,
+                 duration: Optional[ValidParamSpecType] = None,
+                 rate: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
             initial=initial,
-            offset=offset,
-            duration=duration,
             final=final,
+            duration=duration,
+            rate=rate,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -619,11 +826,15 @@ class DeceleratingTimer(TimerFunction):  # -------------------------------------
 
         """
         initial = self._get_current_parameter_value(INITIAL, context)
-        offset = self._get_current_parameter_value(OFFSET, context)
-        duration = self._get_current_parameter_value(DURATION, context)
         final = self._get_current_parameter_value(FINAL, context)
+        duration = self._get_current_parameter_value(DURATION, context)
+        rate = self._get_current_parameter_value(RATE, context)
 
-        result = offset + initial * np.exp(-variable * np.log(1 / final) / duration)
+        direction = 1 if final > initial else -1
+
+        result = ((initial - final - direction) /
+                  (np.log(-direction(initial - final - direction)) * (variable / duration)^rate)
+                  + final + direction)
 
         return self.convert_output_type(result)
 
@@ -632,9 +843,10 @@ class DeceleratingTimer(TimerFunction):  # -------------------------------------
         """Derivative of `function <DeceleratingTimer._function>` at **input**:
 
       .. math::
-         \\frac{sign \\cdot rate \\cdot(initial-final-sign)\\cdot\\ln(sign(final-initial+sign)) \\cdot \\left(\\frac{
-         variable}{duration}\\right)^{rate-1}}{duration\\cdot e^{\\ln(sign(final-initial+sign))\\left(\\frac{variable}{
-         duration}\\right)^{rate}}}
+         \\frac{direction \\cdot rate \\cdot(initial-final-direction)\\cdot\\ln(direction(
+         final-initial+direction))\\cdot \\left(\\frac{variable}{duration}\\right)^{rate-1}}{duration\\cdot e^{\\ln(
+         direction(final-initial+direction))\\left(\\frac{variable}{duration}\\right)^{rate}}}
+
 
         Arguments
         ---------
@@ -650,10 +862,14 @@ class DeceleratingTimer(TimerFunction):  # -------------------------------------
         """
 
         initial = self._get_current_parameter_value(INITIAL, context)
-        duration = self._get_current_parameter_value(DURATION, context)
         final = self._get_current_parameter_value(FINAL, context)
+        duration = self._get_current_parameter_value(DURATION, context)
+        rate = self._get_current_parameter_value(RATE, context)
+        direction = 1 if final > initial else -1
 
-        return (initial * np.log(1/final) / duration) * np.exp(-input * np.log(final) / duration)
+        return direction * rate * (initial - final - direction) * np.log(direction * (final - initial + direction)) * \
+            (input / duration)^(rate - 1) / (duration * np.exp(np.log(direction * (final - initial + direction)) *
+                                                               (input / duration)^rate))
 
     # FIX:
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
@@ -688,22 +904,24 @@ class DeceleratingTimer(TimerFunction):  # -------------------------------------
         builder.store(val, ptro)
 
     def _gen_pytorch_fct(self, device, context=None):
-        offset = self._get_pytorch_fct_param_value(OFFSET, device, context)
-        duration = self._get_pytorch_fct_param_value(DURATION, device, context)
         final = self._get_pytorch_fct_param_value(FINAL, device, context)
         initial = self._get_pytorch_fct_param_value(INITIAL, device, context)
+        duration = self._get_pytorch_fct_param_value(DURATION, device, context)
+        rate = self._get_pytorch_fct_param_value(RATE, device, context)
+        direction = 1 if final > initial else -1
 
-        return lambda x : offset + initial * torch.exp(-x * torch.log(1 / final) / duration)
-
+        return lambda x : ((initial - final - direction) /
+                           (torch.log(-direction(initial - final - direction)) * (x / duration)^rate)
+                           + final + direction)
 
 
 class AsymptoticTimer(TimerFunction):  # ---------------------------------------------------------------------------
     """
-    AsymptoticTimer( \
+    AsymptoticTimer(       \
          default_variable, \
-         initial=1.0,        \
-         duration=1.0,          \
-         final=0,      \
+         initial=1.0,      \
+         final=0,          \
+         duration=1.0,     \
          tolerance=0.01,   \
          params=None,      \
          owner=None,       \
@@ -842,6 +1060,11 @@ class AsymptoticTimer(TimerFunction):  # ---------------------------------------
         """
             Attributes
             ----------
+                rate
+                    see `tolerance <AsymptoticTimer.tolerance>`
+
+                    :default value: None
+                    :type: ``float``
 
                 tolerance
                     see `tolerance <AsymptoticTimer.tolerance>`
@@ -850,6 +1073,10 @@ class AsymptoticTimer(TimerFunction):  # ---------------------------------------
                     :type: ``float``
         """
         tolerance = Parameter(0.01, modulable=True)
+
+        def _validate_rate(self, rate):
+            if rate is not None:
+                return f"is not used and should be left as None."
 
         def _validate_tolerance(self, tolerance):
             if tolerance <= 0 or tolerance >= 1:
@@ -974,5 +1201,3 @@ class AsymptoticTimer(TimerFunction):  # ---------------------------------------
         duration = self._get_pytorch_fct_param_value(DURATION, device, context)
 
         return lambda x : (initial - final) * torch.exp(x * torch.log(tolerance) / duration) + final
-
-
