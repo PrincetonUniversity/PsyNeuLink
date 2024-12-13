@@ -1,6 +1,6 @@
 beartype<0.20.0
 dill<0.3.10
-fastkde>=2.0.0, <2.0.2
+fastkde>=2.0.0, <2.1.4
 graph-scheduler>=1.2.1, <1.3.0
 graphviz<0.21.0
 grpcio<1.69.0
