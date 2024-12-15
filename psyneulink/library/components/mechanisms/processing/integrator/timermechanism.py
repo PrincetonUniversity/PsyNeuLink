@@ -170,7 +170,7 @@ class TimerMechanism(IntegratorMechanism):
         function=SimpleIntegrator(rate=1),      \
         trajectory=LinearTimer,                 \
         threshold=1,                            \
-        end=1)
+        duration=1)
 
     Subclass of `IntegratorMechanism` that advances its input until it reaches a specified value.
     See `IntegratorMechanism <IntegratorMechanism_Class_Reference>` for additional arguments and attributes.
@@ -202,7 +202,7 @@ class TimerMechanism(IntegratorMechanism):
         if a list or array, the length must be the same as specified for **default_variable** or **input_shapes** (see
         `TimerMechanism_Execution` for additional details).
 
-    end : scalar, list or array : default 1
+    duration : scalar, list or array : default 1
         specifies the value of its `variable <Mechanism_Base.variable>` at which the timer stops advancing; if a list
         or array, the length must be the same as specified for **default_variable** or **input_shapes** (see
         `TimerMechanism_Execution` for additional details).
@@ -239,13 +239,13 @@ class TimerMechanism(IntegratorMechanism):
         advancing; if a list or array, the length must be the same as specified for **default_variable** or
         **input_shapes** (see `TimerMechanism_Execution` for additional details).
 
-    end : scalar, list or array
+    duration : scalar, list or array
         determines the value at which the timer stops advancing, after which it sets its `finished
         <TimerMechanism.finished>` Parameter to `True` and `value <Mechanism_Base.value>` remains equal to
-        its `end <TimerMechanism.end>` value.
+        its `duration <TimerMechanism.duration>` value.
 
     finished : bool
-        indicates whether the TimerMechanism has reached its `end <TimerMechanism.end>` value
+        indicates whether the TimerMechanism has reached its `duration <TimerMechanism.duration>` value
         (see `TimerMechanism_Execution` for additional details).
 
     reset : int, float or 1d array of length 1 : default 0
@@ -273,8 +273,8 @@ class TimerMechanism(IntegratorMechanism):
                     :default value: False
                     :type: `bool`
 
-                end
-                    see `end <TimerMechanism.end>`
+                duration
+                    see `duration <TimerMechanism.duration>`
 
                     :default value: 1
                     :type: `float`
@@ -314,7 +314,7 @@ class TimerMechanism(IntegratorMechanism):
         start = FunctionParameter(0, function_name='trajectory', function_parameter_name='initial', primary=True)
         increment = FunctionParameter(1, function_name='function', function_parameter_name='rate', primary=True)
         threshold = FunctionParameter(1, function_name='trajectory', function_parameter_name='final', primary=True )
-        end = FunctionParameter(1, function_name='trajectory', function_parameter_name='duration', primary=True )
+        duration = FunctionParameter(1, function_name='trajectory', function_parameter_name='duration', primary=True )
         finished = Parameter(False, stateful=True, loggable=True)
 
         def _validate_trajectory(self, trajectory):
@@ -334,8 +334,8 @@ class TimerMechanism(IntegratorMechanism):
             if not isinstance(threshold, (int, float, list, np.ndarray)):
                 return f'must be an int, float or a list or array of either'
 
-        def _validate_end(self, end):
-            if not isinstance(end, (int, float, list, np.ndarray)):
+        def _validate_durat(self, duration):
+            if not isinstance(duration, (int, float, list, np.ndarray)):
                 return f'must be an int, float or a list or array of either'
 
 
@@ -351,7 +351,7 @@ class TimerMechanism(IntegratorMechanism):
                  function:Optional[IntegratorFunction]=None,
                  trajectory:Optional[TimerFunction]=None,
                  threshold:Optional[Union[int, float, list, np.ndarray]]=None,
-                 end:Optional[Union[int, float, list, np.ndarray]]=None,
+                 duration:Optional[Union[int, float, list, np.ndarray]]=None,
                  params=None,
                  name=None,
                  prefs:   Optional[ValidPrefSet] = None,
@@ -368,7 +368,7 @@ class TimerMechanism(IntegratorMechanism):
                                              function=function,
                                              trajectory=trajectory,
                                              threshold=threshold,
-                                             end=end,
+                                             duration=duration,
                                              finished=False,
                                              params=params,
                                              name=name,
@@ -388,7 +388,7 @@ class TimerMechanism(IntegratorMechanism):
         # No need to reset during initialization (which will occur if **reset_default** != 0)
         if not self.is_initializing:
 
-            if x == self.parameters.end.get(context):
+            if x == self.parameters.duration.get(context):
                 self.parameters.finished._set(True, context)
 
             if np.array(self._get_current_parameter_value(RESET,context)).squeeze():
