@@ -95,7 +95,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import \
 from psyneulink.core.globals.keywords import \
     (ADDITIVE_PARAM, ACCELERATING_TIMER_FUNCTION, ASYMPTOTIC_TIMER_FUNCTION, DECELERATING_TIMER_FUNCTION,
      DURATION, FINAL, INITIAL, LINEAR_TIMER_FUNCTION, MULTIPLICATIVE_PARAM, OFFSET, PREFERENCE_SET_NAME,
-     RATE, TIMER_FUNCTION_TYPE, TOLERANCE)
+     RATE, TIMER_FUNCTION, TIMER_FUNCTION_TYPE, TOLERANCE)
 
 __all__ = ['LinearTimer','AcceleratingTimer','DeceleratingTimer','AsymptoticTimer']
 
@@ -125,6 +125,7 @@ class TimerFunction(TransferFunction):  # --------------------------------------
 
     """
     componentType = TIMER_FUNCTION_TYPE
+    componentName = TIMER_FUNCTION
 
     class Parameters(TransferFunction.Parameters):
         """
@@ -284,7 +285,7 @@ class LinearTimer(TimerFunction):
         for details).
     """
 
-    componentName = ACCELERATING_TIMER_FUNCTION
+    componentName = LINEAR_TIMER_FUNCTION
 
     classPreferences = {
         PREFERENCE_SET_NAME: 'LinearTimerClassPreferences',
@@ -582,12 +583,13 @@ class AcceleratingTimer(TimerFunction):
         AcceleratingTimer rise transform of variable : number or array
 
         """
-        initial = self._get_current_parameter_value(INITIAL, context)
-        final = self._get_current_parameter_value(FINAL, context)
-        duration = self._get_current_parameter_value(DURATION, context)
-        rate = self._get_current_parameter_value(RATE, context)
+        initial = self._get_current_parameter_value('initial', context)
+        final = self._get_current_parameter_value('final', context)
+        duration = self._get_current_parameter_value('duration', context)
+        rate = self._get_current_parameter_value('rate', context)
 
-        result = initial + (final - initial) * (variable / duration)^rate * np.exp((variable / duration)^rate - 1)
+        result = (initial + (final - initial) * np.power((variable / duration),rate)
+                  * np.exp(np.power((variable / duration),rate) - 1))
 
         return self.convert_output_type(result)
 

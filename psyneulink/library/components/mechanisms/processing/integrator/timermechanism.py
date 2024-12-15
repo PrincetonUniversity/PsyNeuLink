@@ -89,7 +89,7 @@ has **start** and **end** parameters, and takes a single numeric value, a list o
        Function; its `increment <TimerMechanism.increment>` Parameter is assigned as the `rate <TimerFunction.rate>`
        Parameter of the `trajectory <TimerMechanism.trajectory>` Function; and its `end <TimerMechanism.end>` Parameter
        is assigned as the `end <TimerFunction.end>` Parameter of the `trajectory <TimerMechanism.trajectory>` Function,
-       which is also used to set the TimerMechanism's `complete <TImeMechanism.complete>` attribute.
+       which is also used to set the TimerMechanism's `finished <TImeMechanism.finished>` attribute.
 
 .. _TimerMechanism_Modulation:
 
@@ -111,62 +111,12 @@ as its output; otherwise, it generates an array of values, each element of which
 `increment <TimerMechanism.increment>` Parameter is a single value, that is used for advancing all elements; if the
 `increment <TimerMechanism.increment>` Parameter is a list or array, then each element is used to increment the
 corresponding element of the timer array.  The TimerMechanism stop advancing when its value reaches its `end
-<TimerMechanism.end>` Parameter, at which point it sets its `complete <TimerMechanism.complete>` Parameter to True,
+<TimerMechanism.end>` Parameter, at which point it sets its `finished <TimerMechanism.finished>` Parameter to True,
 and stops advancing its value. This can be used together with a `Scheduler` `Condition` to make the processing
 of other `Mechanisms <Mechanism>` contingent on the TimerMechanism reaching its end value. The Timer can be reset to
 its `start <TimerMechanism.start>` `value <Mechanism_Base.value>` by setting  its `reset <TimerMechanism.reset>`
 parameter to a non-zero value, as described for a standard `IntegratorMechanism <IntegratorMechanism_Reset>`.
 
-COMMENT:
-FIX: ADD ADVICE SECTION HERE OR EXAMPLES FOR TIMERS THAT IMPLEMENT RISING TO A THRESHOLD AND COLLAPSING TO BOUND
-EXPONENTIAL GROWTH: **trajectory** = EXPONENTIAL;  **direction** = *INCREASING*
-:math: s-1\ +\ e^{\frac{-\ln\left(1-\frac{d}{s}\right)}{f}x}
-python: start -1 np.exp(-np.ln(1-threhold/start)/end)
-start = offset (y value at which growth begins)
-threshold = distance above starting y at end
-end = scale (x value at which end should occur
-
-DECELLERATING GROWTH: **trajectory** = EXPONENTIAL;  **direction** = *INCREASING*
-# :math: s+r\left(1-e^{\frac{\ln\left(1-\frac{d}{r}\right)}{f}x}\right)
-# python: start + rate * (1 - np.exp(np.ln(1 - threshold / rate) / end) * x))
-# start = offset (y value at which growth begins)
-# end = scale (contingent on threshold; i.e., scale should cause y=threshold at x=end)
-----------------
-:math: s+r\left(1-e^{\frac{\ln\left(1-t\right)}{f}x}\right)
-python: start + threshold * (1 - np.exp(np.ln(1 - threshold) / end) * x))
-start = offset (y value at which growth begins)
-end = scale (y = tolerance * start at x = end)
-threshold = distance above starting y at end
-tolerance = 0.01 (default) (i.e., y = within 1% of threshold at x = end)
-
-EXPONENTIAL DECAY:   **trajectory** = EXPONENTIAL; **direction** = *DECREASING*
-:math:   offset\ + bias e^{-\left(\frac{variable\ln\left(\frac{1}{tolerance}\right)}{scale}\right)}
-[DESMOS: o\ +se^{-\left(\frac{x\ln\left(\frac{1}{t}\right)}{f}\right)}]
-python: offset + bias * np.exp(-variable * np.ln(1/tolerance) / scale)
-
-FOR TIMER:
-offset = offset (y offset for entire function)
-start = bias (starting y value relative to offset: s + o = y for x = 0)
-end = scale (y = (tolerance * start + offset) at x = end)
-tolerance = 0.01 (default) (i.e., y = (1% of start) + offset at x = end)
-
-ACCELERATING DECAY:  **trajectory** = EXPONENTIAL; **direction** = *INCREASING*
-AcceleratingDecay Function
-:math: start + e^{-e}(1-e^x)\frac{n}{e^{end-e-0.4^{end}}}
-python: start + np.exp(-e)*(1-np.exp(x))*n/np.exp(end-e-0.4**end)
-start = offset (y value at which decay begins)
-end = scale (x value at which y=0)
-
-.. technical_note::
-   This is an empirically-derived function;  the value of 0.4 is used to ensure that the function reaches 0 at the
-    specified end value. If anyone has an analytic solution, please add it here.
-
-`function <AcceleratingDecay._function>` returns exponentially decaying transform of `variable
-<AcceleratingDecay.variable>`, that has a value of `start <AcceleratingDecay.start>` + `offset
-<AcceleratingDecay.offset>` at `variable <AcceleratingDecay.variable>` = 0, and a value of `threshold
-<AcceleratingDecay.end>` * `start <AcceleratingDecay.start>` + `offset <AcceleratingDecay.offset>` at
-`variable at `variable <AcceleratingDecay.variable>` = `end <AcceleratingDecay.end>`:
-COMMENT
 
 .. _TimerMechanism_Examples:
 
@@ -192,13 +142,11 @@ from beartype import beartype
 from psyneulink._typing import Optional, Union
 import numpy as np
 
-from psyneulink.core.components.functions.function import Function
-from psyneulink.core.components.functions.nonstateful.transferfunctions import TransferFunction, Linear, Exponential
-from psyneulink.core.components.functions.nonstateful.timerfunctions import TimerFunction
+from psyneulink.core.components.functions.nonstateful.timerfunctions import TimerFunction, LinearTimer
 from psyneulink.core.components.functions.stateful.integratorfunctions import IntegratorFunction, SimpleIntegrator
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
-from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismError
-from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, TIMER_MECHANISM, VARIABLE, PREFERENCE_SET_NAME, RESET
+from psyneulink.core.components.mechanisms.mechanism import MechanismError
+from psyneulink.core.globals.keywords import TIMER_MECHANISM, PREFERENCE_SET_NAME, RESET, TRAJECTORY
 from psyneulink.core.globals.parameters import Parameter, FunctionParameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -220,7 +168,7 @@ class TimerMechanism(IntegratorMechanism):
         start=0,                                \
         increment=1,                            \
         function=SimpleIntegrator(rate=1),      \
-        trajectory=Linear,                      \
+        trajectory=LinearTimer,                 \
         threshold=1,                            \
         end=1)
 
@@ -246,7 +194,7 @@ class TimerMechanism(IntegratorMechanism):
         np.array
         of values, and return one of the same shape.
 
-    trajectory : TransferFunction or UserDefinedFunction : default LINEAR
+    trajectory : TransferFunction or UserDefinedFunction : default LinearTimer
         specifies the shape of the timer's trajectory; must be a supported `TransferFunction` (see XXX
 
     threshold : scalar, list or array : default 1
@@ -292,11 +240,11 @@ class TimerMechanism(IntegratorMechanism):
         **input_shapes** (see `TimerMechanism_Execution` for additional details).
 
     end : scalar, list or array
-        determines the value at which the timer stops advancing, after which it sets its `complete
-        <TimerMechanism.complete>` Parameter to `True` and `value <Mechanism_Base.value>` remains equal to
+        determines the value at which the timer stops advancing, after which it sets its `finished
+        <TimerMechanism.finished>` Parameter to `True` and `value <Mechanism_Base.value>` remains equal to
         its `end <TimerMechanism.end>` value.
 
-    complete : bool
+    finished : bool
         indicates whether the TimerMechanism has reached its `end <TimerMechanism.end>` value
         (see `TimerMechanism_Execution` for additional details).
 
@@ -319,8 +267,8 @@ class TimerMechanism(IntegratorMechanism):
             Attributes
             ----------
 
-                complete
-                    see `complete <TimerMechanism.complete>`
+                finished
+                    see `finished <TimerMechanism.finished>`
 
                     :default value: False
                     :type: `bool`
@@ -358,18 +306,40 @@ class TimerMechanism(IntegratorMechanism):
                 trajectory
                     see `trajectory <TimerMechanism.trajectory>`
 
-                    :default value: `LinearRising`
+                    :default value: `LinearTimer`
                     :type: `Function`
         """
         function = Parameter(SimpleIntegrator, stateful=False, loggable=False)
-        trajectory = Parameter(Linear, stateful=False, loggable=False)
-        start = FunctionParameter(0, function_name='trajectory', function_parameter_name='start', primary=True)
+        trajectory = Parameter(LinearTimer, stateful=False, loggable=False)
+        start = FunctionParameter(0, function_name='trajectory', function_parameter_name='initial', primary=True)
         increment = FunctionParameter(1, function_name='function', function_parameter_name='rate', primary=True)
-        threshold = FunctionParameter(1, function_name='trajectory', function_parameter_name='threshold', primary=True )
-        end = FunctionParameter(1, function_name='trajectory', function_parameter_name='end', primary=True )
-        complete = Parameter(False, stateful=True, loggable=True)
+        threshold = FunctionParameter(1, function_name='trajectory', function_parameter_name='final', primary=True )
+        end = FunctionParameter(1, function_name='trajectory', function_parameter_name='duration', primary=True )
+        finished = Parameter(False, stateful=True, loggable=True)
 
-        # FIX: WRITE VALIDATION METHODS AND REMOVE TYPE HINTS
+        def _validate_trajectory(self, trajectory):
+            if not (isinstance(trajectory, TimerFunction)
+                    or (isinstance(trajectory, type) and issubclass(trajectory, TimerFunction))):
+                return f'must be a TimerFunction'
+
+        def _validate_start(self, start):
+            if not isinstance(start, (int, float, list, np.ndarray)):
+                return f'must be an int, float or a list or array of either'
+
+        def _validate_increment(self, increment):
+            if not isinstance(increment, (int, float, list, np.ndarray)):
+                return f'must be an int, float or a list or array of either'
+
+        def _validate_threshold(self, threshold):
+            if not isinstance(threshold, (int, float, list, np.ndarray)):
+                return f'must be an int, float or a list or array of either'
+
+        def _validate_end(self, end):
+            if not isinstance(end, (int, float, list, np.ndarray)):
+                return f'must be an int, float or a list or array of either'
+
+
+        # FIX: WRITE VALIDATION METHODS HERE AND REMOVE TYPE HINTS BELOWx`
 
     @check_user_specified
     @beartype
@@ -399,7 +369,7 @@ class TimerMechanism(IntegratorMechanism):
                                              trajectory=trajectory,
                                              threshold=threshold,
                                              end=end,
-                                             complete=False,
+                                             finished=False,
                                              params=params,
                                              name=name,
                                              prefs=prefs,
@@ -408,7 +378,7 @@ class TimerMechanism(IntegratorMechanism):
 
     def _execute(self, variable=None, context=None, runtime_params=None, **kwargs):
         """Override to check for call to reset by ControlSignal"""
-        if not self.is_initializing and self.parameters.complete.get(context):
+        if not self.is_initializing and self.parameters.finished.get(context):
             return self.trajectory(self.function.parameters.previous_value._get(context))
 
         x = super()._execute(variable=variable, context=context, runtime_params=runtime_params, **kwargs)
@@ -419,7 +389,7 @@ class TimerMechanism(IntegratorMechanism):
         if not self.is_initializing:
 
             if x == self.parameters.end.get(context):
-                self.parameters.complete._set(True, context)
+                self.parameters.finished._set(True, context)
 
             if np.array(self._get_current_parameter_value(RESET,context)).squeeze():
                 self.reset(context=context)

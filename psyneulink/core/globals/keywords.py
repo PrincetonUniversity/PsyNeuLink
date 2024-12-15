@@ -133,7 +133,8 @@ __all__ = [
     'STANDARD_ARGS', 'STANDARD_DEVIATION', 'STANDARD_OUTPUT_PORTS', 'START', 'STORE', 'SUBTRACTION', 'SUM',
     'TARGET', 'TARGET_MECHANISM', 'TARGET_LABELS_DICT', 'TERMINAL', 'TARGETS',
     'TERMINATION_MEASURE', 'TERMINATION_THRESHOLD', 'TERMINATION_COMPARISION_OP', 'TERSE', 'TEXT', 'THRESHOLD',
-    'TIME', 'TIME_STEP_SIZE', 'TIME_STEPS_DIM', 'TIMER_FUNCTION_TYPE', 'TOLERANCE', 'TRAINED_OUTPUTS', 'TRAINING_SET',
+    'TIME', 'TIME_STEP_SIZE', 'TIME_STEPS_DIM', 'TIMER_FUNCTION', 'TIMER_FUNCTION_TYPE', 'TOLERANCE',
+    'TRAINED_OUTPUTS', 'TRAINING_SET', 'TRAJECTORY',
     'TRANSFER_FUNCTION_TYPE', 'TRANSFER_MECHANISM', 'TRANSFER_WITH_COSTS_FUNCTION', 'TRIAL', 'TRIALS_DIM',
     'UNCHANGED', 'UNIFORM_DIST_FUNCTION', 'UPDATE', 'USER_DEFINED_FUNCTION', 'USER_DEFINED_FUNCTION_TYPE',
     'VALUES', 'VALIDATE', 'VALIDATION', 'VALUE', 'VALUE_ASSIGNMENT', 'VALUE_FUNCTION', 'VARIABLE', 'VARIANCE',
@@ -788,6 +789,7 @@ SOFTMAX_FUNCTION = 'SoftMax Function'
 TRANSFER_WITH_COSTS_FUNCTION = "TransferWithCosts Function"
 
 # TimerFunctions:
+TIMER_FUNCTION = "TimerFunction"
 LINEAR_TIMER_FUNCTION = "LinearTimer Function"
 ACCELERATING_TIMER_FUNCTION = "AcceleratingTimer Function"
 DECELERATING_TIMER_FUNCTION = "DeceleratingTimer Function"
@@ -1096,7 +1098,6 @@ HETERO = 'hetero'
 
 #region ----------------------------------------------    FUNCTION   ---------------------------------------------------
 
-
 # General ------------------------------------------------
 
 FUNCTION_PARAMETER_PREFIX = 'func_'
@@ -1209,7 +1210,11 @@ NETWORK = 'network'
 
 GAMMA = 'gamma'
 
+TRAJECTORY = 'trajectory'
+
 #endregion
+
+#region ----------------------------------------------   MODEL_SPEC   --------------------------------------------------
 
 # model spec keywords
 MODEL_SPEC_ID_TYPE = 'type'
@@ -1236,3 +1241,5 @@ MODEL_SPEC_ID_SHAPE = 'shape'
 MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION = 'input_combination_function'
 
 SHARED_COMPONENT_TYPES = 'shared_component_types'
+
+#endregion
