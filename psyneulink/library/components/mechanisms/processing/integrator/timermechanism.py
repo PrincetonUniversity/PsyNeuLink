@@ -26,12 +26,14 @@ Contents
 Overview
 --------
 
-A TimerMechanism is a form of `IntegratorMechanism` that starts at a specified `value <Mechanism_Base.value>`, that
-is changed monotonically each time it is executed, until it reaches a specified end value. The path that its change
-in `value <Mechanism_Base.value>` takes is specified by its `trajectory <TimerMechanism.trajectory>` Function. If
-it receives an imput, the timer is advanced by that ammount; otherwise it is advanced by the value of its `increment
-<TimerMechanism.increment>` parameter. It can be reset to its starting value by calling its `reset
-<TimerMechanism.reset>` method, or by modulating its `reset <TimerMechanism.reset>` Parameter with a `ControlSignal`.
+A TimerMechanism is a type of `IntegratorMechanism` the `value <Mechanism_Base.value>` of which begins at a specified
+`start <TimerMechanism.start>` value, is changed monotonically each time it is executed, until it reaches a specified
+`end <TimerMechanism.end>` value.  The number of executions it takes to do so is determined by a combination of its
+`duration <TimerMechanism.duration>` and `increment <TimerMechanism.increment>` parameters, and whether or not it
+recieves any input, and the path that its `value <Mechanism_Base.value>` takes is specified by its `trajectory
+<TimerMechanism.trajectory>` Function (see `TimerMechanism_Execution`). It can be reset to its starting value by
+calling its `reset <TimerMechanism.reset>` method, or by modulating its `reset <TimerMechanism.reset>` Parameter with
+a `ControlSignal`.
 
 A TimerMechanism can be used to implement a variety of time-based processes, such as the collapse of a boundary over
 time, or the rise of a value to a threshold. It can also be configured to execute multiple such processes in parallel,
@@ -167,9 +169,9 @@ class TimerMechanism(IntegratorMechanism):
     TimerMechanism(                             \
         start=0,                                \
         increment=1,                            \
+        end=1,                                  \
         function=SimpleIntegrator(rate=1),      \
         trajectory=LinearTimer,                 \
-        threshold=1,                            \
         duration=1)
 
     Subclass of `IntegratorMechanism` that advances its input until it reaches a specified value.
@@ -197,7 +199,7 @@ class TimerMechanism(IntegratorMechanism):
     trajectory : TransferFunction or UserDefinedFunction : default LinearTimer
         specifies the shape of the timer's trajectory; must be a supported `TransferFunction` (see XXX
 
-    threshold : scalar, list or array : default 1
+    end : scalar, list or array : default 1
         specifies the value of its `trajectory <TimerMechamism.trajectory>` function at which the timer stops advancing;
         if a list or array, the length must be the same as specified for **default_variable** or **input_shapes** (see
         `TimerMechanism_Execution` for additional details).
@@ -234,7 +236,7 @@ class TimerMechanism(IntegratorMechanism):
         <TimerMechanism.function>` to generate its output; this determines the shape of the trajectory
         of the TimerMechanism's `value <Mechanism_Base.value>`.
 
-    threshold : scalar, list or array : default 1
+    end : scalar, list or array : default 1
         determines the value of its `trajectory <TimerMechamism.trajectory>` function at which the timer stops
         advancing; if a list or array, the length must be the same as specified for **default_variable** or
         **input_shapes** (see `TimerMechanism_Execution` for additional details).
@@ -297,8 +299,8 @@ class TimerMechanism(IntegratorMechanism):
                     :default value: 0
                     :type: `float`
 
-                threshold
-                    see `threshold <TimerMechanism.threshold>`
+                end
+                    see `end <TimerMechanism.end>`
 
                     :default value: 1
                     :type: `float`
@@ -313,7 +315,7 @@ class TimerMechanism(IntegratorMechanism):
         trajectory = Parameter(LinearTimer, stateful=False, loggable=False)
         start = FunctionParameter(0, function_name='trajectory', function_parameter_name='initial', primary=True)
         increment = FunctionParameter(1, function_name='function', function_parameter_name='rate', primary=True)
-        threshold = FunctionParameter(1, function_name='trajectory', function_parameter_name='final', primary=True )
+        end = FunctionParameter(1, function_name='trajectory', function_parameter_name='final', primary=True )
         duration = FunctionParameter(1, function_name='trajectory', function_parameter_name='duration', primary=True )
         finished = Parameter(False, stateful=True, loggable=True)
 
@@ -330,8 +332,8 @@ class TimerMechanism(IntegratorMechanism):
             if not isinstance(increment, (int, float, list, np.ndarray)):
                 return f'must be an int, float or a list or array of either'
 
-        def _validate_threshold(self, threshold):
-            if not isinstance(threshold, (int, float, list, np.ndarray)):
+        def _validate_end(self, end):
+            if not isinstance(end, (int, float, list, np.ndarray)):
                 return f'must be an int, float or a list or array of either'
 
         def _validate_durat(self, duration):
@@ -350,7 +352,7 @@ class TimerMechanism(IntegratorMechanism):
                  increment:Optional[Union[int, float, list, np.ndarray]]=None,
                  function:Optional[IntegratorFunction]=None,
                  trajectory:Optional[TimerFunction]=None,
-                 threshold:Optional[Union[int, float, list, np.ndarray]]=None,
+                 end:Optional[Union[int, float, list, np.ndarray]]=None,
                  duration:Optional[Union[int, float, list, np.ndarray]]=None,
                  params=None,
                  name=None,
@@ -367,7 +369,7 @@ class TimerMechanism(IntegratorMechanism):
                                              increment=increment,
                                              function=function,
                                              trajectory=trajectory,
-                                             threshold=threshold,
+                                             end=end,
                                              duration=duration,
                                              finished=False,
                                              params=params,
