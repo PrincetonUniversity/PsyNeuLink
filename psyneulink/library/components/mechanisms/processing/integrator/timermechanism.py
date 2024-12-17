@@ -364,15 +364,15 @@ class TimerMechanism(IntegratorMechanism):
     def __init__(self,
                  default_variable=None,
                  input_shapes=None,
-                 start:Optional[Union[int, float, list, np.ndarray]]=None,
-                 increment:Optional[Union[int, float, list, np.ndarray]]=None,
-                 function:Optional[IntegratorFunction]=None,
-                 trajectory:Optional[TimerFunction]=None,
-                 end:Optional[Union[int, float, list, np.ndarray]]=None,
-                 duration:Optional[Union[int, float, list, np.ndarray]]=None,
+                 start=None,
+                 increment=None,
+                 function=None,
+                 trajectory=None,
+                 end=None,
+                 duration=None,
                  params=None,
                  name=None,
-                 prefs:   Optional[ValidPrefSet] = None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs):
         """Assign type-level preferences, default input value (SigmoidLayer_DEFAULT_BIAS) and call super.__init__
         """
@@ -406,7 +406,7 @@ class TimerMechanism(IntegratorMechanism):
         # No need to reset during initialization (which will occur if **reset_default** != 0)
         if not self.is_initializing:
 
-            if x == self.parameters.duration.get(context):
+            if x >= self.parameters.duration.get(context):
                 self.parameters.finished._set(True, context)
 
             if np.array(self._get_current_parameter_value(RESET,context)).squeeze():
