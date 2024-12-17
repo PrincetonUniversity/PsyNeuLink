@@ -583,10 +583,10 @@ class AcceleratingTimer(TimerFunction):
         AcceleratingTimer rise transform of variable : number or array
 
         """
-        initial = self._get_current_parameter_value('initial', context)
-        final = self._get_current_parameter_value('final', context)
-        duration = self._get_current_parameter_value('duration', context)
-        rate = self._get_current_parameter_value('rate', context)
+        initial = self._get_current_parameter_value(INITIAL, context)
+        final = self._get_current_parameter_value(FINAL, context)
+        duration = self._get_current_parameter_value(DURATION, context)
+        rate = self._get_current_parameter_value(RATE, context)
 
         result = (initial + (final - initial) * np.power((variable / duration),rate)
                   * np.exp(np.power((variable / duration),rate) - 1))
@@ -618,9 +618,9 @@ class AcceleratingTimer(TimerFunction):
         return  ((final - initial) *
                  (rate * (input / duration)^(rate - 1)
                   * ((1 / duration)
-                     * (np.exp((input / duration)^rate - 1)
-                        + ((input / duration)^rate)
-                        * np.exp((input / duration)^rate - 1) * rate * 1 / duration))))
+                     * (np.exp(np.power((input / duration),rate) - 1)
+                        + (np.power((input / duration),rate))
+                        * np.exp(np.power((input / duration),rate) - 1) * rate * 1 / duration))))
 
     # FIX:
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
@@ -661,7 +661,8 @@ class AcceleratingTimer(TimerFunction):
         duration = self._get_pytorch_fct_param_value(DURATION, device, context)
         rate = self._get_pytorch_fct_param_value(RATE, device, context)
 
-        return lambda x : initial + (final - initial) * (x / duration)^rate * torch.exp((x / duration)^rate - 1)
+        return lambda x : (initial + (final - initial) * torch.power((x / duration),rate)
+                           * torch.exp(torch.power((x / duration),rate) - 1))
 
 
 class DeceleratingTimer(TimerFunction):  # ---------------------------------------------------------------------------
@@ -861,7 +862,7 @@ class DeceleratingTimer(TimerFunction):  # -------------------------------------
         direction = 1 if final > initial else -1
 
         result = ((initial - final - direction) /
-                  (np.log(-direction(initial - final - direction)) * (variable / duration)^rate)
+                  np.exp((np.log(-direction * (initial - final - direction)) * np.power((variable / duration),rate)))
                   + final + direction)
 
         return self.convert_output_type(result)
@@ -897,7 +898,7 @@ class DeceleratingTimer(TimerFunction):  # -------------------------------------
 
         return direction * rate * (initial - final - direction) * np.log(direction * (final - initial + direction)) * \
             (input / duration)^(rate - 1) / (duration * np.exp(np.log(direction * (final - initial + direction)) *
-                                                               (input / duration)^rate))
+                                                               np.power((input / duration),rate)))
 
     # FIX:
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
@@ -939,7 +940,7 @@ class DeceleratingTimer(TimerFunction):  # -------------------------------------
         direction = 1 if final > initial else -1
 
         return lambda x : ((initial - final - direction) /
-                           (torch.log(-direction(initial - final - direction)) * (x / duration)^rate)
+                           (torch.log(-direction(initial - final - direction)) * torch.power((x / duration),rate))
                            + final + direction)
 
 

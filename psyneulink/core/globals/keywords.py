@@ -521,6 +521,7 @@ PARAMETER = 'parameter'
 RANDOM = 'random'
 FIRST= 'first'
 LAST = 'last'
+FINAL = 'final'
 BEFORE = 'before'
 AFTER = 'after'
 START = 'start'
@@ -583,7 +584,6 @@ VALIDATION = 'VALIDATION'
 EXECUTION = 'EXECUTION'
 PROCESSING = 'PROCESSING'
 VALUE_ASSIGNMENT = 'VALUE_ASSIGNMENT'
-FINAL = 'FINAL'
 
 #endregion
 

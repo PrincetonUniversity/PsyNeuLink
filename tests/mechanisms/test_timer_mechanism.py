@@ -375,6 +375,8 @@ class TestTimerFunctions:
     timer_test_data = [
         (AcceleratingTimer, .1, .3, .3, .1, (0.13422781, 0.19553751, .3, .3, .3)),
         (AcceleratingTimer, 1, 3, 3, 1, (1.3422781, 1.9553751, 3, 3, 3))
+        (DeceleratingTimer, .1, .3, .3, .1, (0.13422781, 0.19553751, .3, .3, .3)),
+        (DeceleratingTimer, 1, 3, 3, 1, (1.3422781, 1.9553751, 3, 3, 3))
     ]
 
     @pytest.mark.mechanism
