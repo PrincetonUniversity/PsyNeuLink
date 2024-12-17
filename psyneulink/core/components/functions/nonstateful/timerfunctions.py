@@ -179,8 +179,7 @@ class TimerFunction(TransferFunction):  # --------------------------------------
 
 
 class LinearTimer(TimerFunction):
-    """
-    LinearTimer(           \
+    """LinearTimer(        \
          default_variable, \
          initial=0.0,      \
          final=1.0,        \
@@ -201,9 +200,9 @@ class LinearTimer(TimerFunction):
     such that:
 
     .. math::
-        value=initial \ for\ variable=0
+        value=initial \\ for\\ variable=0
 
-        value=final\ for\ variable=duration
+        value=final\\ for\\ variable=duration
 
     where:
 
@@ -381,6 +380,7 @@ class LinearTimer(TimerFunction):
         initial = pnlvm.helpers.load_extract_scalar_array_one(builder, initial_ptr)
         final = pnlvm.helpers.load_extract_scalar_array_one(builder, final_ptr)
         duration = pnlvm.helpers.load_extract_scalar_array_one(builder, duration_ptr)
+        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
         val = builder.load(ptri)
@@ -433,9 +433,9 @@ class AcceleratingTimer(TimerFunction):
     such that:
 
     .. math::
-        value=initial \ for\ variable=0
+        value=initial \\ for\\ variable=0
 
-        value=final\ for\ variable=duration
+        value=final\\ for\\ variable=duration
 
     where:
 
@@ -684,16 +684,16 @@ class DeceleratingTimer(TimerFunction):  # -------------------------------------
     <DeceleratingTimer.variable>`:
 
     .. math::
-       \\frac{\\left(initial-final-direction\\right)}{e^{\\ln\\left(-direction\\left(initial\ -\\
+       \\frac{\\left(initial-final-direction\\right)}{e^{\\ln\\left(-direction\\left(initial\\ -\\
        final-direction\\right)\\right)\\left(\\frac{variable}{duration}\\right)^{
        rate}}}+final+direction
 
     such that:
 
     .. math::
-        value = initial + offset\ for\ variable=0
+        value = initial + offset\\ for\\ variable=0
 
-        value = (initial * final) + offset\ for\ variable=duration
+        value = (initial * final) + offset\\ for\\ variable=duration
 
     where:
 
@@ -971,9 +971,9 @@ class AsymptoticTimer(TimerFunction):  # ---------------------------------------
     such that:
 
     .. math::
-        value = initial for\ variable=0
+        value = initial for\\ variable=0
 
-        value = ((initial - final) \\cdot tolerance) for\ variable=duration
+        value = ((initial - final) \\cdot tolerance) for\\ variable=duration
 
     where:
 
