@@ -3591,7 +3591,7 @@ class SoftMax(TransferFunction):
                 _mask = (torch.abs(_input) > mask_threshold)
                 # Subtract off the max value in the input to eliminate extreme values, exponentiate, and apply mask
                 masked_exp = _mask * torch.exp(gain * (_input - torch.max(_input, -1, keepdim=True)[0]))
-                if not any(masked_exp):
+                if (masked_exp == 0).all():
                     return masked_exp
                 return masked_exp / torch.sum(masked_exp, -1, keepdim=True)
             # Return the function
