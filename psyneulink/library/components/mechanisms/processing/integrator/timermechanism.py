@@ -356,9 +356,6 @@ class TimerMechanism(IntegratorMechanism):
             if not isinstance(duration, (int, float, list, np.ndarray)):
                 return f'must be an int, float or a list or array of either'
 
-
-        # FIX: WRITE VALIDATION METHODS HERE AND REMOVE TYPE HINTS BELOWx`
-
     @check_user_specified
     @beartype
     def __init__(self,
@@ -399,7 +396,6 @@ class TimerMechanism(IntegratorMechanism):
         x = super()._execute(variable=variable, context=context, runtime_params=runtime_params, **kwargs)
         y = self.trajectory(x)
 
-        # FIX: WHY IS THIS AFTER RATHER THAN BEFORE EXECUTION?
         # No need to reset during initialization (which will occur if **reset_default** != 0)
         if not self.is_initializing:
 
