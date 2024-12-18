@@ -406,7 +406,7 @@ class TimerMechanism(IntegratorMechanism):
         # No need to reset during initialization (which will occur if **reset_default** != 0)
         if not self.is_initializing:
 
-            if x >= self.parameters.duration.get(context):
+            if np.allclose(x,self.parameters.duration.get(context)):
                 self.parameters.finished._set(True, context)
 
             if np.array(self._get_current_parameter_value(RESET,context)).squeeze():
