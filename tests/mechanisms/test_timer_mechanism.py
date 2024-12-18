@@ -397,4 +397,4 @@ class TestTimerFunctions:
                                increment=increment,
                                duration=duration)
         for i in range(len(expected) - 1):
-            np.testing.assert_allclose(timer.execute(1), expected[i])
+            np.testing.assert_allclose(timer.execute(), expected[i])
