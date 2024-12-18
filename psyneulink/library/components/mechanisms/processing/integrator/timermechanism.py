@@ -29,8 +29,8 @@ Overview
 A TimerMechanism is a type of `IntegratorMechanism` the `value <Mechanism_Base.value>` of which begins at a specified
 `start <TimerMechanism.start>` value, is changed monotonically each time it is executed, until it reaches a specified
 `end <TimerMechanism.end>` value.  The number of executions it takes to do so is determined by a combination of its
-`duration <TimerMechanism.duration>` and `increment <TimerMechanism.increment>` parameters and whether or not it
-receives any input; nand the path that its `value <Mechanism_Base.value>` takes is determined by its `trajectory
+`duration <TimerMechanism.duration>` and `increment <TimerMechanism.increment>` parameters, and whether or not it
+receives any input; and the path that its `value <Mechanism_Base.value>` takes is determined by its `trajectory
 <TimerMechanism.trajectory>` Function. It can be reset to its starting value by calling its `reset
 <TimerMechanism.reset>` method, or by modulating its `reset <TimerMechanism.reset>` Parameter with a `ControlSignal`.
 
@@ -116,9 +116,13 @@ as its output; otherwise, it generates an array of values, each element of which
 corresponding element of the timer array.
 
 The TimerMechanism stops advancing after the `value <Function_Base.value>` of its `function <TimerMechanism.function>`
-equals the TimerMechanism's `duration <TimerMechanism.duration>` Parameter, at which point it `value
-<Mechanism_Base.value>` is equal to its `end <TimerMechanism.end>` Parameter, and its `finished
-<TimeMechanism.finished>` attribute is set to `True`.
+equals the TimerMechanism's `duration <TimerMechanism.duration>` Parameter.  If the TimerMechanism receives no input,
+then it will stop advancing after the number of executions = `duration <TimerMechanism.duration>` / `increment
+<TimerMechanism.increment>`.  If the TimerMechanism receives input, then the number of executions is determined by the
+number of times it is executed, and the amount of input it receives on each execution.  When the TimerMechanism stops
+advancing, it sets its `finished <TimerMechanism.finished>` attribute to `True`, and its `value <Mechanism_Base.value>`
+remains equal to its `end <TimerMechanism.end>` on any further executions, unless it is reset.  If the TimerMechanism
+is reset, its `value <Mechanism_Base.value>` is set to its `start <TimerMechanism.start>` value.
 
     .. hint::
        A TimerMechanism's `finished <TimerMechanism.finished>` attribute can be used together with a `Scheduler`
