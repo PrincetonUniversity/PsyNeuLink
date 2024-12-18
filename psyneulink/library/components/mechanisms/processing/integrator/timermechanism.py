@@ -179,6 +179,9 @@ __all__ = [
 # TimerMechanism parameter keywords:
 DEFAULT_RATE = 1
 
+def _increment_setter(value, owning_component=None, context=None):
+    owning_component.defaults.variable = value
+
 class TimerMechanismError(MechanismError):
     pass
 
@@ -334,7 +337,8 @@ class TimerMechanism(IntegratorMechanism):
         function = Parameter(SimpleIntegrator, stateful=False, loggable=False)
         trajectory = Parameter(LinearTimer, stateful=False, loggable=False)
         start = FunctionParameter(0, function_name='trajectory', function_parameter_name='initial', primary=True)
-        increment = FunctionParameter(.01, function_name='function', function_parameter_name='rate', primary=True)
+        increment = FunctionParameter(.01, function_name='function', function_parameter_name='rate', primary=True,
+                                      setter=_increment_setter)
         end = FunctionParameter(1, function_name='trajectory', function_parameter_name='final', primary=True )
         duration = FunctionParameter(1, function_name='trajectory', function_parameter_name='duration', primary=True )
         finished = Parameter(False, stateful=True, loggable=True)
