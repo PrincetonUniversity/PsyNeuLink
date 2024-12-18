@@ -372,6 +372,7 @@ class TestTimerFunctions:
 
 
     arg_names = ('timer_function', 'start','end','duration','increment','expected')
+    # Note: the values below have been independently verified against those in the Desmos graphing calculator
     timer_test_data = [
         (LinearTimer, .1, .4, .3, .1, (.2, .3, .4, .4)),
         (LinearTimer, 1, 4, 3, 1, (2, 3, 4, 4)),
@@ -395,5 +396,5 @@ class TestTimerFunctions:
                                end=end,
                                increment=increment,
                                duration=duration)
-        for i in range(len(expected)-1):
+        for i in range(len(expected) - 1):
             np.testing.assert_allclose(timer.execute(1), expected[i])
