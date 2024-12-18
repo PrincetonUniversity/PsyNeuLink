@@ -377,8 +377,6 @@ class TimerMechanism(IntegratorMechanism):
         """Assign type-level preferences, default input value (SigmoidLayer_DEFAULT_BIAS) and call super.__init__
         """
 
-        # FIX: ASSIGN start -> initializer, increment -> rate, end -> is_finished
-
         super(TimerMechanism, self).__init__(default_variable=default_variable,
                                              input_shapes=input_shapes,
                                              start=start,
@@ -392,7 +390,6 @@ class TimerMechanism(IntegratorMechanism):
                                              name=name,
                                              prefs=prefs,
                                              **kwargs)
-        assert True
 
     def _execute(self, variable=None, context=None, runtime_params=None, **kwargs):
         """Override to check for call to reset by ControlSignal"""
