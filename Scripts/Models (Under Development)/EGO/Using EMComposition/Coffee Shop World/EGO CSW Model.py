@@ -174,7 +174,7 @@ EMFieldsIndex = IntEnum('EMFields',
                          'CONTEXT',
                          'PREVIOUS STATE'],
                         start=0)
-state_retrieval_weight = 0
+state_retrieval_weight = None
 RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projections
 
 if is_numeric_scalar(model_params['softmax_temperature']):      # translate to gain of softmax retrieval function
@@ -194,7 +194,7 @@ def construct_model(model_name:str=model_params['name'],
                     state_size:int=model_params['state_d'],
 
                     # Previous state
-                    previous_state_input_name:str=model_params['previous_state_layer_name'],
+                    previous_state_name:str=model_params['previous_state_layer_name'],
 
                     # Context representation (learned):
                     context_name:str=model_params['context_layer_name'],
@@ -205,13 +205,15 @@ def construct_model(model_name:str=model_params['name'],
                     em_name:str=model_params['em_name'],
                     retrieval_softmax_gain=retrieval_softmax_gain,
                     retrieval_softmax_threshold=model_params['softmax_threshold'],
-                    state_retrieval_weight:Union[float,int]=state_retrieval_weight,
-                    previous_state_retrieval_weight:Union[float,int]=model_params['state_weight'],
+                    # state_retrieval_weight:Union[float,int]=state_retrieval_weight,
+                    # previous_state_retrieval_weight:Union[float,int]=model_params['state_weight'],
+                    state_retrieval_weight:Union[float,int]=model_params['state_weight'],
+                    previous_state_retrieval_weight:Union[float,int]=model_params['previous_state_weight'],
                     context_retrieval_weight:Union[float,int]=model_params['context_weight'],
                     normalize_field_weights = model_params['normalize_field_weights'],
                     normalize_memories = model_params['normalize_memories'],
                     concatenate_queries = model_params['concatenate_queries'],
-                    learn_field_weights = model_params['learn_field_weights'],
+                    enable_learning = model_params['enable_learning'],
                     memory_capacity = memory_capacity,
                     memory_init=model_params['memory_init'],
 
@@ -220,7 +222,7 @@ def construct_model(model_name:str=model_params['name'],
 
                     # Learning
                     loss_spec=model_params['loss_spec'],
-                    enable_learning=model_params['enable_learning'],
+                    # target_fields=model_params['target_fields'],
                     learning_rate = model_params['learning_rate'],
                     device=model_params['device']
 
@@ -234,7 +236,7 @@ def construct_model(model_name:str=model_params['name'],
     # ----------------------------------------------------------------------------------------------------------------
 
     state_input_layer = ProcessingMechanism(name=state_input_name, input_shapes=state_size)
-    previous_state_layer = ProcessingMechanism(name=previous_state_input_name, input_shapes=state_size)
+    previous_state_layer = ProcessingMechanism(name=previous_state_name, input_shapes=state_size)
     # context_layer = ProcessingMechanism(name=context_name, input_shapes=context_size)
     context_layer = TransferMechanism(name=context_name,
                                       input_shapes=context_size,
@@ -242,15 +244,27 @@ def construct_model(model_name:str=model_params['name'],
                                       integrator_mode=True,
                                       integration_rate=integration_rate)
 
+
+
     em = EMComposition(name=em_name,
                        memory_template=[[0] * state_size,   # state
                                         [0] * state_size,   # previous state
                                         [0] * state_size],  # context
                        memory_fill=memory_init,
                        memory_capacity=memory_capacity,
+                       normalize_memories=False,
                        memory_decay_rate=0,
                        softmax_gain=retrieval_softmax_gain,
                        softmax_threshold=retrieval_softmax_threshold,
+                       fields = {state_input_name: {FIELD_WEIGHT: state_retrieval_weight,
+                                                    LEARN_FIELD_WEIGHT: False,
+                                                    TARGET_FIELD: True},
+                                 previous_state_name: {FIELD_WEIGHT:previous_state_retrieval_weight,
+                                                       LEARN_FIELD_WEIGHT: False,
+                                                       TARGET_FIELD: False},
+                                 context_name: {FIELD_WEIGHT:context_retrieval_weight,
+                                                LEARN_FIELD_WEIGHT: False,
+                                                TARGET_FIELD: False}},
                        # Input Nodes:
                        # field_names=[state_input_name,
                        #              previous_state_input_name,
@@ -260,20 +274,20 @@ def construct_model(model_name:str=model_params['name'],
                        #                previous_state_retrieval_weight,
                        #                context_retrieval_weight
                        #                ),
-                       field_names=[previous_state_input_name,
-                                    context_name,
-                                    state_input_name,
-                                    ],
-                       field_weights=(previous_state_retrieval_weight,
-                                      context_retrieval_weight,
-                                      state_retrieval_weight,
-                                      ),
+                       # field_names=[previous_state_input_name,
+                       #              context_name,
+                       #              state_input_name,
+                       #              ],
+                       # field_weights=(previous_state_retrieval_weight,
+                       #                context_retrieval_weight,
+                       #                state_retrieval_weight,
+                       #                ),
                        normalize_field_weights=normalize_field_weights,
                        normalize_memories=normalize_memories,
                        concatenate_queries=concatenate_queries,
-                       learn_field_weights=learn_field_weights,
-                       learning_rate=learning_rate,
                        enable_learning=enable_learning,
+                       learning_rate=learning_rate,
+                       # target_fields=target_fields,
                        device=device
                        )
 
@@ -313,7 +327,7 @@ def construct_model(model_name:str=model_params['name'],
                            em]
     previous_state_to_em_pathway = [previous_state_layer,
                                     MappingProjection(sender=previous_state_layer,
-                                                      receiver=em.nodes[previous_state_input_name+QUERY],
+                                                      receiver=em.nodes[previous_state_name+QUERY],
                                                       matrix=IDENTITY_MATRIX,
                                                       learnable=False),
                                     em]

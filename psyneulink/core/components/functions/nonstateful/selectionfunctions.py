@@ -187,7 +187,7 @@ class OneHot(SelectionFunction):
         First (possibly only) item specifies a template for the array to be transformed;  if `mode <OneHot.mode>` is
         *PROB* then a 2nd item must be included that is a probability distribution with same length as 1st item.
 
-    mode : DETERMINISITC, PROB, PROB_INDICATOR,
+    mode : DETERMINISTiC, PROB, PROB_INDICATOR,
     ARG_MAX, ARG_MAX_ABS, ARG_MAX_INDICATOR, ARG_MAX_ABS_INDICATOR,
     ARG_MIN, ARG_MIN_ABS, ARG_MIN_INDICATOR, ARG_MIN_ABS_INDICATOR,
     MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
@@ -237,7 +237,7 @@ class OneHot(SelectionFunction):
         distribution, each element of which specifies the probability for selecting the corresponding element of the
         1st item.
 
-    mode : DETERMINISITC, PROB, PROB_INDICATOR,
+    mode : DETERMINISTIC, PROB, PROB_INDICATOR,
     ARG_MAX, ARG_MAX_ABS, ARG_MAX_INDICATOR, ARG_MAX_ABS_INDICATOR,
     ARG_MIN, ARG_MIN_ABS, ARG_MIN_INDICATOR, ARG_MIN_ABS_INDICATOR,
     MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
@@ -421,86 +421,25 @@ class OneHot(SelectionFunction):
                                     f"cannot be specified.")
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        best_idx_ptr = builder.alloca(ctx.int32_ty)
-        builder.store(best_idx_ptr.type.pointee(0), best_idx_ptr)
-
         if self.mode in {PROB, PROB_INDICATOR}:
+
             sum_ptr = builder.alloca(ctx.float_ty)
             builder.store(sum_ptr.type.pointee(-0.0), sum_ptr)
 
-            random_draw_ptr = builder.alloca(ctx.float_ty)
             rand_state_ptr = ctx.get_random_state_ptr(builder, self, state, params)
             rng_f = ctx.get_uniform_dist_function_by_state(rand_state_ptr)
+            random_draw_ptr = builder.alloca(rng_f.args[-1].type.pointee)
             builder.call(rng_f, [rand_state_ptr, random_draw_ptr])
             random_draw = builder.load(random_draw_ptr)
 
             prob_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
             arg_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "search") as (b1, idx):
-            best_idx = b1.load(best_idx_ptr)
-            best_ptr = b1.gep(arg_in, [ctx.int32_ty(0), best_idx])
+            with pnlvm.helpers.array_ptr_loop(builder, arg_in, "search") as (b1, idx):
 
-            current_ptr = b1.gep(arg_in, [ctx.int32_ty(0), idx])
-            current = b1.load(current_ptr)
+                current_ptr = b1.gep(arg_in, [ctx.int32_ty(0), idx])
+                current = b1.load(current_ptr)
 
-            if self.mode not in {PROB, PROB_INDICATOR}:
-                fabs = ctx.get_builtin("fabs", [current.type])
-
-                is_first = b1.icmp_unsigned("==", idx, idx.type(0))
-
-                # Allow the first element to win the comparison
-                prev_best = b1.select(is_first, best_ptr.type.pointee(float("NaN")), b1.load(best_ptr))
-
-            if self.mode == ARG_MAX:
-                cmp_op = ">"
-                cmp_prev = prev_best
-                cmp_curr = current
-                val = current
-
-            elif self.mode == ARG_MAX_ABS:
-                cmp_op = ">"
-                cmp_prev = b1.call(fabs, [prev_best])
-                cmp_curr = b1.call(fabs, [current])
-                val = b1.call(fabs, [current])
-
-            elif self.mode == ARG_MAX_INDICATOR:
-                cmp_op = ">"
-                cmp_prev = prev_best
-                cmp_curr = current
-                val = current.type(1.0)
-
-            elif self.mode == ARG_MAX_ABS_INDICATOR:
-                cmp_op = ">"
-                cmp_prev = b1.call(fabs, [prev_best])
-                cmp_curr = b1.call(fabs, [current])
-                val = current.type(1.0)
-
-            elif self.mode == ARG_MIN:
-                cmp_op = "<"
-                cmp_prev = prev_best
-                cmp_curr = current
-                val = current
-
-            elif self.mode == ARG_MIN_ABS:
-                cmp_op = "<"
-                cmp_prev = b1.call(fabs, [prev_best])
-                cmp_curr = b1.call(fabs, [current])
-                val = b1.call(fabs, [current])
-
-            elif self.mode == ARG_MIN_INDICATOR:
-                cmp_op = "<"
-                cmp_prev = prev_best
-                cmp_curr = current
-                val = current.type(1.0)
-
-            elif self.mode == ARG_MIN_ABS_INDICATOR:
-                cmp_op = "<"
-                cmp_prev = b1.call(fabs, [prev_best])
-                cmp_curr = b1.call(fabs, [current])
-                val = current.type(1.0)
-
-            elif self.mode in {PROB, PROB_INDICATOR}:
                 # Update prefix sum
                 current_prob_ptr = b1.gep(prob_in, [ctx.int32_ty(0), idx])
                 sum_old = b1.load(sum_ptr)
@@ -511,27 +450,125 @@ class OneHot(SelectionFunction):
                 new_above = b1.fcmp_ordered("<", random_draw, sum_new)
                 cond = b1.and_(new_above, old_below)
 
-                cmp_prev = current.type(1.0)
-                cmp_curr = b1.select(cond, cmp_prev, cmp_prev.type(0.0))
-                cmp_op = "=="
                 if self.mode == PROB:
                     val = current
                 else:
                     val = current.type(1.0)
-            else:
-                assert False, "Unsupported mode in LLVM: {} for OneHot Function".format(self.mode)
 
-            prev_res_ptr = b1.gep(arg_out, [ctx.int32_ty(0), best_idx])
-            cur_res_ptr = b1.gep(arg_out, [ctx.int32_ty(0), idx])
+                write_val = b1.select(cond, val, val.type(0.0))
+                cur_res_ptr = b1.gep(arg_out, [ctx.int32_ty(0), idx])
+                builder.store(write_val, cur_res_ptr)
 
-            # Make sure other elements are zeroed
-            builder.store(cur_res_ptr.type.pointee(0), cur_res_ptr)
+            return builder
 
-            cmp_res = builder.fcmp_unordered(cmp_op, cmp_curr, cmp_prev)
-            with builder.if_then(cmp_res):
-                builder.store(prev_res_ptr.type.pointee(0), prev_res_ptr)
-                builder.store(val, cur_res_ptr)
-                builder.store(idx, best_idx_ptr)
+        elif self.mode == DETERMINISTIC:
+            direction = self.direction
+            tie = self.tie
+            abs_val_ptr = ctx.get_param_or_state_ptr(builder, self, self.parameters.abs_val, param_struct_ptr=params)
+            indicator_ptr = ctx.get_param_or_state_ptr(builder, self, self.parameters.indicator, param_struct_ptr=params)
+
+            abs_val = builder.load(abs_val_ptr)
+            is_abs_val = builder.fcmp_unordered("!=", abs_val, abs_val.type(0))
+
+            indicator = builder.load(indicator_ptr)
+            is_indicator = builder.fcmp_unordered("!=", indicator, indicator.type(0))
+
+        else:
+            direction, abs_val, indicator, tie = self._parse_mode(self.mode)
+            is_abs_val = ctx.bool_ty(abs_val)
+            is_indicator = ctx.bool_ty(indicator)
+
+        num_extremes_ptr = builder.alloca(ctx.int32_ty)
+        builder.store(num_extremes_ptr.type.pointee(0), num_extremes_ptr)
+
+        extreme_val_ptr = builder.alloca(ctx.float_ty)
+        builder.store(extreme_val_ptr.type.pointee(float("NaN")), extreme_val_ptr)
+
+        fabs_f = ctx.get_builtin("fabs", [extreme_val_ptr.type.pointee])
+
+        with pnlvm.helpers.recursive_iterate_arrays(ctx, builder, arg_in, loop_id="count_extremes") as (loop_builder, current_ptr):
+
+            current = loop_builder.load(current_ptr)
+            current_abs = loop_builder.call(fabs_f, [current])
+            current = builder.select(is_abs_val, current_abs, current)
+
+            old_extreme = loop_builder.load(extreme_val_ptr)
+            cmp_op = ">" if direction == MAX else "<"
+            is_new_extreme = loop_builder.fcmp_unordered(cmp_op, current, old_extreme)
+
+            with loop_builder.if_then(is_new_extreme):
+                loop_builder.store(current, extreme_val_ptr)
+                loop_builder.store(num_extremes_ptr.type.pointee(1), num_extremes_ptr)
+
+            is_old_extreme = loop_builder.fcmp_ordered("==", current, old_extreme)
+            with loop_builder.if_then(is_old_extreme):
+                extreme_count = loop_builder.load(num_extremes_ptr)
+                extreme_count = loop_builder.add(extreme_count, extreme_count.type(1))
+                loop_builder.store(extreme_count, num_extremes_ptr)
+
+
+        if tie == FIRST:
+            extreme_start = num_extremes_ptr.type.pointee(0)
+            extreme_stop = num_extremes_ptr.type.pointee(1)
+
+        elif tie == LAST:
+            extreme_stop = builder.load(num_extremes_ptr)
+            extreme_start = builder.sub(extreme_stop, extreme_stop.type(1))
+
+        elif tie == ALL:
+            extreme_start = num_extremes_ptr.type.pointee(0)
+            extreme_stop = builder.load(num_extremes_ptr)
+
+        elif tie == RANDOM:
+            rand_state_ptr = ctx.get_random_state_ptr(builder, self, state, params)
+            rand_f = ctx.get_rand_int_function_by_state(rand_state_ptr)
+            random_draw_ptr = builder.alloca(rand_f.args[-1].type.pointee)
+            num_extremes = builder.load(num_extremes_ptr)
+
+            builder.call(rand_f, [rand_state_ptr, ctx.int32_ty(0), num_extremes, random_draw_ptr])
+
+            extreme_start = builder.load(random_draw_ptr)
+            extreme_start = builder.trunc(extreme_start, ctx.int32_ty)
+            extreme_stop = builder.add(extreme_start, extreme_start.type(1))
+
+        else:
+            assert False, "Unknown tie resolution: {}".format(tie)
+
+
+        extreme_val = builder.load(extreme_val_ptr)
+        extreme_write_val = builder.select(is_indicator, extreme_val.type(1), extreme_val)
+        next_extreme_ptr = builder.alloca(num_extremes_ptr.type.pointee)
+        builder.store(next_extreme_ptr.type.pointee(0), next_extreme_ptr)
+
+        pnlvm.helpers.printf(ctx,
+                             builder,
+                             "{} replacing extreme values of %e from <%u,%u) out of %u\n".format(self.name),
+                             extreme_val,
+                             extreme_start,
+                             extreme_stop,
+                             builder.load(num_extremes_ptr),
+                             tags={"one_hot"})
+
+        with pnlvm.helpers.recursive_iterate_arrays(ctx, builder, arg_in, arg_out, loop_id="mark_extremes") as (loop_builder, current_ptr, out_ptr):
+            current = loop_builder.load(current_ptr)
+            current_abs = loop_builder.call(fabs_f, [current])
+            current = builder.select(is_abs_val, current_abs, current)
+
+            is_extreme = loop_builder.fcmp_ordered("==", current, extreme_val)
+            current_extreme_idx = loop_builder.load(next_extreme_ptr)
+
+            with loop_builder.if_then(is_extreme):
+                next_extreme_idx = loop_builder.add(current_extreme_idx, current_extreme_idx.type(1))
+                loop_builder.store(next_extreme_idx, next_extreme_ptr)
+
+            is_after_start = loop_builder.icmp_unsigned(">=", current_extreme_idx, extreme_start)
+            is_before_stop = loop_builder.icmp_unsigned("<", current_extreme_idx, extreme_stop)
+
+            should_write_extreme = loop_builder.and_(is_extreme, is_after_start)
+            should_write_extreme = loop_builder.and_(should_write_extreme, is_before_stop)
+
+            write_value = loop_builder.select(should_write_extreme, extreme_write_val, extreme_write_val.type(0))
+            loop_builder.store(write_value, out_ptr)
 
         return builder
 
@@ -641,6 +678,9 @@ class OneHot(SelectionFunction):
             indicator = True
             tie = ALL
 
+        else:
+            assert False, f"Unknown mode: {mode}"
+
         return direction, abs_val, indicator, tie
 
     def _function(self,
@@ -693,65 +733,62 @@ class OneHot(SelectionFunction):
             random_value = random_state.uniform()
             chosen_item = next(element for element in cum_sum if element > random_value)
             chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)
-            if mode is PROB:
+            if mode == PROB:
                 result = v * chosen_in_cum_sum
             else:
                 result = np.ones_like(v) * chosen_in_cum_sum
+
             # chosen_item = np.random.choice(v, 1, p=prob_dist)
             # one_hot_indicator = np.where(v == chosen_item, 1, 0)
             # return v * one_hot_indicator
             return result
 
-        elif mode is not DETERMINISTIC:
+        elif mode != DETERMINISTIC:
             direction, abs_val, indicator, tie = self._parse_mode(mode)
-
-        # if np.array(variable).ndim != 1:
-        #     raise FunctionError(f"If {MODE} for {self.__class__.__name__} {Function.__name__} is not set to "
-        #                         f"'PROB' or 'PROB_INDICATOR', variable must be a 1d array: {variable}.")
 
         array = variable
 
-        max = None
-        min = None
-
         if abs_val is True:
-            array = np.absolute(array)
+            array = np.absolute(variable)
 
         if direction == MAX:
-            max = np.max(array)
-            if max == -np.inf:
-                warnings.warn(f"Array passed to {self.name} of {self.owner.name} "
-                              f"is all -inf.")
+            extreme_val = np.max(array)
+            if extreme_val == -np.inf:
+                warnings.warn(f"Array passed to {self.name} of {self.owner.name} is all -inf.")
+
+        elif direction == MIN:
+            extreme_val = np.min(array)
+            if extreme_val == np.inf:
+                warnings.warn(f"Array passed to {self.name} of {self.owner.name} is all inf.")
+
         else:
-            min = np.min(array)
-            if min == np.inf:
-                warnings.warn(f"Array passed to {self.name} of {self.owner.name} "
-                              f"is all inf.")
+            assert False, f"Unknown direction: '{direction}'."
 
-        extreme_val = max if direction == MAX else min
+        extreme_indices = np.where(array == extreme_val)
 
-        if tie == ALL:
-            if direction == MAX:
-                result = np.where(array == max, max, -np.inf)
-            else:
-                result = np.where(array == min, min, np.inf)
+        num_indices = len(extreme_indices[0])
+        assert all(len(idx) == num_indices for idx in extreme_indices)
+
+        if tie == FIRST:
+            selected_idx = 0
+
+        elif tie == LAST:
+            selected_idx = -1
+
+        elif tie == RANDOM:
+            random_state = self._get_current_parameter_value("random_state", context)
+            selected_idx = random_state.randint(num_indices)
+
+        elif tie == ALL:
+            selected_idx = slice(num_indices)
+
         else:
-            if tie == FIRST:
-                index = np.min(np.where(array == extreme_val))
-            elif tie == LAST:
-                index = np.max(np.where(array == extreme_val))
-            elif tie == RANDOM:
-                index = np.random.choice(np.where(array == extreme_val))
-            else:
-                assert False, f"PROGRAM ERROR: Unrecognized value for 'tie' in OneHot function: '{tie}'."
-            result = np.zeros_like(array)
-            result[index] = extreme_val
+            assert False, f"PROGRAM ERROR: Unrecognized value for 'tie' in OneHot function: '{tie}'."
 
-        if indicator is True:
-            result = np.where(result == extreme_val, 1, result)
-        if max is not None:
-            result = np.where(result == -np.inf, 0, result)
-        if min is not None:
-            result = np.where(result == np.inf, 0, result)
+
+        set_indices = tuple(index[selected_idx] for index in extreme_indices)
+
+        result = np.zeros_like(variable)
+        result[set_indices] = 1 if indicator else extreme_val
 
         return self.convert_output_type(result)

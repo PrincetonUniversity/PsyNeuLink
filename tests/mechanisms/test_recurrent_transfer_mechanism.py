@@ -1008,6 +1008,41 @@ class TestClip:
         np.testing.assert_allclose(R.execute([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
                            [[-2.0, -1.0, 2.0], [2.0, -2.0, 1.0], [1.0, 2.0, 2.0]])
 
+
+class TestStandardOutputPorts:
+    def test_rtn_energy(self):
+        """Test use of ENERGY OutputPort"""
+        # Get reference value
+        e = pnl.Energy(input_shapes=2, matrix=[[0,-1],[-1,0]])
+        reference = e((0.5124973964842103,0.5124973964842103))
+        assert reference == 0.26265358140309386
+
+        lca_mech = pnl.LCAMechanism( input_shapes=2, output_ports=[pnl.RESULT, pnl.ENERGY])
+        comp = pnl.Composition(lca_mech)
+        result = comp.run(inputs=[1,1])
+        energy_matrix = lca_mech.output_ports[1].function.matrix
+        energy_value = lca_mech.output_ports[1].value
+        assert (energy_matrix == [[0,-1],[-1,0]]).all()
+        assert energy_value == reference
+        assert (result[0] == [[0.5124973964842103,0.5124973964842103]]).all()
+        assert result[1] == reference
+
+    def test_rtn_entropy(self):
+        """Test use of ENTROPY OutputPort"""
+        # Get reference value
+        e = pnl.Entropy(input_shapes=2)
+        reference = e((0.5124973964842103,0.5124973964842103))
+        assert reference == 0.6851676585231217
+
+        lca_mech = pnl.LCAMechanism( input_shapes=2, output_ports=[pnl.RESULT, pnl.ENTROPY])
+        comp = pnl.Composition(lca_mech)
+        result = comp.run(inputs=[1,1])
+        entropy_value = lca_mech.output_ports[1].value
+        assert entropy_value == reference
+        assert (result[0] == [[0.5124973964842103,0.5124973964842103]]).all()
+        assert result[1] == reference
+
+
 @pytest.mark.composition
 class TestRecurrentInputPort:
 

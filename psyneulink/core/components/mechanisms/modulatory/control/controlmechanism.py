@@ -1452,7 +1452,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         if not isinstance(monitor_for_control, list):
             monitor_for_control = [monitor_for_control]
 
-        # If objective_mechanism is used to specify OutputPorts to be monitored (legacy feature)
+        # If objective_mechanism arg is used to specify OutputPorts to be monitored (legacy feature)
         #    move them to monitor_for_control
         if isinstance(self.objective_mechanism, list):
             monitor_for_control.extend(self.objective_mechanism)
