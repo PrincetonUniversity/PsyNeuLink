@@ -85,7 +85,6 @@ from beartype import beartype
 from psyneulink._typing import Optional
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.functions.nonstateful.transferfunctions import TransferFunction
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
@@ -160,14 +159,6 @@ class TimerFunction(TransferFunction):  # --------------------------------------
         final = Parameter(0.0, modulable=True)
         duration = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         rate = Parameter(1.0, modulable=True)
-
-        def _validate_initial(self, initial):
-            if initial < 0:
-                return f"must be greater than or equal to 0."
-
-        def _validate_final(self, final):
-            if final < 0:
-                return f"must be greater than or equal to 0."
 
         def _validate_duration(self, duration):
             if duration <= 0:
