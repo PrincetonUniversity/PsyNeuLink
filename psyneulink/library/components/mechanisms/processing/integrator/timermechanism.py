@@ -411,3 +411,9 @@ class TimerMechanism(IntegratorMechanism):
                 y = self.parameters.value._get(context).reshape(y.shape)
 
         return y
+
+    def reset(self, *args, force=False, context=None, **kwargs):
+        if not args:
+            args = (self.parameters.start._get(context))
+        super().reset(*args, force=force, context=context, **kwargs)
+
