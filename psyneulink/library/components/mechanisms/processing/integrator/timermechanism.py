@@ -53,12 +53,6 @@ progression is specified by it **trajectory** argument, which must be a `TimerFu
 <Mechanism_Base.value>` of the timer are specified by its **start** and **end** arguments, respectively, and the ammount
 it progresses each time the Mechanimsm is executed (in the absence of input) is specified by its **increment** argument.
 
-COMMENT:
-TBI
-The direction of its progression can be specified using the **direction** argument, which can be *INCREASING* or
-*DECREASING*.
-COMMENT
-
 .. _TimerMechanism_Structure:
 
 Structure
