@@ -414,8 +414,6 @@ class TestTimerFunctions:
         timer.reset()
         assert timer.value == 0
         np.testing.assert_allclose(timer.execute(), expected_no_input[0])
-        x = timer.execute(1.5)
-        np.testing.assert_allclose(x, expected_w_input[0])
-        x = timer.execute()
-        np.testing.assert_allclose(x, expected_w_input[1])
+        np.testing.assert_allclose(timer.execute(1.5), expected_w_input[0])
+        np.testing.assert_allclose(timer.execute(), expected_w_input[1])
 
