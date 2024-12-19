@@ -2530,7 +2530,7 @@ class Mechanism_Base(Mechanism):
                         if input is not None:
                             input = convert_all_elements_to_np_array(input)
                     if input is None:
-                        input = self.defaults.variable
+                        input = copy_parameter_value(self.defaults.variable)
                     #     FIX:  this input value is sent to input CIMs when compositions are nested
                     #           variable should be based on afferent projections
                     variable = self._get_variable_from_input(input, context)
