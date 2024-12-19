@@ -406,14 +406,14 @@ class TimerMechanism(IntegratorMechanism):
             if np.allclose(x,self.parameters.duration.get(context)):
                 self.parameters.finished._set(True, context)
 
+            # If reset Parameter has been set, reset() TimerMechanism to start value
             if np.array(self._get_current_parameter_value(RESET,context)).squeeze():
-                self.reset(context=context)
+                self.reset(self.parameters.start._get(context), context=context)
                 y = self.parameters.value._get(context).reshape(y.shape)
 
         return y
 
     def reset(self, *args, force=False, context=None, **kwargs):
-        if not args:
-            args = (self.parameters.start._get(context))
         super().reset(*args, force=force, context=context, **kwargs)
+        self.finished = False
 
