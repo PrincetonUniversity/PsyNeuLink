@@ -887,7 +887,7 @@ class DeceleratingTimer(TimerFunction):  # -------------------------------------
         rate = self._get_current_parameter_value(RATE, context)
         direction = 1 if final > initial else -1
 
-        return (direction * rate * (initial - final - direction) * np.log(direction * (final - initial + direction)) * \
+        return (direction * rate * (initial - final - direction) * np.log(direction * (final - initial + direction)) *
                 np.power((input / duration), (rate - 1))
                 / (duration * np.exp(np.log(direction * (final - initial + direction)) *
                                      np.power((input / duration), rate))))
