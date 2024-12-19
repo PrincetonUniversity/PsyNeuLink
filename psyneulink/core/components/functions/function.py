@@ -534,12 +534,15 @@ class Function_Base(Function):
     Attributes
     ----------
 
-    variable: value
+    variable: number
         format and default value can be specified by the :keyword:`variable` argument of the constructor;  otherwise,
         they are specified by the Function's :keyword:`class_defaults.variable`.
 
     function : function
         called by the Function's `owner <Function_Base.owner>` when it is executed.
+
+    value : number
+        the result returned by calling the Function.
 
     COMMENT:
     enable_output_type_conversion : Bool : False
@@ -554,7 +557,7 @@ class Function_Base(Function):
         specifies whether the return value of the function is different than the shape of either is outermost dimension
         (axis 0) of its  its `variable <Function_Base.variable>`, or any of the items in the next dimension (axis 1).
         Used to determine whether the shape of the inputs to the `Component` to which the function is assigned
-        should be based on the `variable <Function_Base.variable>` of the function or its `value <Function.value>`.
+        should be based on the `variable <Function_Base.variable>` of the function or its `value <Function_Base.value>`.
     COMMENT
 
     owner : Component
