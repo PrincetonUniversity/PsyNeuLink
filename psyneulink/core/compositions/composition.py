@@ -3482,7 +3482,6 @@ class NodeRole(enum.Enum):
 
 
 unmodifiable_node_roles = {NodeRole.ORIGIN,
-                           NodeRole.BIAS,
                            NodeRole.INTERNAL,
                            NodeRole.SINGLETON,
                            NodeRole.TERMINAL,
@@ -4660,6 +4659,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 warnings.warn(f"{role} is not a role that can be assigned directly {to_from} {self.name}. "
                               f"The relevant {Projection.__name__} to it must be designated as 'feedback' "
                               f"where it is addd to the {self.name};  assignment will be ignored.")
+            elif role in {NodeRole.BIAS}:
+                pass
+                # Check that it has at least one input port that does not have any afferent inputs
+                # Assign DEFAULT_INPUT = DEFAULT_VARIABLE for that input_port
+                # Document!
+
             elif role in unmodifiable_node_roles:
                 raise CompositionError(f"Attempt to assign {role} (to {node} of {self.name})"
                                        f"that cannot be modified by user.")
