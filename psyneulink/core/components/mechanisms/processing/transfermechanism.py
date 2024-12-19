@@ -317,7 +317,7 @@ By default, `execute_until_finished <Component.execute_until_finished>` is True,
 <TranserMechanism.integrator_mode>` is set to True a TransferMechanism will execute until it terminates, using a
 `convergence criterion <TransferMechanism_Convergence_Termination>`.  However, the Mechanism's method of termination
 can be configured using its `termination_measure <TransferMechanism.termination_measure>` and `termination_comparison_op
-<TransferMechanism.termination_comparison_op>` `Parameters` can be used to congifure other termination conditions.
+<TransferMechanism.termination_comparison_op>` `Parameters` can be used to configure other termination conditions.
 There are two broad types of termination condition: convergence and boundary termination.
 
 .. _TransferMechanism_Convergence_Termination:
@@ -546,7 +546,7 @@ Notice that the value specified for the TransferMechanism integrator `integrator
 <TransferMechanism.integrator_function>` (``0.3``) takes precendence, and is assigned as the value of the
 TransferMechanism's `integration_rate <TransferMechanism.integration_rate>`, overriding the specified value (``0.1``).
 The same applies for the specification of the TransferMechanism's **initial_value** argument and the **initializer**
-for its `integration_function <TransferMechanism.integrator_function>`. Notice also that two values are reported for
+for its `integrator_function <TransferMechanism.integrator_function>`. Notice also that two values are reported for
 the Mechanism's `integration_rate <TransferMechanism.integration_rate>`. This is because this is a `modulable Parameter
 <ParameterPort_Modulable_Parameters>`.  The ``integration_rate.base`` is the one that is assigned;
 ``integration_rate.modulated`` reports the value that was actually used when the Mechanism was last executed;
