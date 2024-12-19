@@ -36,7 +36,7 @@ There are four types that implement different functional forms, each of which is
 * **AcceleratingTimer** - advances from initial <TimerFunction.initial>` to `final <TimerFunction.final>` value
   by progressively larger amounts at an adjustable exponential `rate <AcceleratingTimerRise.rate>`
   (see `interactive graph <https://www.desmos.com/calculator/rms6z2ji8g>`_).
- 
+
 * **DeceleratingTimer** - advances from initial <TimerFunction.initial>` to `final <TimerFunction.final>` value
   by progressively smaller amounts at an adjustable exponential `rate <DeceleratingTimer.rate>`
   (see `interactive graph <https://www.desmos.com/calculator/cshkzip0ai>`_).
@@ -606,12 +606,12 @@ class AcceleratingTimer(TimerFunction):
         duration = self._get_current_parameter_value(DURATION, context)
         rate = self._get_current_parameter_value(RATE, context)
 
-        return  ((final - initial) *
-                 (rate * (input / duration)^(rate - 1)
-                  * ((1 / duration)
-                     * (np.exp(np.power((input / duration),rate) - 1)
-                        + (np.power((input / duration),rate))
-                        * np.exp(np.power((input / duration),rate) - 1) * rate * 1 / duration))))
+        return ((final - initial) *
+                (rate * np.power((input / duration), (rate - 1))
+                 * ((1 / duration)
+                    * (np.exp(np.power((input / duration), rate) - 1)
+                       + (np.power((input / duration), rate))
+                       * np.exp(np.power((input / duration), rate) - 1) * rate * 1 / duration))))
 
     # FIX:
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
@@ -887,9 +887,10 @@ class DeceleratingTimer(TimerFunction):  # -------------------------------------
         rate = self._get_current_parameter_value(RATE, context)
         direction = 1 if final > initial else -1
 
-        return direction * rate * (initial - final - direction) * np.log(direction * (final - initial + direction)) * \
-            (input / duration)^(rate - 1) / (duration * np.exp(np.log(direction * (final - initial + direction)) *
-                                                               np.power((input / duration),rate)))
+        return (direction * rate * (initial - final - direction) * np.log(direction * (final - initial + direction)) * \
+                np.power((input / duration), (rate - 1))
+                / (duration * np.exp(np.log(direction * (final - initial + direction)) *
+                                     np.power((input / duration), rate))))
 
     # FIX:
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):

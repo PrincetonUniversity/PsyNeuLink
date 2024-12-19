@@ -48,7 +48,7 @@ A TimerMechanism can be created directly by calling its constructor, or using th
 *TIMER_MECHANISM* as its **mech_spec** argument. It can be created with or without a source of input. By default, a
 TimerMechanisms increments linearly, starting at 0, incrementing by 0.01 each time it is executed, and stopping when it
 reaches 1. However, the shape, starting, ending and rate of increment can all be configured.  The shape of the timer's
-progression is specified by it **trajectory** argument, which must be a `TimerFunction` or an appropriately configured 
+progression is specified by it **trajectory** argument, which must be a `TimerFunction` or an appropriately configured
 `UserDefinedFunction` (see `below <TimerMechanism_Trajectory_Function>` for details); the starting and ending `values
 <Mechanism_Base.value>` of the timer are specified by its **start** and **end** arguments, respectively, and the ammount
 it progresses each time the Mechanimsm is executed (in the absence of input) is specified by its **increment** argument.
@@ -196,7 +196,7 @@ class TimerMechanism(IntegratorMechanism):
 
     start : scalar, list or array : default 0
         specifies the starting `value <Mechanism_Base.value>` of the timer; if a list or array, the length must be
-        the same as specified for **default_variable** or **input_shapes** (see `TimerMechanism_Execution` for 
+        the same as specified for **default_variable** or **input_shapes** (see `TimerMechanism_Execution` for
         additional details).
 
     increment : scalar, list or array : default 1
@@ -410,4 +410,3 @@ class TimerMechanism(IntegratorMechanism):
     def reset(self, *args, force=False, context=None, **kwargs):
         super().reset(*args, force=force, context=context, **kwargs)
         self.finished = False
-
