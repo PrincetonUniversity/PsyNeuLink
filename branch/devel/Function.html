@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Function &mdash; PsyNeuLink 0.15.3.0+6.geb5ff88b5 documentation</title>
+  <title>Function &mdash; PsyNeuLink 0.15.3.0+7.g786a69890 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.3.0+6
+                  0.15.3.0+7
                 </div>
               
             
@@ -230,7 +230,7 @@ operation, although most commonly it is a mathematical operation (and, for those
 more numpy functions).  There are two reasons PsyNeuLink packages functions in a Function Component:</p>
 <ul class="simple">
 <li><p><strong>Manage parameters</strong> – parameters are attributes of a Function that either remain stable over multiple calls to the
-function (e.g., the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a> or <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.bias" title="psyneulink.core.components.functions.transferfunctions.Logistic.bias"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bias</span></code></a> of a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> function, or the learning rate
+function (e.g., the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a> or <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic.bias" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic.bias"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bias</span></code></a> of a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> function, or the learning rate
 of a learning function); or, if they change, they do so less frequently or under the control of different factors
 than the function’s variable (i.e., its input).  As a consequence, it is useful to manage these separately from the
 function’s variable, and not have to provide them every time the function is called.  To address this, every
@@ -481,7 +481,7 @@ arguments of the constructor.</p></li>
 they are specified by the Function’s <code class="xref std std-keyword docutils literal notranslate"><span class="pre">class_defaults.variable</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>value</p>
+<dd class="field-odd"><p>number</p>
 </dd>
 </dl>
 </dd></dl>
@@ -493,6 +493,17 @@ they are specified by the Function’s <code class="xref std std-keyword docutil
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>function</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.function.Function_Base.value">
+<span class="sig-name descname"><span class="pre">value</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>the result returned by calling the Function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>number</p>
 </dd>
 </dl>
 </dd></dl>

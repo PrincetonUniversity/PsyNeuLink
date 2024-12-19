@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>PredictionErrorMechanism &mdash; PsyNeuLink 0.15.3.0+6.geb5ff88b5 documentation</title>
+  <title>PredictionErrorMechanism &mdash; PsyNeuLink 0.15.3.0+7.g786a69890 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.3.0+6
+                  0.15.3.0+7
                 </div>
               
             
@@ -302,7 +302,7 @@ OutputPort(s) specified in the <strong>sample</strong> and <strong>target</stron
 example, for <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.TDLearning" title="psyneulink.core.components.functions.learningfunctions.TDLearning"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Temporal</span> <span class="pre">Difference</span> <span class="pre">Learning</span></code></a>, a
 PredictionErrorMechanism is used to compare the predicted reward from the
 sample with the true reward (the target). In the example below, the sample
-Mechanism is a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> that uses the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> function to output
+Mechanism is a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> that uses the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Linear" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> function to output
 the sample values. Because the output is a vector, specifying it as the
 PredictionErrorMechanism’s <strong>sample</strong> argument will generate a corresponding
 InputPort with a vector as its value. This should match the reward

@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MappingProjection &mdash; PsyNeuLink 0.15.3.0+6.geb5ff88b5 documentation</title>
+  <title>MappingProjection &mdash; PsyNeuLink 0.15.3.0+7.g786a69890 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.3.0+6
+                  0.15.3.0+7
                 </div>
               
             
@@ -463,7 +463,7 @@ the context in which the MappingProjection is used, or its initialization will b
 <li><p><strong>receiver</strong> (<a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort" title="psyneulink.core.components.ports.inputport.InputPort"><em>InputPort</em></a><em> or </em><em>Mechanism : default None</em>) – specifies the destination of the Projection’s output.  If a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> is specified, its
 <a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary InputPort</span></a> will be used. If it is not specified, it will be assigned in
 the context in which the Projection is used, or its initialization will be <a class="reference internal" href="#mappingprojection-deferred-initialization"><span class="std std-ref">deferred</span></a>.</p></li>
-<li><p><strong>matrix</strong> (list, np.ndarray, function, <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.RandomMatrix" title="psyneulink.core.components.functions.function.RandomMatrix"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RandomMatrix</span></code></a> or keyword : default DEFAULT_MATRIX) – specifies the matrix used by <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.function" title="psyneulink.core.components.projections.projection.Projection_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> (default: <a class="reference internal" href="TransformFunctions.html#psyneulink.core.components.functions.transformfunctions.LinearCombination" title="psyneulink.core.components.functions.transformfunctions.LinearCombination"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearCombination</span></code></a>) to
+<li><p><strong>matrix</strong> (list, np.ndarray, function, <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.RandomMatrix" title="psyneulink.core.components.functions.function.RandomMatrix"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RandomMatrix</span></code></a> or keyword : default DEFAULT_MATRIX) – specifies the matrix used by <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.function" title="psyneulink.core.components.projections.projection.Projection_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> (default: <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.TransferWithCosts.Parameters.LinearCombination" title="psyneulink.core.components.functions.nonstateful.transferfunctions.TransferWithCosts.Parameters.LinearCombination"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">LinearCombination</span></code></a>) to
 transform the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the <a class="reference internal" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> into a form suitable
 for the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> of its <a class="reference internal" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a> <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>
 (see <a class="reference internal" href="#mappingprojection-matrix-specification"><span class="std std-ref">Specifying the Matrix Parameter</span></a> for additional details).</p></li>

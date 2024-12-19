@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>RecurrentTransferMechanism &mdash; PsyNeuLink 0.15.3.0+6.geb5ff88b5 documentation</title>
+  <title>RecurrentTransferMechanism &mdash; PsyNeuLink 0.15.3.0+7.g786a69890 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.3.0+6
+                  0.15.3.0+7
                 </div>
               
             
@@ -304,7 +304,7 @@ rather, than the primary one (named <em>EXTERNAL</em>).  In this case, the Input
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.combination_function" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.combination_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">combination_function</span></code></a> <em>before</em> being passed to the
 RecurrentTransferMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.</p>
 <p>A RecurrentTransferMechanism also has two additional <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>:  an <em>ENERGY</em> OutputPort and, if its
-<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> is bounded between 0 and 1 (e.g., a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> function), an <em>ENTROPY</em> OutputPort.
+<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> is bounded between 0 and 1 (e.g., a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> function), an <em>ENTROPY</em> OutputPort.
 Each of these report the respective values of the vector in it its <em>RESULT</em> (<a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary</span></a>) OutputPort.</p>
 <p>Finally, if it has been <a class="reference internal" href="#recurrenttransfermechanism-learning"><span class="std std-ref">specified for learning</span></a>, the RecurrentTransferMechanism
 is associated with an <a class="reference internal" href="AutoAssociativeLearningMechanism.html"><span class="doc">AutoAssociativeLearningMechanism</span></a> that is used to train its <a class="reference internal" href="AutoAssociativeProjection.html"><span class="doc">AutoAssociativeProjection</span></a>.
@@ -482,7 +482,7 @@ being passed to the RecurrentTransferMechanism’s <a class="reference internal"
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.combination_function">
 <span class="sig-name descname"><span class="pre">combination_function</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.combination_function" title="Permalink to this definition">¶</a></dt>
-<dd><p>the Function used to combine the <em>RECURRENT</em> and <em>EXTERNAL</em> InputPorts if <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.has_recurrent_input_port" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.has_recurrent_input_port"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">has_recurrent_input_port</span></code></a> is <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.  By default this is a <a class="reference internal" href="TransformFunctions.html#psyneulink.core.components.functions.transformfunctions.LinearCombination" title="psyneulink.core.components.functions.transformfunctions.LinearCombination"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearCombination</span></code></a>
+<dd><p>the Function used to combine the <em>RECURRENT</em> and <em>EXTERNAL</em> InputPorts if <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.has_recurrent_input_port" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.has_recurrent_input_port"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">has_recurrent_input_port</span></code></a> is <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.  By default this is a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.TransferWithCosts.Parameters.LinearCombination" title="psyneulink.core.components.functions.nonstateful.transferfunctions.TransferWithCosts.Parameters.LinearCombination"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">LinearCombination</span></code></a>
 Function that simply adds them.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
