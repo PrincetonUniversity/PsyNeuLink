@@ -215,6 +215,9 @@ class Stability(ObjectiveFunction):
         transfer_fct = Parameter(None, stateful=False, loggable=False)
         normalize = FunctionParameter(False, function_name='metric_fct')
 
+        def _parse_variable(self, variable):
+            return np.atleast_1d(np.squeeze(variable))
+
     @check_user_specified
     @beartype
     def __init__(self,
@@ -467,11 +470,8 @@ class Stability(ObjectiveFunction):
 
         """
 
-        # MODIFIED 6/12/19 NEW: [JDC]
-        variable = np.array(variable)
-        if variable.ndim > 1:
-            variable = np.squeeze(variable)
-        # MODIFIED 6/12/19 END
+        # enforces squeezed 1d array
+        variable = self.parameters._parse_variable(variable)
 
         matrix = self._get_current_parameter_value(MATRIX, context)
         if matrix is None:
