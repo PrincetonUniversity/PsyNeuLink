@@ -4661,14 +4661,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                               f"where it is addd to the {self.name};  assignment will be ignored.")
             elif role in {NodeRole.BIAS}:
                 # FIX: DOCUMENT
-                # FIX: MOVE THIS TO requried_node_roles??
-                input_port = next(((p.default_input == DEFAULT_VARIABLE or not p.afferents)
+                input_port = next((p if (p.default_input == DEFAULT_VARIABLE or not p.path_afferents) else None
                                   for p in node.input_ports), None)
                 if not input_port:
                     raise CompositionError(f"Attempt to add 'NodeRole.BIAS' to a {node.name} that does not have any "
                                            f"input ports that have an unassigned InputPort or one for which "
                                            f"'DEFAULT_INPUT' has been assigned to 'DEFAULT_VARIABLE'.")
-                input_port.default_input = DEFAULT_VARIABLE
+                input_port.parameters.default_input._set(DEFAULT_VARIABLE, context, override=True)
                 self.required_node_roles.append((node, role))
 
             elif role in unmodifiable_node_roles:
