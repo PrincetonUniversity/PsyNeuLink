@@ -8,8 +8,8 @@
 
 # **************************************  IntegratorMechanism *************************************************
 
-"""
 
+"""
 Contents
 --------
 
@@ -18,7 +18,6 @@ Contents
   * `IntegratorMechanism_Structure`
   * `IntegratorMechanism_Execution`
   * `IntegratorMechanism_Class_Reference`
-
 
 .. _IntegratorMechanism_Overview:
 

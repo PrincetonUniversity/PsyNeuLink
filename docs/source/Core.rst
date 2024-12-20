@@ -69,6 +69,8 @@ Core
 
             - `TransferFunctions`
 
+            - `TimerFunctions`
+
             - `TransformFunctions`
 
       - `StatefulFunctions`

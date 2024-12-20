@@ -10,19 +10,24 @@
 # *******************************************  TRANSFER FUNCTIONS  *****************************************************
 """
 
-* `Identity`
-* `Linear`
-* `Exponential`
-* `Logistic`
-* `Tanh`
-* `ReLU`
-* `Angle`
-* `Gaussian`
-* `GaussianDistort`
-* `BinomialDistort`
-* `Dropout`
-* `SoftMax`
-* `TransferWithCosts`
+**Deterministic**
+    * `Identity`
+    * `Linear`
+    * `Exponential`
+    * `Logistic`
+    * `Tanh`
+    * `ReLU`
+
+**Probabilistic**
+    * `Angle`
+    * `Gaussian`
+    * `GaussianDistort`
+    * `BinomialDistort`
+    * `Dropout`
+    * `SoftMax`
+
+**Other**
+    * `TransferWithCosts`
 
 Overview
 --------
@@ -93,15 +98,17 @@ from psyneulink.core.globals.keywords import \
     (ADAPTIVE, ADDITIVE_PARAM, ALL, ANGLE_FUNCTION, BIAS, BINOMIAL_DISTORT_FUNCTION, DROPOUT_FUNCTION,
      EXPONENTIAL_FUNCTION, GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION,
      IDENTITY_FUNCTION, INTERCEPT, LEAK, LINEAR_FUNCTION, LOGISTIC_FUNCTION,
-     TANH_FUNCTION, MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE_PARAM,
-     OFF, OFFSET, ON, OUTPUT_TYPE, PER_ITEM, PROB, PRODUCT, PROB_INDICATOR,
-     RATE, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM,
-     TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME)
+     MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE_PARAM, OFF, OFFSET, ON, OUTPUT_TYPE,
+     PER_ITEM, PROB, PRODUCT, PROB_INDICATOR, RATE, RELU_FUNCTION,
+     SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM,
+     TANH_FUNCTION, TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION,
+     VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME)
 from psyneulink.core.globals.parameters import \
     FunctionParameter, Parameter, get_validator_by_function, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, ValidPrefSet
-from psyneulink.core.globals.utilities import ValidParamSpecType, convert_all_elements_to_np_array, safe_len, is_matrix_keyword
+from psyneulink.core.globals.utilities import (
+    ValidParamSpecType, convert_all_elements_to_np_array, safe_len, is_matrix_keyword)
 
 __all__ = ['Angle', 'BinomialDistort', 'Dropout', 'Exponential', 'Gaussian', 'GaussianDistort', 'Identity',
            'Linear', 'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
@@ -789,10 +796,11 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
 
 # **********************************************************************************************************************
-#                                                   Logistic
+#                                                     Logistic
 # **********************************************************************************************************************
 
-class Logistic(TransferFunction):  # ------------------------------------------------------------------------------------
+
+class Logistic(TransferFunction):  # -----------------------------------------------------------------------------------
     """
     Logistic(              \
          default_variable, \
@@ -1029,7 +1037,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         """
         derivative(input=None, output=None)
 
-        Derivative of `function <Exponential._function>` at either **input** or **output**.
+        Derivative of `function <Logistic._function>` at either **input** or **output**.
 
         COMMENT:  RESTORE WHEN TEST IN DERIVATIVE IS RESTORED
         Either **input** or **output** must be specified.
@@ -1148,7 +1156,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 
     .. _Tanh_Function:
 
-    `function <Logistic._function>` returns hyperbolic tangent of `variable <Logistic.variable>`:
+    `function <Tanh._function>` returns hyperbolic tangent of `variable <Tanh.variable>`:
 
     .. math::
 
@@ -1156,8 +1164,8 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 
     .. note::
 
-       The `Logistic` function is an offset and scaled version of this function.
-       The parameters used here have the same meaning as those used for the `Logistic` Function.
+       The `Tanh` function is an offset and scaled version of this function.
+       The parameters used here have the same meaning as those used for the `Tanh` Function.
 
     `derivative <Tanh.derivative>` returns the derivative of the hyperbolic tangent at its **input**:
 
@@ -1172,19 +1180,19 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         specifies template for the value to be transformed.
 
     gain : float : default 1.0
-        specifies value by which to multiply `variable <Tanh.variable>` before logistic transformation
+        specifies value by which to multiply `variable <Tanh.variable>` before Tanh transformation
 
     bias : float : default 0.0
         specifies value to add to each element of `variable <Tanh.variable>` before applying `gain <Tanh.gain>`
-        and before logistic transformation. This argument is identical to x_0, with the opposite sign.
+        and before Tanh transformation. This argument is identical to x_0, with the opposite sign.
 
     x_0 : float : default 0.0
         specifies value to subtract from each element of `variable <Tanh.variable>` before applying `gain <Tanh.gain>`
-        and before logistic transformation. This argument is identical to bias, with the opposite sign.
+        and before Tanh transformation. This argument is identical to bias, with the opposite sign.
 
     offset : float : default 0.0
         specifies value to add to each element of `variable <Tanh.variable>` after applying `gain <Tanh.gain>`
-        but before logistic transformation.
+        but before Tanh transformation.
 
     scale : float : default 1.0
         specifies value by which to multiply each element after applying Tanh transform.
@@ -1223,7 +1231,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 
     offset : float : default 0.0
         value to added to each element of `variable <Tanh.variable>` after applying `gain <Tanh.gain>`
-        but before logistic transformation.
+        but before tanh transformation.
 
     scale : float : default 1.0
         value by which element is multiplied after applying Tanh transform.
