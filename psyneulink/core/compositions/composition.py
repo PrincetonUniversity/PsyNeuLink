@@ -4668,6 +4668,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                            f"input ports that have an unassigned InputPort or one for which "
                                            f"'DEFAULT_INPUT' has been assigned to 'DEFAULT_VARIABLE'.")
                 input_port.parameters.default_input._set(DEFAULT_VARIABLE, context, override=True)
+                input_port.internal_only = True
                 self.required_node_roles.append((node, role))
 
             elif role in unmodifiable_node_roles:
