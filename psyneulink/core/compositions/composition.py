@@ -1309,7 +1309,7 @@ is a INPUT Node of the Composition to which it belongs). Any INPUT Nodes for whi
 which there are no entries in the inputs dictionary) are assigned their `default_external_inputs
 <Mechanism_Base.default_external_inputs>` on each `TRIAL <TimeScale.TRIAL>` of execution; similarly, if the dictionary
 contains entries for some but not all of the InputPorts of a Node, the remaining InputPorts are assigned their
-`default_input <InputPort.default_input>` on each `TRIAL <TimeScale.TRIAL>` of execution.  See below for additional
+`default_input <InputPort.default_input>` on each `TRIAL <TimeScale.TRIAL>` of execution. See below for additional
 information concerning `entries for Nodes <Composition_Input_Dictionary_Node_Entries>` and `entries for InputPorts
 <Composition_Input_Dictionary_InputPort_Entries>`).
 
@@ -6568,6 +6568,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         receiver,receiver_mechanism,graph_receiver,receiver_input_port,nested_compositions,is_learning_projection = \
             self._parse_receiver_spec(projection, receiver, sender, is_learning_projection)
 
+        if receiver_input_port.default_input == DEFAULT_VARIABLE:
+            if NodeRole.BIAS in self.get_roles_by_node(receiver_mechanism):
+                raise CompositionError(f"'{receiver_mechanism.name}' is configured as a {NodeRole.BIAS.name} node, "
+                                       f"so it cannot receive a MappingProjection from '{sender.name}'"
+                                       f"as currently specified a the pathway in '{self.name}'.")
+            raise CompositionError(f"'{receiver_input_port.full_name}' has its 'default_input' attribute set to "
+                                   f"'DEFAULT_VARIABLE' so it cannot receive a MappingProjection from '{sender.name}'"
+                                   f"as currently specified for a the pathway in '{self.name}'.")
+
+
         if (isinstance(receiver_mechanism, (CompositionInterfaceMechanism))
                 and receiver_input_port.owner not in self.nodes
                 and receiver.componentType == 'ParameterPort'):
@@ -7987,7 +7997,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for i, n_e in enumerate(node_entries):
             for n in convert_to_list(n_e):
                 if isinstance(n, tuple):
-                    nodes[i] = nodes[i][0]
+                    # # MODIFIED 12/22/24 OLD:
+                    # nodes[i] = nodes[i][0]
+                    # MODIFIED 12/22/24 NEW:
+                    nodes[nodes.index(n)] = n[0]
+                    # MODIFIED 12/22/24 END
 
         specified_pathway = pathway
         # interleave (sets of) Nodes and (sets or lists of) Projections
