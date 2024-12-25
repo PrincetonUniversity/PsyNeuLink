@@ -325,6 +325,34 @@ nodes assigned a particular role can be listed using the `get_nodes_by_role <Com
 The `get_required_roles_by_node` method lists the `NodeRoles <NodeRole>` that have been assigned to a Node using the
 `require_node_roles <Composition.require_node_roles>` method.
 
+.. _Composition_Bias_Nodes:
+
+**Bias Nodes**
+^^^^^^^^^^^^^^
+
+NodeRoles can be used to implement Bias Nodes, which add a bias (constant value) to the input of a Node, that can also
+be modified by `learning <Composition_Learning>`. A bias Node is implemented by adding a `ProcessingMechanism` to the
+Composition and requiring it to have the `BIAS` `NodeRole`. The ProcessingMechanims cannot have any afferent
+Projections, and should project to the `InputPort` containing the array of values to be biased. If the bias(es) are
+to be learned, the `learnable <MappingProjection.learnable>` attribute of the MappingProjeciton should be set to True.
+The value of the bias, and how it is applied to the arrays being biased are specified as described below:
+
+    *Single bias value*.  To apply a single scalar bias value to all elements of the array being biased, the
+    `default_variable <Component_Variable>` of the BIAS Node should be specified as a scalar value, and the `matrix
+    <MappingProjection.matrix>` parameter of the MappingProjection should be assigned *FULL_CONNECTIVITY_MATRIX*;  this
+    will use the value for all elements of the bias vector.
+
+    *Array of bias values*. To apply a different bias value to each element of the array being biased, the
+    `default_variable <Component_Variable>` of the BIAS Node should be specified as an array conatining the bias
+    values, and the `matrix <MappingProjection.matrix>` parameter of the MappingProjection should be assigned
+    *IDENTITY_MATRIX*; this will use the value of each element of the bias vector to multiply the corresponding
+    element of the array being biased.
+
+    *Multiple bias arrays*.  A single BIAS Node can be used to bias multiple arrays by specifying the
+    `default_variable <Component_Variable>` of the BIAS Node as a 2d array, with each array in the outer dimension
+    containing the bias values for a different array; this will generate an `OutputPort` for each bias array, which
+    can be assigned a MappingProjeciton to do different Node to be biased.
+
 
 .. _Composition_Nested:
 
@@ -4659,22 +4687,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                               f"The relevant {Projection.__name__} to it must be designated as 'feedback' "
                               f"where it is addd to the {self.name};  assignment will be ignored.")
             elif role is NodeRole.BIAS:
-                # FIX: DOCUMENT
-                # FIX: PRECLUDE INPUT Node
-                # FIX TO ASSIGN ALL INPUT_NODES TO DEFAULT VARIABLE
-                # MODIFIED 12/25/24 OLD:
-                # input_port = next((p if (p.default_input == DEFAULT_VARIABLE or not p.path_afferents) else None
-                #                   for p in node.input_ports), None)
-                # if not input_port:
-                #     raise CompositionError(f"Attempt to add 'NodeRole.BIAS' to a {node.name} that does not have any "
-                #                            f"input ports that have an unassigned InputPort or one for which "
-                #                            f"'DEFAULT_INPUT' has been assigned to 'DEFAULT_VARIABLE'.")
-                # if (node, NodeRole.INPUT) in self.required_node_roles:
-                #     raise CompositionError(f"A BIAS Node ('{node.name}' cannot be assigned NodeRole.INPUT.")
-                # input_port.parameters.default_input._set(DEFAULT_VARIABLE, context, override=True)
-                # input_port.internal_only = True
-                # self.required_node_roles.append((node, role))
-                # MODIFIED 12/25/24 NEW:
                 if (node, NodeRole.INPUT) in self.required_node_roles:
                     raise CompositionError(f"A BIAS Node ('{node.name}' cannot be assigned NodeRole.INPUT.")
                 for input_port in node.input_ports:
@@ -4684,7 +4696,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     input_port.parameters.default_input._set(DEFAULT_VARIABLE, context, override=True)
                     input_port.internal_only = True
                 self.required_node_roles.append((node, role))
-                # MODIFIED 12/25/24 END
 
             elif role is NodeRole.INPUT:
                 if (node, NodeRole.BIAS) in self.required_node_roles:

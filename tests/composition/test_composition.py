@@ -7323,19 +7323,20 @@ class TestNodeRoles:
         assert comp.get_nodes_by_role(NodeRole.INTERNAL) == [B]
 
     def test_BIAS(self):
-        pass
         mech_in = ProcessingMechanism(name='INPUT')
         mech_out = ProcessingMechanism(name='OUTPUT', output_ports = ['a','b'])
         mech_single_bias = ProcessingMechanism(name='SINGLE BIAS')
         mech_double_bias = ProcessingMechanism(name='DOUBLE BIAS',
                                                input_ports=['first','second'],
                                                default_variable = [[1],[2]])
+
         comp = Composition(pathways=[[mech_in, mech_out], (mech_single_bias, [NodeRole.BIAS])])
         assert mech_single_bias.input_port.default_input == DEFAULT_VARIABLE
         assert comp.get_nodes_by_role(NodeRole.BIAS) == [mech_single_bias]
         assert comp.get_nodes_by_role(NodeRole.INPUT) == [mech_in] # mech_single_bias should not be and INPUT Node
 
         comp = Composition(pathways=[[mech_in, mech_out], (mech_double_bias, [NodeRole.BIAS])])
+        assert all(p.default_input == DEFAULT_VARIABLE for p in mech_double_bias.input_ports)
         results = comp.run()
         assert all(results == [[0.], [0.], [1.], [2.]])
 
