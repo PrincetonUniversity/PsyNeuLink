@@ -3368,10 +3368,10 @@ class NodeRole(enum.Enum):
         programmatically.
 
     BIAS
-        A `Node <Composition_Nodes>` for which all of its `InputPorts <InputPort>` are assigned
-        *DEFAULT_VARIABLE* as their `default_input <InputPort.default_input>` (which provides a pre-specified
-        input that is constant across executions). Such a Node is always an `ORIGIN` (since it does not receive
-        Projections from any other Node) and never an INPUT Node (since it does not receive external input).
+        A `Node <Composition_Nodes>` for which all of its `InputPorts <InputPort>` are assigned *DEFAULT_VARIABLE*
+        as their `default_input <InputPort.default_input>` (which provides a pre-specified input to each InputPort
+        that is constant across executions). Such a Node is always also an `ORIGIN` Node (since it does not receive
+        Projections from any other Node) and never an `INPUT` Node (since it does not receive external input).
 
     INTERNAL
         A `Node <Composition_Nodes>` that is neither `INPUT` nor `OUTPUT`.  Note that it *can* also be `ORIGIN`,
@@ -4661,25 +4661,38 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             elif role is NodeRole.BIAS:
                 # FIX: DOCUMENT
                 # FIX: PRECLUDE INPUT Node
-                input_port = next((p if (p.default_input == DEFAULT_VARIABLE or not p.path_afferents) else None
-                                  for p in node.input_ports), None)
-                if not input_port:
-                    raise CompositionError(f"Attempt to add 'NodeRole.BIAS' to a {node.name} that does not have any "
-                                           f"input ports that have an unassigned InputPort or one for which "
-                                           f"'DEFAULT_INPUT' has been assigned to 'DEFAULT_VARIABLE'.")
+                # FIX TO ASSIGN ALL INPUT_NODES TO DEFAULT VARIABLE
+                # MODIFIED 12/25/24 OLD:
+                # input_port = next((p if (p.default_input == DEFAULT_VARIABLE or not p.path_afferents) else None
+                #                   for p in node.input_ports), None)
+                # if not input_port:
+                #     raise CompositionError(f"Attempt to add 'NodeRole.BIAS' to a {node.name} that does not have any "
+                #                            f"input ports that have an unassigned InputPort or one for which "
+                #                            f"'DEFAULT_INPUT' has been assigned to 'DEFAULT_VARIABLE'.")
+                # if (node, NodeRole.INPUT) in self.required_node_roles:
+                #     raise CompositionError(f"A BIAS Node ('{node.name}' cannot be assigned NodeRole.INPUT.")
+                # input_port.parameters.default_input._set(DEFAULT_VARIABLE, context, override=True)
+                # input_port.internal_only = True
+                # self.required_node_roles.append((node, role))
+                # MODIFIED 12/25/24 NEW:
                 if (node, NodeRole.INPUT) in self.required_node_roles:
                     raise CompositionError(f"A BIAS Node ('{node.name}' cannot be assigned NodeRole.INPUT.")
-                input_port.parameters.default_input._set(DEFAULT_VARIABLE, context, override=True)
-                input_port.internal_only = True
+                for input_port in node.input_ports:
+                    if input_port.path_afferents:
+                        raise CompositionError(f"Attempt to add 'NodeRole.BIAS' to a node ('{node.name}') "
+                                               f"in '{self.name}' that already has input(s) assigned.")
+                    input_port.parameters.default_input._set(DEFAULT_VARIABLE, context, override=True)
+                    input_port.internal_only = True
                 self.required_node_roles.append((node, role))
+                # MODIFIED 12/25/24 END
 
             elif role is NodeRole.INPUT:
                 if (node, NodeRole.BIAS) in self.required_node_roles:
-                    raise CompositionError(f"A Node assiged NodeRole.BIAS ('{node.name}') cannot also be "
+                    raise CompositionError(f"A Node assigned NodeRole.BIAS ('{node.name}') cannot also be "
                                            f"assigned NodeRole.INPUT (since it does not receive any input).")
 
             elif role in unmodifiable_node_roles:
-                raise CompositionError(f"A Node assiged NodeRole.BIAS ('{node.name}') cannot also be "
+                raise CompositionError(f"A Node assigned NodeRole.BIAS ('{node.name}') cannot also be "
                                        f"assigned NodeRole.INPUT (since it does not receive any input).")
 
         node_role_pair = (node, role)

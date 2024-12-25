@@ -3102,6 +3102,31 @@ class TestInputPortSpecifications:
         np.testing.assert_allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
         np.testing.assert_allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
 
+    def test_default_input(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B', input_ports=[A,
+                                                       'external',
+                                                       {NAME:'bias',
+                                                        VARIABLE:21,
+                                                        PARAMS: {DEFAULT_INPUT: DEFAULT_VARIABLE}}])
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D', input_ports=[{NAME:'bias',
+                                                        VARIABLE:33,
+                                                        PARAMS: {DEFAULT_INPUT: DEFAULT_VARIABLE}},
+                                                       'recurrent'])
+        E = ProcessingMechanism(name='E')
+        MappingProjection(E,D.input_ports[1])
+        MappingProjection(D.output_ports[1],E)
+        # # FIX: INCLUSION OF A BELOW BLOCKS B FROM RECEIVING EXTERNAL INPUT ON UNOCCUPIED INPUTPORT
+        # comp = Composition(pathways=[[A,B],[B,C],[D,E,D]], name='comp')
+        comp = Composition(pathways=[[B,C],[D,E,D]], name='comp')
+        comp._analyze_graph()
+        comp.run()
+        assert B.value[2] == [21]
+        assert D.value[0] == [33]
+        assert set(comp.get_nodes_by_role(NodeRole.INPUT)) == {B,D,E}
+        assert set(comp.get_nodes_by_role(NodeRole.BIAS)) == set() # This is because both B and D have other InputPorts
+        assert set(comp.get_nodes_by_role(NodeRole.OUTPUT)) == {C,D,E}
 
 
 class TestRunInputSpecifications:
@@ -7288,33 +7313,6 @@ class TestNodeRoles:
         assert set(comp.get_nodes_by_role(NodeRole.OUTPUT)) == {A,C}
         assert set(comp.get_nodes_by_role(NodeRole.SINGLETON)) == {A}
 
-    def test_BIAS(self):
-        A = ProcessingMechanism(name='A')
-        B = ProcessingMechanism(name='B', input_ports=[A,
-                                                       'external',
-                                                       {NAME:'bias',
-                                                        VARIABLE:21,
-                                                        PARAMS: {DEFAULT_INPUT: DEFAULT_VARIABLE}}])
-        C = ProcessingMechanism(name='C')
-        D = ProcessingMechanism(name='D', input_ports=[{NAME:'bias',
-                                                        VARIABLE:33,
-                                                        PARAMS: {DEFAULT_INPUT: DEFAULT_VARIABLE}},
-                                                       'recurrent'])
-        E = ProcessingMechanism(name='E')
-        MappingProjection(E,D.input_ports[1])
-        MappingProjection(D.output_ports[1],E)
-        # # FIX: INCLUSION OF A BELOW BLOCKS B FROM RECEIVING EXTERNAL INPUT ON UNOCCUPIED INPUTPORT
-        # comp = Composition(pathways=[[A,B],[B,C],[D,E,D]], name='comp')
-        comp = Composition(pathways=[[B,C],[D,E,D]], name='comp')
-        comp._analyze_graph()
-        comp.run()
-        assert B.value[2] == [21]
-        assert D.value[0] == [33]
-        assert set(comp.get_nodes_by_role(NodeRole.INPUT)) == {B,D,E}
-        assert set(comp.get_nodes_by_role(NodeRole.BIAS)) == set() # This is because both B and D have other InputPorts
-        assert set(comp.get_nodes_by_role(NodeRole.OUTPUT)) == {C,D,E}
-
-
     def test_INTERNAL(self):
         comp = Composition(name='comp')
         A = ProcessingMechanism(name='A')
@@ -7323,6 +7321,39 @@ class TestNodeRoles:
         comp.add_linear_processing_pathway([A, B, C])
 
         assert comp.get_nodes_by_role(NodeRole.INTERNAL) == [B]
+
+    def test_BIAS(self):
+        pass
+        mech_in = ProcessingMechanism(name='INPUT')
+        mech_out = ProcessingMechanism(name='OUTPUT', output_ports = ['a','b'])
+        mech_single_bias = ProcessingMechanism(name='SINGLE BIAS')
+        mech_double_bias = ProcessingMechanism(name='DOUBLE BIAS',
+                                               input_ports=['first','second'],
+                                               default_variable = [[1],[2]])
+        comp = Composition(pathways=[[mech_in, mech_out], (mech_single_bias, [NodeRole.BIAS])])
+        assert mech_single_bias.input_port.default_input == DEFAULT_VARIABLE
+        assert comp.get_nodes_by_role(NodeRole.BIAS) == [mech_single_bias]
+        assert comp.get_nodes_by_role(NodeRole.INPUT) == [mech_in] # mech_single_bias should not be and INPUT Node
+
+        comp = Composition(pathways=[[mech_in, mech_out], (mech_double_bias, [NodeRole.BIAS])])
+        results = comp.run()
+        assert all(results == [[0.], [0.], [1.], [2.]])
+
+        with pytest.raises(CompositionError) as error_text:
+            Composition(pathways=[mech_in, {mech_out, (mech_single_bias, NodeRole.BIAS)}])
+        assert (f"'SINGLE BIAS' is configured as a BIAS node, so it cannot receive a MappingProjection from 'INPUT' "
+                f"as currently specified for a pathway in 'Composition-2'.") in str(error_text)
+
+        with pytest.raises(CompositionError) as error_text:
+            MappingProjection(sender=mech_in, receiver=mech_double_bias.input_ports['second'])
+            Composition(pathways=[mech_in, {mech_out, (mech_double_bias, NodeRole.BIAS)}])
+        assert (f"Attempt to add 'NodeRole.BIAS' to a node ('DOUBLE BIAS') in 'Composition-3' "
+                f"that already has input(s) assigned.") in str(error_text)
+
+        with pytest.raises(CompositionError) as error_text:
+            Composition(pathways=[[mech_in, mech_out], (mech_single_bias, [NodeRole.BIAS,NodeRole.INPUT])])
+        assert ("A Node assigned NodeRole.BIAS ('SINGLE BIAS') cannot also be assigned NodeRole.INPUT "
+                "(since it does not receive any input).") in str(error_text)
 
     def test_input_labels_and_results_by_node_and_no_orphaning_of_nested_output_nodes(self):
         """
