@@ -7303,7 +7303,7 @@ class TestNodeRoles:
         E = ProcessingMechanism(name='E')
         MappingProjection(E,D.input_ports[1])
         MappingProjection(D.output_ports[1],E)
-        # # FIX: INCLUSION OF A BELOW BLOCKS B FROM RECIEVING EXTERNAL INPUT ON UNOCCUPIED INPUTPORT
+        # # FIX: INCLUSION OF A BELOW BLOCKS B FROM RECEIVING EXTERNAL INPUT ON UNOCCUPIED INPUTPORT
         # comp = Composition(pathways=[[A,B],[B,C],[D,E,D]], name='comp')
         comp = Composition(pathways=[[B,C],[D,E,D]], name='comp')
         comp._analyze_graph()
@@ -7311,7 +7311,7 @@ class TestNodeRoles:
         assert B.value[2] == [21]
         assert D.value[0] == [33]
         assert set(comp.get_nodes_by_role(NodeRole.INPUT)) == {B,D,E}
-        assert set(comp.get_nodes_by_role(NodeRole.BIAS)) == {B,D}
+        assert set(comp.get_nodes_by_role(NodeRole.BIAS)) == set() # This is because both B and D have other InputPorts
         assert set(comp.get_nodes_by_role(NodeRole.OUTPUT)) == {C,D,E}
 
 

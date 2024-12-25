@@ -3368,11 +3368,10 @@ class NodeRole(enum.Enum):
         programmatically.
 
     BIAS
-        A `Node <Composition_Nodes>` for which one or more of its `InputPorts <InputPort>` is assigned
-        *DEFAULT_VARIABLE* as its `default_input <InputPort.default_input>` (which provides it a prespecified
-        input that is constant across executions). Such a node can also be assigned as an `INPUT` and/or `ORIGIN`,
-        if it receives input from outside the Composition and/or does not receive any `Projections <Projection>` from
-        other Nodes within the Composition, respectively.  This role cannot be modified programmatically.
+        A `Node <Composition_Nodes>` for which all of its `InputPorts <InputPort>` are assigned
+        *DEFAULT_VARIABLE* as their `default_input <InputPort.default_input>` (which provides a pre-specified
+        input that is constant across executions). Such a Node is always an `ORIGIN` (since it does not receive
+        Projections from any other Node) and never an INPUT Node (since it does not receive external input).
 
     INTERNAL
         A `Node <Composition_Nodes>` that is neither `INPUT` nor `OUTPUT`.  Note that it *can* also be `ORIGIN`,
@@ -4659,21 +4658,29 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 warnings.warn(f"{role} is not a role that can be assigned directly {to_from} {self.name}. "
                               f"The relevant {Projection.__name__} to it must be designated as 'feedback' "
                               f"where it is addd to the {self.name};  assignment will be ignored.")
-            elif role in {NodeRole.BIAS}:
+            elif role is NodeRole.BIAS:
                 # FIX: DOCUMENT
+                # FIX: PRECLUDE INPUT Node
                 input_port = next((p if (p.default_input == DEFAULT_VARIABLE or not p.path_afferents) else None
                                   for p in node.input_ports), None)
                 if not input_port:
                     raise CompositionError(f"Attempt to add 'NodeRole.BIAS' to a {node.name} that does not have any "
                                            f"input ports that have an unassigned InputPort or one for which "
                                            f"'DEFAULT_INPUT' has been assigned to 'DEFAULT_VARIABLE'.")
+                if (node, NodeRole.INPUT) in self.required_node_roles:
+                    raise CompositionError(f"A BIAS Node ('{node.name}' cannot be assigned NodeRole.INPUT.")
                 input_port.parameters.default_input._set(DEFAULT_VARIABLE, context, override=True)
                 input_port.internal_only = True
                 self.required_node_roles.append((node, role))
 
+            elif role is NodeRole.INPUT:
+                if (node, NodeRole.BIAS) in self.required_node_roles:
+                    raise CompositionError(f"A Node assiged NodeRole.BIAS ('{node.name}') cannot also be "
+                                           f"assigned NodeRole.INPUT (since it does not receive any input).")
+
             elif role in unmodifiable_node_roles:
-                raise CompositionError(f"Attempt to assign {role} (to {node} of {self.name})"
-                                       f"that cannot be modified by user.")
+                raise CompositionError(f"A Node assiged NodeRole.BIAS ('{node.name}') cannot also be "
+                                       f"assigned NodeRole.INPUT (since it does not receive any input).")
 
         node_role_pair = (node, role)
         if node_role_pair not in self.required_node_roles:
@@ -5426,10 +5433,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # INPUT
 
-        # all nodes from processing graph with no incoming edges are INPUT
-        input_nodes = {
-            n for n in comp_graph_dependencies if len(comp_graph_dependencies[n]) == 0
-        }
+        # Start with all nodes from processing graph with no incoming edges
+        input_nodes = {n for n in comp_graph_dependencies if len(comp_graph_dependencies[n]) == 0}
 
         # an entire cycle that has no node with any incoming edge other
         # than from other nodes in the cycle is treated as INPUT
@@ -5484,8 +5489,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # BIAS
         for node in self.nodes:
             if (isinstance(node, Mechanism)
-                    and any(input_port.default_input == DEFAULT_VARIABLE for input_port in node.input_ports)):
+                    and all(input_port.default_input == DEFAULT_VARIABLE for input_port in node.input_ports)):
                 self._add_node_role(node, NodeRole.BIAS)
+                # BIAS Nodes should not be included in INPUT Nodes
+                self._remove_node_role(node, NodeRole.INPUT)
 
         # CYCLE
         for cycle in self.graph_processing.cycle_vertices:
@@ -6568,15 +6575,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         receiver,receiver_mechanism,graph_receiver,receiver_input_port,nested_compositions,is_learning_projection = \
             self._parse_receiver_spec(projection, receiver, sender, is_learning_projection)
 
-        if receiver_input_port.default_input == DEFAULT_VARIABLE:
-            if NodeRole.BIAS in self.get_roles_by_node(receiver_mechanism):
+        if (isinstance(receiver_input_port, InputPort)
+                and receiver_input_port.default_input == DEFAULT_VARIABLE):
+            if (receiver_mechanism, NodeRole.BIAS) in self.required_node_roles:
                 raise CompositionError(f"'{receiver_mechanism.name}' is configured as a {NodeRole.BIAS.name} node, "
-                                       f"so it cannot receive a MappingProjection from '{sender.name}'"
-                                       f"as currently specified a the pathway in '{self.name}'.")
-            raise CompositionError(f"'{receiver_input_port.full_name}' has its 'default_input' attribute set to "
-                                   f"'DEFAULT_VARIABLE' so it cannot receive a MappingProjection from '{sender.name}'"
-                                   f"as currently specified for a the pathway in '{self.name}'.")
-
+                                       f"so it cannot receive a MappingProjection from '{sender.name}' "
+                                       f"as currently specified for a pathway in '{self.name}'.")
 
         if (isinstance(receiver_mechanism, (CompositionInterfaceMechanism))
                 and receiver_input_port.owner not in self.nodes
