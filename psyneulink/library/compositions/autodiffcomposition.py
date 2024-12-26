@@ -15,17 +15,17 @@ Contents
 
   * `AutodiffComposition_Overview`
   * `AutodiffComposition_Creation`
-    - `AutodiffComposition_`
-      - `AutodiffComposition_Modulatory_Mechanisms`
-      - `AutodiffComposition_Bias_Parameters`
-      - `AutodiffComposition_Nesting`
-      - `AutodiffComposition_Post_Construction_Modification`
-    * `AutodiffComposition_Execution`
-      - `AutodiffComposition_PyTorch`
-      - `AutodiffComposition_LLVM`
-      - `AutodiffComposition_Python`
-      - `AutodiffComposition_Nested_Modulation`
-      - `AutodiffComposition_Logging`
+      - `AutodiffComposition`
+          - `AutodiffComposition_Modulatory_Mechanisms`
+          - `AutodiffComposition_Bias_Parameters`
+          - `AutodiffComposition_Nesting`
+          - `AutodiffComposition_Post_Construction_Modification`
+      * `AutodiffComposition_Execution`
+          - `AutodiffComposition_PyTorch`
+          - `AutodiffComposition_LLVM`
+          - `AutodiffComposition_Python`
+          - `AutodiffComposition_Nested_Modulation`
+          - `AutodiffComposition_Logging`
   * `AutodiffComposition_Examples`
   * `AutodiffComposition_Class_Reference`
 
@@ -61,14 +61,14 @@ same methods as a standard Composition, there are a few restrictions that apply 
 
 .. _AutodiffComposition_Restrictions:
 
-.. _AutodiffComposition_Modulatory_Mechanisms:
-
 *Only one OutputPort per Node*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The `Nodes <Composition_Nodes>` of an AutodiffComposition currently can have only *one* `OutputPort`, though that
 can have more than one `efferent <Port_Base.efferents>` `MappingProjection`.  Nodes can also have more than one
 `InputPort`, that can receive more than one `afferent `path_afferent <Port_Base.path_afferents>` Projections.
+
+.. _AutodiffComposition_Modulatory_Mechanisms:
 
 *No Modulatory Components*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -133,6 +133,7 @@ default value is being used (see `learning_rate <AutodiffComposition.learning_ra
 
 *No Post-construction Modification*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 COMMENT:
 IS THIS STILL TRUE?
 COMMENT
