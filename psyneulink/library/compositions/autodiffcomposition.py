@@ -80,27 +80,20 @@ Specifically, this precludes any `learning components <Composition_Learning_Comp
 
 .. _Autodiff_Learning_Components_Warning:
 
-*Learning Components.*  An AutodiffComposition **cannot include any** `learning components
+*Learning Components*.  An AutodiffComposition **cannot include any** `learning components
 <Composition_Learning_Components>` themselves (i.e., `LearningMechanisms <LearningMechanism>`, `LearningSignals
 <LearningSignal>`, or `LearningProjections <LearningProjection>`, nor the `ComparatorMechanism`
 or `ObjectiveMechanism` used to compute the loss for learning). These are constructed
 automatically when learning is executed in `Python mode <AutodiffComposition_Python>` or `LLVM mode
-<AutodiffComposition_LLVM>`, and PyTorch-compatible Components are constructed when it is executed in `PyTorch mode
-<AutodiffComposition_PyTorch>`.
+<AutodiffComposition_LLVM>`, and PyTorch-compatible Components are constructed when it is executed in
+`PyTorch mode <AutodiffComposition_PyTorch>`.
 
-COMMENT:
-FIX: IS THE FOLLOWING STILL TRUE? SEEMS TO CONTRADICT STATEMENTS BELOW:
-This means that it cannot be used with a Composition that contains any `modulatory components
-<ModulatorySignal_Anatomy_Figure>` or ones that are subject to modulation, whether by ModulatoryMechanisms within or
-outside the Composition;
-?MAYBE THE FOLLOWING IS BETTER:
-*Control Components.*  An AutodiffComposition also cannot include any `ControlMechanisms <ControlMechanism>` or a
+*Control Components*. An AutodiffComposition also cannot include any `ControlMechanisms <ControlMechanism>` or a
 `controller <Composition_Controller>`.  However, it *can* include Mechanisms that are subject to modulatory control
 (see `Figure <ModulatorySignal_Anatomy_Figure>`, and `modulation <ModulatorySignal_Modulation>`) by ControlMechanisms
 *outside* the Composition, including the controller of a Composition within which the AutodiffComposition is nested.
-That is, an AutodiffComposition can be `nested in a Composition <Composition_Nested>` that has such other Components
+That is, an AutodiffComposition can be `nested in a Composition <Composition_Nested>` that has other such Components
 (see `AutodiffComposition_Nested_Modulation` below).
-COMMENT
 
 .. _AutodiffComposition_Bias_Parameters:
 
@@ -110,7 +103,7 @@ COMMENT
 AutodiffComposition does not (currently) support the *automatic* construction of separate bias parameters.
 Thus, when constructing the PyTorch version of an AutodiffComposition, the `bias
 <https://www.pytorch.org/docs/stable/nn.html#torch.nn.Module>`_ parameter of PyTorch modules are set to False.
-However, biases can be implemented using `BIAS Nodes <Composition_Bias_Nodes>`.
+However, biases can be implemented using `Composition_Bias_Nodes`.
 
 
 .. _AutodiffComposition_Nesting:
