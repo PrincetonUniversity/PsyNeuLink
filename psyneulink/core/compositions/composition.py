@@ -273,8 +273,8 @@ displayed using the Composition's `show_graph <ShowGraph.show_graph>` method (se
 
 .. _Composition_Acyclic_Cyclic:
 
-**Acyclic and Cyclic Graphs**
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*Acyclic and Cyclic Graphs*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Projections are always directed (that is, information is transimtted in only one direction).  Therefore, if the
 Projections among the Nodes of the Composition never form a loop, then it is a `directed acyclic graph (DAG)
@@ -327,20 +327,20 @@ The `get_required_roles_by_node` method lists the `NodeRoles <NodeRole>` that ha
 
 .. _Composition_Bias_Nodes:
 
-**Bias Nodes**
-^^^^^^^^^^^^^^
+*BIAS Nodes*
+^^^^^^^^^^^^
 
-NodeRoles can be used to implement Bias Nodes, which add a bias (constant value) to the input of a Node, that can also
+NodeRoles can be used to implement BIAS Nodes, which add a bias (constant value) to the input of a Node, that can also
 be modified by `learning <Composition_Learning>`. A bias Node is implemented by adding a `ProcessingMechanism` to the
 Composition and requiring it to have the `BIAS` `NodeRole`. The ProcessingMechanims cannot have any afferent
 Projections, and should project to the `InputPort` containing the array of values to be biased. If the bias(es) are
 to be learned, the `learnable <MappingProjection.learnable>` attribute of the MappingProjeciton should be set to True.
 The value of the bias, and how it is applied to the arrays being biased are specified as described below:
 
-    *Single bias value*.  To apply a single scalar bias value to all elements of the array being biased, the
+    *Single bias value*. To apply a single scalar bias value to all elements of the array being biased, the
     `default_variable <Component_Variable>` of the BIAS Node should be specified as a scalar value, and the `matrix
-    <MappingProjection.matrix>` parameter of the MappingProjection should be assigned *FULL_CONNECTIVITY_MATRIX*;  this
-    will use the value for all elements of the bias vector.
+    <MappingProjection.matrix>` parameter of the MappingProjection should be assigned *FULL_CONNECTIVITY_MATRIX*;
+    this will use the value for all elements of the bias vector.
 
     *Array of bias values*. To apply a different bias value to each element of the array being biased, the
     `default_variable <Component_Variable>` of the BIAS Node should be specified as an array conatining the bias
@@ -348,10 +348,15 @@ The value of the bias, and how it is applied to the arrays being biased are spec
     *IDENTITY_MATRIX*; this will use the value of each element of the bias vector to multiply the corresponding
     element of the array being biased.
 
-    *Multiple bias arrays*.  A single BIAS Node can be used to bias multiple arrays by specifying the
-    `default_variable <Component_Variable>` of the BIAS Node as a 2d array, with each array in the outer dimension
-    containing the bias values for a different array; this will generate an `OutputPort` for each bias array, which
-    can be assigned a MappingProjeciton to do different Node to be biased.
+    *Multiple bias arrays*. A single BIAS Node can be used to bias multiple arrays by specifying the
+    `default_variable <Component_Variable>` of the BIAS Node as a 2d array, with each array in the outer
+    dimension containing the bias values for a different array; this will generate an `OutputPort` for each
+    bias array, which can be assigned a MappingProjeciton to do different Node to be biased.
+
+    .. hint::
+       Bias signals can be `modulated <ModulatorySignal_Modulation>` by a `ControlMechanism`, by including
+       a `ControlSignal <ControlSignal_Specification>` for the `slope <Linear.slope>` Parameter of a BIAS Node's
+       `Linear` Function.
 
 
 .. _Composition_Nested:
