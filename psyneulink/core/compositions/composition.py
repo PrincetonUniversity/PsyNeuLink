@@ -22,7 +22,9 @@ Contents
      - `Composition_Add_Nested`
   * `Composition_Structure`
      - `Composition_Graph`
+        • `Composition_Acyclic_Cyclic`
      - `Composition_Nodes`
+        • `Composition_Bias_Nodes`
      - `Composition_Nested`
         • `Probes <Composition_Probes>`
      - `Composition_CIMs`
@@ -330,9 +332,9 @@ The `get_required_roles_by_node` method lists the `NodeRoles <NodeRole>` that ha
 *BIAS Nodes*
 ^^^^^^^^^^^^
 
-NodeRoles can be used to implement BIAS Nodes, which add a bias (constant value) to the input of a Node, that can also
-be modified by `learning <Composition_Learning>`. A bias Node is implemented by adding a `ProcessingMechanism` to the
-Composition and requiring it to have the `BIAS` `NodeRole`. The ProcessingMechanims cannot have any afferent
+NodeRoles can be used to implement BIAS Nodes, which add a bias (constant value) to the input of another Node, that can
+also be modified by `learning <Composition_Learning>`. A bias Node is implemented by adding a `ProcessingMechanism` to
+the Composition and requiring it to have the `BIAS` `NodeRole`. The ProcessingMechanims cannot have any afferent
 Projections, and should project to the `InputPort` containing the array of values to be biased. If the bias(es) are
 to be learned, the `learnable <MappingProjection.learnable>` attribute of the MappingProjeciton should be set to True.
 The value of the bias, and how it is applied to the arrays being biased are specified as described below:
@@ -4692,15 +4694,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                               f"The relevant {Projection.__name__} to it must be designated as 'feedback' "
                               f"where it is addd to the {self.name};  assignment will be ignored.")
             elif role is NodeRole.BIAS:
-                if (node, NodeRole.INPUT) in self.required_node_roles:
-                    raise CompositionError(f"A BIAS Node ('{node.name}' cannot be assigned NodeRole.INPUT.")
-                for input_port in node.input_ports:
-                    if input_port.path_afferents:
-                        raise CompositionError(f"Attempt to add 'NodeRole.BIAS' to a node ('{node.name}') "
+                if any(p.path_afferents for p in node.input_ports):
+                    if all([isinstance(proj.sender.owner, CompositionInterfaceMechanism) for proj in p.path_afferents]
+                           for p in node.input_ports):
+                        # Was an INPUT Node with Projections from input_CIM,
+                        #   so exclude as INPUT which should remove its afferent Projections
+                        self.exclude_node_roles(node, NodeRole.INPUT, context)
+                        self._analyze_graph(context=context)
+                    else:
+                        # Had afferent Projections other than from input_CIM
+                        raise CompositionError(f"Attempt to assign 'NodeRole.BIAS' to a node ('{node.name}') "
                                                f"in '{self.name}' that already has input(s) assigned.")
+                for input_port in node.input_ports:
                     input_port.parameters.default_input._set(DEFAULT_VARIABLE, context, override=True)
                     input_port.internal_only = True
-                self.required_node_roles.append((node, role))
+                self.exclude_node_roles(node, NodeRole.INPUT, context)
+                self.required_node_roles.append((node, NodeRole.BIAS))
 
             elif role is NodeRole.INPUT:
                 if (node, NodeRole.BIAS) in self.required_node_roles:
@@ -4873,7 +4882,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     nested_nodes.extend(node.get_nested_nodes_by_roles_at_any_level(node, include_roles, exclude_roles))
                 else:
                     nested_nodes.append(node)
-        return nested_nodes if any(nested_nodes) else None
+        return nested_nodes if any(nested_nodes) else []
 
     def get_nested_input_nodes_at_all_levels(self)->list or None:
         """Return all Nodes from nested Compositions that receive input directly from input to outermost Composition."""
