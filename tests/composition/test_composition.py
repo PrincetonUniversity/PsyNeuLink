@@ -7348,7 +7348,7 @@ class TestNodeRoles:
         with pytest.raises(CompositionError) as error_text:
             MappingProjection(sender=mech_in, receiver=mech_double_bias.input_ports['second'])
             Composition(pathways=[mech_in, {mech_out, (mech_double_bias, NodeRole.BIAS)}])
-        assert (f"Attempt to add 'NodeRole.BIAS' to a node ('DOUBLE BIAS') in 'Composition-3' "
+        assert (f"Attempt to assign 'NodeRole.BIAS' to a node ('DOUBLE BIAS') in 'Composition-3' "
                 f"that already has input(s) assigned.") in str(error_text)
 
         with pytest.raises(CompositionError) as error_text:
