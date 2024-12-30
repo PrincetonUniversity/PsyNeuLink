@@ -5524,6 +5524,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        or all(p.sender.owner is self.input_CIM for p in node.path_afferents))):
                 self._add_node_role(node, NodeRole.INPUT)
 
+            if isinstance(node, Composition):
+                if not node.get_nodes_by_role(NodeRole.INPUT):
+                    # If a nested Composition has not INUTS, remove it as an INPUT of the outer Composition
+                    self._remove_node_role(node, NodeRole.INPUT)
+
         # BIAS
         for node in self.nodes:
             if (isinstance(node, Mechanism)
@@ -12159,7 +12164,9 @@ _
 
                 self.parameter_CIM.execute(context=context)
 
-            else:
+            # else:
+            elif self.get_nodes_by_role(NodeRole.INPUT):
+                # If there are any INPUT Nodes (otherwise, skip executing input_CIM)
                 assert build_CIM_input != NotImplemented, f"{self} not in nested mode and no inputs available"
                 self.input_CIM.execute(build_CIM_input, context=context)
 
