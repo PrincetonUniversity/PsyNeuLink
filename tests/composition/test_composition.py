@@ -7356,10 +7356,10 @@ class TestNodeRoles:
         # Composition with only a BIAS Node as its ORIGIN (i.e., no INPUT Nodes)
         comp = Composition(pathways=[(mech_double_bias, [NodeRole.BIAS]), mech_out])
         assert mech_double_bias.input_port.default_input == DEFAULT_VARIABLE
-        assert comp.get_nodes_by_role(NodeRole.BIAS) == [mech_single_bias]
+        assert comp.get_nodes_by_role(NodeRole.BIAS) == [mech_double_bias]
         assert comp.get_nodes_by_role(NodeRole.INPUT) == []
         results = comp.run()
-        assert all(results == [[3.]])
+        assert all(results == [[1],[1]])
 
         # BIAS Node in nested Composition
         comp = Composition(pathways=[[mech_in, mech_out], (mech_double_bias, [NodeRole.BIAS])])
@@ -7370,12 +7370,12 @@ class TestNodeRoles:
         with pytest.raises(CompositionError) as error_text:
             Composition(pathways=[mech_in, {mech_out, (mech_single_bias, NodeRole.BIAS)}])
         assert (f"'SINGLE BIAS' is configured as a BIAS node, so it cannot receive a MappingProjection from 'INPUT' "
-                f"as currently specified for a pathway in 'Composition-2'.") in str(error_text)
+                f"as currently specified for a pathway in 'Composition-5'.") in str(error_text)
 
         with pytest.raises(CompositionError) as error_text:
             MappingProjection(sender=mech_in, receiver=mech_double_bias.input_ports['second'])
             Composition(pathways=[mech_in, {mech_out, (mech_double_bias, NodeRole.BIAS)}])
-        assert (f"Attempt to assign 'NodeRole.BIAS' to a node ('DOUBLE BIAS') in 'Composition-3' "
+        assert (f"Attempt to assign 'NodeRole.BIAS' to a node ('DOUBLE BIAS') in 'Composition-6' "
                 f"that already has input(s) assigned.") in str(error_text)
 
         with pytest.raises(CompositionError) as error_text:
