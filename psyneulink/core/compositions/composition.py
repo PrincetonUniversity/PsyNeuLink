@@ -11310,7 +11310,8 @@ _
                 num_trials = 1
             else:
                 # IMPLEMENTATION NOTE:
-                #     Even though there are not trials to execute, still carry out any remaining "house-keeping."
+                #     Could break here, since there is nothing to execute,
+                #     but probably wisest to still carry out any remaining "house-keeping."
                 num_trials = 0
 
         scheduler._reset_counts_total(TimeScale.RUN, context.execution_id)
