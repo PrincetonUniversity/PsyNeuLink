@@ -7325,16 +7325,43 @@ class TestNodeRoles:
     def test_BIAS(self):
         mech_in = ProcessingMechanism(name='INPUT')
         mech_out = ProcessingMechanism(name='OUTPUT', output_ports = ['a','b'])
-        mech_single_bias = ProcessingMechanism(name='SINGLE BIAS')
+        mech_single_bias = ProcessingMechanism(name='SINGLE BIAS',
+                                               default_variable = [[3]])
         mech_double_bias = ProcessingMechanism(name='DOUBLE BIAS',
                                                input_ports=['first','second'],
                                                default_variable = [[1],[2]])
 
+        # Composition with a BIAS Node that has one InputPort/OutputPort
         comp = Composition(pathways=[[mech_in, mech_out], (mech_single_bias, [NodeRole.BIAS])])
         assert mech_single_bias.input_port.default_input == DEFAULT_VARIABLE
         assert comp.get_nodes_by_role(NodeRole.BIAS) == [mech_single_bias]
-        assert comp.get_nodes_by_role(NodeRole.INPUT) == [mech_in] # mech_single_bias should not be and INPUT Node
+        assert comp.get_nodes_by_role(NodeRole.INPUT) == [mech_in] # mech_single_bias should not be an INPUT Node
+        results = comp.run()
+        assert all(results == [[0.], [0.], [3.]])
 
+        # Composition with a BIAS Node that has two InputPorts/OutputPorts
+        comp = Composition(pathways=[[mech_in, mech_out], (mech_double_bias, [NodeRole.BIAS])])
+        assert all(p.default_input == DEFAULT_VARIABLE for p in mech_double_bias.input_ports)
+        results = comp.run()
+        assert all(results == [[0.], [0.], [1.], [2.]])
+
+        # Composition with just a BIAS Node
+        comp = Composition(pathways=[(mech_double_bias, [NodeRole.BIAS])])
+        assert mech_double_bias.input_port.default_input == DEFAULT_VARIABLE
+        assert comp.get_nodes_by_role(NodeRole.BIAS) == [mech_double_bias]
+        assert comp.get_nodes_by_role(NodeRole.INPUT) == []
+        results = comp.run()
+        assert all(results == [[1.],[2.]])
+
+        # Composition with only a BIAS Node as its ORIGIN (i.e., no INPUT Nodes)
+        comp = Composition(pathways=[(mech_double_bias, [NodeRole.BIAS]), mech_out])
+        assert mech_double_bias.input_port.default_input == DEFAULT_VARIABLE
+        assert comp.get_nodes_by_role(NodeRole.BIAS) == [mech_single_bias]
+        assert comp.get_nodes_by_role(NodeRole.INPUT) == []
+        results = comp.run()
+        assert all(results == [[3.]])
+
+        # BIAS Node in nested Composition
         comp = Composition(pathways=[[mech_in, mech_out], (mech_double_bias, [NodeRole.BIAS])])
         assert all(p.default_input == DEFAULT_VARIABLE for p in mech_double_bias.input_ports)
         results = comp.run()

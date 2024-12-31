@@ -7761,7 +7761,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # The preceding entry is a Node or set of them:
                 #  - if it is a set, list or array, leave as is, else place in set for consistency of processing below
                 preceding_entry = (pathway[c - 1] if isinstance(pathway[c - 1], (set, list, np.ndarray))
-                                   else {pathway[c - 1]})
+                                   else {pathway[c - 1] if not isinstance(pathway[c - 1], tuple) else pathway[c - 1][0]})
                 if all(_is_node_spec(sender) for sender in preceding_entry):
                     senders = _get_node_specs_for_entry(preceding_entry, NodeRole.OUTPUT)
                     projs = set()
@@ -11297,10 +11297,17 @@ _
 
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
-        inputs, num_inputs_sets = self._parse_run_inputs(inputs, context)
+        if input_nodes:
+            inputs, num_inputs_sets = self._parse_run_inputs(inputs, context)
+        else:
+            inputs = {}
+            num_inputs_sets = 0
 
         if num_trials is None:
-            num_trials = num_inputs_sets
+            if input_nodes:
+                num_trials = num_inputs_sets
+            else:
+                num_trials = 1
 
         scheduler._reset_counts_total(TimeScale.RUN, context.execution_id)
 
@@ -11478,11 +11485,14 @@ _
 
                 # PROCESSING ------------------------------------------------------------------------
                 # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
-                try:
-                    # IMPLEMENTATION NOTE: for autdoiff, the following includes backward pass after forward pass
-                    execution_stimuli = self._parse_trial_inputs(inputs, trial_num, context)
-                except StopIteration:
-                    break
+                if input_nodes:
+                    try:
+                        # IMPLEMENTATION NOTE: for autdoiff, the following includes backward pass after forward pass
+                        execution_stimuli = self._parse_trial_inputs(inputs, trial_num, context)
+                    except StopIteration:
+                        break
+                else:
+                    execution_stimuli = None
 
                 # execute processing, passing stimuli for this trial
                 # IMPLEMENTATION NOTE: for autodiff, the following executes the forward pass for a single input
@@ -12165,13 +12175,13 @@ _
                 self.parameter_CIM.execute(context=context)
 
             # else:
-            elif self.get_nodes_by_role(NodeRole.INPUT):
+            elif input_nodes:
                 # If there are any INPUT Nodes (otherwise, skip executing input_CIM)
                 assert build_CIM_input != NotImplemented, f"{self} not in nested mode and no inputs available"
                 self.input_CIM.execute(build_CIM_input, context=context)
 
                 # Update nested compositions
-                for comp in (node for node in self.get_nodes_by_role(NodeRole.INPUT) if isinstance(node, Composition)):
+                for comp in (node for node in input_nodes if isinstance(node, Composition)):
                     for port in comp.input_ports:
                         port._update(context=context)
 
@@ -12431,7 +12441,7 @@ _
                             if node is not self.controller:
                                 mech_context = copy(context)
                                 mech_context.source = ContextFlags.COMPOSITION
-                                if self.is_nested and node in self.get_nodes_by_role(NodeRole.INPUT):
+                                if self.is_nested and node in input_nodes:
                                     for port in node.input_ports:
                                         port._update(context=context)
                                 node.execute(context=mech_context,
