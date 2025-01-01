@@ -7322,7 +7322,7 @@ class TestNodeRoles:
 
         assert comp.get_nodes_by_role(NodeRole.INTERNAL) == [B]
 
-    class TestBIASnodes:
+    class TestBIAS:
         @pytest.fixture
         def nodes(self):
             mech_in = ProcessingMechanism(name='INPUT')
