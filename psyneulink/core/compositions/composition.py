@@ -11300,6 +11300,11 @@ _
         if input_nodes:
             inputs, num_inputs_sets = self._parse_run_inputs(inputs, context)
         else:
+            if inputs:
+                # No inputs should be passed to run since there are no INPUT Nodes
+                raise RunError(f"The following items specified in the 'inputs' arg of the run() method for "
+                               f"'{self.name}' are not INPUT Nodes of that Composition (nor InputPorts of them): "
+                               f"{', '.join([node.name for node in inputs.keys()])}.")
             inputs = {}
             num_inputs_sets = 0
 
