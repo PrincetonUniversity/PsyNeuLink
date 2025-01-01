@@ -7419,7 +7419,7 @@ class TestNodeRoles:
             result = comp.run(inputs={nodes('INPUT'):[[[1]]]})
             assert all(result == [[3]])
 
-        def test_ERRORS(self, nodes):
+        def test_BIAS_Node_errors(self, nodes):
             with pytest.raises(CompositionError) as error_text:
                 Composition(pathways=[nodes('INPUT'), {nodes('OUTPUT'), (nodes('SINGLE BIAS'), NodeRole.BIAS)}])
             assert (f"'SINGLE BIAS' is configured as a BIAS node, so it cannot receive a MappingProjection from 'INPUT' "
