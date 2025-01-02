@@ -7405,13 +7405,13 @@ class TestNodeRoles:
 
         @pytest.mark.nested
         def test_BIAS_Node_errors(self, nodes, comp_mode):
-            # Error when BIAS Node is assigned in a pathway that would cause it to be assigned a afferent Projection
+            # Error if BIAS Node is assigned in a pathway that would cause it to be assigned a afferent Projection
             with pytest.raises(CompositionError) as error_text:
                 Composition(pathways=[nodes('INPUT'), {nodes('OUTPUT'), (nodes('SINGLE BIAS'), NodeRole.BIAS)}])
             assert (f"'SINGLE BIAS' is configured as a BIAS node, so it cannot receive a MappingProjection "
                     f"from 'INPUT' as currently specified for a pathway in 'Composition-0'.") in str(error_text)
 
-            # Error when BIAS Node in nested Composition is assigned an afferent Projection
+            # Error if BIAS Node in nested Composition is assigned an afferent Projection
             with pytest.raises(CompositionError) as error_text:
                 nested_comp = Composition(pathways=[(nodes('SINGLE BIAS'), NodeRole.BIAS)])
                 Composition(pathways=[nodes('INPUT'), {nodes('OUTPUT'), nested_comp}])
