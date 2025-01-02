@@ -7281,7 +7281,6 @@ class TestResetValues:
         assert comp.results == []
 
 
-@pytest.mark.llvm_not_implemented
 @pytest.mark.composition
 class TestNodeRoles:
 
@@ -7305,6 +7304,7 @@ class TestNodeRoles:
 
         assert comp.get_nodes_by_role(NodeRole.INTERNAL) == [B]
 
+    @pytest.mark.llvm_not_implemented
     class TestBIAS:
         @pytest.fixture
         def nodes(self):
@@ -7324,15 +7324,6 @@ class TestNodeRoles:
             def _get_node(node):
                 return nodes[node]
             return _get_node
-
-        @pytest.fixture
-        def mode(self, comp_mode):
-            exec_mode = {pnl.ExecutionMode.Python: comp_mode,
-                         pnl.ExecutionMode.LLVMRun: pytest.param(pnl.ExecutionMode.LLVMRun,
-                                                                 marks=pytest.mark.llvm),
-                         pnl.ExecutionMode.PTXRun: pytest.param(pnl.ExecutionMode.PTXRun,
-                                                                marks=[pytest.mark.llvm, pytest.mark.cuda])}
-            return exec_mode[comp_mode]
 
         def test_single_BIAS_Node(self, nodes, comp_mode):
             """Composition with a BIAS Node that has one InputPort/OutputPort"""
