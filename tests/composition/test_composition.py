@@ -7407,7 +7407,7 @@ class TestNodeRoles:
             assert ("The following items specified in the 'inputs' arg of the run() method for 'Composition-0' "
                     "are not INPUT Nodes of that Composition (nor InputPorts of them): OUTPUT." in str(error_text))
 
-        def test_BIAS_Node_in_nested_composition(self, nodes):
+        def test_BIAS_Node_as_only_ORIGIN_Node_in_nested_composition(self, nodes):
             """Composition with a nested Composition that has a BIAS Node"""
             nested_comp = Composition(name='NESTED COMP', pathways=[(nodes('SINGLE BIAS'), NodeRole.BIAS)])
             comp = Composition(name='COMP', pathways=[[nodes('INPUT'), nodes('OUTPUT')], nested_comp])
