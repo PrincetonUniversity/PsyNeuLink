@@ -7742,13 +7742,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for node in entry:
                     # Extract Nodes from any tuple specs
                     node = _get_spec_if_tuple(node)
-                    # Replace any nested Compositions with their INPUT Nodes
-                    node = (self.get_nested_nodes_by_roles_at_any_level(node, include_roles, exclude_roles)
-                                if isinstance(node, Composition) else [node])
-                    if not node:
-                        raise CompositionError(f"A nested Composition ('{list(entry)[0].name}') included in "
-                                               f"{pathway_arg_str} is empty; (i.e., does not have any nodes "
-                                               f"with the specified NodeRole(s) assigned to it yet).")
+                    if isinstance(node, Composition):
+                        # Replace any nested Compositions with their INPUT Nodes
+                        nested_nodes = self.get_nested_nodes_by_roles_at_any_level(node, include_roles, exclude_roles)
+                        if not nested_nodes:
+                            err_msg = (f"A nested Composition ('{node.name}') included {pathway_arg_str} "
+                                       f"does not (yet) have a Node with the NodeRole '{include_roles.name}' "
+                                       f"required by its position the specified pathway.")
+                            if NodeRole.INPUT in convert_to_list(include_roles):
+                                nested_nodes = self.get_nested_nodes_by_roles_at_any_level(node, NodeRole.BIAS)
+                                if nested_nodes:
+                                    if node.get_nodes_by_role(NodeRole.ORIGIN) == nested_nodes:
+                                        err_msg += (f" This is probably because its only ORIGIN Node is "
+                                                    f"'{nested_nodes[0].name}' which a BIAS Node and therefore "
+                                                    f"cannot accept any input.")
+                            raise CompositionError(err_msg)
+                        node = nested_nodes
+                    else:
+                        node = [node]
                     nodes.extend(node)
                 return nodes
 

@@ -7390,7 +7390,7 @@ class TestNodeRoles:
             assert comp.get_nodes_by_role(NodeRole.INPUT) == []
 
         def test_BIAS_Node_as_only_ORIGIN_Node(self, nodes):
-            # Composition with only a BIAS Node as its ORIGIN (i.e., no INPUT Nodes)
+            # Composition with only a BIAS Node as its ORIGIN (i.e., no INPUT Nodes); test for no inputs allowed.
             comp = Composition(pathways=[(nodes('SINGLE BIAS'), NodeRole.BIAS), nodes('OUTPUT')])
             assert comp.get_nodes_by_role(NodeRole.BIAS) == [nodes('SINGLE BIAS')]
             assert comp.get_nodes_by_role(NodeRole.ORIGIN) == [nodes('SINGLE BIAS')]
@@ -7420,22 +7420,35 @@ class TestNodeRoles:
             assert all(result == [[3]])
 
         def test_BIAS_Node_errors(self, nodes):
+            # Error when BIAS Node is assigned in a pathway that would cause it to be assigned a afferent Projection
             with pytest.raises(CompositionError) as error_text:
                 Composition(pathways=[nodes('INPUT'), {nodes('OUTPUT'), (nodes('SINGLE BIAS'), NodeRole.BIAS)}])
-            assert (f"'SINGLE BIAS' is configured as a BIAS node, so it cannot receive a MappingProjection from 'INPUT' "
-                    f"as currently specified for a pathway in 'Composition-0'.") in str(error_text)
+            assert (f"'SINGLE BIAS' is configured as a BIAS node, so it cannot receive a MappingProjection "
+                    f"from 'INPUT' as currently specified for a pathway in 'Composition-0'.") in str(error_text)
 
+            # Error when BIAS Node in nested Composition is assigned an afferent Projection
+            with pytest.raises(CompositionError) as error_text:
+                nested_comp = Composition(pathways=[(nodes('SINGLE BIAS'), NodeRole.BIAS)])
+                Composition(pathways=[nodes('INPUT'), {nodes('OUTPUT'), nested_comp}])
+            assert (f"A nested Composition ('Composition-1') included in 'pathway' arg for "
+                    f"add_linear_processing_pathway method of 'Composition-2' does not (yet) have a Node "
+                    f"with the NodeRole 'INPUT' required by its position the specified pathway. "
+                    f"This is probably because its only ORIGIN Node is 'SINGLE BIAS' which a BIAS Node "
+                    f"and therefore cannot accept any input.") in str(error_text.value)
+
+            # Error assigning NodeRole.BIAS to Node that already has an afferent Projection.
             with pytest.raises(CompositionError) as error_text:
                 MappingProjection(sender=nodes('INPUT'), receiver=nodes('DOUBLE BIAS').input_ports['second'])
                 Composition(pathways=[nodes('INPUT'), {nodes('OUTPUT'), (nodes('DOUBLE BIAS'), NodeRole.BIAS)}])
-            assert (f"Attempt to assign 'NodeRole.BIAS' to a node ('DOUBLE BIAS') in 'Composition-1' "
-                    f"that already has input(s) assigned.") in str(error_text)
+            assert (f"Attempt to assign 'NodeRole.BIAS' to a node ('DOUBLE BIAS') in 'Composition-3' "
+                    f"that already has input(s) assigned.") in str(error_text.value)
 
+            # Error when assigning Node both NodeRole.BIAS and NodeRole.INPUT
             with pytest.raises(CompositionError) as error_text:
                 Composition(pathways=[[nodes('INPUT'), nodes('OUTPUT')],
                                       (nodes('SINGLE BIAS'), [NodeRole.BIAS, NodeRole.INPUT])])
-            assert ("A Node assigned NodeRole.BIAS ('SINGLE BIAS') cannot also be assigned NodeRole.INPUT "
-                    "(since it does not receive any input).") in str(error_text)
+            assert (f"A Node assigned NodeRole.BIAS ('SINGLE BIAS') cannot also be assigned NodeRole.INPUT "
+                    f"(since it does not receive any input).") in str(error_text.value)
 
     def test_input_labels_and_results_by_node_and_no_orphaning_of_nested_output_nodes(self):
         """
