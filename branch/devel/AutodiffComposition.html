@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.15.3.0+7.g786a69890 documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.15.3.0+8.gbc850c473 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.3.0+7
+                  0.15.3.0+8
                 </div>
               
             
@@ -209,6 +209,7 @@
 <p><em>Related</em></p>
 <ul class="simple">
 <li><p><a class="reference internal" href="Composition.html#composition-learning"><span class="std std-ref">Learning in a Composition</span></a></p></li>
+<li><p><a class="reference internal" href="Composition.html#composition-bias-nodes"><span class="std std-ref">BIAS Nodes</span></a></p></li>
 </ul>
 </div>
 <span class="target" id="module-psyneulink.library.compositions.autodiffcomposition"></span><section id="contents">
@@ -216,24 +217,34 @@
 <blockquote>
 <div><ul>
 <li><p><a class="reference internal" href="#autodiffcomposition-overview"><span class="std std-ref">Overview</span></a></p></li>
-<li><p><a class="reference internal" href="#autodiffcomposition-creation"><span class="std std-ref">Creating an AutodiffComposition</span></a>
-- <code class="xref any docutils literal notranslate"><span class="pre">AutodiffComposition_</span></code></p>
-<blockquote>
-<div><ul class="simple">
-<li><p><a class="reference internal" href="#autodiffcomposition-modulatory-mechanisms"><span class="std std-ref">Only one OutputPort per Node</span></a></p></li>
+<li><dl>
+<dt><a class="reference internal" href="#autodiffcomposition-creation"><span class="std std-ref">Creating an AutodiffComposition</span></a></dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt><a class="reference internal" href="#"><span class="doc">AutodiffComposition</span></a></dt><dd><ul>
+<li><p><a class="reference internal" href="#autodiffcomposition-modulatory-mechanisms"><span class="std std-ref">No Modulatory Components</span></a></p></li>
 <li><p><a class="reference internal" href="#autodiffcomposition-bias-parameters"><span class="std std-ref">No Bias Parameters</span></a></p></li>
 <li><p><a class="reference internal" href="#autodiffcomposition-nesting"><span class="std std-ref">Nesting</span></a></p></li>
 <li><p><a class="reference internal" href="#autodiffcomposition-post-construction-modification"><span class="std std-ref">No Post-construction Modification</span></a></p></li>
 </ul>
-</div></blockquote>
-<ul class="simple">
-<li><p><a class="reference internal" href="#autodiffcomposition-execution"><span class="std std-ref">Execution</span></a>
-- <a class="reference internal" href="#autodiffcomposition-pytorch"><span class="std std-ref">PyTorch mode</span></a>
-- <a class="reference internal" href="#autodiffcomposition-llvm"><span class="std std-ref">LLVM mode</span></a>
-- <a class="reference internal" href="#autodiffcomposition-python"><span class="std std-ref">Python mode</span></a>
-- <a class="reference internal" href="#autodiffcomposition-nested-modulation"><span class="std std-ref">Nested Execution and Modulation</span></a>
-- <a class="reference internal" href="#autodiffcomposition-logging"><span class="std std-ref">Logging</span></a></p></li>
+</dd>
+</dl>
+</li>
 </ul>
+<ul class="simple">
+<li><dl class="simple">
+<dt><a class="reference internal" href="#autodiffcomposition-execution"><span class="std std-ref">Execution</span></a></dt><dd><ul>
+<li><p><a class="reference internal" href="#autodiffcomposition-pytorch"><span class="std std-ref">PyTorch mode</span></a></p></li>
+<li><p><a class="reference internal" href="#autodiffcomposition-llvm"><span class="std std-ref">LLVM mode</span></a></p></li>
+<li><p><a class="reference internal" href="#autodiffcomposition-python"><span class="std std-ref">Python mode</span></a></p></li>
+<li><p><a class="reference internal" href="#autodiffcomposition-nested-modulation"><span class="std std-ref">Nested Execution and Modulation</span></a></p></li>
+<li><p><a class="reference internal" href="#autodiffcomposition-logging"><span class="std std-ref">Logging</span></a></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
 </li>
 <li><p><a class="reference internal" href="#autodiffcomposition-examples"><span class="std std-ref">Examples</span></a></p></li>
 <li><p><a class="reference internal" href="#autodiffcomposition-class-reference"><span class="std std-ref">Class Reference</span></a></p></li>
@@ -261,39 +272,32 @@ specific to the AutodiffComposition (see <a class="reference internal" href="#au
 and <a class="reference internal" href="#autodiffcomposition-examples"><span class="std std-ref">examples</span></a> below). While an AutodiffComposition can generally be created using the
 same methods as a standard Composition, there are a few restrictions that apply to its construction, summarized below.</p>
 <section id="only-one-outputport-per-node">
-<span id="autodiffcomposition-modulatory-mechanisms"></span><span id="autodiffcomposition-restrictions"></span><h3><em>Only one OutputPort per Node</em><a class="headerlink" href="#only-one-outputport-per-node" title="Permalink to this headline">¶</a></h3>
+<span id="autodiffcomposition-restrictions"></span><h3><em>Only one OutputPort per Node</em><a class="headerlink" href="#only-one-outputport-per-node" title="Permalink to this headline">¶</a></h3>
 <p>The <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> of an AutodiffComposition currently can have only <em>one</em> <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>, though that
 can have more than one <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.efferents" title="psyneulink.core.components.ports.port.Port_Base.efferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">efferent</span></code></a> <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.  Nodes can also have more than one
 <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>, that can receive more than one <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.path_afferents" title="psyneulink.core.components.ports.port.Port_Base.path_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">afferent</span> <span class="pre">`path_afferent</span></code></a> Projections.</p>
 </section>
 <section id="no-modulatory-components">
-<h3><em>No Modulatory Components</em><a class="headerlink" href="#no-modulatory-components" title="Permalink to this headline">¶</a></h3>
+<span id="autodiffcomposition-modulatory-mechanisms"></span><h3><em>No Modulatory Components</em><a class="headerlink" href="#no-modulatory-components" title="Permalink to this headline">¶</a></h3>
 <p>All of the Components in an AutodiffComposition must be able to be subjected to <a class="reference internal" href="Composition.html#composition-learning"><span class="std std-ref">learning</span></a>,
 which means that no <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanisms</span></a> can be included in an AutodiffComposition.
 Specifically, this precludes any <a class="reference internal" href="Composition.html#composition-learning-components"><span class="std std-ref">learning components</span></a>, <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanisms</span></a>, or a <a class="reference internal" href="Composition.html#composition-controller"><span class="std std-ref">controller</span></a>.</p>
-<p id="autodiff-learning-components-warning"><em>Learning Components.</em>  An AutodiffComposition <strong>cannot include any</strong> <a class="reference internal" href="Composition.html#composition-learning-components"><span class="std std-ref">learning components</span></a> themselves (i.e., <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a>, <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignals</span></a>, or LearningProjections &lt;LearningProjection&gt;`, nor the <code class="xref any docutils literal notranslate"><span class="pre">ComparatorMechanism</span></code>
-or <a class="reference internal" href="Composition.html#objective-mechanism"><span class="std std-ref">ObjectiveMechanism</span></a> used to compute the loss for learning). These are constructed
-automatically when learning is executed in <a class="reference internal" href="#autodiffcomposition-python"><span class="std std-ref">Python mode</span></a> or <a class="reference internal" href="#autodiffcomposition-llvm"><span class="std std-ref">LLVM mode</span></a>, and PyTorch-compatible Components are constructed when it is executed in <a class="reference internal" href="#autodiffcomposition-pytorch"><span class="std std-ref">PyTorch mode</span></a>.</p>
-<p><em>Control Components.</em>  An AutodiffComposition also cannot include any <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanisms</span></a> or a
+<p id="autodiff-learning-components-warning"><em>Learning Components</em>.  An AutodiffComposition <strong>cannot include any</strong> <a class="reference internal" href="Composition.html#composition-learning-components"><span class="std std-ref">learning components</span></a> themselves (i.e., <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a>, <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignals</span></a>, or <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a>, nor the <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a>
+or <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> used to compute the loss for learning). These are constructed
+automatically when learning is executed in <a class="reference internal" href="#autodiffcomposition-python"><span class="std std-ref">Python mode</span></a> or <a class="reference internal" href="#autodiffcomposition-llvm"><span class="std std-ref">LLVM mode</span></a>, and PyTorch-compatible Components are constructed when it is executed in
+<a class="reference internal" href="#autodiffcomposition-pytorch"><span class="std std-ref">PyTorch mode</span></a>.</p>
+<p><em>Control Components</em>. An AutodiffComposition also cannot include any <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanisms</span></a> or a
 <a class="reference internal" href="Composition.html#composition-controller"><span class="std std-ref">controller</span></a>.  However, it <em>can</em> include Mechanisms that are subject to modulatory control
 (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-anatomy-figure"><span class="std std-ref">Figure</span></a>, and <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">modulation</span></a>) by ControlMechanisms
 <em>outside</em> the Composition, including the controller of a Composition within which the AutodiffComposition is nested.
-That is, an AutodiffComposition can be <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested in a Composition</span></a> that has such other Components
+That is, an AutodiffComposition can be <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested in a Composition</span></a> that has other such Components
 (see <a class="reference internal" href="#autodiffcomposition-nested-modulation"><span class="std std-ref">Nested Execution and Modulation</span></a> below).</p>
 </section>
 <section id="no-bias-parameters">
 <span id="autodiffcomposition-bias-parameters"></span><h3><em>No Bias Parameters</em><a class="headerlink" href="#no-bias-parameters" title="Permalink to this headline">¶</a></h3>
 <p>AutodiffComposition does not (currently) support the <em>automatic</em> construction of separate bias parameters.
-Thus, when constructing a model using an AutodiffComposition that corresponds to one in PyTorch, the <code class="xref any docutils literal notranslate"><span class="pre">bias</span></code> parameter of PyTorch modules should be set
-to <code class="xref any docutils literal notranslate"><span class="pre">False</span></code>.</p>
-<blockquote>
-<div><p>Trainable biases <em>can</em> be specified explicitly in an AutodiffComposition by including a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>
-that projects to the relevant Mechanism (i.e., implementing that layer of the network to receive the biases)
-using a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> with a <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter that implements a diagnoal
-matrix with values corresponding to the initial value of the biases, and setting the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.default_input" title="psyneulink.core.components.ports.inputport.InputPort.default_input"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">default_input</span></code></a> Parameter of one of the ProcessingMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a> to <em>DEFAULT_VARIABLE</em>, and its <code class="xref any docutils literal notranslate"><span class="pre">default_variable</span></code>
-equal to 1. ProcessingMechanisms configured in this way are assigned <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRole</span></code></a> <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.BIAS" title="psyneulink.core.compositions.composition.NodeRole.BIAS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">BIAS</span></code></a>, and the MappingProjection
-is subject to learning.</p>
-</div></blockquote>
+Thus, when constructing the PyTorch version of an AutodiffComposition, the <a class="reference external" href="https://www.pytorch.org/docs/stable/nn.html#torch.nn.Module">bias</a> parameter of PyTorch modules are set to False.
+However, biases can be implemented using <a class="reference internal" href="Composition.html#composition-bias-nodes"><span class="std std-ref">BIAS Nodes</span></a>.</p>
 </section>
 <section id="nesting">
 <span id="autodiffcomposition-nesting"></span><h3><em>Nesting</em><a class="headerlink" href="#nesting" title="Permalink to this headline">¶</a></h3>

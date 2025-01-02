@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.15.3.0+7.g786a69890 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.15.3.0+8.gbc850c473 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.3.0+7
+                  0.15.3.0+8
                 </div>
               
             
@@ -251,8 +251,20 @@
 </li>
 <li><dl class="simple">
 <dt><a class="reference internal" href="#composition-structure"><span class="std std-ref">Composition Structure</span></a></dt><dd><ul>
-<li><p><a class="reference internal" href="#composition-graph"><span class="std std-ref">Graph</span></a></p></li>
-<li><p><a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a></p></li>
+<li><dl class="simple">
+<dt><a class="reference internal" href="#composition-graph"><span class="std std-ref">Graph</span></a></dt><dd><ul>
+<li><p><a class="reference internal" href="#composition-acyclic-cyclic"><span class="std std-ref">Acyclic and Cyclic Graphs</span></a></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a></dt><dd><ul>
+<li><p><a class="reference internal" href="#composition-bias-nodes"><span class="std std-ref">BIAS Nodes</span></a></p></li>
+</ul>
+</dd>
+</dl>
+</li>
 <li><dl class="simple">
 <dt><a class="reference internal" href="#composition-nested"><span class="std std-ref">Nested Compositions</span></a></dt><dd><ul>
 <li><p><a class="reference internal" href="#composition-probes"><span class="std std-ref">Probes</span></a></p></li>
@@ -566,7 +578,7 @@ graph, which can be <a class="reference internal" href="#composition-acyclic-cyc
 <a class="reference internal" href="#composition-nested"><span class="std std-ref">nested Compositions</span></a>) as described below. A Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.graph" title="psyneulink.core.compositions.composition.Composition.graph"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">graph</span></code></a> can be
 displayed using the Composition’s <a class="reference internal" href="Visualization.html#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method (see <a class="reference internal" href="Visualization.html#showgraph-show-graph-method"><span class="std std-ref">Use of the show_graph Method</span></a>).</p>
 <section id="acyclic-and-cyclic-graphs">
-<span id="composition-acyclic-cyclic"></span><h4><strong>Acyclic and Cyclic Graphs</strong><a class="headerlink" href="#acyclic-and-cyclic-graphs" title="Permalink to this headline">¶</a></h4>
+<span id="composition-acyclic-cyclic"></span><h4><em>Acyclic and Cyclic Graphs</em><a class="headerlink" href="#acyclic-and-cyclic-graphs" title="Permalink to this headline">¶</a></h4>
 <p>Projections are always directed (that is, information is transimtted in only one direction).  Therefore, if the
 Projections among the Nodes of the Composition never form a loop, then it is a <a class="reference external" href="https://en.wikipedia.org/wiki/Acyclic_graph">directed acyclic graph (DAG)</a>, and the order in which its Nodes are executed can be determined by
 the structure of the graph itself.  However if the Composition contains loops, then its structure is a <a class="reference external" href="https://en.wikipedia.org/wiki/Cyclic_graph">cyclic graph</a>, and how the Nodes in the loop are initialized and the order in which
@@ -600,6 +612,36 @@ to a particular Node can be listed using the <a class="reference internal" href=
 nodes assigned a particular role can be listed using the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.get_nodes_by_role" title="psyneulink.core.compositions.composition.Composition.get_nodes_by_role"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">get_nodes_by_role</span></code></a> method.
 The <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.get_required_roles_by_node" title="psyneulink.core.compositions.composition.Composition.get_required_roles_by_node"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">get_required_roles_by_node</span></code></a> method lists the <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRoles</span></code></a> that have been assigned to a Node using the
 <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.require_node_roles" title="psyneulink.core.compositions.composition.Composition.require_node_roles"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">require_node_roles</span></code></a> method.</p>
+<section id="bias-nodes">
+<span id="composition-bias-nodes"></span><h4><em>BIAS Nodes</em><a class="headerlink" href="#bias-nodes" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.BIAS" title="psyneulink.core.compositions.composition.NodeRole.BIAS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">BIAS</span></code></a> <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRole</span></code></a> can be used to implement BIAS Nodes, which add a bias (constant value) to the input of another
+Node, that can also be modified by <a class="reference internal" href="#composition-learning"><span class="std std-ref">learning</span></a>. A bias Node is implemented by adding a
+<a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> to the Composition and requiring it to have the <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.BIAS" title="psyneulink.core.compositions.composition.NodeRole.BIAS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">BIAS</span></code></a> <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRole</span></code></a>. The ProcessingMechanims
+cannot have any afferent Projections, and should project to the <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> containing the values to be biased. If
+the bias is to be learned, the <code class="xref any docutils literal notranslate"><span class="pre">learnable</span></code> attribute of the MappingProjeciton
+should be set to True. The value of the bias, and how it is applied to the values being biased are specified as
+described below:</p>
+<blockquote>
+<div><p><em>Single bias value</em>. To apply a single scalar bias value to all elements of the array being biased, the
+<a class="reference internal" href="Component.html#component-variable"><span class="std std-ref">default_variable</span></a> of the BIAS Node should be specified as a scalar value, and the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter of the MappingProjection should be assigned <em>FULL_CONNECTIVITY_MATRIX</em>;
+this will use the value for all elements of the bias vector.</p>
+<p><em>Array of bias values</em>. To apply a different bias value to each element of the array being biased, the
+<a class="reference internal" href="Component.html#component-variable"><span class="std std-ref">default_variable</span></a> of the BIAS Node should be specified as an array conatining the bias
+values, and the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter of the MappingProjection should be assigned
+<em>IDENTITY_MATRIX</em>; this will use the value of each element of the bias vector to multiply the corresponding
+element of the array being biased.</p>
+<p><em>Multiple bias arrays</em>. A single BIAS Node can be used to bias multiple arrays by specifying the
+<a class="reference internal" href="Component.html#component-variable"><span class="std std-ref">default_variable</span></a> of the BIAS Node as a 2d array, with each array in the outer
+dimension containing the bias values for a different array; this will generate an <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> for each
+bias array, which can be assigned a MappingProjeciton to do different Node to be biased.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>Bias signals can be <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">modulated</span></a> by a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>, by including
+a <a class="reference internal" href="ControlSignal.html#controlsignal-specification"><span class="std std-ref">ControlSignal</span></a> for the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Linear.slope" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Linear.slope"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">slope</span></code></a> Parameter of a BIAS Node’s
+<a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Linear" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> Function.</p>
+</div>
+</div></blockquote>
+</section>
 </section>
 <section id="nested-compositions">
 <span id="composition-nested"></span><h3><em>Nested Compositions</em><a class="headerlink" href="#nested-compositions" title="Permalink to this headline">¶</a></h3>
@@ -1416,7 +1458,7 @@ at all levels of nesting (that is, an INPUT Node of a nested Composition can onl
 is a INPUT Node of the Composition to which it belongs). Any INPUT Nodes for which no input is specified (that is, for
 which there are no entries in the inputs dictionary) are assigned their <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.default_external_inputs" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.default_external_inputs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">default_external_inputs</span></code></a> on each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> of execution; similarly, if the dictionary
 contains entries for some but not all of the InputPorts of a Node, the remaining InputPorts are assigned their
-<a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.default_input" title="psyneulink.core.components.ports.inputport.InputPort.default_input"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">default_input</span></code></a> on each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> of execution.  See below for additional
+<a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.default_input" title="psyneulink.core.components.ports.inputport.InputPort.default_input"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">default_input</span></code></a> on each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> of execution. See below for additional
 information concerning <a class="reference internal" href="#composition-input-dictionary-node-entries"><span class="std std-ref">entries for Nodes</span></a> and <a class="reference internal" href="#composition-input-dictionary-inputport-entries"><span class="std std-ref">entries for InputPorts</span></a>).</p>
 <p id="composition-input-dictionary-input-values"><em>Input values</em>. The value of each entry is an ndarray or nested list containing the inputs to that Node or InputPort.
 For Nodes, the value is a 3d array (or correspondingly nested list), in which the outermost items are 2d arrays
@@ -5705,11 +5747,10 @@ programmatically.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.compositions.composition.NodeRole.BIAS">
 <span class="sig-name descname"><span class="pre">BIAS</span></span><a class="headerlink" href="#psyneulink.core.compositions.composition.NodeRole.BIAS" title="Permalink to this definition">¶</a></dt>
-<dd><p>A <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Node</span></a> for which one or more of its <a class="reference internal" href="InputPort.html"><span class="doc">InputPorts</span></a> is assigned
-<em>DEFAULT_VARIABLE</em> as its <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.default_input" title="psyneulink.core.components.ports.inputport.InputPort.default_input"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">default_input</span></code></a> (which provides it a prespecified
-input that is constant across executions). Such a node can also be assigned as an <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> and/or <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.ORIGIN" title="psyneulink.core.compositions.composition.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ORIGIN</span></code></a>,
-if it receives input from outside the Composition and/or does not receive any <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> from
-other Nodes within the Composition, respectively.  This role cannot be modified programmatically.</p>
+<dd><p>A <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Node</span></a> for which all of its <a class="reference internal" href="InputPort.html"><span class="doc">InputPorts</span></a> are assigned <em>DEFAULT_VARIABLE</em>
+as their <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.default_input" title="psyneulink.core.components.ports.inputport.InputPort.default_input"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">default_input</span></code></a> (which provides a pre-specified input to each InputPort
+that is constant across executions). Such a Node is always also an <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.ORIGIN" title="psyneulink.core.compositions.composition.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ORIGIN</span></code></a> Node (since it does not receive
+Projections from any other Node) and never an <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> Node (since it does not receive external input).</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -5977,10 +6018,13 @@ Graph</p>
 </li>
 <li><a class="reference internal" href="#composition-structure">Composition Structure</a><ul>
 <li><a class="reference internal" href="#graph"><em>Graph</em></a><ul>
-<li><a class="reference internal" href="#acyclic-and-cyclic-graphs"><strong>Acyclic and Cyclic Graphs</strong></a></li>
+<li><a class="reference internal" href="#acyclic-and-cyclic-graphs"><em>Acyclic and Cyclic Graphs</em></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#nodes"><em>Nodes</em></a></li>
+<li><a class="reference internal" href="#nodes"><em>Nodes</em></a><ul>
+<li><a class="reference internal" href="#bias-nodes"><em>BIAS Nodes</em></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#nested-compositions"><em>Nested Compositions</em></a></li>
 <li><a class="reference internal" href="#compositioninterfacemechanisms"><em>CompositionInterfaceMechanisms</em></a></li>
 <li><a class="reference internal" href="#projections"><em>Projections</em></a></li>
