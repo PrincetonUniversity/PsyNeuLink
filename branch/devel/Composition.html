@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.15.3.0+8.gbc850c473 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.15.3.0+9.g004a8a1c7 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.3.0+8
+                  0.15.3.0+9
                 </div>
               
             
@@ -615,12 +615,13 @@ The <a class="reference internal" href="#psyneulink.core.compositions.compositio
 <section id="bias-nodes">
 <span id="composition-bias-nodes"></span><h4><em>BIAS Nodes</em><a class="headerlink" href="#bias-nodes" title="Permalink to this headline">¶</a></h4>
 <p><a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.BIAS" title="psyneulink.core.compositions.composition.NodeRole.BIAS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">BIAS</span></code></a> <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRole</span></code></a> can be used to implement BIAS Nodes, which add a bias (constant value) to the input of another
-Node, that can also be modified by <a class="reference internal" href="#composition-learning"><span class="std std-ref">learning</span></a>. A bias Node is implemented by adding a
-<a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> to the Composition and requiring it to have the <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.BIAS" title="psyneulink.core.compositions.composition.NodeRole.BIAS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">BIAS</span></code></a> <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRole</span></code></a>. The ProcessingMechanims
-cannot have any afferent Projections, and should project to the <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> containing the values to be biased. If
-the bias is to be learned, the <code class="xref any docutils literal notranslate"><span class="pre">learnable</span></code> attribute of the MappingProjeciton
-should be set to True. The value of the bias, and how it is applied to the values being biased are specified as
-described below:</p>
+Node, that can also be modified by <a class="reference internal" href="#composition-learning"><span class="std std-ref">learning</span></a>. A BIAS Node is implemented by adding a
+<a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> to the Composition and requiring it to have the <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.BIAS" title="psyneulink.core.compositions.composition.NodeRole.BIAS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">BIAS</span></code></a> <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRole</span></code></a>. This can be done using
+any of the methods described <a class="reference internal" href="#composition-nodes"><span class="std std-ref">above</span></a> for assigning <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRoles</span></code></a> tp a Node. The
+ProcessingMechanism cannot have any afferent Projections, and should project to the <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> of the Node with
+the values to be biased. If the bias is to be learned, the <code class="xref any docutils literal notranslate"><span class="pre">learnable</span></code> attribute of
+the MappingProjeciton should be set to True. The value of the bias, and how it is applied to the values being biased
+are specified as described below:</p>
 <blockquote>
 <div><p><em>Single bias value</em>. To apply a single scalar bias value to all elements of the array being biased, the
 <a class="reference internal" href="Component.html#component-variable"><span class="std std-ref">default_variable</span></a> of the BIAS Node should be specified as a scalar value, and the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter of the MappingProjection should be assigned <em>FULL_CONNECTIVITY_MATRIX</em>;
