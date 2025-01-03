@@ -232,8 +232,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                        self._composition._get_node_index(node),
                                                        device,
                                                        context=context)
-                pytorch_node._is_bias = any(input_port.default_input == DEFAULT_VARIABLE
-                                            for input_port in node.input_ports)
+                # pytorch_node._is_bias = all(input_port.default_input == DEFAULT_VARIABLE
+                #                             for input_port in node.input_ports)
+                pytorch_node._is_bias = node in self._composition.get_nodes_by_role(NodeRole.BIAS)
+
             self.nodes_map[node] = pytorch_node
             self.wrapped_nodes.append(pytorch_node)
 
