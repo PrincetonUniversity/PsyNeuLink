@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameters &mdash; PsyNeuLink 0.15.3.0+11.g18c960725 documentation</title>
+  <title>Parameters &mdash; PsyNeuLink 0.15.3.0+12.g4ec22c253 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.3.0+11
+                  0.15.3.0+12
                 </div>
               
             
@@ -234,7 +234,7 @@ a <a class="reference internal" href="Composition.html"><span class="doc">Compos
 ensure correctness of and allow access to <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-execution"><span class="std std-ref">simulation</span></a> calculations. As a
 result, to inspect and use the values of a parameter, in general you need to know the execution context in which you
 are interested. Much of the time, this execution context is likely to be a Composition::</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">psyneulink</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pnl</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">()</span>
@@ -274,12 +274,12 @@ errors like those encountered in parallel programming.</p>
 <section id="creating-parameters">
 <h3>Creating Parameters<a class="headerlink" href="#creating-parameters" title="Permalink to this headline">¶</a></h3>
 <p>To create new Parameters, reference this example of a new class <em>B</em></p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">B</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
-    <span class="k">class</span> <span class="nc">Parameters</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">Parameters</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">B</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">Parameters</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">Parameters</span><span class="p">):</span>
         <span class="n">p</span> <span class="o">=</span> <span class="mf">1.0</span>
         <span class="n">q</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="n">q</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -308,7 +308,7 @@ arguments for <em>B</em>.__init__. If both are specified and the values differ, 
 <dt>if you want all values set to <em>p</em> to be parsed beforehand, add a method _parse_p(value) that returns the parsed value</dt><dd><ul>
 <li><p>for example, convert to a numpy array or float</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">_parse_p</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">_parse_p</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -324,7 +324,7 @@ arguments for <em>B</em>.__init__. If both are specified and the values differ, 
 <div><p>For example, <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.costs" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.costs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">costs</span></code></a> of <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> has a special
 getter method, which computes the cost on-the-fly:</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">_modulatory_mechanism_costs_getter</span><span class="p">(</span><span class="n">owning_component</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">_modulatory_mechanism_costs_getter</span><span class="p">(</span><span class="n">owning_component</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">compute_costs</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">variable</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="n">context</span><span class="p">),</span> <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">owning_component</span><span class="o">.</span><span class="n">control_signals</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
@@ -335,7 +335,7 @@ getter method, which computes the cost on-the-fly:</p>
 <p>and <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.matrix" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> of <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> has a special setter method,
 which updates its <code class="xref any docutils literal notranslate"><span class="pre">auto</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">hetero</span></code> parameter values accordingly</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">_recurrent_transfer_mechanism_matrix_setter</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">owning_component</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">_recurrent_transfer_mechanism_matrix_setter</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">owning_component</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">value</span> <span class="o">=</span> <span class="n">get_matrix</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">owning_component</span><span class="o">.</span><span class="n">input_shapes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">owning_component</span><span class="o">.</span><span class="n">input_shapes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>

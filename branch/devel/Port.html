@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Port &mdash; PsyNeuLink 0.15.3.0+11.g18c960725 documentation</title>
+  <title>Port &mdash; PsyNeuLink 0.15.3.0+12.g4ec22c253 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.3.0+11
+                  0.15.3.0+12
                 </div>
               
             
@@ -732,11 +732,11 @@ from <code class="docutils literal notranslate"><span class="pre">source_mech_2<
 <span class="c1"># Print names of the Projections:</span>
 <span class="k">for</span> <span class="n">projection</span> <span class="ow">in</span> <span class="n">my_mech</span><span class="o">.</span><span class="n">input_port</span><span class="o">.</span><span class="n">path_afferents</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">projection</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-<span class="o">&gt;</span> <span class="n">MappingProjection</span> <span class="kn">from</span> <span class="nn">SOURCE_1</span><span class="p">[</span><span class="n">RESULT</span><span class="p">]</span> <span class="n">to</span> <span class="n">MY_MECH</span><span class="p">[</span><span class="n">MY</span> <span class="n">INPUT</span><span class="p">]</span>
-<span class="o">&gt;</span> <span class="n">MappingProjection</span> <span class="kn">from</span> <span class="nn">SOURCE_2</span><span class="p">[</span><span class="n">RESULT</span><span class="p">]</span> <span class="n">to</span> <span class="n">MY_MECH</span><span class="p">[</span><span class="n">MY</span> <span class="n">INPUT</span><span class="p">]</span>
+<span class="o">&gt;</span> <span class="n">MappingProjection</span> <span class="kn">from</span><span class="w"> </span><span class="nn">SOURCE_1</span><span class="p">[</span><span class="n">RESULT</span><span class="p">]</span> <span class="n">to</span> <span class="n">MY_MECH</span><span class="p">[</span><span class="n">MY</span> <span class="n">INPUT</span><span class="p">]</span>
+<span class="o">&gt;</span> <span class="n">MappingProjection</span> <span class="kn">from</span><span class="w"> </span><span class="nn">SOURCE_2</span><span class="p">[</span><span class="n">RESULT</span><span class="p">]</span> <span class="n">to</span> <span class="n">MY_MECH</span><span class="p">[</span><span class="n">MY</span> <span class="n">INPUT</span><span class="p">]</span>
 <span class="k">for</span> <span class="n">projection</span> <span class="ow">in</span> <span class="n">my_mech</span><span class="o">.</span><span class="n">output_port</span><span class="o">.</span><span class="n">efferents</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">projection</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-<span class="o">&gt;</span> <span class="n">MappingProjection</span> <span class="kn">from</span> <span class="nn">MY_MECH</span><span class="p">[</span><span class="n">RESULT</span><span class="p">]</span> <span class="n">to</span> <span class="n">DEST</span><span class="p">[</span><span class="n">InputPort</span><span class="p">]</span>
+<span class="o">&gt;</span> <span class="n">MappingProjection</span> <span class="kn">from</span><span class="w"> </span><span class="nn">MY_MECH</span><span class="p">[</span><span class="n">RESULT</span><span class="p">]</span> <span class="n">to</span> <span class="n">DEST</span><span class="p">[</span><span class="n">InputPort</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>A <em>PROJECTIONS</em> entry can contain any of the forms used to <a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">specify a Projection</span></a>.

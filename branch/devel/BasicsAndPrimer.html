@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basics and Primer &mdash; PsyNeuLink 0.15.3.0+11.g18c960725 documentation</title>
+  <title>Basics and Primer &mdash; PsyNeuLink 0.15.3.0+12.g4ec22c253 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.3.0+11
+                  0.15.3.0+12
                 </div>
               
             
@@ -534,7 +534,7 @@ conflict in the <code class="docutils literal notranslate"><span class="pre">out
 <span class="n">np</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="n">precision</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 <span class="k">global</span> <span class="n">t</span>
 <span class="n">t</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="k">def</span> <span class="nf">print_after</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">print_after</span><span class="p">():</span>
     <span class="k">global</span> <span class="n">t</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">End of trial </span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s1">:&#39;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\t\t\t\t</span><span class="s1">color  word&#39;</span><span class="p">)</span>
@@ -1094,7 +1094,7 @@ this can be specified in the <strong>default_variable</strong> argument of their
 constraint on the type of functions that can be assigned.  For example, the script below defines a function that
 returns the amplitude of a sinusoid with a specified frequency at a specified time, and then assigns this to a
 <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">my_sinusoidal_fct</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]],</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">my_sinusoidal_fct</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]],</span>
 <span class="gp">... </span>                      <span class="n">phase</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
 <span class="gp">... </span>                      <span class="n">amplitude</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 <span class="gp">... </span>   <span class="n">frequency</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>

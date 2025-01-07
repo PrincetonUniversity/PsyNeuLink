@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanism &mdash; PsyNeuLink 0.15.3.0+11.g18c960725 documentation</title>
+  <title>Mechanism &mdash; PsyNeuLink 0.15.3.0+12.g4ec22c253 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.3.0+11
+                  0.15.3.0+12
                 </div>
               
             
@@ -335,7 +335,7 @@ including any default Ports that may have been generated when the Mechanism was 
 <p class="rubric">Examples</p>
 <p id="mechanism-example-1">The following example creates an instance of a TransferMechanism that names the default InputPort <code class="docutils literal notranslate"><span class="pre">MY_INPUT</span></code>,
 and assigns three <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPorts</span></a>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">psyneulink</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pnl</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">input_ports</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;MY_INPUT&#39;</span><span class="p">],</span>
 <span class="gp">... </span>                                <span class="n">output_ports</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">RESULT</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">MEAN</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">VARIANCE</span><span class="p">])</span>
 </pre></div>
@@ -768,7 +768,7 @@ applied to a Mechanism with multiple InputPort, only the index zero InputPort wo
 <p>When using labels to specify items in the <a class="reference internal" href="Composition.html#composition-execution-inputs"><span class="std std-ref">inputs</span></a> arguments of the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method, labels may directly replace any or all of the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">InputPort</span> <span class="pre">values</span></code></a> in an
 input specification dictionary. Keep in mind that each label must be specified in the <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_labels_dict" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_labels_dict"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_labels_dict</span></code></a> of the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> Mechanism to which inputs are being specified, and must map to a
 value that would have been valid in that position of the input dictionary.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">psyneulink</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pnl</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">input_labels_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;red&quot;</span><span class="p">:</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span>
 <span class="gp">... </span>                     <span class="s2">&quot;green&quot;</span><span class="p">:</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span>
 <span class="gp">... </span>                     <span class="s2">&quot;blue&quot;</span><span class="p">:</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]}</span>

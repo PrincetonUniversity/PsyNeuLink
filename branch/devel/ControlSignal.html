@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ControlSignal &mdash; PsyNeuLink 0.15.3.0+11.g18c960725 documentation</title>
+  <title>ControlSignal &mdash; PsyNeuLink 0.15.3.0+12.g4ec22c253 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.3.0+11
+                  0.15.3.0+12
                 </div>
               
             
@@ -439,7 +439,7 @@ not implemented until the <a class="reference internal" href="Component.html"><s
 <p id="controlsignal-example-specify-with-parameter"><em>Specify a ControlSignal where a parameter is specified</em></p>
 <p>The simplest way to do this is to specify the ControlSignal by class, or using the keyword <em>CONTROL</em>, in a
 <a class="reference internal" href="ParameterPort.html#parameterport-tuple-specification"><span class="std std-ref">tuple specification</span></a> for the parameter, as in the following examples:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">psyneulink</span> <span class="kn">import</span> <span class="o">*</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">psyneulink</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">(</span><span class="n">bias</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">ControlMechanism</span><span class="p">)))</span> 
 <span class="go">or</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">(</span><span class="n">bias</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">CONTROL</span><span class="p">)))</span>
@@ -491,7 +491,7 @@ dictionary (which supports additional options; see <a class="reference internal"
 argument, but instead of using the keyword for a <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-types"><span class="std std-ref">generic form of modulation</span></a> (as in the
 example <a class="reference internal" href="#controlsignal-example-modulation"><span class="std std-ref">above</span></a>), a parameter of the ControlSignal’s <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.function" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> is used.  For example, the following shows how the parameters of a ControlSignal’s <a class="reference internal" href="#controlsignal-costs"><span class="std std-ref">cost
 function</span></a> can be modulated by another ControlSignal:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">psyneulink</span> <span class="kn">import</span> <span class="o">*</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">psyneulink</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mech</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;my_mech&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ctl_mech_A</span> <span class="o">=</span> <span class="n">ControlMechanism</span><span class="p">(</span><span class="n">monitor_for_control</span><span class="o">=</span><span class="n">mech</span><span class="p">,</span>
 <span class="gp">... </span>                              <span class="n">control_signals</span><span class="o">=</span><span class="n">ControlSignal</span><span class="p">(</span><span class="n">control</span><span class="o">=</span><span class="p">(</span><span class="n">INTERCEPT</span><span class="p">,</span><span class="n">mech</span><span class="p">),</span>

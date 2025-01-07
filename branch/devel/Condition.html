@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Condition &mdash; PsyNeuLink 0.15.3.0+11.g18c960725 documentation</title>
+  <title>Condition &mdash; PsyNeuLink 0.15.3.0+12.g4ec22c253 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.3.0+11
+                  0.15.3.0+12
                 </div>
               
             
@@ -255,7 +255,7 @@ any other node in the graph.</p>
 <p id="condition-recurrent-example">For example, the following script fragment creates a custom Condition in which <code class="docutils literal notranslate"><span class="pre">node_A</span></code> is scheduled to wait to
 execute until <code class="docutils literal notranslate"><span class="pre">node_B</span></code> has “converged” (that is, settled to the point that none of
 its elements has changed in value more than a specified amount since the previous <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a>):</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">converge</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">converge</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
     <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">get_delta</span><span class="p">(</span><span class="n">context</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">thresh</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>

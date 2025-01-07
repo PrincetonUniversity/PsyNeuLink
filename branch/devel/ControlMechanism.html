@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ControlMechanism &mdash; PsyNeuLink 0.15.3.0+11.g18c960725 documentation</title>
+  <title>ControlMechanism &mdash; PsyNeuLink 0.15.3.0+12.g4ec22c253 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.3.0+11
+                  0.15.3.0+12
                 </div>
               
             
@@ -395,7 +395,7 @@ attributes explicitly specified in its construction – are used.  In that case,
 <em>PRODUCT</em> as its <a class="reference internal" href="TransformFunctions.html#psyneulink.core.components.functions.transformfunctions.LinearCombination.operation" title="psyneulink.core.components.functions.transformfunctions.LinearCombination.operation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">operation</span></code></a> parameter are still desired, this must be explicitly
 specified.  This is illustrated in the following examples.</p>
 <p>The following example specifies a <a class="reference internal" href="#"><span class="doc">ControlMechanism</span></a> that automatically constructs its <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_mechanism</span></code></a>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">psyneulink</span> <span class="kn">import</span> <span class="o">*</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">psyneulink</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_ctl_mech</span> <span class="o">=</span> <span class="n">ControlMechanism</span><span class="p">(</span><span class="n">objective_mechanism</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">my_ctl_mech</span><span class="o">.</span><span class="n">objective_mechanism</span><span class="o">.</span><span class="n">function</span><span class="p">,</span> <span class="n">LinearCombination</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_ctl_mech</span><span class="o">.</span><span class="n">objective_mechanism</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">operation</span> <span class="o">==</span> <span class="n">PRODUCT</span>

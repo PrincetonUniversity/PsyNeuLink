@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>InputPort &mdash; PsyNeuLink 0.15.3.0+11.g18c960725 documentation</title>
+  <title>InputPort &mdash; PsyNeuLink 0.15.3.0+12.g4ec22c253 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.3.0+11
+                  0.15.3.0+12
                 </div>
               
             
@@ -513,7 +513,7 @@ to shadow the input to <code class="docutils literal notranslate"><span class="p
 <code class="docutils literal notranslate"><span class="pre">mech</span></code>. As a result, <code class="docutils literal notranslate"><span class="pre">shadowing_mech</span></code> will receive the same input as <code class="docutils literal notranslate"><span class="pre">mech</span></code> when <code class="docutils literal notranslate"><span class="pre">outer_comp</span></code>
 is executed (as noted <a class="reference internal" href="#inputport-shadow-nested-note"><span class="std std-ref">above</span></a>, only the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> of a <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested Composition</span></a> can be shadowed):</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
 <div class="legend">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">psyneulink</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pnl</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Mech&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">shadowing_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Shadowing Mech&#39;</span><span class="p">,</span>
 <span class="gp">... </span>                                     <span class="n">input_ports</span><span class="o">=</span><span class="n">mech</span><span class="o">.</span><span class="n">input_port</span><span class="p">)</span>

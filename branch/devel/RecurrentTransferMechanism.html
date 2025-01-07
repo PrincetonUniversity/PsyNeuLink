@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>RecurrentTransferMechanism &mdash; PsyNeuLink 0.15.3.0+11.g18c960725 documentation</title>
+  <title>RecurrentTransferMechanism &mdash; PsyNeuLink 0.15.3.0+12.g4ec22c253 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.3.0+11
+                  0.15.3.0+12
                 </div>
               
             
@@ -247,7 +247,7 @@ autoassociative (e.g., Hebbian) learning.</p>
 <section id="creating-a-recurrenttransfermechanism">
 <span id="recurrenttransfermechanism-creation"></span><h2>Creating a RecurrentTransferMechanism<a class="headerlink" href="#creating-a-recurrenttransfermechanism" title="Permalink to this headline">¶</a></h2>
 <p>A RecurrentTransferMechanism is created directly by calling its constructor, for example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">psyneulink</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pnl</span>
 <span class="n">my_linear_recurrent_transfer_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">RecurrentTransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">)</span>
 <span class="n">my_logistic_recurrent_transfer_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">RecurrentTransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Logistic</span><span class="p">(</span><span class="n">gain</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
                                                                                                 <span class="n">bias</span><span class="o">=-</span><span class="mf">4.0</span><span class="p">))</span>

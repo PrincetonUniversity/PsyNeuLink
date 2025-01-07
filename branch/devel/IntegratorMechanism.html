@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>IntegratorMechanism &mdash; PsyNeuLink 0.15.3.0+11.g18c960725 documentation</title>
+  <title>IntegratorMechanism &mdash; PsyNeuLink 0.15.3.0+12.g4ec22c253 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.3.0+11
+                  0.15.3.0+12
                 </div>
               
             
@@ -224,7 +224,7 @@ assigned a custom function.</p>
 <p>An IntegratorMechanism can be created directly by calling its constructor, or using the <a class="reference internal" href="Mechanism.html#module-psyneulink.core.components.mechanisms.mechanism" title="psyneulink.core.components.mechanisms.mechanism"><code class="xref any py py-mod docutils literal notranslate"><span class="pre">mechanism</span></code></a> command and
 specifying <em>INTEGRATOR_MECHANISM</em> as its <strong>mech_spec</strong> argument.  Its function is specified in the <strong>function</strong>
 argument, which can be parametrized by calling its constructor with parameter values:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">psyneulink</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pnl</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_time_averaging_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">IntegratorMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">AdaptiveIntegrator</span><span class="p">(</span><span class="n">rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">))</span>
 </pre></div>
 </div>

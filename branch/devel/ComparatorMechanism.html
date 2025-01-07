@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ComparatorMechanism &mdash; PsyNeuLink 0.15.3.0+11.g18c960725 documentation</title>
+  <title>ComparatorMechanism &mdash; PsyNeuLink 0.15.3.0+12.g4ec22c253 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.3.0+11
+                  0.15.3.0+12
                 </div>
               
             
@@ -292,7 +292,7 @@ specifying it as the ComparatorMechanism’s <strong>sample</strong> argument wi
 as its value.  This will not match the reward signal specified in the ComparatorMechanism’s <strong>target</strong> argument, the
 value of which is a single scalar.  This can be dealt with by explicitly specifying the format for the SAMPLE and
 TARGET InputPorts in the <strong>default_variable</strong> argument of the ComparatorMechanism’s constructor, as follows:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">psyneulink</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pnl</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_action_selection_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">input_shapes</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
 <span class="gp">... </span>                                                 <span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">SoftMax</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">PROB</span><span class="p">))</span>
 
