@@ -295,6 +295,13 @@ COMP_HIERARCHY = 'comp_hierarchy' # dict specifying the enclosing composition at
 default_showgraph_subdir = 'pnl-show_graph-output'
 
 
+_gv_executable_not_found_error_msg = (
+    "Graphviz executables were not found on your systems' PATH. These are"
+    " required in addition to the graphviz python package and can be downloaded"
+    " at https://www.graphviz.org/download/"
+)
+
+
 def get_default_showgraph_dir():
     pnl_module_dir = pathlib.Path(psyneulink.__file__).parent.absolute()
     try:
@@ -2613,6 +2620,8 @@ class ShowGraph():
                          ):
 
         from psyneulink.core.compositions.composition import Composition, NodeRole
+        # graphviz is currently only imported within methods
+        from graphviz.backend.execute import ExecutableNotFound
 
         composition = self.composition
         nodes = self._get_nodes(composition, context)
@@ -2684,39 +2693,35 @@ class ShowGraph():
         # GENERATE OUTPUT ---------------------------------------------------------------------
 
         # Show as pdf
-        try:
-            if output_fmt == 'pdf':
-                # G.format = 'svg'
+        if output_fmt == 'pdf':
+            # G.format = 'svg'
+            try:
                 G.view(composition.name.replace(" ", "-"), cleanup=True, directory=get_default_showgraph_dir().joinpath('PDFS'))
+            except ExecutableNotFound as e:
+                raise ShowGraphError(_gv_executable_not_found_error_msg) from e
+            except Exception as e:
+                raise ShowGraphError(f"Problem displaying graph for {composition.name}: {e}") from e
 
-            # Generate images for animation
-            elif output_fmt == 'gif':
-                if composition.active_item_rendered or INITIAL_FRAME in active_items:
-                    self._generate_gifs(G, active_items, context)
+        # Generate images for animation
+        elif output_fmt == 'gif':
+            if composition.active_item_rendered or INITIAL_FRAME in active_items:
+                self._generate_gifs(G, active_items, context)
 
-            # Return graph to show in jupyter
-            elif output_fmt == 'jupyter':
-                return G
+        # Return graph to show in jupyter
+        elif output_fmt == 'jupyter':
+            return G
 
-            elif output_fmt == 'gv':
-                return G
+        elif output_fmt == 'gv':
+            return G
 
-            elif output_fmt == 'source':
-                return G.source
+        elif output_fmt == 'source':
+            return G.source
 
-            elif not output_fmt:
-                return None
+        elif not output_fmt:
+            return None
 
-            else:
-                raise ShowGraphError(f"Bad arg in call to {composition.name}.show_graph: '{output_fmt}'.")
-
-        except ShowGraphError as e:
-            # raise ShowGraphError(str(e.error_value))
-            raise ShowGraphError(str(e.error_value)) from e
-        # except:
-        #     raise ShowGraphError(f"Problem displaying graph for {composition.name}")
-        except Exception as e:
-            raise ShowGraphError(f"Problem displaying graph for {composition.name}: {e}") from e
+        else:
+            raise ShowGraphError(f"Bad arg in call to {composition.name}.show_graph: '{output_fmt}'.")
 
     def _is_composition_controller(self, mech, context, enclosing_comp=None):
         # FIX 6/12/20: REPLACE WITH TEST FOR NodeRole.CONTROLLER ONCE THAT IS IMPLEMENTED
@@ -2918,6 +2923,8 @@ class ShowGraph():
                                )
 
     def _generate_gifs(self, G, active_items, context):
+        # graphviz is currently only imported within methods
+        from graphviz.backend.execute import ExecutableNotFound
 
         composition = self.composition
 
@@ -2969,11 +2976,15 @@ class ShowGraph():
         index = repr(composition._component_animation_execution_count)
         image_filename = '-'.join([repr(run_num), repr(trial_num), index])
         image_file = pathlib.Path(composition._animation_directory, image_filename + '.gif')
-        G.render(filename=image_filename,
-                 directory=composition._animation_directory,
-                 cleanup=True,
-                 # view=True
-                 )
+        try:
+            G.render(
+                filename=image_filename,
+                directory=composition._animation_directory,
+                cleanup=True,
+                # view=True
+            )
+        except ExecutableNotFound as e:
+            raise ShowGraphError(_gv_executable_not_found_error_msg) from e
         # Append gif to composition._animation
         image = Image.open(image_file)
         # TBI?
