@@ -115,12 +115,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
         `AutodiffComposition` being wrapped.
 
     wrapped_nodes : List[PytorchMechanismWrapper]
-        list of nodes in the PytorchCompositionWrapper corresponding to PyTorch modules. Generally these are
+        list of nodes in the PytorchCompositionWrapper corresponding to PyTorch functions. Generally these are
         `Mechanisms <Mechanism>` wrapped in a `PytorchMechanismWrapper`, however, if the `AutodiffComposition`
         being wrapped is itself a nested Composition, then the wrapped nodes are `PytorchCompositionWrapper` objects.
-        When the PyTorch model is executed these are "flattened" into a single PyTorch module, which can be visualized
-        using the AutodiffComposition's `show_graph <ShowGraph.show_graph>` method and setting its *show_pytorch*
-        argument to True (see `PytorchShowGraph` for additional information).
+        When the PyTorch model is executed, all of these are "flattened" into a single PyTorch module, corresponding
+        to the outermost AutodiffComposition being wrapped,, which can be visualized using that AutodiffComposition's
+        `show_graph <ShowGraph.show_graph>` method and setting its *show_pytorch* argument to True (see
+        `PytorchShowGraph` for additional information).
 
     nodes_map : Dict[Node: PytorchMechanismWrapper or PytorchCompositionWrapper]
         maps psyneulink `Nodes <Composition_Nodes>` to PytorchCompositionWrapper nodes.
@@ -140,7 +141,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         assigned by AutodffComposition after the wrapper is created, which passes the parameters to the optimizer
 
     device : torch.device
-        device used to process torch Tensors in PyTorch modules
+        device used to process torch Tensors in PyTorch functions
 
     params : nn.ParameterList()
         list of PyTorch parameters (connection weight matrices) in the PyTorch model.
@@ -857,7 +858,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
 class PytorchMechanismWrapper():
     """Wrapper for a Mechanism in a PytorchCompositionWrapper
-    These comprise nodes of the PytorchCompositionWrapper, and generally correspond to modules of a Pytorch model.
+    These comprise nodes of the PytorchCompositionWrapper, and generally correspond to functions in a Pytorch model.
 
     Attributes
     ----------
@@ -1128,9 +1129,11 @@ class PytorchMechanismWrapper():
 class PytorchProjectionWrapper():
     """Wrapper for Projection in a PytorchCompositionWrapper
 
-    The matrix of the wrapped `_projection <PytorchProjectionWrapper._projection>` corresponds to the parameters
-    (connection weights) of the PyTorch Module that is the `function <Mechanism_Base.function>` of the
-    `receiver <Projection_Base.receiver>` of the wrapped Projection.
+    The matrix of the wrapped `_projection <PytorchProjectionWrapper._projection>` is assigned as a parameter of
+    (set of connection weights in ) the PyTorch Module that, coupled with a corresponding input and `torch.matmul
+    <https://pytorch.org/docs/main/generated/torch.matmul.html>`_ operation, provide the input to the Pytorch
+    function associated with the `Node <Composition_Node>` of the AutdiffComposition that is the `receiver
+    <Projection_Base.receiver>` of the wrapped Projection.
 
     .. note::
        In the case of a nested Composition, the sender and/or receiver attributes may be mapped to different Node(s)
