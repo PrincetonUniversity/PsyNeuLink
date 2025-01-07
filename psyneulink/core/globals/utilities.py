@@ -1707,12 +1707,12 @@ class _SeededPhilox(np.random.Generator):
         assert False, "Use 'seed' parameter instead of seeding the random state directly"
 
 
-_seed = np.int32((time.time() * 1000) % 2**31)
+_seed = np.uint32((time.time() * 1000) % 2**31)
 def get_global_seed(offset=1):
     global _seed
-    _seed += offset
-    _seed %= 2**31
-    return _seed - offset
+    old_seed = _seed
+    _seed = (_seed + offset) % 2**31
+    return old_seed
 
 
 def set_global_seed(new_seed):
