@@ -88,8 +88,9 @@ class TestBuffer():
                    history=3)
         np.testing.assert_allclose(B.execute(3.0), [[1.0], [2.0], np.array([3.])])
         np.testing.assert_allclose(B.execute(4.0), [[2.0], np.array([3.]), np.array([4.])])
+
         val = benchmark(B.execute, 5.0)
-        np.testing.assert_allclose(val, [np.array([3.]), np.array([4.]), np.array([5.])])
+        np.testing.assert_array_equal(val, [[3.], [4.], [5.]])
 
     @pytest.mark.benchmark(group="BufferFunction")
     def test_buffer_as_function_of_processing_mech(self, benchmark):
@@ -100,7 +101,7 @@ class TestBuffer():
         val = benchmark(P.execute, 1.0)
 
         # NOTE: actual output is [0, [[1]]]
-        np.testing.assert_allclose(np.asfarray(val, dtype=object), [[0., 1.]])
+        np.testing.assert_allclose(val, [[0., 1.]])
 
         # fails due to value and variable problems when Buffer is the function of a mechanism
         # P = ProcessingMechanism(function=Buffer(default_variable=[[0.0], [1.0], [2.0]],
@@ -121,17 +122,15 @@ class TestBuffer():
         def assemble_full_result():
             full_result.append(P.parameters.value.get(C))
 
-        C.run(inputs={P: [[1.0], [2.0], [3.0], [4.0], [5.0]]},
-              call_after_trial=assemble_full_result)
+        C.run(inputs={P: [[1.0], [2.0], [3.0], [4.0], [5.0]]}, call_after_trial=assemble_full_result)
         # only returns index 0 item of the deque on each trial  (OutputPort value)
-        np.testing.assert_allclose(np.asfarray(C.results), [[[0.0]], [[0.0]], [[1.0]], [[2.0]], [[3.0]]])
+        np.testing.assert_allclose(C.results, [[[0.0]], [[0.0]], [[1.0]], [[2.0]], [[3.0]]])
 
         # stores full mechanism value (full deque) on each trial
-        expected_full_result = [np.array([[0.], [1.]]),
-                                np.array([[0.], [1.], [2.]]),
-                                np.array([[1.], [2.], [3.]]),   # Shape change
-                                np.array([[2.], [3.], [4.]]),
-                                np.array([[3.], [4.], [5.]])]
+        expected_full_result = [[[0.], [1.]],
+                                [[0.], [1.], [2.]],
+                                [[1.], [2.], [3.]],   # Shape change
+                                [[2.], [3.], [4.]],
+                                [[3.], [4.], [5.]]]
         for i in range(5):
-            np.testing.assert_allclose(expected_full_result[i],
-                               np.asfarray(full_result[i]))
+            np.testing.assert_array_equal(expected_full_result[i], full_result[i])

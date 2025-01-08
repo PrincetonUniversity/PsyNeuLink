@@ -42,11 +42,11 @@ def test_helper_fclamp(mode):
 
         builder.ret_void()
 
-    ref = np.clip(VECTOR, TST_MIN, TST_MAX)
-    bounds = np.asfarray([TST_MIN, TST_MAX])
-
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name, ctype_ptr_args=(0, 2))
     local_vec = VECTOR.copy()
+
+    ref = np.clip(VECTOR, TST_MIN, TST_MAX)
+    bounds = np.asarray([TST_MIN, TST_MAX], dtype=bin_f.np_arg_dtypes[2].base)
 
     if mode == 'CPU':
         ct_vec = local_vec.ctypes.data_as(bin_f.c_func.argtypes[0])
@@ -141,8 +141,8 @@ def test_helper_is_close(mode, var1, var2, rtol, atol, fp_type):
 
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name, ctype_ptr_args=(0, 1, 2))
 
-    vec1 = np.atleast_1d(np.asfarray(var1, dtype=bin_f.np_arg_dtypes[0].base))
-    vec2 = np.atleast_1d(np.asfarray(var2, dtype=bin_f.np_arg_dtypes[1].base))
+    vec1 = np.atleast_1d(np.asarray(var1, dtype=bin_f.np_arg_dtypes[0].base))
+    vec2 = np.atleast_1d(np.asarray(var2, dtype=bin_f.np_arg_dtypes[1].base))
     assert len(vec1) == len(vec2)
     res = np.empty_like(vec2)
 
@@ -163,8 +163,8 @@ def test_helper_is_close(mode, var1, var2, rtol, atol, fp_type):
 @pytest.mark.parametrize('mode', ['CPU', pytest.helpers.cuda_param('PTX')])
 @pytest.mark.parametrize('rtol,atol', [[0, 0], [None, None], [None, 100], [2, None]])
 @pytest.mark.parametrize('var1,var2',
-                         [[1, 1], [1, 100], [1,2], [-4,5], [0, -100], [-1,-2],
-                          [[1,1,1,-4,0,-1], [1,100,2,5,-100,-2]]
+                         [[1, 1], [1, 100], [1, 2], [-4, 5], [0, -100], [-1, -2],
+                          [[1, 1, 1, -4, 0, -1], [1, 100, 2, 5, -100, -2]]
                          ])
 def test_helper_all_close(mode, var1, var2, atol, rtol):
 
@@ -174,8 +174,8 @@ def test_helper_all_close(mode, var1, var2, atol, rtol):
     if atol is not None:
         tolerance['atol'] = atol
 
-    vec1 = np.atleast_1d(np.asfarray(var1))
-    vec2 = np.atleast_1d(np.asfarray(var2))
+    vec1 = np.atleast_1d(var1)
+    vec2 = np.atleast_1d(var2)
     assert len(vec1) == len(vec2)
 
     with pnlvm.LLVMBuilderContext.get_current() as ctx:
@@ -194,6 +194,9 @@ def test_helper_all_close(mode, var1, var2, atol, rtol):
         builder.ret_void()
 
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
+    vec1 = np.atleast_1d(np.asarray(var1, dtype=bin_f.np_arg_dtypes[0].base))
+    vec2 = np.atleast_1d(np.asarray(var2, dtype=bin_f.np_arg_dtypes[1].base))
+    assert len(vec1) == len(vec2)
     res = bin_f.np_buffer_for_arg(2)
 
     ref = np.allclose(vec1, vec2, **tolerance)
@@ -438,7 +441,7 @@ def test_helper_numerical(mode, op, var, expected, fp_type):
 
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
 
-    res = np.asfarray(var, dtype=bin_f.np_arg_dtypes[0])
+    res = np.asarray(var, dtype=bin_f.np_arg_dtypes[0])
 
     if mode == 'CPU':
         bin_f(res)
@@ -478,8 +481,8 @@ def test_helper_recursive_iterate_arrays(mode, var1, var2, expected):
 
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
 
-    vec1 = np.asfarray(var1, dtype=bin_f.np_arg_dtypes[0].base)
-    vec2 = np.asfarray(var2, dtype=bin_f.np_arg_dtypes[1].base)
+    vec1 = np.asarray(var1, dtype=bin_f.np_arg_dtypes[0].base)
+    vec2 = np.asarray(var2, dtype=bin_f.np_arg_dtypes[1].base)
     res = bin_f.np_buffer_for_arg(2)
 
     if mode == 'CPU':
@@ -518,7 +521,7 @@ def test_helper_convert_fp_type(t1, t2, mode, val):
     np_dt1, np_dt2 = (np.dtype(bin_f.np_arg_dtypes[i]) for i in (0, 1))
 
     # instantiate value, result and reference
-    x = np.asfarray(val, dtype=np_dt1)
+    x = np.asarray(val, dtype=np_dt1)
     y = bin_f.np_buffer_for_arg(1)
     ref = x.astype(np_dt2)
 
