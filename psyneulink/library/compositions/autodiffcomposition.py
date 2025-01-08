@@ -102,7 +102,7 @@ That is, an AutodiffComposition can be `nested in a Composition <Composition_Nes
 
 AutodiffComposition does not (currently) support the *automatic* construction of separate bias parameters.
 Thus, when constructing the PyTorch version of an AutodiffComposition, the `bias
-<https://www.pytorch.org/docs/stable/nn.html#torch.nn.Module>`_ parameter of PyTorch modules are set to False.
+<https://www.pytorch.org/docs/stable/nn.html#torch.nn.Module>`_ parameter of any PyTorch modules are set to False.
 However, biases can be implemented using `Composition_Bias_Nodes`.
 
 
@@ -531,7 +531,7 @@ class AutodiffComposition(Composition):
         but slows performance (see `AutodiffComposition_PyTorch_LearningScale` for information about settings).
 
     synch_node_variables_with_torch : OPTIMIZATION_STEP, TRIAL, MINIBATCH, EPOCH, RUN or None
-        determines when to copy the current input to Pytorch nodes (modules) to the PsyNeuLink `variable
+        determines when to copy the current input to Pytorch functions to the PsyNeuLink `variable
         <Mechanism_Base.value>` attribute of the corresponding PsyNeuLink `nodes <Composition_Node>`, if this is not
         specified in the call to `learn <AutodiffComposition.learn>`.
         COMMENT:
@@ -545,11 +545,11 @@ class AutodiffComposition(Composition):
         but slows performance (see `AutodiffComposition_PyTorch_LearningScale` for information about settings).
 
     synch_node_values_with_torch : OPTIMIZATION_STEP, MINIBATCH, EPOCH or RUN
-        determines when to copy the current output of Pytorch nodes (modules) to the PsyNeuLink `value
-        <Mechanism_Base.value>` attribute of the corresponding PsyNeuLink `nodes <Composition_Node>`, if this is not
-        specified in the call to `learn <AutodiffComposition.learn>`. Copying more frequently keeps the PsyNeuLink
-        representation more closely copying more frequently keeps them synchronized with parameter updates in Pytorch,
-        but slows performance (see `AutodiffComposition_PyTorch_LearningScale` for information about settings).
+    determines when to copy the current output of Pytorch functions to the PsyNeuLink `value <Mechanism_Base.value>`
+        attribute of the corresponding PsyNeuLink `nodes <Composition_Node>`, if this is not specified in the call to
+        `learn <AutodiffComposition.learn>`. Copying more frequently keeps the PsyNeuLink representation more closely
+        copying more frequently keeps them synchronized with parameter updates in Pytorch, but slows performance
+        (see `AutodiffComposition_PyTorch_LearningScale` for information about settings).
 
     synch_results_with_torch : OPTIMIZATION_STEP, TRIAL, MINIBATCH, EPOCH or RUN
         determines when to copy the current outputs of Pytorch nodes to the PsyNeuLink `results

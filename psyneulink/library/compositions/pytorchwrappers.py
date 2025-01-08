@@ -58,12 +58,25 @@ class PytorchCompositionWrapper(torch.nn.Module):
 # # MODIFIED 7/29/24 NEW: NEEDED FOR torch MPS SUPPORT
 # class PytorchCompositionWrapper(torch.jit.ScriptModule):
 # MODIFIED 7/29/24 END
-    """Wrapper for a Composition as a Pytorch Module
-    Class that wraps a `Composition <Composition>` as a PyTorch module.
+    """Wrapper for a Composition as a Pytorch Module.
+
+    Wraps an `AutodiffComposition` as a `PyTorch module
+    <https://pytorch.org/docs/stable/generated/torch.nn.Module.html>`_, with each `Mechanism <Mechanism>` in the
+    AutodiffComposition wrapped as a `PytorchMechanismWrapper`, each `Projection <Projection>` wrapped as a
+    `PytorchProjectionWrapper`, and any nested Compositions wrapped as `PytorchCompositionWrapper`\\s. Each
+    PytorchMechanismWrapper implements a Pytorch version of the `function(s) <Mechanism_Base.function>` of the wrapped
+    `Mechanism`, which are executed in the PyTorchCompositionWrapper's `forward <PyTorchCompositionWrapper.forward>`
+    method in the order specified by the AutodiffComposition's `scheduler <Composition.scheduler>`.  The
+    `matrix <MappingProjection.matrix>` Parameters of each wrapped `Projection` are assigned as parameters of the
+    `PytorchMechanismWrapper` Pytorch module and used, together with a Pytorch `matmul
+    <https://pytorch.org/docs/main/generated/torch.matmul.html>`_ operation, to generate the input to each
+    PyTorch function as specified by the `PytorchProjectionWrapper`\\'s `graph <Composition.graph>`.  The graph
+    can be visualized using the AutodiffComposition's `show_graph <ShowGraph.show_graph>` method and setting its
+    *show_pytorch* argument to True (see `PytorchShowGraph` for additional information).
 
     Two main responsibilities:
 
-    1) Set up parameters of PyTorch model & information required for forward computation:
+    1) Set up functions and parameters of PyTorch module required for it forward computation:
         Handle nested compositions (flattened in infer_backpropagation_learning_pathways):
         Deal with Projections into and/or out of a nested Composition as shown in figure below:
             (note: Projections in outer Composition to/from a nested Composition's CIMs are learnable,
@@ -115,12 +128,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
         `AutodiffComposition` being wrapped.
 
     wrapped_nodes : List[PytorchMechanismWrapper]
-        list of nodes in the PytorchCompositionWrapper corresponding to PyTorch modules. Generally these are
-        `Mechanisms <Mechanism>` wrapped in a `PytorchMechanismWrapper`, however, if the `AutodiffComposition`
-        being wrapped is itself a nested Composition, then the wrapped nodes are `PytorchCompositionWrapper` objects.
-        When the PyTorch model is executed these are "flattened" into a single PyTorch module, which can be visualized
-        using the AutodiffComposition's `show_graph <ShowGraph.show_graph>` method and setting its *show_pytorch*
-        argument to True (see `PytorchShowGraph` for additional information).
+        list of nodes in the PytorchCompositionWrapper corresponding to the PyTorch functions that comprise the
+        forward method of the Pytorch module implemented by the PytorchCompositionWrapper. Generally these are
+        `Mechanisms <Mechanism>` wrapped in a `PytorchMechanismWrapper`, however, if the `AutodiffComposition` Node
+        being wrapped is a nested Composition, then the wrapped node is itself a `PytorchCompositionWrapper` object.
+        When the PyTorch model is executed, all of these are "flattened" into a single PyTorch module, corresponding
+        to the outermost AutodiffComposition being wrapped, which can be visualized using that AutodiffComposition's
+        `show_graph <ShowGraph.show_graph>` method and setting its *show_pytorch* argument to True (see
+        `PytorchShowGraph` for additional information).
 
     nodes_map : Dict[Node: PytorchMechanismWrapper or PytorchCompositionWrapper]
         maps psyneulink `Nodes <Composition_Nodes>` to PytorchCompositionWrapper nodes.
@@ -140,7 +155,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         assigned by AutodffComposition after the wrapper is created, which passes the parameters to the optimizer
 
     device : torch.device
-        device used to process torch Tensors in PyTorch modules
+        device used to process torch Tensors in PyTorch functions
 
     params : nn.ParameterList()
         list of PyTorch parameters (connection weight matrices) in the PyTorch model.
@@ -857,7 +872,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
 class PytorchMechanismWrapper():
     """Wrapper for a Mechanism in a PytorchCompositionWrapper
-    These comprise nodes of the PytorchCompositionWrapper, and generally correspond to modules of a Pytorch model.
+    These comprise nodes of the PytorchCompositionWrapper, and generally correspond to functions in a Pytorch model.
 
     Attributes
     ----------
@@ -1128,9 +1143,11 @@ class PytorchMechanismWrapper():
 class PytorchProjectionWrapper():
     """Wrapper for Projection in a PytorchCompositionWrapper
 
-    The matrix of the wrapped `_projection <PytorchProjectionWrapper._projection>` corresponds to the parameters
-    (connection weights) of the PyTorch Module that is the `function <Mechanism_Base.function>` of the
-    `receiver <Projection_Base.receiver>` of the wrapped Projection.
+    The matrix of the wrapped `_projection <PytorchProjectionWrapper._projection>` is assigned as a parameter of
+    (set of connection weights in ) the PyTorch Module that, coupled with a corresponding input and `torch.matmul
+    <https://pytorch.org/docs/main/generated/torch.matmul.html>`_ operation, provide the input to the Pytorch
+    function associated with the `Node <Composition_Node>` of the AutdiffComposition that is the `receiver
+    <Projection_Base.receiver>` of the wrapped Projection.
 
     .. note::
        In the case of a nested Composition, the sender and/or receiver attributes may be mapped to different Node(s)
