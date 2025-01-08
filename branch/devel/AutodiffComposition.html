@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.15.3.0+20.g77e4632ea documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.15.3.0+21.g047401eb1 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.3.0+20
+                  0.15.3.0+21
                 </div>
               
             
@@ -296,7 +296,7 @@ That is, an AutodiffComposition can be <a class="reference internal" href="Compo
 <section id="no-bias-parameters">
 <span id="autodiffcomposition-bias-parameters"></span><h3><em>No Bias Parameters</em><a class="headerlink" href="#no-bias-parameters" title="Permalink to this headline">¶</a></h3>
 <p>AutodiffComposition does not (currently) support the <em>automatic</em> construction of separate bias parameters.
-Thus, when constructing the PyTorch version of an AutodiffComposition, the <a class="reference external" href="https://www.pytorch.org/docs/stable/nn.html#torch.nn.Module">bias</a> parameter of PyTorch modules are set to False.
+Thus, when constructing the PyTorch version of an AutodiffComposition, the <a class="reference external" href="https://www.pytorch.org/docs/stable/nn.html#torch.nn.Module">bias</a> parameter of any PyTorch modules are set to False.
 However, biases can be implemented using <a class="reference internal" href="Composition.html#composition-bias-nodes"><span class="std std-ref">BIAS Nodes</span></a>.</p>
 </section>
 <section id="nesting">
@@ -592,7 +592,7 @@ but slows performance (see <code class="xref any docutils literal notranslate"><
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.synch_node_variables_with_torch">
 <span class="sig-name descname"><span class="pre">synch_node_variables_with_torch</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.synch_node_variables_with_torch" title="Permalink to this definition">¶</a></dt>
-<dd><p>determines when to copy the current input to Pytorch nodes (modules) to the PsyNeuLink <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> attribute of the corresponding PsyNeuLink <code class="xref any docutils literal notranslate"><span class="pre">nodes</span></code>, if this is not
+<dd><p>determines when to copy the current input to Pytorch functions to the PsyNeuLink <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> attribute of the corresponding PsyNeuLink <code class="xref any docutils literal notranslate"><span class="pre">nodes</span></code>, if this is not
 specified in the call to <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a>.
 Copying more frequently keeps the PsyNeuLink
 representation more closely copying more frequently keeps them synchronized with parameter updates in Pytorch,
@@ -607,15 +607,20 @@ but slows performance (see <code class="xref any docutils literal notranslate"><
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.synch_node_values_with_torch">
 <span class="sig-name descname"><span class="pre">synch_node_values_with_torch</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.synch_node_values_with_torch" title="Permalink to this definition">¶</a></dt>
-<dd><p>determines when to copy the current output of Pytorch nodes (modules) to the PsyNeuLink <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> attribute of the corresponding PsyNeuLink <code class="xref any docutils literal notranslate"><span class="pre">nodes</span></code>, if this is not
-specified in the call to <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a>. Copying more frequently keeps the PsyNeuLink
-representation more closely copying more frequently keeps them synchronized with parameter updates in Pytorch,
-but slows performance (see <code class="xref any docutils literal notranslate"><span class="pre">AutodiffComposition_PyTorch_LearningScale</span></code> for information about settings).</p>
-<dl class="field-list simple">
+<dd><dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>OPTIMIZATION_STEP, MINIBATCH, EPOCH or RUN</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">determines</span> <span class="pre">when</span> <span class="pre">to</span> <span class="pre">copy</span> <span class="pre">the</span> <span class="pre">current</span> <span class="pre">output</span> <span class="pre">of</span> <span class="pre">Pytorch</span> <span class="pre">functions</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">PsyNeuLink</span> <span class="pre">`value</span> <span class="pre">&lt;Mechanism_Base.value&gt;`</span></span></dt>
+<dd><p>attribute of the corresponding PsyNeuLink <code class="xref any docutils literal notranslate"><span class="pre">nodes</span></code>, if this is not specified in the call to
+<a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a>. Copying more frequently keeps the PsyNeuLink representation more closely
+copying more frequently keeps them synchronized with parameter updates in Pytorch, but slows performance
+(see <code class="xref any docutils literal notranslate"><span class="pre">AutodiffComposition_PyTorch_LearningScale</span></code> for information about settings).</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -749,12 +754,22 @@ specified by <a class="reference internal" href="#psyneulink.library.composition
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper">
 <em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">PytorchCompositionWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">composition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outer_creator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wrapper for a Composition as a Pytorch Module
-Class that wraps a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> as a PyTorch module.</p>
+<dd><p>Wrapper for a Composition as a Pytorch Module.</p>
+<p>Wraps an <a class="reference internal" href="#"><span class="doc">AutodiffComposition</span></a> as a <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html">PyTorch module</a>, with each <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> in the
+AutodiffComposition wrapped as a <code class="xref any docutils literal notranslate"><span class="pre">PytorchMechanismWrapper</span></code>, each <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> wrapped as a
+<code class="xref any docutils literal notranslate"><span class="pre">PytorchProjectionWrapper</span></code>, and any nested Compositions wrapped as <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PytorchCompositionWrapper</span></code></a>s. Each
+PytorchMechanismWrapper implements a Pytorch version of the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function(s)</span></code></a> of the wrapped
+<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, which are executed in the PyTorchCompositionWrapper’s <code class="xref any docutils literal notranslate"><span class="pre">forward</span></code>
+method in the order specified by the AutodiffComposition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.scheduler" title="psyneulink.core.compositions.composition.Composition.scheduler"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">scheduler</span></code></a>.  The
+<a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> Parameters of each wrapped <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> are assigned as parameters of the
+<code class="xref any docutils literal notranslate"><span class="pre">PytorchMechanismWrapper</span></code> Pytorch module and used, together with a Pytorch <a class="reference external" href="https://pytorch.org/docs/main/generated/torch.matmul.html">matmul</a> operation, to generate the input to each
+PyTorch function as specified by the <code class="xref any docutils literal notranslate"><span class="pre">PytorchProjectionWrapper</span></code>'s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.graph" title="psyneulink.core.compositions.composition.Composition.graph"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">graph</span></code></a>.  The graph
+can be visualized using the AutodiffComposition’s <a class="reference internal" href="Visualization.html#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method and setting its
+<em>show_pytorch</em> argument to True (see <code class="xref any docutils literal notranslate"><span class="pre">PytorchShowGraph</span></code> for additional information).</p>
 <p>Two main responsibilities:</p>
 <ol class="arabic">
 <li><dl>
-<dt>Set up parameters of PyTorch model &amp; information required for forward computation:</dt><dd><p>Handle nested compositions (flattened in infer_backpropagation_learning_pathways):
+<dt>Set up functions and parameters of PyTorch module required for it forward computation:</dt><dd><p>Handle nested compositions (flattened in infer_backpropagation_learning_pathways):
 Deal with Projections into and/or out of a nested Composition as shown in figure below:</p>
 <blockquote>
 <div><blockquote>
@@ -839,12 +854,14 @@ of a Composition.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.wrapped_nodes">
 <span class="sig-name descname"><span class="pre">wrapped_nodes</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.wrapped_nodes" title="Permalink to this definition">¶</a></dt>
-<dd><p>list of nodes in the PytorchCompositionWrapper corresponding to PyTorch modules. Generally these are
-<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> wrapped in a <code class="xref any docutils literal notranslate"><span class="pre">PytorchMechanismWrapper</span></code>, however, if the <a class="reference internal" href="#"><span class="doc">AutodiffComposition</span></a>
-being wrapped is itself a nested Composition, then the wrapped nodes are <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PytorchCompositionWrapper</span></code></a> objects.
-When the PyTorch model is executed these are “flattened” into a single PyTorch module, which can be visualized
-using the AutodiffComposition’s <a class="reference internal" href="Visualization.html#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method and setting its <em>show_pytorch</em>
-argument to True (see <code class="xref any docutils literal notranslate"><span class="pre">PytorchShowGraph</span></code> for additional information).</p>
+<dd><p>list of nodes in the PytorchCompositionWrapper corresponding to the PyTorch functions that comprise the
+forward method of the Pytorch module implemented by the PytorchCompositionWrapper. Generally these are
+<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> wrapped in a <code class="xref any docutils literal notranslate"><span class="pre">PytorchMechanismWrapper</span></code>, however, if the <a class="reference internal" href="#"><span class="doc">AutodiffComposition</span></a> Node
+being wrapped is a nested Composition, then the wrapped node is itself a <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PytorchCompositionWrapper</span></code></a> object.
+When the PyTorch model is executed, all of these are “flattened” into a single PyTorch module, corresponding
+to the outermost AutodiffComposition being wrapped, which can be visualized using that AutodiffComposition’s
+<a class="reference internal" href="Visualization.html#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method and setting its <em>show_pytorch</em> argument to True (see
+<code class="xref any docutils literal notranslate"><span class="pre">PytorchShowGraph</span></code> for additional information).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>List[PytorchMechanismWrapper]</p>
@@ -907,7 +924,7 @@ the PytorchCompositionWrapper.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.device">
 <span class="sig-name descname"><span class="pre">device</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.device" title="Permalink to this definition">¶</a></dt>
-<dd><p>device used to process torch Tensors in PyTorch modules</p>
+<dd><p>device used to process torch Tensors in PyTorch functions</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>torch.device</p>
