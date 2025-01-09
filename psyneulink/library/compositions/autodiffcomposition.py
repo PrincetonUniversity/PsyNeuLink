@@ -1614,20 +1614,11 @@ class AutodiffComposition(Composition):
             if (RESULTS in synch_with_pnl_options
                     and synch_with_pnl_options[RESULTS] in {TRIAL, MINIBATCH}):
                 # Use Composition's own _update_results method since no savings when done trial-by-trial
-                if not self.batched_results:
-                    for out in trial_output:
-                        super()._update_results(results, out, execution_mode, synch_with_pnl_options, context)
-                else:
-                    super()._update_results(results, trial_output, execution_mode, synch_with_pnl_options, context)
-
+                super()._update_results(results, trial_output, execution_mode, synch_with_pnl_options, context)
             elif (RESULTS in synch_with_pnl_options
                     and synch_with_pnl_options[RESULTS] == RUN):
                 # Use pytorch_reps method to keep a local list of results that are copied to autodiff.results after run
-                if not self.batched_results:
-                    for out in trial_output:
-                        self.parameters.pytorch_representation._get(context).retain_results(out)
-                else:
-                    self.parameters.pytorch_representation._get(context).retain_results(trial_output)
+                self.parameters.pytorch_representation._get(context).retain_results(trial_output)
         else:
             super()._update_results(results, trial_output, execution_mode, synch_with_pnl_options, context)
 
