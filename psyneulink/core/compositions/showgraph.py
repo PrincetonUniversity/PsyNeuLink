@@ -564,8 +564,11 @@ class ShowGraph():
         for additional details.
 
         .. note::
-           This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported
-           (standard with PsyNeuLink pip install)
+           This method relies on `graphviz <http://www.graphviz.org>`_
+           python and system packages, which must be installed. The
+           python package comes standard with PsyNeuLink pip install,
+           but the system package must be installed separately. It can
+           be downloaded at https://www.graphviz.org/download/.
 
         Arguments
         ---------
