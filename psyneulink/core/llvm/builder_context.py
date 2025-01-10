@@ -485,7 +485,7 @@ class LLVMBuilderContext:
             if isinstance(val, ContentAddressableList):
                 return ir.LiteralStructType(self.get_param_struct_type(x) for x in val)
             elif p.name == 'matrix':   # Flatten matrix
-                val = np.asfarray(val).flatten()
+                val = np.asarray(val, dtype=float).ravel()
             elif p.name == 'num_trials_per_estimate':  # Should always be int
                 val = np.int32(0) if val is None else np.int32(val)
             elif np.ndim(val) == 0 and component._is_param_modulated(p):
@@ -508,7 +508,7 @@ class LLVMBuilderContext:
             if isinstance(val, ContentAddressableList):
                 return ir.LiteralStructType(self.get_state_struct_type(x) for x in val)
             if p.name == 'matrix':   # Flatten matrix
-                val = np.asfarray(val).flatten()
+                val = np.asarray(val, dtype=float).ravel()
             struct = self.convert_python_struct_to_llvm_ir(val)
             return ir.ArrayType(struct, p.history_min_length + 1)
 

@@ -1425,7 +1425,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         def _convert(p):
             x = p.get(context)
             if p.name == 'matrix': # Flatten matrix
-                val = tuple(np.asfarray(x).flatten())
+                val = tuple(np.asarray(x, dtype=float).ravel())
             elif isinstance(x, np.random.RandomState):
                 state = x.get_state(legacy=False)
 
@@ -1626,7 +1626,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             elif p.name == 'num_trials_per_estimate': # Should always be int
                 return 0 if param is None else int(param)
             elif p.name == 'matrix': # Flatten matrix
-                return tuple(np.asfarray(param).flatten())
+                return tuple(np.asarray(param, dtype=float).ravel())
             return _convert(param)
 
         return tuple(map(_get_values, self._get_compilation_params()))

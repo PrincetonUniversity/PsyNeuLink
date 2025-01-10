@@ -1289,10 +1289,10 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         distance_result = self.distance_function(self._parse_distance_function_variable(variable), context=context)
         # TEST PRINT:
         # print(distance_result, self.distance_function.defaults.value)
-        return np.asfarray([
+        return np.asarray([
             distance_result if i == 0 else np.zeros_like(distance_result)
             for i in range(self.defaults.max_entries)
-        ])
+        ], dtype=float)
 
     def _validate(self, context=None):
         """Validate distance_function, selection_function and memory store"""
@@ -1328,10 +1328,10 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
             # Default to full memory
             selection_function = self.selection_function
-            test_var = np.asfarray([
+            test_var = np.asarray([
                 distance_result if i == 0 else np.zeros_like(distance_result)
                 for i in range(self._get_current_parameter_value('max_entries', context))
-            ])
+            ], dtype=float)
             try:
                 result = np.asarray(selection_function(test_var, context=context))
             except Exception as e:
@@ -2313,10 +2313,10 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         distance_result = self.distance_function.parameters.value._get(context)
         # TEST PRINT:
         # print(distance_result, self.distance_function.defaults.value)
-        return np.asfarray([
+        return np.asarray([
             distance_result if i == 0 else np.zeros_like(distance_result)
             for i in range(self.defaults.max_entries)
-        ])
+        ], dtype=float)
 
     def _get_state_ids(self):
         return super()._get_state_ids() + ["ring_memory"]
@@ -2553,9 +2553,10 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
         # Default to full memory
         selection_function = self.selection_function
-        test_var = np.asfarray([distance_result if i==0
-                                else np.zeros_like(distance_result)
-                                for i in range(self._get_current_parameter_value('max_entries', context))])
+        test_var = np.asarray([distance_result if i==0 else np.zeros_like(distance_result)
+                               for i in range(self._get_current_parameter_value('max_entries', context))],
+                              dtype=float)
+
         if isinstance(selection_function, type):
             selection_function = selection_function(default_variable=test_var, context=context)
             fct_string = 'Function type'
@@ -2709,12 +2710,12 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         # Store variable to dict:
         rate = self._get_current_parameter_value(RATE, context)
         if rate is not None:
-            key = np.asfarray(key) * np.asfarray(rate)
+            key = np.asarray(key, dtype=float) * np.asarray(rate, dtype=float)
             assert len(key) == len(variable[KEYS]), "{} vs. {}".format(key, variable[KEYS])
 
         if noise is not None:
             # TODO: does val need noise?
-            key = np.asfarray(key) + np.asfarray(noise)[KEYS]
+            key = np.asarray(key, dtype=float) + np.asarray(noise, dtype=float)[KEYS]
             assert len(key) == len(variable[KEYS]), "{} vs. {}".format(key, variable[KEYS])
 
         if storage_prob == 1.0 or (storage_prob > 0.0 and storage_prob > random_state.uniform()):

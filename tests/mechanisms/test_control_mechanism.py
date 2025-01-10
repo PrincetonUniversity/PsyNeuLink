@@ -187,7 +187,7 @@ class TestControlMechanism:
         # c.add_linear_processing_pathway(pathway=z)
         comp.add_node(Control_Mechanism)
 
-        np.testing.assert_allclose(np.asfarray(Control_Mechanism.parameters.control_allocation.get()), [[0], [0], [0]])
+        np.testing.assert_allclose(Control_Mechanism.parameters.control_allocation.get(), [[0], [0], [0]])
 
         stim_list = {
             Input_Layer: [[-1, 30]],
