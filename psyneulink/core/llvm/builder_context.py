@@ -210,29 +210,46 @@ class LLVMBuilderContext:
         if "time_stat" in debug_env:
             print("Time to setup PNL builtins: {}".format(finish - start))
 
+    def get_rand_int_function_by_state(self, state):
+        if len(state.type.pointee) == 5:
+            return self.import_llvm_function("__pnl_builtin_mt_rand_int32_bounded")
+
+        elif len(state.type.pointee) == 7:
+            # we have different versions based on selected FP precision
+            return self.import_llvm_function("__pnl_builtin_philox_rand_int32_bounded")
+
+        else:
+            assert False, "Unknown PRNG type!"
+
     def get_uniform_dist_function_by_state(self, state):
         if len(state.type.pointee) == 5:
             return self.import_llvm_function("__pnl_builtin_mt_rand_double")
+
         elif len(state.type.pointee) == 7:
             # we have different versions based on selected FP precision
             return self.import_llvm_function("__pnl_builtin_philox_rand_{}".format(str(self.float_ty)))
+
         else:
             assert False, "Unknown PRNG type!"
 
     def get_binomial_dist_function_by_state(self, state):
         if len(state.type.pointee) == 5:
             return self.import_llvm_function("__pnl_builtin_mt_rand_binomial")
+
         elif len(state.type.pointee) == 7:
             return self.import_llvm_function("__pnl_builtin_philox_rand_binomial")
+
         else:
             assert False, "Unknown PRNG type!"
 
     def get_normal_dist_function_by_state(self, state):
         if len(state.type.pointee) == 5:
             return self.import_llvm_function("__pnl_builtin_mt_rand_normal")
+
         elif len(state.type.pointee) == 7:
             # Normal exists only for self.float_ty
             return self.import_llvm_function("__pnl_builtin_philox_rand_normal")
+
         else:
             assert False, "Unknown PRNG type!"
 

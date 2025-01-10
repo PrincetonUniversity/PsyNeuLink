@@ -15,17 +15,17 @@ Contents
 
   * `AutodiffComposition_Overview`
   * `AutodiffComposition_Creation`
-    - `AutodiffComposition_`
-      - `AutodiffComposition_Modulatory_Mechanisms`
-      - `AutodiffComposition_Bias_Parameters`
-      - `AutodiffComposition_Nesting`
-      - `AutodiffComposition_Post_Construction_Modification`
-    * `AutodiffComposition_Execution`
-      - `AutodiffComposition_PyTorch`
-      - `AutodiffComposition_LLVM`
-      - `AutodiffComposition_Python`
-      - `AutodiffComposition_Nested_Modulation`
-      - `AutodiffComposition_Logging`
+      - `AutodiffComposition`
+          - `AutodiffComposition_Modulatory_Mechanisms`
+          - `AutodiffComposition_Bias_Parameters`
+          - `AutodiffComposition_Nesting`
+          - `AutodiffComposition_Post_Construction_Modification`
+      * `AutodiffComposition_Execution`
+          - `AutodiffComposition_PyTorch`
+          - `AutodiffComposition_LLVM`
+          - `AutodiffComposition_Python`
+          - `AutodiffComposition_Nested_Modulation`
+          - `AutodiffComposition_Logging`
   * `AutodiffComposition_Examples`
   * `AutodiffComposition_Class_Reference`
 
@@ -61,14 +61,14 @@ same methods as a standard Composition, there are a few restrictions that apply 
 
 .. _AutodiffComposition_Restrictions:
 
-.. _AutodiffComposition_Modulatory_Mechanisms:
-
 *Only one OutputPort per Node*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The `Nodes <Composition_Nodes>` of an AutodiffComposition currently can have only *one* `OutputPort`, though that
 can have more than one `efferent <Port_Base.efferents>` `MappingProjection`.  Nodes can also have more than one
 `InputPort`, that can receive more than one `afferent `path_afferent <Port_Base.path_afferents>` Projections.
+
+.. _AutodiffComposition_Modulatory_Mechanisms:
 
 *No Modulatory Components*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -80,26 +80,19 @@ Specifically, this precludes any `learning components <Composition_Learning_Comp
 
 .. _Autodiff_Learning_Components_Warning:
 
-*Learning Components.*  An AutodiffComposition **cannot include any** `learning components
+*Learning Components*.  An AutodiffComposition **cannot include any** `learning components
 <Composition_Learning_Components>` themselves (i.e., `LearningMechanisms <LearningMechanism>`, `LearningSignals
-<LearningSignal>`, or LearningProjections <LearningProjection>`, nor the `ComparatorMechanism <COMPARATOR_MECHANISM>`
-or `ObjectiveMechanism <OBJECTIVE_MECHANISM>` used to compute the loss for learning). These are constructed
+<LearningSignal>`, or `LearningProjections <LearningProjection>`, nor the `ComparatorMechanism`
+or `ObjectiveMechanism` used to compute the loss for learning). These are constructed
 automatically when learning is executed in `Python mode <AutodiffComposition_Python>` or `LLVM mode
-<AutodiffComposition_LLVM>`, and PyTorch-compatible Components are constructed when it is executed in `PyTorch mode
-<AutodiffComposition_PyTorch>`.
+<AutodiffComposition_LLVM>`, and PyTorch-compatible Components are constructed when it is executed in
+`PyTorch mode <AutodiffComposition_PyTorch>`.
 
-COMMENT:
-FIX: IS THE FOLLOWING STILL TRUE? SEEMS TO CONTRADICT STATEMENTS BELOW:
-This means that it cannot be used with a Composition that contains any `modulatory components
-<ModulatorySignal_Anatomy_Figure>` or ones that are subject to modulation, whether by ModulatoryMechanisms within or
-outside the Composition;
-?MAYBE THE FOLLOWING IS BETTER:
-COMMENT
-*Control Components.*  An AutodiffComposition also cannot include any `ControlMechanisms <ControlMechanism>` or a
+*Control Components*. An AutodiffComposition also cannot include any `ControlMechanisms <ControlMechanism>` or a
 `controller <Composition_Controller>`.  However, it *can* include Mechanisms that are subject to modulatory control
 (see `Figure <ModulatorySignal_Anatomy_Figure>`, and `modulation <ModulatorySignal_Modulation>`) by ControlMechanisms
 *outside* the Composition, including the controller of a Composition within which the AutodiffComposition is nested.
-That is, an AutodiffComposition can be `nested in a Composition <Composition_Nested>` that has such other Components
+That is, an AutodiffComposition can be `nested in a Composition <Composition_Nested>` that has other such Components
 (see `AutodiffComposition_Nested_Modulation` below).
 
 .. _AutodiffComposition_Bias_Parameters:
@@ -108,12 +101,10 @@ That is, an AutodiffComposition can be `nested in a Composition <Composition_Nes
 ~~~~~~~~~~~~~~~~~~~~
 
 AutodiffComposition does not (currently) support the *automatic* construction of separate bias parameters.
-Thus, when constructing a model using an AutodiffComposition that corresponds to one in PyTorch, the `bias
-<https://www.pytorch.org/docs/stable/nn.html#torch.nn.Module>` parameter of PyTorch modules should be set
-to `False`. Trainable biases *can* be specified explicitly in an AutodiffComposition by including a
-TransferMechanism that projects to the relevant Mechanism (i.e., implementing that layer of the network to
-receive the biases) using a `MappingProjection` with a `matrix <MappingProjection.matrix>` parameter that
-implements a diagnoal matrix with values corresponding to the initial value of the biases.
+Thus, when constructing the PyTorch version of an AutodiffComposition, the `bias
+<https://www.pytorch.org/docs/stable/nn.html#torch.nn.Module>`_ parameter of any PyTorch modules are set to False.
+However, biases can be implemented using `Composition_Bias_Nodes`.
+
 
 .. _AutodiffComposition_Nesting:
 
@@ -142,6 +133,7 @@ default value is being used (see `learning_rate <AutodiffComposition.learning_ra
 
 *No Post-construction Modification*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 COMMENT:
 IS THIS STILL TRUE?
 COMMENT
@@ -539,7 +531,7 @@ class AutodiffComposition(Composition):
         but slows performance (see `AutodiffComposition_PyTorch_LearningScale` for information about settings).
 
     synch_node_variables_with_torch : OPTIMIZATION_STEP, TRIAL, MINIBATCH, EPOCH, RUN or None
-        determines when to copy the current input to Pytorch nodes (modules) to the PsyNeuLink `variable
+        determines when to copy the current input to Pytorch functions to the PsyNeuLink `variable
         <Mechanism_Base.value>` attribute of the corresponding PsyNeuLink `nodes <Composition_Node>`, if this is not
         specified in the call to `learn <AutodiffComposition.learn>`.
         COMMENT:
@@ -553,11 +545,11 @@ class AutodiffComposition(Composition):
         but slows performance (see `AutodiffComposition_PyTorch_LearningScale` for information about settings).
 
     synch_node_values_with_torch : OPTIMIZATION_STEP, MINIBATCH, EPOCH or RUN
-        determines when to copy the current output of Pytorch nodes (modules) to the PsyNeuLink `value
-        <Mechanism_Base.value>` attribute of the corresponding PsyNeuLink `nodes <Composition_Node>`, if this is not
-        specified in the call to `learn <AutodiffComposition.learn>`. Copying more frequently keeps the PsyNeuLink
-        representation more closely copying more frequently keeps them synchronized with parameter updates in Pytorch,
-        but slows performance (see `AutodiffComposition_PyTorch_LearningScale` for information about settings).
+    determines when to copy the current output of Pytorch functions to the PsyNeuLink `value <Mechanism_Base.value>`
+        attribute of the corresponding PsyNeuLink `nodes <Composition_Node>`, if this is not specified in the call to
+        `learn <AutodiffComposition.learn>`. Copying more frequently keeps the PsyNeuLink representation more closely
+        copying more frequently keeps them synchronized with parameter updates in Pytorch, but slows performance
+        (see `AutodiffComposition_PyTorch_LearningScale` for information about settings).
 
     synch_results_with_torch : OPTIMIZATION_STEP, TRIAL, MINIBATCH, EPOCH or RUN
         determines when to copy the current outputs of Pytorch nodes to the PsyNeuLink `results
@@ -951,8 +943,9 @@ class AutodiffComposition(Composition):
 
             return pathways
 
-        # Construct a pathway for each INPUT Node (except the TARGET Node)
-        pathways = [pathway for node in self.get_nodes_by_role(NodeRole.INPUT)
+        # Construct a pathway for each INPUT Node (including BIAS Nodes), except the TARGET Node)
+        pathways = [pathway
+                    for node in (self.get_nodes_by_role(NodeRole.INPUT) + self.get_nodes_by_role(NodeRole.BIAS))
                     if node not in self.get_nodes_by_role(NodeRole.TARGET)
                     for pathway in _get_pytorch_backprop_pathway(node)]
 
@@ -1055,8 +1048,7 @@ class AutodiffComposition(Composition):
             # and therefore requires a wrapper function to properly package inputs.
             return lambda x, y: nn.CrossEntropyLoss()(torch.atleast_2d(x), torch.atleast_2d(y.type(x.type())))
         elif loss_spec == Loss.BINARY_CROSS_ENTROPY:
-            if version.parse(torch.version.__version__) >= version.parse('1.12.0'):
-                return nn.BCELoss()
+            return nn.BCELoss()
         elif loss_spec == Loss.L1:
             return nn.L1Loss(reduction='sum')
         elif loss_spec == Loss.NLL:
@@ -1117,9 +1109,14 @@ class AutodiffComposition(Composition):
         # Calculate and track the loss over the trained OUTPUT nodes
         for component in curr_tensors_for_trained_outputs.keys():
             trial_loss = 0
-            for i in range(curr_tensors_for_trained_outputs[component].shape[1]):
-                trial_loss += self.loss_function(curr_tensors_for_trained_outputs[component][:, i, :],
-                                               curr_target_tensors_for_trained_outputs[component][i])
+            for i in range(len(curr_tensors_for_trained_outputs[component].shape[1])):
+                # loss only accepts 0 or 1d target. reshape assuming pytorch_rep.minibatch_loss dim is correct
+                comp_loss = self.loss_function(
+                    curr_tensors_for_trained_outputs[component][:, i, :],
+                    torch.atleast_1d(curr_target_tensors_for_trained_outputs[component][i])
+                )
+                comp_loss = comp_loss.reshape_as(pytorch_rep.minibatch_loss)
+                trial_loss += comp_loss
             pytorch_rep.minibatch_loss += trial_loss
         pytorch_rep.minibatch_loss_count += 1
 

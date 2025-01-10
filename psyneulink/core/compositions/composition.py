@@ -22,7 +22,9 @@ Contents
      - `Composition_Add_Nested`
   * `Composition_Structure`
      - `Composition_Graph`
+        • `Composition_Acyclic_Cyclic`
      - `Composition_Nodes`
+        • `Composition_Bias_Nodes`
      - `Composition_Nested`
         • `Probes <Composition_Probes>`
      - `Composition_CIMs`
@@ -273,8 +275,8 @@ displayed using the Composition's `show_graph <ShowGraph.show_graph>` method (se
 
 .. _Composition_Acyclic_Cyclic:
 
-**Acyclic and Cyclic Graphs**
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*Acyclic and Cyclic Graphs*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Projections are always directed (that is, information is transimtted in only one direction).  Therefore, if the
 Projections among the Nodes of the Composition never form a loop, then it is a `directed acyclic graph (DAG)
@@ -324,6 +326,41 @@ to a particular Node can be listed using the `get_roles_by_node <Composition.get
 nodes assigned a particular role can be listed using the `get_nodes_by_role <Composition.get_nodes_by_role>` method.
 The `get_required_roles_by_node` method lists the `NodeRoles <NodeRole>` that have been assigned to a Node using the
 `require_node_roles <Composition.require_node_roles>` method.
+
+.. _Composition_Bias_Nodes:
+
+*BIAS Nodes*
+^^^^^^^^^^^^
+
+`BIAS` `NodeRole` can be used to implement BIAS Nodes, which add a bias (constant value) to the input of another
+Node, that can also be modified by `learning <Composition_Learning>`. A BIAS Node is implemented by adding a
+`ProcessingMechanism` to the Composition and requiring it to have the `BIAS` `NodeRole`. This can be done using
+any of the methods described `above <Composition_Nodes>` for assigning `NodeRoles <NodeRole>` tp a Node. The
+ProcessingMechanism cannot have any afferent Projections, and should project to the `InputPort` of the Node with
+the values to be biased. If the bias is to be learned, the `learnable <MappingProjection.learnable>` attribute of
+the MappingProjeciton should be set to True. The value of the bias, and how it is applied to the values being biased
+are specified as described below:
+
+    *Single bias value*. To apply a single scalar bias value to all elements of the array being biased, the
+    `default_variable <Component_Variable>` of the BIAS Node should be specified as a scalar value, and the `matrix
+    <MappingProjection.matrix>` parameter of the MappingProjection should be assigned *FULL_CONNECTIVITY_MATRIX*;
+    this will use the value for all elements of the bias vector.
+
+    *Array of bias values*. To apply a different bias value to each element of the array being biased, the
+    `default_variable <Component_Variable>` of the BIAS Node should be specified as an array conatining the bias
+    values, and the `matrix <MappingProjection.matrix>` parameter of the MappingProjection should be assigned
+    *IDENTITY_MATRIX*; this will use the value of each element of the bias vector to multiply the corresponding
+    element of the array being biased.
+
+    *Multiple bias arrays*. A single BIAS Node can be used to bias multiple arrays by specifying the
+    `default_variable <Component_Variable>` of the BIAS Node as a 2d array, with each array in the outer
+    dimension containing the bias values for a different array; this will generate an `OutputPort` for each
+    bias array, which can be assigned a MappingProjeciton to do different Node to be biased.
+
+    .. hint::
+       Bias signals can be `modulated <ModulatorySignal_Modulation>` by a `ControlMechanism`, by including
+       a `ControlSignal <ControlSignal_Specification>` for the `slope <Linear.slope>` Parameter of a BIAS Node's
+       `Linear` Function.
 
 
 .. _Composition_Nested:
@@ -1309,7 +1346,7 @@ is a INPUT Node of the Composition to which it belongs). Any INPUT Nodes for whi
 which there are no entries in the inputs dictionary) are assigned their `default_external_inputs
 <Mechanism_Base.default_external_inputs>` on each `TRIAL <TimeScale.TRIAL>` of execution; similarly, if the dictionary
 contains entries for some but not all of the InputPorts of a Node, the remaining InputPorts are assigned their
-`default_input <InputPort.default_input>` on each `TRIAL <TimeScale.TRIAL>` of execution.  See below for additional
+`default_input <InputPort.default_input>` on each `TRIAL <TimeScale.TRIAL>` of execution. See below for additional
 information concerning `entries for Nodes <Composition_Input_Dictionary_Node_Entries>` and `entries for InputPorts
 <Composition_Input_Dictionary_InputPort_Entries>`).
 
@@ -2912,7 +2949,7 @@ from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism, ProcessingMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort, InputPortError
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.modulatorysignals.learningsignal import LearningSignal
@@ -2939,7 +2976,8 @@ from psyneulink.core.globals.keywords import \
     INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
     LEARNABLE, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     LEARNING_SIGNAL, Loss, \
-    MATRIX, MAYBE, MODEL_SPEC_ID_METADATA, MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, NODES, \
+    MATRIX, MAYBE, MODEL_SPEC_ID_METADATA, MONITOR, MONITOR_FOR_CONTROL, MULTIPLICATIVE_PARAM, \
+    NAME, NESTED, NO_CLAMP, NODE, NODES, \
     OBJECTIVE_MECHANISM, ONLINE, ONLY, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PORT, \
     PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP, RECEIVER, \
@@ -3367,11 +3405,10 @@ class NodeRole(enum.Enum):
         programmatically.
 
     BIAS
-        A `Node <Composition_Nodes>` for which one or more of its `InputPorts <InputPort>` is assigned
-        *DEFAULT_VARIABLE* as its `default_input <InputPort.default_input>` (which provides it a prespecified
-        input that is constant across executions).  Such a node can also be assigned as an `INPUT` and/or `ORIGIN`,
-        if it receives input from outside the Composition and/or does not receive any `Projections <Projection>` from
-        other Nodes within the Composition, respectively.  This role cannot be modified programmatically.
+        A `Node <Composition_Nodes>` for which all of its `InputPorts <InputPort>` are assigned *DEFAULT_VARIABLE*
+        as their `default_input <InputPort.default_input>` (which provides a pre-specified input to each InputPort
+        that is constant across executions). Such a Node is always also an `ORIGIN` Node (since it does not receive
+        Projections from any other Node) and never an `INPUT` Node (since it does not receive external input).
 
     INTERNAL
         A `Node <Composition_Nodes>` that is neither `INPUT` nor `OUTPUT`.  Note that it *can* also be `ORIGIN`,
@@ -3481,7 +3518,6 @@ class NodeRole(enum.Enum):
 
 
 unmodifiable_node_roles = {NodeRole.ORIGIN,
-                           NodeRole.BIAS,
                            NodeRole.INTERNAL,
                            NodeRole.SINGLETON,
                            NodeRole.TERMINAL,
@@ -4368,6 +4404,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             self._pre_existing_pathway_components[NODES].append(node)
 
+        # Aux components are being added by Composition, even if main Node is being added was from COMMAND_LINE
         invalid_aux_components = self._add_node_aux_components(node, context=context)
 
         # Implement required_roles
@@ -4639,13 +4676,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError('Invalid NodeRole: {0}'.format(role))
 
         # Disallow assignment of NodeRoles by user that are not programmitically modifiable:
-        # FIX 4/25/20 [JDC]: CHECK IF ROLE OR EQUIVALENT STATUS HAS ALREADY BEEN ASSIGNED AND, IF SO, ISSUE WARNING
+        # FIX 4/25/20 [JDC] - CHECK IF ROLE OR EQUIVALENT STATUS HAS ALREADY BEEN ASSIGNED AND, IF SO, ISSUE WARNING
         if context.source == ContextFlags.COMMAND_LINE:
-            if role in {NodeRole.CONTROL_OBJECTIVE, NodeRole.CONTROLLER_OBJECTIVE}:
-                # raise CompositionError(f"{role} cannot be directly assigned to an {ObjectiveMechanism.__name__};"
-                #                        # f"assign 'CONTROL' to 'role' argument of consructor for {node} of {self.name}")
-                #                        f"try assigning {node} to '{OBJECTIVE_MECHANISM}' argument of "
-                #                        f"the constructor for the desired {ControlMechanism.__name__}.")
+            if role in {NodeRole.CONTROL_OBJECTIVE, NodeRole.CONTROLLER_OBJECTIVE} and not node.control_mechanism:
                 warnings.warn(f"{role} should be assigned with caution to {self.name}. "
                               f"{ObjectiveMechanism.__name__}s are generally constructed automatically by a "
                               f"{ControlMechanism.__name__}, or assigned to it in the '{OBJECTIVE_MECHANISM}' "
@@ -4662,9 +4695,32 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 warnings.warn(f"{role} is not a role that can be assigned directly {to_from} {self.name}. "
                               f"The relevant {Projection.__name__} to it must be designated as 'feedback' "
                               f"where it is addd to the {self.name};  assignment will be ignored.")
+            elif role is NodeRole.BIAS:
+                if any(p.path_afferents for p in node.input_ports):
+                    if all([isinstance(proj.sender.owner, CompositionInterfaceMechanism) for proj in p.path_afferents]
+                           for p in node.input_ports):
+                        # Was an INPUT Node with Projections from input_CIM,
+                        #   so exclude as INPUT which should remove its afferent Projections
+                        self.exclude_node_roles(node, NodeRole.INPUT, context)
+                        self._analyze_graph(context=context)
+                    else:
+                        # Had afferent Projections other than from input_CIM
+                        raise CompositionError(f"Attempt to assign 'NodeRole.BIAS' to a node ('{node.name}') "
+                                               f"in '{self.name}' that already has input(s) assigned.")
+                for input_port in node.input_ports:
+                    input_port.parameters.default_input._set(DEFAULT_VARIABLE, context, override=True)
+                    input_port.internal_only = True
+                self.exclude_node_roles(node, NodeRole.INPUT, context)
+                self.required_node_roles.append((node, NodeRole.BIAS))
+
+            elif role is NodeRole.INPUT:
+                if (node, NodeRole.BIAS) in self.required_node_roles:
+                    raise CompositionError(f"A Node assigned NodeRole.BIAS ('{node.name}') cannot also be "
+                                           f"assigned NodeRole.INPUT (since it does not receive any input).")
+
             elif role in unmodifiable_node_roles:
-                raise CompositionError(f"Attempt to assign {role} (to {node} of {self.name})"
-                                       f"that cannot be modified by user.")
+                raise CompositionError(f"A Node assigned NodeRole.BIAS ('{node.name}') cannot also be "
+                                       f"assigned NodeRole.INPUT (since it does not receive any input).")
 
         node_role_pair = (node, role)
         if node_role_pair not in self.required_node_roles:
@@ -4828,7 +4884,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     nested_nodes.extend(node.get_nested_nodes_by_roles_at_any_level(node, include_roles, exclude_roles))
                 else:
                     nested_nodes.append(node)
-        return nested_nodes if any(nested_nodes) else None
+        return nested_nodes if any(nested_nodes) else []
 
     def get_nested_input_nodes_at_all_levels(self)->list or None:
         """Return all Nodes from nested Compositions that receive input directly from input to outermost Composition."""
@@ -5116,7 +5172,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # ignore these for now and try to activate them again during every call to _analyze_graph
             # and, at runtime, if there are still any invalid aux_components left, issue a warning
             projections = []
-            # Add all "nodes" to the composition first (in case projections reference them)
+            # Add all Nodes to the Composition first (in case Projections reference them)
             for i, component in enumerate(node.aux_components):
                 if isinstance(component, (Mechanism, Composition)):
                     if isinstance(component, Composition):
@@ -5137,10 +5193,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                    "specification (True or False).".format(component, node.name))
                     elif isinstance(component[0], (Mechanism, Composition)):
                         if isinstance(component[1], NodeRole):
-                            self.add_node(node=component[0], required_roles=component[1])
+                            self.add_node(node=component[0], required_roles=component[1], context=context)
                         elif isinstance(component[1], list):
                             if isinstance(component[1][0], NodeRole):
-                                self.add_node(node=component[0], required_roles=component[1])
+                                self.add_node(node=component[0], required_roles=component[1], context=context)
                             else:
                                 raise CompositionError("Invalid Component specification ({}) in {}'s aux_components. "
                                                        "If a tuple is used to specify a Mechanism or Composition, then "
@@ -5417,10 +5473,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # INPUT
 
-        # all nodes from processing graph with no incoming edges are INPUT
-        input_nodes = {
-            n for n in comp_graph_dependencies if len(comp_graph_dependencies[n]) == 0
-        }
+        # Start with all nodes from processing graph with no incoming edges
+        input_nodes = {n for n in comp_graph_dependencies if len(comp_graph_dependencies[n]) == 0}
 
         # an entire cycle that has no node with any incoming edge other
         # than from other nodes in the cycle is treated as INPUT
@@ -5472,11 +5526,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        or all(p.sender.owner is self.input_CIM for p in node.path_afferents))):
                 self._add_node_role(node, NodeRole.INPUT)
 
+            if isinstance(node, Composition):
+                if not node.get_nodes_by_role(NodeRole.INPUT):
+                    # If a nested Composition has not INUTS, remove it as an INPUT of the outer Composition
+                    self._remove_node_role(node, NodeRole.INPUT)
+
         # BIAS
         for node in self.nodes:
             if (isinstance(node, Mechanism)
-                    and any(input_port.default_input == DEFAULT_VARIABLE for input_port in node.input_ports)):
+                    and all(input_port.default_input == DEFAULT_VARIABLE for input_port in node.input_ports)):
                 self._add_node_role(node, NodeRole.BIAS)
+                # BIAS Nodes should not be included in INPUT Nodes
+                self._remove_node_role(node, NodeRole.INPUT)
 
         # CYCLE
         for cycle in self.graph_processing.cycle_vertices:
@@ -6558,6 +6619,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._parse_sender_spec(projection, sender, is_learning_projection)
         receiver,receiver_mechanism,graph_receiver,receiver_input_port,nested_compositions,is_learning_projection = \
             self._parse_receiver_spec(projection, receiver, sender, is_learning_projection)
+
+        if (isinstance(receiver_input_port, InputPort)
+                and receiver_input_port.default_input == DEFAULT_VARIABLE):
+            if (receiver_mechanism, NodeRole.BIAS) in self.required_node_roles:
+                raise CompositionError(f"'{receiver_mechanism.name}' is configured as a {NodeRole.BIAS.name} node, "
+                                       f"so it cannot receive a MappingProjection from '{sender.name}' "
+                                       f"as currently specified for a pathway in '{self.name}'.")
 
         if (isinstance(receiver_mechanism, (CompositionInterfaceMechanism))
                 and receiver_input_port.owner not in self.nodes
@@ -7676,13 +7744,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for node in entry:
                     # Extract Nodes from any tuple specs
                     node = _get_spec_if_tuple(node)
-                    # Replace any nested Compositions with their INPUT Nodes
-                    node = (self.get_nested_nodes_by_roles_at_any_level(node, include_roles, exclude_roles)
-                                if isinstance(node, Composition) else [node])
-                    if not node:
-                        raise CompositionError(f"A nested Composition ('{list(entry)[0].name}') included in "
-                                               f"{pathway_arg_str} is empty; (i.e., does not have any nodes "
-                                               f"with the specified NodeRole(s) assigned to it yet).")
+                    if isinstance(node, Composition):
+                        # Replace any nested Compositions with their INPUT Nodes
+                        nested_nodes = self.get_nested_nodes_by_roles_at_any_level(node, include_roles, exclude_roles)
+                        if not nested_nodes:
+                            err_msg = (f"A nested Composition ('{node.name}') included {pathway_arg_str} "
+                                       f"does not (yet) have a Node with the NodeRole '{include_roles.name}' "
+                                       f"required by its position the specified pathway.")
+                            if NodeRole.INPUT in convert_to_list(include_roles):
+                                nested_nodes = self.get_nested_nodes_by_roles_at_any_level(node, NodeRole.BIAS)
+                                if nested_nodes:
+                                    if node.get_nodes_by_role(NodeRole.ORIGIN) == nested_nodes:
+                                        err_msg += (f" This is probably because its only ORIGIN Node is "
+                                                    f"'{nested_nodes[0].name}' which a BIAS Node and therefore "
+                                                    f"cannot accept any input.")
+                            raise CompositionError(err_msg)
+                        node = nested_nodes
+                    else:
+                        node = [node]
                     nodes.extend(node)
                 return nodes
 
@@ -7695,7 +7774,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # The preceding entry is a Node or set of them:
                 #  - if it is a set, list or array, leave as is, else place in set for consistency of processing below
                 preceding_entry = (pathway[c - 1] if isinstance(pathway[c - 1], (set, list, np.ndarray))
-                                   else {pathway[c - 1]})
+                                   else {pathway[c - 1] if not isinstance(pathway[c - 1], tuple) else pathway[c - 1][0]})
                 if all(_is_node_spec(sender) for sender in preceding_entry):
                     senders = _get_node_specs_for_entry(preceding_entry, NodeRole.OUTPUT)
                     projs = set()
@@ -7978,7 +8057,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for i, n_e in enumerate(node_entries):
             for n in convert_to_list(n_e):
                 if isinstance(n, tuple):
-                    nodes[i] = nodes[i][0]
+                    # # MODIFIED 12/22/24 OLD:
+                    # nodes[i] = nodes[i][0]
+                    # MODIFIED 12/22/24 NEW:
+                    nodes[nodes.index(n)] = n[0]
+                    # MODIFIED 12/22/24 END
 
         specified_pathway = pathway
         # interleave (sets of) Nodes and (sets or lists of) Projections
@@ -9803,6 +9886,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return total_cost
 
+    def _get_modulable_mechanisms(self):
+        modulated_mechanisms = []
+        for mech in [m for m in self.nodes if (isinstance(m, ProcessingMechanism_Base) and
+                                                      not (isinstance(m, ObjectiveMechanism)
+                                                           and self.get_roles_for_node(m) != NodeRole.CONTROL)
+                                                      and hasattr(m.function, MULTIPLICATIVE_PARAM))]:
+            modulated_mechanisms.append(mech)
+        return modulated_mechanisms
+
     # endregion CONTROL
 
     # ******************************************************************************************************************
@@ -11210,10 +11302,27 @@ _
 
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
-        inputs, num_inputs_sets = self._parse_run_inputs(inputs, context)
+        if input_nodes:
+            inputs, num_inputs_sets = self._parse_run_inputs(inputs, context)
+        else:
+            if inputs:
+                # No inputs should be passed to run since there are no INPUT Nodes
+                raise RunError(f"The following items specified in the 'inputs' arg of the run() method for "
+                               f"'{self.name}' are not INPUT Nodes of that Composition (nor InputPorts of them): "
+                               f"{', '.join([node.name for node in inputs.keys()])}.")
+            inputs = {}
+            num_inputs_sets = 0
 
         if num_trials is None:
-            num_trials = num_inputs_sets
+            if input_nodes:
+                num_trials = num_inputs_sets
+            elif self.nodes:
+                num_trials = 1
+            else:
+                # IMPLEMENTATION NOTE:
+                #     Could break here, since there is nothing to execute,
+                #     but probably wisest to still carry out any remaining "house-keeping."
+                num_trials = 0
 
         scheduler._reset_counts_total(TimeScale.RUN, context.execution_id)
 
@@ -11391,19 +11500,23 @@ _
 
                 # PROCESSING ------------------------------------------------------------------------
                 # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
-                try:
-                    # IMPLEMENTATION NOTE: for autdoiff, the following includes backward pass after forward pass
+                if input_nodes:
+                    try:
 
-                    # If this is an instance of generator CompositionRunner._batch_inputs, then there is no
-                    # need to call _parse_trial_inputs, as the inputs are already in the correct format
-                    # from the call to _parse_learning_spec
-                    if isgenerator(inputs) and 'CompositionRunner._batch_inputs' in str(inputs):
-                        execution_stimuli = next(inputs)
-                    else:
-                        execution_stimuli = self._parse_trial_inputs(inputs, trial_num, context)
+                        # IMPLEMENTATION NOTE: for autdoiff, the following includes backward pass after forward pass
 
-                except StopIteration:
-                    break
+                        # If this is an instance of generator CompositionRunner._batch_inputs, then there is no
+                        # need to call _parse_trial_inputs, as the inputs are already in the correct format
+                        # from the call to _parse_learning_spec
+                        if isgenerator(inputs) and 'CompositionRunner._batch_inputs' in str(inputs):
+                            execution_stimuli = next(inputs)
+                        else:
+                            execution_stimuli = self._parse_trial_inputs(inputs, trial_num, context)
+
+                    except StopIteration:
+                        break
+                else:
+                    execution_stimuli = None
 
                 # execute processing, passing stimuli for this trial
                 # IMPLEMENTATION NOTE: for autodiff, the following executes the forward pass for a single input
@@ -12085,12 +12198,14 @@ _
 
                 self.parameter_CIM.execute(context=context)
 
-            else:
+            # else:
+            elif input_nodes:
+                # If there are any INPUT Nodes (otherwise, skip executing input_CIM)
                 assert build_CIM_input != NotImplemented, f"{self} not in nested mode and no inputs available"
                 self.input_CIM.execute(build_CIM_input, context=context)
 
                 # Update nested compositions
-                for comp in (node for node in self.get_nodes_by_role(NodeRole.INPUT) if isinstance(node, Composition)):
+                for comp in (node for node in input_nodes if isinstance(node, Composition)):
                     for port in comp.input_ports:
                         port._update(context=context)
 
@@ -12350,7 +12465,7 @@ _
                             if node is not self.controller:
                                 mech_context = copy(context)
                                 mech_context.source = ContextFlags.COMPOSITION
-                                if self.is_nested and node in self.get_nodes_by_role(NodeRole.INPUT):
+                                if self.is_nested and node in input_nodes:
                                     for port in node.input_ports:
                                         port._update(context=context)
                                 node.execute(context=mech_context,
@@ -12873,7 +12988,19 @@ _
         pass
 
     @handle_external_context(fallback_most_recent=True)
-    def reset(self, values=None, include_unspecified_nodes=True, context=NotImplemented):
+    def reset(self, values=None, include_unspecified_nodes=True, clear_results=False, context=NotImplemented):
+        """Reset all stateful functions in the Composition to their initial values.
+
+        If **values** is provided, the `previous_value <StatefulFunction.previous_value>` of the corresponding
+        `stateful functions <StatefulFunction>` are set to the values specified. If a value is not provided for a
+        given node, the `previous_value <StatefulFunction.previous_value>` is set to the value of its `initializer
+        <StatefulFunction.initializer>`.
+
+        If **include_unspecified_nodes** is False, then all nodes must have corresponding reset values.
+        The `DEFAULT` keyword can be used in lieu of a numerical value to reset a node's value to its default.
+
+        If **clear_results** is True, the `results <Composition.results>` attribute is set to an empty list.
+        """
         if not values:
             values = {}
 
@@ -12883,30 +13010,33 @@ _
             reset_val = values.get(node)
             node.reset(reset_val, context=context)
 
+        if clear_results:
+            self.parameters.results._set([], context)
+
     @handle_external_context(fallback_most_recent=True)
     def initialize(self, values=None, include_unspecified_nodes=True, context=None):
-        """
-            Initializes the values of nodes within cycles. If `include_unspecified_nodes` is True and a value is
-            provided for a given node, the node will be initialized to that value. If `include_unspecified_nodes` is
-            True and a value is not provided, the node will be initialized to its default value. If
-            `include_unspecified_nodes` is False, then all nodes must have corresponding initialization values. The
-            `DEFAULT` keyword can be used in lieu of a numerical value to reset a node's value to its default.
+        """Initialize the values of nodes within cycles.
+        If `include_unspecified_nodes` is True and a value is provided for a given node, the node is initialized to
+        that value. If `include_unspecified_nodes` is  True and a value is not provided, the node is initialized to
+        its default value. If `include_unspecified_nodes` is False, then all nodes must have corresponding
+        initialization values. The `DEFAULT` keyword can be used in lieu of a numerical value to reset a node's value
+        to its default.
 
-            If a context is not provided, the most recent context under which the Composition has executed will be used.
+        If a context is not provided, the most recent context under which the Composition has executed is used.
 
-            Arguments
-            ----------
-            values: Dict { Node: Node Value }
-                A dictionary contaning key-value pairs of Nodes and initialization values. Nodes within cycles that are
-                not included in this dict will be initialized to their default values.
+        Arguments
+        ----------
+        values: Dict { Node: Node Value }
+            A dictionary containing key-value pairs of Nodes and initialization values. Nodes within cycles that are
+            not included in this dict are initialized to their default values.
 
-            include_unspecified_nodes: bool
-                Specifies whether all nodes within cycles should be initialized or only ones specified in the provided
-                values dictionary.
+        include_unspecified_nodes: bool
+            Specifies whether all nodes within cycles should be initialized or only ones specified in the provided
+            values dictionary.
 
-            context: Context
-                The context under which the nodes should be initialized. context will be set to
-                self.most_recent_execution_context if one is not specified.
+        context: Context
+            The context under which the nodes should be initialized. context are set to
+            self.most_recent_execution_context if one is not specified.
 
         """
         # comp must be initialized from context before cycle values are initialized
@@ -12960,7 +13090,7 @@ _
         if convert_to_np_array(input_value, dimension=2).shape == var_shape:
             return "homogeneous"
         # input_value ports have different lengths
-        elif len(var_shape) == 1 and isinstance(var[0], (list, np.ndarray)):
+        elif var and len(var_shape) == 1 and isinstance(var[0], (list, np.ndarray)):
             for i in range(len(input_value)):
                 if len(input_value[i]) != len(var[i]):
                     return False

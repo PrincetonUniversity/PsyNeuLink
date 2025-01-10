@@ -1593,14 +1593,14 @@ class LinearCombination(
             weights = torch.tensor(weights, device=device).double()
         if self.operation == SUM:
             if weights is not None:
-                return lambda x: torch.sum(torch.stack(x) * weights, 0)
+                return lambda x: torch.sum(x * weights, 0)
             else:
-                return lambda x: torch.sum(torch.stack(x), 0)
+                return lambda x: torch.sum(x, 0)
         elif self.operation == PRODUCT:
             if weights is not None:
-                return lambda x: torch.prod(torch.stack(x) * weights, 0)
+                return lambda x: torch.prod(x * weights, 0)
             else:
-                return lambda x: torch.prod(torch.stack(x), 0)
+                return lambda x: torch.prod(x, 0)
         else:
             from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
             raise AutodiffCompositionError(f"The 'operation' parameter of {function.componentName} is not supported "
@@ -2216,7 +2216,7 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
 
         elif operation == L0:
             if normalize:
-                normalization = np.sum(np.abs(vector - matrix))
+                normalization = np.sum(np.abs(vector - matrix)) or 1
                 result = np.sum((1 - (np.abs(vector - matrix)) / normalization),axis=0)
             else:
                 result = np.sum((np.abs(vector - matrix)),axis=0)

@@ -33,7 +33,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.7', '3.11', '3.12']
+        python-version: ['3.8', '3.11', '3.12']
         python-architecture: ['x64']
         extra-args: ['']
         os: [ubuntu, macos, windows]
@@ -51,7 +51,7 @@ jobs:
             extra-args: '--forked -m "not llvm"'
 
           # add 32-bit build on windows
-          - python-version: '3.8'
+          - python-version: '3.9'
             python-architecture: 'x86'
             os: windows
 
@@ -70,22 +70,18 @@ jobs:
             # https://github.com/ionelmc/pytest-benchmark/issues/243
             extra-args: '-m benchmark --benchmark-enable --benchmark-only --benchmark-min-rounds=2 --benchmark-max-time=0.001 --benchmark-warmup=off -n0 --dist=no'
 
-          # add python 3.7 with deps restricted to min supported version
-          - python-version: '3.7'
-            python-architecture: 'x64'
-            os: ubuntu
-            version-restrict: 'min'
-
-          # add python 3.8 build on macos since 3.7 is broken
-          # https://github.com/actions/virtual-environments/issues/4230
-          # use default python-architecture
+          # add python 3.8 with deps restricted to min supported version
+          # use default python architecture
+          # https://github.com/actions/setup-python/issues/960
           - python-version: '3.8'
             os: macos
+            version-restrict: 'min'
 
         exclude:
-          # 3.7 is broken on macos-11,
-          # https://github.com/actions/virtual-environments/issues/4230
-          - python-version: '3.7'
+          # 3.8/x64 python is broken on aarch64 macos runners
+          # https://github.com/actions/setup-python/issues/960
+          - python-version: '3.8'
+            python-architecture: 'x64'
             os: macos
 
     steps:
@@ -112,7 +108,8 @@ jobs:
       if: ${{ matrix.version-restrict == 'min' }}
       shell: bash
       run: |
-        sed -i '/^[^#]/s/>=/==/' *requirements.txt
+        # macos/bsd sed requires backup suffix argument to -i
+        sed -i=.bak -e '/^[^#]/s/>=/==/' *requirements.txt
         git config user.name "github actions"
         git config user.email "none"
         git commit -a -m "Restrict version of direct dependencies to min"
@@ -163,7 +160,7 @@ jobs:
 
     - name: Test with pytest
       timeout-minutes: 180
-      run: pytest --junit-xml=tests_out.xml --verbosity=0 -n logical ${{ matrix.extra-args }}
+      run: pytest --junit-xml=tests_out.xml --verbosity=0 -n logical --capture=sys -o console_output_style=count ${{ matrix.extra-args }}
 
     - name: Upload test results
       uses: actions/upload-artifact@v4

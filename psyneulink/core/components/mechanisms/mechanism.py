@@ -1246,8 +1246,8 @@ class Mechanism_Base(Mechanism):
 
     function : Function : default Linear
         specifies the function used to generate the Mechanism's `value <Mechanism_Base.value>`;
-        can be a PsyNeuLink `Function` or a `UserDefinedFunction`;  it `value <Function.value>` is used to determine
-        the shape of the `primary outputPort <OutputPort_Primary>` of the Mechanism.
+        can be a PsyNeuLink `Function` or a `UserDefinedFunction`;  it `value <Function_Base.value>` is used to
+        determine the shape of the `primary outputPort <OutputPort_Primary>` of the Mechanism.
 
     output_ports : str, list or np.ndarray : default None
         specifies the OutputPorts for the Mechanism; if it is not specified, a single OutputPort is created
@@ -1347,14 +1347,14 @@ class Mechanism_Base(Mechanism):
         name of a parameter of the function, and its value is the parameter's value.
 
     value : 2d np.array [array(float64)]
-        result of the Mechanism's `execute` method, which is usually (but not always) the `value <Function.value>`
-        of it `function <Mechanism_Base.function>`.  It is always at least a 2d np.array, with the
-        items of axis 0 corresponding to the values referenced by the corresponding `index <OutputPort.index>`
-        attribute of the Mechanism's `OutputPorts <OutputPort>`.  The first item is generally referenced by the
-        Mechanism's `primary OutputPort <OutputPort_Primary>` (i.e., the one in the its `output_port
-        <Mechanism_Base.output_port>` attribute), as well as the first item of `output_values
-        <Mechanism_Base.output_values>`.  The `value <Mechanism_Base.value>` is `None` until the Mechanism
-        has been executed at least once.
+        result of the Mechanism's `execute` method, which is usually (but not always) the `value <Function_Base.value>`
+        of it `function <Mechanism_Base.function>` (it is not if the Mechanism implements any auxiliary function(s)
+        after calling its primary function). It is always at least a 2d np.array, with the items of axis 0 corresponding
+        to the values referenced by the corresponding `index <OutputPort.index>` attribute of the Mechanism's
+        `OutputPorts <OutputPort>`.  The first item is generally referenced by the Mechanism's `primary OutputPort
+        <OutputPort_Primary>` (i.e., the one in the its `output_port <Mechanism_Base.output_port>` attribute), as well
+        as the first item of `output_values <Mechanism_Base.output_values>`.  The `value <Mechanism_Base.value>` is
+        None until the Mechanism has been executed at least once.
 
         .. note::
            the `value <Mechanism_Base.value>` of a Mechanism is not necessarily the same as its
@@ -2539,7 +2539,7 @@ class Mechanism_Base(Mechanism):
 
                     # No input was specified, so use Mechanism's default variable
                     if input is None:
-                        input = self.defaults.variable
+                        input = copy_parameter_value(self.defaults.variable)
                     #     FIX:  this input value is sent to input CIMs when compositions are nested
                     #           variable should be based on afferent projections
                     variable = self._get_variable_from_input(input, context)

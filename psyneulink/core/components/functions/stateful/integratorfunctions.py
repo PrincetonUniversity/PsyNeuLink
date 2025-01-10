@@ -29,6 +29,11 @@ Functions that integrate current value of input with previous value.
 import warnings
 
 import numpy as np
+from math import e
+try:
+    import torch
+except ImportError:
+    torch = None
 from beartype import beartype
 
 from psyneulink._typing import Callable, Mapping, Optional, Union
@@ -36,21 +41,19 @@ from psyneulink._typing import Callable, Mapping, Optional, Union
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import DistributionFunction, NormalDist
-from psyneulink.core.components.functions.function import (
-    DEFAULT_SEED, FunctionError, _random_state_getter,
-    _seed_setter, _noise_setter
-)
+from psyneulink.core.components.functions.function import (DEFAULT_SEED, FunctionError, _random_state_getter,
+                                                           _seed_setter, _noise_setter)
 from psyneulink.core.components.functions.stateful.statefulfunction import StatefulFunction
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ADDITIVE_PARAM, \
-    DECAY, DEFAULT_VARIABLE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DRIFT_ON_A_SPHERE_INTEGRATOR_FUNCTION, \
-    DUAL_ADAPTIVE_INTEGRATOR_FUNCTION, FITZHUGHNAGUMO_INTEGRATOR_FUNCTION, FUNCTION, \
-    INCREMENT, INITIALIZER, INPUT_PORTS, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, \
-    INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LEAKY_COMPETING_INTEGRATOR_FUNCTION, \
-    MULTIPLICATIVE_PARAM, NOISE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_PORTS, PRODUCT, \
-    RATE, REST, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE, THRESHOLD, VARIABLE, MODEL_SPEC_ID_MDF_VARIABLE, \
-    PREVIOUS_VALUE
+    (ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ADDITIVE_PARAM,
+     DECAY, DEFAULT_VARIABLE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DRIFT_ON_A_SPHERE_INTEGRATOR_FUNCTION,
+     DUAL_ADAPTIVE_INTEGRATOR_FUNCTION, FITZHUGHNAGUMO_INTEGRATOR_FUNCTION, FUNCTION,
+     INCREMENT, INITIALIZER, INPUT_PORTS, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE,
+     INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LEAKY_COMPETING_INTEGRATOR_FUNCTION,
+     MODEL_SPEC_ID_MDF_VARIABLE, MULTIPLICATIVE_PARAM, NOISE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION,
+     OUTPUT_PORTS, PREVIOUS_VALUE, PRODUCT,  RATE, REST, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE,
+     THRESHOLD, VARIABLE)
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import ValidParamSpecType, all_within_range, is_numeric_scalar, \
@@ -58,8 +61,8 @@ from psyneulink.core.globals.utilities import ValidParamSpecType, all_within_ran
 
 __all__ = ['SimpleIntegrator', 'AdaptiveIntegrator', 'DriftDiffusionIntegrator', 'DriftOnASphereIntegrator',
            'OrnsteinUhlenbeckIntegrator', 'FitzHughNagumoIntegrator', 'AccumulatorIntegrator',
-           'LeakyCompetingIntegrator', 'DualAdaptiveIntegrator', 'InteractiveActivationIntegrator',
-           'S_MINUS_L', 'L_MINUS_S', 'IntegratorFunction'
+           'LeakyCompetingIntegrator', 'DualAdaptiveIntegrator',
+           'InteractiveActivationIntegrator', 'S_MINUS_L', 'L_MINUS_S', 'IntegratorFunction'
            ]
 
 
@@ -400,10 +403,6 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         return pnlvm.helpers.load_extract_scalar_array_one(builder, value_p)
 
 
-
-# *********************************************** INTEGRATOR FUNCTIONS *************************************************
-
-
 class AccumulatorIntegrator(IntegratorFunction):  # --------------------------------------------------------------------
     """
     AccumulatorIntegrator(              \
@@ -420,7 +419,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
     .. _AccumulatorIntegrator:
 
     Accumulates at a constant rate, that is either linear or exponential, depending on `rate
-    <AccumulatorIntegrator.rate>`.  `function <AccumulatorIntegrator._function>` ignores `variable
+    <AccumulatorIntegrator.rate>`;  `function <AccumulatorIntegrator._function>` ignores `variable
     <AccumulatorIntegrator.variable>` and returns:
 
     .. math::
@@ -710,6 +709,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
 
     .. _SimpleIntegrator:
 
+    Acculuates at a rate determined by its `variable <SimpleIntegrator.variable>` and `rate <SimpleIntegrator.rate>`;
     `function <SimpleIntegrator._function>` returns:
 
     .. math::

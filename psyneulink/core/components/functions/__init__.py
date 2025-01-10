@@ -1,13 +1,14 @@
 from . import function
 from .nonstateful import selectionfunctions, objectivefunctions, optimizationfunctions, transformfunctions, \
-    learningfunctions, transferfunctions, distributionfunctions, fitfunctions
+    learningfunctions, timerfunctions, transferfunctions, distributionfunctions, fitfunctions
 from . import stateful
 from .stateful import integratorfunctions, memoryfunctions
 from . import userdefinedfunction
 
 from .function import *
-from psyneulink.core.components.functions.nonstateful.transformfunctions import *
 from psyneulink.core.components.functions.nonstateful.transferfunctions import *
+from psyneulink.core.components.functions.nonstateful.timerfunctions import *
+from psyneulink.core.components.functions.nonstateful.transformfunctions import *
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import *
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import *
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import *
@@ -21,8 +22,9 @@ from .userdefinedfunction import *
 
 __all__ = list(function.__all__)
 __all__.extend(userdefinedfunction.__all__)
-__all__.extend(transformfunctions.__all__)
 __all__.extend(transferfunctions.__all__)
+__all__.extend(timerfunctions.__all__)
+__all__.extend(transformfunctions.__all__)
 __all__.extend(selectionfunctions.__all__)
 __all__.extend(stateful.__all__)
 __all__.extend(distributionfunctions.__all__)
