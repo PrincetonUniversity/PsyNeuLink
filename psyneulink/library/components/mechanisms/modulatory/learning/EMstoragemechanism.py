@@ -682,7 +682,7 @@ class EMStorageMechanism(LearningMechanism):
         for i, learning_signal in enumerate(learning_signals[:num_match_fields]):
             learning_signal_shape = learning_signal.parameters.matrix._get(context).shape
             if concatenate_queries:
-                memory_matrix_field_shape = np.array([np.concatenate(row, dtype=object).flatten()
+                memory_matrix_field_shape = np.array([np.concatenate(row, dtype=object).ravel()
                                                       for row in memory_matrix[:, 0:num_keys]]).T.shape
             else:
                 memory_matrix_field_shape = np.array(memory_matrix[:, key_indices[i]].tolist()).T.shape

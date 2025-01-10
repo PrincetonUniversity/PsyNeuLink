@@ -2464,7 +2464,7 @@ class TestControlMechanisms:
         ret = comp.run(inputs={mech: [2]}, num_trials=1, execution_mode=comp_mode)
         np.testing.assert_allclose(ret, expected)
         if comp_mode is pnl.ExecutionMode.Python:
-            np.testing.assert_allclose(comp.controller.function.saved_values.flatten(), exp_values)
+            np.testing.assert_allclose(comp.controller.function.saved_values.ravel(), exp_values)
 
     @pytest.mark.benchmark
     @pytest.mark.control
@@ -3354,7 +3354,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
 
         np.testing.assert_array_equal(results, result)
         if mode is pnl.ExecutionMode.Python:
-            np.testing.assert_array_equal(saved_values.flatten(), [0.75, 1.5, 2.25])
+            np.testing.assert_array_equal(saved_values.ravel(), [0.75, 1.5, 2.25])
 
     def test_model_based_ocm_with_buffer(self):
 

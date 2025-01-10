@@ -149,7 +149,7 @@ class TestConstruction:
             params.update({'softmax_gain': softmax_gain})
 
         em = EMComposition(**params)
-        assert np.hstack(np.array(em.memory, dtype=object).flatten()).size < 30
+        assert np.hstack(np.array(em.memory, dtype=object).ravel()).size < 30
 
         # Validate basic structure
         assert len(em.memory) == memory_capacity
