@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanism &mdash; PsyNeuLink 0.15.3.0+27.g4a5472ce3 documentation</title>
+  <title>Mechanism &mdash; PsyNeuLink 0.15.3.0+30.g0ef9565af documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.3.0+27
+                  0.15.3.0+30
                 </div>
               
             
@@ -1884,8 +1884,11 @@ loop (invocation of Ports and Functions).</p>
 <dd><p>Generate a detailed display of a the structure of a Mechanism.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This method relies on <a class="reference external" href="http://www.graphviz.org">graphviz</a>, which must be installed and imported
-(standard with PsyNeuLink pip install)</p>
+<p>This method relies on <a class="reference external" href="http://www.graphviz.org">graphviz</a>
+python and system packages, which must be installed. The
+python package comes standard with PsyNeuLink pip install,
+but the system package must be installed separately. It can
+be downloaded at <a class="reference external" href="https://www.graphviz.org/download/">https://www.graphviz.org/download/</a>.</p>
 </div>
 <p>Displays the structure of a Mechanism using html table format and shape=’plaintext’.
 This method is called by <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Composition.show_graph</span></code></a> if its <strong>show_mechanism_structure</strong> argument is specified as
