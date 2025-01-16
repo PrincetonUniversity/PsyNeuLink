@@ -4,13 +4,13 @@ import timeit
 import numpy as np
 from psyneulink import *
 
-from gym_forager.envs.forager_env import ForagerEnv
+# from gym_forager.envs.forager_env import ForagerEnv
 
 # Runtime Switches:
 RENDER = False
 PNL_COMPILE = False
-RUN = True
-SHOW_GRAPH = False
+RUN = False
+SHOW_GRAPH = True
 
 # *********************************************************************************************************************
 # *********************************************** CONSTANTS ***********************************************************
@@ -106,7 +106,8 @@ agent_comp.enable_model_based_optimizer = True
 
 if SHOW_GRAPH:
     # agent_comp.show_graph(show_mechanism_structure='ALL')
-    agent_comp.show_graph(show_controller=True, show_mechanism_structure=True)
+    # agent_comp.show_graph(show_controller=True, show_mechanism_structure=True)
+    agent_comp.show_graph(show_controller=True)
 
 
 # *********************************************************************************************************************
