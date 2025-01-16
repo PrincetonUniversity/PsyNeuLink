@@ -92,7 +92,7 @@ class TestProcessingMechanismFunctions:
     def test_processing_mechanism_function(self, function, expected):
         PM = ProcessingMechanism(function=function)
         res = PM.execute(1.0)
-        np.testing.assert_allclose(np.asfarray(res), expected, rtol=1e-5, atol=1e-8)
+        np.testing.assert_allclose(res, expected, rtol=1e-5, atol=1e-8)
 
     # COMMENTED OUT BECAUSE OF MATLAB ENGINE:
     # def test_processing_mechanism_NavarroAndFuss_function(self):

@@ -206,7 +206,7 @@ class TestScheduler:
                             [np.array([2.]), np.array([1.])],
                             [np.array([10.]), np.array([10.])],
                             [np.array([2.]), np.array([1.])]]
-        np.testing.assert_allclose(expected_results, np.asfarray(C.results))
+        np.testing.assert_array_equal(expected_results, C.results)
 
     def test_default_condition_1(self):
         A = pnl.TransferMechanism(name='A')
