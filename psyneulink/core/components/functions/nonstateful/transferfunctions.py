@@ -820,7 +820,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
     `function <Logistic._function>` returns logistic transform of `variable <Logistic.variable>`:
 
     .. math::
-         scale * \\frac{1}{1 + e^{ - gain ( variable + bias - x_{0} ) + offset}}
+         scale * \\frac{1}{1 + e^{ - gain ( variable + bias - x_{0} )}}  + offset
 
     (this is a vertically offset and scaled version of `Tanh`, which is centered on origin).
 
@@ -828,11 +828,10 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
     .. note::
         The **bias** and **x_0** arguments are identical, apart from having opposite signs: **bias** is included to
-        accommodate the convention in the machine learning community; **x_0** is included to match the `standard
-        form of the Logistic Function <https://en.wikipedia.org/wiki/Logistic_function>`_ (in which **gain**
-        corresponds to the *k* parameter and **scale** corresponds to the *L* parameter); **offset** implements a
-        form of bias that is not modulated by gain (i.e., it produces an offset of the function along the horizontal
-        axis).
+        accommodate the convention in the machine learning community; **x_0** is included to match the `standard form
+        of the Logistic Function <https://en.wikipedia.org/wiki/Logistic_function>`_ (in which **gain** corresponds to
+        the *k* parameter and **scale** corresponds to the *L* parameter); **offset** implements a translation of the
+        function along the vertical axis that is not modulated by gain.
 
     `derivative <Logistic.derivative>` returns the derivative of the Logistic using its **output**:
 
@@ -846,9 +845,9 @@ class Logistic(TransferFunction):  # -------------------------------------------
         specifies a template for the value to be transformed.
 
     gain : float : default 1.0
-        specifies value by which to multiply each element of `variable <Logistic.variable>` after it is adjusted by
-        `bias <Logistic.bias>` and/or `x_0 <Logistic.x_0>`, but before adjustment by `offset <Logistic.offset>` and
-        logistic transformation (see `note <Logistic_Note>` above).
+        specifies value by which to multiply each element of `variable <Logistic.variable>` after it is
+        adjusted by `bias <Logistic.bias>` and/or `x_0 <Logistic.x_0>`, but before logistic transformation
+        (see `note <Logistic_Note>` above).
 
     bias : float : default 0.0
         specifies value to add to each element of `variable <Logistic.variable>` before applying `gain <Logistic.gain>`;
@@ -859,13 +858,12 @@ class Logistic(TransferFunction):  # -------------------------------------------
         this argument has an effect identical to bias, but with the opposite sign (see `note <Logistic_Note>` above).
 
     offset : float : default 0.0
-        specifies value to add to each element of `variable <Logistic.variable>` after adjusting by `bias
-        <Logistic.bias>` and/or `x_0 <Logistic.x_0>` and applying `gain <Logistic.gain>`, but before logistic
-        transformation (see `note <Logistic_Note>` above).
+        specifies value to add to each element of `variable <Logistic.variable>` after logistic  transformation and
+        `scale <Logistic.scale>` have been applied (see `note <Logistic_Note>` above).
 
     scale : float : default 0.0
-        specifies value by which to multiply each element of `variable <Logistic.variable>` after all other parameters
-        and logistic transformation have been applied (see `note <Logistic_Note>` above).
+        specifies value value by which to multiply each element of `variable <Logistic.variable>` after logistic
+        transformation but before `offset <Logistic.offset>` has been applied (see `note <Logistic_Note>` above).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -888,9 +886,9 @@ class Logistic(TransferFunction):  # -------------------------------------------
         contains value to be transformed.
 
     gain : float
-        value by which to multiply each element of `variable <Logistic.variable>` after it is adjusted by `bias
-        <Logistic.bias>` and/or `x_0 <Logistic.x_0>`, but before adjustment by `offset <Logistic.offset>` and
-        logistic transformation (see `note <Logistic_Note>` above).
+        value by which to multiply each element of `variable <Logistic.variable>` after it is adjusted by
+        `bias <Logistic.bias>` and/or `x_0 <Logistic.x_0>`, but before logistic transformation has been applied
+        (see `note <Logistic_Note>` above).
 
     bias : float
         value to add to each element of `variable <Logistic.variable>` before applying `gain <Logistic.gain>`;
@@ -901,13 +899,12 @@ class Logistic(TransferFunction):  # -------------------------------------------
         this argument has an effect identical to bias, but with the opposite sign (see `note <Logistic_Note>` above).
 
     offset : float
-        value to add to each element of `variable <Logistic.variable>` after adjusting by `bias <Logistic.bias>`
-        and/or `x_0 <Logistic.x_0>` and applying `gain <Logistic.gain>`, but before logistic transformation
-        (see `note <Logistic_Note>` above).
+        value to add to each element of `variable <Logistic.variable>` after logistic  transformation and `scale
+        <Logistic.scale>` have been applied (see `note <Logistic_Note>` above).
 
     scale : float
-        value by which to multiply each element of `variable <Logistic.variable>` after all other parameters and
-        logistic transformation have been applied (see `note <Logistic_Note>` above).
+        value by which to multiply each element of `variable <Logistic.variable>` after logistic transformation but
+        before `offset <Logistic.offset>` has been applied (see `note <Logistic_Note>` above).
 
     bounds : (0,1)
         COMMENT:
@@ -1028,7 +1025,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         offset = self._get_current_parameter_value(OFFSET, context)
         scale = self._get_current_parameter_value(SCALE, context)
 
-        result = scale * (1. / (1 + e**(-gain * (variable + bias - x_0) + offset)))
+        result = scale * (1. / (1 + e**(-gain * (variable + bias - x_0)))) + offset
 
         return self.convert_output_type(result)
 
@@ -1098,11 +1095,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
             val = builder.fadd(val, bias)
             val = builder.fsub(val, x_0)
             val = builder.fmul(val, gain)
-            val = builder.fsub(offset, val)
             val = builder.call(exp_f, [val])
             val = builder.fadd(ctx.float_ty(1), val)
             val = builder.fdiv(ctx.float_ty(1), val)
             val = builder.fmul(val, scale)
+            val = builder.fsub(offset, val)
 
         if "derivative" in tags or "derivative_out" in tags:
             # f(x) = g * s * o * (1-o)
@@ -1115,10 +1112,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
         builder.store(val, ptro)
 
     def _gen_pytorch_fct(self, device, context=None):
+        scale = self._get_pytorch_fct_param_value('scale', device, context)
         gain = self._get_pytorch_fct_param_value('gain', device, context)
         bias = self._get_pytorch_fct_param_value('bias', device, context)
         offset = self._get_pytorch_fct_param_value('offset', device, context)
-        return lambda x: 1 / (1 + torch.exp(-gain * (x + bias) + offset))
+        return lambda x: scale / (1 + torch.exp(-gain * (x + bias))) + offset
 
     def as_mdf_model(self):
         model = super().as_mdf_model()
