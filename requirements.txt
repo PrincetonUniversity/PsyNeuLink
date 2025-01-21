@@ -5,7 +5,7 @@ graph-scheduler>=1.2.1, <1.3.0
 graphviz<0.21.0
 grpcio<1.70.0
 leabra-psyneulink<0.3.3
-llvmlite<0.44
+llvmlite<0.45
 matplotlib>=3.7.0, <3.10.1
 modeci_mdf<0.5, >=0.4.3; (platform_machine == 'AMD64' or platform_machine == 'x86_64' or platform_machine == 'arm64' or platform_machine == 'aarch64') and platform_python_implementation == 'CPython' and implementation_name == 'cpython'
 networkx<3.5
