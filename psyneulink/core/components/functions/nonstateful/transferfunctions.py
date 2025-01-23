@@ -1087,16 +1087,15 @@ class Logistic(TransferFunction):  # -------------------------------------------
         x_0 = pnlvm.helpers.load_extract_scalar_array_one(builder, x_0_ptr)
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
         scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
-
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
         val = builder.load(ptri)
+        zero = ctx.float_ty(0)
 
         if "derivative_out" not in tags:
             val = builder.fadd(val, bias)  # variable + bias
             val = builder.fsub(val, x_0)   # variable + bias - x_0
             val = builder.fmul(val, gain)  # gain * (variable + bias - x_0)
-            # val = builder.fsub(offset, val) # offset - gain * (variable + bias - x_0)
-            # val = builder.fsub(0, val) # <- fails
+            val = builder.fsub(zero, val) # <- fails
             val = builder.call(exp_f, [val])
             val = builder.fadd(ctx.float_ty(1), val)
             val = builder.fdiv(ctx.float_ty(1), val)
