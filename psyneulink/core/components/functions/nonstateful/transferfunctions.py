@@ -1092,15 +1092,15 @@ class Logistic(TransferFunction):  # -------------------------------------------
         zero = ctx.float_ty(0)
 
         if "derivative_out" not in tags:
-            val = builder.fadd(val, bias)  # variable + bias
-            val = builder.fsub(val, x_0)   # variable + bias - x_0
-            val = builder.fmul(val, gain)  # gain * (variable + bias - x_0)
-            val = builder.fsub(zero, val) # <- fails
-            val = builder.call(exp_f, [val])
-            val = builder.fadd(ctx.float_ty(1), val)
-            val = builder.fdiv(ctx.float_ty(1), val)
-            val = builder.fmul(val, scale)
-            val = builder.fadd(val, offset)
+            val = builder.fadd(val, bias)             # variable + bias
+            val = builder.fsub(val, x_0)              # variable + bias - x_0
+            val = builder.fmul(val, gain)             # gain * (variable + bias - x_0)
+            val = builder.fsub(zero, val)             # -gain * (variable + bias - x_0)
+            val = builder.call(exp_f, [val])          # e^(-gain * (variable + bias - x_0))
+            val = builder.fadd(ctx.float_ty(1), val)  # 1 + e^(-gain * (variable + bias - x_0))
+            val = builder.fdiv(ctx.float_ty(1), val)  # 1 / (1 + e^(-gain * (variable + bias - x_0)))
+            val = builder.fmul(val, scale)            # scale * (1 / (1 + e^(-gain * (variable + bias - x_0)))
+            val = builder.fadd(val, offset)           # scale * (1 / (1 + e^(-gain * (variable + bias - x_0))) + offset
 
         if "derivative" in tags or "derivative_out" in tags:
             # f(x) = g * s * o * (1-o)
