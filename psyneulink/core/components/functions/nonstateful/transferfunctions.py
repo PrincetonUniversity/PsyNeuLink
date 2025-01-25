@@ -144,6 +144,38 @@ class TransferFunction(Function_Base):
         """
         bounds = None
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if (hasattr(self, 'scale') or hasattr(self, 'offset')) and self.bounds:
+            self._set_bounds()
+
+    def _set_bounds(self):
+        """Reassign bounds based on scale and offset applied to function's output for default upper and lower bounds
+        """
+        if hasattr(self, "scale"):
+            scale = self.scale if self.scale is not None else 1.0
+        else:
+            scale = 1.0
+        if hasattr(self, "offset"):
+            offset = self.offset if self.offset is not None else 0.0
+        else:
+            offset = 0.0
+
+        # Deal with lower bound = None:
+        lower_bound = -np.inf if self.bounds[0] == None else self.bounds[0]
+        output_for_fct_lower_bound = scale * lower_bound + offset
+
+        # Deal with upper bound = None:
+        upper_bound = np.inf if self.bounds[1] == None else self.bounds[1]
+        output_for_fct_upper_bound = scale * upper_bound + offset
+
+        # Need to do this since scale could be negative, reversing upper and lower bounds:
+        lower_bound = min(output_for_fct_lower_bound, output_for_fct_upper_bound)
+        upper_bound = max(output_for_fct_lower_bound, output_for_fct_upper_bound)
+
+        self.parameters.bounds.default_value = (lower_bound, upper_bound)
+        self.bounds = (lower_bound, upper_bound)
+
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
@@ -994,26 +1026,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
             owner=owner,
             prefs=prefs,
         )
-        if self.scale or self.offset:
-            self._set_bounds()
-
-    def _set_bounds(self):
-        """Reassign bounds based on scale and offset applied to function's output for default upper and lower bounds
-        """
-        # Deal with lower bound = None:
-        lower_bound = -np.inf if self.bounds[0] == None else self.bounds[0]
-        output_for_fct_lower_bound = self.scale * lower_bound + self.offset
-
-        # Deal with upper bound = None:
-        upper_bound = np.inf if self.bounds[1] == None else self.bounds[1]
-        output_for_fct_upper_bound = self.scale * upper_bound + self.offset
-
-        # Need to do this since scale could be negative, reversing upper and lower bounds:
-        lower_bound = min(output_for_fct_lower_bound, output_for_fct_upper_bound)
-        upper_bound = max(output_for_fct_lower_bound, output_for_fct_upper_bound)
-
-        self.parameters.bounds.default_value = (lower_bound, upper_bound)
-        self.bounds = (lower_bound, upper_bound)
 
     def _function(self,
                  variable=None,
