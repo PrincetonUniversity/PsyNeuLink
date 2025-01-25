@@ -994,6 +994,16 @@ class Logistic(TransferFunction):  # -------------------------------------------
             owner=owner,
             prefs=prefs,
         )
+        self._validate_bounds()
+
+    def _validate_bounds(self):
+        if self.scale or self.offset:
+            logistic_of_0 = self.scale* 0 + self.offset
+            logistic_of_1 = self.scale * 1 + self.offset
+            lower_bound = min(logistic_of_0, logistic_of_1)
+            upper_bound = max(logistic_of_0, logistic_of_1)
+            self.parameters.bounds.default_value = (lower_bound, upper_bound)
+            self.bounds = (lower_bound, upper_bound)
 
     def _function(self,
                  variable=None,
@@ -1235,7 +1245,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
     scale : float : default 1.0
         value by which element is multiplied after applying Tanh transform.
 
-    bounds : (0,1)
+    bounds : (-1,1)
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -1293,7 +1303,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         offset = Parameter(0.0, modulable=True)
         scale = Parameter(1.0, modulable=True)
-        bounds = (0, 1)
+        bounds = (-1, 1)
 
     @check_user_specified
     @beartype
