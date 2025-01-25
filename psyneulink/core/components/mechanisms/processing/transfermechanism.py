@@ -1433,6 +1433,24 @@ class TransferMechanism(ProcessingMechanism_Base):
                 raise TransferError(f"The function specified for the {repr(INTEGRATOR_FUNCTION)} arg of {self.name} "
                                     f"({integtr_fct}) must be an {IntegratorFunction.__class__.__name__}.")
 
+        if CLIP in target_set and target_set[CLIP] is not None:
+            if self.function.bounds:
+                lower_bad = target_set[CLIP][0] < self.function.bounds[0]
+                upper_bad = target_set[CLIP][1] > self.function.bounds[1]
+                lower_msg = (f"lower value of clip for '{self.name}' ({target_set[CLIP][0]}) is "
+                                 f"below its function's lower bound ({self.function.bounds[0]})") if lower_bad else ""
+                if lower_bad and upper_bad:
+                    val_msg = "clip"
+                    upper_msg = (f" and its upper value ({target_set[CLIP][1]}) is "
+                                     f"above the function's upper bound ({self.function.bounds[1]})") if upper_bad \
+                        else ""
+                else:
+                    val_msg = "it"
+                    upper_msg = (f"upper value of clip for '{self.name}' ({target_set[CLIP][1]}) is "
+                                     f"above its function's upper bound ({self.function.bounds[1]})") if upper_bad else ""
+                if lower_bad or upper_bad:
+                    warnings.warn(f"The {lower_msg}{upper_msg}, so {val_msg} will not have an effect.")
+
     # FIX: CONSOLIDATE THIS WITH StatefulFunction._validate_noise
     def _validate_noise(self, noise):
         # Noise is a scalar, list, array or DistributionFunction
