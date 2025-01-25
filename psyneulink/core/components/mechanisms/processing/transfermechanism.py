@@ -1449,7 +1449,11 @@ class TransferMechanism(ProcessingMechanism_Base):
                     upper_msg = (f"upper value of clip for '{self.name}' ({target_set[CLIP][1]}) is "
                                      f"above its function's upper bound ({self.function.bounds[1]})") if upper_bad else ""
                 if lower_bad or upper_bad:
-                    warnings.warn(f"The {lower_msg}{upper_msg}, so {val_msg} will not have an effect.")
+                    # Avoid duplicate warnings:
+                    warning_msg = (f"The {lower_msg}{upper_msg}, so {val_msg} will not have an effect.")
+                    if not hasattr(self, "clip_warning_msg") or self.clip_warning_msg != warning_msg:
+                        warnings.warn(warning_msg)
+                        self.clip_warning_msg = warning_msg
 
     # FIX: CONSOLIDATE THIS WITH StatefulFunction._validate_noise
     def _validate_noise(self, noise):
