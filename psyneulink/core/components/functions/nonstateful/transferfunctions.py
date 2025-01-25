@@ -994,16 +994,26 @@ class Logistic(TransferFunction):  # -------------------------------------------
             owner=owner,
             prefs=prefs,
         )
-        self._validate_bounds()
-
-    def _validate_bounds(self):
         if self.scale or self.offset:
-            logistic_of_0 = self.scale* 0 + self.offset
-            logistic_of_1 = self.scale * 1 + self.offset
-            lower_bound = min(logistic_of_0, logistic_of_1)
-            upper_bound = max(logistic_of_0, logistic_of_1)
-            self.parameters.bounds.default_value = (lower_bound, upper_bound)
-            self.bounds = (lower_bound, upper_bound)
+            self._set_bounds()
+
+    def _set_bounds(self):
+        """Reassign bounds based on scale and offset applied to function's output for default upper and lower bounds
+        """
+        # Deal with lower bound = None:
+        lower_bound = -np.inf if self.bounds[0] == None else self.bounds[0]
+        output_for_fct_lower_bound = self.scale * lower_bound + self.offset
+
+        # Deal with upper bound = None:
+        upper_bound = np.inf if self.bounds[1] == None else self.bounds[1]
+        output_for_fct_upper_bound = self.scale * upper_bound + self.offset
+
+        # Need to do this since scale could be negative, reversing upper and lower bounds:
+        lower_bound = min(output_for_fct_lower_bound, output_for_fct_upper_bound)
+        upper_bound = max(output_for_fct_lower_bound, output_for_fct_upper_bound)
+
+        self.parameters.bounds.default_value = (lower_bound, upper_bound)
+        self.bounds = (lower_bound, upper_bound)
 
     def _function(self,
                  variable=None,

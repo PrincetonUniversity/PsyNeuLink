@@ -1472,18 +1472,24 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _instantiate_parameter_ports(self, function=None, context=None):
 
-        # If function is a logistic, and clip has not been specified, bound it between 0 and 1
-        if (
-            (
-                isinstance(function, Logistic)
-                or (
-                    inspect.isclass(function)
-                    and issubclass(function, Logistic)
-                )
-            )
-            and self.clip is None
-        ):
-            self.clip = (0,1)
+        # MODIFIED 1/25/25 OLD:
+        # # If function is a logistic, and clip has not been specified, bound it between 0 and 1
+        # if (
+        #     (
+        #         isinstance(function, Logistic)
+        #         or (
+        #             inspect.isclass(function)
+        #             and issubclass(function, Logistic)
+        #         )
+        #     )
+        #     and self.clip is None
+        # ):
+        #     # self.clip = (0,1)
+        #     self.clip = self.function.bounds
+        # MODIFIED 1/25/25 NEW:
+        if self.clip is None:
+            self.clip = self.function.bounds
+        # MODIFIED 1/25/25 END
 
         super()._instantiate_parameter_ports(function=function, context=context)
 
