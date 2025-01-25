@@ -1488,7 +1488,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         #     self.clip = self.function.bounds
         # MODIFIED 1/25/25 NEW:
         if self.clip is None:
-            self.clip = self.function.bounds
+            self.parameters.clip.set(context,self.function.bounds)
         # MODIFIED 1/25/25 END
 
         super()._instantiate_parameter_ports(function=function, context=context)
