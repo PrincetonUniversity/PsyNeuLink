@@ -114,6 +114,7 @@ __all__ = ['Angle', 'BinomialDistort', 'Dropout', 'Exponential', 'Gaussian', 'Ga
            'Linear', 'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
            ]
 
+
 class TransferFunction(Function_Base):
     """Function that transforms variable but maintains its shape.
 
@@ -144,6 +145,7 @@ class TransferFunction(Function_Base):
         """
         bounds = None
 
+    @check_user_specified
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         if (hasattr(self, 'scale') or hasattr(self, 'offset')) and self.bounds:
@@ -174,8 +176,7 @@ class TransferFunction(Function_Base):
         upper_bound = max(output_for_fct_lower_bound, output_for_fct_upper_bound)
 
         self.parameters.bounds.default_value = (lower_bound, upper_bound)
-        self.bounds = (lower_bound, upper_bound)
-
+        self.parameters.bounds.set(None, (lower_bound, upper_bound))
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)

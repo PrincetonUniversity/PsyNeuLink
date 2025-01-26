@@ -913,6 +913,54 @@ def _integrator_mode_setter(value, owning_component=None, context=None, *, compi
 
     return value
 
+def _clip_setter(value, owning_component=None, context=None):
+
+    if (value is not None
+            and owning_component.function
+            and hasattr(owning_component.function, 'bounds')
+            and owning_component.function.bounds is not None
+            and isinstance(owning_component.function.bounds, tuple)
+            and owning_component.function.bounds != (None, None)):
+        bounds = owning_component.function.bounds
+        if bounds[0] is None:
+            lower_bound = -np.inf
+        else:
+            lower_bound = bounds[0]
+        if bounds[1] is None:
+            upper_bound = np.inf
+        else:
+            upper_bound = bounds[1]
+        if value[0] is None:
+            lower_clip = -np.inf
+        else:
+            lower_clip = value[0]
+        if value[1] is None:
+            upper_clip = np.inf
+        else:
+            upper_clip = value[1]
+        clip = (lower_clip, upper_clip)
+        lower_bad = clip[0] < lower_bound
+        upper_bad = clip[1] > upper_bound
+        lower_msg = (f"lower value of clip for '{owning_component.name}' ({value[0]}) is "
+                     f"below its function's lower bound ({lower_bound})") if lower_bad else ""
+        if lower_bad and upper_bad:
+            val_msg = "clip"
+            upper_msg = (f" and its upper value ({value[1]}) is above the function's upper bound "
+                         f"({upper_bound})") if upper_bad else ""
+        else:
+            val_msg = "it"
+            upper_msg = (f"upper value of clip for '{owning_component.name}' ({value[1]}) is above "
+                         f"its function's upper bound ({upper_bound})") if upper_bad else ""
+        if lower_bad or upper_bad:
+            # Avoid duplicate warnings:
+            warning_msg = (f"The {lower_msg}{upper_msg}, so {val_msg} will not have an effect.")
+            if (not hasattr(owning_component, "clip_warning_msg")
+                    or owning_component.clip_warning_msg != warning_msg):
+                warnings.warn(warning_msg)
+                owning_component.clip_warning_msg = warning_msg
+        return clip
+    return value
+
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class TransferMechanism(ProcessingMechanism_Base):
@@ -1216,7 +1264,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         function = Parameter(Linear, stateful=False, loggable=False, dependencies='integrator_function')
         integrator_function_value = Parameter([[0]], read_only=True)
         on_resume_integrator_mode = Parameter(CURRENT_VALUE, stateful=False, loggable=False)
-        clip = None
+        clip = Parameter(None, setter=_clip_setter)#, modulable=False, stateful=False, loggable=False)
         noise = FunctionParameter(0.0, function_name='integrator_function')
         termination_measure = Parameter(
             Distance(metric=MAX_ABS_DIFF),
@@ -1433,28 +1481,6 @@ class TransferMechanism(ProcessingMechanism_Base):
                 raise TransferError(f"The function specified for the {repr(INTEGRATOR_FUNCTION)} arg of {self.name} "
                                     f"({integtr_fct}) must be an {IntegratorFunction.__class__.__name__}.")
 
-        if CLIP in target_set and target_set[CLIP] is not None:
-            if self.function.bounds:
-                lower_bad = target_set[CLIP][0] < self.function.bounds[0]
-                upper_bad = target_set[CLIP][1] > self.function.bounds[1]
-                lower_msg = (f"lower value of clip for '{self.name}' ({target_set[CLIP][0]}) is "
-                                 f"below its function's lower bound ({self.function.bounds[0]})") if lower_bad else ""
-                if lower_bad and upper_bad:
-                    val_msg = "clip"
-                    upper_msg = (f" and its upper value ({target_set[CLIP][1]}) is "
-                                     f"above the function's upper bound ({self.function.bounds[1]})") if upper_bad \
-                        else ""
-                else:
-                    val_msg = "it"
-                    upper_msg = (f"upper value of clip for '{self.name}' ({target_set[CLIP][1]}) is "
-                                     f"above its function's upper bound ({self.function.bounds[1]})") if upper_bad else ""
-                if lower_bad or upper_bad:
-                    # Avoid duplicate warnings:
-                    warning_msg = (f"The {lower_msg}{upper_msg}, so {val_msg} will not have an effect.")
-                    if not hasattr(self, "clip_warning_msg") or self.clip_warning_msg != warning_msg:
-                        warnings.warn(warning_msg)
-                        self.clip_warning_msg = warning_msg
-
     # FIX: CONSOLIDATE THIS WITH StatefulFunction._validate_noise
     def _validate_noise(self, noise):
         # Noise is a scalar, list, array or DistributionFunction
@@ -1492,35 +1518,79 @@ class TransferMechanism(ProcessingMechanism_Base):
             raise MechanismError(f"Noise parameter ({noise}) for {self.name} must be a float, "
                                  f"function, or array/list of these.")
 
-    def _instantiate_parameter_ports(self, function=None, context=None):
+    # def _instantiate_parameter_ports(self, function=None, context=None):
+    #
+    #     # MODIFIED 1/25/25 OLD:
+    #     # # If function is a logistic, and clip has not been specified, bound it between 0 and 1
+    #     # if (
+    #     #     (
+    #     #         isinstance(function, Logistic)
+    #     #         or (
+    #     #             inspect.isclass(function)
+    #     #             and issubclass(function, Logistic)
+    #     #         )
+    #     #     )
+    #     #     and self.clip is None
+    #     # ):
+    #     #     # self.clip = (0,1)
+    #     #     self.clip = self.function.bounds
+    #     # # MODIFIED 1/25/25 NEW:
+    #     if self.clip is None:
+    #         self.parameters.clip.set(context, self.function.bounds)
+    #     # MODIFIED 1/25/25 END
+    #
+    #     super()._instantiate_parameter_ports(function=function, context=context)
 
-        # MODIFIED 1/25/25 OLD:
-        # # If function is a logistic, and clip has not been specified, bound it between 0 and 1
-        # if (
-        #     (
-        #         isinstance(function, Logistic)
-        #         or (
-        #             inspect.isclass(function)
-        #             and issubclass(function, Logistic)
-        #         )
-        #     )
-        #     and self.clip is None
-        # ):
-        #     # self.clip = (0,1)
-        #     self.clip = self.function.bounds
-        # MODIFIED 1/25/25 NEW:
-        if self.clip is None:
-            self.parameters.clip.set(context,self.function.bounds)
-        # MODIFIED 1/25/25 END
+    def _instantiate_attributes_after_function(self, context=None):
+        """Determine number of items expected by termination_measure and check clip if specified"""
+        super()._instantiate_attributes_after_function(context)
 
-        super()._instantiate_parameter_ports(function=function, context=context)
+        measure = self.termination_measure
 
-    def _instantiate_attributes_before_function(self, function=None, context=None):
-        super()._instantiate_attributes_before_function(function=function, context=context)
+        if isinstance(measure, TimeScale):
+            self._termination_measure_num_items_expected = 0
+            self.parameters.termination_comparison_op._set(GREATER_THAN_OR_EQUAL, context)
+            return
 
-        if self.parameters.initial_value._get(context) is None:
-            self.defaults.initial_value = copy.deepcopy(self.defaults.variable)
-            self.parameters.initial_value._set(copy.deepcopy(self.defaults.variable), context)
+        try:
+            # If measure is a Function, use its default_variable to determine expected number of items
+            self._termination_measure_num_items_expected = len(measure.parameters.variable.default_value)
+        except:
+            # Otherwise, use "duck typing"
+            try:
+                # Try a single item first (only uses value, and not previous_value)
+                measure(np.array([0,0]))
+                self._termination_measure_num_items_expected = 1
+            except:
+                try:
+                    # termination_measure takes two arguments -- value and previous_value -- (e.g., Distance)
+                    measure(np.array([[0,0],[0,0]]))
+                    self._termination_measure_num_items_expected = 2
+                except:
+                    assert False, f"PROGRAM ERROR: Unable to determine length of input for" \
+                                  f" {repr(TERMINATION_MEASURE)} arg of {self.name}"
+
+        self.parameters.value.history_min_length = self._termination_measure_num_items_expected - 1
+
+        # if hasattr(self.function, 'bounds'):
+        #     if self.clip is None:
+        #         # # MODIFIED 1/25/25 OLD:
+        #         # if self.function.bounds is not None:
+        #         #     if any(bound is not None for bound in self.function.bounds):
+        #         #         self.clip = self.function.bounds
+        #         # # MODIFIED 1/25/25 NEW:
+        #         # if self.function.bounds is not None and self.function.bounds != (None, None):
+        #         #     self.clip = self.function.bounds
+        #         # MODIFIED 1/25/25 NEWER:
+        #         self.clip = self.function.bounds
+        #         # MODIFIED 1/25/25 END
+        #     else:
+        #         # Reassign clip to call _clip_setter in order to check against bounds
+        #         self.clip = self.clip
+
+        # Force call to _clip_setter in order to check against bounds (now that any function bounds are known)
+        if self.clip:
+            self.clip = self.clip
 
     def _instantiate_output_ports(self, context=None):
         # If user specified more than one item for variable, but did not specify any custom OutputPorts,
@@ -1752,37 +1822,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         else:
             return self._get_instantaneous_function_input(variable, noise, context)
-
-    def _instantiate_attributes_after_function(self, context=None):
-        """Determine numberr of items expected by termination_measure"""
-        super()._instantiate_attributes_after_function(context)
-
-        measure = self.termination_measure
-
-        if isinstance(measure, TimeScale):
-            self._termination_measure_num_items_expected = 0
-            self.parameters.termination_comparison_op._set(GREATER_THAN_OR_EQUAL, context)
-            return
-
-        try:
-            # If measure is a Function, use its default_variable to determine expected number of items
-            self._termination_measure_num_items_expected = len(measure.parameters.variable.default_value)
-        except:
-            # Otherwise, use "duck typing"
-            try:
-                # Try a single item first (only uses value, and not previous_value)
-                measure(np.array([0,0]))
-                self._termination_measure_num_items_expected = 1
-            except:
-                try:
-                    # termination_measure takes two arguments -- value and previous_value -- (e.g., Distance)
-                    measure(np.array([[0,0],[0,0]]))
-                    self._termination_measure_num_items_expected = 2
-                except:
-                    assert False, f"PROGRAM ERROR: Unable to determine length of input for" \
-                                  f" {repr(TERMINATION_MEASURE)} arg of {self.name}"
-
-        self.parameters.value.history_min_length = self._termination_measure_num_items_expected - 1
 
     def _report_mechanism_execution(self, input, params=None, output=None, context=None):
         """Override super to report previous_input rather than input, and selected params
