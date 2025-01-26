@@ -177,6 +177,7 @@ class TransferFunction(Function_Base):
 
         self.parameters.bounds.default_value = (lower_bound, upper_bound)
         self.parameters.bounds.set(None, (lower_bound, upper_bound))
+        # self.bounds = (lower_bound, upper_bound)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
