@@ -1518,29 +1518,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             raise MechanismError(f"Noise parameter ({noise}) for {self.name} must be a float, "
                                  f"function, or array/list of these.")
 
-    # def _instantiate_parameter_ports(self, function=None, context=None):
-    #
-    #     # MODIFIED 1/25/25 OLD:
-    #     # # If function is a logistic, and clip has not been specified, bound it between 0 and 1
-    #     # if (
-    #     #     (
-    #     #         isinstance(function, Logistic)
-    #     #         or (
-    #     #             inspect.isclass(function)
-    #     #             and issubclass(function, Logistic)
-    #     #         )
-    #     #     )
-    #     #     and self.clip is None
-    #     # ):
-    #     #     # self.clip = (0,1)
-    #     #     self.clip = self.function.bounds
-    #     # # MODIFIED 1/25/25 NEW:
-    #     if self.clip is None:
-    #         self.parameters.clip.set(context, self.function.bounds)
-    #     # MODIFIED 1/25/25 END
-    #
-    #     super()._instantiate_parameter_ports(function=function, context=context)
-
     def _instantiate_attributes_after_function(self, context=None):
         """Determine number of items expected by termination_measure and check clip if specified"""
         super()._instantiate_attributes_after_function(context)
@@ -1572,24 +1549,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         self.parameters.value.history_min_length = self._termination_measure_num_items_expected - 1
 
-        # if hasattr(self.function, 'bounds'):
-        #     if self.clip is None:
-        #         # # MODIFIED 1/25/25 OLD:
-        #         # if self.function.bounds is not None:
-        #         #     if any(bound is not None for bound in self.function.bounds):
-        #         #         self.clip = self.function.bounds
-        #         # # MODIFIED 1/25/25 NEW:
-        #         # if self.function.bounds is not None and self.function.bounds != (None, None):
-        #         #     self.clip = self.function.bounds
-        #         # MODIFIED 1/25/25 NEWER:
-        #         self.clip = self.function.bounds
-        #         # MODIFIED 1/25/25 END
-        #     else:
-        #         # Reassign clip to call _clip_setter in order to check against bounds
-        #         self.clip = self.clip
-
-        # Force call to _clip_setter in order to check against bounds (now that any function bounds are known)
-        if self.clip:
+       # Force call to _clip_setter in order to check against bounds (now that any function bounds are known)
+        if self.clip is not None:
             self.clip = self.clip
 
     def _instantiate_output_ports(self, context=None):
