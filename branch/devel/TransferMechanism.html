@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferMechanism &mdash; PsyNeuLink 0.15.3.0+37.gd05a63a7a documentation</title>
+  <title>TransferMechanism &mdash; PsyNeuLink 0.15.3.0+38.gef11a7c82 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.3.0+37
+                  0.15.3.0+38
                 </div>
               
             
@@ -987,7 +987,12 @@ is simply an offset that is the same across all elements and executions.</p>
 <dd><p>determines the allowable range for all elements of the result of <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.
 The 1st item (index 0) determines the minimum allowable value of the result, and the 2nd item (index 1)
 determines the maximum allowable value; any element of the result that exceeds the specified minimum or
-maximum value is set to the value of clip that it exceeds.</p>
+maximum value is set to the value of clip that it exceeds.  If either item is <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>, no clipping is
+performed for that item.  If the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> returns an array, the clip is applied
+elementwise (i.e., the clip is applied to each element of the array independently). If either item is outside
+the interval of the function’s <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.TransferFunction.bounds" title="psyneulink.core.components.functions.nonstateful.transferfunctions.TransferFunction.bounds"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bounds</span></code></a> after its <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.TransferFunction.scale" title="psyneulink.core.components.functions.nonstateful.transferfunctions.TransferFunction.scale"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">scale</span></code></a> and
+<a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.TransferFunction.offset" title="psyneulink.core.components.functions.nonstateful.transferfunctions.TransferFunction.offset"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">offset</span></code></a> have been applied (i.e., <span class="math notranslate nohighlight">\(function.bounds(lower,upper) * scale +
+offset\)</span>), a warning is issued and that item of the clip is ignored.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>tuple(float, float)</p>
@@ -1152,15 +1157,9 @@ TransferMechanism is complete if <a class="reference internal" href="Component.h
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._instantiate_parameter_ports">
-<span class="sig-name descname"><span class="pre">_instantiate_parameter_ports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._instantiate_parameter_ports" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call Port._instantiate_parameter_ports to instantiate a ParameterPort
-for each parameter with modulable=True</p>
-<dl class="simple">
-<dt>This is a stub, implemented to allow Mechanism subclasses to override _instantiate_parameter_ports</dt><dd><p>or process InputPorts before and/or after call to _instantiate_parameter_ports
-:param function:</p>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._instantiate_attributes_after_function">
+<span class="sig-name descname"><span class="pre">_instantiate_attributes_after_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._instantiate_attributes_after_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine number of items expected by termination_measure and check clip if specified</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1229,12 +1228,6 @@ as well as other reinitialization steps that the reset method may carry out.</p>
 <span class="sig-name descname"><span class="pre">_parse_function_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._parse_function_variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parses the <strong>variable</strong> passed in to a Component into a function_variable that can be used with the
 Function associated with this Component</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._instantiate_attributes_after_function">
-<span class="sig-name descname"><span class="pre">_instantiate_attributes_after_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._instantiate_attributes_after_function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Determine numberr of items expected by termination_measure</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1349,6 +1342,7 @@ Function associated with this Component</p>
          <script src="_static/jquery.js"></script>
          <script src="_static/underscore.js"></script>
          <script src="_static/doctools.js"></script>
+         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
      
 
   
