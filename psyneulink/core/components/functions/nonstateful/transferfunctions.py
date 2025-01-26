@@ -39,16 +39,17 @@ Functions that transform their variable but maintain its shape.
 Standard Attributes
 ~~~~~~~~~~~~~~~~~~~
 
-All TransferFunctions have the following attributes:
+All TransferFunctions have the following attributes: `bounds <TransferFunction.bounds>`,
+`scale <TransferFunction.scale>`, and `offset <TransferFunction.offset>`. In addition, they have a standardized pair of
+modulable parameters that are aliased to one of their primary parameters:
 
-* **bounds**:  specifies the lower and upper limits of the result;  if there are none, the attribute is set to
-  `None`;  if it has at least one bound, the attribute is set to a tuple specifying the lower and upper bounds,
-  respectively, with `None` as the entry for no bound.
-..
+.. _TransferFunction_Modulable_Params:
+
 * **multiplicative_param** and **additive_param**:
-  each of these is assigned the name of one of the function's
-  parameters and used by `ModulatoryProjections <ModulatoryProjection>` to modulate the output of the
-  TransferFunction's function (see `Function_Modulatory_Params`).
+  each of these is assigned the name of one of the function's parameters and used by `ModulatoryProjections
+  <ModulatoryProjection>` to modulate the output of the TransferFunction's function (see `Function_Modulatory_Params`).
+  By default, **multiplicative_param** is assigned to the function's `scale <TransferFunction.scale>` Parameter
+  and **additive_param** is assigned to the function's `offset <TransferFunction.offset>` Parameter.
 
 .. _TransferFunction_Derivative:
 
@@ -118,16 +119,25 @@ __all__ = ['Angle', 'BinomialDistort', 'Dropout', 'Exponential', 'Gaussian', 'Ga
 class TransferFunction(Function_Base):
     """Function that transforms variable but maintains its shape.
 
-    All TransferFunctions MUST have the following attributes:
+    In addition to the Parameters listed below, all TransferFunctions have the following have
+    a `multiplicative_param <Function_Modulatory_Params>` and an `additive_param <Function_Modulatory_Params>` --
+    see `multiplicative and additive params <TransferFunction_Modulable_Params>` for additional information.
 
-    `bounds` -- specifies the lower and upper limits of the result;  if there are none, the attribute is set to
-    `None`;  if it has at least one bound, the attribute is set to a tuple specifying the lower and upper bounds,
-    respectively, with `None` as the entry for no bound.
+    Attributes
+    ----------
 
-    `multiplicative_param <Function_Modulatory_Params>` and `additive_param <Function_Modulatory_Params>` -- each
-    of these is assigned the name of one of the function's parameters and used by `ModulatoryProjections
-    <ModulatoryProjection>` to modulate the output of the TransferFunction's `function <TransferFunction._function>`
-    (see  `Function_Modulatory_Params`).
+    bounds : tuple or None
+      specifies the lower and upper limits of the function's result; if there are none, the attribute is set to `None`;
+      if at least one bound is specified, the attribute is a tuple specifying the lower and upper bounds, respectively,
+      with `None` as the entry (indicating no bound). The bounds are with respect to the result of the function before
+      the `scale <TransferFunction.scale>` and `offset <TransferFunction.offset>` Parameters are applied; the actual
+      range of the result value of the function is determined by :math:`bounds(lower, upper) * scale + offset`.
+
+    scale : float
+      the value by which the result of the function is multiplied, before `offset <TransferFunction.offset>` is added.
+
+    offset : float
+      the value added to the result of the function after `scale <TransferFunction.scale>` has been applied.
 
     """
     componentType = TRANSFER_FUNCTION_TYPE
@@ -138,7 +148,7 @@ class TransferFunction(Function_Base):
             ----------
 
                 bounds
-                    see `bounds <TransferFunction.bounds>`
+                    see `bounds <TransferFunction_Bounds>`
 
                     :default value: None
                     :type:
@@ -389,9 +399,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
         value added to each element of `variable <Linear.variable>` after applying the `slope <Linear.slope>`
         (if it is specified).
 
-    bounds : Tuple or None
-        determines the lower and upper limits of the result;  if at least one bound is specified, the attribute is
-        a tuple specifying the lower and upper bounds, respectively, with `None` as the entry for no bound.
+    bounds : (0,1)
 
     owner : Component
         `component <Component>` to which the Function has been assigned.

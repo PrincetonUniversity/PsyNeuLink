@@ -1071,7 +1071,12 @@ class TransferMechanism(ProcessingMechanism_Base):
         determines the allowable range for all elements of the result of `function <Mechanism_Base.function>`.
         The 1st item (index 0) determines the minimum allowable value of the result, and the 2nd item (index 1)
         determines the maximum allowable value; any element of the result that exceeds the specified minimum or
-        maximum value is set to the value of clip that it exceeds.
+        maximum value is set to the value of clip that it exceeds.  If either item is `None`, no clipping is
+        performed for that item.  If the `function <Mechanism_Base.function>` returns an array, the clip is applied
+        elementwise (i.e., the clip is applied to each element of the array independently). If either item is outside
+        the interval of the function's `bounds <TransferFunction.bounds>` after its `scale <TransferFunction.scale>` and
+        `offset <TransferFunction.offset>` have been applied (i.e., :math:`function.bounds(lower,upper) * scale +
+        offset`), a warning is issued and that item of the clip is ignored.
 
     integrator_mode : bool
         determines whether the TransferMechanism uses its `integrator_function <TransferMechanism.integrator_function>`
