@@ -190,11 +190,11 @@ class TransferFunction(Function_Base):
             offset = 0.0
 
         # Deal with lower bound = None:
-        lower_bound = -np.inf if self.bounds[0] == None else self.bounds[0]
+        lower_bound = -np.inf if self.bounds[0] is None else self.bounds[0]
         output_for_fct_lower_bound = scale * lower_bound + offset
 
         # Deal with upper bound = None:
-        upper_bound = np.inf if self.bounds[1] == None else self.bounds[1]
+        upper_bound = np.inf if self.bounds[1] is None else self.bounds[1]
         output_for_fct_upper_bound = scale * upper_bound + offset
 
         # Need to do this since scale could be negative, reversing upper and lower bounds:
