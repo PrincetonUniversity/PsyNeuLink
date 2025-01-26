@@ -138,8 +138,8 @@ class TransferFunction(Function_Base):
 
     offset : float
       the value added to the result of the function after `scale <TransferFunction.scale>` has been applied.
-
     """
+
     componentType = TRANSFER_FUNCTION_TYPE
 
     class Parameters(Function_Base.Parameters):
