@@ -148,12 +148,28 @@ class TransferFunction(Function_Base):
             ----------
 
                 bounds
-                    see `bounds <TransferFunction_Bounds>`
+                    see `bounds <TransferFunction.bounds>`
 
                     :default value: None
                     :type:
+
+                COMMENT:
+                scale
+                    see `scale <TransferFunction.scale>`
+
+                    :default value: 1.0
+                    :type: float
+
+                offset
+                    see `offset <TransferFunction.offset>`
+
+                    :default value: 0.0
+                    :type: float
+                COMMENT
         """
         bounds = None
+        # scale = 1.0
+        # offset = 0.0
 
     @check_user_specified
     def __init__(self, **kwargs):
