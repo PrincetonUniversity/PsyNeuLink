@@ -48,8 +48,6 @@ modulable parameters that are aliased to one of their primary parameters:
 * **multiplicative_param** and **additive_param**:
   each of these is assigned the name of one of the function's parameters and used by `ModulatoryProjections
   <ModulatoryProjection>` to modulate the output of the TransferFunction's function (see `Function_Modulatory_Params`).
-  By default, **multiplicative_param** is assigned to the function's `scale <TransferFunction.scale>` Parameter
-  and **additive_param** is assigned to the function's `offset <TransferFunction.offset>` Parameter.
 
 .. _TransferFunction_Derivative:
 
@@ -153,7 +151,6 @@ class TransferFunction(Function_Base):
                     :default value: None
                     :type:
 
-                COMMENT:
                 scale
                     see `scale <TransferFunction.scale>`
 
@@ -165,11 +162,10 @@ class TransferFunction(Function_Base):
 
                     :default value: 0.0
                     :type: float
-                COMMENT
         """
         bounds = None
-        # scale = 1.0
-        # offset = 0.0
+        scale = Parameter(1.0, modulable=True)
+        offset = Parameter(0.0, modulable=True)
 
     @check_user_specified
     def __init__(self, **kwargs):
@@ -504,10 +500,12 @@ class Linear(TransferFunction):  # ---------------------------------------------
         """
         slope = self._get_current_parameter_value(SLOPE, context)
         intercept = self._get_current_parameter_value(INTERCEPT, context)
+        scale = self._get_current_parameter_value(SCALE, context)
+        offset = self._get_current_parameter_value(OFFSET, context)
 
         try:
-            # By default, result should be returned as np.ndarray with same dimensionality as input
-            result = variable * slope + intercept
+            # By default, result should be returned as np.array with same dimensionality as input
+            result = scale * (variable * slope + intercept) + offset
         except TypeError:
             if hasattr(variable, "dtype"):
                 # If variable is an array with mixed sizes or types, try item-by-item operation
@@ -515,7 +513,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
                     result = np.zeros_like(variable)
                     for i, item in enumerate(variable):
                         try:
-                            result[i] = variable[i] * slope + intercept
+                            result[i] = scale * (variable[i] * slope + intercept) + offset
                         except TypeError:
                             owner_str = f" of '{self.owner.name}'" if self.owner else ""
                             if variable[i] is None:
@@ -535,7 +533,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
             elif isinstance(variable, list):
                 result = []
                 for variable_item in variable:
-                    result.append(np.multiply(variable_item, slope) + intercept)
+                    result.append(np.multiply(np.multiply(variable_item, slope) + intercept) + offset)
             else:
                 raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
 
@@ -560,43 +558,56 @@ class Linear(TransferFunction):  # ---------------------------------------------
         Slope of function :  number or array
 
         """
-        return self._get_current_parameter_value(SLOPE, context)
+        return self._get_current_parameter_value(SLOPE, context) * self._get_current_parameter_value(SCALE, context)
 
     def _is_identity(self, context=None, defaults=False):
         if defaults:
             slope = self.defaults.slope
             intercept = self.defaults.intercept
+            scale = self.defaults.scale
+            offset = self.defaults.offset
         else:
             slope = self.parameters.slope._get(context)
             intercept = self.parameters.intercept._get(context)
+            scale = self.parameters.scale._get(context)
+            offset = self.parameters.offset._get(context)
 
-        return slope == 1 and intercept == 0
+        return slope == 1 and intercept == 0 and scale == 1 and offset == 0
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
         slope_ptr = ctx.get_param_or_state_ptr(builder, self, SLOPE, param_struct_ptr=params)
         intercept_ptr = ctx.get_param_or_state_ptr(builder, self, INTERCEPT, param_struct_ptr=params)
+        scale_ptr = ctx.get_param_or_state_ptr(builder, self, SCALE, param_struct_ptr=params)
+        offset_ptr = ctx.get_param_or_state_ptr(builder, self, OFFSET, param_struct_ptr=params)
 
         slope = pnlvm.helpers.load_extract_scalar_array_one(builder, slope_ptr)
         intercept = pnlvm.helpers.load_extract_scalar_array_one(builder, intercept_ptr)
+        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
+        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
 
         if "derivative" in tags:
-            # f'(x) = m
+            # f'(x) = m * scale
             val = slope
+            val = builder.fmul(val,scale)
         else:
-            # f(x) = mx + b
+            # f(x) = scale * (mx + b) + offset
             val = builder.load(ptri)
             val = builder.fmul(val, slope)
             val = builder.fadd(val, intercept)
+            val = builder.fmul(val, scale)
+            val = builder.fadd(val, offset)
 
         builder.store(val, ptro)
 
     def _gen_pytorch_fct(self, device, context=None):
         slope = self._get_pytorch_fct_param_value('slope', device, context)
         intercept = self._get_pytorch_fct_param_value('intercept', device, context)
-        return lambda x: x * slope + intercept
+        scale = self._get_pytorch_fct_param_value('scale', device, context)
+        offset = self._get_pytorch_fct_param_value('offset', device, context)
+        return lambda x: scale * (x * slope + intercept) + offset
 
 
 # **********************************************************************************************************************
@@ -712,28 +723,14 @@ class Exponential(TransferFunction):  # ----------------------------------------
                     :default value: 0.0
                     :type: ``float``
 
-                offset
-                    see `offset <Exponential.offset>`
-
-                    :default value: 0.0
-                    :type: ``float``
-
                 rate
                     see `rate <Exponential.rate>`
-
-                    :default value: 1.0
-                    :type: ``float``
-
-                scale
-                    see `scale <Exponential.scale>`
 
                     :default value: 1.0
                     :type: ``float``
         """
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        scale = Parameter(1.0, modulable=True)
-        offset = Parameter(0.0, modulable=True)
         bounds = (0, None)
 
     @check_user_specified
@@ -1004,18 +1001,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
                     :default value: 1.0
                     :type: ``float``
 
-                offset
-                    see `offset <Logistic.offset>`
-
-                    :default value: 0.0
-                    :type: ``float``
-
-                scale
-                    see `scale <Logistic.scale>`
-
-                    :default value: 1.0
-                    :type: ``float``
-
                 x_0
                     see `x_0 <Logistic.x_0>`
 
@@ -1025,8 +1010,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         x_0 = Parameter(0.0, modulable=True)
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        offset = Parameter(0.0, modulable=True)
-        scale = Parameter(1.0, modulable=True)
         bounds = (0, 1)
 
     @check_user_specified
@@ -1328,18 +1311,6 @@ class Tanh(TransferFunction):  # -----------------------------------------------
                     :default value: 1.0
                     :type: ``float``
 
-                offset
-                    see `offset <Tanh.offset>`
-
-                    :default value: 0.0
-                    :type: ``float``
-
-                scale
-                    see `scale <Tanh.scale>`
-
-                    :default value: 1.0
-                    :type: ``float``
-
                 x_0
                     see `x_0 <Tanh.x_0>`
 
@@ -1349,8 +1320,6 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         x_0 = Parameter(0.0, modulable=True)
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        offset = Parameter(0.0, modulable=True)
-        scale = Parameter(1.0, modulable=True)
         bounds = (-1, 1)
 
     @check_user_specified
@@ -2114,18 +2083,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
                     :default value: 0.0
                     :type: ``float``
 
-                offset
-                    see `offset <Gaussian.offset>`
-
-                    :default value: 0.0
-                    :type: ``float``
-
-                scale
-                    see `scale <Gaussian.scale>`
-
-                    :default value: 1.0
-                    :type: ``float``
-
                 standard_deviation
                     see `standard_deviation <Gaussian.standard_deviation>`
 
@@ -2134,8 +2091,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         """
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        scale = Parameter(1.0, modulable=True)
-        offset = Parameter(0.0, modulable=True)
         bounds = (None, None)
 
     @check_user_specified
@@ -2380,23 +2335,11 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
                     :default value: 0.0
                     :type: ``float``
 
-                offset
-                    see `offset <GaussianDistort.offset>`
-
-                    :default value: 0.0
-                    :type: ``float``
-
                 random_state
                     see `random_state <GaussianDistort.random_state>`
 
                     :default value: None
                     :type: ``numpy.random.RandomState``
-
-                scale
-                    see `scale <GaussianDistort.scale>`
-
-                    :default value: 1.0
-                    :type: ``float``
 
                 variance
                     see `variance <GaussianDistort.variance>`
@@ -2406,8 +2349,6 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         """
         variance = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        scale = Parameter(1.0, modulable=True)
-        offset = Parameter(0.0, modulable=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
         bounds = (None, None)
@@ -3104,7 +3045,7 @@ class SoftMax(TransferFunction):
         scalar;  otherwise it is ignored (see `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for details).
 
     adapt_scale : scalar
-        determined the *scale* parameter using by the `adapt_gain <SoftMax.adapt_gain>` method (see method for details).
+        determines the *scale* parameter using by the `adapt_gain <SoftMax.adapt_gain>` method (see method for details).
 
     adapt_base : scalar
         determines the *base* parameter using by the `adapt_gain <SoftMax.adapt_gain>` method (see method for details).
