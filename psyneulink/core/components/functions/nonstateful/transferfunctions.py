@@ -569,8 +569,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
         else:
             slope = self.parameters.slope._get(context)
             intercept = self.parameters.intercept._get(context)
-            scale = self.parameters.scale._get(context)
-            offset = self.parameters.offset._get(context)
+            scale = self.defaults.scale
+            offset = self.defaults.offset
 
         return slope == 1 and intercept == 0 and scale == 1 and offset == 0
 
