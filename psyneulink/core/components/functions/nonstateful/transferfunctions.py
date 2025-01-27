@@ -569,8 +569,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
         else:
             slope = self.parameters.slope._get(context)
             intercept = self.parameters.intercept._get(context)
-            scale = self.parameters.scale._get(context)
-            offset = self.parameters.offset._get(context)
+            scale = self.defaults.scale
+            offset = self.defaults.offset
 
         return slope == 1 and intercept == 0 and scale == 1 and offset == 0
 
@@ -1495,7 +1495,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     `function <ReLU._function>` returns rectified linear tranform of `variable <ReLU.variable>`:
 
     .. math::
-        x = gain*(variable - bias)
+        x = scale * gain * (variable - bias) + offset
 
     .. math::
         max(x, leak * x)
@@ -1505,7 +1505,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     `derivative <ReLU.derivative>` returns the derivative of of the rectified linear tranform at its **input**:
 
     .. math::
-        gain\\ if\\ input > 0,\\ gain*leak\\ otherwise
+        scale * gain\\ if\\ input > 0,\\ scale * gain * leak\\ otherwise
 
     Arguments
     ---------
@@ -1636,10 +1636,12 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         gain = self._get_current_parameter_value(GAIN, context)
         bias = self._get_current_parameter_value(BIAS, context)
         leak = self._get_current_parameter_value(LEAK, context)
+        scale = self._get_current_parameter_value(SCALE, context)
+        offset = self._get_current_parameter_value(OFFSET, context)
 
         # KAM modified 2/15/19 to match https://en.wikipedia.org/wiki/Rectifier_(neural_networks)#Leaky_ReLUs
         x = gain * (variable - bias)
-        result = np.maximum(x, leak * x)
+        result = scale * np.maximum(x, leak * x) + offset
 
         return self.convert_output_type(result)
 
@@ -1666,6 +1668,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         gain = self._get_current_parameter_value(GAIN, context)
         leak = self._get_current_parameter_value(LEAK, context)
         bias = self._get_current_parameter_value(BIAS, context)
+        scale = self._get_current_parameter_value(SCALE, context)
 
         if input is not None:
             # Use input if provided
@@ -1674,7 +1677,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
             # Infer input from output
             variable = np.array(output) / gain
 
-        value = np.where(variable > 0, gain, gain * leak)
+        value = np.where(variable > 0, scale * gain, scale * gain * leak)
         return value
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
@@ -1684,10 +1687,14 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         gain_ptr = ctx.get_param_or_state_ptr(builder, self, GAIN, param_struct_ptr=params)
         bias_ptr = ctx.get_param_or_state_ptr(builder, self, BIAS, param_struct_ptr=params)
         leak_ptr = ctx.get_param_or_state_ptr(builder, self, LEAK, param_struct_ptr=params)
+        scale_ptr = ctx.get_param_or_state_ptr(builder, self, SCALE, param_struct_ptr=params)
+        offset_ptr = ctx.get_param_or_state_ptr(builder, self, OFFSET, param_struct_ptr=params)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
         leak = pnlvm.helpers.load_extract_scalar_array_one(builder, leak_ptr)
+        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
+        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
         # Maxnum for some reason needs full function prototype
         max_f = ctx.get_builtin("maxnum", [ctx.float_ty])
@@ -1699,12 +1706,15 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         if "derivative" in tags or "derivative_out" in tags:
             predicate = builder.fcmp_ordered('>', val, val.type(0))
+            gain = builder.fmul(gain, scale)
             val = builder.select(predicate, gain, builder.fmul(gain, leak))
         else:
             val1 = builder.fmul(val, gain)
             val2 = builder.fmul(val1, leak)
 
             val = builder.call(max_f, [val1, val2])
+            val = builder.fmul(val, scale)
+            val = builder.add(val, offset)
 
         builder.store(val, ptro)
 
@@ -4259,9 +4269,6 @@ class TransferWithCosts(TransferFunction):
             if not fct:
                 self.toggle_cost(fct_name, OFF)
                 return None
-            # # MODIFIED 3/10/20 OLD:
-            # if isinstance(fct, (Function, types.FunctionType, types.MethodType)):
-            # MODIFIED 3/10/20 NEW: [JDC]
             elif isinstance(fct, Function):
                 return fct
             elif isinstance(fct, (types.FunctionType, types.MethodType)):
@@ -4270,7 +4277,6 @@ class TransferWithCosts(TransferFunction):
                         custom_function=fct,
                         owner=self,
                         context=context)
-                # MODIFIED 3/10/20 END
             elif issubclass(fct, Function):
                 return fct()
             else:
@@ -4323,6 +4329,11 @@ class TransferWithCosts(TransferFunction):
 
         # Compute current intensity
         intensity = self.parameters.transfer_fct._get(context)(variable, context=context)
+
+        # Apply scale and offset to current intensity (which is value returned by function)
+        scale = self.parameters.scale._get(context)
+        offset = self.parameters.offset._get(context)
+        intensity = scale * intensity + offset
 
         # THEN, DEAL WITH COSTS
         # Note: only compute costs that are enabled;  others are left as None, or with their value when last enabled.
@@ -4384,6 +4395,8 @@ class TransferWithCosts(TransferFunction):
 
         return (
             transfer_fct._is_identity(context, defaults=defaults)
+            and self.parameters.scale.get(context) == 1.0
+            and self.parameters.offset.get(context) == 0.0
             and enabled_cost_functions == CostFunctions.NONE
         )
 
@@ -4510,6 +4523,17 @@ class TransferWithCosts(TransferFunction):
         trans_in = arg_in
         trans_out = arg_out
         builder.call(trans_f, [trans_p, trans_s, trans_in, trans_out])
+
+        # apply scale and offset
+        scale_ptr = ctx.get_param_or_state_ptr(builder, self, SCALE, param_struct_ptr=params)
+        offset_ptr = ctx.get_param_or_state_ptr(builder, self, OFFSET, param_struct_ptr=params)
+        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
+        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
+        # trans_out = pnlvm.helpers.load_extract_scalar_array_one(builder, trans_out)
+        # trans_out = builder.fmul(trans_out, scale)
+        # trans_out = builder.fadd(trans_out, offset)
+        # builder.store(builder.load(trans_out), trans_out)
+
         intensity_ptr = ctx.get_state_space(builder, self, state, self.parameters.intensity)
 
         costs = [(self.parameters.intensity_cost_fct, CostFunctions.INTENSITY, self.parameters.intensity_cost),
