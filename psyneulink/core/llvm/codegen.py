@@ -263,19 +263,9 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         # Only True/False are currently supported as named constants
         # Call deprecated visit_* methods to maintain coverage
         if node.value is True or node.value is False:
-            return self.visit_NameConstant(node)
+            return self.ctx.bool_ty(node.value)
 
-        return self.visit_Num(node)
-
-    # deprecated in Python3.8+
-    def visit_NameConstant(self, node):
-        # Only True and False are supported atm
-        assert node.value is True or node.value is False
-        return self.ctx.bool_ty(node.value)
-
-    # deprecated in Python3.8+
-    def visit_Num(self, node):
-        return self.ctx.float_ty(node.n)
+        return self.ctx.float_ty(node.value)
 
     def visit_Tuple(self, node:ast.AST):
         elements = (self.visit(element) for element in node.elts)
