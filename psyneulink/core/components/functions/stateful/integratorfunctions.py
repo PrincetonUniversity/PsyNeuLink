@@ -1178,7 +1178,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         vi_ptr = builder.gep(vi, [ctx.int32_ty(0), index])
         vi_val = builder.load(vi_ptr)
 
-        rev_rate = builder.fsub(ctx.float_ty(1), rate)
+        rev_rate = builder.fsub(rate.type(1), rate)
         old_val = builder.fmul(prev_val, rev_rate)
         new_val = builder.fmul(vi_val, rate)
 
@@ -4938,26 +4938,26 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
 
         # Second approximation
         # v is approximately previous_value_v + 0.5 * time_step_size * slope_v_approx_1
-        input_v = builder.fmul(ctx.float_ty(0.5), time_step_size)
+        input_v = builder.fmul(time_step_size.type(0.5), time_step_size)
         input_v = builder.fmul(input_v, slope_v_approx_1)
         input_v = builder.fadd(input_v, previous_v)
         slope_v_approx_2 = self.__gen_llvm_dv_dt(builder, ctx, var, input_v, previous_w, param_vals)
 
         # w is approximately previous_value_w + 0.5 * time_step_size * slope_w_approx_1
-        input_w = builder.fmul(ctx.float_ty(0.5), time_step_size)
+        input_w = builder.fmul(time_step_size.type(0.5), time_step_size)
         input_w = builder.fmul(input_w, slope_w_approx_1)
         input_w = builder.fadd(input_w, previous_w)
         slope_w_approx_2 = self.__gen_llvm_dw_dt(builder, ctx, input_w, previous_v, param_vals)
 
         # Third approximation
         # v is approximately previous_value_v + 0.5 * time_step_size * slope_v_approx_2
-        input_v = builder.fmul(ctx.float_ty(0.5), time_step_size)
+        input_v = builder.fmul(time_step_size.type(0.5), time_step_size)
         input_v = builder.fmul(input_v, slope_v_approx_2)
         input_v = builder.fadd(input_v, previous_v)
         slope_v_approx_3 = self.__gen_llvm_dv_dt(builder, ctx, var, input_v, previous_w, param_vals)
 
         # w is approximately previous_value_w + 0.5 * time_step_size * slope_w_approx_2
-        input_w = builder.fmul(ctx.float_ty(0.5), time_step_size)
+        input_w = builder.fmul(time_step_size.type(0.5), time_step_size)
         input_w = builder.fmul(input_w, slope_w_approx_2)
         input_w = builder.fadd(input_w, previous_w)
         slope_w_approx_3 = self.__gen_llvm_dw_dt(builder, ctx, input_w, previous_v, param_vals)
@@ -4973,12 +4973,12 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         input_w = builder.fadd(input_w, previous_w)
         slope_w_approx_4 = self.__gen_llvm_dw_dt(builder, ctx, input_w, previous_v, param_vals)
 
-        ts = builder.fdiv(time_step_size, ctx.float_ty(6.0))
+        ts = builder.fdiv(time_step_size, time_step_size.type(6.0))
         # new_v = previous_value_v \
         #    + (time_step_size/6) * (slope_v_approx_1
         #    + 2 * (slope_v_approx_2 + slope_v_approx_3) + slope_v_approx_4)
         new_v = builder.fadd(slope_v_approx_2, slope_v_approx_3)
-        new_v = builder.fmul(new_v, ctx.float_ty(2.0))
+        new_v = builder.fmul(new_v, new_v.type(2.0))
         new_v = builder.fadd(new_v, slope_v_approx_1)
         new_v = builder.fadd(new_v, slope_v_approx_4)
         new_v = builder.fmul(new_v, ts)
@@ -4989,7 +4989,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         #    + (time_step_size/6) * (slope_w_approx_1
         #    + 2 * (slope_w_approx_2 + slope_w_approx_3) + slope_w_approx_4)
         new_w = builder.fadd(slope_w_approx_2, slope_w_approx_3)
-        new_w = builder.fmul(new_w, ctx.float_ty(2.0))
+        new_w = builder.fmul(new_w, new_w.type(2.0))
         new_w = builder.fadd(new_w, slope_w_approx_1)
         new_w = builder.fadd(new_w, slope_w_approx_4)
         new_w = builder.fmul(new_w, ts)
@@ -5028,19 +5028,20 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         builder.store(new_w, out_w_ptr)
 
     def __gen_llvm_dv_dt(self, builder, ctx, var, v, previous_w, param_vals):
-        # val = (a_v*(v**3) + (1+threshold)*b_v*(v**2) + (-threshold)*c_v*v +
-        #       d_v + e_v*self.previous_w + f_v*variable)/time_constant_v
-        pow_f = ctx.get_builtin("pow", [ctx.float_ty])
+        # val = (a_v * (v ** 3) + (1 + threshold) * b_v * (v ** 2) + (-threshold) * c_v * v +
+        #        d_v + e_v * self.previous_w + f_v * variable) / time_constant_v
+        pow_f = ctx.get_builtin("pow", [v.type])
+        threshold = param_vals["threshold"]
 
-        v_3 = builder.call(pow_f, [v, ctx.float_ty(3.0)])
+        v_3 = builder.call(pow_f, [v, v.type(3.0)])
         tmp1 = builder.fmul(param_vals["a_v"], v_3)
 
-        thr_p1 = builder.fadd(ctx.float_ty(1.0), param_vals["threshold"])
+        thr_p1 = builder.fadd(threshold.type(1.0), threshold)
         tmp2 = builder.fmul(thr_p1, param_vals["b_v"])
-        v_2 = builder.call(pow_f, [v, ctx.float_ty(2.0)])
+        v_2 = builder.call(pow_f, [v, v.type(2.0)])
         tmp2 = builder.fmul(tmp2, v_2)
 
-        thr_neg = pnlvm.helpers.fneg(builder, param_vals["threshold"])
+        thr_neg = pnlvm.helpers.fneg(builder, threshold)
         tmp3 = builder.fmul(thr_neg, param_vals["c_v"])
         tmp3 = builder.fmul(tmp3, v)
 
@@ -5050,21 +5051,19 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
 
         tmp6 = builder.fmul(param_vals["f_v"], var)
 
-        sum = ctx.float_ty(-0.0)
-        sum = builder.fadd(sum, tmp1)
-        sum = builder.fadd(sum, tmp2)
-        sum = builder.fadd(sum, tmp3)
-        sum = builder.fadd(sum, tmp4)
-        sum = builder.fadd(sum, tmp5)
-        sum = builder.fadd(sum, tmp6)
+        val = builder.fadd(tmp1, tmp2)
+        val = builder.fadd(val, tmp3)
+        val = builder.fadd(val, tmp4)
+        val = builder.fadd(val, tmp5)
+        val = builder.fadd(val, tmp6)
 
-        res = builder.fdiv(sum, param_vals["time_constant_v"])
+        res = builder.fdiv(val, param_vals["time_constant_v"])
 
         return res
 
     def __gen_llvm_dw_dt(self, builder, ctx, w, previous_v, param_vals):
-        # val = (mode*a_w*self.previous_v + b_w*w + c_w +
-        #       (1-mode)*uncorrelated_activity)/time_constant_w
+        # val = (mode * a_w * self.previous_v + b_w * w + c_w +
+        #       (1 - mode) * uncorrelated_activity) / time_constant_w
 
         tmp1 = builder.fmul(param_vals["mode"], previous_v)
         tmp1 = builder.fmul(tmp1, param_vals["a_w"])
@@ -5073,16 +5072,15 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
 
         tmp3 = param_vals["c_w"]
 
-        mod_1 = builder.fsub(ctx.float_ty(1.0), param_vals["mode"])
+        mode = param_vals["mode"]
+        mod_1 = builder.fsub(mode.type(1.0), mode)
         tmp4 = builder.fmul(mod_1, param_vals["uncorrelated_activity"])
 
-        sum = ctx.float_ty(-0.0)
-        sum = builder.fadd(sum, tmp1)
-        sum = builder.fadd(sum, tmp2)
-        sum = builder.fadd(sum, tmp3)
-        sum = builder.fadd(sum, tmp4)
+        val = builder.fadd(tmp1, tmp2)
+        val = builder.fadd(val, tmp3)
+        val = builder.fadd(val, tmp4)
 
-        res = builder.fdiv(sum, param_vals["time_constant_w"])
+        res = builder.fdiv(val, param_vals["time_constant_w"])
         return res
 
     # TODO: remove with changes to previous_value/value as stated in
