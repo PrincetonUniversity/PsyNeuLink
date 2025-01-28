@@ -1593,14 +1593,14 @@ class LinearCombination(
             weights = torch.tensor(weights, device=device).double()
         if self.operation == SUM:
             if weights is not None:
-                return lambda x: torch.sum(x * weights, 0)
+                return lambda x: torch.sum(x * weights, 1)
             else:
-                return lambda x: torch.sum(x, 0)
+                return lambda x: torch.sum(x, 1)
         elif self.operation == PRODUCT:
             if weights is not None:
-                return lambda x: torch.prod(x * weights, 0)
+                return lambda x: torch.prod(x * weights, 1)
             else:
-                return lambda x: torch.prod(x, 0)
+                return lambda x: torch.prod(x, 1)
         else:
             from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
             raise AutodiffCompositionError(f"The 'operation' parameter of {function.componentName} is not supported "

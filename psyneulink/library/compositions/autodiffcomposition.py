@@ -1109,7 +1109,7 @@ class AutodiffComposition(Composition):
         # Calculate and track the loss over the trained OUTPUT nodes
         for component in curr_tensors_for_trained_outputs.keys():
             trial_loss = 0
-            for i in range(len(curr_tensors_for_trained_outputs[component].shape[1])):
+            for i in range(curr_tensors_for_trained_outputs[component].shape[1]):
                 # loss only accepts 0 or 1d target. reshape assuming pytorch_rep.minibatch_loss dim is correct
                 comp_loss = self.loss_function(
                     curr_tensors_for_trained_outputs[component][:, i, :],
@@ -1611,11 +1611,20 @@ class AutodiffComposition(Composition):
             if (RESULTS in synch_with_pnl_options
                     and synch_with_pnl_options[RESULTS] in {TRIAL, MINIBATCH}):
                 # Use Composition's own _update_results method since no savings when done trial-by-trial
-                super()._update_results(results, trial_output, execution_mode, synch_with_pnl_options, context)
+                if not self.batched_results:
+                    for out in trial_output:
+                        super()._update_results(results, out, execution_mode, synch_with_pnl_options, context)
+                else:
+                    super()._update_results(results, trial_output, execution_mode, synch_with_pnl_options, context)
+
             elif (RESULTS in synch_with_pnl_options
                     and synch_with_pnl_options[RESULTS] == RUN):
                 # Use pytorch_reps method to keep a local list of results that are copied to autodiff.results after run
-                self.parameters.pytorch_representation._get(context).retain_results(trial_output)
+                if not self.batched_results:
+                    for out in trial_output:
+                        self.parameters.pytorch_representation._get(context).retain_results(out)
+                else:
+                    self.parameters.pytorch_representation._get(context).retain_results(trial_output)
         else:
             super()._update_results(results, trial_output, execution_mode, synch_with_pnl_options, context)
 

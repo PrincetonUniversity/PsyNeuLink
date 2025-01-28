@@ -973,7 +973,7 @@ class PytorchMechanismWrapper():
             curr_val = proj_wrapper.sender.output
             if curr_val is not None:
                 # proj_wrapper._curr_sender_value = proj_wrapper.sender.output[proj_wrapper._value_idx]
-                proj_wrapper._curr_sender_value = curr_val[:, proj_wrapper._value_idx, :]
+                proj_wrapper._curr_sender_value = curr_val[:, proj_wrapper._value_idx, ...]
             else:
                 proj_wrapper._curr_sender_value = torch.tensor(proj_wrapper.default_value)
             proj_wrapper._curr_sender_value = torch.atleast_1d(proj_wrapper._curr_sender_value)
@@ -994,9 +994,15 @@ class PytorchMechanismWrapper():
                 for proj_wrapper in self.afferents:
                     if proj_wrapper._pnl_proj in input_port.path_afferents:
                         ip_res.append(proj_wrapper.execute(proj_wrapper._curr_sender_value))
-                res.append(torch.stack(ip_res))
+
+                # Stack the results for this input port on the second dimension, we want to preserve
+                # the first dimension as the batch
+                ip_res = torch.stack(ip_res, dim=1)
+                res.append(ip_res)
         try:
-            res = torch.stack(res)
+            # Now stack the results for all input ports on the second dimension again, this keeps batch
+            # first again. We should now have a 4D tensor; (batch, input_port, projection, values)
+            res = torch.stack(res, dim=1)
         except (RuntimeError, TypeError):
             # is ragged, will handle ports individually during execute
             pass
@@ -1017,10 +1023,14 @@ class PytorchMechanismWrapper():
 
         res = []
         for i in range(len(self.input_ports)):
-            v = variable[i]
+            v = variable[:, i, ...] # Get the input for the port for all items in the batch
             if isinstance(self.input_ports[i]._pnl_function, TransformFunction):
-                # atleast_2d to account for input port dimension reduction
-                v = torch.atleast_2d(v)
+                # Add input port dimension back to account for input port dimension reduction, we should have shape
+                # (batch, input_port, ... variable dimensions ) or
+                # (batch, input_port, projection, ... variable dimensions ...) if execute_inpute_ports is invoked
+                # after aggregate_afferents.
+                if len(v.shape) == 2:
+                    v = v[:, None, ...]
 
             res.append(self.input_ports[i].function(v))
 
