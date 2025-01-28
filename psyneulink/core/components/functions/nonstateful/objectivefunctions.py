@@ -993,7 +993,7 @@ class Distance(ObjectiveFunction):
         v2 = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(0)])
 
         acc_ptr = builder.alloca(ctx.float_ty)
-        builder.store(ctx.float_ty(-0.0), acc_ptr)
+        builder.store(acc_ptr.type.pointee(-0.0), acc_ptr)
 
         kwargs = {"ctx": ctx, "v1": v1, "v2": v2, "acc": acc_ptr}
         if self.metric == DIFFERENCE or self.metric == NORMED_L0_SIMILARITY:
@@ -1010,7 +1010,8 @@ class Distance(ObjectiveFunction):
             denom1_acc = builder.alloca(ctx.float_ty)
             denom2_acc = builder.alloca(ctx.float_ty)
             for loc in numer_acc, denom1_acc, denom2_acc:
-                builder.store(ctx.float_ty(-0.0), loc)
+                builder.store(loc.type.pointee(-0.0), loc)
+
             kwargs['numer_acc'] = numer_acc
             kwargs['denom1_acc'] = denom1_acc
             kwargs['denom2_acc'] = denom2_acc
@@ -1018,7 +1019,7 @@ class Distance(ObjectiveFunction):
         elif self.metric == MAX_ABS_DIFF:
             del kwargs['acc']
             max_diff_ptr = builder.alloca(ctx.float_ty)
-            builder.store(ctx.float_ty(float("NaN")), max_diff_ptr)
+            builder.store(max_diff_ptr.type.pointee(float("NaN")), max_diff_ptr)
             kwargs['max_diff_ptr'] = max_diff_ptr
             inner = functools.partial(self.__gen_llvm_max_diff, **kwargs)
         elif self.metric == CORRELATION:
@@ -1028,7 +1029,7 @@ class Distance(ObjectiveFunction):
             acc_x2_ptr = builder.alloca(ctx.float_ty)
             acc_y2_ptr = builder.alloca(ctx.float_ty)
             for loc in [acc_x_ptr, acc_y_ptr, acc_xy_ptr, acc_x2_ptr, acc_y2_ptr]:
-                builder.store(ctx.float_ty(-0.0), loc)
+                builder.store(loc.type.pointee(-0.0), loc)
             del kwargs['acc']
             kwargs['acc_x'] = acc_x_ptr
             kwargs['acc_y'] = acc_y_ptr
@@ -1078,7 +1079,7 @@ class Distance(ObjectiveFunction):
             acc_x2 = builder.load(acc_x2_ptr)
             acc_y2 = builder.load(acc_y2_ptr)
 
-            # We'll need meanx,y below
+            # We'll need mean_x,y below
             mean_x = builder.fdiv(acc_x, n)
             mean_y = builder.fdiv(acc_y, n)
 
@@ -1122,7 +1123,7 @@ class Distance(ObjectiveFunction):
 
             # ret =  1 - abs(corr)
             ret = builder.call(fabs, [corr])
-            ret = builder.fsub(ctx.float_ty(1), ret)
+            ret = builder.fsub(ret.type(1), ret)
 
         if arg_out.type.pointee != ret.type:
             # Some instances use 2d output values
@@ -1139,7 +1140,7 @@ class Distance(ObjectiveFunction):
         with builder.if_else(normalize_b) as (then, otherwise):
             with then:
                 norm_factor = input_length ** 2 if self.metric == ENERGY else input_length
-                normalized = builder.fdiv(ret, ctx.float_ty(norm_factor), name="normalized")
+                normalized = builder.fdiv(ret, ret.type(norm_factor), name="normalized")
                 builder.store(normalized, arg_out)
             with otherwise:
                 builder.store(ret, arg_out)
