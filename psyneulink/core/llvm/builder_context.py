@@ -743,6 +743,7 @@ def _convert_llvm_ir_to_ctype(t: ir.Type):
 
     if type_t is ir.VoidType:
         return None
+
     elif type_t is ir.IntType:
         if t.width == 1:
             return ctypes.c_bool
@@ -756,20 +757,27 @@ def _convert_llvm_ir_to_ctype(t: ir.Type):
             return ctypes.c_uint64
         else:
             assert False, "Unknown integer type: {}".format(type_t)
+
     elif type_t is ir.DoubleType:
         return ctypes.c_double
+
     elif type_t is ir.FloatType:
         return ctypes.c_float
+
     elif type_t is ir.HalfType:
         # There's no half type in ctypes. Use uint16 instead.
         # User will need to do the necessary casting.
         return ctypes.c_uint16
-    elif type_t is ir.PointerType:
+
+    # Typed pointers (pre LLVM-15, or LLVM-15+ with opaque pointers disabled)
+    elif hasattr(t, 'pointee'):
         pointee = _convert_llvm_ir_to_ctype(t.pointee)
         ret_t = ctypes.POINTER(pointee)
+
     elif type_t is ir.ArrayType:
         element_type = _convert_llvm_ir_to_ctype(t.element)
         ret_t = element_type * len(t)
+
     elif type_t is ir.LiteralStructType:
         global _struct_count
         uniq_name = "struct_" + str(_struct_count)
@@ -784,8 +792,9 @@ def _convert_llvm_ir_to_ctype(t: ir.Type):
         ret_t = type(uniq_name, (ctypes.Structure,), {"__init__": ctypes.Structure.__init__})
         ret_t._fields_ = field_list
         assert len(ret_t._fields_) == len(t.elements)
+
     else:
-        assert False, "Don't know how to convert LLVM type: {}".format(t)
+        assert False, "Don't know how to convert LLVM type: {}({})".format(t, type(t))
 
     return ret_t
 
