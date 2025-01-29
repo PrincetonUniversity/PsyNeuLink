@@ -761,12 +761,10 @@ class TestCondition:
             ('!=', -1, 0, [[[-1]]]),
         ]
     )
+    @pytest.mark.usefixtures("comp_mode_no_llvm") # Per-node mode doesn't support Parameter access in conditions
     def test_Threshold_comparators(
         self, comparator, increment, threshold, expected_results, comp_mode
     ):
-        if comp_mode is pnl.ExecutionMode.LLVM:
-            pytest.skip('ExecutionMode.LLVM does not support Parameter access in conditions')
-
         A = TransferMechanism(
             integrator_mode=True,
             integrator_function=pnl.AccumulatorIntegrator(rate=1, increment=increment),
@@ -796,11 +794,10 @@ class TestCondition:
             ('!=', -1, -1, 0, 1, [[[-3]]]),
         ]
     )
+    @pytest.mark.usefixtures("comp_mode_no_llvm") # Per-node mode doesn't support Parameter access in conditions
     def test_Threshold_tolerances(
         self, comparator, increment, threshold, atol, rtol, expected_results, comp_mode
     ):
-        if comp_mode is pnl.ExecutionMode.LLVM:
-            pytest.skip('ExecutionMode.LLVM does not support Parameter access in conditions')
 
         A = TransferMechanism(
             integrator_mode=True,

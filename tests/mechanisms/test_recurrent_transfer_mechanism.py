@@ -1179,8 +1179,8 @@ class TestCustomCombinationFunction:
     @pytest.mark.composition
     @pytest.mark.integrator_mechanism
     @pytest.mark.parametrize('until_finished, expected', [
-        (True, [[[[0.96875]]], [[[0.9990234375]]]]), # The 5th and the 10th iteration
-        (False, [[[[0.5]]], [[[0.75]]]]), # The first and the second iteration
+        (True, [[[0.96875]], [[0.9990234375]]]), # The 5th and the 10th iteration
+        (False, [[[0.5]], [[0.75]]]), # The first and the second iteration
     ], ids=['until_finished', 'oneshot'])
     # 'LLVM' mode is not supported, because synchronization of compiler and
     # python values during execution is not implemented.
@@ -1197,10 +1197,9 @@ class TestCustomCombinationFunction:
         results = C.run(inputs={I1: [[1.0]]}, num_trials=1, execution_mode=comp_mode)
         if comp_mode is pnl.ExecutionMode.Python:
             assert I1.parameters.is_finished_flag.get(C) is until_finished
+
         results2 = C.run(inputs={I1: [[1.0]]}, num_trials=1, execution_mode=comp_mode)
-        if comp_mode is not pnl.ExecutionMode.LLVM:
-            results = [results]
-            results2 = [results2]
+
         np.testing.assert_allclose(expected[0], results)
         np.testing.assert_allclose(expected[1], results2)
 
