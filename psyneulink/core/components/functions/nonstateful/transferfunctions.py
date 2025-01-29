@@ -160,19 +160,11 @@ class TransferFunction(Function_Base):
     Attributes
     ----------
 
-    range : tuple or None
-      specifies the lower and upper limits of the function's result; if there are none, the attribute is set to `None`;
-      if at least one bound is specified, the attribute is a tuple specifying the lower and upper bounds, respectively,
-      with `None` as the entry (indicating no bound). The bounds are with respect to the result of the function before
-      the `scale <TransferFunction.scale>` and `offset <TransferFunction.offset>` Parameters are applied; the actual
-      range of the result value of the function is determined by :math:`bounds(lower, upper) * scale + offset`.
-
-    bounds : tuple or None
-      specifies the lower and upper limits of the function's result; if there are none, the attribute is set to `None`;
-      if at least one bound is specified, the attribute is a tuple specifying the lower and upper bounds, respectively,
-      with `None` as the entry (indicating no bound). The bounds are with respect to the result of the function before
-      the `scale <TransferFunction.scale>` and `offset <TransferFunction.offset>` Parameters are applied; the actual
-      range of the result value of the function is determined by :math:`bounds(lower, upper) * scale + offset`.
+    bounds : tuple
+      read-only Parameter that  indicates the lower and upper limits of the function's result. The two items of the
+      tuple indicate the lower and upper bounds, respectively, with `None` as the entry if there is no bound.  Some
+      subclasses of TransferFunction may have other Parameters that influence the bounds, which are described under
+      the `bounds <TransferFunction.bounds>` attribute of the relevant subclass.
     """
 
     componentType = TRANSFER_FUNCTION_TYPE
@@ -185,11 +177,11 @@ class TransferFunction(Function_Base):
                 bounds
                     see `bounds <TransferFunction.bounds>`
 
-                    :default value: None
+                    :default value: (None, None)
                     :type:
 
         """
-        bounds = None
+        bounds = Parameter((None, None), read_only=True)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
@@ -221,12 +213,11 @@ class DeterministicTransferFunction(TransferFunction):
     Attributes
     ----------
 
-    bounds : tuple or None
-      specifies the lower and upper limits of the function's result, that are based on application of the `scale
-      <DeterministicTransferFunction.scale>` and `offset <DeterministicTransferFunction.offset>` Parameters to the
-      result of the function:  :math:`result(lower, upper) * scale + offset`, where the limits of results are
-      specified by the `bounds <TransferFunction.bounds>` attribute of the
-      value of the function's result;  for additional details on how the bounds are determined.
+    bounds : tuple
+      read-only Parameter that indicates the lower and upper limits of the function's result, after the `scale
+      <DeterministicTransferFunction.scale>` and `offset <DeterministicTransferFunction.offset>` Parameters
+      have been applied to the result of the function:  :math:`result(lower, upper) * scale + offset`, where
+      result(lower, upper) is given by the default values of the `bounds <TransferFunction.bounds>` attribute.
 
     scale : float
       the value by which the result of the function is multiplied, before `offset <TransferFunction.offset>` is added.
@@ -260,7 +251,7 @@ class DeterministicTransferFunction(TransferFunction):
                     :default value: 0.0
                     :type: float
         """
-        bounds = Parameter(None, setter=_bounds_setter, dependencies={'scale', 'offset'})
+        bounds = Parameter(None, setter=_bounds_setter, read_only=True, dependencies={'scale', 'offset'})
         scale = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
 
