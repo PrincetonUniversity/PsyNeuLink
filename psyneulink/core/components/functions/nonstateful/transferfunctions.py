@@ -115,39 +115,26 @@ __all__ = ['Angle', 'BinomialDistort', 'Dropout', 'Exponential', 'Gaussian', 'Ga
            'Linear', 'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
            ]
 
-def _bounds_setter(self):
+def _bounds_setter_using_scale_and_offset(value, owning_component=None, context=None):
     """Reassign bounds based on scale and offset applied to function's output for default upper and lower bounds
     """
-    if hasattr(self, "scale"):
-        scale = self.scale if self.scale is not None else 1.0
-    else:
-        scale = 1.0
-    if hasattr(self, "offset"):
-        offset = self.offset if self.offset is not None else 0.0
-    else:
-        offset = 0.0
+    default_bounds = owning_component.defaults.bounds
+    scale = owning_component.scale
+    offset = owning_component.offset
 
     # Deal with lower bound = None:
-    lower_bound = -np.inf if self.bounds[0] is None else self.bounds[0]
+    lower_bound = -np.inf if default_bounds[0] is None else default_bounds[0]
     output_for_fct_lower_bound = scale * lower_bound + offset
 
     # Deal with upper bound = None:
-    upper_bound = np.inf if self.bounds[1] is None else self.bounds[1]
+    upper_bound = np.inf if default_bounds.bounds[1] is None else default_bounds[1]
     output_for_fct_upper_bound = scale * upper_bound + offset
 
     # Need to do this since scale could be negative, reversing upper and lower bounds:
     lower_bound = min(output_for_fct_lower_bound, output_for_fct_upper_bound)
     upper_bound = max(output_for_fct_lower_bound, output_for_fct_upper_bound)
 
-    # # MODIFIED 1/29/25 OLD:
-    # self.parameters.bounds.default_value = (lower_bound, upper_bound)
-    # # self.parameters.bounds.set((lower_bound, upper_bound), None)
-    # self.bounds = (lower_bound, upper_bound)
-    # MODIFIED 1/29/25 NEW:
-    # self.parameters.bounds.default_value = (lower_bound, upper_bound)
-    self.parameters.bounds.set((lower_bound, upper_bound), None)
-    # self.bounds = (lower_bound, upper_bound)
-    # MODIFIED 1/29/25 END
+    return (lower_bound, upper_bound)
 
 
 class TransferFunction(Function_Base):
@@ -251,7 +238,10 @@ class DeterministicTransferFunction(TransferFunction):
                     :default value: 0.0
                     :type: float
         """
-        bounds = Parameter(None, setter=_bounds_setter, read_only=True, dependencies={'scale', 'offset'})
+        bounds = Parameter((None,None),
+                           setter=_bounds_setter_using_scale_and_offset,
+                           read_only=True,
+                           dependencies={'scale', 'offset'})
         scale = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
 
@@ -405,13 +395,17 @@ class Linear(TransferFunction):  # ---------------------------------------------
     `function <Linear._function>` returns linear transform of `variable <Linear.variable>`:
 
     .. math::
+        scale * (slope * variable + intercept) + offset
 
-        slope * variable + intercept
+    .. note::
+       Note: default values for `slope <Linear.slope>`, `intercept <Linear.intercept>`, `scale
+       <DeterministicTransferFunction.scale>`, and `offset <DeterministicTransferFunction.offset>`
+       implement the *IDENTITY_FUNCTION*.
 
-    Note: default values for `slope <Linear.slope>` and `intercept <Linear.intercept>` implement the
-    *IDENTITY_FUNCTION*.
+    `derivative <Exponential.derivative>` returns the derivative of the Linear Function:
 
-    `derivative <Linear.derivative>` returns `slope <Linear.slope>`.
+    .. math::
+        scale*slope
 
     Arguments
     ---------
@@ -477,10 +471,17 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
     _model_spec_class_name_is_generic = True
 
-    class Parameters(TransferFunction.Parameters):
+    class Parameters(DeterministicTransferFunction.Parameters):
         """
             Attributes
             ----------
+
+                bounds
+                    see `bounds <Linear.bounds>`
+
+                    :default value: (None, None)
+                    :type: ``tuple``
+
 
                 intercept
                     see `intercept <Linear.intercept>`
@@ -612,8 +613,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
         else:
             slope = self.parameters.slope._get(context)
             intercept = self.parameters.intercept._get(context)
-            scale = self.defaults.scale
-            offset = self.defaults.offset
+            scale = self.parameters.scale._get(context)
+            offset = self.parameters.offset._get(context)
 
         return slope == 1 and intercept == 0 and scale == 1 and offset == 0
 
@@ -676,10 +677,10 @@ class Exponential(DeterministicTransferFunction):  # ---------------------------
     .. math::
          scale * e^{rate*variable+bias} + offset
 
-    `derivative <Exponential.derivative>` returns the derivative of the Exponential:
+    `derivative <Exponential.derivative>` returns the derivative of the Exponential Function:
 
     .. math::
-        rate*input+bias
+        scale*rate*(input+bias)*e^{rate*input+bias}
 
 
     Arguments
@@ -750,6 +751,13 @@ class Exponential(DeterministicTransferFunction):  # ---------------------------
 
                     :default value: 0.0
                     :type: ``float``
+
+                bounds
+                    see `bounds <Exponential.bounds>`
+
+                    :default value: (0, None)
+                    :type: ``tuple``
+
 
                 rate
                     see `rate <Exponential.rate>`
@@ -837,7 +845,7 @@ class Exponential(DeterministicTransferFunction):  # ---------------------------
         scale = self._get_current_parameter_value(SCALE, context)
         bias = self._get_current_parameter_value(BIAS, context)
 
-        return rate * scale * e**(rate * input + bias)
+        return scale * rate * e**(rate * input + bias)
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -919,7 +927,7 @@ class Logistic(DeterministicTransferFunction):  # ------------------------------
     `derivative <Logistic.derivative>` returns the derivative of the Logistic using its **output**:
 
     .. math::
-        gain * scale * output * (1-output)
+        scale * gain * output * (1-output)
 
     See `note <Logistic_Note>` above for the effects of `scale <DeterministicTransferFunction.scale>` and
     `offset <DeterministicTransferFunction.offset>`.
@@ -1009,6 +1017,13 @@ class Logistic(DeterministicTransferFunction):  # ------------------------------
 
                     :default value: 0.0
                     :type: ``float``
+
+                bounds
+                    see `bounds <Logistic.bounds>`
+
+                    :default value: (0, 1)
+                    :type: ``tuple``
+
 
                 gain
                     see `gain <Logistic.gain>`
@@ -1209,7 +1224,6 @@ class Tanh(DeterministicTransferFunction):  # ----------------------------------
     `function <Tanh._function>` returns hyperbolic tangent of `variable <Tanh.variable>`:
 
     .. math::
-
         \\scale*frac{1 - e^{-2(gain*(variable+bias-x\\_0)+offset)}}{1 + e^{-2(gain*(variable+bias-x\\_0)+offset)}}
 
     .. note::
@@ -1220,7 +1234,7 @@ class Tanh(DeterministicTransferFunction):  # ----------------------------------
     `derivative <Tanh.derivative>` returns the derivative of the hyperbolic tangent at its **input**:
 
     .. math::
-        \\frac{gain*scale}{(\\frac{1+e^{-2(gain*(variable+bias-x\\_0)+offset)}}{2e^{-(gain*(
+        \\frac{scale*gain}{(\\frac{1+e^{-2(gain*(variable+bias-x\\_0)+offset)}}{2e^{-(gain*(
        variable+bias-x\\_0)+offset)}})^2}
 
     Arguments
@@ -1300,6 +1314,13 @@ class Tanh(DeterministicTransferFunction):  # ----------------------------------
 
                     :default value: 0.0
                     :type: ``float``
+
+                bounds
+                    see `bounds <TanH.bounds>`
+
+                    :default value: (-1, 1)
+                    :type: ``tuple``
+
 
                 gain
                     see `gain <Tanh.gain>`
@@ -1494,7 +1515,7 @@ class ReLU(DeterministicTransferFunction):  # ----------------------------------
         x = scale * gain * (variable - bias) + offset
 
     .. math::
-        max(x, leak * x)
+        max(x, leak * x) + offset
 
     Commonly used by `ReLU <https://en.wikipedia.org/wiki/Rectifier_(neural_networks>`_ units in neural networks.
 
@@ -1569,6 +1590,13 @@ class ReLU(DeterministicTransferFunction):  # ----------------------------------
 
                     :default value: 0.0
                     :type: ``float``
+
+                bounds
+                    see `bounds <ReLU.bounds>`
+
+                    :default value: (None, None)
+                    :type: ``tuple``
+
 
                 gain
                     see `gain <ReLU.gain>`
