@@ -19,7 +19,6 @@
     * `ReLU`
 
 **Probabilistic**
-    * `Angle`
     * `Gaussian`
     * `GaussianDistort`
     * `BinomialDistort`
@@ -27,6 +26,7 @@
     * `SoftMax`
 
 **Other**
+    * `Angle`
     * `TransferWithCosts`
 
 Overview
@@ -115,6 +115,40 @@ __all__ = ['Angle', 'BinomialDistort', 'Dropout', 'Exponential', 'Gaussian', 'Ga
            'Linear', 'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
            ]
 
+def _bounds_setter(self):
+    """Reassign bounds based on scale and offset applied to function's output for default upper and lower bounds
+    """
+    if hasattr(self, "scale"):
+        scale = self.scale if self.scale is not None else 1.0
+    else:
+        scale = 1.0
+    if hasattr(self, "offset"):
+        offset = self.offset if self.offset is not None else 0.0
+    else:
+        offset = 0.0
+
+    # Deal with lower bound = None:
+    lower_bound = -np.inf if self.bounds[0] is None else self.bounds[0]
+    output_for_fct_lower_bound = scale * lower_bound + offset
+
+    # Deal with upper bound = None:
+    upper_bound = np.inf if self.bounds[1] is None else self.bounds[1]
+    output_for_fct_upper_bound = scale * upper_bound + offset
+
+    # Need to do this since scale could be negative, reversing upper and lower bounds:
+    lower_bound = min(output_for_fct_lower_bound, output_for_fct_upper_bound)
+    upper_bound = max(output_for_fct_lower_bound, output_for_fct_upper_bound)
+
+    # # MODIFIED 1/29/25 OLD:
+    # self.parameters.bounds.default_value = (lower_bound, upper_bound)
+    # # self.parameters.bounds.set((lower_bound, upper_bound), None)
+    # self.bounds = (lower_bound, upper_bound)
+    # MODIFIED 1/29/25 NEW:
+    # self.parameters.bounds.default_value = (lower_bound, upper_bound)
+    self.parameters.bounds.set((lower_bound, upper_bound), None)
+    # self.bounds = (lower_bound, upper_bound)
+    # MODIFIED 1/29/25 END
+
 
 class TransferFunction(Function_Base):
     """Function that transforms variable but maintains its shape.
@@ -125,6 +159,13 @@ class TransferFunction(Function_Base):
 
     Attributes
     ----------
+
+    range : tuple or None
+      specifies the lower and upper limits of the function's result; if there are none, the attribute is set to `None`;
+      if at least one bound is specified, the attribute is a tuple specifying the lower and upper bounds, respectively,
+      with `None` as the entry (indicating no bound). The bounds are with respect to the result of the function before
+      the `scale <TransferFunction.scale>` and `offset <TransferFunction.offset>` Parameters are applied; the actual
+      range of the result value of the function is determined by :math:`bounds(lower, upper) * scale + offset`.
 
     bounds : tuple or None
       specifies the lower and upper limits of the function's result; if there are none, the attribute is set to `None`;
@@ -149,48 +190,6 @@ class TransferFunction(Function_Base):
 
         """
         bounds = None
-
-    @check_user_specified
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        if (hasattr(self, 'scale') or hasattr(self, 'offset')) and self.bounds:
-            self._set_bounds()
-
-    # FIX 1/29/25:  THIS SHOULD REPLACED WITH A getter FOR BOUNDS with dependencies on scale and offset for
-    #  Deterministic
-    def _set_bounds(self):
-        """Reassign bounds based on scale and offset applied to function's output for default upper and lower bounds
-        """
-        if hasattr(self, "scale"):
-            scale = self.scale if self.scale is not None else 1.0
-        else:
-            scale = 1.0
-        if hasattr(self, "offset"):
-            offset = self.offset if self.offset is not None else 0.0
-        else:
-            offset = 0.0
-
-        # Deal with lower bound = None:
-        lower_bound = -np.inf if self.bounds[0] is None else self.bounds[0]
-        output_for_fct_lower_bound = scale * lower_bound + offset
-
-        # Deal with upper bound = None:
-        upper_bound = np.inf if self.bounds[1] is None else self.bounds[1]
-        output_for_fct_upper_bound = scale * upper_bound + offset
-
-        # Need to do this since scale could be negative, reversing upper and lower bounds:
-        lower_bound = min(output_for_fct_lower_bound, output_for_fct_upper_bound)
-        upper_bound = max(output_for_fct_lower_bound, output_for_fct_upper_bound)
-
-        # # MODIFIED 1/29/25 OLD:
-        # self.parameters.bounds.default_value = (lower_bound, upper_bound)
-        # # self.parameters.bounds.set((lower_bound, upper_bound), None)
-        # self.bounds = (lower_bound, upper_bound)
-        # MODIFIED 1/29/25 NEW:
-        # self.parameters.bounds.default_value = (lower_bound, upper_bound)
-        self.parameters.bounds.set((lower_bound, upper_bound), None)
-        # self.bounds = (lower_bound, upper_bound)
-        # MODIFIED 1/29/25 END
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
@@ -217,10 +216,17 @@ class DeterministicTransferFunction(TransferFunction):
 
     In addition to the `standard attributes <TransferFunction_StandardAttributes>` of a TransferFunction,
     all DeterministicTransferFunctions have a `scale <DeterministicTransferFunction.scale>` and `offset
-    <DeterministicTransferFunction.offset>` Parameter.
+    <DeterministicTransferFunction.offset>` Parameter, that are used to determine the `bounds <TransferFunction.bounds>`
 
     Attributes
     ----------
+
+    bounds : tuple or None
+      specifies the lower and upper limits of the function's result, that are based on application of the `scale
+      <DeterministicTransferFunction.scale>` and `offset <DeterministicTransferFunction.offset>` Parameters to the
+      result of the function:  :math:`result(lower, upper) * scale + offset`, where the limits of results are
+      specified by the `bounds <TransferFunction.bounds>` attribute of the
+      value of the function's result;  for additional details on how the bounds are determined.
 
     scale : float
       the value by which the result of the function is multiplied, before `offset <TransferFunction.offset>` is added.
@@ -235,6 +241,13 @@ class DeterministicTransferFunction(TransferFunction):
         """
             Attributes
             ----------
+
+                bounds
+                    see `bounds <TransferFunction.bounds>`
+
+                    :default value: None
+                    :type:
+
                 scale
                     see `scale <TransferFunction.scale>`
 
@@ -247,14 +260,16 @@ class DeterministicTransferFunction(TransferFunction):
                     :default value: 0.0
                     :type: float
         """
+        bounds = Parameter(None, setter=_bounds_setter, dependencies={'scale', 'offset'})
         scale = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
 
-        def __init__(self,
-                     offset: Optional[ValidParamSpecType] = None,
-                     scale: Optional[ValidParamSpecType] = None,
-                     **kwargs):
-            super().__init__(**kwargs)
+    @check_user_specified
+    def __init__(self,
+                 offset: Optional[ValidParamSpecType] = None,
+                 scale: Optional[ValidParamSpecType] = None,
+                 **kwargs):
+        super().__init__(**kwargs)
 
 
 # **********************************************************************************************************************
@@ -1714,259 +1729,6 @@ class ReLU(DeterministicTransferFunction):  # ----------------------------------
         leak = self._get_pytorch_fct_param_value('leak', device, context)
         return lambda x: (torch.max(input=(x - bias), other=torch.tensor([0], device=device).double()) * gain +
                             torch.min(input=(x - bias), other=torch.tensor([0], device=device).double()) * leak)
-
-
-# **********************************************************************************************************************
-#                                                    Angle
-# **********************************************************************************************************************
-
-# FIX: VALIDATE LEN(VARIABLE)>=2
-
-class Angle(TransferFunction):  # -------------------------------------------------------------------------------------
-    """
-    Angle(                 \
-         default_variable, \
-         params=None,      \
-         owner=None,       \
-         name=None,        \
-         prefs=None        \
-         )
-
-    .. _Angle_Function:
-
-    `function <angle._function>` returns Angle transform of vector in `variable <Angle.variable>`:
-
-    COMMENT:
-    FIX: WITH PROPER MATHEMATICAL DEFN
-    .. math::
-
-        slope * variable + intercept
-
-    `derivative <Angle.derivative>` returns `slope <Angle.slope>`.
-    COMMENT
-
-    Arguments
-    ---------
-
-    default_variable : 1array : default class_defaults.variable
-        specifies a template for the value to be transformed;  length must be at least 2.
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
-        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
-
-    owner : Component
-        `component <Component>` to which to assign the Function.
-
-    name : str : default see `name <Function.name>`
-        specifies the name of the Function.
-
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
-
-    Attributes
-    ----------
-
-    variable : 1d array
-        contains value to be transformed.
-
-    owner : Component
-        `component <Component>` to which the Function has been assigned.
-
-    name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
-        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict : Function.classPreferences
-        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
-        for details).
-    """
-
-    componentName = ANGLE_FUNCTION
-
-    classPreferences = {
-        PREFERENCE_SET_NAME: 'AngleClassPreferences',
-        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-    }
-
-    _model_spec_class_name_is_generic = True
-
-    class Parameters(TransferFunction.Parameters):
-        """
-            Attributes
-            ----------
-
-                variable
-                    see `variable <Angle.variable>`
-
-                    :default value: numpy.array([0.,0,])
-                    :type: ``numpy.ndarray``
-                    :read only: True
-
-        """
-        variable = Parameter(np.array([1,1]),
-                             read_only=True,
-                             pnl_internal=True,
-                             constructor_argument='default_variable')
-
-        def _validate_variable(self, variable):
-            variable = np.squeeze(variable)
-            if variable.ndim != 1 or len(variable) < 2:
-                return f"must be list or 1d array of length 2 or greater."
-
-    @check_user_specified
-    @beartype
-    def __init__(self,
-                 default_variable=None,
-                 params=None,
-                 owner=None,
-                 prefs:  Optional[ValidPrefSet] = None):
-
-        super().__init__(
-            default_variable=default_variable,
-            params=params,
-            owner=owner,
-            prefs=prefs,
-        )
-
-    def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
-        """
-
-        Arguments
-        ---------
-
-        variable : ndarray : default class_defaults.variable
-           an array of coordinates on a sphere to be transformed to n+1d angular coordinates;  must be at least 2d.
-
-        params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
-            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-            arguments of the constructor.
-
-        Returns
-        -------
-
-        Angle transformation of variable : ndarray of variable.ndim+1
-
-        """
-        try:
-            # By default, result should be returned as np.ndarray with same dimensionality as input
-            result = self._angle(variable)
-        except TypeError:
-            if hasattr(variable, "dtype"):
-                # If variable is an array with mixed sizes or types, try item-by-item operation
-                if variable.dtype == object:
-                    result = np.zeros_like(variable)
-                    for i, item in enumerate(variable):
-                        result[i] = self._angle(variable[i])
-                else:
-                    raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
-            # KAM 6/28/18: If the variable does not have a "dtype" attr but made it to this line, then it must be of a
-            # type that even np does not recognize -- typically a custom OutputPort variable with items of different
-            # shapes (e.g. variable = [[0.0], [0.0], array([[0.0, 0.0]])] )
-            elif isinstance(variable, list):
-                result = []
-                for variable_item in variable:
-                    result.append(self._angle(variable_item))
-            else:
-                raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
-
-        return self.convert_output_type(result)
-
-    def _angle(self, value):
-        """Take nd value and return n+1d coordinates for angle on a sphere"""
-        value = np.squeeze(value)
-        dim = len(value) + 1
-        angle = np.zeros(dim)
-        sin_value = np.sin(value)
-        cos_value = np.cos(value)
-        angle[0] = cos_value[0]
-        prod_a = np.cumprod(np.flip(sin_value))[:-1]
-        angle[dim - 1] = prod_a[-1]
-        prod_a[-1] = 1.
-
-        # going down from the top of cumprod we skip: 2 edge values +1 extra for output size
-        for j in range(1, dim - 1):
-            angle[j] = prod_a[dim -3 -j] * cos_value[j]
-        return angle
-
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
-        assert isinstance(arg_out.type.pointee, pnlvm.ir.ArrayType)
-        assert len(arg_in.type.pointee) + 1 == len(arg_out.type.pointee)
-
-        # The first cos
-        res0_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        val0_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        val0 = builder.load(val0_ptr)
-        cos_f = ctx.get_builtin("cos", [val0.type])
-        cos_val0 = builder.call(cos_f, [val0])
-        builder.store(cos_val0, res0_ptr)
-
-        # calculate suffix product
-        sin_f = ctx.get_builtin("sin", [val0.type])
-        prod_ptr = builder.alloca(val0.type)
-        builder.store(prod_ptr.type.pointee(1.0), prod_ptr)
-
-        dim_m1 = ctx.int32_ty(len(arg_out.type.pointee) - 1)
-        with pnlvm.helpers.for_loop(builder, dim_m1.type(1), dim_m1, dim_m1.type(1), id="suff_prod") as (b, idx):
-            #revert the index to go from the end
-            idx = b.sub(dim_m1, idx)
-
-            prod = b.load(prod_ptr)
-            val_ptr = b.gep(arg_in, [ctx.int32_ty(0), idx])
-            val = b.load(val_ptr)
-
-            # calculate suffix product of sin(input)
-            val_sin = b.call(sin_f, [val])
-            new_prod = b.fmul(prod, val_sin)
-            b.store(new_prod, prod_ptr)
-
-            # output value is suffix product * cos(val)
-            val_cos = b.call(cos_f, [val])
-            res = b.fmul(prod, val_cos)
-            res_ptr = b.gep(arg_out, [ctx.int32_ty(0), idx])
-            b.store(res, res_ptr)
-
-        # The last element is just the suffix product * 1
-        last_ptr = builder.gep(arg_out, [ctx.int32_ty(0), dim_m1])
-        builder.store(builder.load(prod_ptr), last_ptr)
-
-        return builder
-
-    # @handle_external_context()
-    # def derivative(self, input=None, output=None, context=None):
-    #     """
-    #     derivative(input)
-    #
-    #     Derivative of `function <Angle._function>` at **input**.
-    #
-    #     Arguments
-    #     ---------
-    #
-    #     input : number
-    #         value of the input to the Angle transform at which derivative is to be taken.
-    #
-    #     Returns
-    #     -------
-    #
-    #     Slope of function :  number or array
-    #
-    #     """
-    #
-    #     return self._get_current_parameter_value(SLOPE, context)
-    #
-    # def _is_identity(self, context=None):
-    #     return (
-    #         self.parameters.slope._get(context) == 1
-    #         and self.parameters.intercept._get(context) == 0
-    #     )
 
 
 # **********************************************************************************************************************
@@ -3615,6 +3377,259 @@ class SoftMax(TransferFunction):
                                    (entropy_weighting * len(x) *
                                     torch.log(-1 * torch.sum((1 / (1 + torch.exp(-1 * x)))
                                                              * torch.log(1 / (1 + torch.exp(-1 * x)))))))
+
+
+# **********************************************************************************************************************
+#                                                    Angle
+# **********************************************************************************************************************
+
+# FIX: VALIDATE LEN(VARIABLE)>=2
+
+class Angle(TransferFunction):  # -------------------------------------------------------------------------------------
+    """
+    Angle(                 \
+         default_variable, \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
+         )
+
+    .. _Angle_Function:
+
+    `function <angle._function>` returns Angle transform of vector in `variable <Angle.variable>`:
+
+    COMMENT:
+    FIX: WITH PROPER MATHEMATICAL DEFN
+    .. math::
+
+        slope * variable + intercept
+
+    `derivative <Angle.derivative>` returns `slope <Angle.slope>`.
+    COMMENT
+
+    Arguments
+    ---------
+
+    default_variable : 1array : default class_defaults.variable
+        specifies a template for the value to be transformed;  length must be at least 2.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : 1d array
+        contains value to be transformed.
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
+    """
+
+    componentName = ANGLE_FUNCTION
+
+    classPreferences = {
+        PREFERENCE_SET_NAME: 'AngleClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+    }
+
+    _model_spec_class_name_is_generic = True
+
+    class Parameters(TransferFunction.Parameters):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <Angle.variable>`
+
+                    :default value: numpy.array([0.,0,])
+                    :type: ``numpy.ndarray``
+                    :read only: True
+
+        """
+        variable = Parameter(np.array([1,1]),
+                             read_only=True,
+                             pnl_internal=True,
+                             constructor_argument='default_variable')
+
+        def _validate_variable(self, variable):
+            variable = np.squeeze(variable)
+            if variable.ndim != 1 or len(variable) < 2:
+                return f"must be list or 1d array of length 2 or greater."
+
+    @check_user_specified
+    @beartype
+    def __init__(self,
+                 default_variable=None,
+                 params=None,
+                 owner=None,
+                 prefs:  Optional[ValidPrefSet] = None):
+
+        super().__init__(
+            default_variable=default_variable,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
+
+    def _function(self,
+                 variable=None,
+                 context=None,
+                 params=None,
+                 ):
+        """
+
+        Arguments
+        ---------
+
+        variable : ndarray : default class_defaults.variable
+           an array of coordinates on a sphere to be transformed to n+1d angular coordinates;  must be at least 2d.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        Returns
+        -------
+
+        Angle transformation of variable : ndarray of variable.ndim+1
+
+        """
+        try:
+            # By default, result should be returned as np.ndarray with same dimensionality as input
+            result = self._angle(variable)
+        except TypeError:
+            if hasattr(variable, "dtype"):
+                # If variable is an array with mixed sizes or types, try item-by-item operation
+                if variable.dtype == object:
+                    result = np.zeros_like(variable)
+                    for i, item in enumerate(variable):
+                        result[i] = self._angle(variable[i])
+                else:
+                    raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
+            # KAM 6/28/18: If the variable does not have a "dtype" attr but made it to this line, then it must be of a
+            # type that even np does not recognize -- typically a custom OutputPort variable with items of different
+            # shapes (e.g. variable = [[0.0], [0.0], array([[0.0, 0.0]])] )
+            elif isinstance(variable, list):
+                result = []
+                for variable_item in variable:
+                    result.append(self._angle(variable_item))
+            else:
+                raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
+
+        return self.convert_output_type(result)
+
+    def _angle(self, value):
+        """Take nd value and return n+1d coordinates for angle on a sphere"""
+        value = np.squeeze(value)
+        dim = len(value) + 1
+        angle = np.zeros(dim)
+        sin_value = np.sin(value)
+        cos_value = np.cos(value)
+        angle[0] = cos_value[0]
+        prod_a = np.cumprod(np.flip(sin_value))[:-1]
+        angle[dim - 1] = prod_a[-1]
+        prod_a[-1] = 1.
+
+        # going down from the top of cumprod we skip: 2 edge values +1 extra for output size
+        for j in range(1, dim - 1):
+            angle[j] = prod_a[dim -3 -j] * cos_value[j]
+        return angle
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+        assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
+        assert isinstance(arg_out.type.pointee, pnlvm.ir.ArrayType)
+        assert len(arg_in.type.pointee) + 1 == len(arg_out.type.pointee)
+
+        # The first cos
+        res0_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        val0_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        val0 = builder.load(val0_ptr)
+        cos_f = ctx.get_builtin("cos", [val0.type])
+        cos_val0 = builder.call(cos_f, [val0])
+        builder.store(cos_val0, res0_ptr)
+
+        # calculate suffix product
+        sin_f = ctx.get_builtin("sin", [val0.type])
+        prod_ptr = builder.alloca(val0.type)
+        builder.store(prod_ptr.type.pointee(1.0), prod_ptr)
+
+        dim_m1 = ctx.int32_ty(len(arg_out.type.pointee) - 1)
+        with pnlvm.helpers.for_loop(builder, dim_m1.type(1), dim_m1, dim_m1.type(1), id="suff_prod") as (b, idx):
+            #revert the index to go from the end
+            idx = b.sub(dim_m1, idx)
+
+            prod = b.load(prod_ptr)
+            val_ptr = b.gep(arg_in, [ctx.int32_ty(0), idx])
+            val = b.load(val_ptr)
+
+            # calculate suffix product of sin(input)
+            val_sin = b.call(sin_f, [val])
+            new_prod = b.fmul(prod, val_sin)
+            b.store(new_prod, prod_ptr)
+
+            # output value is suffix product * cos(val)
+            val_cos = b.call(cos_f, [val])
+            res = b.fmul(prod, val_cos)
+            res_ptr = b.gep(arg_out, [ctx.int32_ty(0), idx])
+            b.store(res, res_ptr)
+
+        # The last element is just the suffix product * 1
+        last_ptr = builder.gep(arg_out, [ctx.int32_ty(0), dim_m1])
+        builder.store(builder.load(prod_ptr), last_ptr)
+
+        return builder
+
+    # @handle_external_context()
+    # def derivative(self, input=None, output=None, context=None):
+    #     """
+    #     derivative(input)
+    #
+    #     Derivative of `function <Angle._function>` at **input**.
+    #
+    #     Arguments
+    #     ---------
+    #
+    #     input : number
+    #         value of the input to the Angle transform at which derivative is to be taken.
+    #
+    #     Returns
+    #     -------
+    #
+    #     Slope of function :  number or array
+    #
+    #     """
+    #
+    #     return self._get_current_parameter_value(SLOPE, context)
+    #
+    # def _is_identity(self, context=None):
+    #     return (
+    #         self.parameters.slope._get(context) == 1
+    #         and self.parameters.intercept._get(context) == 0
+    #     )
 
 
 # **********************************************************************************************************************
