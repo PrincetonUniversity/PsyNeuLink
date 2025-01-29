@@ -1413,13 +1413,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     def _get_state_ids(self):
         return [sp.name for sp in self._get_compilation_state()]
 
-    @property
+    @functools.cached_property
     def llvm_state_ids(self):
-        ids = getattr(self, "_state_ids", None)
-        if ids is None:
-            ids = self._get_state_ids()
-            setattr(self, "_state_ids", ids)
-        return ids
+        return self._get_state_ids()
 
     def _get_state_initializer(self, context):
         def _convert(p):
@@ -1569,13 +1565,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     def _get_param_ids(self):
         return [p.name for p in self._get_compilation_params()]
 
-    @property
+    @functools.cached_property
     def llvm_param_ids(self):
-        ids = getattr(self, "_param_ids", None)
-        if ids is None:
-            ids = self._get_param_ids()
-            setattr(self, "_param_ids", ids)
-        return ids
+        return self._get_param_ids()
 
     def _is_param_modulated(self, p):
         try:

@@ -197,9 +197,9 @@ class TransferFunction(Function_Base):
         lower_bound = min(output_for_fct_lower_bound, output_for_fct_upper_bound)
         upper_bound = max(output_for_fct_lower_bound, output_for_fct_upper_bound)
 
-        self.parameters.bounds.default_value = (lower_bound, upper_bound)
-        # self.parameters.bounds.set(None, (lower_bound, upper_bound))
-        self.bounds = (lower_bound, upper_bound)
+        # self.parameters.bounds.default_value = (lower_bound, upper_bound)
+        self.parameters.bounds.set((lower_bound, upper_bound), None)
+        # self.bounds = (lower_bound, upper_bound)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
@@ -411,7 +411,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
         value added to each element of `variable <Linear.variable>` after applying the `slope <Linear.slope>`
         (if it is specified).
 
-    bounds : (0,1)
+    bounds : (None,None)
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -454,6 +454,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
         """
         slope = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         intercept = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        bounds = (None,None)
 
     @check_user_specified
     @beartype
@@ -1130,23 +1131,22 @@ class Logistic(TransferFunction):  # -------------------------------------------
         scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
         val = builder.load(ptri)
-        zero = ctx.float_ty(0)
 
         if "derivative_out" not in tags:
             val = builder.fadd(val, bias)             # variable + bias
             val = builder.fsub(val, x_0)              # variable + bias - x_0
             val = builder.fmul(val, gain)             # gain * (variable + bias - x_0)
-            val = builder.fsub(zero, val)             # -gain * (variable + bias - x_0)
+            val = builder.fneg(val)                   # -gain * (variable + bias - x_0)
             val = builder.call(exp_f, [val])          # e^(-gain * (variable + bias - x_0))
-            val = builder.fadd(ctx.float_ty(1), val)  # 1 + e^(-gain * (variable + bias - x_0))
-            val = builder.fdiv(ctx.float_ty(1), val)  # 1 / (1 + e^(-gain * (variable + bias - x_0)))
+            val = builder.fadd(val.type(1), val)      # 1 + e^(-gain * (variable + bias - x_0))
+            val = builder.fdiv(val.type(1), val)      # 1 / (1 + e^(-gain * (variable + bias - x_0)))
             val = builder.fmul(val, scale)            # scale * (1 / (1 + e^(-gain * (variable + bias - x_0)))
             val = builder.fadd(val, offset)           # scale * (1 / (1 + e^(-gain * (variable + bias - x_0))) + offset
 
         if "derivative" in tags or "derivative_out" in tags:
-            # f(x) = g * s * o * (1-o)
+            # f(x) = g * s * o * (1 - o)
             function_val = val
-            val = builder.fsub(ctx.float_ty(1), function_val)
+            val = builder.fsub(function_val.type(1), function_val)
             val = builder.fmul(function_val, val)
             val = builder.fmul(gain, val)
             val = builder.fmul(scale, val)
