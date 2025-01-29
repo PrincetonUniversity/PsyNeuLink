@@ -2060,8 +2060,8 @@ in order of their power, are:
 
 .. _Composition_Compilation_Modes:
 
-    * *True* -- try to use the one that yields the greatesst improvement, progressively reverting to less powerful
-      but more forgiving modes, in the order listed below, for each that fails;
+    * *True* -- try to use the one that yields the greatest improvement, progressively reverting to less powerful
+      but more forgiving modes, trying LLVMRun, _LLVMExec, and Python.
 
     * `ExecutionMode.LLVMRun` - compile and run multiple `TRIAL <TimeScale.TRIAL>`\\s; if successful,
       the compiled binary is semantically equivalent to the execution of the `run <Composition.run>` method
@@ -2088,7 +2088,7 @@ in order of their power, are:
          using it with a standard `Composition` is possible, but it will **not** have the expected effect of
          executing its `learn <Composition.learn>` method using PyTorch.
 
-    * `ExecutionMode.PTXrun` -- compile multiple `TRIAL <TimeScale.TRIAL>`\\s  for execution on GPU
+    * `ExecutionMode.PTXRun` -- compile multiple `TRIAL <TimeScale.TRIAL>`\\s  for execution on GPU
       (see `below <Composition_Compilation_PTX>` for additional details).
 
 .. _Composition_Compilation_PyTorch:
@@ -12055,30 +12055,27 @@ _
                     self._initialize_from_context(context, base_context, override=False)
                     context.composition = self
 
-            # Run compiled execution (if compiled execution was requested
+            # Try compiled execution (if compiled execution was requested)
             # NOTE: This should be as high up as possible,
             # but still after the context has been initialized
             if execution_mode & pnlvm.ExecutionMode.COMPILED:
-                is_simulation = (context is not None and
-                                 ContextFlags.SIMULATION_MODE in context.runmode)
-                # Try running in Exec mode first
-                if (execution_mode & pnlvm.ExecutionMode._Exec):
-                    # There's no mode to execute simulations.
+
+                is_simulation = (context is not None and ContextFlags.SIMULATION_MODE in context.runmode)
+
+                _comp_ex = pnlvm.CompExecution.get(self, context)
+
+                if execution_mode & pnlvm.ExecutionMode._Exec:
+                    # There's no mode to execute compiled simulations.
                     # Simulations are run as part of the controller node wrapper.
                     assert not is_simulation
-                    try:
-                        llvm_inputs = self._validate_execution_inputs(inputs)
-                        _comp_ex = pnlvm.CompExecution.get(self, context)
-                        if execution_mode & pnlvm.ExecutionMode.LLVM:
-                            _comp_ex.execute(llvm_inputs)
-                        else:
-                            assert False, "Unknown execution mode: {}".format(execution_mode)
 
-                        report(self,
-                               PROGRESS_REPORT,
-                               report_num=report_num,
-                               content='trial_end',
-                               context=context)
+                    try:
+                        assert execution_mode & pnlvm.ExecutionMode.LLVM, "Unsupported execution mode: {}".format(execution_mode)
+
+                        llvm_inputs = self._validate_execution_inputs(inputs)
+                        _comp_ex.execute(llvm_inputs)
+
+                        report(self, PROGRESS_REPORT, report_num=report_num, content='trial_end', context=context)
 
                         self._propagate_most_recent_context(context)
                         return _comp_ex.extract_node_output(self.output_CIM)
@@ -12087,27 +12084,18 @@ _
                         if not execution_mode & pnlvm.ExecutionMode._Fallback:
                             raise e from None
 
-                        warnings.warn("Failed to execute `{}': {}".format(self.name, str(e)))
+                        warnings.warn("Failed to compile wrapper for `{}' in `{}': {}".format(self.name, self.name, str(e)))
+                        execution_mode = pnlvm.ExecutionMode.Python
 
-                # Exec failed for some reason, we can still try node level execution_mode
-                # Filter out nested compositions. They are not executed in this mode
-                # Filter out controller if running simulation.
-                mechanisms = (n for n in self._all_nodes
-                              if isinstance(n, Mechanism) and
-                                 (n is not self.controller or not is_simulation))
+                elif execution_mode is pnlvm.ExecutionMode.LLVM:
 
-                assert execution_mode & pnlvm.ExecutionMode.LLVM
-                try:
-                    _comp_ex = pnlvm.CompExecution.get(self, context)
                     # Compile all mechanism wrappers
-                    for m in mechanisms:
-                        _comp_ex._set_bin_node(m)
-                except Exception as e:
-                    if not execution_mode & pnlvm.ExecutionMode._Fallback:
-                        raise e from None
+                    for m in self._all_nodes:
+                        if isinstance(m, Mechanism) and not (m is self.controller and is_simulation):
+                            _comp_ex._set_bin_node(m)
 
-                    warnings.warn("Failed to compile wrapper for `{}' in `{}': {}".format(m.name, self.name, str(e)))
-                    execution_mode = pnlvm.ExecutionMode.Python
+                else:
+                    assert False, "Unsupported execution mode: {}".format(execution_mode)
 
 
             # Generate first frame of animation without any active_items
