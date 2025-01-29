@@ -397,16 +397,17 @@ class Linear(DeterministicTransferFunction):  # --------------------------------
     .. math::
         scale * (slope * variable + intercept) + offset
 
-    Note that, whereas `scale <DeterministicTransferFunction.scale>` and `offset <DeterministicTransferFunction.offset>`
-    have effects similar to `slope <Linear.slope>` and `intercept <Linear.intercept>`, respectively, they are applied
-    after the `slope <Linear.slope>` and `intercept <Linear.intercept>` have been applied to `variable
-    <Linear.variable>` they are not identical, and can be thought of as "amplifying" and "displacing"
-    the function, respectively.
+    .. note::
+       Whereas `scale <DeterministicTransferFunction.scale>` and `offset <DeterministicTransferFunction.offset>`
+       have effects similar to `slope <Linear.slope>` and `intercept <Linear.intercept>`, they are applied after
+       those Parameters have been applied to `variable <Linear.variable>`, and thus are not identical; rather,
+       they can be thought of as "amplifying" and "displacing" the Linear function, respectively.
 
     .. note::
        The default values for `slope <Linear.slope>`, `intercept <Linear.intercept>`, `scale
        <DeterministicTransferFunction.scale>`, and `offset <DeterministicTransferFunction.offset>`
-       implement the *IDENTITY_FUNCTION*.
+       implement the *IDENTITY_FUNCTION*.  This may cause the Linear function to be replaced with the
+       `Identity` Function during some circumstances (e.g., `compilation <Composition_Compilation>`).
 
     `derivative <Exponential.derivative>` returns the derivative of the Linear Function:
 
