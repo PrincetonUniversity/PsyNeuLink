@@ -11432,7 +11432,7 @@ _
                     _comp_ex = pnlvm.CompExecution.get(self, context, additional_tags=comp_ex_tags)
                     if execution_mode & pnlvm.ExecutionMode.LLVM:
                         results += _comp_ex.run(inputs, num_trials, num_inputs_sets)
-                    elif execution_mode & pnlvm.ExecutionMode.PTX:
+                    elif execution_mode & pnlvm.ExecutionMode._PTX:
                         results += _comp_ex.cuda_run(inputs, num_trials, num_inputs_sets)
                     else:
                         assert False, "Unknown execution mode: {}".format(execution_mode)
