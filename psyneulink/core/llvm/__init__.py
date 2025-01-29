@@ -49,7 +49,7 @@ class ExecutionMode(enum.Flag):
     LLVM
       compile and run Composition `Nodes <Composition_Nodes>` and `Projections <Projection>` individually.
 
-    LLVMExec
+    _LLVMExec
       compile and run each `TRIAL <TimeScale.TRIAL>` individually.
 
     LLVMRun
@@ -84,7 +84,7 @@ class ExecutionMode(enum.Flag):
 
     Auto = _Fallback | _Run | _Exec | LLVM
     LLVMRun = LLVM | _Run
-    LLVMExec = LLVM | _Exec
+    _LLVMExec = LLVM | _Exec
     PTXRun = _PTX | _Run
     COMPILED = ~ (Python | PyTorch)
 

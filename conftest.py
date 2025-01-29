@@ -188,7 +188,7 @@ def llvm_current_fp_precision():
 def get_comp_execution_modes():
     return [pytest.param(pnlvm.ExecutionMode.Python),
             pytest.param(pnlvm.ExecutionMode.LLVM, marks=pytest.mark.llvm),
-            pytest.param(pnlvm.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
+            pytest.param(pnlvm.ExecutionMode._LLVMExec, marks=pytest.mark.llvm),
             pytest.param(pnlvm.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
             pytest.param(pnlvm.ExecutionMode.PTXRun, marks=[pytest.mark.llvm,  pytest.mark.cuda])
            ]

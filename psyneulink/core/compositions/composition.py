@@ -2067,14 +2067,15 @@ in order of their power, are:
       the compiled binary is semantically equivalent to the execution of the `run <Composition.run>` method
       using the Python interpreter;
 
-    * `ExecutionMode.LLVMExec` -- compile and run each `TRIAL <TimeScale.TRIAL>`, using the Python interpreter
+    * `ExecutionMode._LLVMExec` -- compile and run each `TRIAL <TimeScale.TRIAL>`, using the Python interpreter
       to iterate over them; if successful, the compiled binary for each `TRIAL <TimeScale.TRIAL>` is semantically
       equivalent the execution of the `execute <Composition.execute>` method using the Python interpreter;
+      This mode does not support Trial scope scheduling rules and should not be used outside of development or testing.
 
     * `ExecutionMode.LLVM` -- compile and run `Node <Composition_Nodes>` of the `Composition` and their `Projections
       <Projection>`, using the Python interpreter to call the Composition's `scheduler <Composition.scheduler>`,
       execute each Node and iterate over `TRIAL <TimeScale.TRIAL>`\\s; note that, in this mode, scheduling
-      `Conditions <Condition>` that rely on Node `Parameters` is not supported;
+      `Conditions <Condition>` that rely on Node `Parameters` are not supported;
 
     * `ExecutionMode.Python` (same as *False*; the default) -- use the Python interpreter to execute the `Composition`.
 
