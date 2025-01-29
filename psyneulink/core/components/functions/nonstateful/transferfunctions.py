@@ -127,7 +127,7 @@ def _bounds_setter_using_scale_and_offset(value, owning_component=None, context=
     output_for_fct_lower_bound = scale * lower_bound + offset
 
     # Deal with upper bound = None:
-    upper_bound = np.inf if default_bounds.bounds[1] is None else default_bounds[1]
+    upper_bound = np.inf if default_bounds[1] is None else default_bounds[1]
     output_for_fct_upper_bound = scale * upper_bound + offset
 
     # Need to do this since scale could be negative, reversing upper and lower bounds:
@@ -378,7 +378,7 @@ class Identity(DeterministicTransferFunction):  # ------------------------------
 #                                                    Linear
 # **********************************************************************************************************************
 
-class Linear(TransferFunction):  # -------------------------------------------------------------------------------------
+class Linear(DeterministicTransferFunction):  # -------------------------------------------------------------------------------------
     """
     Linear(                \
          default_variable, \
@@ -397,8 +397,14 @@ class Linear(TransferFunction):  # ---------------------------------------------
     .. math::
         scale * (slope * variable + intercept) + offset
 
+    Note that, whereas `scale <DeterministicTransferFunction.scale>` and `offset <DeterministicTransferFunction.offset>`
+    have effects similar to `slope <Linear.slope>` and `intercept <Linear.intercept>`, respectively, they are applied
+    after the `slope <Linear.slope>` and `intercept <Linear.intercept>` have been applied to `variable
+    <Linear.variable>` they are not identical, and can be thought of as "amplifying" and "displacing"
+    the function, respectively.
+
     .. note::
-       Note: default values for `slope <Linear.slope>`, `intercept <Linear.intercept>`, `scale
+       The default values for `slope <Linear.slope>`, `intercept <Linear.intercept>`, `scale
        <DeterministicTransferFunction.scale>`, and `offset <DeterministicTransferFunction.offset>`
        implement the *IDENTITY_FUNCTION*.
 
@@ -1004,7 +1010,7 @@ class Logistic(DeterministicTransferFunction):  # ------------------------------
     """
 
     componentName = LOGISTIC_FUNCTION
-    parameter_keywords.update({GAIN, BIAS, OFFSET})
+    # parameter_keywords.update({GAIN, BIAS})
     _model_spec_class_name_is_generic = True
 
     class Parameters(DeterministicTransferFunction.Parameters):
@@ -1302,7 +1308,7 @@ class Tanh(DeterministicTransferFunction):  # ----------------------------------
     """
 
     componentName = TANH_FUNCTION
-    parameter_keywords.update({GAIN, BIAS, OFFSET})
+    # parameter_keywords.update({GAIN, BIAS, OFFSET})
 
     class Parameters(DeterministicTransferFunction.Parameters):
         """
@@ -1578,7 +1584,7 @@ class ReLU(DeterministicTransferFunction):  # ----------------------------------
     """
 
     componentName = RELU_FUNCTION
-    parameter_keywords.update({GAIN, BIAS, LEAK})
+    # parameter_keywords.update({GAIN, BIAS, LEAK})
 
     class Parameters(DeterministicTransferFunction.Parameters):
         """
