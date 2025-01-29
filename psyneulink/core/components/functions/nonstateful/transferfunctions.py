@@ -32,16 +32,17 @@
 Overview
 --------
 
-Functions that transform their variable but maintain its shape.
+TransferFunctions transform their variable but maintain its shape.  There are two subclasses of TransferFunctions --
+`Deterministic <Deterministic>` and `Probabilistic <Probabilistic> -- that have specialized attributes and/or methods.
 
 .. _TransferFunction_StandardAttributes:
 
 Standard Attributes
 ~~~~~~~~~~~~~~~~~~~
 
-All TransferFunctions have the following attributes: `bounds <TransferFunction.bounds>`,
-`scale <TransferFunction.scale>`, and `offset <TransferFunction.offset>`. In addition, they have a standardized pair of
-modulable parameters that are aliased to one of their primary parameters:
+All TransferFunctions have a `bounds <TransferFunction.bounds>` attribute that specifies the lower and upper limits
+of the function's result.  For some subclasses, this may be modified by other parameters.  In addition, all
+TransferFunctions have a pair of modulable parameters as described below.
 
 .. _TransferFunction_Modulable_Params:
 
@@ -197,9 +198,15 @@ class TransferFunction(Function_Base):
         lower_bound = min(output_for_fct_lower_bound, output_for_fct_upper_bound)
         upper_bound = max(output_for_fct_lower_bound, output_for_fct_upper_bound)
 
+        # # MODIFIED 1/29/25 OLD:
+        # self.parameters.bounds.default_value = (lower_bound, upper_bound)
+        # # self.parameters.bounds.set((lower_bound, upper_bound), None)
+        # self.bounds = (lower_bound, upper_bound)
+        # MODIFIED 1/29/25 NEW:
         # self.parameters.bounds.default_value = (lower_bound, upper_bound)
         self.parameters.bounds.set((lower_bound, upper_bound), None)
         # self.bounds = (lower_bound, upper_bound)
+        # MODIFIED 1/29/25 END
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
@@ -220,6 +227,19 @@ class TransferFunction(Function_Base):
                                         params=params, state=state, tags=tags)
 
         return builder
+
+class DeterministicTransferFunction(TransferFunction):
+    """Subclass of TransferFunction that computes a deterministic function.
+
+    In addition to the `standard attributes <TransferFunction_StandardAttributes>` of a TransferFunction,
+    all DeterministicTransferFunctions have a `scale <DeterministicTransferFunction.scale>` and `offset
+    <DeterministicTransferFunction.offset>` Parameter.
+
+    Attributes
+    ----------
+    XXX
+
+    """
 
 
 # **********************************************************************************************************************
@@ -4330,10 +4350,12 @@ class TransferWithCosts(TransferFunction):
         # Compute current intensity
         intensity = self.parameters.transfer_fct._get(context)(variable, context=context)
 
-        # Apply scale and offset to current intensity (which is value returned by function)
-        scale = self.parameters.scale._get(context)
-        offset = self.parameters.offset._get(context)
-        intensity = scale * intensity + offset
+        # # MODIFIED 1/29/25 OLD:
+        # # Apply scale and offset to current intensity (which is value returned by function)
+        # scale = self.parameters.scale._get(context)
+        # offset = self.parameters.offset._get(context)
+        # intensity = scale * intensity + offset
+        # MODIFIED 1/29/25 END
 
         # THEN, DEAL WITH COSTS
         # Note: only compute costs that are enabled;  others are left as None, or with their value when last enabled.
@@ -4393,12 +4415,16 @@ class TransferWithCosts(TransferFunction):
         else:
             enabled_cost_functions = self.parameters.enabled_cost_functions.get(context)
 
-        return (
-            transfer_fct._is_identity(context, defaults=defaults)
-            and self.parameters.scale.get(context) == 1.0
-            and self.parameters.offset.get(context) == 0.0
-            and enabled_cost_functions == CostFunctions.NONE
-        )
+        # MODIFIED 1/29/25 OLD:
+        return transfer_fct._is_identity(context, defaults=defaults) and enabled_cost_functions == CostFunctions.NONE
+        # MODIFIED 1/29/25 NEW:
+        # return (
+        #     transfer_fct._is_identity(context, defaults=defaults)
+        #     and self.parameters.scale.get(context) == 1.0
+        #     and self.parameters.offset.get(context) == 0.0
+        #     and enabled_cost_functions == CostFunctions.NONE
+        # )
+        # MODIFIED 1/29/25 END
 
     @beartype
     def assign_costs(self, cost_functions: Union[CostFunctions, list], execution_context=None):
@@ -4524,6 +4550,7 @@ class TransferWithCosts(TransferFunction):
         trans_out = arg_out
         builder.call(trans_f, [trans_p, trans_s, trans_in, trans_out])
 
+        # MODIFIED 1/29/25 NEW:
         # apply scale and offset
         scale_ptr = ctx.get_param_or_state_ptr(builder, self, SCALE, param_struct_ptr=params)
         offset_ptr = ctx.get_param_or_state_ptr(builder, self, OFFSET, param_struct_ptr=params)
@@ -4533,6 +4560,7 @@ class TransferWithCosts(TransferFunction):
         # trans_out = builder.fmul(trans_out, scale)
         # trans_out = builder.fadd(trans_out, offset)
         # builder.store(builder.load(trans_out), trans_out)
+        # MODIFIED 1/29/25 END
 
         intensity_ptr = ctx.get_state_space(builder, self, state, self.parameters.intensity)
 
