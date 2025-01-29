@@ -101,10 +101,9 @@ def test_simplified_greedy_agent_random(benchmark, comp_mode):
 @pytest.mark.parametrize('prng', ['Default', 'Philox'])
 @pytest.mark.parametrize('fp_type', [pnl.core.llvm.ir.DoubleType, pnl.core.llvm.ir.FloatType])
 def test_predator_prey(benchmark, mode, ocm_mode, prng, samples, fp_type):
-    if len(samples) > 10 and mode not in {pnl.ExecutionMode.LLVM,
-                                          pnl.ExecutionMode.LLVMExec,
-                                          pnl.ExecutionMode.LLVMRun} and \
-       ocm_mode not in {'LLVM', 'PTX'}:
+
+    # Skip large test instances that are not CPU compiled, or executed in parallel.
+    if len(samples) > 10 and not (mode & pnl.ExecutionMode.LLVM) and ocm_mode not in {'LLVM', 'PTX'}:
         pytest.skip("This test takes too long")
 
     # Instantiate LLVMBuilderContext using the preferred fp type
