@@ -1871,6 +1871,18 @@ class Gaussian(TransferFunction):  # -------------------------------------------
                     :default value: 0.0
                     :type: ``float``
 
+                offset
+                    see `offset <Gaussian.offset>`
+
+                    :default value: 0.0
+                    :type: ``float``
+
+                scale
+                    see `scale <Gaussian.scale>`
+
+                    :default value: 1.0
+                    :type: ``float``
+
                 standard_deviation
                     see `standard_deviation <Gaussian.standard_deviation>`
 
@@ -1879,6 +1891,8 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         """
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        scale = Parameter(1.0, modulable=True)
+        offset = Parameter(0.0, modulable=True)
         bounds = (None, None)
 
     @check_user_specified
@@ -2123,11 +2137,23 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
                     :default value: 0.0
                     :type: ``float``
 
+                offset
+                    see `offset <GaussianDistort.offset>`
+
+                    :default value: 0.0
+                    :type: ``float``
+
                 random_state
                     see `random_state <GaussianDistort.random_state>`
 
                     :default value: None
                     :type: ``numpy.random.RandomState``
+
+                scale
+                    see `scale <GaussianDistort.scale>`
+
+                    :default value: 1.0
+                    :type: ``float``
 
                 variance
                     see `variance <GaussianDistort.variance>`
@@ -2137,6 +2163,8 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         """
         variance = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        scale = Parameter(1.0, modulable=True)
+        offset = Parameter(0.0, modulable=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
         bounds = (None, None)
