@@ -17,9 +17,9 @@
     * `Logistic`
     * `Tanh`
     * `ReLU`
+    * `Gaussian`
 
 **Probabilistic**
-    * `Gaussian`
     * `GaussianDistort`
     * `BinomialDistort`
     * `Dropout`
@@ -197,6 +197,16 @@ class DeterministicTransferFunction(TransferFunction):
     all DeterministicTransferFunctions have a `scale <DeterministicTransferFunction.scale>` and `offset
     <DeterministicTransferFunction.offset>` Parameter, that are used to determine the `bounds <TransferFunction.bounds>`
 
+    Arguments
+    ---------
+
+    scale : float : default 1.0
+      specifies the value by which the result of the function is multiplied, before `offset
+      <TransferFunction.offset>` is added.
+
+    offset : float : default 0.0
+      specifies the value added to the result of the function after `scale <TransferFunction.scale>` has been applied.
+
     Attributes
     ----------
 
@@ -207,10 +217,11 @@ class DeterministicTransferFunction(TransferFunction):
       result(lower, upper) is given by the default values of the `bounds <TransferFunction.bounds>` attribute.
 
     scale : float
-      the value by which the result of the function is multiplied, before `offset <TransferFunction.offset>` is added.
+      determines the value by which the result of the function is multiplied, before `offset
+      <TransferFunction.offset>` is added.
 
     offset : float
-      the value added to the result of the function after `scale <TransferFunction.scale>` has been applied.
+      determines the value added to the result of the function after `scale <TransferFunction.scale>` has been applied.
 
     """
     componentType = DETERMINISTIC_TRANSFER_FUNCTION_TYPE
@@ -250,7 +261,10 @@ class DeterministicTransferFunction(TransferFunction):
                  offset: Optional[ValidParamSpecType] = None,
                  scale: Optional[ValidParamSpecType] = None,
                  **kwargs):
-        super().__init__(**kwargs)
+
+        super().__init__(offset=offset,
+                         scale=scale,
+                         **kwargs)
 
 
 # **********************************************************************************************************************
@@ -1761,14 +1775,12 @@ class ReLU(DeterministicTransferFunction):  # ----------------------------------
 #                                                    Gaussian
 # **********************************************************************************************************************
 
-class Gaussian(TransferFunction):  # -----------------------------------------------------------------------------------
+class Gaussian(DeterministicTransferFunction):  # ----------------------------------------------------------------------
     """
     Gaussian(                    \
          default_variable,       \
          standard_deviation=1.0, \
          bias=0.0,               \
-         scale=1.0,              \
-         offset=0.0,             \
          params=None,            \
          owner=None,             \
          name=None,              \
@@ -1806,12 +1818,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
     bias : float : default 0.0
         value to add to each element of `variable <Gaussian.variable>` before applying Gaussian transform.
 
-    offset : float : default 0.0
-        value to add to each element after applying Gaussian transform and `scale <Gaussian.scale>`.
-
-    scale : float : default 1.0
-        value by which to multiply each element after applying Gaussian transform.
-
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -1837,12 +1843,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
 
     bias : float : default 0.0
         value added to each element of `variable <Gaussian.variable>` before applying the Gaussian transform.
-
-    scale : float : default 0.0
-        value by which each element is multiplied after applying the Gaussian transform.
-
-    offset : float : default 0.0
-        value added to each element after applying the Gaussian transform and scale.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -1871,18 +1871,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
                     :default value: 0.0
                     :type: ``float``
 
-                offset
-                    see `offset <Gaussian.offset>`
-
-                    :default value: 0.0
-                    :type: ``float``
-
-                scale
-                    see `scale <Gaussian.scale>`
-
-                    :default value: 1.0
-                    :type: ``float``
-
                 standard_deviation
                     see `standard_deviation <Gaussian.standard_deviation>`
 
@@ -1891,8 +1879,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         """
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        scale = Parameter(1.0, modulable=True)
-        offset = Parameter(0.0, modulable=True)
         bounds = (None, None)
 
     @check_user_specified
@@ -1901,8 +1887,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
                  default_variable=None,
                  standard_deviation: Optional[ValidParamSpecType] = None,
                  bias: Optional[ValidParamSpecType] = None,
-                 scale: Optional[ValidParamSpecType] = None,
-                 offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
@@ -1910,8 +1894,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
             default_variable=default_variable,
             standard_deviation=standard_deviation,
             bias=bias,
-            scale=scale,
-            offset=offset,
             params=params,
             owner=owner,
             prefs=prefs,
