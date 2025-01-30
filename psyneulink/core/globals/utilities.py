@@ -125,6 +125,12 @@ from itertools import chain, combinations
 import numpy as np
 from numpy.typing import DTypeLike
 
+try:
+    from numpy import exceptions as np_exceptions
+except ImportError:
+    # Numpy exceptions is only available in Numpy 1.25+
+    np_exceptions = np
+
 # Conditionally import torch
 try:
     import torch
@@ -1644,13 +1650,15 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
         subarr = [recurse(x) for x in arr]
 
         with warnings.catch_warnings():
-            warnings.filterwarnings('error', message='.*ragged.*', category=np.VisibleDeprecationWarning)
+            warnings.filterwarnings('error', message='.*ragged.*', category=np_exceptions.VisibleDeprecationWarning)
             try:
                 # the elements are all uniform in shape, so we can use numpy's standard behavior
                 return np.asarray(subarr)
-            except np.VisibleDeprecationWarning:
+            except np_exceptions.VisibleDeprecationWarning:
                 pass
             except ValueError as e:
+                # Numpy 1.24+ switch jagged array from warning to ValueError.
+                # Note that the below call can still raise other ValueErrors.
                 if 'The requested array has an inhomogeneous shape' not in str(e):
                     raise
 
@@ -2385,18 +2393,15 @@ def safe_create_np_array(value):
         if torch and torch.is_tensor(value):
             return value
 
-        warnings.filterwarnings('error', category=np.VisibleDeprecationWarning)
-        # NOTE: this will raise a ValueError in the future.
-        # See https://numpy.org/neps/nep-0034-infer-dtype-is-object.html
+        warnings.filterwarnings('error', category=np_exceptions.VisibleDeprecationWarning)
         try:
             try:
                 return np.asarray(value)
-            except np.VisibleDeprecationWarning:
+            except np_exceptions.VisibleDeprecationWarning:
                 return np.asarray(value, dtype=object)
             except ValueError as e:
-                # numpy 1.24 removed the above deprecation and raises
-                # ValueError instead. Note that the below call can still
-                # raise other ValueErrors
+                # Numpy 1.24+ switch jagged array from warning to ValueError.
+                # Note that the below call can still raise other ValueErrors.
                 if 'The requested array has an inhomogeneous shape' in str(e):
                     return np.asarray(value, dtype=object)
                 raise
