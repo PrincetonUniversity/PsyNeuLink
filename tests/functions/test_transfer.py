@@ -30,7 +30,7 @@ gaussian_helper = np.e**(-(test_var - RAND2)**2 / (2 * RAND1**2)) / np.sqrt(2 * 
 gaussian_helper = RAND3 * gaussian_helper + RAND4
 
 relu_helper = np.maximum(RAND1 * (test_var - RAND2), RAND3 * RAND1 *(test_var - RAND2))
-logistic_helper = RAND4 / (1 + np.exp(-(RAND1 * (test_var - RAND2)) + RAND3))
+logistic_helper = RAND4 / (1 + np.exp(-(RAND1 * (test_var - RAND2)))) + RAND3
 
 def gaussian_distort_helper(seed):
     state = np.random.RandomState([seed])

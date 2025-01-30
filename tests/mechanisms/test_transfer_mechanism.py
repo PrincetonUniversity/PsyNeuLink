@@ -191,7 +191,7 @@ class TestTransferMechanismNoise:
         T.reset_stateful_function_when = Never()
         val = T.execute([0, 0, 0, 0])
         expected = [[-1.56404341, -3.01320403, -1.22503678, 1.3093712]]
-        np.testing.assert_allclose(np.asfarray(val), expected)
+        np.testing.assert_allclose(val, expected)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -1714,6 +1714,38 @@ class TestClip:
 
         np.testing.assert_allclose(EX([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
                            [[-2.0, -1.0, 2.0], [2.0, -2.0, 1.0], [1.0, 2.0, 2.0]])
+
+    test_params = [
+        # test_for           clip       scale offset input   expected     warning_msg
+        ["no clip",          None,        2,     1,   1.5,  2.63514895,   None],
+        ["ok clip",        (1.0, 3.0),    2,     1,   1.5,  2.63514895,   None],
+        ["clip lower",     (1.0, 3.0),    2,    -1,   1.5,  1.0,          None],
+        ["clip upper",     (1.0, 3.0),    2,     2,   1.5,  3.0,          None],
+        ["warning lower",   (-1.0, 2.0),  2,     0,   1.5,  1.63514895,  ("The lower value of clip for 'MECH' (-1.0) "
+                                                                           "is below its function's lower bound (0), "
+                                                                           "so it will not have an effect.")],
+        ["warning upper",  (-1.0, 3.0),   2,    -1,   1.5,  0.63514895, ("The upper value of clip for 'MECH' (3.0) "
+                                                                          "is above its function's upper bound (1), "
+                                                                          "so it will not have an effect.")],
+        ["warning both",  (1.0, 5.0),     2,     2,   1.5,  3.63514895,  ("The lower value of clip for 'MECH' (1.0) "
+                                                                           "is below its function's lower bound (2) "
+                                                                           "and its upper value (5.0) is above the "
+                                                                           "function's upper bound (4), so clip will "
+                                                                           "not have an effect.")],
+        ]
+    arg_names = "test_for, clip, scale, offset, input, expected, warning"
+
+    @pytest.mark.parametrize(arg_names, test_params, ids=[x[0] for x in test_params])
+    def test_clip_with_respect_to_fct_bounds(self, test_for, clip, scale, offset, input, expected, warning):
+        """Test for clip that falls outside range of function"""
+        if warning:
+            with pytest.warns(UserWarning) as warnings:
+                mech = TransferMechanism(name='MECH', clip=clip, function=Logistic(scale=scale, offset=offset))
+                assert warning in str(warnings.list[0].message)
+        else:
+            mech = TransferMechanism(clip=clip, function=Logistic(scale=scale, offset=offset))
+        assert mech.clip == clip
+        np.testing.assert_allclose(mech.execute(input), expected)
 
 
 class TestOutputPorts:

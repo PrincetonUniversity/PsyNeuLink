@@ -29,7 +29,7 @@ class TestReset:
         #  returns previous_value + rate * variable * time_step_size  + noise
         #  0.0 + 1.0 * 1.0 * 1.0 + 0.0
         D.execute(1.0)
-        np.testing.assert_allclose(np.asfarray(D.value),  [[1.0], [1.0]])
+        np.testing.assert_array_equal(D.value,  [[1.0], [1.0]])
         np.testing.assert_allclose(D.output_ports[0].value[0], 1.0)
         np.testing.assert_allclose(D.output_ports[1].value[0], 1.0)
 
@@ -38,7 +38,7 @@ class TestReset:
         np.testing.assert_allclose(D.function.value[0], 2.0)
         np.testing.assert_allclose(D.function.parameters.previous_value.get(), 2.0)
         np.testing.assert_allclose(D.function.previous_time, 0.1)
-        np.testing.assert_allclose(np.asfarray(D.value),  [[1.0], [1.0]])
+        np.testing.assert_array_equal(D.value,  [[1.0], [1.0]])
         np.testing.assert_allclose(D.output_ports[0].value[0], 1.0)
         np.testing.assert_allclose(D.output_ports[1].value[0], 1.0)
 
@@ -47,7 +47,7 @@ class TestReset:
         np.testing.assert_allclose(D.function.value[0], 0.0)
         np.testing.assert_allclose(D.function.parameters.previous_value.get(), 0.0)
         np.testing.assert_allclose(D.function.previous_time, 0.0)
-        np.testing.assert_allclose(np.asfarray(D.value), [[1.0], [1.0]])
+        np.testing.assert_array_equal(D.value, [[1.0], [1.0]])
         np.testing.assert_allclose(D.output_ports[0].value[0], 1.0)
         np.testing.assert_allclose(D.output_ports[1].value[0], 1.0)
 
@@ -56,13 +56,13 @@ class TestReset:
         np.testing.assert_allclose(D.function.value[0], 2.0)
         np.testing.assert_allclose(D.function.parameters.previous_value.get(), 2.0)
         np.testing.assert_allclose(D.function.previous_time, 0.1)
-        np.testing.assert_allclose(np.asfarray(D.value), [[2.0], [0.1]])
+        np.testing.assert_array_equal(D.value, [[2.0], [0.1]])
         np.testing.assert_allclose(D.output_ports[0].value, 2.0)
         np.testing.assert_allclose(D.output_ports[1].value, 0.1)
 
         D.execute(1.0)
         #  2.0 + 1.0 = 3.0 ; 0.1 + 1.0 = 1.1
-        np.testing.assert_allclose(np.asfarray(D.value), [[3.0], [1.1]])
+        np.testing.assert_array_equal(D.value, [[3.0], [1.1]])
         np.testing.assert_allclose(D.output_ports[0].value[0], 3.0)
         np.testing.assert_allclose(D.output_ports[1].value[0], 1.1)
 
@@ -639,10 +639,7 @@ def test_DDM_in_composition(benchmark, comp_mode):
     inputs = {M: [10]}
     val = benchmark(C.run, inputs, num_trials=2, execution_mode=comp_mode)
 
-    # FIXME: Python version returns dtype=object
-    val = np.asfarray(val)
-    np.testing.assert_allclose(val[0], [2.0])
-    np.testing.assert_allclose(val[1], [0.2])
+    np.testing.assert_allclose(val, [[2.0], [0.2]])
 
 
 @pytest.mark.composition
@@ -812,8 +809,8 @@ def test_DDMMechanism_LCA_equivalent(comp_mode):
     ddm = DDM(default_variable=[0],
               function=DriftDiffusionIntegrator(rate=1, time_step_size=0.1),
               execute_until_finished=False)
-    comp2 = Composition()
-    comp2.add_node(ddm)
-    result2 = comp2.run(inputs={ddm:[1]}, execution_mode=comp_mode)
-    np.testing.assert_allclose(np.asfarray(result2[0]), [0.1])
-    np.testing.assert_allclose(np.asfarray(result2[1]), [0.1])
+    comp = Composition()
+    comp.add_node(ddm)
+    result = comp.run(inputs={ddm:[1]}, execution_mode=comp_mode)
+
+    np.testing.assert_allclose(result, [[0.1], [0.1]])

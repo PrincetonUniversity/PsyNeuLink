@@ -29,6 +29,11 @@ Functions that integrate current value of input with previous value.
 import warnings
 
 import numpy as np
+from math import e
+try:
+    import torch
+except ImportError:
+    torch = None
 from beartype import beartype
 
 from psyneulink._typing import Callable, Mapping, Optional, Union
@@ -36,21 +41,19 @@ from psyneulink._typing import Callable, Mapping, Optional, Union
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import DistributionFunction, NormalDist
-from psyneulink.core.components.functions.function import (
-    DEFAULT_SEED, FunctionError, _random_state_getter,
-    _seed_setter, _noise_setter
-)
+from psyneulink.core.components.functions.function import (DEFAULT_SEED, FunctionError, _random_state_getter,
+                                                           _seed_setter, _noise_setter)
 from psyneulink.core.components.functions.stateful.statefulfunction import StatefulFunction
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ADDITIVE_PARAM, \
-    DECAY, DEFAULT_VARIABLE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DRIFT_ON_A_SPHERE_INTEGRATOR_FUNCTION, \
-    DUAL_ADAPTIVE_INTEGRATOR_FUNCTION, FITZHUGHNAGUMO_INTEGRATOR_FUNCTION, FUNCTION, \
-    INCREMENT, INITIALIZER, INPUT_PORTS, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, \
-    INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LEAKY_COMPETING_INTEGRATOR_FUNCTION, \
-    MULTIPLICATIVE_PARAM, NOISE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_PORTS, PRODUCT, \
-    RATE, REST, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE, THRESHOLD, VARIABLE, MODEL_SPEC_ID_MDF_VARIABLE, \
-    PREVIOUS_VALUE
+    (ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ADDITIVE_PARAM,
+     DECAY, DEFAULT_VARIABLE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DRIFT_ON_A_SPHERE_INTEGRATOR_FUNCTION,
+     DUAL_ADAPTIVE_INTEGRATOR_FUNCTION, FITZHUGHNAGUMO_INTEGRATOR_FUNCTION, FUNCTION,
+     INCREMENT, INITIALIZER, INPUT_PORTS, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE,
+     INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LEAKY_COMPETING_INTEGRATOR_FUNCTION,
+     MODEL_SPEC_ID_MDF_VARIABLE, MULTIPLICATIVE_PARAM, NOISE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION,
+     OUTPUT_PORTS, PREVIOUS_VALUE, PRODUCT,  RATE, REST, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE,
+     THRESHOLD, VARIABLE)
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import ValidParamSpecType, all_within_range, is_numeric_scalar, \
@@ -58,8 +61,8 @@ from psyneulink.core.globals.utilities import ValidParamSpecType, all_within_ran
 
 __all__ = ['SimpleIntegrator', 'AdaptiveIntegrator', 'DriftDiffusionIntegrator', 'DriftOnASphereIntegrator',
            'OrnsteinUhlenbeckIntegrator', 'FitzHughNagumoIntegrator', 'AccumulatorIntegrator',
-           'LeakyCompetingIntegrator', 'DualAdaptiveIntegrator', 'InteractiveActivationIntegrator',
-           'S_MINUS_L', 'L_MINUS_S', 'IntegratorFunction'
+           'LeakyCompetingIntegrator', 'DualAdaptiveIntegrator',
+           'InteractiveActivationIntegrator', 'S_MINUS_L', 'L_MINUS_S', 'IntegratorFunction'
            ]
 
 
@@ -400,10 +403,6 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         return pnlvm.helpers.load_extract_scalar_array_one(builder, value_p)
 
 
-
-# *********************************************** INTEGRATOR FUNCTIONS *************************************************
-
-
 class AccumulatorIntegrator(IntegratorFunction):  # --------------------------------------------------------------------
     """
     AccumulatorIntegrator(              \
@@ -420,7 +419,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
     .. _AccumulatorIntegrator:
 
     Accumulates at a constant rate, that is either linear or exponential, depending on `rate
-    <AccumulatorIntegrator.rate>`.  `function <AccumulatorIntegrator._function>` ignores `variable
+    <AccumulatorIntegrator.rate>`;  `function <AccumulatorIntegrator._function>` ignores `variable
     <AccumulatorIntegrator.variable>` and returns:
 
     .. math::
@@ -710,6 +709,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
 
     .. _SimpleIntegrator:
 
+    Acculuates at a rate determined by its `variable <SimpleIntegrator.variable>` and `rate <SimpleIntegrator.rate>`;
     `function <SimpleIntegrator._function>` returns:
 
     .. math::
@@ -1178,7 +1178,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         vi_ptr = builder.gep(vi, [ctx.int32_ty(0), index])
         vi_val = builder.load(vi_ptr)
 
-        rev_rate = builder.fsub(ctx.float_ty(1), rate)
+        rev_rate = builder.fsub(rate.type(1), rate)
         old_val = builder.fmul(prev_val, rev_rate)
         new_val = builder.fmul(vi_val, rate)
 
@@ -4938,26 +4938,26 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
 
         # Second approximation
         # v is approximately previous_value_v + 0.5 * time_step_size * slope_v_approx_1
-        input_v = builder.fmul(ctx.float_ty(0.5), time_step_size)
+        input_v = builder.fmul(time_step_size.type(0.5), time_step_size)
         input_v = builder.fmul(input_v, slope_v_approx_1)
         input_v = builder.fadd(input_v, previous_v)
         slope_v_approx_2 = self.__gen_llvm_dv_dt(builder, ctx, var, input_v, previous_w, param_vals)
 
         # w is approximately previous_value_w + 0.5 * time_step_size * slope_w_approx_1
-        input_w = builder.fmul(ctx.float_ty(0.5), time_step_size)
+        input_w = builder.fmul(time_step_size.type(0.5), time_step_size)
         input_w = builder.fmul(input_w, slope_w_approx_1)
         input_w = builder.fadd(input_w, previous_w)
         slope_w_approx_2 = self.__gen_llvm_dw_dt(builder, ctx, input_w, previous_v, param_vals)
 
         # Third approximation
         # v is approximately previous_value_v + 0.5 * time_step_size * slope_v_approx_2
-        input_v = builder.fmul(ctx.float_ty(0.5), time_step_size)
+        input_v = builder.fmul(time_step_size.type(0.5), time_step_size)
         input_v = builder.fmul(input_v, slope_v_approx_2)
         input_v = builder.fadd(input_v, previous_v)
         slope_v_approx_3 = self.__gen_llvm_dv_dt(builder, ctx, var, input_v, previous_w, param_vals)
 
         # w is approximately previous_value_w + 0.5 * time_step_size * slope_w_approx_2
-        input_w = builder.fmul(ctx.float_ty(0.5), time_step_size)
+        input_w = builder.fmul(time_step_size.type(0.5), time_step_size)
         input_w = builder.fmul(input_w, slope_w_approx_2)
         input_w = builder.fadd(input_w, previous_w)
         slope_w_approx_3 = self.__gen_llvm_dw_dt(builder, ctx, input_w, previous_v, param_vals)
@@ -4973,12 +4973,12 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         input_w = builder.fadd(input_w, previous_w)
         slope_w_approx_4 = self.__gen_llvm_dw_dt(builder, ctx, input_w, previous_v, param_vals)
 
-        ts = builder.fdiv(time_step_size, ctx.float_ty(6.0))
+        ts = builder.fdiv(time_step_size, time_step_size.type(6.0))
         # new_v = previous_value_v \
         #    + (time_step_size/6) * (slope_v_approx_1
         #    + 2 * (slope_v_approx_2 + slope_v_approx_3) + slope_v_approx_4)
         new_v = builder.fadd(slope_v_approx_2, slope_v_approx_3)
-        new_v = builder.fmul(new_v, ctx.float_ty(2.0))
+        new_v = builder.fmul(new_v, new_v.type(2.0))
         new_v = builder.fadd(new_v, slope_v_approx_1)
         new_v = builder.fadd(new_v, slope_v_approx_4)
         new_v = builder.fmul(new_v, ts)
@@ -4989,7 +4989,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         #    + (time_step_size/6) * (slope_w_approx_1
         #    + 2 * (slope_w_approx_2 + slope_w_approx_3) + slope_w_approx_4)
         new_w = builder.fadd(slope_w_approx_2, slope_w_approx_3)
-        new_w = builder.fmul(new_w, ctx.float_ty(2.0))
+        new_w = builder.fmul(new_w, new_w.type(2.0))
         new_w = builder.fadd(new_w, slope_w_approx_1)
         new_w = builder.fadd(new_w, slope_w_approx_4)
         new_w = builder.fmul(new_w, ts)
@@ -5028,19 +5028,20 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         builder.store(new_w, out_w_ptr)
 
     def __gen_llvm_dv_dt(self, builder, ctx, var, v, previous_w, param_vals):
-        # val = (a_v*(v**3) + (1+threshold)*b_v*(v**2) + (-threshold)*c_v*v +
-        #       d_v + e_v*self.previous_w + f_v*variable)/time_constant_v
-        pow_f = ctx.get_builtin("pow", [ctx.float_ty])
+        # val = (a_v * (v ** 3) + (1 + threshold) * b_v * (v ** 2) + (-threshold) * c_v * v +
+        #        d_v + e_v * self.previous_w + f_v * variable) / time_constant_v
+        pow_f = ctx.get_builtin("pow", [v.type])
+        threshold = param_vals["threshold"]
 
-        v_3 = builder.call(pow_f, [v, ctx.float_ty(3.0)])
+        v_3 = builder.call(pow_f, [v, v.type(3.0)])
         tmp1 = builder.fmul(param_vals["a_v"], v_3)
 
-        thr_p1 = builder.fadd(ctx.float_ty(1.0), param_vals["threshold"])
+        thr_p1 = builder.fadd(threshold.type(1.0), threshold)
         tmp2 = builder.fmul(thr_p1, param_vals["b_v"])
-        v_2 = builder.call(pow_f, [v, ctx.float_ty(2.0)])
+        v_2 = builder.call(pow_f, [v, v.type(2.0)])
         tmp2 = builder.fmul(tmp2, v_2)
 
-        thr_neg = pnlvm.helpers.fneg(builder, param_vals["threshold"])
+        thr_neg = pnlvm.helpers.fneg(builder, threshold)
         tmp3 = builder.fmul(thr_neg, param_vals["c_v"])
         tmp3 = builder.fmul(tmp3, v)
 
@@ -5050,21 +5051,19 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
 
         tmp6 = builder.fmul(param_vals["f_v"], var)
 
-        sum = ctx.float_ty(-0.0)
-        sum = builder.fadd(sum, tmp1)
-        sum = builder.fadd(sum, tmp2)
-        sum = builder.fadd(sum, tmp3)
-        sum = builder.fadd(sum, tmp4)
-        sum = builder.fadd(sum, tmp5)
-        sum = builder.fadd(sum, tmp6)
+        val = builder.fadd(tmp1, tmp2)
+        val = builder.fadd(val, tmp3)
+        val = builder.fadd(val, tmp4)
+        val = builder.fadd(val, tmp5)
+        val = builder.fadd(val, tmp6)
 
-        res = builder.fdiv(sum, param_vals["time_constant_v"])
+        res = builder.fdiv(val, param_vals["time_constant_v"])
 
         return res
 
     def __gen_llvm_dw_dt(self, builder, ctx, w, previous_v, param_vals):
-        # val = (mode*a_w*self.previous_v + b_w*w + c_w +
-        #       (1-mode)*uncorrelated_activity)/time_constant_w
+        # val = (mode * a_w * self.previous_v + b_w * w + c_w +
+        #       (1 - mode) * uncorrelated_activity) / time_constant_w
 
         tmp1 = builder.fmul(param_vals["mode"], previous_v)
         tmp1 = builder.fmul(tmp1, param_vals["a_w"])
@@ -5073,16 +5072,15 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
 
         tmp3 = param_vals["c_w"]
 
-        mod_1 = builder.fsub(ctx.float_ty(1.0), param_vals["mode"])
+        mode = param_vals["mode"]
+        mod_1 = builder.fsub(mode.type(1.0), mode)
         tmp4 = builder.fmul(mod_1, param_vals["uncorrelated_activity"])
 
-        sum = ctx.float_ty(-0.0)
-        sum = builder.fadd(sum, tmp1)
-        sum = builder.fadd(sum, tmp2)
-        sum = builder.fadd(sum, tmp3)
-        sum = builder.fadd(sum, tmp4)
+        val = builder.fadd(tmp1, tmp2)
+        val = builder.fadd(val, tmp3)
+        val = builder.fadd(val, tmp4)
 
-        res = builder.fdiv(sum, param_vals["time_constant_w"])
+        res = builder.fdiv(val, param_vals["time_constant_w"])
         return res
 
     # TODO: remove with changes to previous_value/value as stated in

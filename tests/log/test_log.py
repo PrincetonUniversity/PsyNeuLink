@@ -1353,7 +1353,7 @@ class TestFullModels:
 
         middle_weights.log.print_entries()
 
-        # Test Programatic logging
+        # Test Programmatic logging
         hidden_layer_2.log.log_values(pnl.VALUE, comp)
         log_val = hidden_layer_2.log.nparray(header=False)
         expected_log_val = np.array(

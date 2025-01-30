@@ -401,6 +401,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
             prefs=prefs,
             **kwargs
         )
+        assert True
 
     def _parse_function_variable(self, variable, context=None):
         return self._kwta_scale(variable, context=context)

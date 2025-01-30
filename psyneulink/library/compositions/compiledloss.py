@@ -39,20 +39,20 @@ class MSELoss(Loss):
         builder = ctx.create_llvm_function(args, self, name, return_type=ctx.float_ty)
         value, dim, target = builder.function.args
 
-        sum = builder.alloca(ctx.float_ty)
-        builder.store(ctx.float_ty(-0.0), sum)
+        sum_ptr = builder.alloca(ctx.float_ty)
+        builder.store(sum_ptr.type.pointee(-0.0), sum_ptr)
 
         with pnlvm.helpers.for_loop_zero_inc(builder, dim, "mse_sum_loop") as (b1, index):
             value_ptr = b1.gep(value,[index])
             target_ptr = b1.gep(target,[index])
-            diff = b1.fsub(b1.load(value_ptr),b1.load(target_ptr))
-            diff = b1.fmul(diff,diff)
-            b1.store(b1.fadd(b1.load(sum),diff),sum)
+            diff = b1.fsub(b1.load(value_ptr), b1.load(target_ptr))
+            diff = b1.fmul(diff, diff)
+            b1.store(b1.fadd(b1.load(sum_ptr), diff), sum_ptr)
 
         # Average the values in sum by dimensionality
-        builder.store(builder.fdiv(builder.load(sum),builder.uitofp(dim, ctx.float_ty)), sum)
+        builder.store(builder.fdiv(builder.load(sum_ptr), builder.uitofp(dim, sum_ptr.type.pointee)), sum_ptr)
 
-        builder.ret(builder.load(sum))
+        builder.ret(builder.load(sum_ptr))
 
         return builder.function
 
@@ -101,19 +101,19 @@ class CROSS_ENTROPYLoss(Loss):
         builder = ctx.create_llvm_function(args, self, name, return_type=ctx.float_ty)
         value, dim, target = builder.function.args
 
-        sum = builder.alloca(ctx.float_ty)
-        builder.store(ctx.float_ty(-0.0), sum)
+        sum_ptr = builder.alloca(ctx.float_ty)
+        builder.store(sum_ptr.type.pointee(-0.0), sum_ptr)
 
         with pnlvm.helpers.for_loop_zero_inc(builder, dim, "cross_entropy_sum_loop") as (b1, index):
-            value_ptr = b1.gep(value,[index])
-            target_ptr = b1.gep(target,[index])
+            value_ptr = b1.gep(value, [index])
+            target_ptr = b1.gep(target, [index])
             target_val = b1.load(target_ptr)
-            log_f = ctx.get_builtin("log", [ctx.float_ty])
+            log_f = ctx.get_builtin("log", [target_val.type])
             log = b1.call(log_f, [target_val])
             diff = b1.fmul(b1.load(value_ptr), log)
-            b1.store(b1.fadd(b1.load(sum),diff),sum)
+            b1.store(b1.fadd(b1.load(sum_ptr), diff), sum_ptr)
 
-        builder.ret(builder.load(sum))
+        builder.ret(builder.load(sum_ptr))
 
         return builder.function
 

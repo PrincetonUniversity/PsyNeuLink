@@ -1,4 +1,5 @@
 import psyneulink as pnl
+import pytest
 
 import optuna
 
@@ -384,6 +385,7 @@ def run_stab_flex_cond(
 
     return comp, df
 
+@pytest.mark.llvm
 def test_stab_flex_cond_fit():
     from psyneulink.core.globals.utilities import set_global_seed
 

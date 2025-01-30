@@ -478,7 +478,7 @@ class TestRecurrentTransferMechanismFunction:
             function=Logistic(gain=2, offset=1)
         )
         val = R.execute(np.ones(10))
-        np.testing.assert_allclose(val, [np.full(10, 0.7310585786300049)])
+        np.testing.assert_allclose(val, [np.full(10, 1.880797)])
 
     def test_recurrent_mech_function_psyneulink(self):
 
@@ -490,7 +490,7 @@ class TestRecurrentTransferMechanismFunction:
             function=a
         )
         val = R.execute(np.zeros(7))
-        np.testing.assert_allclose(val, [np.full(7, 0.2689414213699951)])
+        np.testing.assert_allclose(val, [np.full(7, 1.5)])
 
     def test_recurrent_mech_function_custom(self):
         # I don't know how to do this at the moment but it seems highly important.

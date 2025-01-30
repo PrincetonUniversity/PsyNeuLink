@@ -130,6 +130,14 @@ class TestMechanism:
         ):
             t.parameters.noise.set(pnl.NormalDist)
 
+    def test_execute_no_input_doesnt_change_default_variable(self):
+        m = pnl.ProcessingMechanism(default_variable=1)
+        assert m.defaults.variable == [[1]]
+        m.execute()
+        assert m.defaults.variable == [[1]]
+        m.execute(2)
+        assert m.defaults.variable == [[1]]
+
 
 class TestMechanismFunctionParameters:
     f = pnl.Linear()

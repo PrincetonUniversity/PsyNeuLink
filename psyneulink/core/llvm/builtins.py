@@ -45,7 +45,7 @@ def setup_vxm(ctx):
     # zero the output array
     with helpers.for_loop_zero_inc(builder, y, "zero") as (b1, index):
         ptr = b1.gep(o, [index])
-        b1.store(ctx.float_ty(0), ptr)
+        b1.store(ptr.type.pointee(0), ptr)
 
     # Multiplication
     with helpers.for_loop_zero_inc(builder, x, "vxm_outer") as (b1, index_i):
@@ -84,7 +84,7 @@ def setup_vxm_transposed(ctx):
     # zero the output array
     with helpers.for_loop_zero_inc(builder, x, "zero") as (b1, index):
         ptr = b1.gep(o, [index])
-        b1.store(ctx.float_ty(0), ptr)
+        b1.store(ptr.type.pointee(0), ptr)
 
     # Multiplication
     with helpers.for_loop_zero_inc(builder, x, "trans_vxm_outer") as (b1, index_j):
@@ -149,7 +149,7 @@ def setup_vec_sum(ctx):
     u, x, o = builder.function.args
 
     # Sum
-    builder.store(ctx.float_ty(-0), o)
+    builder.store(o.type.pointee(-0), o)
     with helpers.for_loop_zero_inc(builder, x, "sum") as (b1, index):
         u_ptr = b1.gep(u, [index])
         u_val = b1.load(u_ptr)
@@ -828,9 +828,9 @@ def _setup_mt_rand_float(ctx, state_ty, gen_int):
     # NOTE: The combination below could be implemented using bit ops,
     # but due to floating point rounding it'd give slightly different
     # random numbers
-    val = builder.fmul(af, ctx.float_ty(67108864.0))           # Shift left 26
+    val = builder.fmul(af, af.type(67108864.0))           # Shift left 26
     val = builder.fadd(val, bf)                                # Combine
-    val = builder.fdiv(val, ctx.float_ty(9007199254740992.0))  # Scale
+    val = builder.fdiv(val, val.type(9007199254740992.0))  # Scale
 
     # The value is in interval [0, 1)
     lower_bound = builder.fcmp_ordered(">=", val, val.type(0.0))
@@ -876,14 +876,14 @@ def _setup_mt_rand_normal(ctx, state_ty, gen_float):
     # X1 is in (-1, 1)
     builder.call(gen_float, [state, tmp])
     x1 = builder.load(tmp)
-    x1 = builder.fmul(x1, ctx.float_ty(2.0))
-    x1 = builder.fsub(x1, ctx.float_ty(1.0))
+    x1 = builder.fmul(x1, x1.type(2.0))
+    x1 = builder.fsub(x1, x1.type(1.0))
 
     # x2 is in (-1, 1)
     builder.call(gen_float, [state, tmp])
     x2 = builder.load(tmp)
-    x2 = builder.fmul(x2, ctx.float_ty(2.0))
-    x2 = builder.fsub(x2, ctx.float_ty(1.0))
+    x2 = builder.fmul(x2, x2.type(2.0))
+    x2 = builder.fsub(x2, x2.type(1.0))
 
     r2 = builder.fmul(x1, x1)
     r2 = builder.fadd(r2, builder.fmul(x2, x2))

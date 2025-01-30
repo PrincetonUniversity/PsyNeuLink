@@ -10,19 +10,24 @@
 # *******************************************  TRANSFER FUNCTIONS  *****************************************************
 """
 
-* `Identity`
-* `Linear`
-* `Exponential`
-* `Logistic`
-* `Tanh`
-* `ReLU`
-* `Angle`
-* `Gaussian`
-* `GaussianDistort`
-* `BinomialDistort`
-* `Dropout`
-* `SoftMax`
-* `TransferWithCosts`
+**Deterministic**
+    * `Identity`
+    * `Linear`
+    * `Exponential`
+    * `Logistic`
+    * `Tanh`
+    * `ReLU`
+
+**Probabilistic**
+    * `Angle`
+    * `Gaussian`
+    * `GaussianDistort`
+    * `BinomialDistort`
+    * `Dropout`
+    * `SoftMax`
+
+**Other**
+    * `TransferWithCosts`
 
 Overview
 --------
@@ -34,16 +39,17 @@ Functions that transform their variable but maintain its shape.
 Standard Attributes
 ~~~~~~~~~~~~~~~~~~~
 
-All TransferFunctions have the following attributes:
+All TransferFunctions have the following attributes: `bounds <TransferFunction.bounds>`,
+`scale <TransferFunction.scale>`, and `offset <TransferFunction.offset>`. In addition, they have a standardized pair of
+modulable parameters that are aliased to one of their primary parameters:
 
-* **bounds**:  specifies the lower and upper limits of the result;  if there are none, the attribute is set to
-  `None`;  if it has at least one bound, the attribute is set to a tuple specifying the lower and upper bounds,
-  respectively, with `None` as the entry for no bound.
-..
+.. _TransferFunction_Modulable_Params:
+
 * **multiplicative_param** and **additive_param**:
-  each of these is assigned the name of one of the function's
-  parameters and used by `ModulatoryProjections <ModulatoryProjection>` to modulate the output of the
-  TransferFunction's function (see `Function_Modulatory_Params`).
+  each of these is assigned the name of one of the function's parameters and used by `ModulatoryProjections
+  <ModulatoryProjection>` to modulate the output of the TransferFunction's function (see `Function_Modulatory_Params`).
+  By default, **multiplicative_param** is assigned to the function's `scale <TransferFunction.scale>` Parameter
+  and **additive_param** is assigned to the function's `offset <TransferFunction.offset>` Parameter.
 
 .. _TransferFunction_Derivative:
 
@@ -93,35 +99,47 @@ from psyneulink.core.globals.keywords import \
     (ADAPTIVE, ADDITIVE_PARAM, ALL, ANGLE_FUNCTION, BIAS, BINOMIAL_DISTORT_FUNCTION, DROPOUT_FUNCTION,
      EXPONENTIAL_FUNCTION, GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION,
      IDENTITY_FUNCTION, INTERCEPT, LEAK, LINEAR_FUNCTION, LOGISTIC_FUNCTION,
-     TANH_FUNCTION, MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE_PARAM,
-     OFF, OFFSET, ON, OUTPUT_TYPE, PER_ITEM, PROB, PRODUCT, PROB_INDICATOR,
-     RATE, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM,
-     TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME)
+     MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE_PARAM, OFF, OFFSET, ON, OUTPUT_TYPE,
+     PER_ITEM, PROB, PRODUCT, PROB_INDICATOR, RATE, RELU_FUNCTION,
+     SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM,
+     TANH_FUNCTION, TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION,
+     VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME)
 from psyneulink.core.globals.parameters import \
     FunctionParameter, Parameter, get_validator_by_function, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, ValidPrefSet
-from psyneulink.core.globals.utilities import ValidParamSpecType, convert_all_elements_to_np_array, safe_len, is_matrix_keyword
+from psyneulink.core.globals.utilities import (
+    ValidParamSpecType, convert_all_elements_to_np_array, safe_len, is_matrix_keyword)
 
 __all__ = ['Angle', 'BinomialDistort', 'Dropout', 'Exponential', 'Gaussian', 'GaussianDistort', 'Identity',
            'Linear', 'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
            ]
 
+
 class TransferFunction(Function_Base):
     """Function that transforms variable but maintains its shape.
 
-    All TransferFunctions MUST have the following attributes:
+    In addition to the Parameters listed below, all TransferFunctions have the following have
+    a `multiplicative_param <Function_Modulatory_Params>` and an `additive_param <Function_Modulatory_Params>` --
+    see `multiplicative and additive params <TransferFunction_Modulable_Params>` for additional information.
 
-    `bounds` -- specifies the lower and upper limits of the result;  if there are none, the attribute is set to
-    `None`;  if it has at least one bound, the attribute is set to a tuple specifying the lower and upper bounds,
-    respectively, with `None` as the entry for no bound.
+    Attributes
+    ----------
 
-    `multiplicative_param <Function_Modulatory_Params>` and `additive_param <Function_Modulatory_Params>` -- each
-    of these is assigned the name of one of the function's parameters and used by `ModulatoryProjections
-    <ModulatoryProjection>` to modulate the output of the TransferFunction's `function <TransferFunction._function>`
-    (see  `Function_Modulatory_Params`).
+    bounds : tuple or None
+      specifies the lower and upper limits of the function's result; if there are none, the attribute is set to `None`;
+      if at least one bound is specified, the attribute is a tuple specifying the lower and upper bounds, respectively,
+      with `None` as the entry (indicating no bound). The bounds are with respect to the result of the function before
+      the `scale <TransferFunction.scale>` and `offset <TransferFunction.offset>` Parameters are applied; the actual
+      range of the result value of the function is determined by :math:`bounds(lower, upper) * scale + offset`.
 
+    scale : float
+      the value by which the result of the function is multiplied, before `offset <TransferFunction.offset>` is added.
+
+    offset : float
+      the value added to the result of the function after `scale <TransferFunction.scale>` has been applied.
     """
+
     componentType = TRANSFER_FUNCTION_TYPE
 
     class Parameters(Function_Base.Parameters):
@@ -134,9 +152,58 @@ class TransferFunction(Function_Base):
 
                     :default value: None
                     :type:
+
+                COMMENT:
+                scale
+                    see `scale <TransferFunction.scale>`
+
+                    :default value: 1.0
+                    :type: float
+
+                offset
+                    see `offset <TransferFunction.offset>`
+
+                    :default value: 0.0
+                    :type: float
+                COMMENT
         """
         bounds = None
+        # scale = 1.0
+        # offset = 0.0
 
+    @check_user_specified
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if (hasattr(self, 'scale') or hasattr(self, 'offset')) and self.bounds:
+            self._set_bounds()
+
+    def _set_bounds(self):
+        """Reassign bounds based on scale and offset applied to function's output for default upper and lower bounds
+        """
+        if hasattr(self, "scale"):
+            scale = self.scale if self.scale is not None else 1.0
+        else:
+            scale = 1.0
+        if hasattr(self, "offset"):
+            offset = self.offset if self.offset is not None else 0.0
+        else:
+            offset = 0.0
+
+        # Deal with lower bound = None:
+        lower_bound = -np.inf if self.bounds[0] is None else self.bounds[0]
+        output_for_fct_lower_bound = scale * lower_bound + offset
+
+        # Deal with upper bound = None:
+        upper_bound = np.inf if self.bounds[1] is None else self.bounds[1]
+        output_for_fct_upper_bound = scale * upper_bound + offset
+
+        # Need to do this since scale could be negative, reversing upper and lower bounds:
+        lower_bound = min(output_for_fct_lower_bound, output_for_fct_upper_bound)
+        upper_bound = max(output_for_fct_lower_bound, output_for_fct_upper_bound)
+
+        self.parameters.bounds.default_value = (lower_bound, upper_bound)
+        # self.parameters.bounds.set(None, (lower_bound, upper_bound))
+        self.bounds = (lower_bound, upper_bound)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
@@ -348,9 +415,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
         value added to each element of `variable <Linear.variable>` after applying the `slope <Linear.slope>`
         (if it is specified).
 
-    bounds : Tuple or None
-        determines the lower and upper limits of the result;  if at least one bound is specified, the attribute is
-        a tuple specifying the lower and upper bounds, respectively, with `None` as the entry for no bound.
+    bounds : (0,1)
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -789,10 +854,11 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
 
 # **********************************************************************************************************************
-#                                                   Logistic
+#                                                     Logistic
 # **********************************************************************************************************************
 
-class Logistic(TransferFunction):  # ------------------------------------------------------------------------------------
+
+class Logistic(TransferFunction):  # -----------------------------------------------------------------------------------
     """
     Logistic(              \
          default_variable, \
@@ -812,7 +878,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
     `function <Logistic._function>` returns logistic transform of `variable <Logistic.variable>`:
 
     .. math::
-         scale * \\frac{1}{1 + e^{ - gain ( variable + bias - x_{0} ) + offset}}
+         scale * \\frac{1}{1 + e^{ - gain ( variable + bias - x_{0} )}}  + offset
 
     (this is a vertically offset and scaled version of `Tanh`, which is centered on origin).
 
@@ -820,11 +886,10 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
     .. note::
         The **bias** and **x_0** arguments are identical, apart from having opposite signs: **bias** is included to
-        accommodate the convention in the machine learning community; **x_0** is included to match the `standard
-        form of the Logistic Function <https://en.wikipedia.org/wiki/Logistic_function>`_ (in which **gain**
-        corresponds to the *k* parameter and **scale** corresponds to the *L* parameter); **offset** implements a
-        form of bias that is not modulated by gain (i.e., it produces an offset of the function along the horizontal
-        axis).
+        accommodate the convention in the machine learning community; **x_0** is included to match the `standard form
+        of the Logistic Function <https://en.wikipedia.org/wiki/Logistic_function>`_ (in which **gain** corresponds to
+        the *k* parameter and **scale** corresponds to the *L* parameter); **offset** implements a translation of the
+        function along the vertical axis that is not modulated by gain.
 
     `derivative <Logistic.derivative>` returns the derivative of the Logistic using its **output**:
 
@@ -838,9 +903,9 @@ class Logistic(TransferFunction):  # -------------------------------------------
         specifies a template for the value to be transformed.
 
     gain : float : default 1.0
-        specifies value by which to multiply each element of `variable <Logistic.variable>` after it is adjusted by
-        `bias <Logistic.bias>` and/or `x_0 <Logistic.x_0>`, but before adjustment by `offset <Logistic.offset>` and
-        logistic transformation (see `note <Logistic_Note>` above).
+        specifies value by which to multiply each element of `variable <Logistic.variable>` after it is
+        adjusted by `bias <Logistic.bias>` and/or `x_0 <Logistic.x_0>`, but before logistic transformation
+        (see `note <Logistic_Note>` above).
 
     bias : float : default 0.0
         specifies value to add to each element of `variable <Logistic.variable>` before applying `gain <Logistic.gain>`;
@@ -851,13 +916,12 @@ class Logistic(TransferFunction):  # -------------------------------------------
         this argument has an effect identical to bias, but with the opposite sign (see `note <Logistic_Note>` above).
 
     offset : float : default 0.0
-        specifies value to add to each element of `variable <Logistic.variable>` after adjusting by `bias
-        <Logistic.bias>` and/or `x_0 <Logistic.x_0>` and applying `gain <Logistic.gain>`, but before logistic
-        transformation (see `note <Logistic_Note>` above).
+        specifies value to add to each element of `variable <Logistic.variable>` after logistic  transformation and
+        `scale <Logistic.scale>` have been applied (see `note <Logistic_Note>` above).
 
     scale : float : default 0.0
-        specifies value by which to multiply each element of `variable <Logistic.variable>` after all other parameters
-        and logistic transformation have been applied (see `note <Logistic_Note>` above).
+        specifies value value by which to multiply each element of `variable <Logistic.variable>` after logistic
+        transformation but before `offset <Logistic.offset>` has been applied (see `note <Logistic_Note>` above).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -880,9 +944,9 @@ class Logistic(TransferFunction):  # -------------------------------------------
         contains value to be transformed.
 
     gain : float
-        value by which to multiply each element of `variable <Logistic.variable>` after it is adjusted by `bias
-        <Logistic.bias>` and/or `x_0 <Logistic.x_0>`, but before adjustment by `offset <Logistic.offset>` and
-        logistic transformation (see `note <Logistic_Note>` above).
+        value by which to multiply each element of `variable <Logistic.variable>` after it is adjusted by
+        `bias <Logistic.bias>` and/or `x_0 <Logistic.x_0>`, but before logistic transformation has been applied
+        (see `note <Logistic_Note>` above).
 
     bias : float
         value to add to each element of `variable <Logistic.variable>` before applying `gain <Logistic.gain>`;
@@ -893,13 +957,12 @@ class Logistic(TransferFunction):  # -------------------------------------------
         this argument has an effect identical to bias, but with the opposite sign (see `note <Logistic_Note>` above).
 
     offset : float
-        value to add to each element of `variable <Logistic.variable>` after adjusting by `bias <Logistic.bias>`
-        and/or `x_0 <Logistic.x_0>` and applying `gain <Logistic.gain>`, but before logistic transformation
-        (see `note <Logistic_Note>` above).
+        value to add to each element of `variable <Logistic.variable>` after logistic  transformation and `scale
+        <Logistic.scale>` have been applied (see `note <Logistic_Note>` above).
 
     scale : float
-        value by which to multiply each element of `variable <Logistic.variable>` after all other parameters and
-        logistic transformation have been applied (see `note <Logistic_Note>` above).
+        value by which to multiply each element of `variable <Logistic.variable>` after logistic transformation but
+        before `offset <Logistic.offset>` has been applied (see `note <Logistic_Note>` above).
 
     bounds : (0,1)
         COMMENT:
@@ -1020,7 +1083,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         offset = self._get_current_parameter_value(OFFSET, context)
         scale = self._get_current_parameter_value(SCALE, context)
 
-        result = scale * (1. / (1 + e**(-gain * (variable + bias - x_0) + offset)))
+        result = scale * (1. / (1 + e**(-gain * (variable + bias - x_0)))) + offset
 
         return self.convert_output_type(result)
 
@@ -1029,7 +1092,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         """
         derivative(input=None, output=None)
 
-        Derivative of `function <Exponential._function>` at either **input** or **output**.
+        Derivative of `function <Logistic._function>` at either **input** or **output**.
 
         COMMENT:  RESTORE WHEN TEST IN DERIVATIVE IS RESTORED
         Either **input** or **output** must be specified.
@@ -1082,24 +1145,24 @@ class Logistic(TransferFunction):  # -------------------------------------------
         x_0 = pnlvm.helpers.load_extract_scalar_array_one(builder, x_0_ptr)
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
         scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
-
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
         val = builder.load(ptri)
 
         if "derivative_out" not in tags:
-            val = builder.fadd(val, bias)
-            val = builder.fsub(val, x_0)
-            val = builder.fmul(val, gain)
-            val = builder.fsub(offset, val)
-            val = builder.call(exp_f, [val])
-            val = builder.fadd(ctx.float_ty(1), val)
-            val = builder.fdiv(ctx.float_ty(1), val)
-            val = builder.fmul(val, scale)
+            val = builder.fadd(val, bias)             # variable + bias
+            val = builder.fsub(val, x_0)              # variable + bias - x_0
+            val = builder.fmul(val, gain)             # gain * (variable + bias - x_0)
+            val = builder.fneg(val)                   # -gain * (variable + bias - x_0)
+            val = builder.call(exp_f, [val])          # e^(-gain * (variable + bias - x_0))
+            val = builder.fadd(val.type(1), val)      # 1 + e^(-gain * (variable + bias - x_0))
+            val = builder.fdiv(val.type(1), val)      # 1 / (1 + e^(-gain * (variable + bias - x_0)))
+            val = builder.fmul(val, scale)            # scale * (1 / (1 + e^(-gain * (variable + bias - x_0)))
+            val = builder.fadd(val, offset)           # scale * (1 / (1 + e^(-gain * (variable + bias - x_0))) + offset
 
         if "derivative" in tags or "derivative_out" in tags:
-            # f(x) = g * s * o * (1-o)
+            # f(x) = g * s * o * (1 - o)
             function_val = val
-            val = builder.fsub(ctx.float_ty(1), function_val)
+            val = builder.fsub(function_val.type(1), function_val)
             val = builder.fmul(function_val, val)
             val = builder.fmul(gain, val)
             val = builder.fmul(scale, val)
@@ -1107,10 +1170,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
         builder.store(val, ptro)
 
     def _gen_pytorch_fct(self, device, context=None):
+        scale = self._get_pytorch_fct_param_value('scale', device, context)
         gain = self._get_pytorch_fct_param_value('gain', device, context)
         bias = self._get_pytorch_fct_param_value('bias', device, context)
         offset = self._get_pytorch_fct_param_value('offset', device, context)
-        return lambda x: 1 / (1 + torch.exp(-gain * (x + bias) + offset))
+        return lambda x: scale / (1 + torch.exp(-gain * (x + bias))) + offset
 
     def as_mdf_model(self):
         model = super().as_mdf_model()
@@ -1148,7 +1212,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 
     .. _Tanh_Function:
 
-    `function <Logistic._function>` returns hyperbolic tangent of `variable <Logistic.variable>`:
+    `function <Tanh._function>` returns hyperbolic tangent of `variable <Tanh.variable>`:
 
     .. math::
 
@@ -1156,8 +1220,8 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 
     .. note::
 
-       The `Logistic` function is an offset and scaled version of this function.
-       The parameters used here have the same meaning as those used for the `Logistic` Function.
+       The `Tanh` function is an offset and scaled version of this function.
+       The parameters used here have the same meaning as those used for the `Tanh` Function.
 
     `derivative <Tanh.derivative>` returns the derivative of the hyperbolic tangent at its **input**:
 
@@ -1172,19 +1236,19 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         specifies template for the value to be transformed.
 
     gain : float : default 1.0
-        specifies value by which to multiply `variable <Tanh.variable>` before logistic transformation
+        specifies value by which to multiply `variable <Tanh.variable>` before Tanh transformation
 
     bias : float : default 0.0
         specifies value to add to each element of `variable <Tanh.variable>` before applying `gain <Tanh.gain>`
-        and before logistic transformation. This argument is identical to x_0, with the opposite sign.
+        and before Tanh transformation. This argument is identical to x_0, with the opposite sign.
 
     x_0 : float : default 0.0
         specifies value to subtract from each element of `variable <Tanh.variable>` before applying `gain <Tanh.gain>`
-        and before logistic transformation. This argument is identical to bias, with the opposite sign.
+        and before Tanh transformation. This argument is identical to bias, with the opposite sign.
 
     offset : float : default 0.0
         specifies value to add to each element of `variable <Tanh.variable>` after applying `gain <Tanh.gain>`
-        but before logistic transformation.
+        but before Tanh transformation.
 
     scale : float : default 1.0
         specifies value by which to multiply each element after applying Tanh transform.
@@ -1223,12 +1287,12 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 
     offset : float : default 0.0
         value to added to each element of `variable <Tanh.variable>` after applying `gain <Tanh.gain>`
-        but before logistic transformation.
+        but before tanh transformation.
 
     scale : float : default 1.0
         value by which element is multiplied after applying Tanh transform.
 
-    bounds : (0,1)
+    bounds : (-1,1)
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -1286,7 +1350,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         offset = Parameter(0.0, modulable=True)
         scale = Parameter(1.0, modulable=True)
-        bounds = (0, 1)
+        bounds = (-1, 1)
 
     @check_user_specified
     @beartype
@@ -3583,22 +3647,22 @@ class SoftMax(TransferFunction):
         mask_threshold = self._get_pytorch_fct_param_value('mask_threshold', device, context)
 
         if isinstance(gain, str) and gain == ADAPTIVE:
-            return lambda x: (torch.softmax(self._gen_pytorch_adapt_gain_fct(device, context)(x) * x, 0))
+            return lambda x: (torch.softmax(self._gen_pytorch_adapt_gain_fct(device, context)(x) * x, -1))
 
         elif mask_threshold:
             def pytorch_thresholded_softmax(_input: torch.Tensor) -> torch.Tensor:
                 # Mask elements of input below threshold
                 _mask = (torch.abs(_input) > mask_threshold)
                 # Subtract off the max value in the input to eliminate extreme values, exponentiate, and apply mask
-                masked_exp = _mask * torch.exp(gain * (_input - torch.max(_input, 0, keepdim=True)[0]))
-                if not any(masked_exp):
+                masked_exp = _mask * torch.exp(gain * (_input - torch.max(_input, -1, keepdim=True)[0]))
+                if (masked_exp == 0).all():
                     return masked_exp
-                return masked_exp / torch.sum(masked_exp, 0, keepdim=True)
+                return masked_exp / torch.sum(masked_exp, -1, keepdim=True)
             # Return the function
             return pytorch_thresholded_softmax
 
         else:
-            return lambda x: (torch.softmax(gain * x, 0))
+            return lambda x: (torch.softmax(gain * x, -1))
 
     def _gen_pytorch_adapt_gain_fct(self, device, context=None):
         scale = self._get_pytorch_fct_param_value('adapt_scale', device, context)

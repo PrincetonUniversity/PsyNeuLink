@@ -3354,7 +3354,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
 
         def comp_run(inputs, execution_mode):
             comp.run(inputs=inputs, execution_mode=execution_mode)
-            return comp.results.copy(), np.asfarray(ocm.function.saved_values)
+            return comp.results.copy(), np.asarray(ocm.function.saved_values)
 
         results, saved_values = benchmark(comp_run, inputs, mode)
 
