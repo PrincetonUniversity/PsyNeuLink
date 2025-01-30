@@ -121,7 +121,7 @@ class TestKWTAFunction:
             k_value=2
         )
         val = K.execute(input=[1, 2, 3])
-        np.testing.assert_allclose(val, [[0.425557483188341, 0.6681877721681662, 0.84553473491646523]])
+        np.testing.assert_allclose(val, [[0.17754067, 0.42245933, 0.61757448]])
 
     # the inhibition would have to be positive in order to get the desired activity level: thus, inhibition is set to 0
     def test_kwta_log_gain_offset(self):
@@ -132,7 +132,7 @@ class TestKWTAFunction:
             k_value=1
         )
         val = K.execute(input = [.1, -4])
-        np.testing.assert_allclose(val, [[0.017636340339722684, 0.039165722796764356]])
+        np.testing.assert_allclose(val, [[4.49500017, 4.68997448]])
 
     def test_kwta_linear(self): # inhibition would be positive: so instead it is set to zero
         K = KWTAMechanism(

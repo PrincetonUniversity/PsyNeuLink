@@ -96,10 +96,12 @@ import pint
 import psyneulink
 import re
 import tempfile
+import tokenize
 import types
 import time
 import warnings
 
+from psyneulink._typing import Any, Union
 from psyneulink.core.globals.keywords import \
     MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_PARAMETER_SOURCE, \
     MODEL_SPEC_ID_PARAMETER_INITIAL_VALUE, MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_PSYNEULINK, \
@@ -189,6 +191,30 @@ class PNLJSONEncoder(json.JSONEncoder):
             return super().default(o)
         except TypeError:
             return str(o)
+
+
+def _parse_pint_object(obj: Any) -> Union[pint.Unit, pint.Quantity, None]:
+    # varying and don't have a consistent way to identify otherwise
+    pint_errs = (
+        AssertionError,
+        AttributeError,
+        TypeError,
+        ValueError,
+        pint.errors.DefinitionSyntaxError,
+        pint.errors.UndefinedUnitError,
+        tokenize.TokenError,
+    )
+    try:
+        return psyneulink._unit_registry.Unit(obj)
+    except pint_errs:
+        pass
+
+    try:
+        return psyneulink._unit_registry.Quantity(obj)
+    except pint_errs:
+        pass
+
+    return None
 
 
 def _get_variable_parameter_name(obj):
@@ -482,18 +508,7 @@ def _parse_parameter_value(value, component_identifiers=None, name=None, parent_
         if identifier in component_identifiers:
             value = identifier
 
-        try:
-            psyneulink._unit_registry.Unit(value)
-        except (AttributeError, TypeError, ValueError, pint.errors.DefinitionSyntaxError):
-            pass
-        else:
-            value = f"'{value}'"
-
-        try:
-            psyneulink._unit_registry.Quantity(value)
-        except (AttributeError, TypeError, ValueError, pint.errors.DefinitionSyntaxError):
-            pass
-        else:
+        if _parse_pint_object(value) is not None:
             value = f"'{value}'"
 
         evaluates = False

@@ -3379,8 +3379,11 @@ class Mechanism_Base(Mechanism):
         """Generate a detailed display of a the structure of a Mechanism.
 
         .. note::
-           This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported
-           (standard with PsyNeuLink pip install)
+           This method relies on `graphviz <http://www.graphviz.org>`_
+           python and system packages, which must be installed. The
+           python package comes standard with PsyNeuLink pip install,
+           but the system package must be installed separately. It can
+           be downloaded at https://www.graphviz.org/download/.
 
         Displays the structure of a Mechanism using html table format and shape='plaintext'.
         This method is called by `Composition.show_graph` if its **show_mechanism_structure** argument is specified as

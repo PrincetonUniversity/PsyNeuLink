@@ -479,7 +479,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # 3) compute errors
         loss_fn = ctx.import_llvm_function(loss)
         total_loss = builder.alloca(ctx.float_ty)
-        builder.store(ctx.float_ty(0), total_loss)
+        builder.store(total_loss.type.pointee(0), total_loss)
 
         error_dict = {}
         for exec_set in reversed(self.execution_sets):

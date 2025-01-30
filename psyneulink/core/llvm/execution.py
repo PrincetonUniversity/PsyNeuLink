@@ -262,7 +262,7 @@ class FuncExecution(CUDAExecution):
         return self._get_compilation_param('_state', '_get_state_initializer', 1)
 
     def execute(self, variable):
-        new_variable = np.asfarray(variable, dtype=self._bin_func.np_arg_dtypes[2].base)
+        new_variable = np.asarray(variable, dtype=self._bin_func.np_arg_dtypes[2].base)
         data_in = new_variable.reshape(self._bin_func.np_arg_dtypes[2].shape)
 
         data_out = self._bin_func.np_buffer_for_arg(3)
@@ -273,7 +273,7 @@ class FuncExecution(CUDAExecution):
 
     def cuda_execute(self, variable):
         # Create input argument, PyCUDA doesn't care about shape
-        data_in = np.asfarray(variable, dtype=self._bin_func.np_arg_dtypes[2].base)
+        data_in = np.asarray(variable, dtype=self._bin_func.np_arg_dtypes[2].base)
         data_out = self._bin_func.np_buffer_for_arg(3)
 
         self._bin_func.cuda_call(self._cuda_param_struct,

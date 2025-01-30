@@ -1413,19 +1413,15 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     def _get_state_ids(self):
         return [sp.name for sp in self._get_compilation_state()]
 
-    @property
+    @functools.cached_property
     def llvm_state_ids(self):
-        ids = getattr(self, "_state_ids", None)
-        if ids is None:
-            ids = self._get_state_ids()
-            setattr(self, "_state_ids", ids)
-        return ids
+        return self._get_state_ids()
 
     def _get_state_initializer(self, context):
         def _convert(p):
             x = p.get(context)
             if p.name == 'matrix': # Flatten matrix
-                val = tuple(np.asfarray(x).flatten())
+                val = tuple(np.asarray(x, dtype=float).ravel())
             elif isinstance(x, np.random.RandomState):
                 state = x.get_state(legacy=False)
 
@@ -1569,13 +1565,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     def _get_param_ids(self):
         return [p.name for p in self._get_compilation_params()]
 
-    @property
+    @functools.cached_property
     def llvm_param_ids(self):
-        ids = getattr(self, "_param_ids", None)
-        if ids is None:
-            ids = self._get_param_ids()
-            setattr(self, "_param_ids", ids)
-        return ids
+        return self._get_param_ids()
 
     def _is_param_modulated(self, p):
         try:
@@ -1626,7 +1618,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             elif p.name == 'num_trials_per_estimate': # Should always be int
                 return 0 if param is None else int(param)
             elif p.name == 'matrix': # Flatten matrix
-                return tuple(np.asfarray(param).flatten())
+                return tuple(np.asarray(param, dtype=float).ravel())
             return _convert(param)
 
         return tuple(map(_get_values, self._get_compilation_params()))

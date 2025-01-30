@@ -1,3 +1,8 @@
+import os
+import pathlib
+import sys
+import uuid
+
 import numpy as np
 import pytest
 
@@ -15,13 +20,23 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import Composition, NodeRole
+from psyneulink.core.compositions.showgraph import (
+    ShowGraphError,
+    _gv_executable_not_found_error_msg,
+)
 from psyneulink.core.globals.keywords import ALL, INSET, INTERCEPT, NESTED, NOISE, SLOPE
 from psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism import LCControlMechanism
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
 from psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism import \
     EpisodicMemoryMechanism, VALUE_INPUT, VALUE_OUTPUT, KEY_INPUT, KEY_OUTPUT
 
+graphviz_executables = {
+    'dot', 'neato', 'twopi', 'circo', 'fdp', 'sfdp', 'patchwork', 'osage'
+}
+
+
 """These test various elaborate forms of Composition configuration and nesting, in addition to show_graph itself"""
+
 
 class TestSimpleCompositions:
     def test_process(self):
@@ -819,3 +834,59 @@ class TestControl:
     #                                 assert gv == repr(expected_gv_correct)
     #                             except AssertionError:
     #                                 assert gv == repr(expected_gv_incorrect)
+
+
+def _mock_gv_missing_executable(monkeypatch_context):
+    """
+    replace directory of graphviz executable with a uuid that shouldn't
+    exist, so that the executable won't be found by subprocess system
+    calls
+    """
+    if sys.platform == 'win32':
+        import _winapi
+        orig_CreateProcess = _winapi.CreateProcess
+
+        def mock_CreateProcess_gv_fail(executable, args, *a, **kwargs):
+            if any(args.startswith(f'{ex} ') for ex in graphviz_executables):
+                args = f'{uuid.uuid4()}\\{args}'
+            return orig_CreateProcess(executable, args, *a, **kwargs)
+
+        monkeypatch_context.setattr(_winapi, 'CreateProcess', mock_CreateProcess_gv_fail)
+    else:
+        orig_dirname = os.path.dirname
+
+        def mock_dirname_gv_fail(p):
+            q = p
+            try:
+                q = q.decode('utf-8')
+            except AttributeError:
+                # may be str or bytes
+                pass
+
+            if pathlib.Path(q).name in graphviz_executables:
+                return uuid.uuid4()
+
+            return orig_dirname(p)
+
+        monkeypatch_context.setattr(os.path, 'dirname', mock_dirname_gv_fail)
+
+
+def _test_graphviz_not_found(monkeypatch, comp_func, **kwargs):
+    a = TransferMechanism()
+    b = TransferMechanism()
+    comp = Composition([a, b])
+
+    with monkeypatch.context() as m:
+        _mock_gv_missing_executable(m)
+        with pytest.raises(ShowGraphError, match=_gv_executable_not_found_error_msg):
+            getattr(comp, comp_func)(**kwargs)
+
+
+# other output_fmt do not fail on static show_graph
+@pytest.mark.parametrize('output_fmt', ['pdf'])
+def test_graphviz_not_found_static(monkeypatch, output_fmt):
+    _test_graphviz_not_found(monkeypatch, 'show_graph', output_fmt=output_fmt)
+
+
+def test_graphviz_not_found_animated(monkeypatch):
+    _test_graphviz_not_found(monkeypatch, 'run', animate=True)
