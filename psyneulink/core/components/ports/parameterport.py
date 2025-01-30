@@ -374,7 +374,7 @@ from beartype import beartype
 
 from psyneulink._typing import Optional
 
-from psyneulink.core.components.component import Component, parameter_keywords
+from psyneulink.core.components.component import Component, ComponentsMeta, parameter_keywords
 from psyneulink.core.components.functions.function import FunctionError, get_param_value_for_keyword
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.ports.port import PortError, Port_Base, _instantiate_port, port_type_keywords
@@ -1031,7 +1031,9 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
             # prefer instantiated value if exists
             try:
                 func = p._get(context)
-            except FunctionError:
+            except (AttributeError, FunctionError, TypeError):
+                if not isinstance(p._owner._owner, ComponentsMeta):
+                    raise
                 func = None
 
             if func is None:
