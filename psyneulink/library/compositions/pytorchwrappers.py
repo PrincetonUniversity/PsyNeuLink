@@ -973,7 +973,11 @@ class PytorchMechanismWrapper():
             curr_val = proj_wrapper.sender.output
             if curr_val is not None:
                 # proj_wrapper._curr_sender_value = proj_wrapper.sender.output[proj_wrapper._value_idx]
-                proj_wrapper._curr_sender_value = curr_val[:, proj_wrapper._value_idx, ...]
+                if type(curr_val) == torch.Tensor:
+                    proj_wrapper._curr_sender_value = curr_val[:, proj_wrapper._value_idx, ...]
+                else:
+                    proj_wrapper._curr_sender_value = curr_val[proj_wrapper._value_idx]
+
             else:
                 proj_wrapper._curr_sender_value = torch.tensor(proj_wrapper.default_value)
             proj_wrapper._curr_sender_value = torch.atleast_1d(proj_wrapper._curr_sender_value)
@@ -1023,7 +1027,11 @@ class PytorchMechanismWrapper():
 
         res = []
         for i in range(len(self.input_ports)):
-            v = variable[:, i, ...] # Get the input for the port for all items in the batch
+            if type(variable) == torch.Tensor:
+                v = variable[:, i, ...] # Get the input for the port for all items in the batch
+            else:
+                v = variable[i]
+
             if isinstance(self.input_ports[i]._pnl_function, TransformFunction):
                 # Add input port dimension back to account for input port dimension reduction, we should have shape
                 # (batch, input_port, ... variable dimensions ) or
