@@ -170,7 +170,7 @@ class TransferFunction(Function_Base):
                     :type:
 
         """
-        bounds = Parameter(None, read_only=True)
+        bounds = Parameter((None,None), read_only=True)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
@@ -243,7 +243,7 @@ class DeterministicTransferFunction(TransferFunction):
                     :default value: 0.0
                     :type: float
         """
-        bounds = Parameter(None,
+        bounds = Parameter((None, None),
                            getter=_bounds_getter_using_scale_and_offset,
                            read_only=True,
                            dependencies={'scale', 'offset'})
