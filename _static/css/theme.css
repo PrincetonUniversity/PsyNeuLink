@@ -34,6 +34,17 @@
   --breakpoint-xl: 1200px;
   --font-family-sans-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
   --font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  --header-spacing: 1rem;
+
+  --height-page-level-bar: 2.8125rem;
+  --effective-height-page-level-bar: var(--height-page-level-bar);
+}
+
+@media screen and (max-width: 1101px) {
+  :root {
+    --effective-height-page-level-bar: 0rem;
+  }
 }
 
 *,
@@ -9176,12 +9187,13 @@ article.psyneulink-article {
   max-width: 920px;
   margin: 0 auto;
 }
+article.psyneulink-article h1,
 article.psyneulink-article h2,
 article.psyneulink-article h3,
 article.psyneulink-article h4,
 article.psyneulink-article h5,
 article.psyneulink-article h6 {
-  margin: 1.375rem 0;
+  margin-bottom: var(--header-spacing);
   color: #262626;
 }
 article.psyneulink-article h2 {
@@ -9417,7 +9429,7 @@ h1 {
   letter-spacing: 1.78px;
   line-height: 2.5rem;
   text-transform: uppercase;
-  margin: 2rem 0;
+  margin-bottom: var(--header-spacing);
 }
 
 span.pre {
@@ -10321,7 +10333,6 @@ a:hover {
 }
 @media screen and (min-width: 1101px) {
   .psyneulink-content-wrap {
-    padding-top: 45px;
     float: left;
     width: 100%;
     display: block;
@@ -10357,9 +10368,6 @@ a:hover {
     width: 850px;
     margin-left: 30px;
   }
-}
-.psyneulink-content-left .main-content {
-  padding-top: 0.9375rem;
 }
 /*.psyneulink-content-left .main-content ul.simple {*/
 /*  padding-bottom: 1.25rem;*/
@@ -10530,7 +10538,7 @@ a:hover {
   }
   .psyneulink-right-menu.scrolling-fixed {
     position: fixed;
-    top: 45px;
+    top: var(--height-page-level-bar);
     left: 83.5%;
     width: 14%;
   }
@@ -10546,7 +10554,7 @@ a:hover {
   }
   .psyneulink-right-menu.scrolling-fixed {
     position: fixed;
-    top: 45px;
+    top: var(--height-page-level-bar);
     left: 1230px;
   }
   .psyneulink-right-menu.scrolling-absolute {
@@ -10784,7 +10792,7 @@ a:hover {
 }
 
 .psyneulink-right-menu .psyneulink-side-scroll {
-  padding-top: 20px;
+  margin-top: var(--header-spacing);
 }
 @media screen and (min-width: 1101px) {
   .psyneulink-right-menu .psyneulink-side-scroll {
@@ -10883,19 +10891,18 @@ a:hover {
   .psyneulink-page-level-bar {
     left: 0;
     display: flex;
-    height: 45px;
+    height: var(--height-page-level-bar);
     padding-left: 0;
     width: 100%;
-    position: absolute;
+    position: sticky;
     z-index: 1;
   }
   .psyneulink-page-level-bar.left-menu-is-fixed {
-    position: fixed;
+    position: sticky;
     top: 0;
     left: 25%;
     padding-left: 0;
     right: 0;
-    width: 75%;
   }
 }
 @media screen and (min-width: 1600px) {
@@ -10928,6 +10935,45 @@ a:hover {
 @media screen and (min-width: 1600px) {
   .psyneulink-shortcuts-wrapper {
     margin-left: 1.875rem;
+  }
+}
+
+:target,
+.psyneulink-content-wrap,
+.psyneulink-content-wrap section,
+.psyneulink-container section span,
+.psyneulink-container section span.target,
+.psyneulink-container section span.highlighted
+{
+  scroll-margin-top: var(--effective-height-page-level-bar);
+}
+
+.psyneulink-container section div,
+.psyneulink-container section dt,
+.psyneulink-container section p,
+.psyneulink-container section blockquote,
+.psyneulink-container .reference,
+article.psyneulink-article ul,
+article.psyneulink-article ul li,
+article.psyneulink-article ul p
+{
+  scroll-margin-top: calc(var(--effective-height-page-level-bar) + var(--header-spacing));
+}
+
+@-moz-document url-prefix() {
+  .psyneulink-container section span.target,
+  .psyneulink-container section span.highlighted {
+    scroll-margin-top: calc(var(--effective-height-page-level-bar) - var(--header-spacing));
+  }
+}
+
+/* chrome */
+/* safari */
+@supports ((not (-webkit-hyphens:none)) and (not (-moz-appearance:none)) and (list-style-type:"*"))
+or ((font: -apple-system-body) and (-webkit-appearance: none)) {
+  .psyneulink-container section span
+  {
+    scroll-margin-top: calc(var(--effective-height-page-level-bar) + var(--header-spacing));
   }
 }
 
@@ -11259,12 +11305,9 @@ input:checked + .slider:before {
 }
 
 #psyneulink-side-scroll-right {
-  overflow: hidden;
+  overflow: auto;
 }
 
-@media screen and (min-width: 1101px) {
-  section, section > span {
-    padding-top: 45px;
-    margin-top: -45px;
-  }
+.psyneulink-content-wrap section {
+  padding-top: var(--header-spacing);
 }

@@ -1,0 +1,660 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>TimerMechanism &mdash; PsyNeuLink 0.16.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Objective Mechanisms" href="ObjectiveMechanisms.html" />
+    <link rel="prev" title="EpisodicMemoryMechanism" href="EpisodicMemoryMechanism.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+  <!-- Preload the theme fonts -->
+
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-book.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium-italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-SemiBold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+
+<!-- Preload the katex fonts -->
+
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Math-Italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size1-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size4-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size2-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size3-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Caligraphic-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+</head>
+
+<div class="container-fluid header-holder tutorials-header" id="header-holder">
+  <div class="container">
+    <div class="header-container">
+      <a class="header-logo" href="https://princetonuniversity.github.io/PsyNeuLink/"></a>
+<!--      <a class="header-logo"></a>-->
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://github.com/PrincetonUniversity/PsyNeuLink">Github</a>
+          </li>
+        </ul>
+      </div>
+
+      <a class="main-menu-open-button" href="#" data-behavior="open-mobile-menu"></a>
+    </div>
+
+  </div>
+</div>
+
+
+<body class="psyneulink-body">
+
+   
+
+    
+
+    <div class="table-of-contents-link-wrapper">
+      <span>Table of Contents</span>
+      <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+    </div>
+
+    <nav data-toggle="wy-nav-shift" class="psyneulink-left-menu" id="psyneulink-left-menu">
+      <div class="psyneulink-side-scroll">
+        <div class="psyneulink-menu psyneulink-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          <div class="psyneulink-left-menu-search">
+            
+
+            
+              
+              
+                <div class="version">
+                  0.16.0.0
+                </div>
+              
+            
+
+            
+
+
+  
+
+
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search Docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            
+          </div>
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
+<li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
+</ul>
+
+            
+          
+          <div class="psyneulink-dev-mode-toggle">
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="psyneulink-container">
+      <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
+        <div class="psyneulink-breadcrumbs-wrapper">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="psyneulink-breadcrumbs">
+    
+      <li>
+        <a href="index.html">
+          
+            Docs
+          
+        </a> &gt;
+      </li>
+
+        
+          <li><a href="Library.html">Library</a> &gt;</li>
+        
+          <li><a href="Components.html">Components</a> &gt;</li>
+        
+          <li><a href="Mechanisms.html">Mechanisms</a> &gt;</li>
+        
+          <li><a href="ProcessingMechanisms.html">Processing Mechanisms</a> &gt;</li>
+        
+          <li><a href="IntegratorMechanisms.html">IntegratorMechanisms</a> &gt;</li>
+        
+      <li>TimerMechanism</li>
+    
+  </ul>
+
+  
+</div>
+        </div>
+
+        <div class="psyneulink-shortcuts-wrapper" id="psyneulink-shortcuts-wrapper">
+          Shortcuts
+        </div>
+      </div>
+
+      <section data-toggle="wy-nav-shift" id="psyneulink-content-wrap" class="psyneulink-content-wrap">
+        <div class="psyneulink-content-left">
+
+        
+          
+          <div class="rst-content">
+          
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+             <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
+              
+  <section id="module-psyneulink.library.components.mechanisms.processing.integrator.timermechanism">
+<span id="timermechanism"></span><h1>TimerMechanism<a class="headerlink" href="#module-psyneulink.library.components.mechanisms.processing.integrator.timermechanism" title="Permalink to this headline">¶</a></h1>
+<section id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="#timermechanism-overview"><span class="std std-ref">Overview</span></a></p></li>
+<li><p><a class="reference internal" href="#timermechanism-creation"><span class="std std-ref">Creating a TimerMechanism</span></a></p></li>
+<li><p><a class="reference internal" href="#timermechanism-structure"><span class="std std-ref">Structure</span></a></p></li>
+<li><p><a class="reference internal" href="#timermechanism-execution"><span class="std std-ref">Execution</span></a></p></li>
+<li><p><a class="reference internal" href="#timermechanism-examples"><span class="std std-ref">Examples</span></a></p></li>
+<li><p><a class="reference internal" href="#timermechanism-class-reference"><span class="std std-ref">Class Reference</span></a></p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="overview">
+<span id="timermechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>A TimerMechanism is a type of <a class="reference internal" href="IntegratorMechanism.html"><span class="doc">IntegratorMechanism</span></a> the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of which begins at a specified
+<a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.start" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.start"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">start</span></code></a> value, is changed monotonically each time it is executed, until it reaches a specified
+<a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.end" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.end"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">end</span></code></a> value.  The number of executions it takes to do so is determined by a combination of its
+<a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.duration" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.duration"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">duration</span></code></a> and <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.increment" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.increment"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">increment</span></code></a> parameters, and whether or not it
+receives any input; and the path that its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> takes is determined by its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.trajectory" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.trajectory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trajectory</span></code></a> Function. It can be reset to its starting value by calling its <a class="reference internal" href="#id0" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> method, or by modulating its <a class="reference internal" href="#id0" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> Parameter with a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a>.</p>
+<p>A TimerMechanism can be used to implement a variety of time-based processes, such as the collapse of a boundary over
+time, or the rise of a value to a threshold. It can also be configured to execute multiple such processes in parallel,
+each with its own starting and ending values, as well as direction, increment and input (on a given execution), all of
+which use the same <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.trajectory" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.trajectory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trajectory</span></code></a> Function.</p>
+</section>
+<section id="creating-a-timermechanism">
+<span id="timermechanism-creation"></span><h2>Creating a TimerMechanism<a class="headerlink" href="#creating-a-timermechanism" title="Permalink to this headline">¶</a></h2>
+<p>A TimerMechanism can be created directly by calling its constructor, or using the <a class="reference internal" href="Mechanism.html#module-psyneulink.core.components.mechanisms.mechanism" title="psyneulink.core.components.mechanisms.mechanism"><code class="xref any py py-mod docutils literal notranslate"><span class="pre">mechanism</span></code></a> command and specifying
+<em>TIMER_MECHANISM</em> as its <strong>mech_spec</strong> argument. It can be created with or without a source of input. By default, a
+TimerMechanisms increments linearly, starting at 0, incrementing by 0.01 each time it is executed, and stopping when it
+reaches 1. However, the shape, starting, ending and rate of increment can all be configured.  The shape of the timer’s
+progression is specified by it <strong>trajectory</strong> argument, which must be a <a class="reference internal" href="TimerFunctions.html#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimerFunction</span></code></a> or an appropriately configured
+<a class="reference internal" href="UserDefinedFunction.html"><span class="doc">UserDefinedFunction</span></a> (see <a class="reference internal" href="#timermechanism-trajectory-function"><span class="std std-ref">below</span></a> for details); the starting and ending <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">values</span></code></a> of the timer are specified by its <strong>start</strong> and <strong>end</strong> arguments, respectively, and the ammount
+it progresses each time the Mechanimsm is executed (in the absence of input) is specified by its <strong>increment</strong> argument.</p>
+</section>
+<section id="structure">
+<span id="timermechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<p>A TimerMechanism may or may not have a source of input, and has a single <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>.  Its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> is an <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator" title="psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SimpleIntegrator</span></code></a> <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> that determines the input to the TimerMechanism’s
+<a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.trajectory" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.trajectory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trajectory</span></code></a> Function which, in turn, determines the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the
+TimerMechanism. The TimerMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> is always a <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator" title="psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SimpleIntegrator</span></code></a> that always
+starts at 0 and, each time it is executed, increments the value of the TimerMechanism based either on its input or, if
+it receives none, then its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.increment" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.increment"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">increment</span></code></a> Parameter (see <a class="reference internal" href="#timermechanism-execution"><span class="std std-ref">Execution</span></a> for
+additional details).</p>
+<blockquote>
+<div><div class="technical-note docutils container">
+<p>The TimerMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> cannot be modified; its <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator.rate" title="psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a> is set to the value specified for the TimerMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.increment" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.increment"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">increment</span></code></a> Parameter, and its <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator.initializer" title="psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator.initializer"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initializer</span></code></a>,
+<a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator.noise" title="psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator.noise"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">noise</span></code></a> and <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator.offset" title="psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator.offset"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">offset</span></code></a> Parameters are fixed at 0</p>
+</div>
+</div></blockquote>
+<p id="timermechanism-trajectory-function">Its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.trajectory" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.trajectory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trajectory</span></code></a> Function must be either a <a class="reference internal" href="TimerFunctions.html#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimerFunction</span></code></a> or a <a class="reference internal" href="UserDefinedFunction.html"><span class="doc">UserDefinedFunction</span></a> that
+has <strong>initial</strong>, <strong>final</strong> and <em>duration*</em> parameters, and takes a single numeric value, a list or an np.array as its
+<a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.variable" title="psyneulink.core.components.functions.function.Function_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
+<blockquote>
+<div><div class="technical-note docutils container">
+<p>The <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.trajectory" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.trajectory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trajectory</span></code></a> Function is an auxilliary function that takes the result of the
+TimerMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> and transforms it to implement the specified trajectory
+of the timer’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>. The value of the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.start" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.start"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">start</span></code></a> parameter is
+assigned as the <a class="reference internal" href="TimerFunctions.html#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.initial" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.initial"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initial</span></code></a> Parameter of its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.trajectory" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.trajectory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trajectory</span></code></a>
+Function; its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.end" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.end"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">end</span></code></a> Parameter is assigned as the <a class="reference internal" href="TimerFunctions.html#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.final" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.final"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">final</span></code></a> Parameter of
+the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.trajectory" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.trajectory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trajectory</span></code></a> Function, and its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.duration" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.duration"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">duration</span></code></a> Parameter
+is assigned as the <a class="reference internal" href="TimerFunctions.html#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.duration" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.duration"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">duration</span></code></a> Parameter of the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.trajectory" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.trajectory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trajectory</span></code></a>;
+which is also used to set the TimerMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">finished</span></code> attribute.</p>
+</div>
+</div></blockquote>
+<p id="timermechanism-modulation">A TimerMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.start" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.start"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">start</span></code></a>, <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.end" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.end"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">end</span></code></a> and <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.increment" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.increment"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">increment</span></code></a>
+parameters can be <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">modulated</span></a> by a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>.</p>
+</section>
+<section id="execution">
+<span id="timermechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>When a TimerMechanism is executed, it advances its value by adding either its <code class="xref any docutils literal notranslate"><span class="pre">input</span></code>
+or its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.increment" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.increment"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">increment</span></code></a> Parameter to the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction.previous_value" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a>
+of its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, that is then passed to the <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> specified by its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.trajectory" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.trajectory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trajectory</span></code></a> Parameter, the result of which is assigned to the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the
+TimerMechansim’s <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a>. If its <code class="xref any docutils literal notranslate"><span class="pre">default_variable</span></code>
+is a scalar or of length 1, or  its <strong>input_shapes</strong> is specified as 1, the TimerMechanism generates a scalar value
+as its output; otherwise, it generates an array of values, each element of which is independently advanced. If its
+<a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.increment" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.increment"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">increment</span></code></a> Parameter is a single value, that is used for advancing all elements; if the
+<a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.increment" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.increment"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">increment</span></code></a> Parameter is a list or array, then each element is used to increment the
+corresponding element of the timer array.</p>
+<p>The TimerMechanism stops advancing after the <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.value" title="psyneulink.core.components.functions.function.Function_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>
+equals the TimerMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.duration" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.duration"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">duration</span></code></a> Parameter.  If the TimerMechanism receives no input,
+then it will stop advancing after the number of executions = <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.duration" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.duration"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">duration</span></code></a> / <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.increment" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.increment"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">increment</span></code></a>.  If the TimerMechanism receives input, then the number of executions is determined by the
+number of times it is executed, and the amount of input it receives on each execution.  When the TimerMechanism stops
+advancing, it sets its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.finished" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.finished"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">finished</span></code></a> attribute to <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>, and its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>
+remains equal to its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.end" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.end"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">end</span></code></a> on any further executions, unless it is reset.  If the TimerMechanism
+is reset, its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> is set to its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.start" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.start"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">start</span></code></a> value.</p>
+<blockquote>
+<div><div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>A TimerMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.finished" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.finished"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">finished</span></code></a> attribute can be used together with a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a>
+<a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> to make the processing of other <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> contingent on the TimerMechanism
+reaching its end value.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The TimerMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.finished" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.finished"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">finished</span></code></a> attribute is not used to determine when it stops
+advancing; rather, it is set to <code class="xref any docutils literal notranslate"><span class="pre">True</span></code> when the TimerMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> reaches its
+<a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.end" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.end"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">end</span></code></a> value.</p>
+</div>
+</div></blockquote>
+<p>If a TimerMechanism continues to be executed after its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.finished" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.finished"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">finished</span></code></a> attribute is True, its
+<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> remains equal to its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.end" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.end"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">end</span></code></a> value.  The TimerMechanism can be reset
+to its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.start" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.start"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">start</span></code></a> value by setting its <a class="reference internal" href="#id0" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> Parameter to a non-zero value,
+as described for a standard <a class="reference internal" href="IntegratorMechanism.html#integratormechanism-reset"><span class="std std-ref">IntegratorMechanism</span></a>.</p>
+<p class="rubric" id="timermechanism-examples">Examples</p>
+<p>The following example creates a TimerMechanism with a linear decay from 1 to 0:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">psyneulink</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pnl</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_timer_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TimerMechanism</span><span class="p">(</span><span class="n">trajectory</span><span class="o">=</span><span class="n">LINEAR</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+<section id="class-reference">
+<span id="timermechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.processing.integrator.timermechanism.</span></span><span class="sig-name descname"><span class="pre">TimerMechanism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">increment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trajectory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass of <a class="reference internal" href="IntegratorMechanism.html"><span class="doc">IntegratorMechanism</span></a> that advances its input until it reaches a specified value.
+See <a class="reference internal" href="IntegratorMechanism.html#integratormechanism-class-reference"><span class="std std-ref">IntegratorMechanism</span></a> for additional arguments and attributes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start</strong> (<em>scalar</em><em>, </em><em>list</em><em> or </em><em>array : default 0</em>) – specifies the starting <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the timer; if a list or array, the length must be
+the same as specified for <strong>default_variable</strong> or <strong>input_shapes</strong> (see <a class="reference internal" href="#timermechanism-execution"><span class="std std-ref">Execution</span></a> for
+additional details).</p></li>
+<li><p><strong>increment</strong> (<em>scalar</em><em>, </em><em>list</em><em> or </em><em>array : default 1</em>) – specifies the amount by which the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction.previous_value" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> of the
+TimerMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> is incremented each time the TimerMechanism is
+executed in the absence of input; if a list or array, the length must be the same as specified for
+<strong>default_variable</strong> or <strong>input_shapes</strong> (see <a class="reference internal" href="#timermechanism-execution"><span class="std std-ref">Execution</span></a> for additional details).</p></li>
+<li><p><strong>function</strong> (<em>IntegratorFunction : default SimpleIntegrator</em><em>(</em><em>rate=1</em><em>)</em>) – specifies the function used to increment the input to the TimerMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.trajectory" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.trajectory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trajectory</span></code></a> Function; must take a single numeric value, or a list or np.array
+of values, and return one of the same shape.</p></li>
+<li><p><strong>trajectory</strong> (<a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.TransferFunction" title="psyneulink.core.components.functions.nonstateful.transferfunctions.TransferFunction"><em>TransferFunction</em></a><em> or </em><em>UserDefinedFunction : default LinearTimer</em>) – specifies the shape of the timer’s trajectory; must be a supported <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.TransferFunction" title="psyneulink.core.components.functions.nonstateful.transferfunctions.TransferFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TransferFunction</span></code></a>
+(see <a class="reference internal" href="#timermechanism-trajectory-function"><span class="std std-ref">trajectory function</span></a>)</p></li>
+<li><p><strong>end</strong> (<em>scalar</em><em>, </em><em>list</em><em> or </em><em>array : default 1</em>) – specifies the value of its <code class="xref any docutils literal notranslate"><span class="pre">trajectory</span></code> function at which the timer stops advancing;
+if a list or array, the length must be the same as specified for <strong>default_variable</strong> or <strong>input_shapes</strong> (see
+<a class="reference internal" href="#timermechanism-execution"><span class="std std-ref">Execution</span></a> for additional details).</p></li>
+<li><p><strong>duration</strong> (<em>scalar</em><em>, </em><em>list</em><em> or </em><em>array : default 1</em>) – specifies the value of its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> at which the timer stops advancing; if a list
+or array, the length must be the same as specified for <strong>default_variable</strong> or <strong>input_shapes</strong> (see
+<a class="reference internal" href="#timermechanism-execution"><span class="std std-ref">Execution</span></a> for additional details).</p></li>
+<li><p><strong>reset_default</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray : default 0</em>) – specifies the default value used for the <a class="reference internal" href="#id0" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> parameter.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.start">
+<span class="sig-name descname"><span class="pre">start</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the starting <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the timer; assigned as the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.start" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.start"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">start</span></code></a> Parameter of the
+TimerMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trajectory</span></code></a> if it has one; otherwise, it is computed if possible
+or, an error is raised (see <a class="reference internal" href="#timermechanism-execution"><span class="std std-ref">Execution</span></a> for additional details).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>scalar, list or array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.increment">
+<span class="sig-name descname"><span class="pre">increment</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.increment" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the amount by which the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction.previous_value" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> of the
+TimerMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> is incremented each time the TimerMechanism is
+executed in the absence of input; assigned as the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction.rate" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a> of the TimerMechanism’s
+<a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> (see <a class="reference internal" href="#timermechanism-execution"><span class="std std-ref">Execution</span></a> for additional details).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>scalar, list or array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.function">
+<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the function used to advance the input to the TimerMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.trajectory" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.trajectory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trajectorytrajectory</span></code></a> Function; if the TimerMechanism receives an external input, that is
+used to advance the timer; otherwise, the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.increment" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.increment"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">increment</span></code></a> Parameter is used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction">IntegratorFunction</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.trajectory">
+<span class="sig-name descname"><span class="pre">trajectory</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.trajectory" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> used to transform the ouput of the TimerMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> to generate its output; this determines the shape of the trajectory
+of the TimerMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="TimerFunctions.html#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction">TimerFunction</a> or <a class="reference internal" href="UserDefinedFunction.html#psyneulink.core.components.functions.userdefinedfunction.UserDefinedFunction" title="psyneulink.core.components.functions.userdefinedfunction.UserDefinedFunction">UserDefinedFunction</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.end">
+<span class="sig-name descname"><span class="pre">end</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.end" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the value of its <code class="xref any docutils literal notranslate"><span class="pre">trajectory</span></code> function at which the timer stops
+advancing; if a list or array, the length must be the same as specified for <strong>default_variable</strong> or
+<strong>input_shapes</strong> (see <a class="reference internal" href="#timermechanism-execution"><span class="std std-ref">Execution</span></a> for additional details).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>scalar, list or array : default 1</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.duration">
+<span class="sig-name descname"><span class="pre">duration</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.duration" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the value at which the timer stops advancing, after which it sets its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.finished" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.finished"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">finished</span></code></a> Parameter to <code class="xref any docutils literal notranslate"><span class="pre">True</span></code> and <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> remains equal to
+its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.duration" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.duration"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">duration</span></code></a> value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>scalar, list or array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.finished">
+<span class="sig-name descname"><span class="pre">finished</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.finished" title="Permalink to this definition">¶</a></dt>
+<dd><p>indicates whether the TimerMechanism has reached its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.duration" title="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.duration"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">duration</span></code></a> value
+(see <a class="reference internal" href="#timermechanism-execution"><span class="std std-ref">Execution</span></a> for additional details).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>if non-zero, the TimerMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reset" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> method is called, which resets the
+<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the TimerMechanism to its initial value (see
+<code class="xref any docutils literal notranslate"><span class="pre">TimerMechanism_Reset</span></code> for additional details).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int, float or 1d array of length 1 : default 0</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism._execute">
+<span class="sig-name descname"><span class="pre">_execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runtime_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanism._execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override to check for call to reset by ControlSignal</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> if Mechanisms is stateful.</p>
+<p>If the mechanism’s <code class="xref any docutils literal notranslate"><span class="pre">function</span></code> is an <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">IntegratorFunction</span></code></a>, or if the mechanism has and
+<a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a> (see <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>), this method
+effectively begins the function’s accumulation over again at the specified value, and updates related
+attributes on the mechanism.  It also clears the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.history" title="psyneulink.core.globals.parameters.Parameter.history"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">history</span></code></a>,
+thus effectively setting the previous value to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<p>If the mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> is an <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">IntegratorFunction</span></code></a>, its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reset" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> method:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Calls the function’s own <code class="xref any docutils literal notranslate"><span class="pre">reset</span></code> method (see Note below for
+details)</p></li>
+<li><p>Sets the mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> to the output of the function’s
+reset method</p></li>
+<li><p>Updates its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_port" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_port"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output</span> <span class="pre">ports</span></code></a> based on its new <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a></p></li>
+</ol>
+</div></blockquote>
+<p>If the mechanism has an <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a>, its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reset" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>(1) Calls the `integrator_function&#39;s &lt;TransferMechanism.integrator_function&gt;` own `reset
+    &lt;IntegratorFunction.reset&gt;` method (see Note below for details)
+
+(2) Executes its `function &lt;Mechanism_Base.function&gt;` using the output of the `integrator_function&#39;s
+    &lt;TransferMechanism.integrator_function&gt;` `reset &lt;IntegratorFunction.reset&gt;` method as
+    the function&#39;s variable
+
+(3) Sets the mechanism&#39;s `value &lt;Mechanism_Base.value&gt;` to the output of its function
+
+(4) Updates its `output ports &lt;Mechanism_Base.output_port&gt;` based on its new `value
+    &lt;Mechanism_Base.value&gt;`
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The reset method of an IntegratorFunction Function typically resets the function’s
+<a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction.previous_value" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> (and any other <code class="xref any docutils literal notranslate"><span class="pre">stateful_attributes</span></code>) and <code class="xref any docutils literal notranslate"><span class="pre">value</span></code> to the quantity (or
+quantities) specified. If <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reset" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> is called without arguments,
+the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction.initializer" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction.initializer"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initializer</span></code></a> value (or the values of each of the attributes in
+<code class="xref any docutils literal notranslate"><span class="pre">initializers</span></code>) is used instead. The <code class="xref any docutils literal notranslate"><span class="pre">reset</span></code> method may vary across different Integrators. See individual
+functions for details on their <code class="xref any docutils literal notranslate"><span class="pre">stateful_attributes</span></code>,
+as well as other reinitialization steps that the reset method may carry out.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanismError">
+<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.processing.integrator.timermechanism.</span></span><span class="sig-name descname"><span class="pre">TimerMechanismError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">component</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.timermechanism.TimerMechanismError" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+
+
+             </article>
+             
+            </div>
+            <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="ObjectiveMechanisms.html" class="btn btn-neutral float-right" title="Objective Mechanisms" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+      
+      
+        <a href="EpisodicMemoryMechanism.html" class="btn btn-neutral" title="EpisodicMemoryMechanism" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+      
+    </div>
+  
+
+  
+
+    <hr>
+
+  
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen.
+
+    </p>
+  </div>
+    
+      <div>
+        Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+      </div>
+     
+
+</footer>
+
+          </div>
+        </div>
+
+        <div class="psyneulink-content-right" id="psyneulink-content-right">
+          <div class="psyneulink-right-menu" id="psyneulink-right-menu">
+            <div class="psyneulink-side-scroll" id="psyneulink-side-scroll-right">
+              <ul>
+<li><a class="reference internal" href="#">TimerMechanism</a><ul>
+<li><a class="reference internal" href="#contents">Contents</a></li>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#creating-a-timermechanism">Creating a TimerMechanism</a></li>
+<li><a class="reference internal" href="#structure">Structure</a></li>
+<li><a class="reference internal" href="#execution">Execution</a></li>
+<li><a class="reference internal" href="#class-reference">Class Reference</a></li>
+</ul>
+</li>
+</ul>
+
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  
+
+
+  
+
+     
+       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+         <script src="_static/jquery.js"></script>
+         <script src="_static/underscore.js"></script>
+         <script src="_static/doctools.js"></script>
+     
+
+  
+
+  <script type="text/javascript" src="_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="_static/js/vendor/bootstrap.min.js"></script>
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+  <!-- Begin Footer -->
+
+  <footer class="site-footer" id="docs-tutorials-resources">
+    <div class="container footer-container">
+      <div class="footer-logo-wrapper">
+        <a href="https://princetonuniversity.github.io/PsyNeuLink/" class="footer-logo"></a>
+      </div>
+
+  </footer>
+
+  
+
+  <!-- End Footer -->
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container mobile-logo-container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="https://princetonuniversity.github.io/PsyNeuLink/" aria-label="PsyNeuLink"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://github.com/PrincetonUniversity/PsyNeuLink">Github</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      psyneulinkAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.psyneulink-article a span.pre").each(function(e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
+  </script>
+</body>
+</html>

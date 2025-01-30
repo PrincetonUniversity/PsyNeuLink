@@ -1,0 +1,1190 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>TimerFunctions &mdash; PsyNeuLink 0.16.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+  <!-- Preload the theme fonts -->
+
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-book.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium-italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-SemiBold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+
+<!-- Preload the katex fonts -->
+
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Math-Italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size1-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size4-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size2-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size3-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Caligraphic-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+</head>
+
+<div class="container-fluid header-holder tutorials-header" id="header-holder">
+  <div class="container">
+    <div class="header-container">
+      <a class="header-logo" href="https://princetonuniversity.github.io/PsyNeuLink/"></a>
+<!--      <a class="header-logo"></a>-->
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://github.com/PrincetonUniversity/PsyNeuLink">Github</a>
+          </li>
+        </ul>
+      </div>
+
+      <a class="main-menu-open-button" href="#" data-behavior="open-mobile-menu"></a>
+    </div>
+
+  </div>
+</div>
+
+
+<body class="psyneulink-body">
+
+   
+
+    
+
+    <div class="table-of-contents-link-wrapper">
+      <span>Table of Contents</span>
+      <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+    </div>
+
+    <nav data-toggle="wy-nav-shift" class="psyneulink-left-menu" id="psyneulink-left-menu">
+      <div class="psyneulink-side-scroll">
+        <div class="psyneulink-menu psyneulink-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          <div class="psyneulink-left-menu-search">
+            
+
+            
+              
+              
+                <div class="version">
+                  0.16.0.0
+                </div>
+              
+            
+
+            
+
+
+  
+
+
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search Docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            
+          </div>
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
+<li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
+</ul>
+
+            
+          
+          <div class="psyneulink-dev-mode-toggle">
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="psyneulink-container">
+      <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
+        <div class="psyneulink-breadcrumbs-wrapper">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="psyneulink-breadcrumbs">
+    
+      <li>
+        <a href="index.html">
+          
+            Docs
+          
+        </a> &gt;
+      </li>
+
+        
+      <li>TimerFunctions</li>
+    
+  </ul>
+
+  
+</div>
+        </div>
+
+        <div class="psyneulink-shortcuts-wrapper" id="psyneulink-shortcuts-wrapper">
+          Shortcuts
+        </div>
+      </div>
+
+      <section data-toggle="wy-nav-shift" id="psyneulink-content-wrap" class="psyneulink-content-wrap">
+        <div class="psyneulink-content-left">
+
+        
+          
+          <div class="rst-content">
+          
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+             <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
+              
+  <section id="timerfunctions">
+<h1>TimerFunctions<a class="headerlink" href="#timerfunctions" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<span class="target" id="module-psyneulink.core.components.functions.nonstateful.timerfunctions"></span><ul class="simple">
+<li><p><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimerFunction</span></code></a></p></li>
+<li><p><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer" title="psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearTimer</span></code></a></p></li>
+<li><p><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AcceleratingTimer</span></code></a></p></li>
+<li><p><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DeceleratingTimer</span></code></a></p></li>
+<li><p><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AsymptoticTimer</span></code></a></p></li>
+</ul>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>Functions for which <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.initial" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.initial"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initial</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.final" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.final"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">final</span></code></a> values and a <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.duration" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.duration"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">duration</span></code></a> can be specified, for use with a <a class="reference internal" href="TimerMechanism.html"><span class="doc">TimerMechanism</span></a>.</p>
+<section id="types">
+<span id="timerfunction-types"></span><h3>Types<a class="headerlink" href="#types" title="Permalink to this headline">¶</a></h3>
+<p>There are four types that implement different functional forms, each of which is rising if <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.initial" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.initial"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initial</span></code></a> is less than <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.final" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.final"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">final</span></code></a> and declining for the reverse:</p>
+<ul>
+<li><p><strong>LinearTimer</strong> - progresses linearly from <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.initial" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.initial"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initial</span></code></a> to <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.final" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.final"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">final</span></code></a> value.
+(see <a class="reference external" href="https://www.desmos.com/calculator/i0knnnozcs">interactive graph</a>).</p></li>
+<li><p><strong>AcceleratingTimer</strong> - advances from initial &lt;TimerFunction.initial&gt;` to <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.final" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.final"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">final</span></code></a> value
+by progressively larger amounts at an adjustable exponential <code class="xref any docutils literal notranslate"><span class="pre">rate</span></code>
+(see <a class="reference external" href="https://www.desmos.com/calculator/rms6z2ji8g">interactive graph</a>).</p></li>
+<li><p><strong>DeceleratingTimer</strong> - advances from initial &lt;TimerFunction.initial&gt;` to <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.final" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.final"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">final</span></code></a> value
+by progressively smaller amounts at an adjustable exponential <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.rate" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a>
+(see <a class="reference external" href="https://www.desmos.com/calculator/cshkzip0ai">interactive graph</a>).</p></li>
+<li><p><strong>AsymptoticTimer</strong> - progresses at a fixed exponential <code class="xref any docutils literal notranslate"><span class="pre">rate</span></code> from <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.initial" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.initial"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initial</span></code></a> to within <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.tolerance" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.tolerance"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">tolerance</span></code></a> of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.final" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.final"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">final</span></code></a></p>
+<blockquote>
+<div><p>(see <a class="reference external" href="https://www.desmos.com/calculator/tmfs4ps9cp">interactive graph</a>).</p>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="standard-attributes">
+<span id="timerfunction-standardattributes"></span><h3>Standard Attributes<a class="headerlink" href="#standard-attributes" title="Permalink to this headline">¶</a></h3>
+<p>TimerFunctions have the following Parameters:</p>
+<ul class="simple">
+<li><p><strong>initial</strong>: specifies the <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.value" title="psyneulink.core.components.functions.function.Function_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> that the function has when its <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.variable" title="psyneulink.core.components.functions.function.Function_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is 0.</p></li>
+</ul>
+<ul class="simple">
+<li><p><strong>final</strong>: specifies the <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.value" title="psyneulink.core.components.functions.function.Function_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> that the function has when its <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.variable" title="psyneulink.core.components.functions.function.Function_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is equal to <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.duration" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.duration"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">duration</span></code></a>.</p></li>
+</ul>
+<ul class="simple">
+<li><p><strong>duration</strong>: specifies the value of the <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.variable" title="psyneulink.core.components.functions.function.Function_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> at which the`value
+&lt;Function_Base.value&gt;` of the function is equal to <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.final" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.final"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">final</span></code></a>.</p></li>
+</ul>
+<ul class="simple">
+<li><p><strong>rate</strong>: specifies the rate at which the progression of the <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.value" title="psyneulink.core.components.functions.function.Function_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the function changes.</p></li>
+</ul>
+</section>
+</section>
+<section id="timerfunction-class-references">
+<h2>TimerFunction Class References<a class="headerlink" href="#timerfunction-class-references" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.nonstateful.timerfunctions.</span></span><span class="sig-name descname"><span class="pre">LinearTimer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer" title="Permalink to this definition">¶</a></dt>
+<dd><div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer._function" title="psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> returns linear transform of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
+<div class="math notranslate nohighlight">
+\[\left(\frac{final-initial}{duration}\right) \cdot variable + initial\]</div>
+<p>such that:</p>
+<div class="math notranslate nohighlight">
+\[ \begin{align}\begin{aligned}value=initial \ for\ variable=0\\value=final\ for\ variable=duration\end{aligned}\end{align} \]</div>
+<p>where:</p>
+<blockquote>
+<div><p><strong>initial</strong> determines the <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.value" title="psyneulink.core.components.functions.function.Function_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the function
+when its <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> = 0.</p>
+<p><strong>final</strong> determines the <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.value" title="psyneulink.core.components.functions.function.Function_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the function
+when its <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> = duration.</p>
+<p><strong>duration</strong> determines the value of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>
+at which the value of the function = final.</p>
+</div></blockquote>
+<p><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.derivative" title="psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.derivative"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">derivative</span></code></a> returns the derivative of the LinearTimer Function:</p>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[\frac{final-initial}{duration}\]</div>
+</div></blockquote>
+<p>See <a class="reference external" href="https://www.desmos.com/calculator/i0knnnozcs">graph</a> for interactive plot of the function using <a class="reference external" href="https://www.desmos.com">Desmos</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>default_variable</strong> (<em>number</em><em> or </em><em>array : default class_defaults.variable</em>) – specifies a template for the value to be transformed.</p></li>
+<li><p><strong>initial</strong> (<em>float : default 1.0</em>) – specifies the value the function should have when <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> = 0;
+must be greater than or equal to 0.</p></li>
+<li><p><strong>final</strong> (<em>float : default 1.0</em>) – specifies the value the function should have when <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> = <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.duration" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.duration"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">duration</span></code></a>; must be greater than <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.initial" title="psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.initial"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initial</span></code></a>.</p></li>
+<li><p><strong>duration</strong> (<em>float : default 1.0</em>) – specifies the value of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> at which the value of the function
+should equal <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.final" title="psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.final"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">final</span></code></a>; must be greater than 0.</p></li>
+<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters
+in arguments of the constructor.</p></li>
+<li><p><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p></li>
+<li><p><strong>name</strong> (str : default see <code class="xref any docutils literal notranslate"><span class="pre">name</span></code>) – specifies the name of the Function.</p></li>
+<li><p><strong>prefs</strong> (<em>PreferenceSet</em><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.variable">
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>contains value to be transformed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>number or array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.initial">
+<span class="sig-name descname"><span class="pre">initial</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.initial" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the value of the function when <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> = 0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float (&gt;0)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.final">
+<span class="sig-name descname"><span class="pre">final</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.final" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the value of the function when <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> = <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.duration" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.duration"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">duration</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.duration">
+<span class="sig-name descname"><span class="pre">duration</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.duration" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the value of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> at which the value of the function is equal
+to <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.final" title="psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.final"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">final</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float (&gt;0)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.owner">
+<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component">Component</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
+assigned by FunctionRegistry (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.prefs">
+<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
+constructor, a default is assigned using <code class="xref any docutils literal notranslate"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
+for details).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>PreferenceSet or specification dict : Function.classPreferences</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer._function">
+<span class="sig-name descname"><span class="pre">_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer._function" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>variable</strong> (<em>number</em><em> or </em><em>array : default class_defaults.variable</em>) – a single value or array to be exponentiated.</p></li>
+<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>LinearTimer rise transform of variable</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>number or array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.derivative">
+<span class="sig-name descname"><span class="pre">derivative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer.derivative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Derivative of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer._function" title="psyneulink.core.components.functions.nonstateful.timerfunctions.LinearTimer._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> at <strong>input</strong>:</p>
+<div class="math notranslate nohighlight">
+\[(final - initial) * \left(\frac{(1 + duration * e^{variable})}{duration * e^{duration}}\right)\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input</strong> (<em>number</em>) – value of the input to the LinearTimer transform at which derivative is to be taken.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>derivative</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>number or array</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.nonstateful.timerfunctions.</span></span><span class="sig-name descname"><span class="pre">AcceleratingTimer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer" title="Permalink to this definition">¶</a></dt>
+<dd><div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer._function" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> returns acceleratingTimer rise transform of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>; this is the inverse of the <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AcceleratingTimer</span></code></a> Function.</p>
+<div class="math notranslate nohighlight">
+\[initial+\left(final-initial\right)\left(\frac{variable}{duration}\right)^{rate}e^{\left(\left(
+\frac{variable}{duration}\right)^{rate}-1\right)}\]</div>
+<p>such that:</p>
+<div class="math notranslate nohighlight">
+\[ \begin{align}\begin{aligned}value=initial \ for\ variable=0\\value=final\ for\ variable=duration\end{aligned}\end{align} \]</div>
+<p>where:</p>
+<blockquote>
+<div><p><strong>initial</strong> determines the <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.value" title="psyneulink.core.components.functions.function.Function_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the function
+when its <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> = 0.</p>
+<p><strong>final</strong> determines the <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.value" title="psyneulink.core.components.functions.function.Function_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the function
+when its <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> = duration.</p>
+<p><strong>duration</strong> determines the value of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>
+at which the value of the function = final.</p>
+<p><strong>rate</strong> determines the <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.rate" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a> of acceleration of the function.</p>
+</div></blockquote>
+<p><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.derivative" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.derivative"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">derivative</span></code></a> returns the derivative of the AcceleratingTimer Function:</p>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[(final-initial) \cdot \left[ rate \cdot \left(\frac{variable}{duration}\right)^{rate-1}
+\cdot \frac{1}{duration} \cdot e^{\left(\left(\frac{variable}{duration}\right)^{rate}-1\right)} +
+\left(\frac{variable}{duration}\right)^{rate} \cdot e^{\left(\left(\frac{variable}{duration}\right)^{
+rate}-1\right)} \cdot rate \cdot \frac{1}{duration}\right]\]</div>
+</div></blockquote>
+<p>See <a class="reference external" href="https://www.desmos.com/calculator/rms6z2ji8g">graph</a> for interactive plot of the function using <a class="reference external" href="https://www.desmos.com">Desmos</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>default_variable</strong> (<em>number</em><em> or </em><em>array : default class_defaults.variable</em>) – specifies a template for the value to be transformed.</p></li>
+<li><p><strong>initial</strong> (<em>float : default 1.0</em>) – specifies the value the function should have when <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> = 0;
+must be greater than or equal to 0.</p></li>
+<li><p><strong>final</strong> (<em>float : default 1.0</em>) – specifies the value the function should have when <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> = <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.duration" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.duration"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">duration</span></code></a>; must be greater than <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.initial" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.initial"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initial</span></code></a>.</p></li>
+<li><p><strong>duration</strong> (<em>float : default 1.0</em>) – specifies the value of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> at which the value of the function
+should equal <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.final" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.final"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">final</span></code></a>; must be greater than 0.</p></li>
+<li><p><strong>rate</strong> (<em>float : default 1.0</em>) – specifies the rate at which the value of the function accelerates; must be greater than 0.</p></li>
+<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters
+in arguments of the constructor.</p></li>
+<li><p><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p></li>
+<li><p><strong>name</strong> (str : default see <code class="xref any docutils literal notranslate"><span class="pre">name</span></code>) – specifies the name of the Function.</p></li>
+<li><p><strong>prefs</strong> (<em>PreferenceSet</em><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.variable">
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>contains value to be transformed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>number or array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.initial">
+<span class="sig-name descname"><span class="pre">initial</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.initial" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the value of the function when <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> = 0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float (&gt;0)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.final">
+<span class="sig-name descname"><span class="pre">final</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.final" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the value of the function when <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> = <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.duration" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.duration"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">duration</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.duration">
+<span class="sig-name descname"><span class="pre">duration</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.duration" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the value of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> at which the value of the function is equal
+to <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.final" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.final"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">final</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float (&gt;0)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.rate">
+<span class="sig-name descname"><span class="pre">rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the rate at which the value of the function accelerates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float (&gt;1.0)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.owner">
+<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component">Component</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
+assigned by FunctionRegistry (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.prefs">
+<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
+constructor, a default is assigned using <code class="xref any docutils literal notranslate"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
+for details).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>PreferenceSet or specification dict : Function.classPreferences</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer._function">
+<span class="sig-name descname"><span class="pre">_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer._function" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>variable</strong> (<em>number</em><em> or </em><em>array : default class_defaults.variable</em>) – a single value or array to be exponentiated.</p></li>
+<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>AcceleratingTimer rise transform of variable</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>number or array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.derivative">
+<span class="sig-name descname"><span class="pre">derivative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer.derivative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Derivative of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer._function" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AcceleratingTimer._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> at <strong>input</strong>:</p>
+<div class="math notranslate nohighlight">
+\[(final - initial) * \left(\frac{(1 + duration * e^{variable})}{duration * e^{duration}}\right)\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input</strong> (<em>number</em>) – value of the input to the AcceleratingTimer transform at which derivative is to be taken.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>derivative</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>number or array</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.nonstateful.timerfunctions.</span></span><span class="sig-name descname"><span class="pre">DeceleratingTimer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer" title="Permalink to this definition">¶</a></dt>
+<dd><div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer._function" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> returns exponentially decaying transform of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>:</p>
+<div class="math notranslate nohighlight">
+\[\frac{\left(initial-final-direction\right)}{e^{\ln\left(-direction\left(initial\ -\
+final-direction\right)\right)\left(\frac{variable}{duration}\right)^{
+rate}}}+final+direction\]</div>
+<p>such that:</p>
+<div class="math notranslate nohighlight">
+\[ \begin{align}\begin{aligned}value = initial + offset\ for\ variable=0\\value = (initial * final) + offset\ for\ variable=duration\end{aligned}\end{align} \]</div>
+<p>where:</p>
+<blockquote>
+<div><p><strong>initial</strong>, together with <code class="xref any docutils literal notranslate"><span class="pre">offset</span></code>, determines the value of the function when
+<a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> = 0, and is used together with <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.final" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.final"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">final</span></code></a>
+to determine the value of the function when <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> = <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.duration" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.duration"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">duration</span></code></a>.</p>
+<p><strong>duration</strong> determines the value of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> at which
+the value of the function should equal <span class="math notranslate nohighlight">\(initial * final + offset\)</span>.</p>
+<p><strong>final</strong> is the fraction of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.initial" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.initial"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initial</span></code></a> when, added to <code class="xref any docutils literal notranslate"><span class="pre">offset</span></code>, is used to determine the value of the function when <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> should equal <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.duration" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.duration"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">duration</span></code></a>.</p>
+<p><strong>rate</strong> determines the <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.rate" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a> of deceleration of the function.</p>
+<p><strong>direction</strong> is +1 if final &gt; initial, otherwise -1, and is used to determine the direction of the
+progression (rising or decaying) of the TimerFunction.</p>
+</div></blockquote>
+<p><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.derivative" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.derivative"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">derivative</span></code></a> returns the derivative of the DeceleratingTimer Function:</p>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[\frac{direction \cdot rate \cdot(initial-final-direction)\cdot\ln(direction(final-initial+direction)) \cdot \left(\frac{
+variable}{duration}\right)^{rate-1}}{duration\cdot e^{\ln(direction(final-initial+direction))\left(\frac{variable}{
+duration}\right)^{rate}}}\]</div>
+</div></blockquote>
+<p>See <a class="reference external" href="https://www.desmos.com/calculator/cshkzip0ai">graph</a> for interactive plot of the function using <a class="reference external" href="https://www.desmos.com">Desmos</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>default_variable</strong> (<em>number</em><em> or </em><em>array : default class_defaults.variable</em>) – specifies a template for the value to be transformed.</p></li>
+<li><p><strong>initial</strong> (<em>float : default 1.0</em>) – specifies, together with <code class="xref any docutils literal notranslate"><span class="pre">offset</span></code>, the value of the function when <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> = 0; must be greater than 0.</p></li>
+<li><p><strong>final</strong> (<em>float : default 0.01</em>) – specifies the fraction of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.initial" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.initial"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initial</span></code></a> when added to <code class="xref any docutils literal notranslate"><span class="pre">offset</span></code>,
+that determines the value of the function when <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> = <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.duration" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.duration"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">duration</span></code></a>; must be between 0 and 1.</p></li>
+<li><p><strong>duration</strong> (<em>float : default 1.0</em>) – specifies the value of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> at which the <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.initial" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.initial"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span> <span class="pre">of</span> <span class="pre">the</span> <span class="pre">function</span>
+<span class="pre">should</span> <span class="pre">equal</span> <span class="pre">`initial</span></code></a> * <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.final" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.final"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">final</span></code></a> + <code class="xref any docutils literal notranslate"><span class="pre">offset</span></code>; must be greater than 0.</p></li>
+<li><p><strong>rate</strong> (<em>float : default 1.0</em>) – specifies the rate at which the value of the function decelerates; must be greater than 0.</p></li>
+<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters
+in arguments of the constructor.</p></li>
+<li><p><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p></li>
+<li><p><strong>name</strong> (str : default see <code class="xref any docutils literal notranslate"><span class="pre">name</span></code>) – specifies the name of the Function.</p></li>
+<li><p><strong>prefs</strong> (<em>PreferenceSet</em><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.variable">
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>contains value to be transformed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>number or array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.initial">
+<span class="sig-name descname"><span class="pre">initial</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.initial" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines, together with <code class="xref any docutils literal notranslate"><span class="pre">offset</span></code>, the value of the function when <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> = 0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.final">
+<span class="sig-name descname"><span class="pre">final</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.final" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the fraction of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.initial" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.initial"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initial</span></code></a> when added to <code class="xref any docutils literal notranslate"><span class="pre">offset</span></code>,
+that determines the value of the function when <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> = <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.duration" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.duration"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">duration</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.duration">
+<span class="sig-name descname"><span class="pre">duration</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.duration" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the value of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> at which the value of the function should
+equal <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.initial" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.initial"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initial</span></code></a> * <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.final" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.final"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">final</span></code></a> + <code class="xref any docutils literal notranslate"><span class="pre">offset</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float (&gt;0)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.rate">
+<span class="sig-name descname"><span class="pre">rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the rate at which the value of the function decelerates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float (&gt;1.0)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.owner">
+<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component">Component</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
+assigned by FunctionRegistry (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.prefs">
+<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
+constructor, a default is assigned using <code class="xref any docutils literal notranslate"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
+for details).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>PreferenceSet or specification dict : Function.classPreferences</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer._function">
+<span class="sig-name descname"><span class="pre">_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer._function" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>variable</strong> (<em>number</em><em> or </em><em>array : default class_defaults.variable</em>) – amount by which to increment timer on current execution;  if this is not specified, the timer is incremented
+by the value of <code class="xref any docutils literal notranslate"><span class="pre">increment</span></code>.</p></li>
+<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>Exponentially decayed value of variable</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>number or array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.derivative">
+<span class="sig-name descname"><span class="pre">derivative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer.derivative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Derivative of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer._function" title="psyneulink.core.components.functions.nonstateful.timerfunctions.DeceleratingTimer._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> at <strong>input</strong>:</p>
+<div class="math notranslate nohighlight">
+\[ \begin{align}\begin{aligned}\frac{direction \cdot rate \cdot(initial-final-direction)\cdot\ln(direction(
+ final-initial+direction))\cdot \left(\frac{variable}{duration}\right)^{rate-1}}{duration\cdot e^{\ln(
+ direction(final-initial+direction))\left(\frac{variable}{duration}\right)^{rate}}}\\Arguments
+---------\\input : number
+    value of the input to the DeceleratingTimer transform at which derivative is to be taken.\\Derivative of `function &lt;DeceleratingTimer._function&gt;` at **input**.\\Returns
+-------
+derivative :  number or array\end{aligned}\end{align} \]</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.nonstateful.timerfunctions.</span></span><span class="sig-name descname"><span class="pre">AsymptoticTimer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer" title="Permalink to this definition">¶</a></dt>
+<dd><div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer._function" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> returns exponentially progressing transform of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> toward an asymptoticTimer value that reaches <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.duration" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.duration"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">duration</span></code></a>
+when it falls within the specified <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.tolerance" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.tolerance"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">tolerance</span></code></a> of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.final" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.final"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">final</span></code></a>:</p>
+<div class="math notranslate nohighlight">
+\[(initial - final) * \frac{\ln(tolerance)}{duration} *e^{\left(\frac{variable * \ln(tolerance)}
+{duration}\right)} + final\]</div>
+<p>such that:</p>
+<div class="math notranslate nohighlight">
+\[ \begin{align}\begin{aligned}value = initial for\ variable=0\\value = ((initial - final) \cdot tolerance) for\ variable=duration\end{aligned}\end{align} \]</div>
+<p>where:</p>
+<blockquote>
+<div><p><strong>initial</strong>, determines the value of the function when <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> = 0,
+and is used together with <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.final" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.final"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">final</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.tolerance" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.tolerance"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">tolerance</span></code></a> to determine the value of the function at which <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> = <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.duration" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.duration"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">duration</span></code></a>.</p>
+<p><strong>final</strong> is the asymptoticTimer value toward which the function decays.</p>
+<p><strong>tolerance</strong> is the fraction of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.initial" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.initial"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initial</span></code></a> - <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.final" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.final"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">final</span></code></a> used to determine the value of the function when <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is equal to <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.duration" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.duration"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">duration</span></code></a>.</p>
+<p><strong>duration</strong> determines the value of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> at which
+the value of the function is equal to <span class="math notranslate nohighlight">\(initial \cdot final\)</span>.</p>
+</div></blockquote>
+<p><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.derivative" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.derivative"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">derivative</span></code></a> returns the derivative of the AsymptoticTimer Function:</p>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[\frac{initial\cdot\ln(tolerance)}{duration}\cdot e^{\frac{variable\cdot\ln(tolerance)}{duration}}\]</div>
+</div></blockquote>
+<p>See <a class="reference external" href="https://www.desmos.com/calculator/tmfs4ps9cp">graph</a> for interactive plot of the function using <a class="reference external" href="https://www.desmos.com">Desmos</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>default_variable</strong> (<em>number</em><em> or </em><em>array : default class_defaults.variable</em>) – specifies a template for the value to be transformed.</p></li>
+<li><p><strong>initial</strong> (<em>float : default 1.0</em>) – specifies the value of the function when <a href="#id10"><span class="problematic" id="id11">`</span></a>variable&lt;AsymptoticTimer.variable&gt;`=0; must be greater than 0.</p></li>
+<li><p><strong>final</strong> (<em>float : default 0.0</em>) – specifies the asymptoticTimer value toward which the function decays.</p></li>
+<li><p><strong>tolerance</strong> (<em>float : default 0.01</em>) – specifies the fraction of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.initial" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.initial"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initial</span></code></a>-<a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.final" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.final"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">final</span></code></a>
+that determines the value of the function when <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> = <a href="#id12"><span class="problematic" id="id13">`</span></a>duration; must be
+between 0 and 1.</p></li>
+<li><p><strong>duration</strong> (<em>float : default 1.0</em>) – specifies the value of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> at which the <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.initial" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.initial"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span> <span class="pre">of</span> <span class="pre">the</span> <span class="pre">function</span>
+<span class="pre">should</span> <span class="pre">equal</span> <span class="pre">`initial</span></code></a> * <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.final" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.final"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">final</span></code></a>;
+must be greater than 0.</p></li>
+<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters
+in arguments of the constructor.</p></li>
+<li><p><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p></li>
+<li><p><strong>name</strong> (str : default see <code class="xref any docutils literal notranslate"><span class="pre">name</span></code>) – specifies the name of the Function.</p></li>
+<li><p><strong>prefs</strong> (<em>PreferenceSet</em><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.variable">
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>contains value to be transformed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>number or array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.initial">
+<span class="sig-name descname"><span class="pre">initial</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.initial" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the value of the function when <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> = 0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float (&gt;0)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.final">
+<span class="sig-name descname"><span class="pre">final</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.final" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the asymptoticTimer value toward which the function decays.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.tolerance">
+<span class="sig-name descname"><span class="pre">tolerance</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.tolerance" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the fraction of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.initial" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.initial"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initial</span></code></a> - final &lt;AsymptoticTimer.final&gt;
+that determines the value of the function when <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> = <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.duration" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.duration"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">duration</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float (0,1)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.duration">
+<span class="sig-name descname"><span class="pre">duration</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.duration" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the value of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> at which the value of the function should
+equal <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.initial" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.initial"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initial</span></code></a> * <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.final" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.final"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">final</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float (&gt;0)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.bounds">
+<span class="sig-name descname"><span class="pre">bounds</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.bounds" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>(None, None)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.owner">
+<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component">Component</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
+assigned by FunctionRegistry (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.prefs">
+<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
+constructor, a default is assigned using <code class="xref any docutils literal notranslate"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
+for details).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>PreferenceSet or specification dict : Function.classPreferences</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer._function">
+<span class="sig-name descname"><span class="pre">_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer._function" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>variable</strong> (<em>number</em><em> or </em><em>array : default class_defaults.variable</em>) – amount by which to increment timer on current execution;  if this is not specified, the timer is incremented
+by the value of <code class="xref any docutils literal notranslate"><span class="pre">increment</span></code>.</p></li>
+<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>Exponentially decayed value of variable</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>number or array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.derivative">
+<span class="sig-name descname"><span class="pre">derivative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer.derivative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Derivative of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer._function" title="psyneulink.core.components.functions.nonstateful.timerfunctions.AsymptoticTimer._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> at <strong>input</strong>:</p>
+<div class="math notranslate nohighlight">
+\[\frac{initial\cdot\ln(tolerance)}{duration}\cdot e^{\frac{variable\cdot\ln(tolerance)}{duration}}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input</strong> (<em>number</em>) – value of the input to the AsymptoticTimer transform at which derivative is to be taken.</p></li>
+<li><p><strong>input.</strong> (<em>Derivative of function at</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>derivative</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>number or array</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.nonstateful.timerfunctions.</span></span><span class="sig-name descname"><span class="pre">TimerFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass of TransferFunction that allows a initial, final and duration value to be specified;
+for use with a <a class="reference internal" href="TimerMechanism.html"><span class="doc">TimerMechanism</span></a>.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.variable">
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>contains value to be transformed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>number or array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.initial">
+<span class="sig-name descname"><span class="pre">initial</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.initial" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the value of the function when <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> = 0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float (&gt;0)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.final">
+<span class="sig-name descname"><span class="pre">final</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.final" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the value of the function when <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> = <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.duration" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.duration"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">duration</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.duration">
+<span class="sig-name descname"><span class="pre">duration</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.duration" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the value of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.variable" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> at which the value of the function is equal
+to <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.final" title="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.final"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">final</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float (&gt;0)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.rate">
+<span class="sig-name descname"><span class="pre">rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.timerfunctions.TimerFunction.rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the rate at which the value of the function accelerates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float (&gt;1.0)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+             </article>
+             
+            </div>
+            <footer>
+  
+
+  
+
+    <hr>
+
+  
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen.
+
+    </p>
+  </div>
+    
+      <div>
+        Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+      </div>
+     
+
+</footer>
+
+          </div>
+        </div>
+
+        <div class="psyneulink-content-right" id="psyneulink-content-right">
+          <div class="psyneulink-right-menu" id="psyneulink-right-menu">
+            <div class="psyneulink-side-scroll" id="psyneulink-side-scroll-right">
+              <ul>
+<li><a class="reference internal" href="#">TimerFunctions</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a><ul>
+<li><a class="reference internal" href="#types">Types</a></li>
+<li><a class="reference internal" href="#standard-attributes">Standard Attributes</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#timerfunction-class-references">TimerFunction Class References</a></li>
+</ul>
+</li>
+</ul>
+
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  
+
+
+  
+
+     
+       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+         <script src="_static/jquery.js"></script>
+         <script src="_static/underscore.js"></script>
+         <script src="_static/doctools.js"></script>
+         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+     
+
+  
+
+  <script type="text/javascript" src="_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="_static/js/vendor/bootstrap.min.js"></script>
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+  <!-- Begin Footer -->
+
+  <footer class="site-footer" id="docs-tutorials-resources">
+    <div class="container footer-container">
+      <div class="footer-logo-wrapper">
+        <a href="https://princetonuniversity.github.io/PsyNeuLink/" class="footer-logo"></a>
+      </div>
+
+  </footer>
+
+  
+
+  <!-- End Footer -->
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container mobile-logo-container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="https://princetonuniversity.github.io/PsyNeuLink/" aria-label="PsyNeuLink"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://github.com/PrincetonUniversity/PsyNeuLink">Github</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      psyneulinkAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.psyneulink-article a span.pre").each(function(e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
+  </script>
+</body>
+</html>

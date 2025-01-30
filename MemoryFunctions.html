@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MemoryFunctions &mdash; PsyNeuLink 0.15.3.0 documentation</title>
+  <title>MemoryFunctions &mdash; PsyNeuLink 0.16.0.0 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.3.0
+                  0.16.0.0
                 </div>
               
             
@@ -1319,7 +1319,7 @@ time.</p>
 <span class="sig-name descname"><span class="pre">selection_type</span></span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.selection_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>indicates whether <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.selection_function" title="psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.selection_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">selection_function</span></code></a> returns a single
 item (e.g., the default: <a class="reference internal" href="SelectionFunctions.html#psyneulink.core.components.functions.selectionfunctions.OneHot" title="psyneulink.core.components.functions.selectionfunctions.OneHot"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OneHot</span></code></a> using <em>MIN_INDICATOR</em> for its <a class="reference internal" href="SelectionFunctions.html#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a> attribute) or a
-weighted sum over the items in memory (e.g., using <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.SoftMax" title="psyneulink.core.components.functions.transferfunctions.SoftMax"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SoftMax</span></code></a> with <em>ALL</em>, its default, as its <code class="xref any docutils literal notranslate"><span class="pre">output</span></code> along each field, weighted by the
+weighted sum over the items in memory (e.g., using <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax" title="psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SoftMax</span></code></a> with <em>ALL</em>, its default, as its <code class="xref any docutils literal notranslate"><span class="pre">output</span></code> along each field, weighted by the
 corresponding element of <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.distance_field_weights" title="psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.distance_field_weights"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">distance_field_weights</span></code></a>.</p>
 <div class="technical-note docutils container">
 <p>This attribute is assigned by evaluating the <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.selection_function" title="psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.selection_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">selection_function</span></code></a> in the ContentAddressableMemory’s

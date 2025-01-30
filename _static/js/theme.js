@@ -334,8 +334,13 @@ window.scrollToAnchor = {
 
     var anchorScrolls = {
       ANCHOR_REGEX: /^#[^ ]+$/,
-      offsetHeightPx: function() {
-        return utilities.headersHeight() + utilities.OFFSET_HEIGHT_PADDING;
+      offsetHeightPx: function(elem) {
+        var offset = $(elem).offset().top;
+        var extraSpacing = $(elem).css('scroll-margin-top');
+        if (extraSpacing !== undefined) {
+          offset -= parseFloat(extraSpacing);
+        }
+        return offset;
       },
 
       /**
@@ -374,7 +379,7 @@ window.scrollToAnchor = {
           if ($(match).hasClass('dev-mode-link')){
             $(document.querySelector('.switch-ctrl input')).prop('checked', true).trigger('change')
           };
-          $('html, body').scrollTop($(match).offset().top);
+          $('html, body').scrollTop(this.offsetHeightPx(match));
           $('html, body').trigger('scroll');
           // Add the state to history as-per normal anchor links
           if(HISTORY_SUPPORT && pushToHistory) {
@@ -412,6 +417,10 @@ window.scrollToAnchor = {
         }
         else if (elem.tagName.toLowerCase() === 'span'){
           elem = elem.parentNode
+        }
+        // should do an upward search for <a>? or will that cause false matches?
+        if (elem.tagName.toLowerCase() === 'code') {
+          elem = elem.parentNode;
         }
         if(this.scrollIfAnchor(elem.getAttribute('href'), true)) {
           e.preventDefault();
@@ -788,41 +797,6 @@ function ThemeNav () {
         $(div.querySelector('input')).change(devMode_toggle);
         document.querySelector('.psyneulink-dev-mode-toggle').appendChild(div.firstChild);
 
-        function adjust_hashes(h, offset=0){
-            var dev_mode_link = false;
-            var h_parent = h.parentNode;
-            var new_element = document.createElement('div');
-            if ($(h.querySelector('.anchorjs-link')).hasClass('dev-mode-link')){
-              dev_mode_link = true;
-            }
-            $(new_element).addClass('hash_adjust');
-            if (dev_mode_link){$(new_element).addClass('dev-mode-link');}
-            $(new_element).attr('id', $(h).attr('id'));
-            $(new_element).css("position", "relative");
-            $(new_element).css("top", `${offset}px`);
-            h_parent.insertBefore(new_element, h)
-            var section_link = h.querySelector('span');
-            if (section_link){
-                var new_element = document.createElement('div');
-                $(new_element).addClass('hash_adjust');
-                if (dev_mode_link){$(new_element).addClass('dev-mode-link');}
-                $(new_element).attr('id', $(section_link).attr('id'));
-                $(new_element).css("position", "relative");
-                $(new_element).css("top", `${offset}px`);
-                h_parent.insertBefore(new_element, h)
-            }
-        }
-
-        document.querySelectorAll('.psyneulink-container dt').forEach(
-            (h) => {
-                adjust_hashes(h, -(utilities.headersHeight() + utilities.OFFSET_HEIGHT_PADDING))
-            });
-
-        document.querySelectorAll('.psyneulink-container .section').forEach(
-            (h) => {
-                adjust_hashes(h, -(utilities.headersHeight()))
-            });
-
         // Set up javascript UX bits
         $(document)
             // Shift nav in mobile when clicking the menu.
@@ -879,32 +853,6 @@ function ThemeNav () {
                 i.textContent = 'Arguments:'
             }
         })
-
-        // Adjust spans for each section in TOC for scrolling that's consistent with side menu
-
-        var tocSections = document.querySelectorAll('#psyneulink-article #contents a.reference.internal')
-
-        tocSections.forEach(
-            (section) => {
-                let utilities = window.utilities;
-                let href = section.getAttribute('href')
-                let span = document.querySelector(`span${href}`)
-                span.style.display = 'block';
-                span.style.position = 'relative';
-            }
-        )
-
-        var nonTocNavSections = document.querySelectorAll('.psyneulink-article .section')
-
-        nonTocNavSections.forEach(
-            (section) => {
-                let span = section.querySelector('span')
-                if (span && span.textContent === ''){
-                    span.style.display = 'block';
-                    span.style.position = 'relative';
-                }
-            }
-        );
     };
 
     nav.reset = function () {

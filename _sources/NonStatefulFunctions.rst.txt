@@ -15,4 +15,5 @@ Functions that do *not* depend on a previous value.
    OptimizationFunctions
    SelectionFunctions
    TransferFunctions
+   TimerFunctions
    TransformFunctions

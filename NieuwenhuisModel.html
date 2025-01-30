@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Locus Coeruleus and Attentional Blink (Nieuwenhuis, et al, 2005) &mdash; PsyNeuLink 0.15.3.0 documentation</title>
+  <title>Locus Coeruleus and Attentional Blink (Nieuwenhuis, et al, 2005) &mdash; PsyNeuLink 0.16.0.0 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.3.0
+                  0.16.0.0
                 </div>
               
             
@@ -248,9 +248,9 @@ associated <a class="reference internal" href="ObjectiveMechanism.html"><span cl
 <section id="behavioral-network-subsystem">
 <h3>Behavioral Network Subsystem<a class="headerlink" href="#behavioral-network-subsystem" title="Permalink to this headline">¶</a></h3>
 <p><strong>INPUT LAYER</strong>:  a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> with <strong>input_shapes</strong>=3 (one element for the input to the T1, T2 and distractor units
-of the <em>DECISION LAYER</em>, respectively), and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> function with <strong>slope</strong>=1.0 and <strong>intercept</strong>=0.0.</p>
+of the <em>DECISION LAYER</em>, respectively), and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Linear" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> function with <strong>slope</strong>=1.0 and <strong>intercept</strong>=0.0.</p>
 <p><strong>DECISION LAYER</strong>: an <a class="reference internal" href="LCAMechanism.html"><span class="doc">LCAMechanism</span></a> Mechanism of <strong>input_shapes</strong>=3 (one element each for the T1, T2 and distractor units),
-and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> Function with a slope=1.0 and intercept=0.0.  Each element has a self-excitatory connection
+and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> Function with a slope=1.0 and intercept=0.0.  Each element has a self-excitatory connection
 with a weight specified by <strong>self_excitation</strong>=2.5, a <strong>leak</strong>=-1.0, and every element is connected to every other
 element by mutually inhibitory connections with a weight specified by <strong>competition</strong> =1.0.  An ordinary differential
 equation describes the change in state over time, implemented in the LCAMechanism mechanism by setting
@@ -280,7 +280,7 @@ simulation of the population-level activity of the LC. The LCControlMechanism ou
 </ul>
 </div></blockquote>
 <p>The LC sends gain(<em>t</em>) to the <em>DECISION LAYER</em> and <em>RESPONSE LAYER</em> via <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> in
-order to modulate the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a> parameter of their <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> Functions.
+order to modulate the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a> parameter of their <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> Functions.
 Overall LC activity can be computed from <em>v</em> using the function <span class="math notranslate nohighlight">\(h(v) = C * v + (1 - C) * d\)</span>,
 where <em>C</em> =0.90 and <em>d</em> = 0.5 (see <a class="reference internal" href="#nieuwenhuis-execution"><span class="std std-ref">Execution</span></a> for additional details).</p>
 <p><strong>COMBINE VALUES</strong>: an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>, specified in the <strong>objective_mechanism</strong> argument of the
