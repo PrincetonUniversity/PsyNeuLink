@@ -782,7 +782,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             return
 
         for pnl_node, pytorch_node in nodes:
-            # Update each node's value with the output of the corresponding wrappter in the PyTorch representation
+            # Update each node's value with the output of the corresponding wrapper in the PyTorch representation
             if pytorch_node.output is None:
                 assert pytorch_node.exclude_from_gradient_calc, \
                     (f"PROGRAM ERROR: Value of PyTorch wrapper for {pnl_node.name} is None during forward pass, "
@@ -790,7 +790,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 continue
             # First get value in numpy format
             if isinstance(pytorch_node.output, list):
-                value = np.array([val.detach().cpu().numpy() for val in pytorch_node.output], dtype=object)
+                value = np.empty((len(pytorch_node.output),), dtype=object)
+                value[:] = [val.detach().cpu().numpy() for val in pytorch_node.output]
             else:
                 value = pytorch_node.output.detach().cpu().numpy()
 
