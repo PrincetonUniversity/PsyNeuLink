@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ParameterPort &mdash; PsyNeuLink 0.15.2.0+5.g1ea4407c6 documentation</title>
+  <title>ParameterPort &mdash; PsyNeuLink 0.15.3.0+7.g5c8168fb8 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.2.0+5
+                  0.15.3.0+7
                 </div>
               
             
@@ -340,7 +340,7 @@ listed above, then no ParameterPort is created and the parameter cannot be modif
 <span id="parameterport-specification-examples"></span><h3><em>Examples</em><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
 <p>In the following example, a Mechanism is created by specifying two of its parameters, as well as its
 <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> and two of that function’s parameters, each using a different specification format:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">psyneulink</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pnl</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">RecurrentTransferMechanism</span><span class="p">(</span>
 <span class="gp">... </span>                        <span class="n">input_shapes</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
 <span class="gp">... </span>                        <span class="n">noise</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">ControlSignal</span><span class="p">(),</span>
@@ -353,9 +353,9 @@ listed above, then no ParameterPort is created and the parameter cannot be modif
 directly assigning a value to it.  The second specifies the <code class="xref any docutils literal notranslate"><span class="pre">noise</span></code> parameter
 by assigning a default <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a>;  this will use the default value of the
 <code class="xref any docutils literal notranslate"><span class="pre">noise</span></code> attribute.  The <strong>function</strong> argument is specified using the constructor for
-a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> function, that specifies two of its parameters.  The <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a> parameter
+a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> function, that specifies two of its parameters.  The <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a> parameter
 is specified using a tuple, the first item of which is the value to be assigned, and the second specifies
-a default <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a>.  The <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.bias" title="psyneulink.core.components.functions.transferfunctions.Logistic.bias"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bias</span></code></a> parameter is also specified using a tuple,
+a default <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a>.  The <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic.bias" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic.bias"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bias</span></code></a> parameter is also specified using a tuple,
 in this case with a constructor for the ControlSignal that specifies its <a class="reference internal" href="ModulatorySignal.html#psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.modulation" title="psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.modulation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">modulation</span></code></a>
 parameter.</p>
 <p>In the following example, a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is created, and its

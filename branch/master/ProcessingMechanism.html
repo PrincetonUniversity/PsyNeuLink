@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ProcessingMechanism &mdash; PsyNeuLink 0.15.2.0+5.g1ea4407c6 documentation</title>
+  <title>ProcessingMechanism &mdash; PsyNeuLink 0.15.3.0+7.g5c8168fb8 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.2.0+5
+                  0.15.3.0+7
                 </div>
               
             
@@ -248,7 +248,7 @@ that is specialized for this purpose.</p>
 <p>A ProcessingMechanism is created by calling its constructor. By default, a ProcessingMechanism is assigned:</p>
 <ul class="simple">
 <li><p>a single <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>, that receives (and sums the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>) of any <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>s to it;</p></li>
-<li><p><a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> as its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>;</p></li>
+<li><p><a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Linear" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> as its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>;</p></li>
 <li><p>a single <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>, the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of which is the result of the linear transformation
 of its input (which, if no <a class="reference internal" href="Parameters.html"><span class="doc">parameters</span></a> are assigned to it function, is the same as its input).</p></li>
 </ul>
@@ -264,7 +264,7 @@ ways. Some common ones are described below (also see <a class="reference interna
 <p class="admonition-title">Note</p>
 <p>All of the configurations below assume that:</p>
 <ul class="simple">
-<li><p>the ProcessingMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> is a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.TransferFunction" title="psyneulink.core.components.functions.transferfunctions.TransferFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TransferFunction</span></code></a></p></li>
+<li><p>the ProcessingMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> is a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.TransferFunction" title="psyneulink.core.components.functions.nonstateful.transferfunctions.TransferFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TransferFunction</span></code></a></p></li>
 <li><p>any specified <strong>InputPorts and/or OutputPorts</strong> use their <strong>default</strong> <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>,</p></li>
 <li><p>the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.variable" title="psyneulink.core.components.ports.outputport.OutputPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> of <strong>OutputPorts</strong> is <strong>not specified</strong>.</p></li>
 </ul>
@@ -328,7 +328,7 @@ InputPorts and OutputPorts.</p>
 <p class="rubric" id="processingmechanism-examples">Examples</p>
 <p>The <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of a ProcessingMechanism is specified in the <strong>function</strong> argument,
 which may be the name of a <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> class:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">psyneulink</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pnl</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_processing_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">)</span>
 </pre></div>
 </div>

@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ComparatorMechanism &mdash; PsyNeuLink 0.15.2.0+5.g1ea4407c6 documentation</title>
+  <title>ComparatorMechanism &mdash; PsyNeuLink 0.15.3.0+7.g5c8168fb8 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.2.0+5
+                  0.15.3.0+7
                 </div>
               
             
@@ -267,7 +267,7 @@ and named, respectively, <em>SAMPLE</em> and <em>TARGET</em>.  The OutputPorts f
 in the <strong>sample</strong> and <strong>target</strong> arguments) are listed in the Mechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sample</span></code></a> and
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">target</span></code></a> attributes as well as in its <code class="xref any docutils literal notranslate"><span class="pre">monitor</span></code> attribute.
 The ComparatorMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> compares the value of the sample and target
-InputPorts.  By default, it uses a <a class="reference internal" href="TransformFunctions.html#psyneulink.core.components.functions.transformfunctions.LinearCombination" title="psyneulink.core.components.functions.transformfunctions.LinearCombination"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearCombination</span></code></a> function, assigning the sample InputPort a <code class="xref any docutils literal notranslate"><span class="pre">weight</span></code> of <em>-1</em> and the target a <code class="xref any docutils literal notranslate"><span class="pre">weight</span></code> of <em>1</em>, so that the sample
+InputPorts.  By default, it uses a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.TransferWithCosts.Parameters.LinearCombination" title="psyneulink.core.components.functions.nonstateful.transferfunctions.TransferWithCosts.Parameters.LinearCombination"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">LinearCombination</span></code></a> function, assigning the sample InputPort a <code class="xref any docutils literal notranslate"><span class="pre">weight</span></code> of <em>-1</em> and the target a <code class="xref any docutils literal notranslate"><span class="pre">weight</span></code> of <em>1</em>, so that the sample
 is subtracted from the target.  However, the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> can be customized, so long as
 it is replaced with one that takes two arrays with the same format as its inputs and generates a similar array as its
 result. The result is assigned as the value of the Comparator Mechanism’s <em>OUTCOME</em> (<a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary</span></a>)
@@ -286,13 +286,13 @@ compare these.  By default, the result is assigned to the <a class="reference in
 of a ComparatorMechanism.  This can be useful when one or both of these differ from the format of the
 OutputPort(s) specified in the <strong>sample</strong> and <strong>target</strong> arguments. For example, for <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.Reinforcement" title="psyneulink.core.components.functions.learningfunctions.Reinforcement"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Reinforcement</span> <span class="pre">Learning</span></code></a>, a ComparatorMechanism is used to monitor an action selection Mechanism (the sample), and compare
 this with a reinforcement signal (the target).  In the example below, the action selection Mechanism is a
-<a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> that uses the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.SoftMax" title="psyneulink.core.components.functions.transferfunctions.SoftMax"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SoftMax</span></code></a> function (and the <code class="xref any docutils literal notranslate"><span class="pre">PROB</span></code> as its output format) to select
+<a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> that uses the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax" title="psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SoftMax</span></code></a> function (and the <code class="xref any docutils literal notranslate"><span class="pre">PROB</span></code> as its output format) to select
 an action.  This generates a vector with a single non-zero value (the selected action). Because the output is a vector,
 specifying it as the ComparatorMechanism’s <strong>sample</strong> argument will generate a corresponding InputPort with a vector
 as its value.  This will not match the reward signal specified in the ComparatorMechanism’s <strong>target</strong> argument, the
 value of which is a single scalar.  This can be dealt with by explicitly specifying the format for the SAMPLE and
 TARGET InputPorts in the <strong>default_variable</strong> argument of the ComparatorMechanism’s constructor, as follows:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">psyneulink</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pnl</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_action_selection_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">input_shapes</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
 <span class="gp">... </span>                                                 <span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">SoftMax</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">PROB</span><span class="p">))</span>
 

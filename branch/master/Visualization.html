@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Visualization &mdash; PsyNeuLink 0.15.2.0+5.g1ea4407c6 documentation</title>
+  <title>Visualization &mdash; PsyNeuLink 0.15.3.0+7.g5c8168fb8 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.2.0+5
+                  0.15.3.0+7
                 </div>
               
             
@@ -222,7 +222,7 @@ them as edges.</p>
 <div class="technical-note docutils container">
 <p>Every Composition is assigned a <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph" title="psyneulink.core.compositions.showgraph.ShowGraph"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ShowGraph</span></code></a> object, that is implemented in the free-standing showgraph.py module.
 The <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method of a Composition directly calls the <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method of its <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph" title="psyneulink.core.compositions.showgraph.ShowGraph"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ShowGraph</span></code></a> object, as do all links to documentation concerning
-<a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a>.</p>
+<a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.show_graph" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a>.</p>
 </div>
 <p>By default, all nodes within a Composition, including any <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">Compositions nested</span></a> within it, are
 shown, each displayed as an oval (if the node is a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>) or a rectangle (if it is a nested Composition),
@@ -421,8 +421,11 @@ when the <code class="xref any docutils literal notranslate"><span class="pre">s
 for additional details.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This method relies on <a class="reference external" href="http://www.graphviz.org">graphviz</a>, which must be installed and imported
-(standard with PsyNeuLink pip install)</p>
+<p>This method relies on <a class="reference external" href="http://www.graphviz.org">graphviz</a>
+python and system packages, which must be installed. The
+python package comes standard with PsyNeuLink pip install,
+but the system package must be installed separately. It can
+be downloaded at <a class="reference external" href="https://www.graphviz.org/download/">https://www.graphviz.org/download/</a>.</p>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

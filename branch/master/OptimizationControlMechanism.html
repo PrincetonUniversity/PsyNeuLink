@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.15.2.0+5.g1ea4407c6 documentation</title>
+  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.15.3.0+7.g5c8168fb8 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.15.2.0+5
+                  0.15.3.0+7
                 </div>
               
             
@@ -640,7 +640,7 @@ function for <a class="reference internal" href="#psyneulink.core.components.mec
 the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.function" title="psyneulink.core.components.ports.inputport.InputPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> to any state_input_ports for which <em>no other</em> <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> is specified –
 that is, in either an <a class="reference internal" href="InputPort.html#inputport-specification-dictionary"><span class="std std-ref">InputPort specification dictionary</span></a> or a <a class="reference internal" href="#optimizationcontrolmechanism-tuple-state-feature"><span class="std std-ref">2-item tuple</span></a> in the <strong>state_features</strong> argument (see <a class="reference internal" href="#optimizationcontrolmechanism-state-features-arg"><span class="std std-ref">state_features</span></a>).  If either of the latter is specified, they override
 the specification in <strong>state_feature_function</strong>.  If <strong>state_feature_function</strong> is <em>not</em> specified, then
-<a class="reference internal" href="TransformFunctions.html#psyneulink.core.components.functions.transformfunctions.LinearCombination" title="psyneulink.core.components.functions.transformfunctions.LinearCombination"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearCombination</span></code></a> (the standard default <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> for an <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>) is assigned to any <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_input_ports" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">state_input_ports</span></code></a> that are not otherwise assigned a <a class="reference internal" href="Function.html"><span class="doc">Function</span></a>.
+<a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.TransferWithCosts.Parameters.LinearCombination" title="psyneulink.core.components.functions.nonstateful.transferfunctions.TransferWithCosts.Parameters.LinearCombination"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">LinearCombination</span></code></a> (the standard default <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> for an <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>) is assigned to any <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_input_ports" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">state_input_ports</span></code></a> that are not otherwise assigned a <a class="reference internal" href="Function.html"><span class="doc">Function</span></a>.
 Specifying functions for <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_input_ports" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">state_input_ports</span></code></a> can be useful,
 for example to provide an average or integrated value of prior inputs to the <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">agent_rep</span></code></a>'s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.evaluate" title="psyneulink.core.compositions.composition.Composition.evaluate"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">evaluate</span></code></a> method during the optimization
 process, or to use a generative model of the environment to provide those inputs.</p>
@@ -819,7 +819,7 @@ times, and aggregate the results in computing the <a class="reference internal" 
 <a class="reference internal" href="#optimizationcontrolmechanism-estimation-randomization"><span class="std std-ref">Randomization of Estimation</span></a> for additional details).</p></li>
 </ul>
 <ul class="simple">
-<li><p>It must implement a <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.BayesGLM.reset" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> method that can accept as keyword arguments <strong>objective_function</strong>,
+<li><p>It must implement a <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator.reset" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> method that can accept as keyword arguments <strong>objective_function</strong>,
 <strong>search_function</strong>, <strong>search_termination_function</strong>, and <strong>search_space</strong>, and implement attributes
 with corresponding names.</p></li>
 </ul>

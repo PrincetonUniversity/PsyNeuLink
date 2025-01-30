@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Log &mdash; PsyNeuLink 0.15.2.0+5.g1ea4407c6 documentation</title>
+  <title>Log &mdash; PsyNeuLink 0.15.3.0+7.g5c8168fb8 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.2.0+5
+                  0.15.3.0+7
                 </div>
               
             
@@ -301,7 +301,7 @@ multiple Components to be specied at once, while the latter affords more control
 under more than one condition using bitwise operators on the <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LogConditions</span></code></a>.  For convenience, they
 can also be referred to by their names, and combined by specifying a list.  For example, all of the following specify
 that the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of <code class="docutils literal notranslate"><span class="pre">my_mech</span></code> be logged both during execution and learning:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">psyneulink</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pnl</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">set_log_conditions</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">LogCondition</span><span class="o">.</span><span class="n">EXECUTION</span> <span class="o">|</span> <span class="n">pnl</span><span class="o">.</span><span class="n">LogCondition</span><span class="o">.</span><span class="n">LEARNING</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">set_log_conditions</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">LogCondition</span><span class="o">.</span><span class="n">EXECUTION</span> <span class="o">+</span> <span class="n">pnl</span><span class="o">.</span><span class="n">LogCondition</span><span class="o">.</span><span class="n">LEARNING</span><span class="p">)</span>

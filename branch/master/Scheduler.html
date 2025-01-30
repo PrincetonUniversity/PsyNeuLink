@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Scheduler &mdash; PsyNeuLink 0.15.2.0+5.g1ea4407c6 documentation</title>
+  <title>Scheduler &mdash; PsyNeuLink 0.15.3.0+7.g5c8168fb8 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.2.0+5
+                  0.15.3.0+7
                 </div>
               
             
@@ -368,7 +368,7 @@ conditions (<a class="reference internal" href="Condition.html#psyneulink.core.s
 <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.TimeInterval" title="psyneulink.core.scheduling.condition.TimeInterval"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeInterval</span></code></a>, and <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.TimeTermination.t" title="psyneulink.core.scheduling.condition.TimeTermination.t"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">t</span></code></a> of <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.TimeTermination" title="psyneulink.core.scheduling.condition.TimeTermination"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeTermination</span></code></a>) may not occur at exactly
 the time specified. The simplest example of this situation involves a
 linear composition with two nodes:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">psyneulink</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pnl</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">()</span>
@@ -416,7 +416,7 @@ Additionally, non-absolute conditions like
 <p>Please see <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> for a list of all supported Conditions and their behavior.</p>
 <ul>
 <li><p>Basic phasing in a linear process:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">psyneulink</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pnl</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;B&#39;</span><span class="p">)</span>
