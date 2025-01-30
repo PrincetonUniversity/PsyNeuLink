@@ -328,6 +328,7 @@ class Identity(DeterministicTransferFunction):  #
         PREFERENCE_SET_NAME: 'IdentityClassPreferences',
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
+    default_bounds = (None, None)
 
     @check_user_specified
     @beartype
