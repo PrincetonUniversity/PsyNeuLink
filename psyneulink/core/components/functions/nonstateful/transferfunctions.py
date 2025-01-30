@@ -115,12 +115,12 @@ __all__ = ['Angle', 'BinomialDistort', 'Dropout', 'Exponential', 'Gaussian', 'Ga
            'Linear', 'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
            ]
 
-def _bounds_setter_using_scale_and_offset(value, owning_component=None, context=None):
+def _bounds_getter_using_scale_and_offset(owning_component=None, context=None):
     """Reassign bounds based on scale and offset applied to function's output for default upper and lower bounds
     """
-    default_bounds = owning_component.defaults.bounds
-    scale = owning_component.scale
-    offset = owning_component.offset
+    default_bounds = owning_component.default_bounds
+    scale = owning_component.parameters.scale._get(context)
+    offset = owning_component.parameters.offset._get(context)
 
     # Deal with lower bound = None:
     lower_bound = -np.inf if default_bounds[0] is None else default_bounds[0]
@@ -140,14 +140,16 @@ def _bounds_setter_using_scale_and_offset(value, owning_component=None, context=
 class TransferFunction(Function_Base):
     """Function that transforms variable but maintains its shape.
 
-    In addition to the Parameters listed below, all TransferFunctions have the following have
-    a `multiplicative_param <Function_Modulatory_Params>` and an `additive_param <Function_Modulatory_Params>` --
+    Abstract base class for TransferFunctions.
+
+    In addition to the Parameters listed below, all TransferFunctions have a
+    `multiplicative_param <Function_Modulatory_Params>` and an `additive_param <Function_Modulatory_Params>` --
     see `multiplicative and additive params <TransferFunction_Modulable_Params>` for additional information.
 
     Attributes
     ----------
 
-    bounds : tuple
+    bounds : tuple(lower bound: float, uppper bound: float)
       read-only Parameter that  indicates the lower and upper limits of the function's result. The two items of the
       tuple indicate the lower and upper bounds, respectively, with `None` as the entry if there is no bound.  Some
       subclasses of TransferFunction may have other Parameters that influence the bounds, which are described under
@@ -168,7 +170,7 @@ class TransferFunction(Function_Base):
                     :type:
 
         """
-        bounds = Parameter((None, None), read_only=True)
+        bounds = Parameter(None, read_only=True)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
@@ -193,24 +195,16 @@ class TransferFunction(Function_Base):
 class DeterministicTransferFunction(TransferFunction):
     """Subclass of TransferFunction that computes a deterministic function.
 
+    Abstract base class for TransferFunctions that take scale and offset as parameters.
+
     In addition to the `standard attributes <TransferFunction_StandardAttributes>` of a TransferFunction,
     all DeterministicTransferFunctions have a `scale <DeterministicTransferFunction.scale>` and `offset
     <DeterministicTransferFunction.offset>` Parameter, that are used to determine the `bounds <TransferFunction.bounds>`
 
-    Arguments
-    ---------
-
-    scale : float : default 1.0
-      specifies the value by which the result of the function is multiplied, before `offset
-      <TransferFunction.offset>` is added.
-
-    offset : float : default 0.0
-      specifies the value added to the result of the function after `scale <TransferFunction.scale>` has been applied.
-
     Attributes
     ----------
 
-    bounds : tuple
+    bounds : tuple(lower bound: float, uppper bound: float)
       read-only Parameter that indicates the lower and upper limits of the function's result, after the `scale
       <DeterministicTransferFunction.scale>` and `offset <DeterministicTransferFunction.offset>` Parameters
       have been applied to the result of the function:  :math:`result(lower, upper) * scale + offset`, where
@@ -238,33 +232,35 @@ class DeterministicTransferFunction(TransferFunction):
                     :type:
 
                 scale
-                    see `scale <TransferFunction.scale>`
+                    see `scale <DeterministicTransferFunction.scale>`
 
                     :default value: 1.0
                     :type: float
 
                 offset
-                    see `offset <TransferFunction.offset>`
+                    see `offset <DeterministicTransferFunction.offset>`
 
                     :default value: 0.0
                     :type: float
         """
-        bounds = Parameter((None,None),
-                           setter=_bounds_setter_using_scale_and_offset,
+        bounds = Parameter(None,
+                           getter=_bounds_getter_using_scale_and_offset,
                            read_only=True,
                            dependencies={'scale', 'offset'})
         scale = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
 
-    @check_user_specified
-    def __init__(self,
-                 offset: Optional[ValidParamSpecType] = None,
-                 scale: Optional[ValidParamSpecType] = None,
-                 **kwargs):
-
-        super().__init__(offset=offset,
-                         scale=scale,
-                         **kwargs)
+    # # MODIFIED 1/29/25 OLD:
+    # @check_user_specified
+    # def __init__(self,
+    #              offset: Optional[ValidParamSpecType] = None,
+    #              scale: Optional[ValidParamSpecType] = None,
+    #              **kwargs):
+    #
+    #     super().__init__(offset=offset,
+    #                      scale=scale,
+    #                      **kwargs)
+    # # MODIFIED 1/29/25 END
 
 
 # **********************************************************************************************************************
@@ -272,7 +268,8 @@ class DeterministicTransferFunction(TransferFunction):
 # **********************************************************************************************************************
 
 
-class Identity(DeterministicTransferFunction):  # ----------------------------------------------------------------------
+class Identity(DeterministicTransferFunction):  #
+    # ----------------------------------------------------------------------
     """
     Identity(                  \
              default_variable, \
@@ -392,12 +389,15 @@ class Identity(DeterministicTransferFunction):  # ------------------------------
 #                                                    Linear
 # **********************************************************************************************************************
 
-class Linear(DeterministicTransferFunction):  # -------------------------------------------------------------------------------------
+class Linear(DeterministicTransferFunction):  #
+    # -------------------------------------------------------------------------------------
     """
     Linear(                \
          default_variable, \
          slope=1.0,        \
          intercept=0.0,    \
+         scale=1.0,        \
+         offset=0.0,       \
          params=None,      \
          owner=None,       \
          name=None,        \
@@ -412,10 +412,10 @@ class Linear(DeterministicTransferFunction):  # --------------------------------
         scale * (slope * variable + intercept) + offset
 
     .. note::
-       Whereas `scale <DeterministicTransferFunction.scale>` and `offset <DeterministicTransferFunction.offset>`
-       have effects similar to `slope <Linear.slope>` and `intercept <Linear.intercept>`, they are applied after
-       those Parameters have been applied to `variable <Linear.variable>`, and thus are not identical; rather,
-       they can be thought of as "amplifying" and "displacing" the Linear function, respectively.
+       Whereas `scale <Linear.scale>` and `offset <Linear.offset>` have effects similar to `slope <Linear.slope>`
+       and `intercept <Linear.intercept>`, they are applied after those Parameters have been applied to `variable
+       <Linear.variable>`, and thus are not identical; rather, they can be thought of as "amplifying" and
+       "displacing" the Linear function, respectively.
 
     .. note::
        The default values for `slope <Linear.slope>`, `intercept <Linear.intercept>`, `scale
@@ -439,6 +439,12 @@ class Linear(DeterministicTransferFunction):  # --------------------------------
 
     intercept : float : default 0.0
         specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+
+    scale : float : default 1.0
+      specifies the value by which the result of the function is multiplied, before `offset <Linear.offset>` is added.
+
+    offset : float : default 0.0
+      specifies the value added to the result of the function after `scale <Linear.scale>` has been applied.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -468,7 +474,14 @@ class Linear(DeterministicTransferFunction):  # --------------------------------
         value added to each element of `variable <Linear.variable>` after applying the `slope <Linear.slope>`
         (if it is specified).
 
-    bounds : (None,None)
+    bounds : (None, None)
+        modified by `scale <Linear.scale> and/or `offset <Linear.offset>` if they are specified.
+
+    scale : float
+      determines the value by which the result of the function is multiplied, before `offset <Linear.offset>` is added.
+
+    offset : float
+      determines the value added to the result of the function after `scale <Linear.scale>` has been applied.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -492,17 +505,12 @@ class Linear(DeterministicTransferFunction):  # --------------------------------
 
     _model_spec_class_name_is_generic = True
 
+    default_bounds = (None, None)
+
     class Parameters(DeterministicTransferFunction.Parameters):
         """
             Attributes
             ----------
-
-                bounds
-                    see `bounds <Linear.bounds>`
-
-                    :default value: (None, None)
-                    :type: ``tuple``
-
 
                 intercept
                     see `intercept <Linear.intercept>`
@@ -518,7 +526,6 @@ class Linear(DeterministicTransferFunction):  # --------------------------------
         """
         slope = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         intercept = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        bounds = (None,None)
 
     @check_user_specified
     @beartype
@@ -526,6 +533,8 @@ class Linear(DeterministicTransferFunction):  # --------------------------------
                  default_variable=None,
                  slope: Optional[ValidParamSpecType] = None,
                  intercept: Optional[ValidParamSpecType] = None,
+                 scale: Optional[ValidParamSpecType] = None,
+                 offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
@@ -534,9 +543,11 @@ class Linear(DeterministicTransferFunction):  # --------------------------------
             default_variable=default_variable,
             slope=slope,
             intercept=intercept,
+            scale=scale,
+            offset=offset,
             params=params,
             owner=owner,
-            prefs=prefs,
+            prefs=prefs
         )
 
     def _function(self,
@@ -685,6 +696,8 @@ class Exponential(DeterministicTransferFunction):  # ---------------------------
          default_variable, \
          rate=1.0,         \
          bias=0.0,         \
+         scale=1.0,        \
+         offset=0.0,       \
          params=None,      \
          owner=None,       \
          name=None,        \
@@ -717,6 +730,13 @@ class Exponential(DeterministicTransferFunction):  # ---------------------------
         specifies a value to add to `variable <Exponential.variable>` after multplying by `rate <Exponential.rate>`
         and before exponentiation.
 
+    scale : float : default 1.0
+      specifies the value by which the result of the function is multiplied, before `offset <Exponential.offset>` is
+      added.
+
+    offset : float : default 0.0
+      specifies the value added to the result of the function after `scale <Exponential.scale>` has been applied.
+
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -746,6 +766,14 @@ class Exponential(DeterministicTransferFunction):  # ---------------------------
         and before exponentiation;  assigned as *ADDITIVE_PARAM* of the Exponential Function.
 
     bounds : (0, None)
+        modified by `scale <Exponential.scale> and/or `offset <Exponential.offset>` if they are specified.
+
+    scale : float
+      determines the value by which the result of the function is multiplied, before `offset <Exponential.offset>`
+      is added.
+
+    offset : float
+      determines the value added to the result of the function after `scale <Exponential.scale>` has been applied.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -761,6 +789,8 @@ class Exponential(DeterministicTransferFunction):  # ---------------------------
     """
 
     componentName = EXPONENTIAL_FUNCTION
+    default_bounds = (0, None)
+
 
     class Parameters(DeterministicTransferFunction.Parameters):
         """
@@ -773,13 +803,6 @@ class Exponential(DeterministicTransferFunction):  # ---------------------------
                     :default value: 0.0
                     :type: ``float``
 
-                bounds
-                    see `bounds <Exponential.bounds>`
-
-                    :default value: (0, None)
-                    :type: ``tuple``
-
-
                 rate
                     see `rate <Exponential.rate>`
 
@@ -788,15 +811,14 @@ class Exponential(DeterministicTransferFunction):  # ---------------------------
         """
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        bounds = (0, None)
 
     @check_user_specified
     @beartype
     def __init__(self,
                  default_variable=None,
                  rate: Optional[ValidParamSpecType] = None,
-                 scale: Optional[ValidParamSpecType] = None,
                  bias: Optional[ValidParamSpecType] = None,
+                 scale: Optional[ValidParamSpecType] = None,
                  offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
@@ -809,7 +831,7 @@ class Exponential(DeterministicTransferFunction):  # ---------------------------
             offset=offset,
             params=params,
             owner=owner,
-            prefs=prefs,
+            prefs=prefs
         )
 
     def _function(self,
@@ -919,6 +941,8 @@ class Logistic(DeterministicTransferFunction):  # ------------------------------
          gain=1.0,         \
          bias=0.0,         \
          x_0=0.0,          \
+         scale=1.0,        \
+         offset=0.0,       \
          params=None,      \
          owner=None,       \
          name=None,        \
@@ -941,17 +965,15 @@ class Logistic(DeterministicTransferFunction):  # ------------------------------
         opposite signs: `bias <Logistic.bias>` is included to accommodate the convention in the machine learning
         community; `x_0 <Logistic.x_0>` is included to match the `standard form of the Logistic Function
         <https://en.wikipedia.org/wiki/Logistic_function>`_ (in which `gain <Logistic.gain>` corresponds to
-        the *k* parameter and `scale <DeterministTransferFunction.scale>` corresponds to the *L* parameter);
-        `offset <TransferFunction.offset>` implements a translation of the function along the vertical axis
-        that is *not* modulated by gain.
+        the *k* parameter and `scale <Logistic.scale>` corresponds to the *L* parameter); `offset <Logistic.offset>`
+        implements a translation of the function along the vertical axis that is *not* modulated by gain.
 
     `derivative <Logistic.derivative>` returns the derivative of the Logistic using its **output**:
 
     .. math::
         scale * gain * output * (1-output)
 
-    See `note <Logistic_Note>` above for the effects of `scale <DeterministicTransferFunction.scale>` and
-    `offset <DeterministicTransferFunction.offset>`.
+    See `note <Logistic_Note>` above for the effects of `scale <Logistic.scale>` and `offset <Logistic.offset>`.
 
     Arguments
     ---------
@@ -971,6 +993,12 @@ class Logistic(DeterministicTransferFunction):  # ------------------------------
     x_0 : float : default 0.0
         specifies value to add to each element of `variable <Logistic.variable>` before applying `gain <Logistic.gain>`;
         this argument has an effect identical to bias, but with the opposite sign (see `note <Logistic_Note>` above).
+
+    scale : float : default 1.0
+      specifies the value by which the result of the function is multiplied, before `offset <Logistic.offset>` is added.
+
+    offset : float : default 0.0
+      specifies the value added to the result of the function after `scale <Logistic.scale>` has been applied.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -1005,11 +1033,15 @@ class Logistic(DeterministicTransferFunction):  # ------------------------------
         value to add to each element of `variable <Logistic.variable>` before applying `gain <Logistic.gain>`;
         this argument has an effect identical to bias, but with the opposite sign (see `note <Logistic_Note>` above).
 
-    bounds : (0,1)
-        COMMENT:
-        the lower and upper limits of the result which, in the case of the `Logistic`, is determined by the function
-        itself.
-        COMMENT
+    bounds : (0, 1)
+        modified by `scale <Gaussian.scale> and/or `offset <Gaussian.offset>` if they are specified.
+
+    scale : float
+      determines the value by which the result of the function is multiplied, before `offset <Logistic.offset>`
+      is added.
+
+    offset : float
+      determines the value added to the result of the function after `scale <Logistic.scale>` has been applied.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -1027,6 +1059,8 @@ class Logistic(DeterministicTransferFunction):  # ------------------------------
     componentName = LOGISTIC_FUNCTION
     # parameter_keywords.update({GAIN, BIAS})
     _model_spec_class_name_is_generic = True
+    default_bounds = (0, 1)
+
 
     class Parameters(DeterministicTransferFunction.Parameters):
         """
@@ -1038,13 +1072,6 @@ class Logistic(DeterministicTransferFunction):  # ------------------------------
 
                     :default value: 0.0
                     :type: ``float``
-
-                bounds
-                    see `bounds <Logistic.bounds>`
-
-                    :default value: (0, 1)
-                    :type: ``tuple``
-
 
                 gain
                     see `gain <Logistic.gain>`
@@ -1061,7 +1088,6 @@ class Logistic(DeterministicTransferFunction):  # ------------------------------
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         x_0 = Parameter(0.0, modulable=True)
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        bounds = (0, 1)
 
     @check_user_specified
     @beartype
@@ -1070,19 +1096,23 @@ class Logistic(DeterministicTransferFunction):  # ------------------------------
                  gain: Optional[ValidParamSpecType] = None,
                  x_0=None,
                  bias=None,
+                 scale: Optional[ValidParamSpecType] = None,
+                 offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None):
+                 prefs:  Optional[ValidPrefSet] = None,
+                 **kwargs):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
             x_0=x_0,
             bias=bias,
-            offset=offset,
             scale=scale,
+            offset=offset,
             params=params,
             owner=owner,
             prefs=prefs,
+            **kwargs
         )
 
     def _function(self,
@@ -1234,6 +1264,8 @@ class Tanh(DeterministicTransferFunction):  # ----------------------------------
          gain=1.0,         \
          bias=0.0,         \
          x_0=0.0,          \
+         scale=1.0,        \
+         offset=0.0,       \
          params=None,      \
          owner=None,       \
          name=None,        \
@@ -1275,6 +1307,12 @@ class Tanh(DeterministicTransferFunction):  # ----------------------------------
         specifies value to subtract from each element of `variable <Tanh.variable>` before applying `gain <Tanh.gain>`
         and before Tanh transformation. This argument is identical to bias, with the opposite sign.
 
+    scale : float : default 1.0
+      specifies the value by which the result of the function is multiplied, before `offset <TanH.offset>` is added.
+
+    offset : float : default 0.0
+      specifies the value added to the result of the function after `scale <TanH.scale>` has been applied.
+
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -1307,7 +1345,14 @@ class Tanh(DeterministicTransferFunction):  # ----------------------------------
         value subtracted from each element of `variable <Tanh.variable>` before applying the `gain <Tanh.gain>`
         (if it is specified). This attribute is identical to bias, with the opposite sign.
 
-    bounds : (-1,1)
+    bounds : (None, None)
+        modified by `scale <TanH.scale> and/or `offset <TanH.offset>` if they are specified.
+
+    scale : float
+      determines the value by which the result of the function is multiplied, before `offset <TanH.offset>` is added.
+
+    offset : float
+      determines the value added to the result of the function after `scale <TanH.scale>` has been applied.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -1324,6 +1369,8 @@ class Tanh(DeterministicTransferFunction):  # ----------------------------------
 
     componentName = TANH_FUNCTION
     # parameter_keywords.update({GAIN, BIAS, OFFSET})
+    default_bounds = (-1, 1)
+
 
     class Parameters(DeterministicTransferFunction.Parameters):
         """
@@ -1335,13 +1382,6 @@ class Tanh(DeterministicTransferFunction):  # ----------------------------------
 
                     :default value: 0.0
                     :type: ``float``
-
-                bounds
-                    see `bounds <TanH.bounds>`
-
-                    :default value: (-1, 1)
-                    :type: ``tuple``
-
 
                 gain
                     see `gain <Tanh.gain>`
@@ -1358,7 +1398,6 @@ class Tanh(DeterministicTransferFunction):  # ----------------------------------
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         x_0 = Parameter(0.0, modulable=True)
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        bounds = (-1, 1)
 
     @check_user_specified
     @beartype
@@ -1367,21 +1406,23 @@ class Tanh(DeterministicTransferFunction):  # ----------------------------------
                  gain: Optional[ValidParamSpecType] = None,
                  x_0=None,
                  bias=None,
-                 offset: Optional[ValidParamSpecType] = None,
                  scale: Optional[ValidParamSpecType] = None,
+                 offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None):
+                 prefs:  Optional[ValidPrefSet] = None,
+                 **kwargs):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
             x_0=x_0,
             bias=bias,
-            offset=offset,
             scale=scale,
+            offset=offset,
             params=params,
             owner=owner,
             prefs=prefs,
+            **kwargs
         )
 
     def _function(self,
@@ -1522,6 +1563,8 @@ class ReLU(DeterministicTransferFunction):  # ----------------------------------
          gain=1.0,         \
          bias=0.0,         \
          leak=0.0,         \
+         scale=1.0,        \
+         offset=0.0,       \
          params=None,      \
          owner=None,       \
          name=None,        \
@@ -1547,23 +1590,37 @@ class ReLU(DeterministicTransferFunction):  # ----------------------------------
 
     Arguments
     ---------
+
     default_variable : number or array : default class_defaults.variable
         specifies a template for the value to be transformed.
+
     gain : float : default 1.0
         specifies a value by which to multiply `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted
         from it.
+
     bias : float : default 0.0
         specifies a value to subtract from each element of `variable <ReLU.variable>`; functions as threshold.
+
     leak : float : default 0.0
         specifies a scaling factor between 0 and 1 when (variable - bias) is less than or equal to 0.
+
+    scale : float : default 1.0
+      specifies the value by which the result of the function is multiplied, before `offset <ReLU.offset>` is added.
+
+    offset : float : default 0.0
+      specifies the value added to the result of the function after `scale <ReLU.scale>` has been applied.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
-    owner : Component
-        `component <Component>` to which to assign the Function.
+
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -1583,7 +1640,14 @@ class ReLU(DeterministicTransferFunction):  # ----------------------------------
     leak : float : default 0.0
         scaling factor between 0 and 1 when (variable - bias) is less than or equal to 0.
 
-    bounds : (None,None)
+    bounds : (None, None)
+        modified by `scale <Gaussian.scale> and/or `offset <ReLU.offset>` if they are specified.
+
+    scale : float : default 1.0
+      specifies the value by which the result of the function is multiplied, before `offset <ReLU.offset>` is added.
+
+    offset : float : default 0.0
+      specifies the value added to the result of the function after `scale <ReLU.scale>` has been applied.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -1600,6 +1664,8 @@ class ReLU(DeterministicTransferFunction):  # ----------------------------------
 
     componentName = RELU_FUNCTION
     # parameter_keywords.update({GAIN, BIAS, LEAK})
+    default_bounds = (None, None)
+
 
     class Parameters(DeterministicTransferFunction.Parameters):
         """
@@ -1611,13 +1677,6 @@ class ReLU(DeterministicTransferFunction):  # ----------------------------------
 
                     :default value: 0.0
                     :type: ``float``
-
-                bounds
-                    see `bounds <ReLU.bounds>`
-
-                    :default value: (None, None)
-                    :type: ``tuple``
-
 
                 gain
                     see `gain <ReLU.gain>`
@@ -1634,7 +1693,6 @@ class ReLU(DeterministicTransferFunction):  # ----------------------------------
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         leak = Parameter(0.0, modulable=True)
-        bounds = (None, None)
 
     @check_user_specified
     @beartype
@@ -1643,17 +1701,23 @@ class ReLU(DeterministicTransferFunction):  # ----------------------------------
                  gain: Optional[ValidParamSpecType] = None,
                  bias: Optional[ValidParamSpecType] = None,
                  leak: Optional[ValidParamSpecType] = None,
+                 scale: Optional[ValidParamSpecType] = None,
+                 offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None):
+                 prefs:  Optional[ValidPrefSet] = None,
+                 **kwargs):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
             bias=bias,
             leak=leak,
+            scale=scale,
+            offset=offset,
             params=params,
             owner=owner,
             prefs=prefs,
+            **kwargs
         )
 
     def _function(self,
@@ -1781,6 +1845,8 @@ class Gaussian(DeterministicTransferFunction):  # ------------------------------
          default_variable,       \
          standard_deviation=1.0, \
          bias=0.0,               \
+         scale=1.0,              \
+         offset=0.0,             \
          params=None,            \
          owner=None,             \
          name=None,              \
@@ -1818,6 +1884,12 @@ class Gaussian(DeterministicTransferFunction):  # ------------------------------
     bias : float : default 0.0
         value to add to each element of `variable <Gaussian.variable>` before applying Gaussian transform.
 
+    scale : float : default 1.0
+      specifies the value by which the result of the function is multiplied, before `offset <Gaussian.offset>` is added.
+
+    offset : float : default 0.0
+      specifies the value added to the result of the function after `scale <Gaussian.scale>` has been applied.
+
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -1844,6 +1916,16 @@ class Gaussian(DeterministicTransferFunction):  # ------------------------------
     bias : float : default 0.0
         value added to each element of `variable <Gaussian.variable>` before applying the Gaussian transform.
 
+    bounds : (None, None)
+        modified by `scale <Gaussian.scale> and/or `offset <Gaussian.offset>` if they are specified.
+
+    scale : float
+      determines the value by which the result of the function is multiplied, before `offset <Gaussian.offset>`
+      is added.
+
+    offset : float
+      determines the value added to the result of the function after `scale <Gaussian.scale>` has been applied.
+
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
@@ -1859,6 +1941,7 @@ class Gaussian(DeterministicTransferFunction):  # ------------------------------
 
     componentName = GAUSSIAN_FUNCTION
     # parameter_keywords.update({STANDARD_DEVIATION, BIAS, SCALE, OFFSET})
+    default_bounds = (None, None)
 
     class Parameters(TransferFunction.Parameters):
         """
@@ -1879,7 +1962,6 @@ class Gaussian(DeterministicTransferFunction):  # ------------------------------
         """
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        bounds = (None, None)
 
     @check_user_specified
     @beartype
@@ -1887,16 +1969,22 @@ class Gaussian(DeterministicTransferFunction):  # ------------------------------
                  default_variable=None,
                  standard_deviation: Optional[ValidParamSpecType] = None,
                  bias: Optional[ValidParamSpecType] = None,
+                 scale: Optional[ValidParamSpecType] = None,
+                 offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None):
+                 prefs:  Optional[ValidPrefSet] = None,
+                 **kwargs):
         super().__init__(
             default_variable=default_variable,
             standard_deviation=standard_deviation,
             bias=bias,
+            scale=scale,
+            offset=offset,
             params=params,
             owner=owner,
             prefs=prefs,
+            **kwargs
         )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
@@ -2870,7 +2958,7 @@ class SoftMax(TransferFunction):
         for 2d variables, determines whether the SoftMax function is applied to the entire variable (per_item =
         False), or applied to each item in the variable separately (per_item = True).
 
-    bounds : None if `output <SoftMax.output>` in {ARG_MAX, MAX_VAL}, else (0,1) : default (0,1)
+    bounds : None if `output <SoftMax.output>` in {ARG_MAX, MAX_VAL}, else (0, 1) : default (0, 1)
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -4571,17 +4659,17 @@ class TransferWithCosts(TransferFunction):
         trans_out = arg_out
         builder.call(trans_f, [trans_p, trans_s, trans_in, trans_out])
 
-        # MODIFIED 1/29/25 NEW:
-        # apply scale and offset
-        scale_ptr = ctx.get_param_or_state_ptr(builder, self, SCALE, param_struct_ptr=params)
-        offset_ptr = ctx.get_param_or_state_ptr(builder, self, OFFSET, param_struct_ptr=params)
-        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
-        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
-        # trans_out = pnlvm.helpers.load_extract_scalar_array_one(builder, trans_out)
-        # trans_out = builder.fmul(trans_out, scale)
-        # trans_out = builder.fadd(trans_out, offset)
-        # builder.store(builder.load(trans_out), trans_out)
-        # MODIFIED 1/29/25 END
+        # # MODIFIED 1/29/25 NEW:
+        # # apply scale and offset
+        # scale_ptr = ctx.get_param_or_state_ptr(builder, self, SCALE, param_struct_ptr=params)
+        # offset_ptr = ctx.get_param_or_state_ptr(builder, self, OFFSET, param_struct_ptr=params)
+        # scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
+        # offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
+        # # trans_out = pnlvm.helpers.load_extract_scalar_array_one(builder, trans_out)
+        # # trans_out = builder.fmul(trans_out, scale)
+        # # trans_out = builder.fadd(trans_out, offset)
+        # # builder.store(builder.load(trans_out), trans_out)
+        # # MODIFIED 1/29/25 END
 
         intensity_ptr = ctx.get_state_space(builder, self, state, self.parameters.intensity)
 

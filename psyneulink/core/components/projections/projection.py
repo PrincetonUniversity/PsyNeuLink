@@ -516,7 +516,7 @@ class Projection_Base(Projection):
         feedback=None          \
         )
 
-    Base class for all Projections.
+    Abstract base class for all Projections.
 
     The arguments below can be used in the constructor for any subclass of Mechanism.
     See `Component <Component_Class_Reference>` and subclasses for additional arguments and attributes.
