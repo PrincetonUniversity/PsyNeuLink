@@ -3841,3 +3841,98 @@ class TestBatching:
         ce_torch = adc.loss_function(output, target).detach().numpy()
 
         np.testing.assert_allclose(ce_numpy, ce_torch)
+
+
+def test_training_xor_with_batching():
+    """
+    This test actually trains an equivalent model in pytorch and compares the losses with the ones from the
+    AutodiffComposition learn.
+    """
+
+    import torch
+    import torch.nn as nn
+    import torch.optim as optim
+
+    torch.manual_seed(0)
+
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+    HIDDEN_SIZE = 5
+    LEARNING_RATE = 0.1
+    WEIGHT_DECAY = 0
+    NSTEPS = 3
+
+    X = torch.FloatTensor([[0, 0], [0, 1], [1, 0], [1, 1]]).to(device)
+    Y = torch.FloatTensor([[0], [1], [1], [0]]).to(device)
+
+    linear1 = nn.Linear(2, HIDDEN_SIZE, bias=False)
+    linear2 = nn.Linear(HIDDEN_SIZE, 1, bias=False)
+    sigmoid = nn.Sigmoid()
+
+    model = nn.Sequential(linear1, sigmoid, linear2, sigmoid).to(device) # MLP model
+
+    # Copy the initial weights and biases. Make sure to copy the data, not just the reference.
+    weights1 = linear1.weight.detach().numpy().copy()
+    bias1 = linear1.bias.detach().numpy().copy() if linear1.bias is not None else None
+    weights2 = linear2.weight.detach().numpy().copy()
+    bias2 = linear2.bias.detach().numpy().copy() if linear2.bias is not None else None
+
+    # define cost/loss & optimizer
+    # criterion = nn.BCELoss().to(device)
+    criterion = nn.MSELoss().to(device)
+    optimizer = optim.SGD(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
+
+    torch_losses = []
+    for step in range(NSTEPS):
+        pred = model(X)
+        loss = criterion(pred, Y)
+            # cost/loss function
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        torch_losses.append(loss.item())
+
+        if step % 1000 == 0:
+            print('step:', step, 'loss:', loss.item())
+
+    autodiff_mode = pnl.ExecutionMode.PyTorch
+
+    xor_in = TransferMechanism(name='xor_in',
+                               default_variable=np.zeros(2))
+
+    xor_hid = TransferMechanism(name='xor_hid',
+                                default_variable=np.zeros(HIDDEN_SIZE),
+                                function=Logistic())
+
+    xor_out = TransferMechanism(name='xor_out',
+                                default_variable=np.zeros(1),
+                                function=Logistic())
+
+    hid_map = MappingProjection(matrix=weights1.T)
+    out_map = MappingProjection(matrix=weights2.T)
+
+    xor = AutodiffComposition(loss_spec=pnl.Loss.MSE, learning_rate=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
+
+    xor.add_node(xor_in)
+    xor.add_node(xor_hid)
+    xor.add_node(xor_out)
+
+    xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+    xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+
+    xor_inputs = np.array([[0.0, 0.0],
+                           [0.0, 1.0],
+                           [1.0, 0.0],
+                           [1.0, 1.0]])
+
+    xor_targets = np.array([[0.0], [1.0], [1.0], [0.0]])
+
+    xor.learn(inputs={"inputs": {xor_in: xor_inputs},
+                      "targets": {xor_out: xor_targets}},
+              epochs=NSTEPS,
+              minibatch_size=4,
+              execution_mode=autodiff_mode)
+
+    np.testing.assert_allclose(torch_losses, xor.torch_losses.flatten(), rtol=1e-5)
+
