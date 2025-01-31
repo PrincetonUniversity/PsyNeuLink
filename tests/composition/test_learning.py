@@ -510,7 +510,7 @@ class TestLearningPathwayMethods:
 
     # Use explicit parametrize instead of the autodiff_mode fixture to avoid
     # applying marks. This test doesn't execute pytorch or compiled mode
-    @pytest.mark.parametrize('execution_mode', [pnl.ExecutionMode.LLVM, pnl.ExecutionMode.PyTorch])
+    @pytest.mark.parametrize('execution_mode', [pnl.ExecutionMode.LLVMRun, pnl.ExecutionMode.PyTorch])
     def test_execution_mode_pytorch_and_LLVM_errors(self, execution_mode):
         A = TransferMechanism(name="learning-process-mech-A")
         B = TransferMechanism(name="learning-process-mech-B")

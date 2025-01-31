@@ -238,10 +238,12 @@ class CompositionRunner():
         Outputs from the final execution
         """
 
-        if not (execution_mode & ExecutionMode.COMPILED):
-            self._is_llvm_mode = False
-        else:
+        if execution_mode.is_compiled():
+            assert execution_mode.is_cpu_compiled()
             self._is_llvm_mode = True
+
+        else:
+            self._is_llvm_mode = False
 
         if execution_mode is ExecutionMode.Python and learning_rate is not None:
             # User learning_rate specified in call to learn, so use that by passing it in runtime_params,

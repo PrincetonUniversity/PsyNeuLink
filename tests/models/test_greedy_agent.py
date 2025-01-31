@@ -103,7 +103,7 @@ def test_simplified_greedy_agent_random(benchmark, comp_mode):
 def test_predator_prey(benchmark, mode, ocm_mode, prng, samples, fp_type):
 
     # Skip large test instances that are not CPU compiled, or executed in parallel.
-    if len(samples) > 10 and not (mode & pnl.ExecutionMode.LLVM) and ocm_mode not in {'LLVM', 'PTX'}:
+    if len(samples) > 10 and not mode.is_compiled() and ocm_mode not in {'LLVM', 'PTX'}:
         pytest.skip("This test takes too long")
 
     # Instantiate LLVMBuilderContext using the preferred fp type
