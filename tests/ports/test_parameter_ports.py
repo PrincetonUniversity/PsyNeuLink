@@ -197,7 +197,7 @@ class TestParameterPortList:
 
         with pytest.raises(
             pnl.ParameterPortError,
-            match='Did you want offset-integrator_function or offset-self'
+            match='Did you want offset-function, offset-integrator_function, or offset-self'
         ):
             mech.parameter_ports['offset']
 

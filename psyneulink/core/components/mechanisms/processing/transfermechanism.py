@@ -859,7 +859,6 @@ from psyneulink.core.scheduling.time import TimeScale
 __all__ = [
     'INITIAL_VALUE', 'CLIP',  'INTEGRATOR_FUNCTION', 'INTEGRATION_RATE',
     'TERMINATION_THRESHOLD', 'TERMINATION_MEASURE', 'TERMINATION_MEASURE_VALUE',
-    'Transfer_DEFAULT_BIAS', 'Transfer_DEFAULT_GAIN', 'Transfer_DEFAULT_LENGTH', 'Transfer_DEFAULT_OFFSET',
     'TransferError', 'TransferMechanism',
 ]
 
@@ -873,13 +872,6 @@ TERMINATION_MEASURE = 'termination_measure'
 TERMINATION_MEASURE_VALUE = 'termination_measure_value'
 termination_keywords = [EXECUTION_COUNT, NUM_EXECUTIONS_BEFORE_FINISHED]
 
-
-# TransferMechanism default parameter values:
-Transfer_DEFAULT_LENGTH = 1
-Transfer_DEFAULT_GAIN = 1
-Transfer_DEFAULT_BIAS = 0
-Transfer_DEFAULT_OFFSET = 0
-# Transfer_DEFAULT_RANGE = np.array([])
 
 logger = logging.getLogger(__name__)
 
@@ -962,7 +954,6 @@ def _clip_setter(value, owning_component=None, context=None):
     return value
 
 
-# IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class TransferMechanism(ProcessingMechanism_Base):
     """
     TransferMechanism(                                       \
@@ -1006,7 +997,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         specifies `IntegratorFunction` to use when `integrator_mode <TransferMechanism.integrator_mode>` is True (see
         `Execution with Integration <TransferMechanism_Examples_Execution_With_Integration>` for additional details).
 
-    initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
+    initial_value :  value, list or np.ndarray : 0
         specifies the starting value for integration when `integrator_mode <TransferMechanism.integrator_mode>` is
         True; must be the same length `variable <Mechanism_Base.variable>` (see
         `TransferMechanism_Execution_Integration_Initialization` for additional details).
@@ -1152,11 +1143,6 @@ class TransferMechanism(ProcessingMechanism_Base):
     componentType = TRANSFER_MECHANISM
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
-    # These will override those specified in TYPE_DEFAULT_PREFERENCES
-    # classPreferences = {
-    #     PREFERENCE_SET_NAME: 'TransferCustomClassPreferences',
-    #     # REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-    #     }
 
     # TransferMechanism parameter and control signal assignments):
 
