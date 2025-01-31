@@ -12527,8 +12527,7 @@ _
                         else:
                             nested_execution_mode = execution_mode
 
-                        ret = node.execute(context=context,
-                                           execution_mode=nested_execution_mode)
+                        ret = node.execute(context=context, execution_mode=nested_execution_mode)
 
                         # Get output info from nested execution
                         if execution_mode.is_compiled():
@@ -12632,7 +12631,17 @@ _
 
             # Reset context flags
             context.execution_phase = ContextFlags.PROCESSING
-            self.output_CIM.execute(context=context)
+
+            if execution_mode.is_compiled():
+                assert execution_mode & pnlvm.ExecutionMode._PerNode
+                assert execution_mode.is_cpu_compiled()
+
+                _comp_ex.freeze_values()
+                _comp_ex.execute_node(self.output_CIM)
+
+            else:
+                self.output_CIM.execute(context=context)
+
             context.execution_phase = ContextFlags.IDLE
 
             # Animate output_CIM
@@ -12676,25 +12685,19 @@ _
                        content='execute_end',
                        context=context)
 
+            # UPDATE TIME and RETURN ***********************************************************************************
+
+            execution_scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
+
             # Extract result here
             if execution_mode.is_compiled():
                 assert execution_mode & pnlvm.ExecutionMode._PerNode
                 assert execution_mode.is_cpu_compiled()
 
-                _comp_ex.freeze_values()
-                _comp_ex.execute_node(self.output_CIM)
-                report(self,
-                       PROGRESS_REPORT,
-                       report_num=report_num,
-                       content='trial_end',
-                       context=context)
                 return _comp_ex.extract_node_output(self.output_CIM)
 
-            # UPDATE TIME and RETURN ***********************************************************************************
-
-            execution_scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
-
-            return self.get_output_values(context)
+            else:
+                return self.get_output_values(context)
 
     def __call__(self, *args, **kwargs):
         """Execute Composition if any args are provided; else simply return results of last execution.
