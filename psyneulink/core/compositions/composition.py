@@ -1122,7 +1122,7 @@ that execution only.
       an AutodffComposition to be run in any mode (e.g., for comparison and/or compatibility purposes).
 
   .. warning::
-    * `ExecutionMode.LLVM` and `ExecutionMode.PyTorch` can only be used in the `learn <AutodiffComposition.learn>`
+    * `ExecutionMode.LLVMRun` and `ExecutionMode.PyTorch` can only be used in the `learn <AutodiffComposition.learn>`
       method of an `AutodiffComposition`;  specifying them in the `learn <Composition.learn>`()` method of a standard
       `Composition` causes an error.
 
@@ -2072,7 +2072,7 @@ in order of their power, are:
       equivalent the execution of the `execute <Composition.execute>` method using the Python interpreter;
       This mode does not support Trial scope scheduling rules and should not be used outside of development or testing.
 
-    * `ExecutionMode.LLVM` -- compile and run `Node <Composition_Nodes>` of the `Composition` and their `Projections
+    * `ExecutionMode._LLVMPerNode` -- compile and run `Node <Composition_Nodes>` of the `Composition` and their `Projections
       <Projection>`, using the Python interpreter to call the Composition's `scheduler <Composition.scheduler>`,
       execute each Node and iterate over `TRIAL <TimeScale.TRIAL>`\\s; note that, in this mode, scheduling
       `Conditions <Condition>` that rely on Node `Parameters` are not supported;
@@ -11837,12 +11837,13 @@ _
                            node=self.controller)
 
                 if self.controller and not execution_mode & pnlvm.ExecutionMode.COMPILED:
+
                     context.execution_phase = ContextFlags.PROCESSING
                     self.controller.execute(context=context)
 
                 else:
-                    assert (execution_mode == pnlvm.ExecutionMode.LLVM
-                            or execution_mode & pnlvm.ExecutionMode._Fallback),\
+                    assert execution_mode & pnlvm.ExecutionMode._PerNode
+                    assert execution_mode & pnlvm.ExecutionMode.LLVM, \
                         f"PROGRAM ERROR: Unrecognized compiled execution_mode: '{execution_mode}'."
                     _comp_ex.freeze_values()
                     _comp_ex.execute_node(self.controller)
@@ -12060,6 +12061,8 @@ _
             # but still after the context has been initialized
             if execution_mode & pnlvm.ExecutionMode.COMPILED:
 
+                assert execution_mode & pnlvm.ExecutionMode.LLVM, "Unsupported execution mode: {}".format(execution_mode)
+
                 is_simulation = (context is not None and ContextFlags.SIMULATION_MODE in context.runmode)
 
                 _comp_ex = pnlvm.CompExecution.get(self, context)
@@ -12070,8 +12073,6 @@ _
                     assert not is_simulation
 
                     try:
-                        assert execution_mode & pnlvm.ExecutionMode.LLVM, "Unsupported execution mode: {}".format(execution_mode)
-
                         llvm_inputs = self._validate_execution_inputs(inputs)
                         _comp_ex.execute(llvm_inputs)
 
@@ -12087,7 +12088,7 @@ _
                         warnings.warn("Failed to compile wrapper for `{}' in `{}': {}".format(self.name, self.name, str(e)))
                         execution_mode = pnlvm.ExecutionMode.Python
 
-                elif execution_mode is pnlvm.ExecutionMode.LLVM:
+                elif execution_mode & pnlvm.ExecutionMode._PerNode:
 
                     # Compile all mechanism wrappers
                     for m in self._all_nodes:
@@ -12161,11 +12162,13 @@ _
                 build_CIM_input = self._build_variable_for_input_CIM(inputs)
 
             if execution_mode & pnlvm.ExecutionMode.COMPILED:
-                _comp_ex.execute_node(self.input_CIM, inputs)
                 # FIXME: parameter_CIM should be executed here as well,
                 #        but node execution of nested compositions with
                 #        outside control is not supported yet.
                 assert not self.is_nested or len(self.parameter_CIM.afferents) == 0
+                assert execution_mode & pnlvm.ExecutionMode._PerNode
+
+                _comp_ex.execute_node(self.input_CIM, inputs)
 
             elif self.is_nested:
                 simulation = ContextFlags.SIMULATION_MODE in context.runmode
@@ -12365,6 +12368,7 @@ _
                 frozen_values = {}
                 new_values = {}
                 if execution_mode & pnlvm.ExecutionMode.COMPILED:
+                    assert execution_mode & pnlvm.ExecutionMode._PerNode
                     _comp_ex.freeze_values()
 
                 # PURGE LEARNING IF NOT ENABLED ----------------------------------------------------------------
@@ -12448,7 +12452,9 @@ _
 
                         # Execute Mechanism
                         if execution_mode & pnlvm.ExecutionMode.COMPILED:
+                            assert execution_mode & pnlvm.ExecutionMode._PerNode
                             _comp_ex.execute_node(node)
+
                         else:
                             if node is not self.controller:
                                 mech_context = copy(context)
@@ -12475,6 +12481,8 @@ _
                     elif isinstance(node, Composition):
 
                         if execution_mode & pnlvm.ExecutionMode.COMPILED:
+                            assert execution_mode & pnlvm.ExecutionMode._PerNode
+
                             # Invoking nested composition passes data via Python
                             # structures. Make sure all sources get their latest values
                             srcs = (proj.sender.owner for proj in node.input_CIM.afferents)
@@ -12507,7 +12515,7 @@ _
 
                         # Run node-level compiled nested composition
                         # only if there are no control projections
-                        if execution_mode == pnlvm.ExecutionMode.LLVM and len(node.parameter_CIM.afferents) != 0:
+                        if execution_mode & pnlvm.ExecutionMode.LLVM and len(node.parameter_CIM.afferents) != 0:
                             nested_execution_mode = pnlvm.ExecutionMode.Python
                         else:
                             nested_execution_mode = execution_mode
@@ -12516,6 +12524,8 @@ _
 
                         # Get output info from nested execution
                         if execution_mode & pnlvm.ExecutionMode.COMPILED:
+                            assert execution_mode & pnlvm.ExecutionMode._PerNode
+
                             # Update result in binary data structure
                             _comp_ex.insert_node_output(node, ret)
 
@@ -12659,6 +12669,7 @@ _
 
             # Extract result here
             if execution_mode & pnlvm.ExecutionMode.COMPILED:
+                assert execution_mode & pnlvm.ExecutionMode._PerNode
                 _comp_ex.freeze_values()
                 _comp_ex.execute_node(self.output_CIM)
                 report(self,

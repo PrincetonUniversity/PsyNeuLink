@@ -2507,9 +2507,9 @@ class TestControlMechanisms:
     @pytest.mark.benchmark
     @pytest.mark.control
     @pytest.mark.composition
-    # 'LLVM' mode is not supported, because synchronization of compiler and
+    # '_LLVMPerNode' mode is not supported, because synchronization of compiler and
     # python values during execution is not implemented.
-    @pytest.mark.usefixtures("comp_mode_no_llvm")
+    @pytest.mark.usefixtures("comp_mode_no_per_node")
     @pytest.mark.parametrize('prng', ['Default', 'Philox'])
     def test_modulation_of_random_state_DDM(self, comp_mode, benchmark, prng):
         # set explicit seed to make sure modulation is different
@@ -2622,9 +2622,9 @@ class TestControlMechanisms:
     @pytest.mark.benchmark
     @pytest.mark.control
     @pytest.mark.composition
-    # 'LLVM' mode is not supported, because synchronization of compiler and
+    # '_LLVMPerNode' mode is not supported, because synchronization of compiler and
     # python values during execution is not implemented.
-    @pytest.mark.usefixtures("comp_mode_no_llvm")
+    @pytest.mark.usefixtures("comp_mode_no_per_node")
     @pytest.mark.parametrize('prng', ['Default', 'Philox'])
     def test_modulation_of_random_state_DDM_Analytical(self, comp_mode, benchmark, prng):
         # set explicit seed to make sure modulation is different

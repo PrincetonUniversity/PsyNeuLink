@@ -3764,7 +3764,7 @@ class TestRun:
         np.testing.assert_allclose(np.array([[75.]]), output)
 
     @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python,
-                                      pytest.param(pnl.ExecutionMode.LLVM, marks=pytest.mark.llvm),
+                                      pytest.param(pnl.ExecutionMode._LLVMPerNode, marks=pytest.mark.llvm),
                                       pytest.param(pnl.ExecutionMode._LLVMExec, marks=pytest.mark.llvm),
                                      ])
     def test_execute_composition(self, mode):
@@ -3864,7 +3864,7 @@ class TestRun:
                 and "that is in deferred init" in str(error_text.value))
 
     @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python,
-                                      pytest.param(pnl.ExecutionMode.LLVM, marks=pytest.mark.llvm),
+                                      pytest.param(pnl.ExecutionMode._LLVMPerNode, marks=pytest.mark.llvm),
                                       pytest.param(pnl.ExecutionMode._LLVMExec, marks=pytest.mark.llvm),
                                      ])
     def test_execute_no_inputs(self, mode):
@@ -4423,8 +4423,8 @@ class TestRun:
         self._check_comp_ex(comp, None, comp_mode, struct_name, is_not=True)
         self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name, is_not=True)
 
-    @pytest.mark.usefixtures("comp_mode_no_llvm")
-    @pytest.mark.parametrize("comp_mode2", [m for m in pytest.helpers.get_comp_execution_modes() if m.values[0] is not pnl.ExecutionMode.LLVM])
+    @pytest.mark.usefixtures("comp_mode_no_per_node")
+    @pytest.mark.parametrize("comp_mode2", [m for m in pytest.helpers.get_comp_execution_modes() if m.values[0] is not pnl.ExecutionMode._LLVMPerNode])
     def test_execution_after_cleanup_enum_param(self, comp_mode, comp_mode2):
         """
         This test checks that compiled sync works for Parameters with Enum values.
@@ -6607,7 +6607,7 @@ class TestProperties:
 
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Auto, pnl.ExecutionMode.Python,
-                                      pytest.param(pnl.ExecutionMode.LLVM, marks=[_fallback_xfail, pytest.mark.llvm]),
+                                      pytest.param(pnl.ExecutionMode._LLVMPerNode, marks=[_fallback_xfail, pytest.mark.llvm]),
                                       pytest.param(pnl.ExecutionMode._LLVMExec, marks=[_fallback_xfail, pytest.mark.llvm]),
                                       pytest.param(pnl.ExecutionMode.LLVMRun, marks=[_fallback_xfail, pytest.mark.llvm]),
                                       pytest.param(pnl.ExecutionMode.PTXRun, marks=[_fallback_xfail, pytest.mark.llvm, pytest.mark.cuda]),

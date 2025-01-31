@@ -728,7 +728,7 @@ class TestCondition:
         ]
     )
     @pytest.mark.parametrize('threshold', [10, 10.0])
-    @pytest.mark.usefixtures("comp_mode_no_llvm")
+    @pytest.mark.usefixtures("comp_mode_no_per_node")
     def test_Threshold_parameters(
         self, parameter, indices, default_variable, integration_rate, expected_results, threshold, comp_mode
     ):
@@ -761,7 +761,7 @@ class TestCondition:
             ('!=', -1, 0, [[[-1]]]),
         ]
     )
-    @pytest.mark.usefixtures("comp_mode_no_llvm") # Per-node mode doesn't support Parameter access in conditions
+    @pytest.mark.usefixtures("comp_mode_no_per_node") # Per-node mode doesn't support Parameter access in conditions
     def test_Threshold_comparators(
         self, comparator, increment, threshold, expected_results, comp_mode
     ):
@@ -794,7 +794,7 @@ class TestCondition:
             ('!=', -1, -1, 0, 1, [[[-3]]]),
         ]
     )
-    @pytest.mark.usefixtures("comp_mode_no_llvm") # Per-node mode doesn't support Parameter access in conditions
+    @pytest.mark.usefixtures("comp_mode_no_per_node") # Per-node mode doesn't support Parameter access in conditions
     def test_Threshold_tolerances(
         self, comparator, increment, threshold, atol, rtol, expected_results, comp_mode
     ):

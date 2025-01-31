@@ -184,7 +184,7 @@ AutoDiffCompositions in learning. Although it is best suited for use with `super
        during execution (see `AutodiffComposition_Nested_Modulation` below), which is not supported by PyTorch.
 
     .. warning::
-      * Specifying `ExecutionMode.LLVM` or `ExecutionMode.PyTorch` in the learn() method of a standard
+      * Specifying `ExecutionMode.LLVMRun` or `ExecutionMode.PyTorch` in the learn() method of a standard
         `Composition` causes an error.
 
 COMMENT:
@@ -204,7 +204,7 @@ the constructor (see `AutodiffComposition <AutodiffComposition_Class_Reference>`
 `Compilation Modes <Composition_Compiled_Modes>` for more information about executing a Composition in compiled mode.
 
     .. note::
-       Specifying `ExecutionMode.LLVMRUn` in either the `learn <Composition.learn>` and `run <Composition.run>`
+       Specifying `ExecutionMode.LLVMRun` in either the `learn <Composition.learn>` and `run <Composition.run>`
        methods of an AutodiffComposition causes it to (attempt to) use compiled execution in both cases; this is
        because LLVM compilation supports the use of modulation in PsyNeuLink models (as compared to `PyTorch mode
        <AutodiffComposition_PyTorch>`; see `note <AutodiffComposition_PyTorch_Note>` below).

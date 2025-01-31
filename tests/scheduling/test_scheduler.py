@@ -1544,9 +1544,9 @@ class TestFeedback:
                               (TimeScale.TRIAL, [[1.5], [0.4375]]),
                               (TimeScale.RUN, [[1.5], [0.4375]])],
                               ids=lambda x: x if isinstance(x, TimeScale) else "")
-    # 'LLVM' mode is not supported, because synchronization of compiler and
+    # '_LLVMPerNode' mode is not supported, because synchronization of compiler and
     # python values during execution is not implemented.
-    @pytest.mark.usefixtures("comp_mode_no_llvm")
+    @pytest.mark.usefixtures("comp_mode_no_per_node")
     def test_time_termination_measures(self, comp_mode, timescale, expected):
         in_one_pass = timescale in {TimeScale.TIME_STEP, TimeScale.PASS}
         attention = pnl.TransferMechanism(name='Attention',

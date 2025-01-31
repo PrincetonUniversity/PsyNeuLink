@@ -78,13 +78,15 @@ class ExecutionMode(enum.Flag):
     PyTorch = enum.auto()
     LLVM     = enum.auto()
     _PTX      = enum.auto()
-    _Run      = enum.auto()
+    _PerNode  = enum.auto()
     _Exec     = enum.auto()
+    _Run      = enum.auto()
     _Fallback = enum.auto()
 
     Auto = _Fallback | _Run | _Exec | LLVM
     LLVMRun = LLVM | _Run
     _LLVMExec = LLVM | _Exec
+    _LLVMPerNode = LLVM | _PerNode
     PTXRun = _PTX | _Run
     COMPILED = ~ (Python | PyTorch)
 
