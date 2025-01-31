@@ -1036,7 +1036,7 @@ class PytorchMechanismWrapper():
             if isinstance(self.input_ports[i]._pnl_function, TransformFunction):
                 # Add input port dimension back to account for input port dimension reduction, we should have shape
                 # (batch, input_port, ... variable dimensions ) or
-                # (batch, input_port, projection, ... variable dimensions ...) if execute_inpute_ports is invoked
+                # (batch, input_port, projection, ... variable dimensions ...) if execute_input_ports is invoked
                 # after aggregate_afferents.
                 if len(v.shape) == 2:
                     v = v[:, None, ...]
@@ -1044,7 +1044,7 @@ class PytorchMechanismWrapper():
             res.append(self.input_ports[i].function(v))
 
         try:
-            res = torch.stack(res)
+            res = torch.stack(res, dim=1) # Stack along the input port dimension, first dimension is batch
         except (RuntimeError, TypeError):
             # ragged
             pass
