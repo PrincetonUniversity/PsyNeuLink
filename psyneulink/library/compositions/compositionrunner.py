@@ -359,7 +359,7 @@ class CompositionRunner():
                                   **kwargs)
             skip_initialization = True
 
-            if execution_mode == ExecutionMode.PyTorch:
+            if execution_mode is ExecutionMode.PyTorch:
                 pytorch_rep = (self._composition.parameters.pytorch_representation._get(context).
                                copy_weights_to_psyneulink(context))
                 if pytorch_rep and synch_with_pnl_options[MATRIX_WEIGHTS] == MINIBATCH:
@@ -372,7 +372,7 @@ class CompositionRunner():
             self._composition.parameters.results.get(context)[-1 * num_epoch_results:], context)
         # return result of last *trial* (as usual for a call to run)
 
-        if execution_mode == ExecutionMode.PyTorch and synch_with_pnl_options[MATRIX_WEIGHTS] == EPOCH:
+        if execution_mode is ExecutionMode.PyTorch and synch_with_pnl_options[MATRIX_WEIGHTS] == EPOCH:
             # Copy weights at end of learning run
             pytorch_rep.copy_weights_to_psyneulink(context)
 

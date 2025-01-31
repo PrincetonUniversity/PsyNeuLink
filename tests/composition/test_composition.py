@@ -4274,7 +4274,7 @@ class TestRun:
             comp.run()
 
     def _check_comp_ex(self, comp, comparison, comp_mode, struct_name, context=None, is_not=False):
-        if comp_mode == pnl.ExecutionMode.Python:
+        if comp_mode is pnl.ExecutionMode.Python:
             return
 
         if context is None:

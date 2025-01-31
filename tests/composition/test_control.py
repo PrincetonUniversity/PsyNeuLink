@@ -2469,7 +2469,7 @@ class TestControlMechanisms:
 
         ret = comp.run(inputs={mech: [2]}, num_trials=1, execution_mode=comp_mode)
         np.testing.assert_allclose(ret, expected)
-        if comp_mode == pnl.ExecutionMode.Python:
+        if comp_mode is pnl.ExecutionMode.Python:
             np.testing.assert_allclose(comp.controller.function.saved_values.flatten(), exp_values)
 
     @pytest.mark.benchmark
@@ -2531,7 +2531,7 @@ class TestControlMechanisms:
         benchmark(comp.run, inputs={ctl_mech:seeds, mech:5.0}, num_trials=len(seeds) * 2, execution_mode=comp_mode)
 
         # Python uses fp64 irrespective of the pytest precision setting
-        precision = 'fp64' if comp_mode == pnl.ExecutionMode.Python else pytest.helpers.llvm_current_fp_precision()
+        precision = 'fp64' if comp_mode is pnl.ExecutionMode.Python else pytest.helpers.llvm_current_fp_precision()
         if prng == 'Default':
             np.testing.assert_allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[100, 21], [100, 23], [100, 20]] * 2)
         elif prng == 'Philox' and precision == 'fp64':
@@ -2644,7 +2644,7 @@ class TestControlMechanisms:
         benchmark(comp.run, inputs={ctl_mech:seeds, mech:0.1}, num_trials=len(seeds) * 2, execution_mode=comp_mode)
 
         # Python uses fp64 irrespective of the pytest precision setting
-        precision = 'fp64' if comp_mode == pnl.ExecutionMode.Python else pytest.helpers.llvm_current_fp_precision()
+        precision = 'fp64' if comp_mode is pnl.ExecutionMode.Python else pytest.helpers.llvm_current_fp_precision()
         if prng == 'Default':
             np.testing.assert_allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[-1, 3.99948962], [1, 3.99948962], [-1, 3.99948962]] * 2)
         elif prng == 'Philox' and precision == 'fp64':
@@ -3359,7 +3359,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         results, saved_values = benchmark(comp_run, inputs, mode)
 
         np.testing.assert_array_equal(results, result)
-        if mode == pnl.ExecutionMode.Python:
+        if mode is pnl.ExecutionMode.Python:
             np.testing.assert_array_equal(saved_values.flatten(), [0.75, 1.5, 2.25])
 
     def test_model_based_ocm_with_buffer(self):

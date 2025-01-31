@@ -46,8 +46,7 @@ class TestOutputPorts:
                              ], ids=lambda x: str(x) if len(x) != 1 else '')
     @pytest.mark.usefixtures("comp_mode_no_per_node")
     def tests_output_port_variable_spec_composition(self, comp_mode, spec, expected1, expected2):
-        if (len(spec) == 2) and (spec[1] == pnl.TimeScale.RUN) and \
-           ((comp_mode & pnl.ExecutionMode._Exec) == pnl.ExecutionMode._Exec):
+        if (len(spec) == 2) and (spec[1] == pnl.TimeScale.RUN) and (comp_mode & pnl.ExecutionMode._Exec):
             pytest.skip("{} is not supported in {}".format(spec[1], comp_mode))
 
         # Test specification of OutputPort's variable

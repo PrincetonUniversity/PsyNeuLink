@@ -2907,12 +2907,13 @@ class TestMiscTrainingFunctionality:
 
         # fp32 results are different due to rounding
         if pytest.helpers.llvm_current_fp_precision() == 'fp32' and \
-           autodiff_mode != pnl.ExecutionMode.PyTorch and \
+           autodiff_mode is not pnl.ExecutionMode.PyTorch and \
            optimizer_type == 'sgd' and \
            learning_rate == 10:
             expected = [[[0.9918830394744873]], [[0.9982172846794128]], [[0.9978305697441101]], [[0.9994590878486633]]]
+
         # FIXME: LLVM version is broken with learning rate == 1.5
-        if learning_rate != 1.5 or autodiff_mode == pnl.ExecutionMode.PyTorch:
+        if learning_rate != 1.5 or autodiff_mode is pnl.ExecutionMode.PyTorch:
             np.testing.assert_allclose(results, expected)
 
 

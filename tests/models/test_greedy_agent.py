@@ -214,7 +214,7 @@ def test_predator_prey(benchmark, mode, ocm_mode, prng, samples, fp_type):
             # np.testing.assert_allclose(run_results, [[0.9705216285127504, -0.1343332460369043]])
             np.testing.assert_allclose(run_results, [[0.9705216285127504, -0.1343332460369043]], atol=1e-6, rtol=1e-6)
         elif prng == 'Philox':
-            if mode == pnl.ExecutionMode.Python or pytest.helpers.llvm_current_fp_precision() == 'fp64':
+            if mode is pnl.ExecutionMode.Python or pytest.helpers.llvm_current_fp_precision() == 'fp64':
                 # np.testing.assert_allclose(run_results[0], [[-0.16882940384606543, -0.07280074899749223]])
                 np.testing.assert_allclose(run_results, [[-0.16882940384606543, -0.07280074899749223]])
             elif pytest.helpers.llvm_current_fp_precision() == 'fp32':
@@ -225,7 +225,7 @@ def test_predator_prey(benchmark, mode, ocm_mode, prng, samples, fp_type):
         else:
             assert False, "Unknown PRNG!"
 
-        if mode == pnl.ExecutionMode.Python and not benchmark.enabled:
+        if mode is pnl.ExecutionMode.Python and not benchmark.enabled:
             # FIXME: The results are 'close' for both Philox and MT,
             #        because they're dominated by costs
             # FIX: Requires 1e-5 tolerance

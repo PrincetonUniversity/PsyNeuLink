@@ -949,7 +949,7 @@ class AutodiffComposition(Composition):
                     if node not in self.get_nodes_by_role(NodeRole.TARGET)
                     for pathway in _get_pytorch_backprop_pathway(node)]
 
-        if execution_mode == pnlvm.ExecutionMode.PyTorch:
+        if execution_mode is pnlvm.ExecutionMode.PyTorch:
             # For PyTorch mode, only need to construct dummy TARGET Nodes, to allow targets to be:
             #  - specified in the same way as for other execution_modes
             #  - trial-by-trial values kept aligned with inputs in batch / minibatch construction
@@ -1073,7 +1073,7 @@ class AutodiffComposition(Composition):
           before the next time it calls run(), in a call to backward() by do_gradient_optimization()
           in _batch_inputs() or _batch_function_inputs(),
         """
-        assert execution_mode == pnlvm.ExecutionMode.PyTorch
+        assert execution_mode is pnlvm.ExecutionMode.PyTorch
         pytorch_rep = self.parameters.pytorch_representation._get(context)
 
         # --------- Do forward computation on current inputs -------------------------------------------------
