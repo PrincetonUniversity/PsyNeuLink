@@ -218,8 +218,6 @@ class OneHot(SelectionFunction):
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
-    bounds : None
-
     owner : Component
         `component <Component>` to which to assign the Function.
 

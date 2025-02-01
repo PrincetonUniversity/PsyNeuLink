@@ -40,7 +40,7 @@ TransferFunctions transform their variable but maintain its shape.  There are tw
 Standard Attributes
 ~~~~~~~~~~~~~~~~~~~
 
-All TransferFunctions have a `bounds <TransferFunction.bounds>` attribute that specifies the lower and upper limits
+All TransferFunctions have a `range <TransferFunction.range>` attribute that specifies the lower and upper limits
 of the function's result.  For some subclasses, this may be modified by other parameters.  In addition, all
 TransferFunctions have a pair of modulable parameters as described below.
 
@@ -115,22 +115,22 @@ __all__ = ['Angle', 'BinomialDistort', 'Dropout', 'Exponential', 'Gaussian', 'Ga
            'Linear', 'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
            ]
 
-def _bounds_getter_using_scale_and_offset(owning_component=None, context=None):
-    """Reassign bounds based on scale and offset applied to function's output for default upper and lower bounds
+def _range_getter_using_scale_and_offset(owning_component=None, context=None):
+    """Reassign range based on scale and offset applied to function's default_range
     """
-    default_bounds = owning_component.default_bounds
+    default_range = owning_component.default_range
     scale = owning_component.parameters.scale._get(context)
     offset = owning_component.parameters.offset._get(context)
 
     # Deal with lower bound = None:
-    lower_bound = -np.inf if default_bounds[0] is None else default_bounds[0]
+    lower_bound = -np.inf if default_range[0] is None else default_range[0]
     output_for_fct_lower_bound = scale * lower_bound + offset
 
     # Deal with upper bound = None:
-    upper_bound = np.inf if default_bounds[1] is None else default_bounds[1]
+    upper_bound = np.inf if default_range[1] is None else default_range[1]
     output_for_fct_upper_bound = scale * upper_bound + offset
 
-    # Need to do this since scale could be negative, reversing upper and lower bounds:
+    # Need to do this since scale could be negative, reversing upper and lower range:
     lower_bound = min(output_for_fct_lower_bound, output_for_fct_upper_bound)
     upper_bound = max(output_for_fct_lower_bound, output_for_fct_upper_bound)
 
@@ -149,11 +149,14 @@ class TransferFunction(Function_Base):
     Attributes
     ----------
 
-    bounds : tuple(lower bound: float, uppper bound: float)
+    range : tuple(lower bound: float, uppper bound: float)
       read-only Parameter that  indicates the lower and upper limits of the function's result. The two items of the
-      tuple indicate the lower and upper bounds, respectively, with `None` as the entry if there is no bound.  Some
-      subclasses of TransferFunction may have other Parameters that influence the bounds, which are described under
-      the `bounds <TransferFunction.bounds>` attribute of the relevant subclass.
+      tuple indicate the lower and upper bounds of range, respectively, with `None` as the entry if there are no
+      bounds.  Some subclasses of TransferFunction may have other Parameters that influence the range, which are
+      described under the `range <TransferFunction.range>` attribute of the relevant subclasses.
+
+    default_range : tuple(lower bound: float, uppper bound: float)
+       class attribute that indicates the upper and lower limits of the Function's result.
     """
 
     componentType = TRANSFER_FUNCTION_TYPE
@@ -163,14 +166,14 @@ class TransferFunction(Function_Base):
             Attributes
             ----------
 
-                bounds
-                    see `bounds <TransferFunction.bounds>`
+                range
+                    see `range <TransferFunction.range>`
 
                     :default value: (None, None)
                     :type:
 
         """
-        bounds = Parameter((None,None), read_only=True)
+        range = Parameter((None,None), read_only=True)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
@@ -199,16 +202,19 @@ class DeterministicTransferFunction(TransferFunction):
 
     In addition to the `standard attributes <TransferFunction_StandardAttributes>` of a TransferFunction,
     all DeterministicTransferFunctions have a `scale <DeterministicTransferFunction.scale>` and `offset
-    <DeterministicTransferFunction.offset>` Parameter, that are used to determine the `bounds <TransferFunction.bounds>`
+    <DeterministicTransferFunction.offset>` Parameter, that are used to determine the `range <TransferFunction.range>`
 
     Attributes
     ----------
 
-    bounds : tuple(lower bound: float, uppper bound: float)
-      read-only Parameter that indicates the lower and upper limits of the function's result, after the `scale
+    default_range : tuple(lower bound: float, uppper bound: float)
+       class attribute that indicates the upper and lower limits of the Function's result, before `scale
+       <DeterministicTransferFunction.scale>` or `offset <DeterministicTransferFunction.offset>` are applied.
+
+    range : tuple(lower bound: float, uppper bound: float)
+      read-only Parameter that indicates the lower and upper limits of the Function's result, after the `scale
       <DeterministicTransferFunction.scale>` and `offset <DeterministicTransferFunction.offset>` Parameters
-      have been applied to the result of the function:  :math:`result(lower, upper) * scale + offset`, where
-      result(lower, upper) is given by the default values of the `bounds <TransferFunction.bounds>` attribute.
+      have been applied to the Function's default_range:  :math:`default_range(lower, upper) * scale + offset`.
 
     scale : float
       determines the value by which the result of the function is multiplied, before `offset
@@ -225,8 +231,8 @@ class DeterministicTransferFunction(TransferFunction):
             Attributes
             ----------
 
-                bounds
-                    see `bounds <TransferFunction.bounds>`
+                range
+                    see `range <TransferFunction.range>`
 
                     :default value: None
                     :type:
@@ -243,24 +249,12 @@ class DeterministicTransferFunction(TransferFunction):
                     :default value: 0.0
                     :type: float
         """
-        bounds = Parameter((None, None),
-                           getter=_bounds_getter_using_scale_and_offset,
+        range = Parameter((None, None),
+                           getter=_range_getter_using_scale_and_offset,
                            read_only=True,
                            dependencies={'scale', 'offset'})
         scale = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
-
-    # # MODIFIED 1/29/25 OLD:
-    # @check_user_specified
-    # def __init__(self,
-    #              offset: Optional[ValidParamSpecType] = None,
-    #              scale: Optional[ValidParamSpecType] = None,
-    #              **kwargs):
-    #
-    #     super().__init__(offset=offset,
-    #                      scale=scale,
-    #                      **kwargs)
-    # # MODIFIED 1/29/25 END
 
 
 # **********************************************************************************************************************
@@ -328,7 +322,7 @@ class Identity(DeterministicTransferFunction):  #
         PREFERENCE_SET_NAME: 'IdentityClassPreferences',
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
-    default_bounds = (None, None)
+    default_range = (None, None)
 
     @check_user_specified
     @beartype
@@ -475,7 +469,7 @@ class Linear(DeterministicTransferFunction):  #
         value added to each element of `variable <Linear.variable>` after applying the `slope <Linear.slope>`
         (if it is specified).
 
-    bounds : (None, None)
+    range : (None, None)
         modified by `scale <Linear.scale> and/or `offset <Linear.offset>` if they are specified.
 
     scale : float
@@ -506,7 +500,7 @@ class Linear(DeterministicTransferFunction):  #
 
     _model_spec_class_name_is_generic = True
 
-    default_bounds = (None, None)
+    default_range = (None, None)
 
     class Parameters(DeterministicTransferFunction.Parameters):
         """
@@ -766,7 +760,7 @@ class Exponential(DeterministicTransferFunction):  # ---------------------------
         value added to `variable <Exponential.variable>` after multiplying by `rate <Exponential.rate>`
         and before exponentiation;  assigned as *ADDITIVE_PARAM* of the Exponential Function.
 
-    bounds : (0, None)
+    range : (0, None)
         modified by `scale <Exponential.scale> and/or `offset <Exponential.offset>` if they are specified.
 
     scale : float
@@ -790,7 +784,7 @@ class Exponential(DeterministicTransferFunction):  # ---------------------------
     """
 
     componentName = EXPONENTIAL_FUNCTION
-    default_bounds = (0, None)
+    default_range = (0, None)
 
 
     class Parameters(DeterministicTransferFunction.Parameters):
@@ -1034,7 +1028,7 @@ class Logistic(DeterministicTransferFunction):  # ------------------------------
         value to add to each element of `variable <Logistic.variable>` before applying `gain <Logistic.gain>`;
         this argument has an effect identical to bias, but with the opposite sign (see `note <Logistic_Note>` above).
 
-    bounds : (0, 1)
+    range : (0, 1)
         modified by `scale <Gaussian.scale> and/or `offset <Gaussian.offset>` if they are specified.
 
     scale : float
@@ -1060,7 +1054,7 @@ class Logistic(DeterministicTransferFunction):  # ------------------------------
     componentName = LOGISTIC_FUNCTION
     # parameter_keywords.update({GAIN, BIAS})
     _model_spec_class_name_is_generic = True
-    default_bounds = (0, 1)
+    default_range = (0, 1)
 
 
     class Parameters(DeterministicTransferFunction.Parameters):
@@ -1346,7 +1340,7 @@ class Tanh(DeterministicTransferFunction):  # ----------------------------------
         value subtracted from each element of `variable <Tanh.variable>` before applying the `gain <Tanh.gain>`
         (if it is specified). This attribute is identical to bias, with the opposite sign.
 
-    bounds : (None, None)
+    range : (None, None)
         modified by `scale <TanH.scale> and/or `offset <TanH.offset>` if they are specified.
 
     scale : float
@@ -1370,7 +1364,7 @@ class Tanh(DeterministicTransferFunction):  # ----------------------------------
 
     componentName = TANH_FUNCTION
     # parameter_keywords.update({GAIN, BIAS, OFFSET})
-    default_bounds = (-1, 1)
+    default_range = (-1, 1)
 
 
     class Parameters(DeterministicTransferFunction.Parameters):
@@ -1641,7 +1635,7 @@ class ReLU(DeterministicTransferFunction):  # ----------------------------------
     leak : float : default 0.0
         scaling factor between 0 and 1 when (variable - bias) is less than or equal to 0.
 
-    bounds : (None, None)
+    range : (None, None)
         modified by `scale <Gaussian.scale> and/or `offset <ReLU.offset>` if they are specified.
 
     scale : float : default 1.0
@@ -1665,7 +1659,7 @@ class ReLU(DeterministicTransferFunction):  # ----------------------------------
 
     componentName = RELU_FUNCTION
     # parameter_keywords.update({GAIN, BIAS, LEAK})
-    default_bounds = (None, None)
+    default_range = (None, None)
 
 
     class Parameters(DeterministicTransferFunction.Parameters):
@@ -1917,7 +1911,7 @@ class Gaussian(DeterministicTransferFunction):  # ------------------------------
     bias : float : default 0.0
         value added to each element of `variable <Gaussian.variable>` before applying the Gaussian transform.
 
-    bounds : (None, None)
+    range : (None, None)
         modified by `scale <Gaussian.scale> and/or `offset <Gaussian.offset>` if they are specified.
 
     scale : float
@@ -1942,7 +1936,7 @@ class Gaussian(DeterministicTransferFunction):  # ------------------------------
 
     componentName = GAUSSIAN_FUNCTION
     # parameter_keywords.update({STANDARD_DEVIATION, BIAS, SCALE, OFFSET})
-    default_bounds = (None, None)
+    default_range = (None, None)
 
     class Parameters(TransferFunction.Parameters):
         """
@@ -2238,7 +2232,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         offset = Parameter(0.0, modulable=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
-        bounds = (None, None)
+        range = (None, None)
 
     @check_user_specified
     @beartype
@@ -2462,7 +2456,7 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
         p = Parameter(0.5, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
-        bounds = (None, None)
+        range = (None, None)
 
     @check_user_specified
     @beartype
@@ -2959,7 +2953,7 @@ class SoftMax(TransferFunction):
         for 2d variables, determines whether the SoftMax function is applied to the entire variable (per_item =
         False), or applied to each item in the variable separately (per_item = True).
 
-    bounds : None if `output <SoftMax.output>` in {ARG_MAX, MAX_VAL}, else (0, 1) : default (0, 1)
+    range : None if `output <SoftMax.output>` in {ARG_MAX, MAX_VAL}, else (0, 1) : default (0, 1)
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -3006,8 +3000,8 @@ class SoftMax(TransferFunction):
                     :default value: 0.1
                     :type: ``float``
 
-                bounds
-                    see `bounds <SoftMax.bounds>`
+                range
+                    see `range <SoftMax.range>`
 
                     :default value: (0, 1)
                     :type: <class 'tuple'>
@@ -3042,7 +3036,7 @@ class SoftMax(TransferFunction):
         adapt_scale = Parameter(1.0, modulable=True)
         adapt_base = Parameter(1.0, modulable=True)
         adapt_entropy_weighting = Parameter(0.95, modulable=True)
-        bounds = (0, 1)
+        range = (0, 1)
         output = ALL
         per_item = Parameter(True, pnl_internal=True)
         one_hot_function = Parameter(None, stateful=False, loggable=False)
@@ -4460,13 +4454,6 @@ class TransferWithCosts(TransferFunction):
         # Compute current intensity
         intensity = self.parameters.transfer_fct._get(context)(variable, context=context)
 
-        # # MODIFIED 1/29/25 OLD:
-        # # Apply scale and offset to current intensity (which is value returned by function)
-        # scale = self.parameters.scale._get(context)
-        # offset = self.parameters.offset._get(context)
-        # intensity = scale * intensity + offset
-        # MODIFIED 1/29/25 END
-
         # THEN, DEAL WITH COSTS
         # Note: only compute costs that are enabled;  others are left as None, or with their value when last enabled.
 
@@ -4525,16 +4512,7 @@ class TransferWithCosts(TransferFunction):
         else:
             enabled_cost_functions = self.parameters.enabled_cost_functions.get(context)
 
-        # MODIFIED 1/29/25 OLD:
         return transfer_fct._is_identity(context, defaults=defaults) and enabled_cost_functions == CostFunctions.NONE
-        # MODIFIED 1/29/25 NEW:
-        # return (
-        #     transfer_fct._is_identity(context, defaults=defaults)
-        #     and self.parameters.scale.get(context) == 1.0
-        #     and self.parameters.offset.get(context) == 0.0
-        #     and enabled_cost_functions == CostFunctions.NONE
-        # )
-        # MODIFIED 1/29/25 END
 
     @beartype
     def assign_costs(self, cost_functions: Union[CostFunctions, list], execution_context=None):
@@ -4659,18 +4637,6 @@ class TransferWithCosts(TransferFunction):
         trans_in = arg_in
         trans_out = arg_out
         builder.call(trans_f, [trans_p, trans_s, trans_in, trans_out])
-
-        # # MODIFIED 1/29/25 NEW:
-        # # apply scale and offset
-        # scale_ptr = ctx.get_param_or_state_ptr(builder, self, SCALE, param_struct_ptr=params)
-        # offset_ptr = ctx.get_param_or_state_ptr(builder, self, OFFSET, param_struct_ptr=params)
-        # scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
-        # offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
-        # # trans_out = pnlvm.helpers.load_extract_scalar_array_one(builder, trans_out)
-        # # trans_out = builder.fmul(trans_out, scale)
-        # # trans_out = builder.fadd(trans_out, offset)
-        # # builder.store(builder.load(trans_out), trans_out)
-        # # MODIFIED 1/29/25 END
 
         intensity_ptr = ctx.get_state_space(builder, self, state, self.parameters.intensity)
 

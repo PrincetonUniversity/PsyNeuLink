@@ -477,7 +477,7 @@ Notice that since noise is a `modulable Parameter <ParameterPort_Modulable_Param
 after the TransferMechanism has been constructed must be done to its base value (see `ModulatorySignal_Modulation`
 for additional information).
 
-Finally, `clipping <TransferMechanism.clip>` can also be used to cap the result to within specified bounds::
+Finally, `clipping <TransferMechanism.clip>` can also be used to cap the result to within specified range::
 
     >>> my_linear_tm.clip = (.5, 1.2)
     >>> my_linear_tm.execute([1.0, 1.0, 1.0])
@@ -487,7 +487,7 @@ Finally, `clipping <TransferMechanism.clip>` can also be used to cap the result 
     >>> my_linear_tm.execute([1.0, 1.0, 1.0])
     array([[0.5       , 1.01316799, 1.2       ]])
 
-Note that the bounds specified in **clip** apply to all elements of the result if it is an array.
+Note that the range specified in **clip** applies to all elements of the result if it is an array.
 
 .. _TransferMechanism_Examples_Execution_With_Integration:
 
@@ -909,19 +909,19 @@ def _clip_setter(value, owning_component=None, context=None):
 
     if (value is not None
             and owning_component.function
-            and hasattr(owning_component.function, 'bounds')
-            and owning_component.function.bounds is not None
-            and isinstance(owning_component.function.bounds, tuple)
-            and owning_component.function.bounds != (None, None)):
-        bounds = owning_component.function.bounds
-        if bounds[0] is None:
+            and hasattr(owning_component.function, 'range')
+            and owning_component.function.range is not None
+            and isinstance(owning_component.function.range, tuple)
+            and owning_component.function.range != (None, None)):
+        range = owning_component.function.range
+        if range[0] is None:
             lower_bound = -np.inf
         else:
-            lower_bound = bounds[0]
-        if bounds[1] is None:
+            lower_bound = range[0]
+        if range[1] is None:
             upper_bound = np.inf
         else:
-            upper_bound = bounds[1]
+            upper_bound = range[1]
         if value[0] is None:
             lower_clip = -np.inf
         else:
@@ -1065,9 +1065,10 @@ class TransferMechanism(ProcessingMechanism_Base):
         maximum value is set to the value of clip that it exceeds.  If either item is `None`, no clipping is
         performed for that item.  If the `function <Mechanism_Base.function>` returns an array, the clip is applied
         elementwise (i.e., the clip is applied to each element of the array independently). If either item is outside
-        the interval of the function's `bounds <TransferFunction.bounds>` after its `scale <TransferFunction.scale>` and
-        `offset <TransferFunction.offset>` have been applied (i.e., :math:`function.bounds(lower,upper) * scale +
-        offset`), a warning is issued and that item of the clip is ignored.
+        the interval of the function's `range <TransferFunction.range>` Parameter after its `scale
+        <TransferFunction.scale>` and `offset <TransferFunction.offset>` Parameters have been applied (i.e.,
+        :math:`function.range(lower,upper) * scale + offset`), a warning is issued and the corresponding items of
+        clip are ignored.
 
     integrator_mode : bool
         determines whether the TransferMechanism uses its `integrator_function <TransferMechanism.integrator_function>`
@@ -1540,7 +1541,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         self.parameters.value.history_min_length = self._termination_measure_num_items_expected - 1
 
-       # Force call to _clip_setter in order to check against bounds (now that any function bounds are known)
+       # Force call to _clip_setter in order to check against range (now that any function range are known)
         if self.clip is not None:
             self.clip = self.clip
 
