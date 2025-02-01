@@ -1110,9 +1110,9 @@ class TestCustomCombinationFunction:
           [np.array([0.5]), np.array([0.9375])],
           [np.array([0.5]), np.array([0.96875])]]),
         ], ids=lambda x: str(x) if isinstance(x, pnl.Condition) else "")
-    # 'LLVM' mode is not supported, because synchronization of compiler and
+    # '_LLVMPerNode' mode is not supported, because synchronization of compiler and
     # python values during execution is not implemented.
-    @pytest.mark.usefixtures("comp_mode_no_llvm")
+    @pytest.mark.usefixtures("comp_mode_no_per_node")
     def test_reset_stateful_function_when_composition(self, comp_mode, cond0, cond1, expected):
         I1 = pnl.RecurrentTransferMechanism(integrator_mode=True,
                                             integration_rate=0.5)
@@ -1145,9 +1145,9 @@ class TestCustomCombinationFunction:
                              ids=["initializers1", "NO initializers1"])
     @pytest.mark.parametrize('has_initializers1', [True, False],
                              ids=["initializers2", "NO initializers2"])
-    # 'LLVM' mode is not supported, because synchronization of compiler and
+    # '_LLVMPerNode' mode is not supported, because synchronization of compiler and
     # python values during execution is not implemented.
-    @pytest.mark.usefixtures("comp_mode_no_llvm")
+    @pytest.mark.usefixtures("comp_mode_no_per_node")
     def test_reset_stateful_function_when_has_initializers_composition(self, comp_mode, cond0, cond1, expected,
                                            has_initializers1, has_initializers2):
         I1 = pnl.RecurrentTransferMechanism(integrator_mode=True,
@@ -1179,12 +1179,12 @@ class TestCustomCombinationFunction:
     @pytest.mark.composition
     @pytest.mark.integrator_mechanism
     @pytest.mark.parametrize('until_finished, expected', [
-        (True, [[[[0.96875]]], [[[0.9990234375]]]]), # The 5th and the 10th iteration
-        (False, [[[[0.5]]], [[[0.75]]]]), # The first and the second iteration
+        (True, [[[0.96875]], [[0.9990234375]]]), # The 5th and the 10th iteration
+        (False, [[[0.5]], [[0.75]]]), # The first and the second iteration
     ], ids=['until_finished', 'oneshot'])
-    # 'LLVM' mode is not supported, because synchronization of compiler and
+    # '_LLVMPerNode' mode is not supported, because synchronization of compiler and
     # python values during execution is not implemented.
-    @pytest.mark.usefixtures("comp_mode_no_llvm")
+    @pytest.mark.usefixtures("comp_mode_no_per_node")
     def test_max_executions_before_finished(self, comp_mode, until_finished, expected):
         I1 = pnl.RecurrentTransferMechanism(integrator_mode=True,
                                             integration_rate=0.5,
@@ -1197,10 +1197,9 @@ class TestCustomCombinationFunction:
         results = C.run(inputs={I1: [[1.0]]}, num_trials=1, execution_mode=comp_mode)
         if comp_mode is pnl.ExecutionMode.Python:
             assert I1.parameters.is_finished_flag.get(C) is until_finished
+
         results2 = C.run(inputs={I1: [[1.0]]}, num_trials=1, execution_mode=comp_mode)
-        if comp_mode is not pnl.ExecutionMode.LLVM:
-            results = [results]
-            results2 = [results2]
+
         np.testing.assert_allclose(expected[0], results)
         np.testing.assert_allclose(expected[1], results2)
 

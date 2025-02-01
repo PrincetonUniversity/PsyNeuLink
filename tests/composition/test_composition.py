@@ -3764,8 +3764,8 @@ class TestRun:
         np.testing.assert_allclose(np.array([[75.]]), output)
 
     @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python,
-                                      pytest.param(pnl.ExecutionMode.LLVM, marks=pytest.mark.llvm),
-                                      pytest.param(pnl.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
+                                      pytest.param(pnl.ExecutionMode._LLVMPerNode, marks=pytest.mark.llvm),
+                                      pytest.param(pnl.ExecutionMode._LLVMExec, marks=pytest.mark.llvm),
                                      ])
     def test_execute_composition(self, mode):
         comp = Composition()
@@ -3864,8 +3864,8 @@ class TestRun:
                 and "that is in deferred init" in str(error_text.value))
 
     @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python,
-                                      pytest.param(pnl.ExecutionMode.LLVM, marks=pytest.mark.llvm),
-                                      pytest.param(pnl.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
+                                      pytest.param(pnl.ExecutionMode._LLVMPerNode, marks=pytest.mark.llvm),
+                                      pytest.param(pnl.ExecutionMode._LLVMExec, marks=pytest.mark.llvm),
                                      ])
     def test_execute_no_inputs(self, mode):
         m_inner = ProcessingMechanism(input_shapes=2)
@@ -4274,7 +4274,7 @@ class TestRun:
             comp.run()
 
     def _check_comp_ex(self, comp, comparison, comp_mode, struct_name, context=None, is_not=False):
-        if comp_mode == pnl.ExecutionMode.Python:
+        if comp_mode is pnl.ExecutionMode.Python:
             return
 
         if context is None:
@@ -4423,8 +4423,8 @@ class TestRun:
         self._check_comp_ex(comp, None, comp_mode, struct_name, is_not=True)
         self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name, is_not=True)
 
-    @pytest.mark.usefixtures("comp_mode_no_llvm")
-    @pytest.mark.parametrize("comp_mode2", [m for m in pytest.helpers.get_comp_execution_modes() if m.values[0] is not pnl.ExecutionMode.LLVM])
+    @pytest.mark.usefixtures("comp_mode_no_per_node")
+    @pytest.mark.parametrize("comp_mode2", [m for m in pytest.helpers.get_comp_execution_modes() if m.values[0] is not pnl.ExecutionMode._LLVMPerNode])
     def test_execution_after_cleanup_enum_param(self, comp_mode, comp_mode2):
         """
         This test checks that compiled sync works for Parameters with Enum values.
@@ -6607,8 +6607,8 @@ class TestProperties:
 
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Auto, pnl.ExecutionMode.Python,
-                                      pytest.param(pnl.ExecutionMode.LLVM, marks=[_fallback_xfail, pytest.mark.llvm]),
-                                      pytest.param(pnl.ExecutionMode.LLVMExec, marks=[_fallback_xfail, pytest.mark.llvm]),
+                                      pytest.param(pnl.ExecutionMode._LLVMPerNode, marks=[_fallback_xfail, pytest.mark.llvm]),
+                                      pytest.param(pnl.ExecutionMode._LLVMExec, marks=[_fallback_xfail, pytest.mark.llvm]),
                                       pytest.param(pnl.ExecutionMode.LLVMRun, marks=[_fallback_xfail, pytest.mark.llvm]),
                                       pytest.param(pnl.ExecutionMode.PTXRun, marks=[_fallback_xfail, pytest.mark.llvm, pytest.mark.cuda]),
                                      ])

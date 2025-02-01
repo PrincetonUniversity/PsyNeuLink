@@ -856,6 +856,14 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
                                                             is_finished_callbacks,
                                                             nodes_states)
             with builder.if_then(reinit_cond):
+                helpers.printf(ctx,
+                               builder,
+                               "<%u/%u/%u> Reinitializing: {}/{}\n".format(composition.name, node.name),
+                               cond_gen.get_global_trial(builder, cond),
+                               cond_gen.get_global_pass(builder, cond),
+                               cond_gen.get_global_step(builder, cond),
+                               tags={"scheduler"})
+
                 node_w = ctx.get_node_assembly(composition, node)
                 node_reinit_f = ctx.import_llvm_function(node_w, tags=node_tags.union({"reset"}))
                 builder.call(node_reinit_f, [state, params, comp_in, data, data])
