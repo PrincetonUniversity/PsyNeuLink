@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Condition &mdash; PsyNeuLink 0.16.0.0+12.g30c89d53d documentation</title>
+  <title>Condition &mdash; PsyNeuLink 0.16.0.0+13.g1fed0ad29 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.16.0.0+12
+                  0.16.0.0+13
                 </div>
               
             
@@ -460,11 +460,11 @@ satisfied if the specified node was assigned to run in the previous <a class="re
 <li><p><a class="reference internal" href="#psyneulink.core.scheduling.condition.AllHaveRun" title="psyneulink.core.scheduling.condition.AllHaveRun"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AllHaveRun</span></code></a> (<a href="#id15"><span class="problematic" id="id16">*</span></a>nodes)
 satisfied when all of the specified nodes have executed at least once.</p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.scheduling.condition.WhenFinished" title="psyneulink.core.scheduling.condition.WhenFinished"><code class="xref any py py-class docutils literal notranslate"><span class="pre">WhenFinished</span></code></a> (node)
-satisfied when the <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> method of the specified node,       given <a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context.execution_id" title="psyneulink.core.globals.context.Context.execution_id"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">execution_id</span></code></a> returns <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+satisfied when the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> method of the specified node,       given <a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context.execution_id" title="psyneulink.core.globals.context.Context.execution_id"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">execution_id</span></code></a> returns <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.scheduling.condition.WhenFinishedAny" title="psyneulink.core.scheduling.condition.WhenFinishedAny"><code class="xref any py py-class docutils literal notranslate"><span class="pre">WhenFinishedAny</span></code></a> (<a href="#id17"><span class="problematic" id="id18">*</span></a>nodes)
-satisfied when the <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> method of any of the specified       nodes, given <a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context.execution_id" title="psyneulink.core.globals.context.Context.execution_id"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">execution_id</span></code></a> returns <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+satisfied when the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> method of any of the specified       nodes, given <a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context.execution_id" title="psyneulink.core.globals.context.Context.execution_id"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">execution_id</span></code></a> returns <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.scheduling.condition.WhenFinishedAll" title="psyneulink.core.scheduling.condition.WhenFinishedAll"><code class="xref any py py-class docutils literal notranslate"><span class="pre">WhenFinishedAll</span></code></a> (<a href="#id19"><span class="problematic" id="id20">*</span></a>nodes)
-satisfied when the <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> method of all of the specified       nodes, given <a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context.execution_id" title="psyneulink.core.globals.context.Context.execution_id"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">execution_id</span></code></a> returns <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+satisfied when the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> method of all of the specified       nodes, given <a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context.execution_id" title="psyneulink.core.globals.context.Context.execution_id"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">execution_id</span></code></a> returns <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
 </ul>
 </div></blockquote>
 <p id="conditions-convenience"><strong>Convenience Conditions</strong> (based on other Conditions, condensed for convenience)</p>
@@ -2151,7 +2151,7 @@ only after <em>t</em></p>
 <p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>the <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> methods of the node specified in <strong>dependencies</strong> returns <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p>the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> methods of the node specified in <strong>dependencies</strong> returns <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
 </ul>
 </div></blockquote>
 <p class="rubric">Notes</p>
@@ -2174,7 +2174,7 @@ this Condition) can vary arbitrarily in time.</p></li>
 <p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>the <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> methods of all nodes specified in <strong>dependencies</strong> return <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p>the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> methods of all nodes specified in <strong>dependencies</strong> return <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
 </ul>
 </div></blockquote>
 <p class="rubric">Notes</p>
@@ -2200,7 +2200,7 @@ this Condition) can vary arbitrarily in time.</p></li>
 <p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>the <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> methods of any nodes specified in <strong>dependencies</strong> returns <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p>the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> methods of any nodes specified in <strong>dependencies</strong> returns <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
 </ul>
 </div></blockquote>
 <p class="rubric">Notes</p>
