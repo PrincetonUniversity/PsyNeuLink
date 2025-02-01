@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.16.0.0+2.gd12866f81 documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.16.0.0+12.g30c89d53d documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.16.0.0+2
+                  0.16.0.0+12
                 </div>
               
             
@@ -361,7 +361,7 @@ during execution (see <a class="reference internal" href="#autodiffcomposition-n
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <ul class="simple">
-<li><p>Specifying <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.LLVM" title="psyneulink.core.llvm.__init__.ExecutionMode.LLVM"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.LLVM</span></code></a> or <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="psyneulink.core.llvm.__init__.ExecutionMode.PyTorch"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.PyTorch</span></code></a> in the learn() method of a standard
+<li><p>Specifying <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.LLVMRun" title="psyneulink.core.llvm.__init__.ExecutionMode.LLVMRun"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.LLVMRun</span></code></a> or <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="psyneulink.core.llvm.__init__.ExecutionMode.PyTorch"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.PyTorch</span></code></a> in the learn() method of a standard
 <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> causes an error.</p></li>
 </ul>
 </div>
@@ -377,7 +377,7 @@ the constructor (see <a class="reference internal" href="#autodiffcomposition-cl
 <blockquote>
 <div><div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Specifying <code class="xref any docutils literal notranslate"><span class="pre">ExecutionMode.LLVMRUn</span></code> in either the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> and <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a>
+<p>Specifying <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.LLVMRun" title="psyneulink.core.llvm.__init__.ExecutionMode.LLVMRun"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.LLVMRun</span></code></a> in either the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> and <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a>
 methods of an AutodiffComposition causes it to (attempt to) use compiled execution in both cases; this is
 because LLVM compilation supports the use of modulation in PsyNeuLink models (as compared to <a class="reference internal" href="#autodiffcomposition-pytorch"><span class="std std-ref">PyTorch mode</span></a>; see <a class="reference internal" href="#autodiffcomposition-pytorch-note"><span class="std std-ref">note</span></a> below).</p>
 </div>
