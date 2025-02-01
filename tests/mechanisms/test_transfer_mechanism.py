@@ -1650,9 +1650,9 @@ class TestOnResumeIntegratorMode:
 
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism")
-    # 'LLVM' mode is not supported, because synchronization of compiler and
+    # '_LLVMPerNode' mode is not supported, because synchronization of compiler and
     # python values during execution is not implemented.
-    @pytest.mark.usefixtures("comp_mode_no_llvm")
+    @pytest.mark.usefixtures("comp_mode_no_per_node")
     def test_termination_measures(self, comp_mode):
         stim_input = ProcessingMechanism(input_shapes=2, name='Stim Input')
         stim_percept = TransferMechanism(name='Stimulus', input_shapes=2, function=Logistic)
