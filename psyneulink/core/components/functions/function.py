@@ -438,7 +438,7 @@ class Function_Base(Function):
          prefs=None          \
     )
 
-    Implement abstract class for Function category of Component class
+    Abstract base class for Function category of Component class
 
     COMMENT:
         Description:

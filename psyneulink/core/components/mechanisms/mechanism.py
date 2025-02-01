@@ -1154,7 +1154,7 @@ class Mechanism_Base(Mechanism):
         output_ports,           \
         )
 
-    Base class for Mechanism.
+    Abstract base class for Mechanism.
 
     The arguments below can be used in the constructor for any subclass of Mechanism.
     See `Component <Component_Class_Reference>` and subclasses for additional arguments and attributes.

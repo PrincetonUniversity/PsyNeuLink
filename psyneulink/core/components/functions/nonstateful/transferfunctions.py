@@ -17,39 +17,38 @@
     * `Logistic`
     * `Tanh`
     * `ReLU`
+    * `Gaussian`
 
 **Probabilistic**
-    * `Angle`
-    * `Gaussian`
     * `GaussianDistort`
     * `BinomialDistort`
     * `Dropout`
     * `SoftMax`
 
 **Other**
+    * `Angle`
     * `TransferWithCosts`
 
 Overview
 --------
 
-Functions that transform their variable but maintain its shape.
+TransferFunctions transform their variable but maintain its shape.  There are two subclasses of TransferFunctions --
+`Deterministic <Deterministic>` and `Probabilistic <Probabilistic> -- that have specialized attributes and/or methods.
 
 .. _TransferFunction_StandardAttributes:
 
 Standard Attributes
 ~~~~~~~~~~~~~~~~~~~
 
-All TransferFunctions have the following attributes: `bounds <TransferFunction.bounds>`,
-`scale <TransferFunction.scale>`, and `offset <TransferFunction.offset>`. In addition, they have a standardized pair of
-modulable parameters that are aliased to one of their primary parameters:
+All TransferFunctions have a `range <TransferFunction.range>` attribute that specifies the lower and upper limits
+of the function's result.  For some subclasses, this may be modified by other parameters.  In addition, all
+TransferFunctions have a pair of modulable parameters as described below.
 
 .. _TransferFunction_Modulable_Params:
 
 * **multiplicative_param** and **additive_param**:
   each of these is assigned the name of one of the function's parameters and used by `ModulatoryProjections
   <ModulatoryProjection>` to modulate the output of the TransferFunction's function (see `Function_Modulatory_Params`).
-  By default, **multiplicative_param** is assigned to the function's `scale <TransferFunction.scale>` Parameter
-  and **additive_param** is assigned to the function's `offset <TransferFunction.offset>` Parameter.
 
 .. _TransferFunction_Derivative:
 
@@ -96,12 +95,13 @@ from psyneulink.core.components.shellclasses import Projection
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import is_numeric_scalar
 from psyneulink.core.globals.keywords import \
-    (ADAPTIVE, ADDITIVE_PARAM, ALL, ANGLE_FUNCTION, BIAS, BINOMIAL_DISTORT_FUNCTION, DROPOUT_FUNCTION,
+    (ADAPTIVE, ADDITIVE_PARAM, ALL, ANGLE_FUNCTION, BIAS, BINOMIAL_DISTORT_FUNCTION,
+     DETERMINISTIC_TRANSFER_FUNCTION_TYPE, DROPOUT_FUNCTION,
      EXPONENTIAL_FUNCTION, GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION,
      IDENTITY_FUNCTION, INTERCEPT, LEAK, LINEAR_FUNCTION, LOGISTIC_FUNCTION,
      MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE_PARAM, OFF, OFFSET, ON, OUTPUT_TYPE,
-     PER_ITEM, PROB, PRODUCT, PROB_INDICATOR, RATE, RELU_FUNCTION,
-     SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM,
+     PER_ITEM, PROB, PRODUCT, PROB_INDICATOR, PROBABILISTIC_TRANSFER_FUNCTION_TYPE,
+     RATE, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM,
      TANH_FUNCTION, TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION,
      VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME)
 from psyneulink.core.globals.parameters import \
@@ -115,29 +115,48 @@ __all__ = ['Angle', 'BinomialDistort', 'Dropout', 'Exponential', 'Gaussian', 'Ga
            'Linear', 'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
            ]
 
+def _range_getter_using_scale_and_offset(owning_component=None, context=None):
+    """Reassign range based on scale and offset applied to function's default_range
+    """
+    default_range = owning_component.default_range
+    scale = owning_component.parameters.scale._get(context)
+    offset = owning_component.parameters.offset._get(context)
+
+    # Deal with lower bound = None:
+    lower_bound = -np.inf if default_range[0] is None else default_range[0]
+    output_for_fct_lower_bound = scale * lower_bound + offset
+
+    # Deal with upper bound = None:
+    upper_bound = np.inf if default_range[1] is None else default_range[1]
+    output_for_fct_upper_bound = scale * upper_bound + offset
+
+    # Need to do this since scale could be negative, reversing upper and lower range:
+    lower_bound = min(output_for_fct_lower_bound, output_for_fct_upper_bound)
+    upper_bound = max(output_for_fct_lower_bound, output_for_fct_upper_bound)
+
+    return (lower_bound, upper_bound)
+
 
 class TransferFunction(Function_Base):
     """Function that transforms variable but maintains its shape.
 
-    In addition to the Parameters listed below, all TransferFunctions have the following have
-    a `multiplicative_param <Function_Modulatory_Params>` and an `additive_param <Function_Modulatory_Params>` --
+    Abstract base class for TransferFunctions.
+
+    In addition to the Parameters listed below, all TransferFunctions have a
+    `multiplicative_param <Function_Modulatory_Params>` and an `additive_param <Function_Modulatory_Params>` --
     see `multiplicative and additive params <TransferFunction_Modulable_Params>` for additional information.
 
     Attributes
     ----------
 
-    bounds : tuple or None
-      specifies the lower and upper limits of the function's result; if there are none, the attribute is set to `None`;
-      if at least one bound is specified, the attribute is a tuple specifying the lower and upper bounds, respectively,
-      with `None` as the entry (indicating no bound). The bounds are with respect to the result of the function before
-      the `scale <TransferFunction.scale>` and `offset <TransferFunction.offset>` Parameters are applied; the actual
-      range of the result value of the function is determined by :math:`bounds(lower, upper) * scale + offset`.
+    range : tuple(lower bound: float, uppper bound: float)
+      read-only Parameter that  indicates the lower and upper limits of the function's result. The two items of the
+      tuple indicate the lower and upper bounds of range, respectively, with `None` as the entry if there are no
+      bounds.  Some subclasses of TransferFunction may have other Parameters that influence the range, which are
+      described under the `range <TransferFunction.range>` attribute of the relevant subclasses.
 
-    scale : float
-      the value by which the result of the function is multiplied, before `offset <TransferFunction.offset>` is added.
-
-    offset : float
-      the value added to the result of the function after `scale <TransferFunction.scale>` has been applied.
+    default_range : tuple(lower bound: float, uppper bound: float)
+       class attribute that indicates the upper and lower limits of the Function's result.
     """
 
     componentType = TRANSFER_FUNCTION_TYPE
@@ -147,63 +166,14 @@ class TransferFunction(Function_Base):
             Attributes
             ----------
 
-                bounds
-                    see `bounds <TransferFunction.bounds>`
+                range
+                    see `range <TransferFunction.range>`
 
-                    :default value: None
+                    :default value: (None, None)
                     :type:
 
-                COMMENT:
-                scale
-                    see `scale <TransferFunction.scale>`
-
-                    :default value: 1.0
-                    :type: float
-
-                offset
-                    see `offset <TransferFunction.offset>`
-
-                    :default value: 0.0
-                    :type: float
-                COMMENT
         """
-        bounds = None
-        # scale = 1.0
-        # offset = 0.0
-
-    @check_user_specified
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        if (hasattr(self, 'scale') or hasattr(self, 'offset')) and self.bounds:
-            self._set_bounds()
-
-    def _set_bounds(self):
-        """Reassign bounds based on scale and offset applied to function's output for default upper and lower bounds
-        """
-        if hasattr(self, "scale"):
-            scale = self.scale if self.scale is not None else 1.0
-        else:
-            scale = 1.0
-        if hasattr(self, "offset"):
-            offset = self.offset if self.offset is not None else 0.0
-        else:
-            offset = 0.0
-
-        # Deal with lower bound = None:
-        lower_bound = -np.inf if self.bounds[0] is None else self.bounds[0]
-        output_for_fct_lower_bound = scale * lower_bound + offset
-
-        # Deal with upper bound = None:
-        upper_bound = np.inf if self.bounds[1] is None else self.bounds[1]
-        output_for_fct_upper_bound = scale * upper_bound + offset
-
-        # Need to do this since scale could be negative, reversing upper and lower bounds:
-        lower_bound = min(output_for_fct_lower_bound, output_for_fct_upper_bound)
-        upper_bound = max(output_for_fct_lower_bound, output_for_fct_upper_bound)
-
-        self.parameters.bounds.default_value = (lower_bound, upper_bound)
-        # self.parameters.bounds.set(None, (lower_bound, upper_bound))
-        self.bounds = (lower_bound, upper_bound)
+        range = Parameter((None,None), read_only=True)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
@@ -225,12 +195,75 @@ class TransferFunction(Function_Base):
 
         return builder
 
+class DeterministicTransferFunction(TransferFunction):
+    """Subclass of TransferFunction that computes a deterministic function.
+
+    Abstract base class for TransferFunctions that take scale and offset as parameters.
+
+    In addition to the `standard attributes <TransferFunction_StandardAttributes>` of a TransferFunction,
+    all DeterministicTransferFunctions have a `scale <DeterministicTransferFunction.scale>` and `offset
+    <DeterministicTransferFunction.offset>` Parameter, that are used to determine the `range <TransferFunction.range>`
+
+    Attributes
+    ----------
+
+    default_range : tuple(lower bound: float, uppper bound: float)
+       class attribute that indicates the upper and lower limits of the Function's result, before `scale
+       <DeterministicTransferFunction.scale>` or `offset <DeterministicTransferFunction.offset>` are applied.
+
+    range : tuple(lower bound: float, uppper bound: float)
+      read-only Parameter that indicates the lower and upper limits of the Function's result, after the `scale
+      <DeterministicTransferFunction.scale>` and `offset <DeterministicTransferFunction.offset>` Parameters
+      have been applied to the Function's default_range:  :math:`default_range(lower, upper) * scale + offset`.
+
+    scale : float
+      determines the value by which the result of the function is multiplied, before `offset
+      <TransferFunction.offset>` is added.
+
+    offset : float
+      determines the value added to the result of the function after `scale <TransferFunction.scale>` has been applied.
+
+    """
+    componentType = DETERMINISTIC_TRANSFER_FUNCTION_TYPE
+
+    class Parameters(TransferFunction.Parameters):
+        """
+            Attributes
+            ----------
+
+                range
+                    see `range <TransferFunction.range>`
+
+                    :default value: None
+                    :type:
+
+                scale
+                    see `scale <DeterministicTransferFunction.scale>`
+
+                    :default value: 1.0
+                    :type: float
+
+                offset
+                    see `offset <DeterministicTransferFunction.offset>`
+
+                    :default value: 0.0
+                    :type: float
+        """
+        range = Parameter((None, None),
+                           getter=_range_getter_using_scale_and_offset,
+                           read_only=True,
+                           dependencies={'scale', 'offset'})
+        scale = Parameter(1.0, modulable=True)
+        offset = Parameter(0.0, modulable=True)
+
 
 # **********************************************************************************************************************
 #                                                 Identity
 # **********************************************************************************************************************
 
-class Identity(TransferFunction):  # -----------------------------------------------------------------------------------
+
+class Identity(DeterministicTransferFunction):  #
+    # ----------------------------------------------------------------------
     """
     Identity(                  \
              default_variable, \
@@ -289,6 +322,7 @@ class Identity(TransferFunction):  # -------------------------------------------
         PREFERENCE_SET_NAME: 'IdentityClassPreferences',
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
+    default_range = (None, None)
 
     @check_user_specified
     @beartype
@@ -350,12 +384,15 @@ class Identity(TransferFunction):  # -------------------------------------------
 #                                                    Linear
 # **********************************************************************************************************************
 
-class Linear(TransferFunction):  # -------------------------------------------------------------------------------------
+class Linear(DeterministicTransferFunction):  #
+    # -------------------------------------------------------------------------------------
     """
     Linear(                \
          default_variable, \
          slope=1.0,        \
          intercept=0.0,    \
+         scale=1.0,        \
+         offset=0.0,       \
          params=None,      \
          owner=None,       \
          name=None,        \
@@ -367,13 +404,24 @@ class Linear(TransferFunction):  # ---------------------------------------------
     `function <Linear._function>` returns linear transform of `variable <Linear.variable>`:
 
     .. math::
+        scale * (slope * variable + intercept) + offset
 
-        slope * variable + intercept
+    .. note::
+       Whereas `scale <Linear.scale>` and `offset <Linear.offset>` have effects similar to `slope <Linear.slope>`
+       and `intercept <Linear.intercept>`, they are applied after those Parameters have been applied to `variable
+       <Linear.variable>`, and thus are not identical; rather, they can be thought of as "amplifying" and
+       "displacing" the Linear function, respectively.
 
-    Note: default values for `slope <Linear.slope>` and `intercept <Linear.intercept>` implement the
-    *IDENTITY_FUNCTION*.
+    .. note::
+       The default values for `slope <Linear.slope>`, `intercept <Linear.intercept>`, `scale
+       <DeterministicTransferFunction.scale>`, and `offset <DeterministicTransferFunction.offset>`
+       implement the *IDENTITY_FUNCTION*.  This may cause the Linear function to be replaced with the
+       `Identity` Function during some circumstances (e.g., `compilation <Composition_Compilation>`).
 
-    `derivative <Linear.derivative>` returns `slope <Linear.slope>`.
+    `derivative <Exponential.derivative>` returns the derivative of the Linear Function:
+
+    .. math::
+        scale*slope
 
     Arguments
     ---------
@@ -386,6 +434,12 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
     intercept : float : default 0.0
         specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
+
+    scale : float : default 1.0
+      specifies the value by which the result of the function is multiplied, before `offset <Linear.offset>` is added.
+
+    offset : float : default 0.0
+      specifies the value added to the result of the function after `scale <Linear.scale>` has been applied.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -415,7 +469,14 @@ class Linear(TransferFunction):  # ---------------------------------------------
         value added to each element of `variable <Linear.variable>` after applying the `slope <Linear.slope>`
         (if it is specified).
 
-    bounds : (0,1)
+    range : (None, None)
+        modified by `scale <Linear.scale> and/or `offset <Linear.offset>` if they are specified.
+
+    scale : float
+      determines the value by which the result of the function is multiplied, before `offset <Linear.offset>` is added.
+
+    offset : float
+      determines the value added to the result of the function after `scale <Linear.scale>` has been applied.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -439,7 +500,9 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
     _model_spec_class_name_is_generic = True
 
-    class Parameters(TransferFunction.Parameters):
+    default_range = (None, None)
+
+    class Parameters(DeterministicTransferFunction.Parameters):
         """
             Attributes
             ----------
@@ -465,6 +528,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
                  default_variable=None,
                  slope: Optional[ValidParamSpecType] = None,
                  intercept: Optional[ValidParamSpecType] = None,
+                 scale: Optional[ValidParamSpecType] = None,
+                 offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
@@ -473,9 +538,11 @@ class Linear(TransferFunction):  # ---------------------------------------------
             default_variable=default_variable,
             slope=slope,
             intercept=intercept,
+            scale=scale,
+            offset=offset,
             params=params,
             owner=owner,
-            prefs=prefs,
+            prefs=prefs
         )
 
     def _function(self,
@@ -504,10 +571,12 @@ class Linear(TransferFunction):  # ---------------------------------------------
         """
         slope = self._get_current_parameter_value(SLOPE, context)
         intercept = self._get_current_parameter_value(INTERCEPT, context)
+        scale = self._get_current_parameter_value(SCALE, context)
+        offset = self._get_current_parameter_value(OFFSET, context)
 
         try:
-            # By default, result should be returned as np.ndarray with same dimensionality as input
-            result = variable * slope + intercept
+            # By default, result should be returned as np.array with same dimensionality as input
+            result = scale * (variable * slope + intercept) + offset
         except TypeError:
             if hasattr(variable, "dtype"):
                 # If variable is an array with mixed sizes or types, try item-by-item operation
@@ -515,7 +584,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
                     result = np.zeros_like(variable)
                     for i, item in enumerate(variable):
                         try:
-                            result[i] = variable[i] * slope + intercept
+                            result[i] = scale * (variable[i] * slope + intercept) + offset
                         except TypeError:
                             owner_str = f" of '{self.owner.name}'" if self.owner else ""
                             if variable[i] is None:
@@ -535,7 +604,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
             elif isinstance(variable, list):
                 result = []
                 for variable_item in variable:
-                    result.append(np.multiply(variable_item, slope) + intercept)
+                    result.append(np.multiply(np.multiply(variable_item, slope) + intercept) + offset)
             else:
                 raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
 
@@ -560,50 +629,63 @@ class Linear(TransferFunction):  # ---------------------------------------------
         Slope of function :  number or array
 
         """
-        return self._get_current_parameter_value(SLOPE, context)
+        return self._get_current_parameter_value(SLOPE, context) * self._get_current_parameter_value(SCALE, context)
 
     def _is_identity(self, context=None, defaults=False):
         if defaults:
             slope = self.defaults.slope
             intercept = self.defaults.intercept
+            scale = self.defaults.scale
+            offset = self.defaults.offset
         else:
             slope = self.parameters.slope._get(context)
             intercept = self.parameters.intercept._get(context)
+            scale = self.parameters.scale._get(context)
+            offset = self.parameters.offset._get(context)
 
-        return slope == 1 and intercept == 0
+        return slope == 1 and intercept == 0 and scale == 1 and offset == 0
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
         slope_ptr = ctx.get_param_or_state_ptr(builder, self, SLOPE, param_struct_ptr=params)
         intercept_ptr = ctx.get_param_or_state_ptr(builder, self, INTERCEPT, param_struct_ptr=params)
+        scale_ptr = ctx.get_param_or_state_ptr(builder, self, SCALE, param_struct_ptr=params)
+        offset_ptr = ctx.get_param_or_state_ptr(builder, self, OFFSET, param_struct_ptr=params)
 
         slope = pnlvm.helpers.load_extract_scalar_array_one(builder, slope_ptr)
         intercept = pnlvm.helpers.load_extract_scalar_array_one(builder, intercept_ptr)
+        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
+        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
 
         if "derivative" in tags:
-            # f'(x) = m
+            # f'(x) = m * scale
             val = slope
+            val = builder.fmul(val,scale)
         else:
-            # f(x) = mx + b
+            # f(x) = scale * (mx + b) + offset
             val = builder.load(ptri)
             val = builder.fmul(val, slope)
             val = builder.fadd(val, intercept)
+            val = builder.fmul(val, scale)
+            val = builder.fadd(val, offset)
 
         builder.store(val, ptro)
 
     def _gen_pytorch_fct(self, device, context=None):
         slope = self._get_pytorch_fct_param_value('slope', device, context)
         intercept = self._get_pytorch_fct_param_value('intercept', device, context)
-        return lambda x: x * slope + intercept
+        scale = self._get_pytorch_fct_param_value('scale', device, context)
+        offset = self._get_pytorch_fct_param_value('offset', device, context)
+        return lambda x: scale * (x * slope + intercept) + offset
 
 
 # **********************************************************************************************************************
 #                                                    Exponential
 # **********************************************************************************************************************
 
-class Exponential(TransferFunction):  # --------------------------------------------------------------------------------
+class Exponential(DeterministicTransferFunction):  # -------------------------------------------------------------------
     """
     Exponential(           \
          default_variable, \
@@ -624,10 +706,10 @@ class Exponential(TransferFunction):  # ----------------------------------------
     .. math::
          scale * e^{rate*variable+bias} + offset
 
-    `derivative <Exponential.derivative>` returns the derivative of the Exponential:
+    `derivative <Exponential.derivative>` returns the derivative of the Exponential Function:
 
     .. math::
-        rate*input+bias
+        scale*rate*(input+bias)*e^{rate*input+bias}
 
 
     Arguments
@@ -644,11 +726,11 @@ class Exponential(TransferFunction):  # ----------------------------------------
         and before exponentiation.
 
     scale : float : default 1.0
-        specifies a value by which to multiply the exponentiated value of `variable <Exponential.variable>`.
+      specifies the value by which the result of the function is multiplied, before `offset <Exponential.offset>` is
+      added.
 
     offset : float : default 0.0
-        specifies value to add to the exponentiated value of `variable <Exponential.variable>`
-        after multiplying by `scale <Exponentinal.scale>`.
+      specifies the value added to the result of the function after `scale <Exponential.scale>` has been applied.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -678,13 +760,15 @@ class Exponential(TransferFunction):  # ----------------------------------------
         value added to `variable <Exponential.variable>` after multiplying by `rate <Exponential.rate>`
         and before exponentiation;  assigned as *ADDITIVE_PARAM* of the Exponential Function.
 
+    range : (0, None)
+        modified by `scale <Exponential.scale> and/or `offset <Exponential.offset>` if they are specified.
+
     scale : float
-        value by which the exponentiated value is multiplied.
+      determines the value by which the result of the function is multiplied, before `offset <Exponential.offset>`
+      is added.
 
     offset : float
-        value added to exponentiated value after multiplying by `scale <Exponentinal.scale>`.
-
-    bounds : (0, None)
+      determines the value added to the result of the function after `scale <Exponential.scale>` has been applied.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -700,8 +784,10 @@ class Exponential(TransferFunction):  # ----------------------------------------
     """
 
     componentName = EXPONENTIAL_FUNCTION
+    default_range = (0, None)
 
-    class Parameters(TransferFunction.Parameters):
+
+    class Parameters(DeterministicTransferFunction.Parameters):
         """
             Attributes
             ----------
@@ -712,37 +798,22 @@ class Exponential(TransferFunction):  # ----------------------------------------
                     :default value: 0.0
                     :type: ``float``
 
-                offset
-                    see `offset <Exponential.offset>`
-
-                    :default value: 0.0
-                    :type: ``float``
-
                 rate
                     see `rate <Exponential.rate>`
-
-                    :default value: 1.0
-                    :type: ``float``
-
-                scale
-                    see `scale <Exponential.scale>`
 
                     :default value: 1.0
                     :type: ``float``
         """
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        scale = Parameter(1.0, modulable=True)
-        offset = Parameter(0.0, modulable=True)
-        bounds = (0, None)
 
     @check_user_specified
     @beartype
     def __init__(self,
                  default_variable=None,
                  rate: Optional[ValidParamSpecType] = None,
-                 scale: Optional[ValidParamSpecType] = None,
                  bias: Optional[ValidParamSpecType] = None,
+                 scale: Optional[ValidParamSpecType] = None,
                  offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
@@ -755,7 +826,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
             offset=offset,
             params=params,
             owner=owner,
-            prefs=prefs,
+            prefs=prefs
         )
 
     def _function(self,
@@ -812,7 +883,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
         scale = self._get_current_parameter_value(SCALE, context)
         bias = self._get_current_parameter_value(BIAS, context)
 
-        return rate * scale * e**(rate * input + bias)
+        return scale * rate * e**(rate * input + bias)
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -858,15 +929,15 @@ class Exponential(TransferFunction):  # ----------------------------------------
 # **********************************************************************************************************************
 
 
-class Logistic(TransferFunction):  # -----------------------------------------------------------------------------------
+class Logistic(DeterministicTransferFunction):  # ----------------------------------------------------------------------
     """
     Logistic(              \
          default_variable, \
          gain=1.0,         \
          bias=0.0,         \
          x_0=0.0,          \
-         offset=0.0,       \
          scale=1.0,        \
+         offset=0.0,       \
          params=None,      \
          owner=None,       \
          name=None,        \
@@ -885,16 +956,19 @@ class Logistic(TransferFunction):  # -------------------------------------------
     .. _Logistic_Note:
 
     .. note::
-        The **bias** and **x_0** arguments are identical, apart from having opposite signs: **bias** is included to
-        accommodate the convention in the machine learning community; **x_0** is included to match the `standard form
-        of the Logistic Function <https://en.wikipedia.org/wiki/Logistic_function>`_ (in which **gain** corresponds to
-        the *k* parameter and **scale** corresponds to the *L* parameter); **offset** implements a translation of the
-        function along the vertical axis that is not modulated by gain.
+        The `bias <Logistic.bias>` and `x_0 <Logistic.x_0>` Parameters have identical effects, apart from having
+        opposite signs: `bias <Logistic.bias>` is included to accommodate the convention in the machine learning
+        community; `x_0 <Logistic.x_0>` is included to match the `standard form of the Logistic Function
+        <https://en.wikipedia.org/wiki/Logistic_function>`_ (in which `gain <Logistic.gain>` corresponds to
+        the *k* parameter and `scale <Logistic.scale>` corresponds to the *L* parameter); `offset <Logistic.offset>`
+        implements a translation of the function along the vertical axis that is *not* modulated by gain.
 
     `derivative <Logistic.derivative>` returns the derivative of the Logistic using its **output**:
 
     .. math::
-        gain * scale * output * (1-output)
+        scale * gain * output * (1-output)
+
+    See `note <Logistic_Note>` above for the effects of `scale <Logistic.scale>` and `offset <Logistic.offset>`.
 
     Arguments
     ---------
@@ -915,13 +989,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
         specifies value to add to each element of `variable <Logistic.variable>` before applying `gain <Logistic.gain>`;
         this argument has an effect identical to bias, but with the opposite sign (see `note <Logistic_Note>` above).
 
-    offset : float : default 0.0
-        specifies value to add to each element of `variable <Logistic.variable>` after logistic  transformation and
-        `scale <Logistic.scale>` have been applied (see `note <Logistic_Note>` above).
+    scale : float : default 1.0
+      specifies the value by which the result of the function is multiplied, before `offset <Logistic.offset>` is added.
 
-    scale : float : default 0.0
-        specifies value value by which to multiply each element of `variable <Logistic.variable>` after logistic
-        transformation but before `offset <Logistic.offset>` has been applied (see `note <Logistic_Note>` above).
+    offset : float : default 0.0
+      specifies the value added to the result of the function after `scale <Logistic.scale>` has been applied.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -956,19 +1028,15 @@ class Logistic(TransferFunction):  # -------------------------------------------
         value to add to each element of `variable <Logistic.variable>` before applying `gain <Logistic.gain>`;
         this argument has an effect identical to bias, but with the opposite sign (see `note <Logistic_Note>` above).
 
-    offset : float
-        value to add to each element of `variable <Logistic.variable>` after logistic  transformation and `scale
-        <Logistic.scale>` have been applied (see `note <Logistic_Note>` above).
+    range : (0, 1)
+        modified by `scale <Gaussian.scale> and/or `offset <Gaussian.offset>` if they are specified.
 
     scale : float
-        value by which to multiply each element of `variable <Logistic.variable>` after logistic transformation but
-        before `offset <Logistic.offset>` has been applied (see `note <Logistic_Note>` above).
+      determines the value by which the result of the function is multiplied, before `offset <Logistic.offset>`
+      is added.
 
-    bounds : (0,1)
-        COMMENT:
-        the lower and upper limits of the result which, in the case of the `Logistic`, is determined by the function
-        itself.
-        COMMENT
+    offset : float
+      determines the value added to the result of the function after `scale <Logistic.scale>` has been applied.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -984,10 +1052,12 @@ class Logistic(TransferFunction):  # -------------------------------------------
     """
 
     componentName = LOGISTIC_FUNCTION
-    parameter_keywords.update({GAIN, BIAS, OFFSET})
+    # parameter_keywords.update({GAIN, BIAS})
     _model_spec_class_name_is_generic = True
+    default_range = (0, 1)
 
-    class Parameters(TransferFunction.Parameters):
+
+    class Parameters(DeterministicTransferFunction.Parameters):
         """
             Attributes
             ----------
@@ -1004,18 +1074,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
                     :default value: 1.0
                     :type: ``float``
 
-                offset
-                    see `offset <Logistic.offset>`
-
-                    :default value: 0.0
-                    :type: ``float``
-
-                scale
-                    see `scale <Logistic.scale>`
-
-                    :default value: 1.0
-                    :type: ``float``
-
                 x_0
                     see `x_0 <Logistic.x_0>`
 
@@ -1025,9 +1083,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         x_0 = Parameter(0.0, modulable=True)
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        offset = Parameter(0.0, modulable=True)
-        scale = Parameter(1.0, modulable=True)
-        bounds = (0, 1)
 
     @check_user_specified
     @beartype
@@ -1036,21 +1091,23 @@ class Logistic(TransferFunction):  # -------------------------------------------
                  gain: Optional[ValidParamSpecType] = None,
                  x_0=None,
                  bias=None,
-                 offset: Optional[ValidParamSpecType] = None,
                  scale: Optional[ValidParamSpecType] = None,
+                 offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None):
+                 prefs:  Optional[ValidPrefSet] = None,
+                 **kwargs):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
             x_0=x_0,
             bias=bias,
-            offset=offset,
             scale=scale,
+            offset=offset,
             params=params,
             owner=owner,
             prefs=prefs,
+            **kwargs
         )
 
     def _function(self,
@@ -1195,15 +1252,15 @@ class Logistic(TransferFunction):  # -------------------------------------------
 #                                                    Tanh
 # **********************************************************************************************************************
 
-class Tanh(TransferFunction):  # ------------------------------------------------------------------------------------
+class Tanh(DeterministicTransferFunction):  # --------------------------------------------------------------------------
     """
     Tanh(                  \
          default_variable, \
          gain=1.0,         \
          bias=0.0,         \
          x_0=0.0,          \
-         offset=0.0,       \
          scale=1.0,        \
+         offset=0.0,       \
          params=None,      \
          owner=None,       \
          name=None,        \
@@ -1215,7 +1272,6 @@ class Tanh(TransferFunction):  # -----------------------------------------------
     `function <Tanh._function>` returns hyperbolic tangent of `variable <Tanh.variable>`:
 
     .. math::
-
         \\scale*frac{1 - e^{-2(gain*(variable+bias-x\\_0)+offset)}}{1 + e^{-2(gain*(variable+bias-x\\_0)+offset)}}
 
     .. note::
@@ -1226,7 +1282,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
     `derivative <Tanh.derivative>` returns the derivative of the hyperbolic tangent at its **input**:
 
     .. math::
-        \\frac{gain*scale}{(\\frac{1+e^{-2(gain*(variable+bias-x\\_0)+offset)}}{2e^{-(gain*(
+        \\frac{scale*gain}{(\\frac{1+e^{-2(gain*(variable+bias-x\\_0)+offset)}}{2e^{-(gain*(
        variable+bias-x\\_0)+offset)}})^2}
 
     Arguments
@@ -1246,12 +1302,11 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         specifies value to subtract from each element of `variable <Tanh.variable>` before applying `gain <Tanh.gain>`
         and before Tanh transformation. This argument is identical to bias, with the opposite sign.
 
-    offset : float : default 0.0
-        specifies value to add to each element of `variable <Tanh.variable>` after applying `gain <Tanh.gain>`
-        but before Tanh transformation.
-
     scale : float : default 1.0
-        specifies value by which to multiply each element after applying Tanh transform.
+      specifies the value by which the result of the function is multiplied, before `offset <TanH.offset>` is added.
+
+    offset : float : default 0.0
+      specifies the value added to the result of the function after `scale <TanH.scale>` has been applied.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -1285,14 +1340,14 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         value subtracted from each element of `variable <Tanh.variable>` before applying the `gain <Tanh.gain>`
         (if it is specified). This attribute is identical to bias, with the opposite sign.
 
-    offset : float : default 0.0
-        value to added to each element of `variable <Tanh.variable>` after applying `gain <Tanh.gain>`
-        but before tanh transformation.
+    range : (None, None)
+        modified by `scale <TanH.scale> and/or `offset <TanH.offset>` if they are specified.
 
-    scale : float : default 1.0
-        value by which element is multiplied after applying Tanh transform.
+    scale : float
+      determines the value by which the result of the function is multiplied, before `offset <TanH.offset>` is added.
 
-    bounds : (-1,1)
+    offset : float
+      determines the value added to the result of the function after `scale <TanH.scale>` has been applied.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -1308,9 +1363,11 @@ class Tanh(TransferFunction):  # -----------------------------------------------
     """
 
     componentName = TANH_FUNCTION
-    parameter_keywords.update({GAIN, BIAS, OFFSET})
+    # parameter_keywords.update({GAIN, BIAS, OFFSET})
+    default_range = (-1, 1)
 
-    class Parameters(TransferFunction.Parameters):
+
+    class Parameters(DeterministicTransferFunction.Parameters):
         """
             Attributes
             ----------
@@ -1327,18 +1384,6 @@ class Tanh(TransferFunction):  # -----------------------------------------------
                     :default value: 1.0
                     :type: ``float``
 
-                offset
-                    see `offset <Tanh.offset>`
-
-                    :default value: 0.0
-                    :type: ``float``
-
-                scale
-                    see `scale <Tanh.scale>`
-
-                    :default value: 1.0
-                    :type: ``float``
-
                 x_0
                     see `x_0 <Tanh.x_0>`
 
@@ -1348,9 +1393,6 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         x_0 = Parameter(0.0, modulable=True)
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        offset = Parameter(0.0, modulable=True)
-        scale = Parameter(1.0, modulable=True)
-        bounds = (-1, 1)
 
     @check_user_specified
     @beartype
@@ -1359,21 +1401,23 @@ class Tanh(TransferFunction):  # -----------------------------------------------
                  gain: Optional[ValidParamSpecType] = None,
                  x_0=None,
                  bias=None,
-                 offset: Optional[ValidParamSpecType] = None,
                  scale: Optional[ValidParamSpecType] = None,
+                 offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None):
+                 prefs:  Optional[ValidPrefSet] = None,
+                 **kwargs):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
             x_0=x_0,
             bias=bias,
-            offset=offset,
             scale=scale,
+            offset=offset,
             params=params,
             owner=owner,
             prefs=prefs,
+            **kwargs
         )
 
     def _function(self,
@@ -1507,13 +1551,15 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 #                                                    ReLU
 # **********************************************************************************************************************
 
-class ReLU(TransferFunction):  # ------------------------------------------------------------------------------------
+class ReLU(DeterministicTransferFunction):  # --------------------------------------------------------------------------
     """
     ReLU(                  \
          default_variable, \
          gain=1.0,         \
          bias=0.0,         \
          leak=0.0,         \
+         scale=1.0,        \
+         offset=0.0,       \
          params=None,      \
          owner=None,       \
          name=None,        \
@@ -1525,37 +1571,51 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     `function <ReLU._function>` returns rectified linear tranform of `variable <ReLU.variable>`:
 
     .. math::
-        x = gain*(variable - bias)
+        x = scale * gain * (variable - bias) + offset
 
     .. math::
-        max(x, leak * x)
+        max(x, leak * x) + offset
 
     Commonly used by `ReLU <https://en.wikipedia.org/wiki/Rectifier_(neural_networks>`_ units in neural networks.
 
     `derivative <ReLU.derivative>` returns the derivative of of the rectified linear tranform at its **input**:
 
     .. math::
-        gain\\ if\\ input > 0,\\ gain*leak\\ otherwise
+        scale * gain\\ if\\ input > 0,\\ scale * gain * leak\\ otherwise
 
     Arguments
     ---------
+
     default_variable : number or array : default class_defaults.variable
         specifies a template for the value to be transformed.
+
     gain : float : default 1.0
         specifies a value by which to multiply `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted
         from it.
+
     bias : float : default 0.0
         specifies a value to subtract from each element of `variable <ReLU.variable>`; functions as threshold.
+
     leak : float : default 0.0
         specifies a scaling factor between 0 and 1 when (variable - bias) is less than or equal to 0.
+
+    scale : float : default 1.0
+      specifies the value by which the result of the function is multiplied, before `offset <ReLU.offset>` is added.
+
+    offset : float : default 0.0
+      specifies the value added to the result of the function after `scale <ReLU.scale>` has been applied.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
-    owner : Component
-        `component <Component>` to which to assign the Function.
+
     name : str : default see `name <Function.name>`
         specifies the name of the Function.
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
 
@@ -1575,7 +1635,14 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     leak : float : default 0.0
         scaling factor between 0 and 1 when (variable - bias) is less than or equal to 0.
 
-    bounds : (None,None)
+    range : (None, None)
+        modified by `scale <Gaussian.scale> and/or `offset <ReLU.offset>` if they are specified.
+
+    scale : float : default 1.0
+      specifies the value by which the result of the function is multiplied, before `offset <ReLU.offset>` is added.
+
+    offset : float : default 0.0
+      specifies the value added to the result of the function after `scale <ReLU.scale>` has been applied.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -1591,9 +1658,11 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     """
 
     componentName = RELU_FUNCTION
-    parameter_keywords.update({GAIN, BIAS, LEAK})
+    # parameter_keywords.update({GAIN, BIAS, LEAK})
+    default_range = (None, None)
 
-    class Parameters(TransferFunction.Parameters):
+
+    class Parameters(DeterministicTransferFunction.Parameters):
         """
             Attributes
             ----------
@@ -1619,7 +1688,6 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         leak = Parameter(0.0, modulable=True)
-        bounds = (None, None)
 
     @check_user_specified
     @beartype
@@ -1628,17 +1696,23 @@ class ReLU(TransferFunction):  # -----------------------------------------------
                  gain: Optional[ValidParamSpecType] = None,
                  bias: Optional[ValidParamSpecType] = None,
                  leak: Optional[ValidParamSpecType] = None,
+                 scale: Optional[ValidParamSpecType] = None,
+                 offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None):
+                 prefs:  Optional[ValidPrefSet] = None,
+                 **kwargs):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
             bias=bias,
             leak=leak,
+            scale=scale,
+            offset=offset,
             params=params,
             owner=owner,
             prefs=prefs,
+            **kwargs
         )
 
     def _function(self,
@@ -1666,10 +1740,12 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         gain = self._get_current_parameter_value(GAIN, context)
         bias = self._get_current_parameter_value(BIAS, context)
         leak = self._get_current_parameter_value(LEAK, context)
+        scale = self._get_current_parameter_value(SCALE, context)
+        offset = self._get_current_parameter_value(OFFSET, context)
 
         # KAM modified 2/15/19 to match https://en.wikipedia.org/wiki/Rectifier_(neural_networks)#Leaky_ReLUs
         x = gain * (variable - bias)
-        result = np.maximum(x, leak * x)
+        result = scale * np.maximum(x, leak * x) + offset
 
         return self.convert_output_type(result)
 
@@ -1696,6 +1772,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         gain = self._get_current_parameter_value(GAIN, context)
         leak = self._get_current_parameter_value(LEAK, context)
         bias = self._get_current_parameter_value(BIAS, context)
+        scale = self._get_current_parameter_value(SCALE, context)
 
         if input is not None:
             # Use input if provided
@@ -1704,7 +1781,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
             # Infer input from output
             variable = np.array(output) / gain
 
-        value = np.where(variable > 0, gain, gain * leak)
+        value = np.where(variable > 0, scale * gain, scale * gain * leak)
         return value
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
@@ -1714,10 +1791,14 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         gain_ptr = ctx.get_param_or_state_ptr(builder, self, GAIN, param_struct_ptr=params)
         bias_ptr = ctx.get_param_or_state_ptr(builder, self, BIAS, param_struct_ptr=params)
         leak_ptr = ctx.get_param_or_state_ptr(builder, self, LEAK, param_struct_ptr=params)
+        scale_ptr = ctx.get_param_or_state_ptr(builder, self, SCALE, param_struct_ptr=params)
+        offset_ptr = ctx.get_param_or_state_ptr(builder, self, OFFSET, param_struct_ptr=params)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
         leak = pnlvm.helpers.load_extract_scalar_array_one(builder, leak_ptr)
+        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
+        offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
         # Maxnum for some reason needs full function prototype
         max_f = ctx.get_builtin("maxnum", [ctx.float_ty])
@@ -1729,12 +1810,15 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         if "derivative" in tags or "derivative_out" in tags:
             predicate = builder.fcmp_ordered('>', val, val.type(0))
+            gain = builder.fmul(gain, scale)
             val = builder.select(predicate, gain, builder.fmul(gain, leak))
         else:
             val1 = builder.fmul(val, gain)
             val2 = builder.fmul(val1, leak)
 
             val = builder.call(max_f, [val1, val2])
+            val = builder.fmul(val, scale)
+            val = builder.fadd(val, offset)
 
         builder.store(val, ptro)
 
@@ -1747,263 +1831,10 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
 
 # **********************************************************************************************************************
-#                                                    Angle
-# **********************************************************************************************************************
-
-# FIX: VALIDATE LEN(VARIABLE)>=2
-
-class Angle(TransferFunction):  # -------------------------------------------------------------------------------------
-    """
-    Angle(                 \
-         default_variable, \
-         params=None,      \
-         owner=None,       \
-         name=None,        \
-         prefs=None        \
-         )
-
-    .. _Angle_Function:
-
-    `function <angle._function>` returns Angle transform of vector in `variable <Angle.variable>`:
-
-    COMMENT:
-    FIX: WITH PROPER MATHEMATICAL DEFN
-    .. math::
-
-        slope * variable + intercept
-
-    `derivative <Angle.derivative>` returns `slope <Angle.slope>`.
-    COMMENT
-
-    Arguments
-    ---------
-
-    default_variable : 1array : default class_defaults.variable
-        specifies a template for the value to be transformed;  length must be at least 2.
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
-        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
-
-    owner : Component
-        `component <Component>` to which to assign the Function.
-
-    name : str : default see `name <Function.name>`
-        specifies the name of the Function.
-
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
-
-    Attributes
-    ----------
-
-    variable : 1d array
-        contains value to be transformed.
-
-    owner : Component
-        `component <Component>` to which the Function has been assigned.
-
-    name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
-        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict : Function.classPreferences
-        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
-        for details).
-    """
-
-    componentName = ANGLE_FUNCTION
-
-    classPreferences = {
-        PREFERENCE_SET_NAME: 'AngleClassPreferences',
-        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-    }
-
-    _model_spec_class_name_is_generic = True
-
-    class Parameters(TransferFunction.Parameters):
-        """
-            Attributes
-            ----------
-
-                variable
-                    see `variable <Angle.variable>`
-
-                    :default value: numpy.array([0.,0,])
-                    :type: ``numpy.ndarray``
-                    :read only: True
-
-        """
-        variable = Parameter(np.array([1,1]),
-                             read_only=True,
-                             pnl_internal=True,
-                             constructor_argument='default_variable')
-
-        def _validate_variable(self, variable):
-            variable = np.squeeze(variable)
-            if variable.ndim != 1 or len(variable) < 2:
-                return f"must be list or 1d array of length 2 or greater."
-
-    @check_user_specified
-    @beartype
-    def __init__(self,
-                 default_variable=None,
-                 params=None,
-                 owner=None,
-                 prefs:  Optional[ValidPrefSet] = None):
-
-        super().__init__(
-            default_variable=default_variable,
-            params=params,
-            owner=owner,
-            prefs=prefs,
-        )
-
-    def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
-        """
-
-        Arguments
-        ---------
-
-        variable : ndarray : default class_defaults.variable
-           an array of coordinates on a sphere to be transformed to n+1d angular coordinates;  must be at least 2d.
-
-        params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
-            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-            arguments of the constructor.
-
-        Returns
-        -------
-
-        Angle transformation of variable : ndarray of variable.ndim+1
-
-        """
-        try:
-            # By default, result should be returned as np.ndarray with same dimensionality as input
-            result = self._angle(variable)
-        except TypeError:
-            if hasattr(variable, "dtype"):
-                # If variable is an array with mixed sizes or types, try item-by-item operation
-                if variable.dtype == object:
-                    result = np.zeros_like(variable)
-                    for i, item in enumerate(variable):
-                        result[i] = self._angle(variable[i])
-                else:
-                    raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
-            # KAM 6/28/18: If the variable does not have a "dtype" attr but made it to this line, then it must be of a
-            # type that even np does not recognize -- typically a custom OutputPort variable with items of different
-            # shapes (e.g. variable = [[0.0], [0.0], array([[0.0, 0.0]])] )
-            elif isinstance(variable, list):
-                result = []
-                for variable_item in variable:
-                    result.append(self._angle(variable_item))
-            else:
-                raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
-
-        return self.convert_output_type(result)
-
-    def _angle(self, value):
-        """Take nd value and return n+1d coordinates for angle on a sphere"""
-        value = np.squeeze(value)
-        dim = len(value) + 1
-        angle = np.zeros(dim)
-        sin_value = np.sin(value)
-        cos_value = np.cos(value)
-        angle[0] = cos_value[0]
-        prod_a = np.cumprod(np.flip(sin_value))[:-1]
-        angle[dim - 1] = prod_a[-1]
-        prod_a[-1] = 1.
-
-        # going down from the top of cumprod we skip: 2 edge values +1 extra for output size
-        for j in range(1, dim - 1):
-            angle[j] = prod_a[dim -3 -j] * cos_value[j]
-        return angle
-
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
-        assert isinstance(arg_out.type.pointee, pnlvm.ir.ArrayType)
-        assert len(arg_in.type.pointee) + 1 == len(arg_out.type.pointee)
-
-        # The first cos
-        res0_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        val0_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        val0 = builder.load(val0_ptr)
-        cos_f = ctx.get_builtin("cos", [val0.type])
-        cos_val0 = builder.call(cos_f, [val0])
-        builder.store(cos_val0, res0_ptr)
-
-        # calculate suffix product
-        sin_f = ctx.get_builtin("sin", [val0.type])
-        prod_ptr = builder.alloca(val0.type)
-        builder.store(prod_ptr.type.pointee(1.0), prod_ptr)
-
-        dim_m1 = ctx.int32_ty(len(arg_out.type.pointee) - 1)
-        with pnlvm.helpers.for_loop(builder, dim_m1.type(1), dim_m1, dim_m1.type(1), id="suff_prod") as (b, idx):
-            #revert the index to go from the end
-            idx = b.sub(dim_m1, idx)
-
-            prod = b.load(prod_ptr)
-            val_ptr = b.gep(arg_in, [ctx.int32_ty(0), idx])
-            val = b.load(val_ptr)
-
-            # calculate suffix product of sin(input)
-            val_sin = b.call(sin_f, [val])
-            new_prod = b.fmul(prod, val_sin)
-            b.store(new_prod, prod_ptr)
-
-            # output value is suffix product * cos(val)
-            val_cos = b.call(cos_f, [val])
-            res = b.fmul(prod, val_cos)
-            res_ptr = b.gep(arg_out, [ctx.int32_ty(0), idx])
-            b.store(res, res_ptr)
-
-        # The last element is just the suffix product * 1
-        last_ptr = builder.gep(arg_out, [ctx.int32_ty(0), dim_m1])
-        builder.store(builder.load(prod_ptr), last_ptr)
-
-        return builder
-
-    # @handle_external_context()
-    # def derivative(self, input=None, output=None, context=None):
-    #     """
-    #     derivative(input)
-    #
-    #     Derivative of `function <Angle._function>` at **input**.
-    #
-    #     Arguments
-    #     ---------
-    #
-    #     input : number
-    #         value of the input to the Angle transform at which derivative is to be taken.
-    #
-    #     Returns
-    #     -------
-    #
-    #     Slope of function :  number or array
-    #
-    #     """
-    #
-    #     return self._get_current_parameter_value(SLOPE, context)
-    #
-    # def _is_identity(self, context=None):
-    #     return (
-    #         self.parameters.slope._get(context) == 1
-    #         and self.parameters.intercept._get(context) == 0
-    #     )
-
-
-# **********************************************************************************************************************
 #                                                    Gaussian
 # **********************************************************************************************************************
 
-class Gaussian(TransferFunction):  # -----------------------------------------------------------------------------------
+class Gaussian(DeterministicTransferFunction):  # ----------------------------------------------------------------------
     """
     Gaussian(                    \
          default_variable,       \
@@ -2048,11 +1879,11 @@ class Gaussian(TransferFunction):  # -------------------------------------------
     bias : float : default 0.0
         value to add to each element of `variable <Gaussian.variable>` before applying Gaussian transform.
 
-    offset : float : default 0.0
-        value to add to each element after applying Gaussian transform and `scale <Gaussian.scale>`.
-
     scale : float : default 1.0
-        value by which to multiply each element after applying Gaussian transform.
+      specifies the value by which the result of the function is multiplied, before `offset <Gaussian.offset>` is added.
+
+    offset : float : default 0.0
+      specifies the value added to the result of the function after `scale <Gaussian.scale>` has been applied.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -2080,11 +1911,15 @@ class Gaussian(TransferFunction):  # -------------------------------------------
     bias : float : default 0.0
         value added to each element of `variable <Gaussian.variable>` before applying the Gaussian transform.
 
-    scale : float : default 0.0
-        value by which each element is multiplied after applying the Gaussian transform.
+    range : (None, None)
+        modified by `scale <Gaussian.scale> and/or `offset <Gaussian.offset>` if they are specified.
 
-    offset : float : default 0.0
-        value added to each element after applying the Gaussian transform and scale.
+    scale : float
+      determines the value by which the result of the function is multiplied, before `offset <Gaussian.offset>`
+      is added.
+
+    offset : float
+      determines the value added to the result of the function after `scale <Gaussian.scale>` has been applied.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -2101,6 +1936,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
 
     componentName = GAUSSIAN_FUNCTION
     # parameter_keywords.update({STANDARD_DEVIATION, BIAS, SCALE, OFFSET})
+    default_range = (None, None)
 
     class Parameters(TransferFunction.Parameters):
         """
@@ -2113,18 +1949,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
                     :default value: 0.0
                     :type: ``float``
 
-                offset
-                    see `offset <Gaussian.offset>`
-
-                    :default value: 0.0
-                    :type: ``float``
-
-                scale
-                    see `scale <Gaussian.scale>`
-
-                    :default value: 1.0
-                    :type: ``float``
-
                 standard_deviation
                     see `standard_deviation <Gaussian.standard_deviation>`
 
@@ -2133,9 +1957,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         """
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        scale = Parameter(1.0, modulable=True)
-        offset = Parameter(0.0, modulable=True)
-        bounds = (None, None)
 
     @check_user_specified
     @beartype
@@ -2147,7 +1968,8 @@ class Gaussian(TransferFunction):  # -------------------------------------------
                  offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None):
+                 prefs:  Optional[ValidPrefSet] = None,
+                 **kwargs):
         super().__init__(
             default_variable=default_variable,
             standard_deviation=standard_deviation,
@@ -2157,6 +1979,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
             params=params,
             owner=owner,
             prefs=prefs,
+            **kwargs
         )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
@@ -2409,7 +2232,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         offset = Parameter(0.0, modulable=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
-        bounds = (None, None)
+        range = (None, None)
 
     @check_user_specified
     @beartype
@@ -2633,7 +2456,7 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
         p = Parameter(0.5, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
-        bounds = (None, None)
+        range = (None, None)
 
     @check_user_specified
     @beartype
@@ -3103,7 +2926,7 @@ class SoftMax(TransferFunction):
         scalar;  otherwise it is ignored (see `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for details).
 
     adapt_scale : scalar
-        determined the *scale* parameter using by the `adapt_gain <SoftMax.adapt_gain>` method (see method for details).
+        determines the *scale* parameter using by the `adapt_gain <SoftMax.adapt_gain>` method (see method for details).
 
     adapt_base : scalar
         determines the *base* parameter using by the `adapt_gain <SoftMax.adapt_gain>` method (see method for details).
@@ -3130,7 +2953,7 @@ class SoftMax(TransferFunction):
         for 2d variables, determines whether the SoftMax function is applied to the entire variable (per_item =
         False), or applied to each item in the variable separately (per_item = True).
 
-    bounds : None if `output <SoftMax.output>` in {ARG_MAX, MAX_VAL}, else (0,1) : default (0,1)
+    range : None if `output <SoftMax.output>` in {ARG_MAX, MAX_VAL}, else (0, 1) : default (0, 1)
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -3177,8 +3000,8 @@ class SoftMax(TransferFunction):
                     :default value: 0.1
                     :type: ``float``
 
-                bounds
-                    see `bounds <SoftMax.bounds>`
+                range
+                    see `range <SoftMax.range>`
 
                     :default value: (0, 1)
                     :type: <class 'tuple'>
@@ -3213,7 +3036,7 @@ class SoftMax(TransferFunction):
         adapt_scale = Parameter(1.0, modulable=True)
         adapt_base = Parameter(1.0, modulable=True)
         adapt_entropy_weighting = Parameter(0.95, modulable=True)
-        bounds = (0, 1)
+        range = (0, 1)
         output = ALL
         per_item = Parameter(True, pnl_internal=True)
         one_hot_function = Parameter(None, stateful=False, loggable=False)
@@ -3673,6 +3496,259 @@ class SoftMax(TransferFunction):
                                    (entropy_weighting * len(x) *
                                     torch.log(-1 * torch.sum((1 / (1 + torch.exp(-1 * x)))
                                                              * torch.log(1 / (1 + torch.exp(-1 * x)))))))
+
+
+# **********************************************************************************************************************
+#                                                    Angle
+# **********************************************************************************************************************
+
+# FIX: VALIDATE LEN(VARIABLE)>=2
+
+class Angle(TransferFunction):  # -------------------------------------------------------------------------------------
+    """
+    Angle(                 \
+         default_variable, \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
+         )
+
+    .. _Angle_Function:
+
+    `function <angle._function>` returns Angle transform of vector in `variable <Angle.variable>`:
+
+    COMMENT:
+    FIX: WITH PROPER MATHEMATICAL DEFN
+    .. math::
+
+        slope * variable + intercept
+
+    `derivative <Angle.derivative>` returns `slope <Angle.slope>`.
+    COMMENT
+
+    Arguments
+    ---------
+
+    default_variable : 1array : default class_defaults.variable
+        specifies a template for the value to be transformed;  length must be at least 2.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : 1d array
+        contains value to be transformed.
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
+    """
+
+    componentName = ANGLE_FUNCTION
+
+    classPreferences = {
+        PREFERENCE_SET_NAME: 'AngleClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+    }
+
+    _model_spec_class_name_is_generic = True
+
+    class Parameters(TransferFunction.Parameters):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <Angle.variable>`
+
+                    :default value: numpy.array([0.,0,])
+                    :type: ``numpy.ndarray``
+                    :read only: True
+
+        """
+        variable = Parameter(np.array([1,1]),
+                             read_only=True,
+                             pnl_internal=True,
+                             constructor_argument='default_variable')
+
+        def _validate_variable(self, variable):
+            variable = np.squeeze(variable)
+            if variable.ndim != 1 or len(variable) < 2:
+                return f"must be list or 1d array of length 2 or greater."
+
+    @check_user_specified
+    @beartype
+    def __init__(self,
+                 default_variable=None,
+                 params=None,
+                 owner=None,
+                 prefs:  Optional[ValidPrefSet] = None):
+
+        super().__init__(
+            default_variable=default_variable,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
+
+    def _function(self,
+                 variable=None,
+                 context=None,
+                 params=None,
+                 ):
+        """
+
+        Arguments
+        ---------
+
+        variable : ndarray : default class_defaults.variable
+           an array of coordinates on a sphere to be transformed to n+1d angular coordinates;  must be at least 2d.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        Returns
+        -------
+
+        Angle transformation of variable : ndarray of variable.ndim+1
+
+        """
+        try:
+            # By default, result should be returned as np.ndarray with same dimensionality as input
+            result = self._angle(variable)
+        except TypeError:
+            if hasattr(variable, "dtype"):
+                # If variable is an array with mixed sizes or types, try item-by-item operation
+                if variable.dtype == object:
+                    result = np.zeros_like(variable)
+                    for i, item in enumerate(variable):
+                        result[i] = self._angle(variable[i])
+                else:
+                    raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
+            # KAM 6/28/18: If the variable does not have a "dtype" attr but made it to this line, then it must be of a
+            # type that even np does not recognize -- typically a custom OutputPort variable with items of different
+            # shapes (e.g. variable = [[0.0], [0.0], array([[0.0, 0.0]])] )
+            elif isinstance(variable, list):
+                result = []
+                for variable_item in variable:
+                    result.append(self._angle(variable_item))
+            else:
+                raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
+
+        return self.convert_output_type(result)
+
+    def _angle(self, value):
+        """Take nd value and return n+1d coordinates for angle on a sphere"""
+        value = np.squeeze(value)
+        dim = len(value) + 1
+        angle = np.zeros(dim)
+        sin_value = np.sin(value)
+        cos_value = np.cos(value)
+        angle[0] = cos_value[0]
+        prod_a = np.cumprod(np.flip(sin_value))[:-1]
+        angle[dim - 1] = prod_a[-1]
+        prod_a[-1] = 1.
+
+        # going down from the top of cumprod we skip: 2 edge values +1 extra for output size
+        for j in range(1, dim - 1):
+            angle[j] = prod_a[dim -3 -j] * cos_value[j]
+        return angle
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+        assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
+        assert isinstance(arg_out.type.pointee, pnlvm.ir.ArrayType)
+        assert len(arg_in.type.pointee) + 1 == len(arg_out.type.pointee)
+
+        # The first cos
+        res0_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        val0_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        val0 = builder.load(val0_ptr)
+        cos_f = ctx.get_builtin("cos", [val0.type])
+        cos_val0 = builder.call(cos_f, [val0])
+        builder.store(cos_val0, res0_ptr)
+
+        # calculate suffix product
+        sin_f = ctx.get_builtin("sin", [val0.type])
+        prod_ptr = builder.alloca(val0.type)
+        builder.store(prod_ptr.type.pointee(1.0), prod_ptr)
+
+        dim_m1 = ctx.int32_ty(len(arg_out.type.pointee) - 1)
+        with pnlvm.helpers.for_loop(builder, dim_m1.type(1), dim_m1, dim_m1.type(1), id="suff_prod") as (b, idx):
+            #revert the index to go from the end
+            idx = b.sub(dim_m1, idx)
+
+            prod = b.load(prod_ptr)
+            val_ptr = b.gep(arg_in, [ctx.int32_ty(0), idx])
+            val = b.load(val_ptr)
+
+            # calculate suffix product of sin(input)
+            val_sin = b.call(sin_f, [val])
+            new_prod = b.fmul(prod, val_sin)
+            b.store(new_prod, prod_ptr)
+
+            # output value is suffix product * cos(val)
+            val_cos = b.call(cos_f, [val])
+            res = b.fmul(prod, val_cos)
+            res_ptr = b.gep(arg_out, [ctx.int32_ty(0), idx])
+            b.store(res, res_ptr)
+
+        # The last element is just the suffix product * 1
+        last_ptr = builder.gep(arg_out, [ctx.int32_ty(0), dim_m1])
+        builder.store(builder.load(prod_ptr), last_ptr)
+
+        return builder
+
+    # @handle_external_context()
+    # def derivative(self, input=None, output=None, context=None):
+    #     """
+    #     derivative(input)
+    #
+    #     Derivative of `function <Angle._function>` at **input**.
+    #
+    #     Arguments
+    #     ---------
+    #
+    #     input : number
+    #         value of the input to the Angle transform at which derivative is to be taken.
+    #
+    #     Returns
+    #     -------
+    #
+    #     Slope of function :  number or array
+    #
+    #     """
+    #
+    #     return self._get_current_parameter_value(SLOPE, context)
+    #
+    # def _is_identity(self, context=None):
+    #     return (
+    #         self.parameters.slope._get(context) == 1
+    #         and self.parameters.intercept._get(context) == 0
+    #     )
 
 
 # **********************************************************************************************************************
@@ -4317,9 +4393,6 @@ class TransferWithCosts(TransferFunction):
             if not fct:
                 self.toggle_cost(fct_name, OFF)
                 return None
-            # # MODIFIED 3/10/20 OLD:
-            # if isinstance(fct, (Function, types.FunctionType, types.MethodType)):
-            # MODIFIED 3/10/20 NEW: [JDC]
             elif isinstance(fct, Function):
                 return fct
             elif isinstance(fct, (types.FunctionType, types.MethodType)):
@@ -4328,7 +4401,6 @@ class TransferWithCosts(TransferFunction):
                         custom_function=fct,
                         owner=self,
                         context=context)
-                # MODIFIED 3/10/20 END
             elif issubclass(fct, Function):
                 return fct()
             else:
@@ -4440,10 +4512,7 @@ class TransferWithCosts(TransferFunction):
         else:
             enabled_cost_functions = self.parameters.enabled_cost_functions.get(context)
 
-        return (
-            transfer_fct._is_identity(context, defaults=defaults)
-            and enabled_cost_functions == CostFunctions.NONE
-        )
+        return transfer_fct._is_identity(context, defaults=defaults) and enabled_cost_functions == CostFunctions.NONE
 
     @beartype
     def assign_costs(self, cost_functions: Union[CostFunctions, list], execution_context=None):
@@ -4568,6 +4637,7 @@ class TransferWithCosts(TransferFunction):
         trans_in = arg_in
         trans_out = arg_out
         builder.call(trans_f, [trans_p, trans_s, trans_in, trans_out])
+
         intensity_ptr = ctx.get_state_space(builder, self, state, self.parameters.intensity)
 
         costs = [(self.parameters.intensity_cost_fct, CostFunctions.INTENSITY, self.parameters.intensity_cost),
