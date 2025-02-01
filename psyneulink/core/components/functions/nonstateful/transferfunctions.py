@@ -1818,7 +1818,7 @@ class ReLU(DeterministicTransferFunction):  # ----------------------------------
 
             val = builder.call(max_f, [val1, val2])
             val = builder.fmul(val, scale)
-            val = builder.add(val, offset)
+            val = builder.fadd(val, offset)
 
         builder.store(val, ptro)
 

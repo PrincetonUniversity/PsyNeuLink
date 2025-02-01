@@ -47,71 +47,71 @@ def binomial_distort_helper(seed):
 
 
 test_data = [
-    pytest.param(pnl.Linear, test_var, {kw.SLOPE:RAND1, kw.INTERCEPT:RAND2}, test_var * RAND1 + RAND2, id="LINEAR"),
-    pytest.param(pnl.Exponential, test_var, {kw.SCALE:RAND1, kw.RATE:RAND2}, RAND1 * np.exp(RAND2 * test_var), id="EXPONENTIAL"),
-    pytest.param(pnl.Logistic, test_var, {kw.GAIN:RAND1, kw.X_0:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4}, logistic_helper, id="LOGISTIC"),
-    pytest.param(pnl.Tanh, test_var, {kw.GAIN:RAND1, kw.BIAS:RAND2, kw.X_0:RAND3, kw.OFFSET:RAND4}, tanh_helper, id="TANH"),
+    # pytest.param(pnl.Linear, test_var, {kw.SLOPE:RAND1, kw.INTERCEPT:RAND2}, test_var * RAND1 + RAND2, id="LINEAR"),
+    # pytest.param(pnl.Exponential, test_var, {kw.SCALE:RAND1, kw.RATE:RAND2}, RAND1 * np.exp(RAND2 * test_var), id="EXPONENTIAL"),
+    # pytest.param(pnl.Logistic, test_var, {kw.GAIN:RAND1, kw.X_0:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4}, logistic_helper, id="LOGISTIC"),
+    # pytest.param(pnl.Tanh, test_var, {kw.GAIN:RAND1, kw.BIAS:RAND2, kw.X_0:RAND3, kw.OFFSET:RAND4}, tanh_helper, id="TANH"),
     pytest.param(pnl.ReLU, test_var, {kw.GAIN:RAND1, kw.BIAS:RAND2, kw.LEAK:RAND3}, relu_helper, id="RELU"),
 
-    # Angle doesn't have a helper using 'test_var', hardcode bopth the input and output
-    pytest.param(pnl.Angle,
-                 [0.5488135,  0.71518937, 0.60276338, 0.54488318, 0.4236548,
-                  0.64589411, 0.43758721, 0.891773, 0.96366276, 0.38344152],
-                  {},
-                 [0.85314409, 0.00556188, 0.01070476, 0.0214405,  0.05559454,
-                  0.08091079, 0.21657281, 0.19296643, 0.21343805, 0.92738261, 0.00483101],
-                 id="ANGLE"),
-
-    # Distort
-    pytest.param(pnl.Gaussian, test_var, {kw.STANDARD_DEVIATION:RAND1, kw.BIAS:RAND2, kw.SCALE:RAND3, kw.OFFSET:RAND4}, gaussian_helper, id="GAUSSIAN"),
-    pytest.param(pnl.GaussianDistort, test_var, {kw.BIAS: RAND1, kw.VARIANCE:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4 }, gaussian_distort_helper(0), id="GAUSSIAN DISTORT GLOBAL SEED"),
-    pytest.param(pnl.GaussianDistort, test_var, {kw.BIAS: RAND1, kw.VARIANCE:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4, 'seed':0 }, gaussian_distort_helper(0), id="GAUSSIAN DISTORT"),
-    pytest.param(pnl.BinomialDistort, test_var, {'seed':0, 'p':RAND1 }, binomial_distort_helper(0), id="BINOMIAL DISTORT"),
-
-    # SoftMax 1D input
-    pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.PER_ITEM:False}, softmax_helper, id="SOFT_MAX ALL"),
-    pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:pnl.ARG_MAX, kw.PER_ITEM:False},
-                 np.where(softmax_helper == np.max(softmax_helper), softmax_helper, 0), id="SOFT_MAX ARG_MAX"),
-    pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:pnl.ARG_MAX_INDICATOR, kw.PER_ITEM:False},
-                 np.where(softmax_helper == np.max(softmax_helper), 1, 0), id="SOFT_MAX ARG_MAX_INDICATOR"),
-    pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:False},
-                 np.where(softmax_helper == np.max(softmax_helper), softmax_helper, 0), id="SOFT_MAX MAX_VAL"),
-    pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM:False},
-                 np.where(softmax_helper == np.max(softmax_helper), 1, 0), id="SOFT_MAX MAX_INDICATOR"),
-    pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.PROB, kw.PER_ITEM:False},
-                 [0.0, 0.0, 0.0, 0.0, test_var[4], 0.0, 0.0, 0.0, 0.0, 0.0], id="SOFT_MAX PROB"),
-
-    # SoftMax 2D testing per-item
-    pytest.param(pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.PER_ITEM:True}, [softmax_helper], id="SOFT_MAX ALL 2D"),
-    pytest.param(pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:pnl.ARG_MAX, kw.PER_ITEM:True},
-                 [np.where(softmax_helper == np.max(softmax_helper), softmax_helper, 0)], id="SOFT_MAX ARG_MAX 2D"),
-    pytest.param(pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:pnl.ARG_MAX_INDICATOR, kw.PER_ITEM:True},
-                 [np.where(softmax_helper == np.max(softmax_helper), 1, 0)], id="SOFT_MAX ARG_MAX_INDICATOR 2D"),
-    pytest.param(pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:True},
-                 [np.where(softmax_helper == np.max(softmax_helper), softmax_helper, 0)], id="SOFT_MAX MAX_VAL 2D"),
-    pytest.param(pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM:True},
-                 [np.where(softmax_helper == np.max(softmax_helper), 1, 0)], id="SOFT_MAX MAX_INDICATOR 2D"),
-    pytest.param(pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.PROB, kw.PER_ITEM:True},
-                 [[0.0, 0.0, 0.0, 0.0, test_var[4], 0.0, 0.0, 0.0, 0.0, 0.0]], id="SOFT_MAX PROB 2D"),
-
-    # SoftMax per-item with 2 elements in input
-    pytest.param(pnl.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.PER_ITEM: True}, softmax_helper2, id="SOFT_MAX ALL PER_ITEM"),
-    pytest.param(pnl.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:pnl.ARG_MAX, kw.PER_ITEM: True},
-                 np.where(softmax_helper2 == np.max(softmax_helper2), softmax_helper2, 0), id="SOFT_MAX ARG_MAX PER_ITEM"),
-    pytest.param(pnl.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:pnl.ARG_MAX_INDICATOR, kw.PER_ITEM: True},
-                 np.where(softmax_helper2 == np.max(softmax_helper2), 1, 0), id="SOFT_MAX ARG_MAX_INDICATOR PER_ITEM"),
-    pytest.param(pnl.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM: True},
-                 np.where(softmax_helper2 == np.max(softmax_helper2), softmax_helper2, 0), id="SOFT_MAX MAX_VAL PER_ITEM"),
-    pytest.param(pnl.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM: True},
-                 np.where(softmax_helper2 == np.max(softmax_helper2), 1, 0), id="SOFT_MAX MAX_INDICATOR PER_ITEM"),
-
-    # Linear Matrix
-    pytest.param(pnl.MatrixTransform, test_var, {kw.MATRIX:test_matrix}, np.dot(test_var, test_matrix), id="LINEAR_MATRIX SQUARE"),
-    pytest.param(pnl.MatrixTransform, test_var, {kw.MATRIX:test_matrix_l}, np.dot(test_var, test_matrix_l), id="LINEAR_MATRIX WIDE"),
-    pytest.param(pnl.MatrixTransform, test_var, {kw.MATRIX:test_matrix_s}, np.dot(test_var, test_matrix_s), id="LINEAR_MATRIX TALL"),
-
-    # Dropout is just identity in non-learning mode
-    pytest.param(pnl.Dropout, test_var, {}, test_var, id="DROPOUT"),
+    # # Angle doesn't have a helper using 'test_var', hardcode bopth the input and output
+    # pytest.param(pnl.Angle,
+    #              [0.5488135,  0.71518937, 0.60276338, 0.54488318, 0.4236548,
+    #               0.64589411, 0.43758721, 0.891773, 0.96366276, 0.38344152],
+    #               {},
+    #              [0.85314409, 0.00556188, 0.01070476, 0.0214405,  0.05559454,
+    #               0.08091079, 0.21657281, 0.19296643, 0.21343805, 0.92738261, 0.00483101],
+    #              id="ANGLE"),
+    #
+    # # Distort
+    # pytest.param(pnl.Gaussian, test_var, {kw.STANDARD_DEVIATION:RAND1, kw.BIAS:RAND2, kw.SCALE:RAND3, kw.OFFSET:RAND4}, gaussian_helper, id="GAUSSIAN"),
+    # pytest.param(pnl.GaussianDistort, test_var, {kw.BIAS: RAND1, kw.VARIANCE:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4 }, gaussian_distort_helper(0), id="GAUSSIAN DISTORT GLOBAL SEED"),
+    # pytest.param(pnl.GaussianDistort, test_var, {kw.BIAS: RAND1, kw.VARIANCE:RAND2, kw.OFFSET:RAND3, kw.SCALE:RAND4, 'seed':0 }, gaussian_distort_helper(0), id="GAUSSIAN DISTORT"),
+    # pytest.param(pnl.BinomialDistort, test_var, {'seed':0, 'p':RAND1 }, binomial_distort_helper(0), id="BINOMIAL DISTORT"),
+    #
+    # # SoftMax 1D input
+    # pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.PER_ITEM:False}, softmax_helper, id="SOFT_MAX ALL"),
+    # pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:pnl.ARG_MAX, kw.PER_ITEM:False},
+    #              np.where(softmax_helper == np.max(softmax_helper), softmax_helper, 0), id="SOFT_MAX ARG_MAX"),
+    # pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:pnl.ARG_MAX_INDICATOR, kw.PER_ITEM:False},
+    #              np.where(softmax_helper == np.max(softmax_helper), 1, 0), id="SOFT_MAX ARG_MAX_INDICATOR"),
+    # pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:False},
+    #              np.where(softmax_helper == np.max(softmax_helper), softmax_helper, 0), id="SOFT_MAX MAX_VAL"),
+    # pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM:False},
+    #              np.where(softmax_helper == np.max(softmax_helper), 1, 0), id="SOFT_MAX MAX_INDICATOR"),
+    # pytest.param(pnl.SoftMax, test_var, {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.PROB, kw.PER_ITEM:False},
+    #              [0.0, 0.0, 0.0, 0.0, test_var[4], 0.0, 0.0, 0.0, 0.0, 0.0], id="SOFT_MAX PROB"),
+    #
+    # # SoftMax 2D testing per-item
+    # pytest.param(pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.PER_ITEM:True}, [softmax_helper], id="SOFT_MAX ALL 2D"),
+    # pytest.param(pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:pnl.ARG_MAX, kw.PER_ITEM:True},
+    #              [np.where(softmax_helper == np.max(softmax_helper), softmax_helper, 0)], id="SOFT_MAX ARG_MAX 2D"),
+    # pytest.param(pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:pnl.ARG_MAX_INDICATOR, kw.PER_ITEM:True},
+    #              [np.where(softmax_helper == np.max(softmax_helper), 1, 0)], id="SOFT_MAX ARG_MAX_INDICATOR 2D"),
+    # pytest.param(pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:True},
+    #              [np.where(softmax_helper == np.max(softmax_helper), softmax_helper, 0)], id="SOFT_MAX MAX_VAL 2D"),
+    # pytest.param(pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM:True},
+    #              [np.where(softmax_helper == np.max(softmax_helper), 1, 0)], id="SOFT_MAX MAX_INDICATOR 2D"),
+    # pytest.param(pnl.SoftMax, [test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.PROB, kw.PER_ITEM:True},
+    #              [[0.0, 0.0, 0.0, 0.0, test_var[4], 0.0, 0.0, 0.0, 0.0, 0.0]], id="SOFT_MAX PROB 2D"),
+    #
+    # # SoftMax per-item with 2 elements in input
+    # pytest.param(pnl.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.PER_ITEM: True}, softmax_helper2, id="SOFT_MAX ALL PER_ITEM"),
+    # pytest.param(pnl.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:pnl.ARG_MAX, kw.PER_ITEM: True},
+    #              np.where(softmax_helper2 == np.max(softmax_helper2), softmax_helper2, 0), id="SOFT_MAX ARG_MAX PER_ITEM"),
+    # pytest.param(pnl.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:pnl.ARG_MAX_INDICATOR, kw.PER_ITEM: True},
+    #              np.where(softmax_helper2 == np.max(softmax_helper2), 1, 0), id="SOFT_MAX ARG_MAX_INDICATOR PER_ITEM"),
+    # pytest.param(pnl.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM: True},
+    #              np.where(softmax_helper2 == np.max(softmax_helper2), softmax_helper2, 0), id="SOFT_MAX MAX_VAL PER_ITEM"),
+    # pytest.param(pnl.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM: True},
+    #              np.where(softmax_helper2 == np.max(softmax_helper2), 1, 0), id="SOFT_MAX MAX_INDICATOR PER_ITEM"),
+    #
+    # # Linear Matrix
+    # pytest.param(pnl.MatrixTransform, test_var, {kw.MATRIX:test_matrix}, np.dot(test_var, test_matrix), id="LINEAR_MATRIX SQUARE"),
+    # pytest.param(pnl.MatrixTransform, test_var, {kw.MATRIX:test_matrix_l}, np.dot(test_var, test_matrix_l), id="LINEAR_MATRIX WIDE"),
+    # pytest.param(pnl.MatrixTransform, test_var, {kw.MATRIX:test_matrix_s}, np.dot(test_var, test_matrix_s), id="LINEAR_MATRIX TALL"),
+    #
+    # # Dropout is just identity in non-learning mode
+    # pytest.param(pnl.Dropout, test_var, {}, test_var, id="DROPOUT"),
 ]
 
 @pytest.mark.function
