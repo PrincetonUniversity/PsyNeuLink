@@ -773,7 +773,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         def update_autodiff_all_output_values():
             """Update autodiff's output_values by executing its output_CIM's with pytorch_rep all_output_values"""
-            if self.all_output_values:
+            if self.all_output_values is not None:
                 self._composition.output_CIM.execute(self.all_output_values, context=context)
 
         # Allow selective updating of just autodiff.output_values if specified

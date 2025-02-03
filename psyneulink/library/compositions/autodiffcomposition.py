@@ -1099,7 +1099,11 @@ class AutodiffComposition(Composition):
         # Get value of TARGET nodes for current trial
         curr_tensors_for_targets = {}
         for component in targets.keys():
-            curr_tensors_for_targets[component] = [targets[component][:, i, :] for i in range(targets[component].shape[1])]
+            if isinstance(targets[component], torch.Tensor) or isinstance(targets[component], np.ndarray):
+                curr_tensors_for_targets[component] = [targets[component][:, i, :] for i in range(targets[component].shape[1])]
+            else:
+                # Its  a list
+                curr_tensors_for_targets[component] = [torch.tensor(targets[component][i], device=self.device).double() for i in range(len(targets[component]))]
 
         # Get value of TARGET nodes for trained OUTPUT nodes
         curr_target_tensors_for_trained_outputs = {}
@@ -1131,7 +1135,7 @@ class AutodiffComposition(Composition):
                 f"PROGRAM ERROR: {input_port.name} of ouput_CIM for '{self.name}' has more than one afferent."
             port, source, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
             idx = source.output_ports.index(port)
-            trained_output_values += [curr_tensors_for_trained_outputs[source][idx].detach().cpu().numpy().copy().tolist()]
+            trained_output_values += [curr_tensors_for_trained_outputs[source][:, idx, ...].detach().cpu().numpy().copy().tolist()]
 
         # Get values of all OUTPUT nodes
         all_output_values = []
@@ -1140,10 +1144,20 @@ class AutodiffComposition(Composition):
                 f"PROGRAM ERROR: {input_port.name} of ouput_CIM for '{self.name}' has more than one afferent."
             port, component, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
             idx = component.output_ports.index(port)
-            t = curr_tensors_for_outputs[component][idx]
+            t = curr_tensors_for_outputs[component][:, idx, ...]
             # t = torch.atleast_1d(t.squeeze())
             t = t.detach().cpu().numpy().copy().tolist()
             all_output_values += [t]
+
+        # Turn into a numpy array, possibly ragged
+        try:
+            all_output_values = np.array(all_output_values)
+        except ValueError:
+            all_output_values = np.array(all_output_values, dtype=object)
+
+        # Swap the first two dimensions (output_port, batch) to (batch, output_port)
+        all_output_values = all_output_values.swapaxes(0, 1)
+
         pytorch_rep.all_output_values = all_output_values
 
         # Get values of TARGET nodes

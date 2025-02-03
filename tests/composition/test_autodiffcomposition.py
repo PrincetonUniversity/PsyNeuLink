@@ -3935,4 +3935,3 @@ def test_training_xor_with_batching():
               execution_mode=autodiff_mode)
 
     np.testing.assert_allclose(torch_losses, xor.torch_losses.flatten(), rtol=1e-5)
-

@@ -2664,7 +2664,7 @@ class Mechanism_Base(Mechanism):
                                   format(num_inputs, self.name,  num_input_ports ))
         for input_item, input_port in zip(input, self.input_ports):
 
-            if input_item.dtype == np.dtype('O'):
+            if type(input_item) == np.ndarray and input_item.dtype == np.dtype('O'):
                 input_item = input_item.item()
 
             if input_port.default_input_shape.size == np.array(input_item).size:
