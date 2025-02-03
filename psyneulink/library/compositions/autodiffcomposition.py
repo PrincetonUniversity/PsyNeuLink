@@ -1620,12 +1620,17 @@ class AutodiffComposition(Composition):
 
     def _update_results(self, results, trial_output, execution_mode, synch_with_pnl_options, context):
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
+
+            # Check if the trial_output is atleast 3D
+            is_output_3d = trial_output.ndim >= 3 or (trial_output.ndim == 2 and len(trial_output) > 0 and
+                                                      isinstance(trial_output[0, 0], (np.ndarray, list)))
+
             # FIX: FOR NOW, USE THIS FOR BOTH TRIAL AND MINIBATCH, SINCE CURRENTLY NO DIFFERENCE;
             #      NEED TO FIGURE OUT WHAT TO DO ABOUT UPDATING RESULTS ONCE TRUE BATCHING IS IMPLEMENTED
             if (RESULTS in synch_with_pnl_options
                     and synch_with_pnl_options[RESULTS] in {TRIAL, MINIBATCH}):
                 # Use Composition's own _update_results method since no savings when done trial-by-trial
-                if not self.batched_results:
+                if not self.batched_results and is_output_3d:
                     for out in trial_output:
                         super()._update_results(results, out, execution_mode, synch_with_pnl_options, context)
                 else:
@@ -1634,7 +1639,7 @@ class AutodiffComposition(Composition):
             elif (RESULTS in synch_with_pnl_options
                     and synch_with_pnl_options[RESULTS] == RUN):
                 # Use pytorch_reps method to keep a local list of results that are copied to autodiff.results after run
-                if not self.batched_results:
+                if not self.batched_results and is_output_3d:
                     for out in trial_output:
                         self.parameters.pytorch_representation._get(context).retain_results(out)
                 else:
