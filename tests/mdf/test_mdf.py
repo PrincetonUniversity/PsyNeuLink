@@ -443,6 +443,7 @@ def test_generate_script_from_mdf(filename, composition_name, fmt, tmp_path):
 # test for simple crashes by Components unused in sample models
 @pytest.mark.parametrize(
     'component_type', [
+        pnl.AutodiffComposition, pnl.EMComposition,
         pnl.LCAMechanism, pnl.RecurrentTransferMechanism,
     ]
 )
