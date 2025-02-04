@@ -505,35 +505,11 @@ class GRUComposition(AutodiffComposition):
             Attributes
             ----------
 
-                concatenate_queries
-                    see `concatenate_queries <GRUComposition.concatenate_queries>`
-
-                    :default value: False
-                    :type: ``bool``
-
                 enable_learning
                     see `enable_learning <GRUComposition.enable_learning>`
 
                     :default value: True
                     :type: ``bool``
-
-                field_names
-                    see `field_names <GRUComposition.field_names>`
-
-                    :default value: None
-                    :type: ``list``
-
-                field_weights
-                    see `field_weights <GRUComposition.field_weights>`
-
-                    :default value: None
-                    :type: ``numpy.ndarray``
-
-                learn_field_weights
-                    see `learn_field_weights <GRUComposition.learn_field_weights>`
-
-                    :default value: True
-                    :type: ``numpy.ndarray``
 
                 learning_rate
                     see `learning_results <GRUComposition.learning_rate>`
@@ -541,154 +517,17 @@ class GRUComposition(AutodiffComposition):
                     :default value: []
                     :type: ``list``
 
-                memory
-                    see `memory <GRUComposition.memory>`
-
-                    :default value: None
-                    :type: ``numpy.ndarray``
-
-                memory_capacity
-                    see `memory_capacity <GRUComposition.memory_capacity>`
-
-                    :default value: 1000
-                    :type: ``int``
-
-                memory_decay_rate
-                    see `memory_decay_rate <GRUComposition.memory_decay_rate>`
-
-                    :default value: 0.001
-                    :type: ``float``
-
-                memory_template
-                    see `memory_template <GRUComposition.memory_template>`
-
-                    :default value: np.array([[0],[0]])
-                    :type: ``np.ndarray``
-
-                normalize_field_weights
-                    see `normalize_field_weights <GRUComposition.normalize_field_weights>`
-
-                    :default value: True
-                    :type: ``bool``
-
-                normalize_memories
-                    see `normalize_memories <GRUComposition.normalize_memories>`
-
-                    :default value: True
-                    :type: ``bool``
-
-                purge_by_field_weights
-                    see `purge_by_field_weights <GRUComposition.purge_by_field_weights>`
-
-                    :default value: False
-                    :type: ``bool``
-
                 random_state
                     see `random_state <NormalDist.random_state>`
 
                     :default value: None
                     :type: ``numpy.random.RandomState``
 
-                softmax_gain
-                    see `softmax_gain <GRUComposition.softmax_gain>`
-                    :default value: 1.0
-                    :type: ``float, ADAPTIVE or CONTROL``
-
-                softmax_choice
-                    see `softmax_choice <GRUComposition.softmax_choice>`
-                    :default value: WEIGHTED_AVG
-                    :type: ``keyword``
-
-                softmax_threshold
-                    see `softmax_threshold <GRUComposition.softmax_threshold>`
-                    :default value: .001
-                    :type: ``float``
-
-                storage_prob
-                    see `storage_prob <GRUComposition.storage_prob>`
-
-                    :default value: 1.0
-                    :type: ``float``
         """
-        memory = Parameter(None, loggable=True, getter=_memory_getter, read_only=True)
-        memory_template = Parameter([[0],[0]], structural=True, valid_types=(tuple, list, np.ndarray), read_only=True)
-        memory_capacity = Parameter(1000, structural=True)
-        field_names = Parameter(None, structural=True)
-        field_weights = Parameter([1], setter=field_weights_setter)
-        learn_field_weights = Parameter(False, structural=True)
         learning_rate = Parameter(.001, modulable=True)
-        normalize_field_weights = Parameter(True)
-        concatenate_queries = Parameter(False, structural=True)
-        normalize_memories = Parameter(True)
-        softmax_gain = Parameter(1.0, modulable=True)
-        softmax_threshold = Parameter(.001, modulable=True, specify_none=True)
-        softmax_choice = Parameter(WEIGHTED_AVG, modulable=False, specify_none=True)
-        storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        memory_decay_rate = Parameter(AUTO, modulable=True)
-        purge_by_field_weights = Parameter(False, structural=True)
         enable_learning = Parameter(True, structural=True)
-        target_fields = Parameter(None, read_only=True, structural=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED(), modulable=True, setter=_seed_setter)
-
-        def _validate_memory_template(self, memory_template):
-            if isinstance(memory_template, tuple):
-                if not len(memory_template) in {2,3}:
-                    return f"must be length either 2 or 3 if it is a tuple (used to specify shape)."
-                if not all(isinstance(item, int) for item in memory_template):
-                    return f"must have only integers as entries."
-            if isinstance(memory_template, (list, np.ndarray)):
-                memory_template = np.array(memory_template)
-                if memory_template.ndim not in {1,2,3}:
-                    return f"must be either 2 or 3d."
-                if not all(isinstance(item, (list, np.ndarray)) for item in memory_template):
-                    return f"must be a list or array of lists or arrays."
-                # if not all(isinstance(item, (int, float)) for sublist in memory_template for item in sublist):
-                #     return f"must be a list or array of lists or arrays of integers or floats."
-            else:
-                return f"must be tuple of length 2 or 3, or a list or array that is either 2 or 3d."
-
-        def _validate_field_names(self, field_names):
-            if field_names and not all(isinstance(item, str) for item in field_names):
-                return f"must be a list of strings."
-
-        def _validate_field_weights(self, field_weights):
-            if field_weights is not None:
-                if not np.atleast_1d(field_weights).ndim == 1:
-                    return f"must be a scalar, list of scalars, or 1d array."
-                if len(field_weights) == 1 and field_weights[0] is None:
-                    raise GRUCompositionError(f"must be a scalar, since there is only one field specified.")
-                if any([field_weight < 0 for field_weight in field_weights if field_weight is not None]):
-                    return f"must be all be positive values."
-
-        def _validate_normalize_field_weights(self, normalize_field_weights):
-            if not isinstance(normalize_field_weights, bool):
-                return f"must be all be a boolean value."
-
-        def _validate_learn_field_weights(self, learn_field_weights):
-            if isinstance(learn_field_weights, (list, np.ndarray)):
-                if not all(isinstance(item, (bool, int, float)) for item in learn_field_weights):
-                    return f"can only contains bools, ints or floats as entries."
-            elif not isinstance(learn_field_weights, bool):
-                return f"must be a bool or list of bools, ints and/or floats."
-
-        def _validate_memory_decay_rate(self, memory_decay_rate):
-            if memory_decay_rate is None or memory_decay_rate == AUTO:
-                return
-            if not is_numeric_scalar(memory_decay_rate) and not (0 <= memory_decay_rate <= 1):
-                return f"must be a float in the interval [0,1]."
-
-        def _validate_softmax_gain(self, softmax_gain):
-            if not is_numeric_scalar(softmax_gain) and softmax_gain not in {ADAPTIVE, CONTROL}:
-                return f"must be a scalar or one the keywords '{ADAPTIVE}' or '{CONTROL}'."
-
-        def _validate_softmax_threshold(self, softmax_threshold):
-            if softmax_threshold is not None and (not is_numeric_scalar(softmax_threshold) or softmax_threshold <= 0):
-                return f"must be a scalar greater than 0."
-
-        def _validate_storage_prob(self, storage_prob):
-            if not is_numeric_scalar(storage_prob) and not (0 <= storage_prob <= 1):
-                return f"must be a float in the interval [0,1]."
 
     @check_user_specified
     def __init__(self,
