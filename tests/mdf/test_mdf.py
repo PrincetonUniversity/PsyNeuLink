@@ -438,3 +438,14 @@ def test_generate_script_from_mdf(filename, composition_name, fmt, tmp_path):
     mdf_file.write_text(serialized)
 
     assert pnl.generate_script_from_mdf(mdf_file.read_text()) == pnl.generate_script_from_mdf(mdf_fname)
+
+
+# test for simple crashes by Components unused in sample models
+@pytest.mark.parametrize(
+    'component_type', [
+        pnl.LCAMechanism, pnl.RecurrentTransferMechanism,
+    ]
+)
+def test_as_mdf_model_defaults(component_type):
+    c = component_type()
+    c.as_mdf_model()
