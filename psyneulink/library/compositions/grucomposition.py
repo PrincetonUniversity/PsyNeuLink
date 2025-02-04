@@ -153,6 +153,8 @@ __all__ = ['GRUComposition', 'GRUCompositionError']
 
 
 # Node names
+INPUT_NODE_NAME = 'INPUT'
+INPUT_AFFIX = f' [{INPUT_NODE_NAME}]'
 HIDDEN_LAYER_NODE_NAME = 'HIDDEN LAYER'
 HIDDEN_LAYER_AFFIX = f' [{HIDDEN_LAYER_NODE_NAME}]'
 RESET_GATE_NAME = 'RESET GATE'
@@ -175,22 +177,26 @@ class GRUCompositionError(CompositionError):
     def nodes(self):
         """Return all Nodes assigned to the field."""
         return [node for node in
-                [self.hidden_layer_node,
-                 self.reset_gate_node,
-                 self.update_gate_node,
-                 self.new_gate_node,
+                [self.input_node,
+                self.hidden_layer_node,
+                self.reset_gate_node,
+                self.update_gate_node,
+                self.new_gate_node,
                 if node is not None]
 
     @property
     def projections(self):
         """Return all Projections assigned to the field."""
-        return [proj for proj in [self.reset_gating_projection,
+        return [proj for proj in [self.input_to_hidden_projection
+                                  self.input_to_reset_gate_projection,
+                                  self.input_to_update_gate_projection,
+                                  self.input_to_new_gate_projection,
+                                  self.reset_gating_projection,
                                   self.update_gating_projection,
                                   self.new_gating_projection,
                                   self.input_projection,
                                   self.hidden_layer_recurrent_projection]
                                   if proj is not None]
-    @property
 
 
 class GRUComposition(AutodiffComposition):
@@ -206,290 +212,44 @@ class GRUComposition(AutodiffComposition):
     Arguments
     ---------
 
-    memory_template : tuple, list, 2d or 3d array : default [[0],[0]]
-        specifies the shape of an item to be stored in the GRUComposition's memory
-        (see `memory_template <GRUComposition_Memory_Template>` for details).
-
-    memory_fill : scalar or tuple : default 0
-        specifies the value used to fill the memory when it is initialized
-        (see `memory_fill <GRUComposition_Memory_Fill>` for details).
-
-    memory_capacity : int : default None
-        specifies the number of items that can be stored in the GRUComposition's memory;
-        (see `memory_capacity <GRUComposition_Memory_Capacity>` for details).
-
-    fields : dict[tuple[field weight, learning specification]] : default None
-        each key must a string that is the name of a field, and its value a dict or tuple that specifies that field's
-        `field_weight <GRUComposition.field_weights>`, `learn_field_weights <GRUComposition.learn_field_weights>`, and
-        `target_fields <GRUComposition.target_fields>` specifications (see `fields <GRUComposition_Fields>` for details
-        of specificaton format). The **fields** arg replaces the **field_names**, **field_weights**
-        **learn_field_weights**, and **target_fields** arguments, and specifying any of these raises an error.
-
-    field_names : list or tuple : default None
-        specifies the names assigned to each field in the memory_template (see `field names <GRUComposition_Field_Names>`
-        for details). If the **fields** argument is specified, this is not necessary and specifying raises an error.
-
-    field_weights : list or tuple : default (1,0)
-        specifies the relative weight assigned to each key when matching an item in memory (see `field weights
-        <GRUComposition_Field_Weights>` for additional details). If the **fields** argument is specified, this
-        is not necessary and specifying raises an error.
-
-    learn_field_weights : bool or list[bool, int, float]: default False
-        specifies whether the `field_weights <GRUComposition.field_weights>` are learnable and, if so, optionally what
-        the learning_rate is for each field (see `learn_field_weights <GRUComposition_Field_Weights_Learning>` for
-        specifications). If the **fields** argument is specified, this is not necessary and specifying raises an error.
-
     learning_rate : float : default .01
         specifies the default learning_rate for `field_weights <GRUComposition.field_weights>` not
         specified in `learn_field_weights <GRUComposition.learn_field_weights>` (see `learning_rate
         <GRUComposition_Field_Weights_Learning>` for additional details).
 
-    normalize_field_weights : bool : default True
-        specifies whether the **fields_weights** are normalized over the number of keys, or used as absolute
-        weighting values when retrieving an item from memory (see `normalize_field weights
-        <GRUComposition_Normalize_Field_Weights>` for additional details).
-
-    concatenate_queries : bool : default False
-        specifies whether to concatenate the keys into a single field before matching them to items in
-        the corresponding fields in memory (see `concatenate keys <GRUComposition_Concatenate_Queries>` for details).
-
-    normalize_memories : bool : default True
-        specifies whether keys and memories are normalized before computing their dot product (similarity)
-        (see `Match memories by field <GRUComposition_Processing>` for additional details).
-
-    softmax_gain : float, ADAPTIVE or CONTROL : default 1.0
-        specifies the temperature used for softmax normalizing the distance of queries and keys in memory
-        (see `Softmax normalize matches over fields <GRUComposition_Processing>` for additional details).
-
-    softmax_threshold : float : default .0001
-        specifies the threshold used to mask out small values in the softmax calculation
-        see *mask_threshold* under `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for details).
-
-    softmax_choice : WEIGHTED_AVG, ARG_MAX, PROBABILISTIC : default WEIGHTED_AVG
-        specifies how the softmax over distances of queries and keys in memory is used for retrieval
-        (see `softmax_choice <GRUComposition_Softmax_Choice>` for a description of each option).
-
-    storage_prob : float : default 1.0
-        specifies the probability that an item will be stored in `memory <GRUComposition.memory>`
-        when the GRUComposition is executed (see `Retrieval and Storage <GRUComposition_Storage>` for
-        additional details).
-
-    memory_decay_rate : float : AUTO
-        specifies the rate at which items in the GRUComposition's memory decay
-        (see `memory_decay_rate <GRUComposition_Memory_Decay_Rate>` for details).
-
-    purge_by_field_weights : bool : False
-        specifies whether `fields_weights <GRUComposition.field_weights>` are used to determine which memory to
-        replace when a new one is stored (see `purge_by_field_weight <GRUComposition_Purge_by_Weight>` for details).
-
     enable_learning : bool : default True
         specifies whether learning is enabled for the EMCComposition (see `Learning <GRUComposition_Learning>`
         for additional details); **use_gating_for_weighting** must be False.
 
-    target_fields : list[bool]: default None
-        specifies whether a learning pathway is constructed for each `field <GRUComposition_Entries_and_Fields>`
-        of the GRUComposition.  If it is a list, each item must be ``True`` or ``False`` and the number of items
-        must be equal to the number of `fields <GRUComposition_Fields> specified (see `Target Fields
-         <GRUComposition_Target_Fields>` for additional details). If the **fields** argument is specified,
-         this is not necessary and specifying raises an error.
-
-    # 7/10/24 FIX: STILL TRUE?  DOES IT PRECLUDE USE OF GRUComposition as a nested Composition??
-    .. technical_note::
-        use_storage_node : bool : default True
-            specifies whether to use a `LearningMechanism` to store entries in `memory <GRUComposition.memory>`.
-            If False, a method on GRUComposition is used rather than a LearningMechanism. This is meant for
-            debugging, and precludes use of `import_composition <Composition.import_composition>` to integrate
-            the GRUComposition into another Composition;  to do so, use_storage_node must be True (default).
-
-    use_gating_for_weighting : bool : default False
-        specifies whether to use output gating to weight the `match_nodes <GRUComposition.match_node>` instead of
-        a standard input (see `Weight distances <GRUComposition_Field_Weighting>` for additional details).
 
     Attributes
     ----------
-
-    memory : ndarray
-        3d array of entries in memory, in which each row (axis 0) is an entry, each column (axis 1) is a field, and
-        each item (axis 2) is the value for the corresponding field (see `GRUComposition_Memory_Specification`  for
-        additional details).
-
-        .. note::
-           This is a read-only attribute;  memories can be added to the GRUComposition's memory either by
-           COMMENT:
-           using its `add_to_memory <GRUComposition.add_to_memory>` method, or
-           COMMENT
-           executing its `run <Composition.run>` or learn methods with the entry as the ``inputs`` argument.
-
-    fields : ContentAddressableList[Field]
-        list of `Field` objects, each of which contains information about the nodes and values of a field in the
-        GRUComposition's memory (see `Field`).
-
-    .. _GRUComposition_Parameters:
-
-    memory_capacity : int
-        determines the number of items that can be stored in `memory <GRUComposition.memory>`
-        (see `memory_capacity <GRUComposition_Memory_Capacity>` for additional details).
-
-    field_names : list[str]
-        determines which names that can be used to label fields in `memory <GRUComposition.memory>`
-        (see `field_names <GRUComposition_Field_Names>` for additional details).
-
-    field_weights : tuple[float]
-        determines which fields of the input are treated as "keys" (non-zero values) that are used to match entries in
-        `memory <GRUComposition.memory>` for retrieval, and which are used as "values" (zero values) that are stored
-        and retrieved from memory but not used in the match process (see `Match memories by field
-        <GRUComposition_Processing>`; also determines the relative contribution of each key field to the match process;
-        see `field_weights <GRUComposition_Field_Weights>` additional details. The field_weights can be changed by
-        assigning a new list of weights to the `field_weights <GRUComposition.field_weights>` attribute, however only
-        the weights for fields used as `keys <GRUComposition_Entries_and_Fields>` can be changed (see
-        `GRUComposition_Field_Weights_Change_Note` for additional details).
-
-    learn_field_weights : bool or list[bool, int, float]
-        determines whether the `field_weight <GRUComposition.field_weights>` for each `field <GRUComposition_Fields>
-        is learnable (see `learn_field_weights <GRUComposition_Learning>` for additional details).
 
     learning_rate : float
         determines the default learning_rate for `field_weights <GRUComposition.field_weights>`
         not specified in `learn_field_weights <GRUComposition.learn_field_weights>`
         (see `learning_rate <GRUComposition_Field_Weights_Learning>` for additional details).
 
-    normalize_field_weights : bool
-        determines whether `fields_weights <GRUComposition.field_weights>` are normalized over the number of keys, or
-        used as absolute weighting values when retrieving an item from memory (see `normalize_field weights
-        <GRUComposition_Normalize_Field_Weights>` for additional details).
-
-    concatenate_queries : bool
-        determines whether keys are concatenated into a single field before matching them to items in `memory
-        <GRUComposition.memory (see `concatenate keys <GRUComposition_Concatenate_Queries>` for additional details).
-
-    normalize_memories : bool
-        determines whether keys and memories are normalized before computing their dot product (similarity)
-        (see `Match memories by field <GRUComposition_Processing>` for additional details).
-
-    softmax_gain : float, ADAPTIVE or CONTROL
-        determines gain (inverse temperature) used for softmax normalizing the summed distances of queries
-        and keys in memory by the `SoftMax` Function of the `softmax_node <GRUComposition.softmax_node>`
-        (see `Softmax normalize distances <GRUComposition_Processing>` for additional details).
-
-    softmax_threshold : float
-        determines the threshold used to mask out small values in the softmax calculation
-        (see *mask_threshold* under `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for details).
-
-    softmax_choice : WEIGHTED_AVG, ARG_MAX or PROBABILISTIC
-        determines how the softmax over distances of queries and keys in memory is used for retrieval
-        (see `softmax_choice <GRUComposition_Softmax_Choice>` for a description of each option).
-
-    storage_prob : float
-        determines the probability that an item will be stored in `memory <GRUComposition.memory>`
-        when the GRUComposition is executed (see `Retrieval and Storage <GRUComposition_Storage>` for
-        additional details).
-
-    memory_decay_rate : float
-        determines the rate at which items in the GRUComposition's memory decay
-        (see `memory_decay_rate <GRUComposition_Memory_Decay_Rate>` for details).
-
-    purge_by_field_weights : bool
-        determines whether `fields_weights <GRUComposition.field_weights>` are used to determine which memory to
-        replace when a new one is stored (see `purge_by_field_weight <GRUComposition_Purge_by_Weight>` for details).
-
     enable_learning : bool
         determines whether learning is enabled for the EMCComposition
         (see `Learning <GRUComposition_Learning>` for additional details).
 
-    target_fields : list[bool]
-        determines which fields convey error signals during learning
-        (see `Target Fields <GRUComposition_Target_Fields>` for additional details).
-
     .. _GRUComposition_Nodes:
 
-    query_input_nodes : list[ProcessingMechanism]
-        `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receive keys used to determine the item
-        to be retrieved from `memory <GRUComposition.memory>`, and then themselves stored in `memory
-        <GRUComposition.memory>` (see `Match memories by field <GRUComposition_Processing>` for additional details).
-        By default these are assigned the name *KEY_n_INPUT* where n is the field number (starting from 0);
-        however, if `field_names <GRUComposition.field_names>` is specified, then the name of each query_input_node
-        is assigned the corresponding field name appended with * [QUERY]*.
+    input_node : list[ProcessingMechanism]
+        `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receives...
 
-    value_input_nodes : list[ProcessingMechanism]
-        `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receive values to be stored in `memory
-        <GRUComposition.memory>`; these are not used in the matching process used for retrieval.  By default these
-        are assigned the name *VALUE_n_INPUT* where n is the field number (starting from 0);  however, if
-        `field_names <GRUComposition.field_names>` is specified, then the name of each value_input_node is assigned
-        the corresponding field name appended with * [VALUE]*.
+    hidden_layer_node : list[ProcessingMechanism]
+        `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receives...
 
-    concatenate_queries_node : ProcessingMechanism
-        `ProcessingMechanism` that concatenates the inputs to `query_input_nodes <GRUComposition.query_input_nodes>`
-        into a single vector used for the matching processing if `concatenate keys <GRUComposition.concatenate_queries>`
-        is True. This is not created if the **concatenate_queries** argument to the GRUComposition's constructor is
-        False or is overridden (see `concatenate_queries <GRUComposition_Concatenate_Queries>`), or there is only one
-        query_input_node. This node is named *CONCATENATE_QUERIES*
+    reset_gate_node : list[ProcessingMechanism]
+        `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receives
 
-    match_nodes : list[ProcessingMechanism]
-        `ProcessingMechanisms <ProcessingMechanism>` that compute the dot product of each query and the key stored in
-        the corresponding field of `memory <GRUComposition.memory>` (see `Match memories by field
-        <GRUComposition_Processing>` for additional details). These are named the same as the corresponding
-        `query_input_nodes <GRUComposition.query_input_nodes>` appended with the suffix *[MATCH to KEYS]*.
+    update_gate_node : list[ProcessingMechanism]
+        `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receives
 
-    field_weight_nodes : list[ProcessingMechanism or GatingMechanism]
-        Nodes used to weight the distances computed by the `match_nodes <GRUComposition.match_nodes>` with the
-        `field weight <GRUComposition.field_weights>` for the corresponding `key field <GRUComposition_Fields>`
-        (see `Weight distances <GRUComposition_Field_Weighting>` for implementation). These are named the same
-        as the corresponding `query_input_nodes <GRUComposition.query_input_nodes>`.
-
-    weighted_match_nodes : list[ProcessingMechanism]
-        `ProcessingMechanisms <ProcessingMechanism>` that combine the `field weight <GRUComposition.field_weights>`
-        for each `key field <GRUComposition_Fields>` with the dot product computed by the corresponding the
-        `match_node <GRUComposition.match_nodes>`. These are only implemented if `use_gating_for_weighting
-        <GRUComposition.use_gating_for_weighting>` is False (see `Weight distances <GRUComposition_Field_Weighting>`
-        for details), and are named the same as the corresponding `query_input_nodes <GRUComposition.query_input_nodes>`
-        appended with the suffix *[WEIGHTED MATCH]*.
-
-    combined_matches_node : ProcessingMechanism
-        `ProcessingMechanism` that receives the weighted distances from the `weighted_match_nodes
-        <GRUComposition.weighted_match_nodes>` if more than one `key field <GRUComposition_Fields>` is specified
-        (or directly from `match_nodes <GRUComposition.match_nodes>` if `use_gating_for_weighting
-        <GRUComposition.use_gating_for_weighting>` is True), and combines them into a single vector that is passed
-        to the `softmax_node <GRUComposition.softmax_node>` for retrieval. This node is named *COMBINE MATCHES*.
-
-    softmax_node : list[ProcessingMechanism]
-        `ProcessingMechanisms <ProcessingMechanism>` that computes the softmax over the summed distances of keys
-        and memories (output of the `combined_match_node <GRUComposition.combined_match_node>`)
-        from the corresponding `match_nodes <GRUComposition.match_nodes>` (see `Softmax over summed distances
-        <GRUComposition_Processing>` for additional details).  This is named *RETRIEVE* (as it yields the
-        softmax-weighted average over the keys in `memory <GRUComposition.memory>`).
-
-    softmax_gain_control_node : list[ControlMechanism]
-        `ControlMechanisms <ControlMechanism>` that adaptively control the `softmax_gain <GRUComposition.softmax_gain>`
-        of the `softmax_node <GRUComposition.softmax_node>`. This is implemented only if `softmax_gain
-        <GRUComposition.softmax_gain>` is specified as *CONTROL* (see `softmax_gain <GRUComposition_Softmax_Gain>` for
-        details).
-
-    retrieved_nodes : list[ProcessingMechanism]
-        `ProcessingMechanisms <ProcessingMechanism>` that receive the vector retrieved for each field in `memory
-        <GRUComposition.memory>` (see `Retrieve values by field <GRUComposition_Processing>` for additional details).
-        These are assigned the same names as the `query_input_nodes <GRUComposition.query_input_nodes>` and
-        `value_input_nodes <GRUComposition.value_input_nodes>` to which they correspond appended with the suffix
-        * [RETRIEVED]*, and are in the same order as  `input_nodes <GRUComposition.input_nodes>`
-        to which to which they correspond.
-
-    storage_node : EMStorageMechanism
-        `EMStorageMechanism` that receives inputs from the `query_input_nodes <GRUComposition.query_input_nodes>` and
-        `value_input_nodes <GRUComposition.value_input_nodes>`, and stores these in the corresponding field of`memory
-        <GRUComposition.memory>` with probability `storage_prob <GRUComposition.storage_prob>` after a retrieval has been
-        made (see `Retrieval and Storage <GRUComposition_Storage>` for additional details). This node is named *STORE*.
-
-        .. technical_note::
-           The `storage_node <GRUComposition.storage_node>` is assigned a Condition to execute after the `retrieved_nodes
-           <GRUComposition.retrieved_nodes>` have executed, to ensure that storage occurs after retrieval, but before
-           any subequent processing is done (i.e., in a composition in which the GRUComposition may be embededded.
-
-    input_nodes : list[ProcessingMechanism]
-        Full list of `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` in the same order specified in the
-        **field_names** argument of the constructor and in `self.field_names <GRUComposition.field_names>`.
-
-    query_and_value_input_nodes : list[ProcessingMechanism]
-        Full list of `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` ordered with query_input_nodes first
-        followed by value_input_nodes; used primarily for internal computations.
+    new_gate_node : list[ProcessingMechanism]
+        `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receives
 
     """
 
@@ -531,114 +291,24 @@ class GRUComposition(AutodiffComposition):
 
     @check_user_specified
     def __init__(self,
-                 memory_template:Union[tuple, list, np.ndarray]=[[0],[0]],
-                 memory_capacity:Optional[int]=None,
-                 memory_fill:Union[int, float, tuple, RANDOM]=0,
-                 fields:Optional[dict]=None,
-                 field_names:Optional[list]=None,
-                 field_weights:Union[int,float,list,tuple]=None,
-                 learn_field_weights:Union[bool,list,tuple]=None,
                  learning_rate:float=None,
-                 normalize_field_weights:bool=True,
-                 concatenate_queries:bool=False,
-                 normalize_memories:bool=True,
-                 softmax_gain:Union[float, ADAPTIVE, CONTROL]=1.0,
-                 softmax_threshold:Optional[float]=.001,
-                 softmax_choice:Optional[Union[WEIGHTED_AVG, ARG_MAX, PROBABILISTIC]]=WEIGHTED_AVG,
-                 storage_prob:float=1.0,
-                 memory_decay_rate:Union[float,AUTO]=AUTO,
-                 purge_by_field_weights:bool=False,
                  enable_learning:bool=True,
-                 target_fields:Optional[Union[list, tuple, np.ndarray]]=None,
-                 use_storage_node:bool=True,
-                 use_gating_for_weighting:bool=False,
                  random_state=None,
                  seed=None,
                  name="EM_Composition",
                  **kwargs):
 
-        # Construct memory --------------------------------------------------------------------------------
-
-        memory_fill = memory_fill or 0 # FIX: GET RID OF THIS ONCE IMPLEMENTED AS A Parameter
-        self._validate_memory_specs(memory_template,
-                                    memory_capacity,
-                                    memory_fill,
-                                    field_weights,
-                                    field_names,
-                                    name)
-
-        memory_template, memory_capacity = self._parse_memory_template(memory_template,
-                                                                       memory_capacity,
-                                                                       memory_fill)
-
-        self.fields = ContentAddressableList(component_type=Field)
-
-        (field_names,
-         field_weights,
-         learn_field_weights,
-         target_fields,
-         concatenate_queries) = self._parse_fields(fields,
-                                                   field_names,
-                                                   field_weights,
-                                                   learn_field_weights,
-                                                   learning_rate,
-                                                   normalize_field_weights,
-                                                   concatenate_queries,
-                                                   normalize_memories,
-                                                   target_fields,
-                                                   name)
-        if memory_decay_rate is AUTO:
-            memory_decay_rate = 1 / memory_capacity
-
-        self._use_storage_node = use_storage_node
-        self._use_gating_for_weighting = use_gating_for_weighting
-
-        if softmax_gain == CONTROL:
-            self.parameters.softmax_gain.modulable = False
-
         # Instantiate Composition -------------------------------------------------------------------------
 
         super().__init__(name=name,
-                         memory_template = memory_template,
-                         memory_capacity = memory_capacity,
-                         field_names = field_names,
-                         field_weights = field_weights,
-                         learn_field_weights=learn_field_weights,
                          learning_rate = learning_rate,
-                         normalize_field_weights = normalize_field_weights,
-                         concatenate_queries = concatenate_queries,
-                         normalize_memories = normalize_memories,
-                         softmax_gain = softmax_gain,
-                         softmax_threshold = softmax_threshold,
-                         softmax_choice = softmax_choice,
-                         storage_prob = storage_prob,
-                         memory_decay_rate = memory_decay_rate,
-                         purge_by_field_weights = purge_by_field_weights,
                          enable_learning = enable_learning,
-                         target_fields = target_fields,
                          random_state = random_state,
                          seed = seed,
                          **kwargs
                          )
 
-        self._validate_options_with_learning(use_gating_for_weighting,
-                                             enable_learning,
-                                             softmax_choice)
-
-        self._construct_pathways(self.memory_template,
-                                 self.memory_capacity,
-                                 self.field_weights,
-                                 self.concatenate_queries,
-                                 self.normalize_memories,
-                                 self.softmax_gain,
-                                 self.softmax_threshold,
-                                 self.softmax_choice,
-                                 self.storage_prob,
-                                 self.memory_decay_rate,
-                                 self._use_storage_node,
-                                 self.learn_field_weights,
-                                 self.enable_learning,
-                                 self._use_gating_for_weighting)
+        self._construct_pathways()
 
         # if torch_available:
         #     from psyneulink.library.compositions.pytorchGRUCompositionwrapper import PytorchGRUCompositionWrapper
@@ -646,411 +316,6 @@ class GRUComposition(AutodiffComposition):
 
         # Final Configuration and Clean-up ---------------------------------------------------------------------------
 
-        # Assign learning-related attributes
-        self._set_learning_attributes()
-
-        if self._use_storage_node:
-            # ---------------------------------------
-            #
-            # CONDITION:
-            self.scheduler.add_condition(self.storage_node, conditions.AllHaveRun(*self.retrieved_nodes))
-            #
-            # Generates expected results, but execution_sets has a second set for INPUT nodes
-            #    and the match_nodes again with storage_node
-            #
-            # ---------------------------------------
-            #
-            # CONDITION:
-            # self.scheduler.add_condition(self.storage_node, conditions.AllHaveRun(*self.retrieved_nodes,
-            #                                                               time_scale=TimeScale.PASS))
-            # Hangs (or takes inordinately long to run),
-            #     and evaluating list(execution_list) at LINE 11233 of composition.py hangs:
-            #
-            # ---------------------------------------
-            # CONDITION:
-            # self.scheduler.add_condition(self.storage_node, conditions.JustRan(self.retrieved_nodes[0]))
-            #
-            # Hangs (or takes inordinately long to run),
-            #     and evaluating list(execution_list) at LINE 11233 of composition.py hangs:
-            #
-            # ---------------------------------------
-            # CONDITION:
-            # self.scheduler.add_condition_set({n: conditions.BeforeNCalls(n, 1) for n in self.nodes})
-            # self.scheduler.add_condition(self.storage_node, conditions.AllHaveRun(*self.retrieved_nodes))
-            #
-            # Generates the desired execution set for a single pass, and runs with expected results,
-            #   but raises a warning messages for every node of the following sort:
-            # /Users/jdc/PycharmProjects/PsyNeuLink/psyneulink/core/scheduling/scheduler.py:120:
-            #   UserWarning: BeforeNCalls((EMStorageMechanism STORAGE MECHANISM), 1) is dependent on
-            #   (EMStorageMechanism STORAGE MECHANISM), but you are assigning (EMStorageMechanism STORAGE MECHANISM)
-            #   as its owner. This may result in infinite loops or unknown behavior.
-            # super().add_condition_set(conditions)
-
-        # Suppress warnings for no efferent Projections
-        for node in self.value_input_nodes:
-            node.output_port.parameters.require_projection_in_composition.set(False, override=True)
-        self.softmax_node.output_port.parameters.require_projection_in_composition.set(False, override=True)
-
-        # Suppress field_weight_nodes as INPUT nodes of the Composition
-        for node in self.field_weight_nodes:
-            self.exclude_node_roles(node, NodeRole.INPUT)
-
-        # Suppress value_input_nodes as OUTPUT nodes of the Composition
-        for node in self.value_input_nodes:
-            self.exclude_node_roles(node, NodeRole.OUTPUT)
-
-        # Warn if divide by zero will occur due to memory initialization
-        memory = self.memory
-        memory_capacity = self.memory_capacity
-        if not np.any([
-            np.any([memory[i][j] for i in range(memory_capacity)])
-            for j in range(self.num_keys)
-        ]):
-            warnings.warn(f"Memory initialized with at least one field that has all zeros; "
-                          f"a divide by zero will occur if 'normalize_memories' is True. "
-                          f"This can be avoided by using 'memory_fill' to initialize memories with non-zero values.")
-
-    # *****************************************************************************************************************
-    # ***********************************  Memory Construction Methods  ***********************************************
-    # *****************************************************************************************************************
-    #region
-    def _validate_memory_specs(self, memory_template, memory_capacity, memory_fill, field_weights, field_names, name):
-        """Validate the memory_template, field_weights, and field_names arguments
-        """
-
-        # memory_template must specify a 2D array:
-        if isinstance(memory_template, tuple):
-        #     if len(memory_template) != 2 or not all(isinstance(item, int) for item in memory_template):
-        #         raise GRUCompositionError(f"The 'memory_template' arg for {name} ({memory_template}) uses a tuple to "
-        #                                  f"shape requires but does not have exactly two integers.")
-            num_fields = memory_template[0]
-            if len(memory_template) == 3:
-                num_entries = memory_template[0]
-            else:
-                num_entries = memory_capacity
-        elif isinstance(memory_template, (list, np.ndarray)):
-            num_entries, num_fields = self._parse_memory_shape(memory_template)
-        else:
-            raise GRUCompositionError(f"Unrecognized specification for "
-                                     f"the 'memory_template' arg ({memory_template}) of {name}.")
-
-        # If a 3d array is specified (i.e., template has multiple entries), ensure all have the same shape
-        if not isinstance(memory_template, tuple) and num_entries > 1:
-            for entry in memory_template:
-                if not (len(entry) == num_fields
-                        and np.all([len(entry[i]) == len(memory_template[0][i]) for i in range(num_fields)])):
-                    raise GRUCompositionError(f"The 'memory_template' arg for {name} must specify a list "
-                                             f"or 2d array that has the same shape for all entries.")
-
-        # Validate memory_fill specification (int, float, or tuple with two scalars)
-        if not (isinstance(memory_fill, (int, float)) or
-                (isinstance(memory_fill, tuple) and len(memory_fill)==2) and
-                all(isinstance(item, (int, float)) for item in memory_fill)):
-            raise GRUCompositionError(f"The 'memory_fill' arg ({memory_fill}) specified for {name} "
-                                     f"must be a float, int or len tuple of ints and/or floats.")
-
-        # If learn_field_weights is a list of bools, it must match the len of 1st dimension (axis 0) of memory_template:
-        if isinstance(self.learn_field_weights, list) and len(self.learn_field_weights) != num_fields:
-            raise GRUCompositionError(f"The number of items ({len(self.learn_field_weights)}) in the "
-                                     f"'learn_field_weights' arg for {name} must match the number of "
-                                     f"fields in memory ({num_fields}).")
-
-        _field_wts = np.atleast_1d(field_weights)
-        _field_wts_len = len(_field_wts)
-
-        # If len of field_weights > 1, must match the len of 1st dimension (axis 0) of memory_template:
-        if field_weights is not None:
-            if (_field_wts_len > 1 and _field_wts_len != num_fields):
-                raise GRUCompositionError(f"The number of items ({_field_wts_len}) in the 'field_weights' arg "
-                                         f"for {name} must match the number of items in an entry of memory "
-                                         f"({num_fields}).")
-            # Deal with this here instead of Parameter._validate_field_weights since this is called before super()
-            if all([fw is None for fw in _field_wts]):
-                raise GRUCompositionError(f"The entries in 'field_weights' arg for {name} can't all be 'None' "
-                                         f"since that will preclude the construction of any keys.")
-
-            if not any(_field_wts):
-                warnings.warn(f"All of the entries in the 'field_weights' arg for {name} "
-                              f"are either None or set to 0; this will result in no retrievals "
-                              f"unless/until one or more of them are changed to a positive value.")
-
-            elif any([fw == 0 for fw in _field_wts if fw is not None]):
-                warnings.warn(f"Some of the entries in the 'field_weights' arg for {name} "
-                              f"are set to 0; those fields will be ignored during retrieval "
-                              f"unless/until they are changed to a positive value.")
-
-        # If field_names has more than one value it must match the first dimension (axis 0) of memory_template:
-        if field_names and len(field_names) != num_fields:
-            raise GRUCompositionError(f"The number of items ({len(field_names)}) "
-                                     f"in the 'field_names' arg for {name} must match "
-                                     f"the number of fields ({_field_wts_len}).")
-
-    def _parse_memory_template(self, memory_template, memory_capacity, memory_fill)->(np.ndarray,int):
-        """Construct memory from memory_template and memory_fill
-        Assign self.memory_template and self.entry_template attributes
-        """
-
-        def _construct_entries(entry_template, num_entries, memory_fill=None)->np.ndarray:
-            """Construct memory entries from memory_template and memory_fill"""
-
-            # Random fill specification
-            if isinstance(memory_fill, tuple):
-                entries = [[np.full(len(field),
-                                    np.random.uniform(memory_fill[1], # upper bound
-                                                      memory_fill[0], # lower bound
-                                                      len(field))).tolist()
-                            for field in entry_template] for i in range(num_entries)]
-            else:
-                # Fill with zeros
-                if memory_fill is None:
-                    entry = entry_template
-                # Fill with specified value
-                elif isinstance(memory_fill, (list, float, int)):
-                    entry = [np.full(len(field), memory_fill).tolist() for field in entry_template]
-                entries = [np.array(entry, dtype=object) for _ in range(num_entries)]
-
-            return np.array(np.array(entries,dtype=object), dtype=object)
-
-        # If memory_template is a tuple, create and fill full memory matrix
-        if isinstance(memory_template, tuple):
-            if len(memory_template) == 2:
-                memory_capacity = memory_capacity or self.defaults.memory_capacity
-                memory = _construct_entries(np.full(memory_template, 0), memory_capacity, memory_fill)
-            else:
-                if memory_capacity and memory_template[0] != memory_capacity:
-                    raise GRUCompositionError(
-                        f"The first item ({memory_template[0]}) of the tuple in the 'memory_template' arg "
-                        f"for {self.name} does not match the specification of the 'memory_capacity' arg "
-                        f"({memory_capacity}); should remove the latter or use a 2-item tuple, list or array in "
-                        f"'memory_template' to specify the shape of entries.")
-                memory_capacity = memory_template[0]
-                memory = _construct_entries(np.full(memory_template[1:], 0), memory_capacity, memory_fill)
-
-        # If memory_template is a list or array
-        else:
-            # Determine whether template is a single entry or full/partial memory specification
-            num_entries, num_fields = self._parse_memory_shape(memory_template)
-
-            # memory_template specifies a single entry
-            if num_entries == 1:
-                memory_capacity = memory_capacity or self.defaults.memory_capacity
-                if np.array([np.nonzero(field) for field in memory_template],dtype=object).any():
-                    memory_fill = None
-                # Otherwise, use memory_fill
-                memory = _construct_entries(memory_template, memory_capacity, memory_fill)
-
-            # If memory template is a full or partial 3d (matrix) specification
-            else:
-                # If all entries are zero, create entire memory matrix with memory_fill
-                if not any(list(np.array(memory_template, dtype=object).flat)):
-                    # Use first entry of zeros as template and replicate for full memory matrix
-                    memory = _construct_entries(memory_template[0], memory_capacity, memory_fill)
-                # If there are any non-zero values, keep specified entries and create rest using memory_fill
-                else:
-                    memory_capacity = memory_capacity or num_entries
-                    if num_entries > memory_capacity:
-                        raise GRUCompositionError(
-                            f"The number of entries ({num_entries}) specified in "
-                            f"the 'memory_template' arg of  {self.name} exceeds the number of entries specified in "
-                            f"its 'memory_capacity' arg ({memory_capacity}); remove the latter or reduce the number"
-                            f"of entries specified in 'memory_template'.")
-                    num_entries_needed = memory_capacity - len(memory_template)
-                    # Get remaining entries populated with memory_fill
-                    remaining_entries = _construct_entries(memory_template[0], num_entries_needed, memory_fill)
-                    assert bool(num_entries_needed == len(remaining_entries))
-                    # If any remaining entries, concatenate them with the entries that were specified
-                    if num_entries_needed:
-                        memory = np.concatenate((np.array(memory_template, dtype=object),
-                                                 np.array(remaining_entries, dtype=object)))
-                    # All entries were specivied, so just retun memory_template
-                    else:
-                        memory = np.array(memory_template, dtype=object)
-
-        # Get shape of single entry
-        self.entry_template = memory[0]
-
-        return memory, memory_capacity
-
-    def _parse_fields(self,
-                      fields,
-                      field_names,
-                      field_weights,
-                      learn_field_weights,
-                      learning_rate,
-                      normalize_field_weights,
-                      concatenate_queries,
-                      normalize_memories,
-                      target_fields,
-                      name)->(list, list, list, bool):
-
-        def _parse_fields_dict(name, fields, num_fields)->(list,list,list,list):
-            """Parse fields dict into field_names, field_weights, learn_field_weights, and target_fields"""
-            if len(fields) != num_fields:
-                raise GRUCompositionError(f"The number of entries ({len(fields)}) in the dict specified in the 'fields' "
-                                         f"arg of '{name}' does not match the number of fields in its memory "
-                                         f"({self.num_fields}).")
-            field_names = [None] * num_fields
-            field_weights = [None] * num_fields
-            learn_field_weights = [None] * num_fields
-            target_fields = [None] * num_fields
-            for i, field_name in enumerate(fields):
-                field_names[i] = field_name
-                if isinstance(fields[field_name], (tuple, list)):
-                    # field specified as tuple or list
-                    field_weights[i] = fields[field_name][0]
-                    learn_field_weights[i] = fields[field_name][1]
-                    target_fields[i] = fields[field_name][2]
-                elif isinstance(fields[field_name], dict):
-                    # field specified as dict
-                    field_weights[i] = fields[field_name][FIELD_WEIGHT]
-                    learn_field_weights[i] = fields[field_name][LEARN_FIELD_WEIGHT]
-                    target_fields[i] = fields[field_name][TARGET_FIELD]
-                else:
-                    raise GRUCompositionError(f"Unrecognized specification for field '{field_name}' in the 'fields' "
-                                             f"arg of '{name}'; it must be a tuple, list or dict.")
-            return field_names, field_weights, learn_field_weights, target_fields
-
-        self.num_fields = len(self.entry_template)
-
-        if fields:
-            # If a fields dict has been specified, use that to assign field_names, field_weights & learn_field_weights
-            if any([field_names, field_weights, learn_field_weights, target_fields]):
-                warnings.warn(f"The 'fields' arg for '{name}' was specified, so any of the 'field_names', "
-                              f"'field_weights',  'learn_field_weights' or 'target_fields' args will be ignored.")
-            (field_names,
-             field_weights,
-             learn_field_weights,
-             target_fields) = _parse_fields_dict(name, fields, self.num_fields)
-
-        # Deal with default field_weights
-        if field_weights is None:
-            if len(self.entry_template) == 1:
-                field_weights = [1]
-            else:
-                # Default is to treat all fields as keys except the last one, which is the value
-                field_weights = [1] * self.num_fields
-                field_weights[-1] = None
-        field_weights = np.atleast_1d(field_weights)
-
-        if normalize_field_weights and not all([fw == 0 for fw in field_weights]): # noqa: E127
-            fld_wts_0s_for_Nones = [fw if fw is not None else 0 for fw in field_weights]
-            parsed_field_weights = list(np.array(fld_wts_0s_for_Nones) / (np.sum(fld_wts_0s_for_Nones) or 1))
-            parsed_field_weights = [pfw if fw is not None else None
-                                    for pfw, fw in zip(parsed_field_weights, field_weights)]
-        else:
-            parsed_field_weights = field_weights
-
-        # If only one field_weight was specified, but there is more than one field,
-        #    repeat the single weight for each field
-        if len(field_weights) == 1 and self.num_fields > 1:
-            parsed_field_weights = np.repeat(parsed_field_weights, self.num_fields)
-
-        # Make sure field_weight learning was not specified for any value fields (since they don't have field_weights)
-        if isinstance(learn_field_weights, (list, tuple, np.ndarray)):
-            for i, lfw in enumerate(learn_field_weights):
-                if parsed_field_weights[i] is None and lfw is not False:
-                    warnings.warn(f"Learning was specified for field '{field_names[i]}' in the 'learn_field_weights' "
-                                  f"arg for '{name}', but it is not allowed for value fields; it will be ignored.")
-        elif learn_field_weights in {None, True, False}:
-            learn_field_weights = [False] * len(parsed_field_weights)
-        else:
-            assert False, f"PROGRAM ERROR: learn_field_weights ({learn_field_weights}) is not a list, tuple or bool."
-
-        # Memory structure Parameters
-        parsed_field_names = field_names.copy() if field_names is not None else None
-
-        # Set memory field attributes
-        keys_weights = [i for i in parsed_field_weights if i is not None]
-        self.num_keys = len(keys_weights)
-
-        # Get indices of field_weights that specify keys and values:
-        self.key_indices = [i for i, pfw in enumerate(parsed_field_weights) if pfw is not None]
-        assert len(self.key_indices) == self.num_keys, \
-            f"PROGRAM ERROR: number of keys ({self.num_keys}) does not match number of " \
-            f"non-zero values in field_weights ({len(self.key_indices)})."
-        self.value_indices = [i for i, pfw in enumerate(parsed_field_weights) if pfw is None]
-        self.num_values = self.num_fields - self.num_keys
-        assert len(self.value_indices) == self.num_values, \
-            f"PROGRAM ERROR: number of values ({self.num_values}) does not match number of " \
-            f"zero values in field_weights ({len(self.value_indices)})."
-
-        if parsed_field_names:
-            self.key_names = [parsed_field_names[i] for i in self.key_indices]
-            # self.value_names = parsed_field_names[self.num_keys:]
-            self.value_names = [parsed_field_names[i] for i in range(self.num_fields) if i not in self.key_indices]
-        else:
-            self.key_names = [f'{i}' for i in range(self.num_keys)] if self.num_keys > 1 else ['KEY']
-            if self.num_values > 1:
-                self.value_names = [f'{i} [VALUE]' for i in range(self.num_values)]
-            elif self.num_values == 1:
-                self.value_names = ['VALUE']
-            else:
-                self.value_names = []
-            parsed_field_names = self.key_names + self.value_names
-
-        user_specified_concatenate_queries = concatenate_queries or False
-        parsed_concatenate_queries = (user_specified_concatenate_queries
-                                    and self.num_keys > 1
-                                    and np.all(keys_weights == keys_weights[0])
-                                    and normalize_memories)
-        # if concatenate_queries was forced to be False when user specified it as True, issue warning
-        if user_specified_concatenate_queries and not parsed_concatenate_queries:
-            # Issue warning if concatenate_queries is True but:
-            #   field weights are not all equal and/or
-            #   normalize_memories is False and/or
-            #   there is only one key
-            if self.num_keys == 1:
-                error_msg = f"there is only one key"
-                correction_msg = ""
-            elif not all(np.all(keys_weights[i] == keys_weights[0] for i in range(len(keys_weights)))):
-                error_msg = f" field weights ({field_weights}) are not all equal"
-                correction_msg = (f" To use concatenation, remove `field_weights` "
-                                     f"specification or make them all the same.")
-            elif not normalize_memories:
-                error_msg = f" normalize_memories is False"
-                correction_msg = f" To use concatenation, set normalize_memories to True."
-            warnings.warn(f"The 'concatenate_queries' arg for '{name}' is True but {error_msg}; "
-                          f"concatenation will be ignored.{correction_msg}")
-
-        # Deal with default target_fields
-        if target_fields is None:
-            target_fields = [True] * self.num_fields
-
-        self.learning_rate = learning_rate
-
-        for i, name, weight, learn_weight, target in zip(range(self.num_fields),
-                                                         parsed_field_names,
-                                                         parsed_field_weights,
-                                                         learn_field_weights,
-                                                         target_fields):
-            self.fields.append(Field(name=name,
-                                     index=i,
-                                     type=FieldType.KEY if weight is not None else FieldType.VALUE,
-                                     weight=weight,
-                                     learn_weight=learn_weight,
-                                     target=target))
-
-        return (parsed_field_names,
-                parsed_field_weights,
-                learn_field_weights,
-                target_fields,
-                parsed_concatenate_queries)
-
-    def _parse_memory_shape(self, memory_template):
-        """Parse shape of memory_template to determine number of entries and fields"""
-        memory_template_dim = np.array(memory_template, dtype=object).ndim
-        if memory_template_dim == 1 or all(isinstance(item, (int, float)) for item in memory_template[0]):
-            fields_equal_length = all(len(field) == len(memory_template[0]) for field in memory_template)
-        else:
-            fields_equal_length = all(len(field) == len(memory_template[0]) for field in memory_template[0])
-
-        single_entry = (((memory_template_dim == 1) and not fields_equal_length) or
-                        ((memory_template_dim == 2) and fields_equal_length))
-        num_entries = 1 if single_entry else len(memory_template)
-        num_fields = len(memory_template) if single_entry else len(memory_template[0])
-        return num_entries, num_fields
-
-    #endregion
 
     # *****************************************************************************************************************
     # ******************************  Nodes and Pathway Construction Methods  *****************************************
