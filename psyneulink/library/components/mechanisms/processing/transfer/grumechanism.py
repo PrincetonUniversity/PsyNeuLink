@@ -5,11 +5,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
 
-# NOTES:
-#  * NOW THAT NOISE AND INTEGRATION_RATE ARE PROPERTIES THAT DIRECTLY REFERERENCE integrator_function,
-#      SHOULD THEY NOW BE VALIDATED ONLY THERE (AND NOT IN TransferMechanism)??
-#  * ARE THOSE THE ONLY TWO integrator PARAMS THAT SHOULD BE PROPERTIES??
-
 # ****************************************  GRUMechanism *************************************************
 
 """
@@ -31,12 +26,13 @@ Contents
 Overview
 --------
 
-A GRUMechanism is a subclass of `TransferMechanism` that implements a single-layered recurrent
+A GRUMechanism is a subclass of `RecurrentTransferMechanism` that implements a single-layered gated recurrent
 network, in which each element is connected to every other element (instantiated in a recurrent
-`AutoAssociativeProjection` referenced by the Mechanism's `matrix <GRUMechanism.matrix>` parameter).
-Like a TransferMechanism, it can integrate its input prior to executing its `function <Mechanism_Base.function>`. It
-can also report the energy and, if appropriate, the entropy of its output, and can be configured to implement
-autoassociative (e.g., Hebbian) learning.
+`AutoAssociativeProjection` referenced by the Mechanism's `matrix <GRUMechanism.matrix>` parameter). The primary
+difference between a GRUMechanism and a standard `RecurrentTransferMechanism` is that the GRUMechanism has two
+additional `InputPorts <InputPort>`: a *RESET* InputPort and *UPDATE* InputPort. These receive Projections from the
+same source as the Mechanism's `primary InputPort <InputPort_Primary>`, and are combined with that input before being
+passed to its `function <GRUMechanism.function>` in order to modulate the flow of information through the Mechanism.
 
 .. _GRUMechanism_Creation:
 
