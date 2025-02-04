@@ -157,12 +157,12 @@ INPUT_NODE_NAME = 'INPUT'
 INPUT_AFFIX = f' [{INPUT_NODE_NAME}]'
 HIDDEN_LAYER_NODE_NAME = 'HIDDEN LAYER'
 HIDDEN_LAYER_AFFIX = f' [{HIDDEN_LAYER_NODE_NAME}]'
-RESET_GATE_NAME = 'RESET GATE'
-RESET_GATE_AFFIX = f' [{RESET_GATE_NAME}]'
-UPDATE_GATE_NAME = 'UPDATE GATE'
-UPDATE_GATE_AFFIX = f' [{UPDATE_GATE_NAME}]
-NEW_GATE_NAME = 'NEW GATE'
-NEW_GATE_AFFIX = f' [{NEW_GATE_NAME}]'
+RESET_GATE_NODE_NAME = 'RESET GATE'
+RESET_GATE_AFFIX = f' [{RESET_GATE_NODE_NAME}]'
+UPDATE_GATE_NODE_NAME = 'UPDATE GATE'
+UPDATE_GATE_AFFIX = f' [{UPDATE_GATE_NODE_NAME}]
+NEW_GATE_NODE_NAME = 'NEW GATE'
+NEW_GATE_AFFIX = f' [{NEW_GATE_NODE_NAME}]'
 
 
 class GRUCompositionError(CompositionError):
@@ -212,18 +212,50 @@ class GRUComposition(AutodiffComposition):
     Arguments
     ---------
 
+    input_size : int : default 1
+        specifies the length of the input array to the GRUComposition.
+
+    hidden_size : int : default 1
+        specifies the length of the hidden layer of the GRUComposition.
+
+    bias=True : bool : default False
+        specifies whether the GRUComposition uses a bias vector in its computations.
+
+    COMMENT:
+    num_layers : int : default 1
+     batch_first : bool : default False
+     dropout : float : default 0.0
+     bidirectional : bool : default False
+    COMMENT
+
     learning_rate : float : default .01
         specifies the default learning_rate for `field_weights <GRUComposition.field_weights>` not
         specified in `learn_field_weights <GRUComposition.learn_field_weights>` (see `learning_rate
         <GRUComposition_Field_Weights_Learning>` for additional details).
 
     enable_learning : bool : default True
-        specifies whether learning is enabled for the EMCComposition (see `Learning <GRUComposition_Learning>`
-        for additional details); **use_gating_for_weighting** must be False.
+        specifies whether learning is enabled for the GRUComposition (see `Learning <GRUComposition_Learning>`
+        for additional details)
 
 
     Attributes
     ----------
+
+    input_size : int
+        determines the length of the input array to the GRUComposition.
+
+    hidden_size : int
+        determines the length of the hidden layer of the GRUComposition.
+
+    bias=True : bool
+        determines whether the GRUComposition uses a bias vector in its computations.
+
+    COMMENT:
+    num_layers : int : default 1
+     batch_first : bool : default False
+     dropout : float : default 0.0
+     bidirectional : bool : default False
+    COMMENT
 
     learning_rate : float
         determines the default learning_rate for `field_weights <GRUComposition.field_weights>`
@@ -237,19 +269,20 @@ class GRUComposition(AutodiffComposition):
     .. _GRUComposition_Nodes:
 
     input_node : list[ProcessingMechanism]
-        `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receives...
+        `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receives the input to the GRUComposition
+        and passes it to the hidden layer.
 
     hidden_layer_node : list[ProcessingMechanism]
-        `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receives...
+        `RecurrentTransferMechanism` that implements the recurrent layer of the GRUComposition.
 
     reset_gate_node : list[ProcessingMechanism]
-        `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receives
+        `GatingMechanism` that implements the reset gate of the GRUComposition.
 
     update_gate_node : list[ProcessingMechanism]
-        `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receives
+        `GatingMechanism` that implements the update gate of the GRUComposition.
 
     new_gate_node : list[ProcessingMechanism]
-        `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receives
+        `GatingMechanism` that implements the new gate of the GRUComposition.
 
     """
 
@@ -291,6 +324,13 @@ class GRUComposition(AutodiffComposition):
 
     @check_user_specified
     def __init__(self,
+                 input_size:int=None,
+                 hidden_size:int=None,
+                 bias:bool=True,
+                 # num_layers:int=1,
+                 # batch_first:bool=False,
+                 # dropout:float=0.0,
+                 # bidirectional:bool=False,
                  learning_rate:float=None,
                  enable_learning:bool=True,
                  random_state=None,
@@ -301,6 +341,13 @@ class GRUComposition(AutodiffComposition):
         # Instantiate Composition -------------------------------------------------------------------------
 
         super().__init__(name=name,
+                         input_size=input_size,
+                         hidden_size=hidden_size,
+                         bias=bias,
+                         # num_layers=num_layers,
+                         # batch_first=batch_first,
+                         # dropout=dropout,
+                         # bidirectional=bidirectional,
                          learning_rate = learning_rate,
                          enable_learning = enable_learning,
                          random_state = random_state,
@@ -322,392 +369,22 @@ class GRUComposition(AutodiffComposition):
     # *****************************************************************************************************************
     #region
     def _construct_pathways(self,
-                            memory_template,
-                            memory_capacity,
-                            field_weights,
-                            concatenate_queries,
-                            normalize_memories,
-                            softmax_gain,
-                            softmax_threshold,
-                            softmax_choice,
-                            storage_prob,
-                            memory_decay_rate,
-                            use_storage_node,
-                            learn_field_weights,
-                            enable_learning,
-                            use_gating_for_weighting,
                             ):
         """Construct Nodes and Pathways for GRUComposition"""
+        self.input_node = ProcessingMechanism(name=INPUT_NODE_NAME, size=self.input_size)
+        self.new_gate_node = ProcessingMechanism(name=HIDDEN_LAYER_NODE_NAME,
+                                                     size=self.input_size,
+                                                     input_ports=self.input_node)
+
+        self.hidden_layer_node = ProcessingMechanism(name=HIDDEN_LAYER_NODE_NAME,
+                                                     size=self.input_size,
+                                                     input_ports=self.input_node)
+        self.reset_gate_node = GatingMechanism(name=RESET_GATE_NODE_NAME,
+                                               size=self.input_size,
+                                               input_ports=self.input_node)
+
 
         # Construct Nodes --------------------------------------------------------------------------------
-
-        self._construct_input_nodes()
-        self._construct_concatenate_queries_node(concatenate_queries)
-        self._construct_match_nodes(memory_template, memory_capacity, concatenate_queries,normalize_memories)
-        self._construct_field_weight_nodes(concatenate_queries, use_gating_for_weighting)
-        self._construct_weighted_match_nodes(concatenate_queries)
-        self._construct_combined_matches_node(concatenate_queries, memory_capacity, use_gating_for_weighting)
-        self._construct_softmax_node(memory_capacity, softmax_gain, softmax_threshold, softmax_choice)
-        self._construct_softmax_gain_control_node(softmax_gain)
-        self._construct_retrieved_nodes(memory_template)
-        self._construct_storage_node(use_storage_node, memory_template, memory_decay_rate, storage_prob)
-
-        # Do some validation and get singleton softmax and match Nodes for concatenated queries
-        if self.concatenate_queries:
-            assert len(self.match_nodes) == 1, \
-                f"PROGRAM ERROR: Too many match_nodes ({len(self.match_nodes)}) for concatenated queries."
-            assert not self.field_weight_nodes, \
-                f"PROGRAM ERROR: There should be no field_weight_nodes for concatenated queries."
-
-
-        # Create _field_index_map by first assigning indices for all Field Nodes and their Projections
-        self._field_index_map = {node: field.index for field in self.fields for node in field.nodes}
-        self._field_index_map.update({proj: field.index for field in self.fields for proj in field.projections})
-        if self.concatenate_queries:
-            # Add projections to concatenated_queries_node with indices of sender query_input_nodes
-            for proj in self.concatenate_queries_node.path_afferents:
-                self._field_index_map[proj] = self._field_index_map[proj.sender.owner]
-            # No indices for singleton Nodes and Projections from concatenated_queries_node through to softmax_node
-            self._field_index_map[self.concatenate_queries_node] = None
-            self._field_index_map[self.match_nodes[0]] = None
-            self._field_index_map[self.match_nodes[0].path_afferents[0]] = None
-            self._field_index_map[self.match_nodes[0].efferents[0]] = None
-
-
-        # Construct Pathways --------------------------------------------------------------------------------
-        # FIX: REFACTOR TO ITERATE OVER Fields
-
-        # LEARNING NOT ENABLED --------------------------------------------------
-        # Set up pathways WITHOUT PsyNeuLink learning pathways
-        if not self.enable_learning:
-            self.add_nodes(self.input_nodes)
-            if use_storage_node:
-                self.add_node(self.storage_node)
-            if self.concatenate_queries_node:
-                self.add_node(self.concatenate_queries_node)
-            self.add_nodes(self.match_nodes + self.field_weight_nodes + self.weighted_match_nodes)
-            if self.combined_matches_node:
-                self.add_node(self.combined_matches_node)
-            self.add_nodes([self.softmax_node] + self.retrieved_nodes)
-            if self.softmax_gain_control_node:
-                self.add_node(self.softmax_gain_control_node)
-
-        # LEARNING ENABLED -----------------------------------------------------
-        # Set up pathways WITH psyneulink backpropagation learning field weights
-        else:
-            # Query-specific pathways
-            if not self.concatenate_queries:
-                if self.num_keys == 1:
-                    self.add_linear_processing_pathway([self.query_input_nodes[0],
-                                                        self.match_nodes[0],
-                                                        self.softmax_node])
-                else:
-                    for i in range(self.num_keys):
-                        pathway = [self.query_input_nodes[i],
-                                   self.match_nodes[i],
-                                   self.combined_matches_node]
-                        if self.weighted_match_nodes:
-                            pathway.insert(2, self.weighted_match_nodes[i])
-                        self.add_linear_processing_pathway(pathway)
-                    self.add_linear_processing_pathway([self.combined_matches_node, self.softmax_node])
-            # Query-concatenated pathways
-            else:
-                for i in range(self.num_keys):
-                    pathway = [self.query_input_nodes[i],
-                               self.concatenate_queries_node,
-                               self.match_nodes[0]]
-                    self.add_linear_processing_pathway(pathway)
-                self.add_linear_processing_pathway([self.match_nodes[0], self.softmax_node])
-
-            # softmax gain control is specified:
-            if self.softmax_gain_control_node:
-                self.add_node(self.softmax_gain_control_node)
-
-            # field_weights -> weighted_softmax pathways
-            if any(self.field_weight_nodes):
-                for i in range(self.num_keys):
-                    self.add_linear_processing_pathway([self.field_weight_nodes[i], self.weighted_match_nodes[i]])
-
-            self.add_nodes(self.value_input_nodes)
-
-            # Retrieval pathways
-            for i in range(len(self.retrieved_nodes)):
-                self.add_linear_processing_pathway([self.softmax_node, self.retrieved_nodes[i]])
-
-            # Storage Nodes
-            if use_storage_node:
-                self.add_node(self.storage_node)
-
-    def _construct_input_nodes(self):
-        """Create one node for each input to GRUComposition and identify as key or value
-        """
-        assert len(self.key_indices) == self.num_keys, \
-            f"PROGRAM ERROR: number of keys ({self.num_keys}) does not match number of " \
-            f"non-zero values in field_weights ({len(self.key_indices)})."
-        assert len(self.value_indices) == self.num_values, \
-            f"PROGRAM ERROR: number of values ({self.num_values}) does not match number of " \
-            f"None's in field_weights ({len(self.value_indices)})."
-
-        for field in [self.fields[i] for i in self.key_indices]:
-            field.input_node = ProcessingMechanism(name=f'{field.name} [QUERY]',
-                                                   input_shapes=len(self.entry_template[field.index]))
-            field.type = FieldType.KEY
-
-        for field in [self.fields[i] for i in self.value_indices]:
-            field.input_node = ProcessingMechanism(name=f'{field.name} [VALUE]',
-                                                   input_shapes=len(self.entry_template[field.index]))
-            field.type = FieldType.VALUE
-
-    def _construct_concatenate_queries_node(self, concatenate_queries):
-        """Create node that concatenates the inputs for all keys into a single vector
-        Used to create a matrix for Projection from match / memory weights from concatenate_node -> match_node
-        """
-        if concatenate_queries:
-            # One node that concatenates inputs from all keys
-            self.concatenate_queries_node = (
-                ProcessingMechanism(name=CONCATENATE_QUERIES_NAME,
-                                    function=Concatenate,
-                                    input_ports=[{NAME: 'CONCATENATE',
-                                                  INPUT_SHAPES: len(self.query_input_nodes[i].output_port.value),
-                                                  PROJECTIONS: MappingProjection(
-                                                      name=f'{self.key_names[i]} to CONCATENATE',
-                                                      sender=self.query_input_nodes[i].output_port,
-                                                      matrix=IDENTITY_MATRIX)}
-                                                 for i in range(self.num_keys)]))
-            # Add Projections from query_input_nodes to concatenate_queries_node to each Field
-            for i, proj in enumerate(self.concatenate_queries_node.path_afferents):
-                self.fields[self.key_indices[i]].concatenation_projection = proj
-
-        else:
-            self.concatenate_queries_node = None
-
-    def _construct_match_nodes(self, memory_template, memory_capacity, concatenate_queries, normalize_memories):
-        """Create nodes that, for each key field, compute the similarity between the input and each item in memory.
-        - If self.concatenate_queries is True, then all inputs for keys from concatenated_keys_node are
-            assigned a single match_node, and weights from memory_template are assigned to a Projection
-            from concatenated_keys_node to that match_node.
-        - Otherwise, each key has its own match_node, and weights from memory_template are assigned to a Projection
-            from each query_input_node[i] to each match_node[i].
-        - Each element of the output represents the similarity between the query_input and one key in memory.
-        """
-        OPERATION = 0
-        NORMALIZE = 1
-        # Enforce normalization of memories if key is a scalar
-        #   (this is to allow 1-L0 distance to be used as similarity measure, so that better matches
-        #   (more similar memories) have higher match values; see `MatrixTransform` for explanation)
-        args = [(L0,True) if len(key) == 1 else (DOT_PRODUCT,normalize_memories)
-                for key in memory_template[0]]
-
-        if concatenate_queries:
-            # Assign one match_node for concatenate_queries_node
-            # - get fields of memory structure corresponding to the keys
-            # - number of rows should total number of elements over all keys,
-            #    and columns should number of items in memory
-            matrix =np.array([np.concatenate((memory_template[:,:self.num_keys][i]))
-                              for i in range(memory_capacity)]).transpose()
-            memory_projection = MappingProjection(name=f'MEMORY',
-                                                  sender=self.concatenate_queries_node,
-                                                  matrix=np.array(matrix.tolist()),
-                                                  function=MatrixTransform(operation=args[0][OPERATION],
-                                                                           normalize=args[0][NORMALIZE]))
-            self.concatenated_match_node = ProcessingMechanism(name='MATCH',
-                                                               input_ports={NAME: 'CONCATENATED_INPUTS',
-                                                                            INPUT_SHAPES: memory_capacity,
-                                                                            PROJECTIONS: memory_projection})
-            # Assign None as match_node for all key Fields (since they first project to concatenate_queries_node)
-            for field in [field for field in self.fields if field.type == FieldType.KEY]:
-                field.match_node = None
-
-        else:
-            # Assign each key Field its own match_node and "memory" Projection to it
-            for i in range(self.num_keys):
-                key_idx = self.key_indices[i]
-                field = self.fields[key_idx]
-                memory_projection = (
-                    MappingProjection(name=f'MEMORY for {self.key_names[i]} [KEY]',
-                                      sender=self.query_input_nodes[i].output_port,
-                                      matrix = np.array(memory_template[:,key_idx].tolist()).transpose().astype(float),
-                                      function=MatrixTransform(operation=args[key_idx][OPERATION],
-                                                               normalize=args[key_idx][NORMALIZE])))
-                field.match_node = (ProcessingMechanism(name=self.key_names[i] + MATCH_TO_KEYS_AFFIX,
-                                                        input_ports= {INPUT_SHAPES:memory_capacity,
-                                                                      PROJECTIONS: memory_projection}))
-                field.memory_projection = memory_projection
-
-
-    def _construct_field_weight_nodes(self, concatenate_queries, use_gating_for_weighting):
-        """Create ProcessingMechanisms that weight each key's softmax contribution to the retrieved values."""
-        if not concatenate_queries and self.num_keys > 1:
-            for field in [self.fields[i] for i in self.key_indices]:
-                name = WEIGHT if self.num_keys == 1 else f'{field.name}{WEIGHT_AFFIX}'
-                variable = np.array(self.field_weights[field.index])
-                params = {DEFAULT_INPUT: DEFAULT_VARIABLE}
-                if use_gating_for_weighting:
-                    field.weight_node = GatingMechanism(name=name,
-                                                        input_ports={NAME: 'OUTCOME',
-                                                                     VARIABLE: variable,
-                                                                     PARAMS: params},
-                                                        gate=field.match_node.output_ports[0])
-                else:
-                    field.weight_node = ProcessingMechanism(name=name,
-                                                            input_ports={NAME: 'FIELD_WEIGHT',
-                                                                         VARIABLE: variable,
-                                                                         PARAMS: params})
-
-    def _construct_weighted_match_nodes(self, concatenate_queries):
-        """Create nodes that weight the output of the match node for each key."""
-        if not concatenate_queries and self.num_keys > 1:
-            for field in [self.fields[i] for i in self.key_indices]:
-                field.weighted_match_node = (
-                    ProcessingMechanism(name=field.name + WEIGHTED_MATCH_AFFIX,
-                                        default_variable=[field.match_node.output_port.value,
-                                                          field.match_node.output_port.value],
-                                        input_ports=[{PROJECTIONS:
-                                                          MappingProjection(name=(f'{MATCH} to {WEIGHTED_MATCH_NODE_NAME} '
-                                                                                  f'for {field.name}'),
-                                                                            sender=field.match_node,
-                                                                            matrix=IDENTITY_MATRIX)},
-                                                     {PROJECTIONS:
-                                                          MappingProjection(name=(f'{WEIGHT} to {WEIGHTED_MATCH_NODE_NAME} '
-                                                                                  f'for {field.name}'),
-                                                                            sender=field.weight_node,
-                                                                            matrix=FULL_CONNECTIVITY_MATRIX)}],
-                                        function=LinearCombination(operation=PRODUCT)))
-                field.match_projection = field.match_node.efferents[0]
-                field.weight_projection = field.weight_node.efferents[0]
-
-    def _construct_softmax_gain_control_node(self, softmax_gain):
-        """Create nodes that set the softmax gain (inverse temperature) for each softmax_node."""
-        node = None
-        if softmax_gain == CONTROL:
-            node = ControlMechanism(name='SOFTMAX GAIN CONTROL',
-                                    monitor_for_control=self.combined_matches_node,
-                                    control_signals=[(GAIN, self.softmax_node)],
-                                    function=get_softmax_gain)
-        self.softmax_gain_control_node = node
-
-    def _construct_combined_matches_node(self,
-                                         concatenate_queries,
-                                         memory_capacity,
-                                         use_gating_for_weighting
-                                         ):
-        """Create node that combines weighted matches for all keys into one match vector."""
-        if self.num_keys == 1 or self.concatenate_queries_node:
-            self.combined_matches_node = None
-            return
-
-        field_weighting = len([weight for weight in self.field_weights if weight]) > 1 and not concatenate_queries
-
-        if not field_weighting or use_gating_for_weighting:
-            input_source = self.match_nodes
-        else:
-            input_source = self.weighted_match_nodes
-
-        self.combined_matches_node = (
-            ProcessingMechanism(name=COMBINE_MATCHES_NODE_NAME,
-                                input_ports=[{INPUT_SHAPES:memory_capacity,
-                                              PROJECTIONS:[MappingProjection(sender=s,
-                                                                             matrix=IDENTITY_MATRIX,
-                                                                             name=f'{WEIGHTED_MATCH_NODE_NAME} '
-                                                                                  f'for {self.key_names[i]} to '
-                                                                                  f'{COMBINE_MATCHES_NODE_NAME}')
-                                                           for i, s in enumerate(input_source)]}]))
-
-        for i, proj in enumerate(self.combined_matches_node.path_afferents):
-            self.fields[self.key_indices[i]].weighted_match_projection = proj
-
-        assert len(self.combined_matches_node.output_port.value) == memory_capacity, \
-            'PROGRAM ERROR: number of items in combined_matches_node ' \
-            f'({len(self.combined_matches_node.output_port)}) does not match memory_capacity ({self.memory_capacity})'
-
-    def _construct_softmax_node(self, memory_capacity, softmax_gain, softmax_threshold, softmax_choice):
-        """Create node that applies softmax to output of combined_matches_node."""
-        if self.num_keys == 1 or self.concatenate_queries_node:
-            input_source = self.match_nodes[0]
-            proj_name =f'{MATCH} to {SOFTMAX_NODE_NAME}'
-        else:
-            input_source = self.combined_matches_node
-            proj_name =f'{COMBINE_MATCHES_NODE_NAME} to {SOFTMAX_NODE_NAME}'
-
-        if softmax_choice == ARG_MAX:
-            # ARG_MAX would return entry multiplied by its dot product
-            # ARG_MAX_INDICATOR returns the entry unmodified
-            softmax_choice = ARG_MAX_INDICATOR
-
-        self.softmax_node = ProcessingMechanism(name=SOFTMAX_NODE_NAME,
-                                                input_ports={INPUT_SHAPES: memory_capacity,
-                                                             PROJECTIONS: MappingProjection(
-                                                                 sender=input_source,
-                                                                 matrix=IDENTITY_MATRIX,
-                                                                 name=proj_name)},
-                                                function=SoftMax(gain=softmax_gain,
-                                                                 mask_threshold=softmax_threshold,
-                                                                 output=softmax_choice,
-                                                                 adapt_entropy_weighting=.95))
-
-    def _construct_retrieved_nodes(self, memory_template)->list:
-        """Create nodes that report the value field(s) for the item(s) matched in memory.
-        """
-        for field in self.fields:
-            field.retrieved_node = (
-                ProcessingMechanism(name=field.name + RETRIEVED_AFFIX,
-                                    input_ports={INPUT_SHAPES: len(field.input_node.variable[0]),
-                                                 PROJECTIONS:
-                                                     MappingProjection(
-                                                         sender=self.softmax_node,
-                                                         matrix=memory_template[:,field.index],
-                                                         name=f'MEMORY FOR {field.name} '
-                                                              f'[RETRIEVE {field.type.name}]')}))
-            field.retrieve_projection = field.retrieved_node.path_afferents[0]
-
-    def _construct_storage_node(self,
-                                use_storage_node,
-                                memory_template,
-                                memory_decay_rate,
-                                storage_prob):
-        """Create EMStorageMechanism that stores the key and value inputs in memory.
-        Memories are stored by adding the current input to each field to the corresponding row of the matrix for
-        the Projection from the query_input_node (or concatenate_node) to the matching_node and retrieved_node for keys,
-        and from the value_input_node to the retrieved_node for values. The `function <EMStorageMechanism.function>`
-        of the `EMSorageMechanism` that takes the following arguments:
-
-         - **variable** -- template for an `entry <GRUComposition_Memory_Specification>`
-           in `memory<GRUComposition.memory>`;
-
-         - **fields** -- the `input_nodes <GRUComposition.input_nodes>` for the corresponding `fields
-           <GRUComposition_Fields>` of an `entry <EMCmposition_Memory>` in `memory <GRUComposition.memory>`;
-
-         - **field_types** -- a list of the same length as ``fields``, containing 1's for key fields and 0's for
-           value fields;
-
-         - **concatenate_queries_node** -- node used to concatenate keys
-           (if `concatenate_queries <GRUComposition.concatenate_queries>` is `True`) or None;
-
-         - **memory_matrix** -- `memory_template <GRUComposition.memory_template>`);
-
-         - **learning_signals** -- list of ` `MappingProjection`\\s (or their ParameterPort`\\s) that store each
-           `field <GRUComposition_Fields>` of `memory <GRUComposition.memory>`;
-
-         - **decay_rate** -- rate at which entries in the `memory_matrix <GRUComposition.memory_matrix>` decay;
-
-         - **storage_prob** -- probability for storing an entry in `memory <GRUComposition.memory>`.
-        """
-        if use_storage_node:
-            learning_signals = [match_node.input_port.path_afferents[0]
-                                for match_node in self.match_nodes] + [retrieved_node.input_port.path_afferents[0]
-                                for retrieved_node in self.retrieved_nodes]
-            self.storage_node = (
-                EMStorageMechanism(default_variable=[field.input_node.value[0] for field in self.fields],
-                                   fields=[field.input_node for field in self.fields],
-                                   field_types=[1 if field.type is FieldType.KEY else 0 for field in self.fields],
-                                   concatenation_node=self.concatenate_queries_node,
-                                   memory_matrix=memory_template,
-                                   learning_signals=learning_signals,
-                                   storage_prob=storage_prob,
-                                   decay_rate = memory_decay_rate,
-                                   name=STORE_NODE_NAME))
-            for field in self.fields:
-                field.storage_projection = self.storage_node.path_afferents[field.index]
 
     def _set_learning_attributes(self):
         """Set learning-related attributes for Node and Projections
@@ -759,8 +436,6 @@ class GRUComposition(AutodiffComposition):
             warnings.warn(f"The 'softmax_choice' arg of '{self.name}' is set to '{softmax_choice}' with "
                           f"'enable_learning' set to True; this will generate an error if its "
                           f"'learn' method is called. Set 'softmax_choice' to WEIGHTED_AVG before learning.")
-
-
     #endregion
 
     # *****************************************************************************************************************

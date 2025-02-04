@@ -108,11 +108,7 @@ __all__ = [
     'OBJECTIVE_FUNCTION_TYPE', 'OBJECTIVE_MECHANISM', 'OBJECTIVE_MECHANISM_OBJECT', 'OFF', 'OFFSET', 'OLDEST', 'ON',
     'ONLINE', 'ONLY', 'OPERATION', 'OPTIMIZATION_FUNCTION_TYPE', 'OPTIMIZATION_STEP', 'ORIGIN',
     'ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION',
-    'OUTCOME', 'OUTCOMEthat implements a single-layered gated recurrent
-network, which combines a `RecurrentTransferMechanism` with a set of `GatingMechanisms <GatingMechanism>` that modulate
-the flow of information through the RecurrentTransferMechanism.  This corresponds to the `PyTorch GRUNetwork
-<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_, which is used to implement it when its `learn
-<GRUComposition.learn>` method is colled with `execution_mode <GRUComposition.execution_mode>` set to *PyTorch*_FUNCTION', 'OUTPUT', 'OUTPUTS', 'OUTPUT_CIM_NAME', 'OUTPUT_LABELS_DICT', 'OUTPUT_MECHANISM',
+    'OUTCOME', 'OUTCOME_FUNCTION', 'OUTPUT', 'OUTPUTS', 'OUTPUT_CIM_NAME', 'OUTPUT_LABELS_DICT', 'OUTPUT_MECHANISM',
     'OUTPUT_PORT', 'OUTPUT_PORT_PARAMS', 'output_port_spec_to_parameter_name', 'OUTPUT_PORTS', 'OUTPUT_TYPE',
     'OVERRIDE', 'OVERRIDE_PARAM', 'OVERWRITE', 'OWNER', 'OWNER_EXECUTION_COUNT', 'OWNER_EXECUTION_TIME',
     'OWNER_VALUE', 'OWNER_VARIABLE',
