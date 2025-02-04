@@ -16,21 +16,15 @@ Contents
      - `Organization <GRUComposition_Organization>`
      - `Operation <GRUComposition_Operation>`
   * `GRUComposition_Creation`
-     - `Memory <GRUComposition_Memory_Specification>`
-     - `Capacity <GRUComposition_Memory_Capacity>`
-     - `Fields <GRUComposition_Fields>`
-     - `Storage and Retrieval <GRUComposition_Retrieval_Storage>`
      - `Learning <GRUComposition_Learning>`
   * `GRUComposition_Structure`
      - `Input <GRUComposition_Input>`
-     - `Memory <GRUComposition_Hidden_Layer>`
+     - `Hidden Layer <GRUComposition_Hidden_Layer>`
      - `Output <GRUComposition_Output>`
   * `GRUComposition_Execution`
      - `Processing <GRUComposition_Processing>`
      - `Learning <GRUComposition_Training>`
   * `GRUComposition_Examples`
-     - `Memory Template and Fill <GRUComposition_Example_Memory_Template>`
-     - `Field Weights <GRUComposition_Example_Field_Weights>`
   * `GRUComposition_Class_Reference`
 
 .. _GRUComposition_Overview:
@@ -38,8 +32,8 @@ Contents
 Overview
 --------
 
-The GRUComposition a subclass of `AutodiffComposition` that  implements a implements a single-layered gated recurrent
-network, which combines a `RecurrentTransferMechanism` with a set of `GatingMechanisms <GatingMechanism>` that modulate
+The GRUComposition a subclass of `AutodiffComposition` that implements a single-layered gated recurrent network,
+which combines a `RecurrentTransferMechanism` with a set of `GatingMechanisms <GatingMechanism>` that modulate
 the flow of information through the RecurrentTransferMechanism.  This corresponds to the `PyTorch GRUNetwork
 <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_, which is used to implement it when its `learn
 <GRUComposition.learn>` method is colled with `execution_mode <GRUComposition.execution_mode>` set to *PyTorch*
@@ -124,199 +118,8 @@ will be computed for
 Examples
 --------
 
-The following are examples of how to configure and initialize the GRUComposition's `memory <GRUComposition.memory>`:
+The following are examples of how to configure and initialize a GRUComposition:
 
-*Visualizing the GRUComposition*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The GRUComposition can be visualized graphically, like any `Composition`, using its `show_graph
-<ShowGraph_show_graph_Method>` method.  For example, the figure below shows an GRUComposition that
-implements a simple dictionary, with one key field and one value field, each of length 5::
-
-    >>> import psyneulink as pnl
-    >>> em = GRUComposition(memory_template=(2,5))
-    >>> em.show_graph()
-    <BLANKLINE>
-
-.. _GRUComposition_Example_fig:
-
-.. figure:: _static/GRUComposition_Example_fig.svg
-   :alt: Exxample of an GRUComposition
-   :align: left
-
-       **Example of an GRUComposition**
-
-       .. note::
-          The order in which the nodes at a given level (e.g., the `INPUT <NodeRole.INPUT>` or `OUTPUT
-          <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>`) are shown in the diagram is arbitrary, and does not necessarily
-          reflect the order in which they are created or specied in the script.
-
-.. _GRUComposition_Example_Memory_Template:
-
-*Memory Template*
-~~~~~~~~~~~~~~~~~
-
-The `memory_template <GRUComposition_Memory_Template>` argument of a GRUComposition's constructor is used to configure
-it `memory <GRUComposition.memory>`, which can be specified using either a tuple or a list or array.
-
-.. _GRUComposition_Example_Tuple_Spec:
-
-**Tuple specification**
-
-The simplest form of specification is a tuple, that uses the `numpy shape
-<https://numpy.org/doc/stable/reference/generated/numpy.shape.html>`_ format.  If it has two elements (as in the
-example above), the first specifies the number of fields, and the second the length of each field.  In this case,
-a default number of entries (1000) is created:
-
-    >>> em.memory_capacity
-    1000
-
-The number of entries can be specified explicitly in the GRUComposition's constructor, using either the
-`memory_capacity <GRUComposition_Memory_Capacity>` argument, or by using a 3-item tuple to specify the
-`memory_template <GRUComposition_Memory_Template>` argument, in which case the first element specifies
-the  number of entries, while the second and their specify the number of fields and the length of each field,
-respectively.  The following are equivalent::
-
-    >>> em = GRUComposition(memory_template=(2,5), memory_capcity=4)
-
-and
-
-    >>> em = GRUComposition(memory_template=(4,2,5))
-
-both of which create a memory with 4 entries, each with 2 fields of length 5. The contents of `memory
-<GRUComposition_Memory_Specification>` can be inspected using the `memory <GRUComposition.memory>` attribute::
-
-    >>> em.memory
-    [[array([0., 0., 0., 0., 0.]), array([0., 0., 0., 0., 0.])],
-     [array([0., 0., 0., 0., 0.]), array([0., 0., 0., 0., 0.])],
-     [array([0., 0., 0., 0., 0.]), array([0., 0., 0., 0., 0.])],
-     [array([0., 0., 0., 0., 0.]), array([0., 0., 0., 0., 0.])]]
-
-The default for `memory_capacity <GRUComposition.memory_capacity>` is 1000, which is used if it is not otherwise
-specified.
-
-**List or array specification**
-
-Note that in the example above the two fields have the same length (5). This is always the case when a tuple is used,
-as it generates a regular array.  A list or numpy array can also be used to specify the **memory_template** argument.
-For example, the following is equivalent to the examples above::
-
-    >>> em = GRUComposition(memory_template=[[0,0,0],[0,0,0]], memory_capacity=4)
-
-However, a list or array can be used to specify fields of different length (i.e., as a ragged array).  For example,
-the following specifies one field of length 3 and another of length 1::
-
-    >>> em = GRUComposition(memory_template=[[0,0,0],[0]], memory_capacity=4)
-    >>> em.memory
-    [[[array([0., 0., 0.]), array([0.])]],
-     [[array([0., 0., 0.]), array([0.])]],
-     [[array([0., 0., 0.]), array([0.])]],
-     [[array([0., 0., 0.]), array([0.])]]]
-
-.. _GRUComposition_Example_Memory_Fill:
-
-**Memory fill**
-
-Note that the examples above generate a warning about the use of zeros to initialize the memory. This is
-because the default value for **memory_fill** is ``0``, and the default value for `normalize_memories
-<GRUComposition.normalize_memories>` is True, which will cause a divide by zero warning when memories are
-normalized. While this doesn't crash, it will result in nan's that are likely to cauase problems elsewhere.
-This can be avoided by specifying a non-zero  value for **memory_fill**, such as small number::
-
-    >>> em = GRUComposition(memory_template=[[0,0,0],[0]], memory_capacity=4, memory_fill=.001)
-    >>> em.memory
-    [[[array([0.001, 0.001, 0.001]), array([0.001])]],
-     [[array([0.001, 0.001, 0.001]), array([0.001])]],
-     [[array([0.001, 0.001, 0.001]), array([0.001])]],
-     [[array([0.001, 0.001, 0.001]), array([0.001])]]]
-
-Here, a single value was specified for **memory_fill** (which can be a float or int), that is used to fill all values.
-Random values can be assigned using a tuple to specify and internval between the first and second elements.  For
-example, the following uses random values between 0 and 0.01 to fill all entries::
-
-    >>> em = GRUComposition(memory_template=[[0,0,0],[0]], memory_capacity=4, memory_fill=(0,0.01))
-    >>> em.memory
-    [[[array([0.00298981, 0.00563404, 0.00444073]), array([0.00245373])]],
-     [[array([0.00148447, 0.00666486, 0.00228882]), array([0.00237541])]],
-     [[array([0.00432786, 0.00035378, 0.00265932]), array([0.00980598])]],
-     [[array([0.00151163, 0.00889032, 0.00899815]), array([0.00854529])]]]
-
-.. _GRUComposition_Example_Multiple_Entries:
-
-**Multiple entries**
-
-In the examples above, a single entry was specified, and that was used as a template for initializing the remaining
-entries in memory. However, a list or array can be used to directly initialize any or all entries. For example, the
-following initializes memory with two specific entries::
-
-    >>> em = GRUComposition(memory_template=[[[1,2,3],[4]],[[100,101,102],[103]]], memory_capacity=4)
-    >>> em.memory
-    [[[array([1., 2., 3.]), array([4.])]],
-     [[array([100., 101., 102.]), array([103.])]],
-     [[array([0., 0., 0.]), array([0.])]],
-     [[array([0., 0., 0.]), array([0.])]]]
-
-Note that the two entries must have exactly the same shapes. If they do not, an error is generated.
-Also note that the remaining entries are filled with zeros (the default value for **memory_fill**).
-Here again, **memory_fill** can be used to specify a different value::
-
-    >>> em = GRUComposition(memory_template=[[[7],[24,5]],[[100],[3,106]]], memory_capacity=4, memory_fill=(0,.01))
-    >>> em.memory
-    [[[array([7.]), array([24.,  5.])]],
-     [[array([100.]), array([  3., 106.])]],
-     [[array([0.00803646]), array([0.00341276, 0.00286969])]],
-     [[array([0.00143196]), array([0.00079033, 0.00710556])]]]
-
-.. _GRUComposition_Example_Field_Weights:
-
-*Field Weights*
-~~~~~~~~~~~~~~~
-
-By default, all of the fields specified are treated as keys except the last, which is treated as a "value" field --
-that is, one that is not included in the matching process, but for which a value is retrieved along with the key fields.
-For example, in the `figure <GRUComposition_Example_fig>` above, the first field specified was used as a key field,
-and the last as a value field. However, the **field_weights** argument can be used to modify this, specifying which
-fields should be used as keys fields -- including the relative contribution that each makes to the matching process
--- and which should be used as value fields.  Non-zero elements in the **field_weights** argument designate key fields,
-and zeros specify value fields. For example, the following specifies that the first two fields should be used as keys
-while the last two should be used as values::
-
-    >>> em = GRUComposition(memory_template=[[0,0,0],[0],[0,0],[0,0,0,0]], memory_capacity=3, field_weights=[1,1,0,0])
-    >>> em.show_graph()
-    <BLANKLINE>
-
-
-.. _GRUComposition_Example_Field_Weights_Equal_fig:
-
-.. figure:: _static/GRUComposition_field_weights_equal_fig.svg
-
-    **Use of field_weights to specify keys and values.**
-
-Note that the figure now shows `<QUERY> [WEIGHT] <GRUComposition.field_weight_nodes>` `nodes <Composition_Node>`,
-that are used to implement the relative contribution that each key field makes to the matching process specifed in
-`field_weights <GRUComposition.field_weights>` argument.  By default, these are equal (all assigned a value of 1),
-but different values can be used to weight the relative contribution of each key field.  The values are normalized so
-that they sum 1, and the relative contribution of each is determined by the ratio of its value to the sum of all
-non-zero values.  For example, the following specifies that the first two fields should be used as keys,
-with the first contributing 75% to the matching process and the second field contributing 25%::
-
-    >>> em = GRUComposition(memory_template=[[0,0,0],[0],[0,0]], memory_capacity=3, field_weights=[3,1,0])
-    <BLANKLINE>
-
-COMMENT:
-.. _GRUComposition_Example_Field_Weights_Different_fig:
-
-.. figure:: _static/GRUComposition_field_weights_different.svg
-
-    **Use of field_weights to specify relative contribution of fields to matching process.**
-
-Note that in this case, the `concatenate_queries_node <GRUComposition.concatenate_queries_node>` has been replaced by
-a pair of `weighted_match_node <GRUComposition.weighted_match_node>`, one for each key field.  This is because
-the keys were assigned different weights;  when they are assigned equal weights, or if no weights are specified,
-and `normalize_memories <GRUComposition.normalize_memories>` is `True`, then the keys are concatenated and are
-concatenated for efficiency of processing.  This can be suppressed by specifying `concatenate_queries` as `False`
-(see `concatenate_queries <GRUComposition_Concatenate_Queries>` for additional details).
-COMMENT
 
 .. _GRUComposition_Class_Reference:
 
@@ -331,126 +134,33 @@ import psyneulink.core.scheduling.condition as conditions
 
 from psyneulink._typing import Optional, Union
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
-from psyneulink.core.components.functions.nonstateful.transformfunctions import (
-    Concatenate, LinearCombination, MatrixTransform)
 from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.compositions.composition import CompositionError, NodeRole
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, torch_available
-from psyneulink.library.components.mechanisms.modulatory.learning.EMstoragemechanism import EMStorageMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.context import handle_external_context
-from psyneulink.core.globals.keywords import \
-    (ADAPTIVE, ALL, ARG_MAX, ARG_MAX_INDICATOR, AUTO, CONTEXT, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, DOT_PRODUCT,
-     EM_COMPOSITION, FULL_CONNECTIVITY_MATRIX, GAIN, IDENTITY_MATRIX, INPUT_SHAPES, L0,
-     MULTIPLICATIVE_PARAM, NAME, PARAMS, PROB_INDICATOR, PRODUCT, PROJECTIONS, RANDOM, VALUE, VARIABLE)
+from psyneulink.core.globals.keywords import GRU_COMPOSITION
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, convert_all_elements_to_np_array, is_numeric_scalar
-from psyneulink.core.globals.registry import name_without_suffix
 from psyneulink.core.llvm import ExecutionMode
 
 
-__all__ = ['GRUComposition', 'GRUCompositionError', 'FieldType', 'FIELD_WEIGHT',
-           'KEY', 'LEARN_FIELD_WEIGHT', 'PROBABILISTIC', 'TARGET_FIELD','WEIGHTED_AVG']
+__all__ = ['GRUComposition', 'GRUCompositionError']
 
-KEY = 'key'
-
-# softmax_choice options:
-STORAGE_PROB = 'storage_prob'
-WEIGHTED_AVG = ALL
-PROBABILISTIC = PROB_INDICATOR
-
-# specs for entry of fields specification dict
-FIELD_WEIGHT = 'field_weight'
-LEARN_FIELD_WEIGHT = 'learn_field_weight'
-TARGET_FIELD = 'target_field'
 
 # Node names
-QUERY_NODE_NAME = 'QUERY'
-QUERY_AFFIX = f' [{QUERY_NODE_NAME}]'
-VALUE_NODE_NAME = 'VALUE'
-VALUE_AFFIX = f' [{VALUE_NODE_NAME}]'
-MATCH = 'MATCH'
-MATCH_AFFIX = f' [{MATCH}]'
-MATCH_TO_KEYS_NODE_NAME = f'{MATCH} to KEYS'
-WEIGHT = 'WEIGHT'
-WEIGHT_AFFIX = f' [{WEIGHT}]'
-MATCH_TO_KEYS_AFFIX = f' [{MATCH_TO_KEYS_NODE_NAME}]'
-WEIGHTED_MATCH_NODE_NAME = 'WEIGHTED MATCH'
-WEIGHTED_MATCH_AFFIX = f' [{WEIGHTED_MATCH_NODE_NAME}]'
-CONCATENATE_QUERIES_NAME = 'CONCATENATE QUERIES'
-COMBINE_MATCHES_NODE_NAME = 'COMBINE MATCHES'
-COMBINE_MATCHES_AFFIX = f' [{COMBINE_MATCHES_NODE_NAME}]'
-SOFTMAX_NODE_NAME = 'RETRIEVE'
-SOFTMAX_AFFIX = f' [{SOFTMAX_NODE_NAME}]'
-RETRIEVED_NODE_NAME = 'RETRIEVED'
-RETRIEVED_AFFIX = ' [RETRIEVED]'
-STORE_NODE_NAME = 'STORE'
-
-def _memory_getter(owning_component=None, context=None)->list:
-    """Return list of memories in which rows (outer dimension) are memories for each field.
-    These are derived from `matrix <MappingProjection.matrix>` parameter of the `afferent
-    <Mechanism_Base.afferents>` MappingProjections to each of the `2472s <GRUComposition.retrieved_nodes>`.
-    """
-
-    # If storage_node (EMstoragemechanism) is implemented, get memory from that
-    if owning_component.is_initializing:
-        return None
-    if owning_component._use_storage_node:
-        return owning_component.storage_node.parameters.memory_matrix.get(context)
-
-    # Otherwise, get memory from Projection(s) to each retrieved_node
-    memory = [retrieved_node.path_afferents[0].parameters.matrix.get(context)
-              for retrieved_node in owning_component.retrieved_nodes]
-    # Reorganize memory so that each row is an entry and each column is a field
-    memory_capacity = owning_component.memory_capacity or owning_component.defaults.memory_capacity
-    return convert_all_elements_to_np_array([
-        [memory[j][i] for j in range(owning_component.num_fields)]
-        for i in range(memory_capacity)
-    ])
-
-def field_weights_setter(field_weights, owning_component=None, context=None):
-    # FIX: ALLOW DICTIONARY WITH FIELD NAME AND WEIGHT
-    if owning_component.field_weights is None:
-        return field_weights
-    elif len(field_weights) != len(owning_component.field_weights):
-        raise GRUCompositionError(f"The number of field_weights ({len(field_weights)}) must match the number of fields "
-                                 f"{len(owning_component.field_weights)}")
-    if owning_component.normalize_field_weights:
-        denominator = np.sum(np.where(field_weights is not None, field_weights, 0)) or 1
-        field_weights = [fw / denominator if fw is not None else None for fw in field_weights]
-
-    # Assign new fields_weights to default_variable of field_weight_nodes
-    field_wt_node_idx = 0  # Needed since # of field_weight_nodes may be less than # of fields
-                           # and now way to know if user has assigned a value where there used to be a None
-    for i, field_weight in enumerate(field_weights):
-        # Check if original value was None (i.e., a value node), in which case disallow change
-        if owning_component.parameters.field_weights.default_value[i] is None:
-            if field_weight:
-                raise GRUCompositionError(f"Field '{owning_component.field_names[i]}' of '{owning_component.name}' "
-                                         f"was originally assigned as a value node (i.e., with a field_weight = None); "
-                                         f"this cannot be changed after construction. If you want to change it to a "
-                                         f"key field, you must re-construct the GRUComposition using a scalar "
-                                         f"for its field in the `field_weights` arg (including 0.")
-            continue
-        owning_component.field_weight_nodes[field_wt_node_idx].input_port.defaults.variable = field_weights[i]
-        owning_component.field_weights[i] = field_weights[i]
-        field_wt_node_idx += 1
-    return np.array(field_weights)
-
-def get_softmax_gain(v, scale=1, base=1, entropy_weighting=.1)->float:
-    """Compute the softmax gain (inverse temperature) based on the entropy of the distribution of values.
-    scale * (base + (entropy_weighting * log(entropy(logistic(v))))))))
-    """
-    v = np.squeeze(v)
-    gain = scale * (base +
-                    (entropy_weighting *
-                     np.log(
-                         -1 * np.sum((1 / (1 + np.exp(-1 * v))) * np.log(1 / (1 + np.exp(-1 * v)))))))
-    return gain
+HIDDEN_LAYER_NODE_NAME = 'HIDDEN LAYER'
+HIDDEN_LAYER_AFFIX = f' [{HIDDEN_LAYER_NODE_NAME}]'
+RESET_GATE_NAME = 'RESET GATE'
+RESET_GATE_AFFIX = f' [{RESET_GATE_NAME}]'
+UPDATE_GATE_NAME = 'UPDATE GATE'
+UPDATE_GATE_AFFIX = f' [{UPDATE_GATE_NAME}]
+NEW_GATE_NAME = 'NEW GATE'
+NEW_GATE_AFFIX = f' [{NEW_GATE_NAME}]'
 
 
 class GRUCompositionError(CompositionError):
@@ -460,116 +170,38 @@ class GRUCompositionError(CompositionError):
         return repr(self.error_value)
 
 
-class FieldType(Enum):
-    KEY = 0
-    VALUE = 1
-
-
-class Field():
-    """Object that contains information about a field in an GRUComposition's `memory <GRUComposition.memory>`.
-    """
-    name = None
-    def __init__(self,
-                 name:str=None,
-                 index:int=None,
-                 type:FieldType=None,
-                 weight:float=None,
-                 learn_weight:bool=None,
-                 learning_rate:float=None,
-                 target:bool=None):
-        self.name = name
-        self.index = index
-        self.type = type
-        self.weight = weight
-        self.learn_weight = learn_weight
-        self.learning_rate = learning_rate
-        self.target = target
-        self.input_node = None
-        self.match_node = None
-        self.weight_node = None
-        self.weighted_match_node = None
-        self.retrieved_node = None
-        # Projections for all fields:
-        self.storage_projection = None       # Projection from input_node to storage_node
-        self.retrieve_projection = None     # Projection from softmax_node ("RETRIEVE" node) to retrieved_node
-        # Projections for key fields:
-        self.memory_projection = None        # Projection from query_input_node to match_node
-        self.concatenation_projection = None # Projection from query_input_node to concatenate_queries_node
-        self.match_projection = None         # Projection from match_node to weighted_match_node
-        self.weight_projection = None        # Projection from weight_node to weighted_match_node
-        self.weighted_match_projection = None  # Projection from weighted_match_node to combined_matches_node
 
     @property
     def nodes(self):
         """Return all Nodes assigned to the field."""
         return [node for node in
-                [self.input_node,
-                 self.match_node,
-                 self.weighted_match_node,
-                 self.weight_node,
-                 self.retrieved_node]
+                [self.hidden_layer_node,
+                 self.reset_gate_node,
+                 self.update_gate_node,
+                 self.new_gate_node,
                 if node is not None]
+
     @property
     def projections(self):
         """Return all Projections assigned to the field."""
-        return [proj for proj in [self.memory_projection,
-                                  self.storage_projection,
-                                  self.match_projection,
-                                  self.weight_projection,
-                                  self.weighted_match_projection,
-                                  self.retrieve_projection]
+        return [proj for proj in [self.reset_gating_projection,
+                                  self.update_gating_projection,
+                                  self.new_gating_projection,
+                                  self.input_projection,
+                                  self.hidden_layer_recurrent_projection]
                                   if proj is not None]
     @property
-    def query(self):
-        return self.input_node.variable
-
-    @property
-    def match(self):
-        return self.match_node.value
-
-    @property
-    def weighted_match(self):
-        return self.weighted_match_node.value
-
-    @property
-    def retrieved_memory(self):
-        return self.retrieved_node.value
-
-    @property
-    def memories(self):
-        return self.retrieved_node.path_afferents[0].matrix.modulated
-
-    def retrieval_operation(self):
-        return self.retrieved_node.path_afferents[0].function.operation
 
 
 class GRUComposition(AutodiffComposition):
     """
     GRUComposition(                      \
-        memory_template=[[0],[0]],      \
-        memory_fill=0,                  \
-        memory_capacity=None,           \
-        fields=None,                    \
-        field_names=None,               \
-        field_weights=None,             \
-        learn_field_weights=False,      \
-        learning_rate=True,             \
-        normalize_field_weights=True,   \
-        concatenate_queries=False,      \
-        normalize_memories=True,        \
-        softmax_gain=THRESHOLD,         \
-        storage_prob=1.0,               \
-        memory_decay_rate=AUTO,         \
-        enable_learning=True,           \
-        target_fields=None,             \
-        use_gating_for_weighting=False, \
-        name="EM_Composition"           \
+        name="GRU_Composition"           \
         )
 
-    Subclass of `AutodiffComposition` that implements the functions of an `EpisodicMemoryMechanism` in a
-    differentiable form and in which it's `field_weights <GRUComposition.field_weights>` parameter can be learned.
+    Subclass of `AutodiffComposition` that implements a single-layered gated recurrent network.
 
-    Takes only the following arguments, all of which are optional
+    Takes the following arguments:
 
     Arguments
     ---------
@@ -861,10 +493,10 @@ class GRUComposition(AutodiffComposition):
 
     """
 
-    componentCategory = EM_COMPOSITION
+    componentCategory = GRU_COMPOSITION
 
     if torch_available:
-        from psyneulink.library.compositions.pytorchGRUCompositionwrapper import PytorchGRUCompositionWrapper
+        from psyneulink.library.compositions.pytorchGRUcompositionwrapper import PytorchGRUCompositionWrapper
         pytorch_composition_wrapper_type = PytorchGRUCompositionWrapper
 
 

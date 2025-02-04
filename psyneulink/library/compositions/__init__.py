@@ -2,10 +2,12 @@ from .regressioncfa import *
 from .compositionrunner import *
 from .autodiffcomposition import *
 from .emcomposition import *
+from .grucomposition import *
 __all__ = list(regressioncfa.__all__)
 __all__.extend(compositionrunner.__all__)
 __all__.extend(autodiffcomposition.__all__)
 __all__.extend(emcomposition.__all__)
+__all__.extend(grucomposition.__all__)
 
 try:
     import torch
