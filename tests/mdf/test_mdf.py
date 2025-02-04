@@ -440,12 +440,49 @@ def test_generate_script_from_mdf(filename, composition_name, fmt, tmp_path):
     assert pnl.generate_script_from_mdf(mdf_file.read_text()) == pnl.generate_script_from_mdf(mdf_fname)
 
 
+_reason_no_default = 'cannot be instantiated with no arguments'
+_reason_abstract = 'is an abstract/shell class'
+_test_as_mdf_model_defaults_excluded_classes = {
+    pnl.ControlSignal: _reason_no_default,
+    pnl.DefaultControlMechanism: _reason_abstract,
+    pnl.GatingSignal: _reason_no_default,
+    pnl.IntegratorFunction: _reason_abstract,
+    pnl.KohonenMechanism: 'generally untested/broken',
+    pnl.LeabraFunction: _reason_no_default,
+    pnl.LearningMechanism: _reason_no_default,
+    pnl.LearningSignal: _reason_no_default,
+    pnl.ModulatorySignal: _reason_no_default,
+    pnl.OutputPort: _reason_no_default,
+    pnl.Rearrange: _reason_no_default,
+    pnl.UserDefinedFunction: _reason_no_default,
+}
+
+
 # test for simple crashes by Components unused in sample models
 @pytest.mark.parametrize(
-    'component_type', [
-        pnl.LCAMechanism, pnl.RecurrentTransferMechanism,
-    ]
+    'class_', sorted(
+        [
+            *(
+                set(pytest.helpers.get_all_subclasses(include_abstract=False))
+                - _test_as_mdf_model_defaults_excluded_classes.keys()
+            ),
+        ],
+        key=str
+    )
+    + [
+        pytest.param(cls_, marks=pytest.mark.xfail(reason=reason or ''))
+        for cls_, reason in _test_as_mdf_model_defaults_excluded_classes.items()
+    ],
 )
-def test_as_mdf_model_defaults(component_type):
-    c = component_type()
+def test_as_mdf_model_defaults(class_):
+    try:
+        c = class_()
+    except TypeError as e:
+        if 'required positional argument' in str(e):
+            pytest.xfail(reason=_reason_no_default)
+        else:
+            raise
+    except (pnl.ShellClassError, NotImplementedError):
+        pytest.skip(reason=_reason_abstract)
+
     c.as_mdf_model()
