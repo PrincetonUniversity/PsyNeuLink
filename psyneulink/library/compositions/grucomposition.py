@@ -133,6 +133,7 @@ from enum import Enum
 from sympy.stats import Logistic
 
 import psyneulink.core.scheduling.condition as conditions
+from psyneulink import IDENTITY_MATRIX
 
 from psyneulink._typing import Optional, Union
 from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination
@@ -377,30 +378,26 @@ class GRUComposition(AutodiffComposition):
     # Construct Nodes --------------------------------------------------------------------------------
 
     def _construct_pathways(self, input_size, hidden_size):
-        """Construct Nodes and Pathways for GRUComposition"""
+        """Construct Nodes and Projections for GRUComposition"""
         self.input_node = ProcessingMechanism(name=INPUT_NODE_NAME, input_shapes=input_size)
         self.hidden_layer_node = ProcessingMechanism(name=HIDDEN_LAYER_NODE_NAME,
                                                      input_shapes=[hidden_size, hidden_size],
-                                                     # default_variable=[[0],[0]],
                                                      input_ports=[
                                                          InputPort(name='RECURRENT',
                                                                    function=LinearCombination(operation=PRODUCT)),
                                                          InputPort(name='INPUT',
-                                                                   function=LinearCombination(operation=PRODUCT))
-                                                     ],
-                                                     function=LinearCombination(operation=SUM)
-                                                     )
+                                                                   function=LinearCombination(operation=PRODUCT))],
+                                                     function=LinearCombination(operation=SUM))
         self.new_gate_node = ProcessingMechanism(name=NEW_GATE_NODE_NAME,
                                                  input_shapes=[hidden_size, hidden_size],
                                                  input_ports=[
                                                      InputPort(name='FROM_INPUT',
                                                                function=LinearCombination(operation=PRODUCT)),
-                                                     "FROM_RESET_GATE"],
+                                                     "FROM RESET GATE"],
                                                  function=Tanh,
                                                  output_ports=[OutputPort(
-                                                     name='TO HIDDEN_LAYER INPUT',
-                                                     function=Linear(scale=-1,offset=1))]
-                                                 )
+                                                     name='TO HIDDEN LAYER INPUT',
+                                                     function=Linear(scale=-1,offset=1))])
         self.update_gate_node = ProcessingMechanism(name=UPDATE_GATE_NODE_NAME,
                                                     input_shapes=hidden_size,
                                                     function=Logistic)
@@ -416,32 +413,24 @@ class GRUComposition(AutodiffComposition):
                         self.new_gate_node,
                         self.output_node,
                         self.hidden_layer_node])
-        # self.exclude_node_roles(self.reset_gate_node, NodeRole.OUTPUT)
-        # self.exclude_node_roles(self.update_gate_node, NodeRole.OUTPUT)
-        # self.exclude_node_roles(self.new_gate_node, NodeRole.OUTPUT)
-        self.add_projections([MappingProjection(sender=self.hidden_layer_node,
-                                                receiver=self.hidden_layer_node.input_ports['RECURRENT']),
-                              MappingProjection(sender=self.update_gate_node,
-                                                receiver=self.hidden_layer_node.input_ports['RECURRENT']),
-                              MappingProjection(sender=self.update_gate_node,
-                                                receiver=self.hidden_layer_node.input_ports['INPUT']),
-                              MappingProjection(sender=self.new_gate_node,
-                                                receiver=self.hidden_layer_node.input_ports['INPUT']),
-                              MappingProjection(sender=self.input_node,
-                                                receiver=self.update_gate_node),
-                              MappingProjection(sender=self.hidden_layer_node,
-                                                receiver=self.reset_gate_node),
-                              MappingProjection(sender=self.hidden_layer_node,
-                                                receiver=self.update_gate_node),
-                              MappingProjection(sender=self.input_node,
-                                                receiver=self.reset_gate_node),
-                              MappingProjection(sender=self.reset_gate_node,
-                                                receiver=self.new_gate_node),
-                              MappingProjection(sender=self.hidden_layer_node,
-                                                receiver=self.output_node)
-                              ])
+        self.add_projections([
+            MappingProjection(sender=self.input_node, receiver=self.reset_gate_node),
+            MappingProjection(sender=self.input_node, receiver=self.update_gate_node),
+            MappingProjection(sender=self.hidden_layer_node, receiver=self.hidden_layer_node.input_ports['RECURRENT'],
+                              matrix=IDENTITY_MATRIX, learnable=False),
+            MappingProjection(sender=self.hidden_layer_node, receiver=self.output_node),
+            MappingProjection(sender=self.hidden_layer_node, receiver=self.reset_gate_node),
+            MappingProjection(sender=self.hidden_layer_node, receiver=self.update_gate_node),
+            MappingProjection(sender=self.reset_gate_node, receiver=self.new_gate_node,
+                              matrix=IDENTITY_MATRIX, learnable=False),
+            MappingProjection(sender=self.update_gate_node, receiver=self.hidden_layer_node.input_ports['RECURRENT'],
+                              matrix=IDENTITY_MATRIX, learnable=False),
+            MappingProjection(sender=self.update_gate_node, receiver=self.hidden_layer_node.input_ports['INPUT'],
+                              matrix=IDENTITY_MATRIX, learnable=False),
+            MappingProjection(sender=self.new_gate_node, receiver=self.hidden_layer_node.input_ports['INPUT'],
+                              matrix=IDENTITY_MATRIX, learnable=False),
+        ])
     #region
-
 
 
     def _set_learning_attributes(self):
