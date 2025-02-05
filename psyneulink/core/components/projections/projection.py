@@ -1168,7 +1168,7 @@ class Projection_Base(Projection):
         from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 
         # these may occur during deferred init
-        if not isinstance(self.sender, type):
+        if hasattr(self, 'sender') and not isinstance(self.sender, type):
             sender_name = parse_valid_identifier(self.sender.name)
             if isinstance(self.sender.owner, CompositionInterfaceMechanism):
                 sender_mech = parse_valid_identifier(self.sender.owner.composition.name)
@@ -1178,7 +1178,7 @@ class Projection_Base(Projection):
             sender_name = ''
             sender_mech = ''
 
-        if not isinstance(self.receiver, type):
+        if hasattr(self, 'receiver') and not isinstance(self.receiver, type):
             try:
                 num_path_afferents = len(self.receiver.path_afferents)
             except PortError:
@@ -1209,7 +1209,11 @@ class Projection_Base(Projection):
         if self.defaults.weight is None:
             parameters[self._model_spec_id_parameters]['weight'] = 1
 
-        if simple_edge_format and not self.function._is_identity(defaults=True):
+        if (
+            simple_edge_format
+            and self.function is not None
+            and not self.function._is_identity(defaults=True)
+        ):
             edge_node = ProcessingMechanism(
                 name=f'{self.name}_dummy_node',
                 default_variable=self.defaults.variable,
