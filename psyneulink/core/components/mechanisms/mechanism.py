@@ -4243,7 +4243,17 @@ class Mechanism_Base(Mechanism):
         for name, val in self._mdf_model_parameters[self._model_spec_id_parameters].items():
             model.parameters.append(mdf.Parameter(id=name, value=val))
 
-        for ip in self.input_ports:
+        if (
+            self.input_ports is None
+            and self.initialization_status is ContextFlags.DEFERRED_INIT
+        ):
+            input_ports = []
+            primary_input_port = None
+        else:
+            input_ports = self.input_ports
+            primary_input_port = self.input_ports[0]
+
+        for ip in input_ports:
             if len(ip.path_afferents) > 1:
                 for aff in ip.path_afferents:
                     ip_model = mdf.InputPort(
@@ -4288,18 +4298,32 @@ class Mechanism_Base(Mechanism):
 
                 model.input_ports.append(ip_model)
 
-        for op in self.output_ports:
+        output_ports = self.output_ports
+        if (
+            output_ports is None
+            and self.initialization_status is ContextFlags.DEFERRED_INIT
+        ):
+            output_ports = []
+
+        for op in output_ports:
             op_model = op.as_mdf_model()
             op_model.id = f'{parse_valid_identifier(self.name)}_{op_model.id}'
 
             model.output_ports.append(op_model)
 
-        if len(ip.path_afferents) > 1:
+        # from deferred init above
+        if primary_input_port is None:
+            primary_function_input_name = ''
+        elif len(ip.path_afferents) > 1:
             primary_function_input_name = combination_function_dimreduce_id
         else:
             primary_function_input_name = model.input_ports[0].id
 
-        self.function._assign_to_mdf_model(model, primary_function_input_name)
+        if (
+            self.function is not None
+            or self.initialization_status is not ContextFlags.DEFERRED_INIT
+        ):
+            self.function._assign_to_mdf_model(model, primary_function_input_name)
 
         return model
 
