@@ -133,7 +133,6 @@ from enum import Enum
 from sympy.stats import Logistic
 
 import psyneulink.core.scheduling.condition as conditions
-from psyneulink import IDENTITY_MATRIX
 
 from psyneulink._typing import Optional, Union
 from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination
@@ -149,7 +148,7 @@ from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmecha
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.context import handle_external_context
-from psyneulink.core.globals.keywords import GRU_COMPOSITION, PRODUCT, SUM
+from psyneulink.core.globals.keywords import GRU_COMPOSITION, PRODUCT, SUM, IDENTITY_MATRIX
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, convert_all_elements_to_np_array, is_numeric_scalar
 from psyneulink.core.llvm import ExecutionMode
@@ -428,7 +427,7 @@ class GRUComposition(AutodiffComposition):
             MappingProjection(sender=self.update_gate_node, receiver=self.hidden_layer_node.input_ports['INPUT'],
                               matrix=IDENTITY_MATRIX, learnable=False),
             MappingProjection(sender=self.new_gate_node, receiver=self.hidden_layer_node.input_ports['INPUT'],
-                              matrix=IDENTITY_MATRIX, learnable=False),
+                              matrix=IDENTITY_MATRIX, learnable=False)
         ])
     #region
 
