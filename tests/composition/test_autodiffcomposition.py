@@ -2139,8 +2139,8 @@ class TestNestedLearning:
 
         nested = AutodiffComposition(nodes=[hidden_nodes[0],hidden_node_x],name='nested')
 
-        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]]),
-                  hidden_node_x.input_ports[0]:[[1], [1], [0], [0]]}
+        inputs = {input_nodes[0]: np.array([[0, 0], [0, 1], [1, 0], [1, 1]]),
+                  hidden_node_x.input_ports[0]: [[1], [1], [0], [0]]}
 
         direct_1 = [(nested, pnl.NodeRole.INPUT),
                   MappingProjection(hidden_nodes[0], output_nodes[0]),
