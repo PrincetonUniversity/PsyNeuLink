@@ -617,7 +617,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         return optimizer
 
     @handle_external_context()
-    def forward(self, inputs, optimization_rep, context=None)->dict:
+    def forward(self, inputs, optimization_rep, context=None) -> dict:
         """Forward method of the model for PyTorch and LLVM modes
         Returns a dictionary {output_node:value} of output values for the model
         """
@@ -650,6 +650,15 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                     # input_port uses a bias, so get that
                                     variable.append(torch.from_numpy(input_port.defaults.variable))
 
+                            # We now need to stack these so the batch dimension is first
+                            try:
+                                variable = torch.stack(variable, dim=1)
+                            except (RuntimeError, TypeError):
+                                # ragged, we need to reshape so batch dimension is first
+                                # is ragged, need to reshape things so batch size is first dimension.
+                                batch_size = variable[0].shape[0]
+                                variable = [[inp[b] for inp in variable] for b in range(batch_size)]
+
                     # Input for the Mechanism is *not* explicitly specified, but its input_port(s) may have been
                     else:
                         # Get input for each input_port of the node
@@ -664,6 +673,15 @@ class PytorchCompositionWrapper(torch.nn.Module):
                             elif not input_port.internal_only:
                                 # otherwise, use the node's input_port's afferents
                                 variable.append(node.aggregate_afferents(i))
+
+                        # We now need to stack these so the batch dimension is first
+                        try:
+                            variable = torch.stack(variable, dim=1)
+                        except (RuntimeError, TypeError):
+                            # ragged, we need to reshape so batch dimension is first
+                            # is ragged, need to reshape things so batch size is first dimension.
+                            batch_size = variable[0].shape[0]
+                            variable = [[inp[b] for inp in variable] for b in range(batch_size)]
                 else:
                     # Node is not INPUT to Composition or BIAS, so get all input from its afferents
                     variable = node.aggregate_afferents()
@@ -791,8 +809,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 continue
             # First get value in numpy format
             if isinstance(pytorch_node.output, list):
-                value = np.empty((len(pytorch_node.output),), dtype=object)
-                value[:] = [val.detach().cpu().numpy() for val in pytorch_node.output]
+                batch_size = len(pytorch_node.output)
+                num_outputs = len(pytorch_node.output[0])
+                value = np.empty((batch_size, num_outputs), dtype=object)
+                for bi in range(batch_size):
+                    for i in range(num_outputs):
+                        value[bi, i] = pytorch_node.output[bi][i].detach().cpu().numpy()
+
             else:
                 value = pytorch_node.output.detach().cpu().numpy()
 
@@ -978,7 +1001,9 @@ class PytorchMechanismWrapper():
                 if type(curr_val) == torch.Tensor:
                     proj_wrapper._curr_sender_value = curr_val[:, proj_wrapper._value_idx, ...]
                 else:
-                    proj_wrapper._curr_sender_value = curr_val[proj_wrapper._value_idx]
+                    val = [batch_elem[proj_wrapper._value_idx] for batch_elem in curr_val]
+                    val = torch.stack(val)
+                    proj_wrapper._curr_sender_value = val
 
             else:
                 proj_wrapper._curr_sender_value = torch.tensor(proj_wrapper.default_value)
@@ -1011,7 +1036,10 @@ class PytorchMechanismWrapper():
             res = torch.stack(res, dim=1)
         except (RuntimeError, TypeError):
             # is ragged, will handle ports individually during execute
-            pass
+            # We still need to reshape things so batch size is first dimension.
+            batch_size = res[0].shape[0]
+            res = [[inp[b] for inp in res] for b in range(batch_size)]
+
         return res
 
     def execute_input_ports(self, variable):
@@ -1021,18 +1049,22 @@ class PytorchMechanismWrapper():
             try:
                 variable = torch.stack(variable)
             except (RuntimeError, TypeError):
-                # ragged
+                # is ragged, need to reshape things so batch size is first dimension.
                 pass
 
         # must iterate over at least 1d input per port
-        variable = torch.atleast_2d(variable)
+        if type(variable) == torch.Tensor:
+            variable = torch.atleast_2d(variable)
 
         res = []
         for i in range(len(self.input_ports)):
             if type(variable) == torch.Tensor:
                 v = variable[:, i, ...] # Get the input for the port for all items in the batch
             else:
-                v = variable[i]
+                v = [batch_elem[i] for batch_elem in variable]
+
+                # We should be able to stack now, since the ragged structure is only on input ports
+                v = torch.stack(v)
 
             if isinstance(self.input_ports[i]._pnl_function, TransformFunction):
                 # Add input port dimension back to account for input port dimension reduction, we should have shape
@@ -1047,8 +1079,10 @@ class PytorchMechanismWrapper():
         try:
             res = torch.stack(res, dim=1) # Stack along the input port dimension, first dimension is batch
         except (RuntimeError, TypeError):
-            # ragged
-            pass
+            # is ragged, need to reshape things so batch size is first dimension.
+            batch_size = res[0].shape[0]
+            res = [[inp[b] for inp in res] for b in range(batch_size)]
+
         return res
 
     def execute(self, variable, context):
@@ -1065,7 +1099,13 @@ class PytorchMechanismWrapper():
                 res = function(*variable)
             # variable is ragged
             elif isinstance(variable, list):
-                res = [function(variable[i]) for i in range(len(variable))]
+                # res = [function(variable[i]) for i in range(len(variable))]
+                res = [function(torch.stack([batch_elem[i] for batch_elem in variable])) for i in range(len(variable[0]))]
+
+                # Reshape to batch dimension first
+                batch_size = res[0].shape[0]
+                res = [[inp[b] for inp in res] for b in range(batch_size)]
+
             else:
                 # Functions handle batch dimensions, just run the
                 # function with the variable and get back a tensor.

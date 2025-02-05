@@ -11508,7 +11508,8 @@ _
                         # If this is an instance of generator CompositionRunner._batch_inputs, then there is no
                         # need to call _parse_trial_inputs, as the inputs are already in the correct format
                         # from the call to _parse_learning_spec
-                        if isgenerator(inputs) and 'CompositionRunner._batch_inputs' in str(inputs):
+                        if isgenerator(inputs) and ('CompositionRunner._batch_inputs' in str(inputs) or
+                                                    'CompositionRunner._batch_function_inputs' in str(inputs)):
                             execution_stimuli = next(inputs)
                         else:
                             execution_stimuli = self._parse_trial_inputs(inputs, trial_num, context)

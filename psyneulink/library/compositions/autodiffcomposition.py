@@ -1098,12 +1098,13 @@ class AutodiffComposition(Composition):
 
         # Get value of TARGET nodes for current trial
         curr_tensors_for_targets = {}
-        for component in targets.keys():
-            if isinstance(targets[component], torch.Tensor) or isinstance(targets[component], np.ndarray):
-                curr_tensors_for_targets[component] = [targets[component][:, i, :] for i in range(targets[component].shape[1])]
+        for component, target in targets.items():
+            if isinstance(target, torch.Tensor) or isinstance(target, np.ndarray):
+                curr_tensors_for_targets[component] = [target[:, i, :] for i in range(target.shape[1])]
             else:
-                # Its  a list
-                curr_tensors_for_targets[component] = [torch.tensor(targets[component][i], device=self.device).double() for i in range(len(targets[component]))]
+                # It's  a list, of lists, of torch tensors because it is ragged
+                num_outputs = len(targets[component][0])
+                curr_tensors_for_targets[component] = [torch.stack([batch_elem[i] for batch_elem in target]) for i in range(num_outputs)]
 
         # Get value of TARGET nodes for trained OUTPUT nodes
         curr_target_tensors_for_trained_outputs = {}
@@ -1111,13 +1112,20 @@ class AutodiffComposition(Composition):
             curr_target_tensors_for_trained_outputs[trained_output] = curr_tensors_for_targets[target]
 
         # Calculate and track the loss over the trained OUTPUT nodes
-        for component in curr_tensors_for_trained_outputs.keys():
+        for component, outputs in curr_tensors_for_trained_outputs.items():
             trial_loss = 0
-            for i in range(curr_tensors_for_trained_outputs[component].shape[1]):
+            targets = curr_target_tensors_for_trained_outputs[component]
+            num_outputs = outputs.shape[1] if type(outputs) is torch.Tensor else len(outputs[0])
+            for i in range(num_outputs):
                 # loss only accepts 0 or 1d target. reshape assuming pytorch_rep.minibatch_loss dim is correct
+
+                # Get the output, if it's a torch tensor we can slice, if it's a list of list (its ragged) and we
+                # need to index
+                output = outputs[:, i, :] if type(outputs) is torch.Tensor else torch.stack([batch_elem[i] for batch_elem in outputs])
+
                 comp_loss = self.loss_function(
-                    curr_tensors_for_trained_outputs[component][:, i, :],
-                    torch.atleast_1d(curr_target_tensors_for_trained_outputs[component][i])
+                    output,
+                    torch.atleast_1d(targets[i])
                 )
                 comp_loss = comp_loss.reshape_as(pytorch_rep.minibatch_loss)
                 trial_loss += comp_loss
@@ -1135,7 +1143,14 @@ class AutodiffComposition(Composition):
                 f"PROGRAM ERROR: {input_port.name} of ouput_CIM for '{self.name}' has more than one afferent."
             port, source, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
             idx = source.output_ports.index(port)
-            trained_output_values += [curr_tensors_for_trained_outputs[source][:, idx, ...].detach().cpu().numpy().copy().tolist()]
+            outputs = curr_tensors_for_trained_outputs[source]
+            if type(outputs) is torch.Tensor:
+                output = outputs[:, idx, ...]
+            else:
+                output = torch.stack([batch_elem[idx] for batch_elem in outputs])
+
+            output = output.detach().cpu().numpy().copy().tolist()
+            trained_output_values += [output]
 
         # Get values of all OUTPUT nodes
         all_output_values = []
@@ -1144,10 +1159,15 @@ class AutodiffComposition(Composition):
                 f"PROGRAM ERROR: {input_port.name} of ouput_CIM for '{self.name}' has more than one afferent."
             port, component, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
             idx = component.output_ports.index(port)
-            t = curr_tensors_for_outputs[component][:, idx, ...]
-            # t = torch.atleast_1d(t.squeeze())
-            t = t.detach().cpu().numpy().copy().tolist()
-            all_output_values += [t]
+            outputs = curr_tensors_for_outputs[component]
+
+            if type(outputs) is torch.Tensor:
+                output = outputs[:, idx, ...]
+            else:
+                output = torch.stack([batch_elem[idx] for batch_elem in outputs])
+
+            output = output.detach().cpu().numpy().copy().tolist()
+            all_output_values += [output]
 
         # Turn into a numpy array, possibly ragged
         try:

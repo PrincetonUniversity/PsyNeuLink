@@ -48,6 +48,47 @@ class CompositionRunner():
             total_loss += comparator.value[0][0]
         return total_loss
 
+    def convert_to_torch(self, v):
+        """Convert a list of numpy arrays to a list of PyTorch tensors"""
+
+        import torch
+
+        # If the inner elements of the list are numpy arrays, convert to np.array first since PyTorch says
+        # converting directly to tensors for lists of np.ndarrays is slow.
+        if type(v[0]) == np.ndarray:
+            t = torch.from_numpy(np.array(v))
+        else:
+            try:
+                t = torch.tensor(v)
+            except ValueError:
+                # We probably have a ragged array, so we need to convert to a list of tensors
+                t = [[torch.tensor(y).double() for y in x] for x in v]
+
+        # Assume that the input port dimension is singleton and add it for 2D inputs
+        if isinstance(t, torch.Tensor) and t.ndim < 3:
+            t = t.unsqueeze(dim=1)
+
+        # Convert integer types to double
+        if type(t) is not list and t.dtype in [torch.int64, torch.int32, torch.int16, torch.int8]:
+            t = t.double()
+
+        return t
+
+    def convert_input_to_arrays(self, inputs, execution_mode):
+        """If the inputs are not numpy arrays or torch tensors, convert them"""
+
+        array_inputs = {}
+        for k, v in inputs.items():
+            if type(v) is list:
+                if execution_mode is ExecutionMode.PyTorch:
+                    array_inputs[k] = self.convert_to_torch(v)
+                else:
+                    array_inputs[k] = np.array(v)
+            else:
+                array_inputs[k] = v
+
+        return array_inputs
+
     def _batch_inputs(self,
                       inputs: dict,
                       epochs: int,
@@ -81,33 +122,9 @@ class CompositionRunner():
         if minibatch_size > 1 and optimizations_per_minibatch != 1:
             raise ValueError("Cannot optimize multiple times per batch if minibatch size is greater than 1.")
 
-        if execution_mode is ExecutionMode.PyTorch:
-            import torch
+        inputs = self.convert_input_to_arrays(inputs, execution_mode)
 
-        # If the inputs are not numpy arrays or torch tensors, convert them
-        tensor_inputs = {}
-        for k, v in inputs.items():
-            if type(v) is list:
-                if execution_mode is ExecutionMode.PyTorch:
-                    # If the inner elements of the list are numpy arrays, convert to np.array first since PyTorch says
-                    # converting directly to tensors for lists of np.ndarrays is slow.
-                    if type(v[0]) == np.ndarray:
-                        tensor_inputs[k] = torch.from_numpy(np.array(v))
-                    else:
-                        tensor_inputs[k] = torch.tensor(v)
-
-                    # Convert integer types to double
-                    if tensor_inputs[k].dtype in [torch.int64, torch.int32, torch.int16, torch.int8]:
-                        tensor_inputs[k] = tensor_inputs[k].double()
-
-                else:
-                    tensor_inputs[k] = np.array(v)
-            else:
-                tensor_inputs[k] = v
-
-        inputs = tensor_inputs
-
-        #This is a generator for performance reasons,
+        # This is a generator for performance reasons,
         #    since we don't want to copy any data (especially for very large inputs or epoch counts!)
         for epoch in range(epochs):
             indices_of_all_trials = list(range(0, num_trials))
@@ -125,7 +142,11 @@ class CompositionRunner():
                 inputs_for_minibatch = {}
                 for k, v in inputs.items():
                     modded_indices = [i % len(v) for i in indices_of_trials_in_batch]
-                    inputs_for_minibatch[k] = v[modded_indices]
+
+                    if type(v) is not list:
+                        inputs_for_minibatch[k] = v[modded_indices]
+                    else: # list because ragged
+                        inputs_for_minibatch[k] = [v[i] for i in modded_indices]
 
                 # Cycle over optimizations per trial (stimulus
                 for optimization_num in range(optimizations_per_minibatch):
@@ -187,10 +208,10 @@ class CompositionRunner():
                                inputs: dict,
                                epochs: int,
                                num_trials: int,
-                               batch_size: int = 1,
+                               minibatch_size: int = 1,
                                optimizations_per_minibatch: int = 1,
-                               synch_with_pnl_options:Optional[Mapping] = None,
-                               retain_in_pnl_options:Optional[Mapping] = None,
+                               synch_with_pnl_options: Optional[Mapping] = None,
+                               retain_in_pnl_options: Optional[Mapping] = None,
                                call_before_minibatch=None,
                                call_after_minibatch=None,
                                early_stopper=None,
@@ -201,25 +222,37 @@ class CompositionRunner():
         assert call_before_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
         assert call_after_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
 
+        if type(minibatch_size) == np.ndarray:
+            minibatch_size = minibatch_size.item()
+
+        if type(minibatch_size) == list:
+            minibatch_size = np.array(minibatch_size).item()
+
+        if minibatch_size > 1 and optimizations_per_minibatch != 1:
+            raise ValueError("Cannot optimize multiple times per batch if minibatch size is greater than 1.")
+
         for epoch in range(epochs):
-            for i in range(0, num_trials, batch_size):
+            for i in range(0, num_trials, minibatch_size):
                 batch_ran = False
 
                 if call_before_minibatch:
                     call_before_minibatch()
 
-                for idx in range(i, i + batch_size):
+                for idx in range(i, i + minibatch_size):
                     try:
-                        trial_input, _ = self._composition._parse_learning_spec(inputs=inputs(idx),
+                        input_batch, _ = self._composition._parse_learning_spec(inputs=inputs(idx),
                                                                                 targets=None,
                                                                                 execution_mode=execution_mode,
                                                                                 context=context)
                     except:
                         break
-                    if trial_input is None:
+                    if input_batch is None:
                         break
                     batch_ran = True
-                    yield trial_input
+
+                    input_batch = self.convert_input_to_arrays(input_batch, execution_mode)
+
+                    yield input_batch
 
                 if batch_ran:
                     if call_after_minibatch:
