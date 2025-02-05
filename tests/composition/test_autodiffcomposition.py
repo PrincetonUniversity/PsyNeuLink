@@ -3498,7 +3498,9 @@ def test_autodiff_saveload(tmp_path):
 @pytest.mark.pytorch
 @pytest.mark.aclogging
 class TestACLogging:
-    def test_autodiff_logging(self):
+
+    @pytest.mark.parametrize('minibatch_size', [1, 2])
+    def test_autodiff_logging(self, minibatch_size):
         xor_in = TransferMechanism(name='xor_in',
                                    default_variable=np.zeros(2))
 
@@ -3549,7 +3551,8 @@ class TestACLogging:
                   synch_projection_matrices_with_torch=pnl.MINIBATCH,
                   synch_results_with_torch=pnl.MINIBATCH,
                   # synch_results_with_torch=pnl.RUN,
-                  execution_mode=pnl.ExecutionMode.PyTorch)
+                  execution_mode=pnl.ExecutionMode.PyTorch,
+                  minibatch_size=minibatch_size)
 
         exec_id = xor.default_execution_id
 
@@ -3566,21 +3569,26 @@ class TestACLogging:
 
         out_np_dict_vals = xor_out.log.nparray_dictionary()[exec_id]['value']
 
-        expected_length = len(xor_inputs) * num_epochs
+        expected_length = int(len(xor_inputs) * num_epochs / minibatch_size)
 
-        np.testing.assert_equal(in_np_dict_vals[0:4], xor_inputs)
+
+        if minibatch_size == 1:
+            np.testing.assert_equal(in_np_dict_vals[0:4], xor_inputs[:, None, :, :])
+        elif minibatch_size == 4:
+            np.testing.assert_equal(in_np_vals[0:2][:, :, :], in_np_dict_vals)
+
         np.testing.assert_equal(in_np_vals, in_np_dict_vals)
-        assert in_np_dict_vals.shape == (expected_length, 1, xor_in.input_shapes)
+        assert in_np_dict_vals.shape == (expected_length, minibatch_size, 1, xor_in.input_shapes)
 
         assert hid_map_np_dict_mats.shape == (expected_length, xor_in.input_shapes, xor_hid.input_shapes)
         np.testing.assert_equal(hid_map_np_mats, hid_map_np_dict_mats)
 
-        assert hid_np_dict_vals.shape == (expected_length, 1, xor_hid.input_shapes)
+        assert hid_np_dict_vals.shape == (expected_length, minibatch_size, 1, xor_hid.input_shapes)
 
         assert out_map_np_dict_mats.shape == (expected_length, xor_hid.input_shapes, xor_out.input_shapes)
         np.testing.assert_equal(out_map_np_mats, out_map_np_dict_mats)
 
-        assert out_np_dict_vals.shape == (expected_length, 1, xor_out.input_shapes)
+        assert out_np_dict_vals.shape == (expected_length, minibatch_size, 1, xor_out.input_shapes)
 
         xor_out.log.print_entries()
 
