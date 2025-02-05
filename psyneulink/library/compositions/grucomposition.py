@@ -38,7 +38,6 @@ the flow of information through the RecurrentTransferMechanism.  This correspond
 <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_, which is used to implement it when its `learn
 <GRUComposition.learn>` method is colled with `execution_mode <GRUComposition.execution_mode>` set to *PyTorch*
 
-
 COMMENT:
 FIX: ADD EXPLANATION OF ITS RELATIONSHIP TO PyTorch GRUCell
 COMMENT
@@ -131,11 +130,16 @@ import numpy as np
 import warnings
 from enum import Enum
 
+from sympy.stats import Logistic
+
 import psyneulink.core.scheduling.condition as conditions
 
 from psyneulink._typing import Optional, Union
-from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
+from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear, Logistic, Tanh
 from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_state_getter, _seed_setter
+from psyneulink.core.components.ports.inputport import InputPort
+from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.compositions.composition import CompositionError, NodeRole
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, torch_available
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
@@ -144,7 +148,7 @@ from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmecha
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.context import handle_external_context
-from psyneulink.core.globals.keywords import GRU_COMPOSITION
+from psyneulink.core.globals.keywords import GRU_COMPOSITION, PRODUCT, SUM, IDENTITY_MATRIX
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, convert_all_elements_to_np_array, is_numeric_scalar
 from psyneulink.core.llvm import ExecutionMode
@@ -158,12 +162,14 @@ INPUT_NODE_NAME = 'INPUT'
 INPUT_AFFIX = f' [{INPUT_NODE_NAME}]'
 HIDDEN_LAYER_NODE_NAME = 'HIDDEN LAYER'
 HIDDEN_LAYER_AFFIX = f' [{HIDDEN_LAYER_NODE_NAME}]'
-RESET_GATE_NAME = 'RESET GATE'
-RESET_GATE_AFFIX = f' [{RESET_GATE_NAME}]'
-UPDATE_GATE_NAME = 'UPDATE GATE'
-UPDATE_GATE_AFFIX = f' [{UPDATE_GATE_NAME}]'
-NEW_GATE_NAME = 'NEW GATE'
-NEW_GATE_AFFIX = f' [{NEW_GATE_NAME}]'
+RESET_GATE_NODE_NAME = 'RESET GATE'
+RESET_GATE_AFFIX = f' [{RESET_GATE_NODE_NAME}]'
+UPDATE_GATE_NODE_NAME = 'UPDATE GATE'
+UPDATE_GATE_AFFIX = f' [{UPDATE_GATE_NODE_NAME}]'
+NEW_GATE_NODE_NAME = 'NEW GATE'
+NEW_GATE_AFFIX = f' [{NEW_GATE_NODE_NAME}]'
+OUTPUT_NODE_NAME = 'OUTPUT'
+OUTPUT_AFFIX = f' [{OUTPUT_NODE_NAME}]'
 
 
 class GRUCompositionError(CompositionError):
@@ -184,7 +190,7 @@ class GRUCompositionError(CompositionError):
                 self.update_gate_node,
                 self.new_gate_node]
                 if node is not None]
-
+    
     @property
     def projections(self):
         """Return all Projections assigned to the field."""
@@ -214,25 +220,20 @@ class GRUComposition(AutodiffComposition):
     ---------
 
     input_size : int : default 1
-        specifies the size of the input layer.
+        specifies the length of the input array to the GRUComposition.
 
     hidden_size : int : default 1
-        specifies the size of the hidden layer.
+        specifies the length of the hidden layer of the GRUComposition.
 
+    bias=True : bool : default False
+        specifies whether the GRUComposition uses a bias vector in its computations.
+
+    COMMENT:
     num_layers : int : default 1
-        specifies the number of layers in the GRU.
-
-    bias : bool : default True
-        specifies whether or not to use a bias in the GRU.
-
-    batch_first : bool : default False
-        specifies whether the input and output tensors are provided as (batch, seq, feature).
-
-    dropout : float : default 0.0
-        specifies the dropout probability.
-
-    bidrectional : bool : default False
-        specifies whether the GRU is bidirectional.
+     batch_first : bool : default False
+     dropout : float : default 0.0
+     bidirectional : bool : default False
+    COMMENT
 
     learning_rate : float : default .01
         specifies the default learning_rate for `field_weights <GRUComposition.field_weights>` not
@@ -240,12 +241,28 @@ class GRUComposition(AutodiffComposition):
         <GRUComposition_Field_Weights_Learning>` for additional details).
 
     enable_learning : bool : default True
-        specifies whether learning is enabled for the EMCComposition (see `Learning <GRUComposition_Learning>`
-        for additional details); **use_gating_for_weighting** must be False.
+        specifies whether learning is enabled for the GRUComposition (see `Learning <GRUComposition_Learning>`
+        for additional details)
 
 
     Attributes
     ----------
+
+    input_size : int
+        determines the length of the input array to the GRUComposition.
+
+    hidden_size : int
+        determines the length of the hidden layer of the GRUComposition.
+
+    bias=True : bool
+        determines whether the GRUComposition uses a bias vector in its computations.
+
+    COMMENT:
+    num_layers : int : default 1
+     batch_first : bool : default False
+     dropout : float : default 0.0
+     bidirectional : bool : default False
+    COMMENT
 
     learning_rate : float
         determines the default learning_rate for `field_weights <GRUComposition.field_weights>`
@@ -259,22 +276,20 @@ class GRUComposition(AutodiffComposition):
     .. _GRUComposition_Nodes:
 
     input_node : list[ProcessingMechanism]
-        `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` that receives...
-
-    bias_node : list[ProcessingMechanism]
-        `BIAS <NodeRole.INPUT>` `Node <Composition_Nodes>` that receives...
+        `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receives the input to the GRUComposition
+        and passes it to the hidden layer.
 
     hidden_layer_node : list[ProcessingMechanism]
-        `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` that receives...
+        `RecurrentTransferMechanism` that implements the recurrent layer of the GRUComposition.
 
     reset_gate_node : list[ProcessingMechanism]
-        `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` that receives
+        `GatingMechanism` that implements the reset gate of the GRUComposition.
 
     update_gate_node : list[ProcessingMechanism]
-        `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` that receives
+        `GatingMechanism` that implements the update gate of the GRUComposition.
 
     new_gate_node : list[ProcessingMechanism]
-        `INPUT <NodeRole.INPUT>` ` <Composition_Nodes>` that receives
+        `GatingMechanism` that implements the new gate of the GRUComposition.
 
     """
 
@@ -316,6 +331,13 @@ class GRUComposition(AutodiffComposition):
 
     @check_user_specified
     def __init__(self,
+                 input_size:int=1,
+                 hidden_size:int=1,
+                 bias:bool=False,
+                 # num_layers:int=1,
+                 # batch_first:bool=False,
+                 # dropout:float=0.0,
+                 # bidirectional:bool=False,
                  learning_rate:float=None,
                  enable_learning:bool=True,
                  random_state=None,
@@ -326,6 +348,13 @@ class GRUComposition(AutodiffComposition):
         # Instantiate Composition -------------------------------------------------------------------------
 
         super().__init__(name=name,
+                         # input_size=input_size,
+                         # hidden_size=hidden_size,
+                         # bias=bias,
+                         # num_layers=num_layers,
+                         # batch_first=batch_first,
+                         # dropout=dropout,
+                         # bidirectional=bidirectional,
                          learning_rate = learning_rate,
                          enable_learning = enable_learning,
                          random_state = random_state,
@@ -333,7 +362,7 @@ class GRUComposition(AutodiffComposition):
                          **kwargs
                          )
 
-        self._construct_pathways()
+        self._construct_pathways(input_size, hidden_size)
 
         # if torch_available:
         #     from psyneulink.library.compositions.pytorchGRUCompositionwrapper import PytorchGRUCompositionWrapper
@@ -345,13 +374,104 @@ class GRUComposition(AutodiffComposition):
     # *****************************************************************************************************************
     # ******************************  Nodes and Pathway Construction Methods  *****************************************
     # *****************************************************************************************************************
+    # Construct Nodes --------------------------------------------------------------------------------
+
+    def _construct_pathways(self, input_size, hidden_size):
+        """Construct Nodes and Projections for GRUComposition"""
+        self.input_node = ProcessingMechanism(name=INPUT_NODE_NAME, input_shapes=input_size)
+        self.hidden_layer_node = ProcessingMechanism(name=HIDDEN_LAYER_NODE_NAME,
+                                                     input_shapes=[hidden_size, hidden_size],
+                                                     input_ports=[
+                                                         InputPort(name='RECURRENT',
+                                                                   function=LinearCombination(operation=PRODUCT)),
+                                                         InputPort(name='INPUT',
+                                                                   function=LinearCombination(operation=PRODUCT))],
+                                                     function=LinearCombination(operation=SUM))
+        self.new_gate_node = ProcessingMechanism(name=NEW_GATE_NODE_NAME,
+                                                 input_shapes=[hidden_size, hidden_size],
+                                                 input_ports=[
+                                                     InputPort(name='FROM_INPUT',
+                                                               function=LinearCombination(operation=PRODUCT)),
+                                                     "FROM RESET GATE"],
+                                                 function=Tanh,
+                                                 output_ports=[OutputPort(
+                                                     name='TO HIDDEN LAYER INPUT',
+                                                     function=Linear(scale=-1,offset=1))])
+        self.update_gate_node = ProcessingMechanism(name=UPDATE_GATE_NODE_NAME,
+                                                    input_shapes=hidden_size,
+                                                    function=Logistic)
+        self.reset_gate_node = ProcessingMechanism(name=RESET_GATE_NODE_NAME,
+                                                   input_shapes=hidden_size,
+                                                   function=Logistic)
+        self.output_node = ProcessingMechanism(name=OUTPUT_NODE_NAME,
+                                                   input_shapes=hidden_size,
+                                                   function=Linear)
+        self.add_nodes([self.input_node,
+                        self.reset_gate_node,
+                        self.update_gate_node,
+                        self.new_gate_node,
+                        self.output_node,
+                        self.hidden_layer_node])
+        self.add_projections([
+            MappingProjection(sender=self.input_node, receiver=self.reset_gate_node),
+            MappingProjection(sender=self.input_node, receiver=self.update_gate_node),
+            MappingProjection(sender=self.hidden_layer_node, receiver=self.hidden_layer_node.input_ports['RECURRENT'],
+                              matrix=IDENTITY_MATRIX, learnable=False),
+            MappingProjection(sender=self.hidden_layer_node, receiver=self.output_node),
+            MappingProjection(sender=self.hidden_layer_node, receiver=self.reset_gate_node),
+            MappingProjection(sender=self.hidden_layer_node, receiver=self.update_gate_node),
+            MappingProjection(sender=self.reset_gate_node, receiver=self.new_gate_node,
+                              matrix=IDENTITY_MATRIX, learnable=False),
+            MappingProjection(sender=self.update_gate_node, receiver=self.hidden_layer_node.input_ports['RECURRENT'],
+                              matrix=IDENTITY_MATRIX, learnable=False),
+            MappingProjection(sender=self.update_gate_node, receiver=self.hidden_layer_node.input_ports['INPUT'],
+                              matrix=IDENTITY_MATRIX, learnable=False),
+            MappingProjection(sender=self.new_gate_node, receiver=self.hidden_layer_node.input_ports['INPUT'],
+                              matrix=IDENTITY_MATRIX, learnable=False)
+        ])
     #region
-    def _construct_pathways(self):
-        """Construct Nodes and Pathways for GRUComposition"""
-
-        # Construct Nodes --------------------------------------------------------------------------------
 
 
+    def _set_learning_attributes(self):
+        """Set learning-related attributes for Node and Projections
+        """
+        # 7/10/24 FIX: SHOULD THIS ALSO BE CONSTRAINED BY VALUE OF field_weights FOR CORRESPONDING FIELD?
+        #         (i.e., if it is zero then not learnable? or is that a valid initial condition?)
+        for projection in self.projections:
+
+            projection_is_field_weight = projection.sender.owner in self.field_weight_nodes
+
+            if self.enable_learning is False or not projection_is_field_weight:
+                projection.learnable = False
+                continue
+
+            if learning_rate is False:
+                projection.learnable = False
+                continue
+            elif learning_rate is True:
+                # Default (GRUComposition's learning_rate) is used for all field_weight Projections:
+                learning_rate = self.learning_rate
+            assert isinstance(learning_rate, (int, float)), \
+                (f"PROGRAM ERROR: learning_rate for {projection.sender.owner.name} is not a valid value.")
+
+            projection.learnable = True
+            if projection.learning_mechanism:
+                projection.learning_mechanism.learning_rate = learning_rate
+
+    def _validate_options_with_learning(self,
+                                        use_gating_for_weighting,
+                                        enable_learning,
+                                        softmax_choice):
+        if use_gating_for_weighting and enable_learning:
+            warnings.warn(f"The 'enable_learning' option for '{self.name}' cannot be used with "
+                          f"'use_gating_for_weighting' set to True; this will generate an error if its "
+                          f"'learn' method is called. Set 'use_gating_for_weighting' to True in order "
+                          f"to enable learning of field weights.")
+
+        if softmax_choice in {ARG_MAX, PROBABILISTIC} and enable_learning:
+            warnings.warn(f"The 'softmax_choice' arg of '{self.name}' is set to '{softmax_choice}' with "
+                          f"'enable_learning' set to True; this will generate an error if its "
+                          f"'learn' method is called. Set 'softmax_choice' to WEIGHTED_AVG before learning.")
     #endregion
 
     # *****************************************************************************************************************
@@ -425,8 +545,3 @@ class GRUComposition(AutodiffComposition):
 
     #endregion
 
-    # *****************************************************************************************************************
-    # ***************************************** Properties  **********************************************************
-    # *****************************************************************************************************************
-    # region
-    #endregion

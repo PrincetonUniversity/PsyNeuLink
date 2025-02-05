@@ -308,9 +308,9 @@ class GatingMechanism(ControlMechanism):
 
     variable : value, list or ndarray
         used as the input to the GatingMechanism's `function <GatingMechanism.function>`.  Its format is determined
-        by the **default_gating_allocation** or **input_shapes** argument of the GatingMechanism's constructor (see above),
-        and is the same format as its `gating_allocation <GatingMechanis.gating_allocation>` (unless a custom
-        `function <GatingMechanism.function>` has been assigned).
+        by the **default_gating_allocation** or **input_shapes** argument of the GatingMechanism's constructor
+        (see above), and is the same format as its `gating_allocation <GatingMechanism.gating_allocation>`
+        (unless a custom `function <GatingMechanism.function>` has been assigned).
 
     monitor_for_gating : List[OutputPort]
         each item is an `OutputPort` monitored by the GatingMechanism or its `objective_mechanism
@@ -492,7 +492,7 @@ class GatingMechanism(ControlMechanism):
                           )
 
     def _instantiate_control_signal_type(self, gating_signal_spec, context):
-        """Instantiate actual ControlSignal, or subclass if overridden"""
+        """Instantiate GatingSignal"""
         from psyneulink.core.components.ports.port import _instantiate_port
         from psyneulink.core.components.projections.projection import ProjectionError
 
