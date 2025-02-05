@@ -130,11 +130,16 @@ import numpy as np
 import warnings
 from enum import Enum
 
+from sympy.stats import Logistic
+
 import psyneulink.core.scheduling.condition as conditions
 
 from psyneulink._typing import Optional, Union
-from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
+from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear, Logistic, Tanh
 from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_state_getter, _seed_setter
+from psyneulink.core.components.ports.inputport import InputPort
+from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.compositions.composition import CompositionError, NodeRole
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, torch_available
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
@@ -143,7 +148,7 @@ from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmecha
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.context import handle_external_context
-from psyneulink.core.globals.keywords import GRU_COMPOSITION
+from psyneulink.core.globals.keywords import GRU_COMPOSITION, PRODUCT, SUM
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, convert_all_elements_to_np_array, is_numeric_scalar
 from psyneulink.core.llvm import ExecutionMode
@@ -160,9 +165,11 @@ HIDDEN_LAYER_AFFIX = f' [{HIDDEN_LAYER_NODE_NAME}]'
 RESET_GATE_NODE_NAME = 'RESET GATE'
 RESET_GATE_AFFIX = f' [{RESET_GATE_NODE_NAME}]'
 UPDATE_GATE_NODE_NAME = 'UPDATE GATE'
-UPDATE_GATE_AFFIX = f' [{UPDATE_GATE_NODE_NAME}]
+UPDATE_GATE_AFFIX = f' [{UPDATE_GATE_NODE_NAME}]'
 NEW_GATE_NODE_NAME = 'NEW GATE'
 NEW_GATE_AFFIX = f' [{NEW_GATE_NODE_NAME}]'
+OUTPUT_NODE_NAME = 'OUTPUT'
+OUTPUT_AFFIX = f' [{OUTPUT_NODE_NAME}]'
 
 
 class GRUCompositionError(CompositionError):
@@ -181,13 +188,13 @@ class GRUCompositionError(CompositionError):
                 self.hidden_layer_node,
                 self.reset_gate_node,
                 self.update_gate_node,
-                self.new_gate_node,
+                self.new_gate_node]
                 if node is not None]
-
+    
     @property
     def projections(self):
         """Return all Projections assigned to the field."""
-        return [proj for proj in [self.input_to_hidden_projection
+        return [proj for proj in [self.input_to_hidden_projection,
                                   self.input_to_reset_gate_projection,
                                   self.input_to_update_gate_projection,
                                   self.input_to_new_gate_projection,
@@ -324,9 +331,9 @@ class GRUComposition(AutodiffComposition):
 
     @check_user_specified
     def __init__(self,
-                 input_size:int=None,
-                 hidden_size:int=None,
-                 bias:bool=True,
+                 input_size:int=1,
+                 hidden_size:int=1,
+                 bias:bool=False,
                  # num_layers:int=1,
                  # batch_first:bool=False,
                  # dropout:float=0.0,
@@ -341,9 +348,9 @@ class GRUComposition(AutodiffComposition):
         # Instantiate Composition -------------------------------------------------------------------------
 
         super().__init__(name=name,
-                         input_size=input_size,
-                         hidden_size=hidden_size,
-                         bias=bias,
+                         # input_size=input_size,
+                         # hidden_size=hidden_size,
+                         # bias=bias,
                          # num_layers=num_layers,
                          # batch_first=batch_first,
                          # dropout=dropout,
@@ -355,7 +362,7 @@ class GRUComposition(AutodiffComposition):
                          **kwargs
                          )
 
-        self._construct_pathways()
+        self._construct_pathways(input_size, hidden_size)
 
         # if torch_available:
         #     from psyneulink.library.compositions.pytorchGRUCompositionwrapper import PytorchGRUCompositionWrapper
@@ -367,24 +374,75 @@ class GRUComposition(AutodiffComposition):
     # *****************************************************************************************************************
     # ******************************  Nodes and Pathway Construction Methods  *****************************************
     # *****************************************************************************************************************
-    #region
-    def _construct_pathways(self,
-                            ):
+    # Construct Nodes --------------------------------------------------------------------------------
+
+    def _construct_pathways(self, input_size, hidden_size):
         """Construct Nodes and Pathways for GRUComposition"""
-        self.input_node = ProcessingMechanism(name=INPUT_NODE_NAME, size=self.input_size)
-        self.new_gate_node = ProcessingMechanism(name=HIDDEN_LAYER_NODE_NAME,
-                                                     size=self.input_size,
-                                                     input_ports=self.input_node)
-
+        self.input_node = ProcessingMechanism(name=INPUT_NODE_NAME, input_shapes=input_size)
         self.hidden_layer_node = ProcessingMechanism(name=HIDDEN_LAYER_NODE_NAME,
-                                                     size=self.input_size,
-                                                     input_ports=self.input_node)
-        self.reset_gate_node = GatingMechanism(name=RESET_GATE_NODE_NAME,
-                                               size=self.input_size,
-                                               input_ports=self.input_node)
+                                                     input_shapes=[hidden_size, hidden_size],
+                                                     # default_variable=[[0],[0]],
+                                                     input_ports=[
+                                                         InputPort(name='RECURRENT',
+                                                                   function=LinearCombination(operation=PRODUCT)),
+                                                         InputPort(name='INPUT',
+                                                                   function=LinearCombination(operation=PRODUCT))
+                                                     ],
+                                                     function=LinearCombination(operation=SUM)
+                                                     )
+        self.new_gate_node = ProcessingMechanism(name=NEW_GATE_NODE_NAME,
+                                                 input_shapes=[hidden_size, hidden_size],
+                                                 input_ports=[
+                                                     InputPort(name='FROM_INPUT',
+                                                               function=LinearCombination(operation=PRODUCT)),
+                                                     "FROM_RESET_GATE"],
+                                                 function=Tanh,
+                                                 output_ports=[OutputPort(
+                                                     name='TO HIDDEN_LAYER INPUT',
+                                                     function=Linear(scale=-1,offset=1))]
+                                                 )
+        self.update_gate_node = ProcessingMechanism(name=UPDATE_GATE_NODE_NAME,
+                                                    input_shapes=hidden_size,
+                                                    function=Logistic)
+        self.reset_gate_node = ProcessingMechanism(name=RESET_GATE_NODE_NAME,
+                                                   input_shapes=hidden_size,
+                                                   function=Logistic)
+        self.output_node = ProcessingMechanism(name=OUTPUT_NODE_NAME,
+                                                   input_shapes=hidden_size,
+                                                   function=Linear)
+        self.add_nodes([self.input_node,
+                        self.reset_gate_node,
+                        self.update_gate_node,
+                        self.new_gate_node,
+                        self.output_node,
+                        self.hidden_layer_node])
+        # self.exclude_node_roles(self.reset_gate_node, NodeRole.OUTPUT)
+        # self.exclude_node_roles(self.update_gate_node, NodeRole.OUTPUT)
+        # self.exclude_node_roles(self.new_gate_node, NodeRole.OUTPUT)
+        self.add_projections([MappingProjection(sender=self.hidden_layer_node,
+                                                receiver=self.hidden_layer_node.input_ports['RECURRENT']),
+                              MappingProjection(sender=self.update_gate_node,
+                                                receiver=self.hidden_layer_node.input_ports['RECURRENT']),
+                              MappingProjection(sender=self.update_gate_node,
+                                                receiver=self.hidden_layer_node.input_ports['INPUT']),
+                              MappingProjection(sender=self.new_gate_node,
+                                                receiver=self.hidden_layer_node.input_ports['INPUT']),
+                              MappingProjection(sender=self.input_node,
+                                                receiver=self.update_gate_node),
+                              MappingProjection(sender=self.hidden_layer_node,
+                                                receiver=self.reset_gate_node),
+                              MappingProjection(sender=self.hidden_layer_node,
+                                                receiver=self.update_gate_node),
+                              MappingProjection(sender=self.input_node,
+                                                receiver=self.reset_gate_node),
+                              MappingProjection(sender=self.reset_gate_node,
+                                                receiver=self.new_gate_node),
+                              MappingProjection(sender=self.hidden_layer_node,
+                                                receiver=self.output_node)
+                              ])
+    #region
 
 
-        # Construct Nodes --------------------------------------------------------------------------------
 
     def _set_learning_attributes(self):
         """Set learning-related attributes for Node and Projections
@@ -398,16 +456,6 @@ class GRUComposition(AutodiffComposition):
             if self.enable_learning is False or not projection_is_field_weight:
                 projection.learnable = False
                 continue
-
-            # Use globally specified learning_rate
-            if self.learn_field_weights is None: # Default, which should be treat same as True
-                learning_rate = True
-            elif isinstance(self.learn_field_weights, (bool, int, float)):
-                learning_rate = self.learn_field_weights
-            # Use individually specified learning_rate
-            else:
-                # FIX: THIS NEEDS TO USE field_index_map, BUT THAT DOESN'T SEEM TO HAVE THE WEIGHT PROJECTION YET
-                learning_rate = self.learn_field_weights[self._field_index_map[projection]]
 
             if learning_rate is False:
                 projection.learnable = False
@@ -452,80 +500,6 @@ class GRUComposition(AutodiffComposition):
             self._store_memory(inputs, context)
         return results
 
-    def _store_memory(self, inputs, context):
-        """Store inputs to query and value nodes in memory
-        Store memories in weights of Projections to match_nodes (queries) and retrieved_nodes (values).
-        Note: inputs argument is ignored (included for compatibility with function of MemoryFunctions class;
-              storage is handled by call to EMComopsition._encode_memory
-        """
-        storage_prob = np.array(self._get_current_parameter_value(STORAGE_PROB, context)).astype(float)
-        random_state = self._get_current_parameter_value('random_state', context)
-
-        if storage_prob == 0.0 or (storage_prob > 0.0 and storage_prob < random_state.uniform()):
-            return
-        # self._encode_memory(inputs, context)
-        self._encode_memory(context)
-
-    def _encode_memory(self, context=None):
-        """Encode inputs as memories
-        For each node in query_input_nodes and value_input_nodes,
-        assign its value to afferent weights of corresponding retrieved_node.
-        - memory = matrix of entries made up vectors for each field in each entry (row)
-        - memory_full_vectors = matrix of entries made up vectors concatentated across all fields (used for norm)
-        - entry_to_store = query_input or value_input to store
-        - field_memories = weights of Projections for each field
-        """
-
-        # Get least used slot (i.e., weakest memory = row of matrix with lowest weights) computed across all fields
-        field_norms = np.array([np.linalg.norm(field, axis=1)
-                                for field in [row for row in self.parameters.memory.get(context)]])
-        if self.purge_by_field_weights:
-            field_norms *= self.field_weights
-        row_norms = np.sum(field_norms, axis=1)
-        idx_of_min = np.argmin(row_norms)
-
-        # If concatenate_queries=True, assign entry to col of matrix for Projection from concatenate_node to match_node
-        if self.concatenate_queries_node:
-            # Get entry to store from concatenate_queries_node
-            entry_to_store = self.concatenate_queries_node.value[0]
-            # Get matrix of weights for Projection from concatenate_node to match_node
-            field_memories = self.concatenate_queries_node.efferents[0].parameters.matrix.get(context)
-            # Decay existing memories before storage if memory_decay_rate is specified
-            if self.memory_decay_rate:
-                field_memories *= self.parameters.memory_decay_rate._get(context)
-            # Assign input vector to col of matrix that has lowest norm (i.e., weakest memory)
-            field_memories[:,idx_of_min] = np.array(entry_to_store)
-            # Assign updated matrix to Projection
-            self.concatenate_queries_node.efferents[0].parameters.matrix.set(field_memories, context)
-
-        # Otherwise, assign input for each key field to col of matrix for Projection from query_input_node to match_node
-        else:
-            for i, input_node in enumerate(self.query_input_nodes):
-                # Get entry to store from query_input_node
-                entry_to_store = input_node.value[0]
-                # Get matrix of weights for Projection from query_input_node to match_node
-                field_memories = input_node.efferents[0].parameters.matrix.get(context)
-                # Decay existing memories before storage if memory_decay_rate is specified
-                if self.memory_decay_rate:
-                    field_memories *= self.parameters.memory_decay_rate._get(context)
-                # Assign query_input vector to col of matrix that has lowest norm (i.e., weakest memory)
-                field_memories[:,idx_of_min] = np.array(entry_to_store)
-                # Assign updated matrix to Projection
-                input_node.efferents[0].parameters.matrix.set(field_memories, context)
-
-        # For each key and value field, assign input to row of matrix for Projection to retrieved_nodes
-        for i, input_node in enumerate(self.query_input_nodes + self.value_input_nodes):
-            # Get entry to store from query_input_node or value_input_node
-            entry_to_store = input_node.value[0]
-            # Get matrix of weights for Projection from input_node to match_node
-            field_memories = self.retrieved_nodes[i].path_afferents[0].parameters.matrix.get(context)
-            # Decay existing memories before storage if memory_decay_rate is specified
-            if self.memory_decay_rate:
-                field_memories *= self.memory_decay_rate
-            # Assign input vector to col of matrix that has lowest norm (i.e., weakest memory)
-            field_memories[idx_of_min] = np.array(entry_to_store)
-            # Assign updated matrix to Projection
-            self.retrieved_nodes[i].path_afferents[0].parameters.matrix.set(field_memories, context)
 
     @handle_external_context()
     def learn(self, *args, **kwargs)->list:
@@ -583,41 +557,3 @@ class GRUComposition(AutodiffComposition):
 
     #endregion
 
-    # *****************************************************************************************************************
-    # ***************************************** Properties  **********************************************************
-    # *****************************************************************************************************************
-    # region
-    @property
-    def input_nodes(self):
-        return [field.input_node for field in self.fields]
-
-    @property
-    def query_input_nodes(self):
-        return [field.input_node for field in self.fields if field.type == FieldType.KEY]
-
-    @property
-    def value_input_nodes(self):
-        return [field.input_node for field in self.fields if field.type == FieldType.VALUE]
-
-    @property
-    def match_nodes(self):
-        if self.concatenate_queries_node:
-            return [self.concatenated_match_node]
-        else:
-            return [field.match_node for field in self.fields if field.type == FieldType.KEY]
-
-    @property
-    def field_weight_nodes(self):
-        return [field.weight_node for field in self.fields
-                if field.weight_node and field.type == FieldType.KEY]
-
-    @property
-    def weighted_match_nodes(self):
-        return [field.weighted_match_node for field in self.fields
-                if field.weighted_match_node and (field.type == FieldType.KEY)]
-
-    @property
-    def retrieved_nodes(self):
-        return [field.retrieved_node for field in self.fields]
-
-    #endregion
