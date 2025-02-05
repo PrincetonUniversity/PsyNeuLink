@@ -232,7 +232,7 @@ class GatingMechanismError(ControlMechanismError):
 class GatingMechanism(ControlMechanism):
     """
     GatingMechanism(                           \
-        default_gating_allocation=None,        \
+        default_allocation=None,               \
         monitor_for_gating=None,               \
         function=Linear(slope=1, intercept=0), \
         default_allocation=None,               \
@@ -253,16 +253,14 @@ class GatingMechanism(ControlMechanism):
     Arguments
     ---------
 
-    default_gating_allocation : value, list or ndarray : default `defaultGatingAllocation`
-        the default value for each of the GatingMechanism's GatingSignals;
-        its length must equal the number of items specified in the **gate** argument.
-
     input_shapes : int, list or 1d np.array of ints
-        specifies default_gating_allocation as an array of zeros if **default_gating_allocation** is not passed as an
-        argument;  if **default_gating_allocation** is specified, it takes precedence over the specification of **input_shapes**.
+        specifies default_allocation as an array of zeros if **default_allocation** is not passed as an argument;
+        if **default_allocation** is specified, it takes precedence over the specification of **input_shapes**.
         As an example, the following mechanisms are equivalent::
             T1 = TransferMechanism(input_shapes = [3, 2])
             T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
+            T3 = TransferMechanism(input_shapes = [5, 1])
+                                   default_allocation = [[0, 0, 0], [0, 0]])
 
     monitor_for_gating : List[OutputPort or Mechanism] : default None
         specifies the `OutputPorts <OutputPort>` to be monitored by the `ObjectiveMechanism`, if specified in an
@@ -275,14 +273,15 @@ class GatingMechanism(ControlMechanism):
         specifies the function used to transform the GatingMechanism's `variable <GatingMechanism.variable>`
         to a `gating_allocation`.
 
-    default_allocation : number, list or 1d array : None
-        specifies the default_allocation of any `gating_signals <GatingMechanism.gating.signals>` for
-        which the **default_allocation** was not specified in its constructor (see default_allocation
-        <GatingMechanism.default_allocation>` for additional details).
+    default_allocation : number, list or nd array : None
+        specifies the default_allocation of any `gating_signals <GatingMechanism.gating.signals>` for which the
+        **default_allocation** is not specified in its constructor; its length must equal the number of items
+        specified in the **gate** argument (see default_allocation <GatingMechanism.default_allocation>` for
+        additional details).
 
     gate : list[GatingSignal, InputPort, OutputPort, Mechanism, tuple[str, Mechanism], or dict]
         specifies the `InputPorts <InputPort>` and/or `OutputPorts <OutputPorts>` to be gated by the
-        GatingMechanism; the number of items must equal the length of the **default_gating_allocation**
+        GatingMechanism; the number of items must equal the length of the **default_allocation**
         argument; if a `Mechanism <Mechanism>` is specified, its `primary InputPort <InputPort_Primary>`
         is used (see `GatingMechanism_GatingSignals` for details).
 
@@ -308,9 +307,9 @@ class GatingMechanism(ControlMechanism):
 
     variable : value, list or ndarray
         used as the input to the GatingMechanism's `function <GatingMechanism.function>`.  Its format is determined
-        by the **default_gating_allocation** or **input_shapes** argument of the GatingMechanism's constructor
-        (see above), and is the same format as its `gating_allocation <GatingMechanism.gating_allocation>`
-        (unless a custom `function <GatingMechanism.function>` has been assigned).
+        by the **default_allocation** or **input_shapes** argument of the GatingMechanism's constructor (see above),
+        and is the same format as its `gating_allocation <GatingMechanism.gating_allocation>` (unless a custom
+        `function <GatingMechanism.function>` has been assigned).
 
     monitor_for_gating : List[OutputPort]
         each item is an `OutputPort` monitored by the GatingMechanism or its `objective_mechanism
@@ -322,15 +321,15 @@ class GatingMechanism(ControlMechanism):
         to a `gating_allocation`;  the default is an identity function that simply assigns
         `variable <GatingMechanism.variable>` as the `gating_allocation <GatingMechanism.gating_allocation>`.
 
-    default_allocation : number, list or 1d array
+    default_allocation : number, list or nd array
         determines the default_allocation of any `gating_signals <GatingMechanism.gating.signals>` for
         which the **default_allocation** was not specified in its constructor;  if it is None (not specified)
         then the GatingSignal's parameters.allocation.default_value is used. See documentation for
         **default_allocation** argument of GatingSignal constructor for additional details.
 
-    gating_allocation : 2d array
-        each item is the value assigned as the `allocation <GatingSignal.allocation>` for the corresponding
-        `GatingSignal` listed in the `gating_signals <GatingMechanism.gating_signals>` attribute;  the
+    gating_allocation : nd array
+        each item in the outer dimension is the value assigned as the `allocation <GatingSignal.allocation>` for the
+        corresponding `GatingSignal` listed in the `gating_signals <GatingMechanism.gating_signals>` attribute; the
         gating_allocation is the same as the GatingMechanism's `value <Mechanism_Base.value>` attribute).
 
     gating_signals : ContentAddressableList[GatingSignal]
@@ -441,7 +440,6 @@ class GatingMechanism(ControlMechanism):
     @check_user_specified
     @beartype
     def __init__(self,
-                 default_gating_allocation=None,
                  input_shapes=None,
                  monitor_for_gating=None,
                  function=None,
@@ -466,10 +464,10 @@ class GatingMechanism(ControlMechanism):
                 if args:
                     monitor_for_gating.extend(convert_to_list(args))
             if 'default_gating_allocation' in kwargs:
-                raise GatingMechanismError(f"'default_allocation' should be used in place of "
-                                           f"'default_gating_allocation'.")
+                raise GatingMechanismError(f"'default_allocation' should be used "
+                                           f"in place of 'default_gating_allocation'.")
 
-        super().__init__(default_variable=default_gating_allocation,
+        super().__init__(default_variable=default_allocation,
                          input_shapes=input_shapes,
                          monitor_for_control=monitor_for_gating,
                          function=function,

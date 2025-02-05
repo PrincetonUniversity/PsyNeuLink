@@ -926,7 +926,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
     default_allocation : number, list or 1d array
         determines the default_allocation of any `control_signals <ControlMechanism.control_signals>` for
-        which the **default_allocation** was not specified in its constructor;  if it is None (not specified)
+        which the **default_allocation** is not specified in its constructor;  if it is None (not specified)
         then the ControlSignal's parameters.allocation.default_value is used. See documentation for
         **default_allocation** argument of ControlSignal constructor for additional details.
 
