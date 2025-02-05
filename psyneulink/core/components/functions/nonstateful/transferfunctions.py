@@ -131,8 +131,12 @@ def _range_getter_using_scale_and_offset(owning_component=None, context=None):
     output_for_fct_upper_bound = scale * upper_bound + offset
 
     # Need to do this since scale could be negative, reversing upper and lower range:
-    lower_bound = min(output_for_fct_lower_bound, output_for_fct_upper_bound)
-    upper_bound = max(output_for_fct_lower_bound, output_for_fct_upper_bound)
+    if np.isscalar(scale) or np.isscalar(offset):
+        lower_bound = min(output_for_fct_lower_bound, output_for_fct_upper_bound)
+        upper_bound = max(output_for_fct_lower_bound, output_for_fct_upper_bound)
+    else:
+        lower_bound = np.minimum(output_for_fct_lower_bound, output_for_fct_upper_bound)
+        upper_bound = np.maximum(output_for_fct_lower_bound, output_for_fct_upper_bound)
 
     return (lower_bound, upper_bound)
 
