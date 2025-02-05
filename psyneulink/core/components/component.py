@@ -1484,7 +1484,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "control_signal", "competition",
                      "has_recurrent_input_port", "enable_learning",
                      "enable_output_type_conversion", "changes_shape",
-                     "output_type", "bounds", "internal_only",
+                     "output_type", "range", "internal_only",
                      "require_projection_in_composition", "default_input",
                      "shadow_inputs", "compute_reconfiguration_cost",
                      "reconfiguration_cost", "net_outcome", "outcome",

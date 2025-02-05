@@ -20,7 +20,7 @@ Increased debug output:
  * "stat" -- prints code generation and compilation statistics
  * "time_stat" -- print compilation and code generation times
  * "comp_node_debug" -- print intermediate results after execution composition node wrapper.
- * "printf_tags" -- Enabledprintfs in compiled caode with the specififed tags
+ * "printf_tags" -- Enable print statements in compiled code with the specified tags
 
 Compilation modifiers:
  * "const_data" -- hardcode initial output values into generated code,

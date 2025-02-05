@@ -1233,9 +1233,9 @@ class TestStatefulness:
           [np.array([0.5]), np.array([0.9375])],
           [np.array([0.5]), np.array([0.96875])]]),
         ], ids=lambda x: str(x) if isinstance(x, pnl.Condition) else "")
-    # 'LLVM' mode is not supported, because synchronization of compiler and
+    # '_LLVMPerNode' mode is not supported, because synchronization of compiler and
     # python values during execution is not implemented.
-    @pytest.mark.usefixtures("comp_mode_no_llvm")
+    @pytest.mark.usefixtures("comp_mode_no_per_node")
     def test_reset_stateful_function_when_composition(self, comp_mode, cond0, cond1, expected):
         I1 = pnl.IntegratorMechanism()
         I2 = pnl.IntegratorMechanism()

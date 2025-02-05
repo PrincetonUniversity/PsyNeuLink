@@ -1735,8 +1735,6 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
         be used if `variable <MatrixTransform.variable>` is a scalar (i.e., has only one element), and **operation**
         is set to *L0* (since it is not needed, and can produce a divide by zero error).
 
-    bounds : None
-
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -1823,7 +1821,6 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
         matrix = Parameter(None, modulable=True, mdf_name='B')
         operation = Parameter(DOT_PRODUCT, stateful=False)
         normalize = Parameter(False)
-        bounds = None
 
     @check_user_specified
     @beartype
