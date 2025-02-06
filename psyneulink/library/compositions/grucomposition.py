@@ -194,8 +194,8 @@ class GRUComposition(AutodiffComposition):
         specifies the length of the internal state of the GRUComposition, and the size of the `hidden_layer_node
         <GRUComposition.hidden_layer_node>` and all nodes other than the `input_node<GRUComposition.input_node>`.
 
-    bias=True : bool : default False
-        specifies whether the GRUComposition uses a bias vector in its computations.
+    bias : bool : default False
+        specifies whether the GRUComposition uses bias vectors in its computations.
 
     COMMENT:
     num_layers : int : default 1
