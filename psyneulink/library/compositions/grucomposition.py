@@ -244,20 +244,69 @@ class GRUComposition(AutodiffComposition):
 
     input_node : list[ProcessingMechanism]
         `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receives the input to the GRUComposition
-        and passes it to the hidden layer.
-
-    hidden_layer_node : list[ProcessingMechanism]
-        `RecurrentTransferMechanism` that implements the recurrent layer of the GRUComposition.
-
-    reset_node : list[ProcessingMechanism]
-        `GatingMechanism` that implements the reset node of the GRUComposition.
-
-    update_node : list[ProcessingMechanism]
-        `GatingMechanism` that implements the update node of the GRUComposition.
+        and passes it to the `hidden_layer_node <GRUComposition.hidden_layer_node>`.
 
     new_node : list[ProcessingMechanism]
-        `ProcessingMechanism` that implements the new of the GRUComposition.
+        `ProcessingMechanism` that implements the new node of the GRUComposition that provides the `hidden_layer_node
+        <GRUComposition.hidden_layer_node>` with the input from the `input_node <GRUComposition.input_node>`, gated by
+        the `reset_node <GRUComposition.reset_node>`.
 
+    hidden_layer_node : list[ProcessingMechanism]
+        `ProcessingTransferMechanism` that implements the recurrent layer of the GRUComposition.
+
+    reset_node : list[ProcessingMechanism]
+        `GatingMechanism` that implements the reset node of the GRUComposition, that gates the input to the
+        `new_node <GRUComposition.new_node>`.
+
+    update_node : list[ProcessingMechanism]
+        `GatingMechanism` that implements the update node of the GRUComposition, that gates the inputs to the hidden
+        layer from the `new_node <GRUComposition.new_node>` and the prior state of the `hidden_layer_node
+        <GRUComposition.hidden_layer_node>` itself (i.e., the input it receives from its recurrent Projection).
+
+    .. _GRUComposition_Projections:
+
+    wts_in : MappingProjection
+        `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
+        from the `input_node <GRUComposition.input_node>` to the `new_node <GRUComposition.new_node>`.
+
+    wts_nh : MappingProjection
+        `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
+        from the `new_node <GRUComposition.new_node>` to the `hidden_layer_node <GRUComposition.hidden_layer_node>`.
+
+    wts_hh : MappingProjection
+        `MappingProjection` with fixed `matrix <MappingProjection.matrix>` ("connection weights") that projects
+        from the `hidden_layer_node <GRUComposition.hidden_layer_node>` to itself (i.e., the recurrent Projection).
+
+    wts_ho : MappingProjection
+        `MappingProjection` with fixed `matrix <MappingProjection.matrix>` ("connection weights") that projects from
+        the `hidden_layer_node <GRUComposition.hidden_layer_node>` to the `output_node <GRUComposition.output_node>`.
+
+    wts_iu : MappingProjection
+        `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
+        from the `input_node <GRUComposition.input_node>` to the `update_node <GRUComposition.update_node>`.
+
+    wts_ir : MappingProjection
+        `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
+        from the `input_node <GRUComposition.input_node>` to the `reset_node <GRUComposition.reset_node>`.
+
+    reset_gate : GatingProjection
+        `GatingProjection` that gates the input to the `new_node <GRUComposition.new_node>` from the `input_node
+        <GRUComposition.input_node>`; its `value <GatingProjection.value>` is used in the Hadamard product with
+        the input to produce the new (external) input to the `hidden_layer_node <GRUComposition.hidden_layer_node>`.
+
+    new_gate : GatingProjection
+        `GatingProjection` that gates the input to the `hidden_layer_node <GRUComposition.hidden_layer_node>` from the
+        `new_node <GRUComposition.new_node>`; its `value <GatingProjection.value>` is used in the Hadamard product
+        with the (external) input to the `hidden_layer_node <GRUComposition.hidden_layer_node>` from the `new_node
+        <GRUComposition.new_node>`, which determines how much of the `hidden_layer_node
+        <GRUComposition.hidden_layer_node>`\\'s new state is determined by the external input vs. its prior state.
+
+    recurrent_gate : GatingProjection
+        `GatingProjection` that gates the input to the `hidden_layer_node <GRUComposition.hidden_layer_node>` from its
+        recurrent projection (`wts_hh <GRUComposition.wts_hh>`); its `value <GatingProjection.value>` is used in the
+        in the Hadamard product with the recurrent input to the `hidden_layer_node <GRUComposition.hidden_layer_node>`,
+        which determines how much of the `hidden_layer_node <GRUComposition.hidden_layer_node>`\\'s
+        new state is determined by its prior state vs.its external input.
     """
 
     componentCategory = GRU_COMPOSITION
@@ -329,7 +378,7 @@ class GRUComposition(AutodiffComposition):
                          **kwargs
                          )
 
-        self._construct_pathways(input_size, hidden_size)
+        self._construct_composition(input_size, hidden_size)
 
         # if torch_available:
         #     from psyneulink.library.compositions.pytorchGRUCompositionwrapper import PytorchGRUCompositionWrapper
@@ -343,7 +392,7 @@ class GRUComposition(AutodiffComposition):
     # *****************************************************************************************************************
     # Construct Nodes --------------------------------------------------------------------------------
 
-    def _construct_pathways(self, input_size, hidden_size):
+    def _construct_composition(self, input_size, hidden_size):
         """Construct Nodes and Projections for GRUComposition"""
         hidden_shape = np.ones(hidden_size)
 
@@ -382,8 +431,10 @@ class GRUComposition(AutodiffComposition):
                                                GatingSignal(name='RECURRENT GATING SIGNAL',
                                                             default_allocation=hidden_shape,
                                                             gate=self.hidden_layer_node.input_ports['RECURRENT'])])
-        self.update_node.gating_signals['NEW GATING SIGNAL'].efferents[0].name = 'NEW GATE'
-        self.update_node.gating_signals['RECURRENT GATING SIGNAL'].efferents[0].name = 'RECURRENT GATE'
+        self.new_gate = self.update_node.gating_signals['NEW GATING SIGNAL'].efferents[0]
+        self.new_gate.name = 'NEW GATE'
+        self.recurrent_gate = self.update_node.gating_signals['RECURRENT GATING SIGNAL'].efferents[0]
+        self.recurrent_gate.name = 'RECURRENT GATE'
         self.wts_iu = self.update_node.input_ports[0].path_afferents[0]
         self.wts_iu.name = 'UPDATE GATE\nINPUT WEIGHTS'
         self.wts_iu.learnable = True
@@ -396,7 +447,8 @@ class GRUComposition(AutodiffComposition):
                                                   name='RESET GATING SIGNAL',
                                                   default_allocation=hidden_shape,
                                                   gate=self.new_node.input_ports['FROM RESET'])])
-        self.reset_node.gating_signals['RESET GATING SIGNAL'].efferents[0].name = 'RESET GATE'
+        self.reset_gate = self.reset_node.gating_signals['RESET GATING SIGNAL'].efferents[0]
+        self.reset_gate.name = 'RESET GATE'
         self.wts_ir = self.reset_node.input_ports[0].path_afferents[0]
         self.wts_ir.name = 'RESET GATE\nINPUT WEIGHTS'
         self.wts_ir.learnable = True
