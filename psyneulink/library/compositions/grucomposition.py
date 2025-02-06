@@ -315,8 +315,8 @@ class GRUComposition(AutodiffComposition):
         # Instantiate Composition -------------------------------------------------------------------------
 
         super().__init__(name=name,
-                         # input_size=input_size,
-                         # hidden_size=hidden_size,
+                         input_size=input_size,
+                         hidden_size=hidden_size,
                          # bias=bias,
                          # num_layers=num_layers,
                          # batch_first=batch_first,
