@@ -350,7 +350,7 @@ def test_mdf_pnl_results_equivalence(filename, composition_name, input_dict, sim
 
     m = load_mdf(mdf_fname)
     eg = ee.EvaluableGraph(m.graphs[0], verbose=True)
-    eg.evaluate(initializer={f'{node}_InputPort_0': i for node, i in input_dict.items()})
+    eg.evaluate(initializer={f'{node}_InputPort_0': np.array(i) for node, i in input_dict.items()})
 
     assert_result_equality(orig_results, {composition_name: _get_mdf_model_results(eg, composition)})
 
