@@ -439,6 +439,7 @@ class GRUComposition(AutodiffComposition):
                                         matrix=IDENTITY_MATRIX)
 
         self.add_projections([self.wts_in, self.wts_iu, self.wts_ir, self.wts_nh, self.wts_hh, self.wts_ho])
+        self._analyze_graph()
     #region
 
 
