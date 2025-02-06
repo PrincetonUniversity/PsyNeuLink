@@ -159,17 +159,11 @@ __all__ = ['GRUComposition', 'GRUCompositionError']
 
 # Node names
 INPUT_NODE_NAME = 'INPUT'
-INPUT_AFFIX = f' [{INPUT_NODE_NAME}]'
-HIDDEN_LAYER_NODE_NAME = 'HIDDEN LAYER'
-HIDDEN_LAYER_AFFIX = f' [{HIDDEN_LAYER_NODE_NAME}]'
-RESET_GATE_NODE_NAME = 'RESET GATE'
-RESET_GATE_AFFIX = f' [{RESET_GATE_NODE_NAME}]'
-UPDATE_GATE_NODE_NAME = 'UPDATE GATE'
-UPDATE_GATE_AFFIX = f' [{UPDATE_GATE_NODE_NAME}]'
-GATED_INPUT_NODE_NAME = 'GATED INPUT'
-GATED_INPUT_AFFIX = f' [{GATED_INPUT_NODE_NAME}]'
+HIDDEN_LAYER_NODE_NAME = 'HIDDEN\nLAYER'
+RESET_NODE_NAME = 'RESET'
+UPDATE_NODE_NAME = 'UPDATE'
+NEW_NODE_NAME = 'NEW'
 OUTPUT_NODE_NAME = 'OUTPUT'
-OUTPUT_AFFIX = f' [{OUTPUT_NODE_NAME}]'
 
 
 class GRUCompositionError(CompositionError):
@@ -186,21 +180,21 @@ class GRUCompositionError(CompositionError):
         return [node for node in
                 [self.input_node,
                 self.hidden_layer_node,
-                self.reset_gate_node,
-                self.update_gate_node,
-                self.gated_input_node]
+                self.reset_node,
+                self.update_node,
+                self.new_node]
                 if node is not None]
     
     @property
     def projections(self):
         """Return all Projections assigned to the field."""
         return [proj for proj in [self.input_to_hidden_projection,
-                                  self.input_to_reset_gate_projection,
-                                  self.input_to_update_gate_projection,
-                                  self.input_to_gated_input_projection,
+                                  self.input_to_reset_projection,
+                                  self.input_to_update_projection,
+                                  self.input_to_new_projection,
                                   self.reset_gating_projection,
                                   self.update_gating_projection,
-                                  self.gated_input_projection,
+                                  self.new_projection,
                                   self.input_projection,
                                   self.hidden_layer_recurrent_projection]
                                   if proj is not None]
@@ -282,14 +276,14 @@ class GRUComposition(AutodiffComposition):
     hidden_layer_node : list[ProcessingMechanism]
         `RecurrentTransferMechanism` that implements the recurrent layer of the GRUComposition.
 
-    reset_gate_node : list[ProcessingMechanism]
-        `GatingMechanism` that implements the reset gate of the GRUComposition.
+    reset_node : list[ProcessingMechanism]
+        `GatingMechanism` that implements the reset node of the GRUComposition.
 
-    update_gate_node : list[ProcessingMechanism]
-        `GatingMechanism` that implements the update gate of the GRUComposition.
+    update_node : list[ProcessingMechanism]
+        `GatingMechanism` that implements the update node of the GRUComposition.
 
-    gated_input_node : list[ProcessingMechanism]
-        `ProcessingMechanism` that implements the gated input of the GRUComposition.
+    new_node : list[ProcessingMechanism]
+        `ProcessingMechanism` that implements the new of the GRUComposition.
 
     """
 
@@ -396,17 +390,17 @@ class GRUComposition(AutodiffComposition):
         #         default_allocation=[0,0,0],
         #         gating_signals=[GatingSignal(default_allocation=[0,0,0],
         #                                      gate=mech.input_port)]
-        self.gated_input_node = ProcessingMechanism(name=GATED_INPUT_NODE_NAME,
+        self.new_node = ProcessingMechanism(name=NEW_NODE_NAME,
                                                     input_shapes=[hidden_size, hidden_size],
                                                     input_ports=['FROM INPUT',
                                                                  InputPort(
-                                                                     name="FROM RESET GATE",
+                                                                     name="FROM RESET",
                                                                      function=LinearCombination(scale=hidden_shape))],
                                                     function=LinearCombination,
                                                     output_ports=[OutputPort(name='TO HIDDEN LAYER INPUT',
                                                                              function=Tanh)])
         hidden_layer = self.hidden_layer_node
-        self.update_gate_node = GatingMechanism(name=UPDATE_GATE_NODE_NAME,
+        self.update_node = GatingMechanism(name=UPDATE_NODE_NAME,
                                                 input_shapes=hidden_size,
                                                 monitor_for_gating=self.input_node,
                                                 function=Logistic,
@@ -417,21 +411,21 @@ class GRUComposition(AutodiffComposition):
                                                                  gate=hidden_layer.input_ports['NEW INPUT']),
                                                     GatingSignal(default_allocation=hidden_shape,
                                                                  gate=hidden_layer.input_ports['RECURRENT'])])
-        self.reset_gate_node = GatingMechanism(name=RESET_GATE_NODE_NAME,
+        self.reset_node = GatingMechanism(name=RESET_NODE_NAME,
                                                input_shapes=hidden_size,
                                                monitor_for_gating=[self.input_node, self.hidden_layer_node],
                                                default_allocation=hidden_shape,
                                                gating_signals=[
                                                    GatingSignal(
                                                        default_allocation=hidden_shape,
-                                                       gate=self.gated_input_node.input_ports['FROM RESET GATE'])])
+                                                       gate=self.new_node.input_ports['FROM RESET'])])
         self.output_node = ProcessingMechanism(name=OUTPUT_NODE_NAME,
                                                input_shapes=hidden_size,
                                                function=Linear)
         self.add_nodes([self.input_node,
-                        self.gated_input_node,
-                        self.reset_gate_node,
-                        self.update_gate_node,
+                        self.new_node,
+                        self.reset_node,
+                        self.update_node,
                         self.output_node,
                         self.hidden_layer_node])
         def init_wts(sender_size, receiver_size):
@@ -439,10 +433,10 @@ class GRUComposition(AutodiffComposition):
             sqrt_val = np.sqrt(hidden_size)
             return np.random.uniform(-sqrt_val, sqrt_val, (sender_size, receiver_size))
         self.proj_in = MappingProjection(sender=self.input_node,
-                                         receiver=self.gated_input_node.input_ports['FROM INPUT'],
+                                         receiver=self.new_node.input_ports['FROM INPUT'],
                                          learnable=True,
                                          matrix=init_wts(input_size, hidden_size))
-        self.proj_nh = MappingProjection(sender=self.gated_input_node,
+        self.proj_nh = MappingProjection(sender=self.new_node,
                                          receiver=self.hidden_layer_node.input_ports['NEW INPUT'],
                                          learnable=True,
                                          matrix=init_wts(hidden_size, hidden_size))
