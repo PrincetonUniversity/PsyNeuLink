@@ -434,17 +434,27 @@ class GRUComposition(AutodiffComposition):
                         self.update_gate_node,
                         self.output_node,
                         self.hidden_layer_node])
-        self.add_projections([
-            MappingProjection(sender=self.input_node,
-                              receiver=self.gated_input_node.input_ports['FROM INPUT']),
-            MappingProjection(sender=self.gated_input_node,
-                              receiver=self.hidden_layer_node.input_ports['NEW INPUT'],
-                              matrix=IDENTITY_MATRIX, learnable=False),
-            MappingProjection(sender=self.hidden_layer_node,
-                              receiver=self.hidden_layer_node.input_ports['RECURRENT'],
-                              matrix=IDENTITY_MATRIX, learnable=False),
-            MappingProjection(sender=self.hidden_layer_node, receiver=self.output_node),
-        ])
+        def init_wts(sender_size, receiver_size):
+            """Initialize weights for Projections"""
+            sqrt_val = np.sqrt(hidden_size)
+            return np.random.uniform(-sqrt_val, sqrt_val, (sender_size, receiver_size))
+        self.proj_in = MappingProjection(sender=self.input_node,
+                                         receiver=self.gated_input_node.input_ports['FROM INPUT'],
+                                         learnable=True,
+                                         matrix=init_wts(input_size, hidden_size))
+        self.proj_nh = MappingProjection(sender=self.gated_input_node,
+                                         receiver=self.hidden_layer_node.input_ports['NEW INPUT'],
+                                         learnable=True,
+                                         matrix=init_wts(hidden_size, hidden_size))
+        self.proj_hh = MappingProjection(sender=self.hidden_layer_node,
+                                         receiver=self.hidden_layer_node.input_ports['RECURRENT'],
+                                         learnable=False,
+                                         matrix=IDENTITY_MATRIX)
+        self.proj_ho = MappingProjection(sender=self.hidden_layer_node,
+                                         receiver=self.output_node,
+                                         learnable=False,
+                                         matrix=IDENTITY_MATRIX)
+        self.add_projections([self.proj_in, self.proj_nh, self.proj_hh, self.proj_ho])
     #region
 
 
