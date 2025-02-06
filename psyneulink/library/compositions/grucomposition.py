@@ -187,13 +187,15 @@ class GRUComposition(AutodiffComposition):
     ---------
 
     input_size : int : default 1
-        specifies the length of the input array to the GRUComposition.
+        specifies the length of the input array to the GRUComposition, and the size of the `input_node
+        <GRUComposition.input_node>`.
 
     hidden_size : int : default 1
-        specifies the length of the hidden layer of the GRUComposition.
+        specifies the length of the internal state of the GRUComposition, and the size of the `hidden_layer_node
+        <GRUComposition.hidden_layer_node>` and all nodes other than the `input_node<GRUComposition.input_node>`.
 
-    bias=True : bool : default False
-        specifies whether the GRUComposition uses a bias vector in its computations.
+    bias : bool : default False
+        specifies whether the GRUComposition uses bias vectors in its computations.
 
     COMMENT:
     num_layers : int : default 1
@@ -244,20 +246,69 @@ class GRUComposition(AutodiffComposition):
 
     input_node : list[ProcessingMechanism]
         `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` that receives the input to the GRUComposition
-        and passes it to the hidden layer.
-
-    hidden_layer_node : list[ProcessingMechanism]
-        `RecurrentTransferMechanism` that implements the recurrent layer of the GRUComposition.
-
-    reset_node : list[ProcessingMechanism]
-        `GatingMechanism` that implements the reset node of the GRUComposition.
-
-    update_node : list[ProcessingMechanism]
-        `GatingMechanism` that implements the update node of the GRUComposition.
+        and passes it to the `hidden_layer_node <GRUComposition.hidden_layer_node>`.
 
     new_node : list[ProcessingMechanism]
-        `ProcessingMechanism` that implements the new of the GRUComposition.
+        `ProcessingMechanism` that implements the new node of the GRUComposition that provides the `hidden_layer_node
+        <GRUComposition.hidden_layer_node>` with the input from the `input_node <GRUComposition.input_node>`, gated by
+        the `reset_node <GRUComposition.reset_node>`.
 
+    hidden_layer_node : list[ProcessingMechanism]
+        `ProcessingTransferMechanism` that implements the recurrent layer of the GRUComposition.
+
+    reset_node : list[ProcessingMechanism]
+        `GatingMechanism` that implements the reset node of the GRUComposition, that gates the input to the
+        `new_node <GRUComposition.new_node>`.
+
+    update_node : list[ProcessingMechanism]
+        `GatingMechanism` that implements the update node of the GRUComposition, that gates the inputs to the hidden
+        layer from the `new_node <GRUComposition.new_node>` and the prior state of the `hidden_layer_node
+        <GRUComposition.hidden_layer_node>` itself (i.e., the input it receives from its recurrent Projection).
+
+    .. _GRUComposition_Projections:
+
+    wts_in : MappingProjection
+        `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
+        from the `input_node <GRUComposition.input_node>` to the `new_node <GRUComposition.new_node>`.
+
+    wts_nh : MappingProjection
+        `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
+        from the `new_node <GRUComposition.new_node>` to the `hidden_layer_node <GRUComposition.hidden_layer_node>`.
+
+    wts_hh : MappingProjection
+        `MappingProjection` with fixed `matrix <MappingProjection.matrix>` ("connection weights") that projects
+        from the `hidden_layer_node <GRUComposition.hidden_layer_node>` to itself (i.e., the recurrent Projection).
+
+    wts_ho : MappingProjection
+        `MappingProjection` with fixed `matrix <MappingProjection.matrix>` ("connection weights") that projects from
+        the `hidden_layer_node <GRUComposition.hidden_layer_node>` to the `output_node <GRUComposition.output_node>`.
+
+    wts_iu : MappingProjection
+        `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
+        from the `input_node <GRUComposition.input_node>` to the `update_node <GRUComposition.update_node>`.
+
+    wts_ir : MappingProjection
+        `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
+        from the `input_node <GRUComposition.input_node>` to the `reset_node <GRUComposition.reset_node>`.
+
+    reset_gate : GatingProjection
+        `GatingProjection` that gates the input to the `new_node <GRUComposition.new_node>` from the `input_node
+        <GRUComposition.input_node>`; its `value <GatingProjection.value>` is used in the Hadamard product with
+        the input to produce the new (external) input to the `hidden_layer_node <GRUComposition.hidden_layer_node>`.
+
+    new_gate : GatingProjection
+        `GatingProjection` that gates the input to the `hidden_layer_node <GRUComposition.hidden_layer_node>` from the
+        `new_node <GRUComposition.new_node>`; its `value <GatingProjection.value>` is used in the Hadamard product
+        with the (external) input to the `hidden_layer_node <GRUComposition.hidden_layer_node>` from the `new_node
+        <GRUComposition.new_node>`, which determines how much of the `hidden_layer_node
+        <GRUComposition.hidden_layer_node>`\\'s new state is determined by the external input vs. its prior state.
+
+    recurrent_gate : GatingProjection
+        `GatingProjection` that gates the input to the `hidden_layer_node <GRUComposition.hidden_layer_node>` from its
+        recurrent projection (`wts_hh <GRUComposition.wts_hh>`); its `value <GatingProjection.value>` is used in the
+        in the Hadamard product with the recurrent input to the `hidden_layer_node <GRUComposition.hidden_layer_node>`,
+        which determines how much of the `hidden_layer_node <GRUComposition.hidden_layer_node>`\\'s
+        new state is determined by its prior state vs.its external input.
     """
 
     componentCategory = GRU_COMPOSITION
@@ -329,7 +380,7 @@ class GRUComposition(AutodiffComposition):
                          **kwargs
                          )
 
-        self._construct_pathways(input_size, hidden_size)
+        self._construct_composition(input_size, hidden_size)
 
         # if torch_available:
         #     from psyneulink.library.compositions.pytorchGRUCompositionwrapper import PytorchGRUCompositionWrapper
@@ -343,7 +394,7 @@ class GRUComposition(AutodiffComposition):
     # *****************************************************************************************************************
     # Construct Nodes --------------------------------------------------------------------------------
 
-    def _construct_pathways(self, input_size, hidden_size):
+    def _construct_composition(self, input_size, hidden_size):
         """Construct Nodes and Projections for GRUComposition"""
         hidden_shape = np.ones(hidden_size)
 
@@ -375,13 +426,17 @@ class GRUComposition(AutodiffComposition):
                                            gating_signals=[
                                                # FIX: BE SURE BOTH GET SAME VARIABLE
                                                #      ELSE SINGLE GATING SIGNAL WITH TWO PROJECTIONS?
-                                               GatingSignal(name='NEW GATE',
+                                               GatingSignal(name='NEW GATING SIGNAL',
                                                             default_allocation=hidden_shape,
                                                             transfer_function=Linear(scale=-1,offset=1),
                                                             gate=self.hidden_layer_node.input_ports['NEW INPUT']),
-                                               GatingSignal(name='RECURRENT GATE',
+                                               GatingSignal(name='RECURRENT GATING SIGNAL',
                                                             default_allocation=hidden_shape,
                                                             gate=self.hidden_layer_node.input_ports['RECURRENT'])])
+        self.new_gate = self.update_node.gating_signals['NEW GATING SIGNAL'].efferents[0]
+        self.new_gate.name = 'NEW GATE'
+        self.recurrent_gate = self.update_node.gating_signals['RECURRENT GATING SIGNAL'].efferents[0]
+        self.recurrent_gate.name = 'RECURRENT GATE'
         self.wts_iu = self.update_node.input_ports[0].path_afferents[0]
         self.wts_iu.name = 'UPDATE GATE\nINPUT WEIGHTS'
         self.wts_iu.learnable = True
@@ -391,9 +446,11 @@ class GRUComposition(AutodiffComposition):
                                           default_allocation=hidden_shape,
                                           gating_signals=[
                                               GatingSignal(
-                                                  name='RESET GATE',
+                                                  name='RESET GATING SIGNAL',
                                                   default_allocation=hidden_shape,
                                                   gate=self.new_node.input_ports['FROM RESET'])])
+        self.reset_gate = self.reset_node.gating_signals['RESET GATING SIGNAL'].efferents[0]
+        self.reset_gate.name = 'RESET GATE'
         self.wts_ir = self.reset_node.input_ports[0].path_afferents[0]
         self.wts_ir.name = 'RESET GATE\nINPUT WEIGHTS'
         self.wts_ir.learnable = True
@@ -439,28 +496,29 @@ class GRUComposition(AutodiffComposition):
                                         matrix=IDENTITY_MATRIX)
 
         self.add_projections([self.wts_in, self.wts_iu, self.wts_ir, self.wts_nh, self.wts_hh, self.wts_ho])
+        self._analyze_graph()
     #region
 
 
     def _set_learning_attributes(self):
         """Set learning-related attributes for Node and Projections
         """
-        # 7/10/24 FIX: SHOULD THIS ALSO BE CONSTRAINED BY VALUE OF field_weights FOR CORRESPONDING FIELD?
-        #         (i.e., if it is zero then not learnable? or is that a valid initial condition?)
         for projection in self.projections:
 
             projection_is_field_weight = projection.sender.owner in self.field_weight_nodes
 
-            if self.enable_learning is False or not projection_is_field_weight:
+            if self.enable_learning is False:
                 projection.learnable = False
                 continue
 
             if learning_rate is False:
                 projection.learnable = False
                 continue
+
             elif learning_rate is True:
                 # Default (GRUComposition's learning_rate) is used for all field_weight Projections:
                 learning_rate = self.learning_rate
+
             assert isinstance(learning_rate, (int, float)), \
                 (f"PROGRAM ERROR: learning_rate for {projection.sender.owner.name} is not a valid value.")
 
