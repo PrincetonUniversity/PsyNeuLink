@@ -648,7 +648,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                     variable.append(input[i])
                                 elif input_port.default_input == DEFAULT_VARIABLE:
                                     # input_port uses a bias, so get that
-                                    variable.append(torch.from_numpy(input_port.defaults.variable))
+                                    variable.append(torch.atleast_2d(torch.from_numpy(input_port.defaults.variable)))
 
                             # We now need to stack these so the batch dimension is first
                             try:
@@ -669,7 +669,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                 variable.append(inputs[input_port])
                             elif input_port.default_input == DEFAULT_VARIABLE:
                                 # input_port uses a bias, so get that
-                                variable.append(torch.from_numpy(input_port.defaults.variable))
+                                variable.append(torch.atleast_2d(torch.from_numpy(input_port.defaults.variable)))
                             elif not input_port.internal_only:
                                 # otherwise, use the node's input_port's afferents
                                 variable.append(node.aggregate_afferents(i))
