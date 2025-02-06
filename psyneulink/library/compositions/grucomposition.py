@@ -36,7 +36,7 @@ The GRUComposition a subclass of `AutodiffComposition` that implements a single-
 which combines a `RecurrentTransferMechanism` with a set of `GatingMechanisms <GatingMechanism>` that modulate
 the flow of information through the RecurrentTransferMechanism.  This corresponds to the `PyTorch GRUNetwork
 <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_, which is used to implement it when its `learn
-<GRUComposition.learn>` method is colled with `execution_mode <GRUComposition.execution_mode>` set to *PyTorch*
+<GRUComposition.learn>` method is called with `execution_mode <GRUComposition.execution_mode>` set to *PyTorch*
 
 COMMENT:
 FIX: ADD EXPLANATION OF ITS RELATIONSHIP TO PyTorch GRUCell
@@ -46,7 +46,7 @@ COMMENT
 
 **Organization**
 
-
+FIX: ADD EQUATION AND MAP TO NAMES OF NODES AND PROJECTIONS
 
 .. _GRUComposition_Operation:
 
