@@ -375,13 +375,15 @@ class GRUComposition(AutodiffComposition):
                                            gating_signals=[
                                                # FIX: BE SURE BOTH GET SAME VARIABLE
                                                #      ELSE SINGLE GATING SIGNAL WITH TWO PROJECTIONS?
-                                               GatingSignal(name='NEW GATE',
+                                               GatingSignal(name='NEW GATING SIGNAL',
                                                             default_allocation=hidden_shape,
                                                             transfer_function=Linear(scale=-1,offset=1),
                                                             gate=self.hidden_layer_node.input_ports['NEW INPUT']),
-                                               GatingSignal(name='RECURRENT GATE',
+                                               GatingSignal(name='RECURRENT GATING SIGNAL',
                                                             default_allocation=hidden_shape,
                                                             gate=self.hidden_layer_node.input_ports['RECURRENT'])])
+        self.update_node.gating_signals['NEW GATING SIGNAL'].efferents[0].name = 'NEW GATE'
+        self.update_node.gating_signals['RECURRENT GATING SIGNAL'].efferents[0].name = 'RECURRENT GATE'
         self.wts_iu = self.update_node.input_ports[0].path_afferents[0]
         self.wts_iu.name = 'UPDATE GATE\nINPUT WEIGHTS'
         self.wts_iu.learnable = True
@@ -391,9 +393,10 @@ class GRUComposition(AutodiffComposition):
                                           default_allocation=hidden_shape,
                                           gating_signals=[
                                               GatingSignal(
-                                                  name='RESET GATE',
+                                                  name='RESET GATING SIGNAL',
                                                   default_allocation=hidden_shape,
                                                   gate=self.new_node.input_ports['FROM RESET'])])
+        self.reset_node.gating_signals['RESET GATING SIGNAL'].efferents[0].name = 'RESET GATE'
         self.wts_ir = self.reset_node.input_ports[0].path_afferents[0]
         self.wts_ir.name = 'RESET GATE\nINPUT WEIGHTS'
         self.wts_ir.learnable = True
@@ -446,22 +449,22 @@ class GRUComposition(AutodiffComposition):
     def _set_learning_attributes(self):
         """Set learning-related attributes for Node and Projections
         """
-        # 7/10/24 FIX: SHOULD THIS ALSO BE CONSTRAINED BY VALUE OF field_weights FOR CORRESPONDING FIELD?
-        #         (i.e., if it is zero then not learnable? or is that a valid initial condition?)
         for projection in self.projections:
 
             projection_is_field_weight = projection.sender.owner in self.field_weight_nodes
 
-            if self.enable_learning is False or not projection_is_field_weight:
+            if self.enable_learning is False:
                 projection.learnable = False
                 continue
 
             if learning_rate is False:
                 projection.learnable = False
                 continue
+
             elif learning_rate is True:
                 # Default (GRUComposition's learning_rate) is used for all field_weight Projections:
                 learning_rate = self.learning_rate
+
             assert isinstance(learning_rate, (int, float)), \
                 (f"PROGRAM ERROR: learning_rate for {projection.sender.owner.name} is not a valid value.")
 
