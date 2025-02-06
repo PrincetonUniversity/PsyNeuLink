@@ -112,6 +112,10 @@ def get_loaded_model_state(model_input: str):
     _globals = copy.copy(globals())
     _locals = copy.copy(locals())
 
+    # MDF execution engine does not parse initializer values into numpy arrays.
+    # exec uses string value of numpy array, which is 'array(...)'
+    _globals['array'] = np.array
+
     exec(model_input, _globals, _locals)
 
     return _globals, _locals
@@ -350,7 +354,7 @@ def test_mdf_pnl_results_equivalence(filename, composition_name, input_dict, sim
 
     m = load_mdf(mdf_fname)
     eg = ee.EvaluableGraph(m.graphs[0], verbose=True)
-    eg.evaluate(initializer={f'{node}_InputPort_0': i for node, i in input_dict.items()})
+    eg.evaluate(initializer={f'{node}_InputPort_0': np.array(i) for node, i in input_dict.items()})
 
     assert_result_equality(orig_results, {composition_name: _get_mdf_model_results(eg, composition)})
 
