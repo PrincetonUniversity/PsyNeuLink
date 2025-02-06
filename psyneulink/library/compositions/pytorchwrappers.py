@@ -640,9 +640,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
                             variable = inputs[node._mechanism]
                         else:
                             # node is also a BIAS node, so get input for each input_port individually
+                            variable = []
                             for i, input_port in enumerate(node._mechanism.input_ports):
                                 input = inputs[node._mechanism]
-                                variable = []
                                 if not input_port.internal_only:
                                     # input_port receives external input, so get from inputs
                                     variable.append(input[i])
