@@ -48,6 +48,20 @@ COMMENT
 
 FIX: ADD EQUATION AND MAP TO NAMES OF NODES AND PROJECTIONS
 
+r(t) = sigma(W_ir * x(t) + b_ir + W_hr * h(t-1) + b_hr)
+z(t) = sigma(W_iz * x(t) + b_iz + W_hz * h(t-1) + b_hz)
+n(t) = tanh(W_in * x(t) + b_in + r(t) * (W_hn * h(t-1) + b_hn))
+h(t) = (1 - z(t)) * n(t) + z(t) * h(t-1)
+
+where:
+    r(t) = reset gate
+    z(t) = update gate
+    n(t) = new gate
+    h(t) = hidden layer
+    x(t) = input
+    W_ir, W_iz, W_in, W_hr, W_hz, W_hn = input, update, and reset weights
+    b_ir, b_iz, b_in, b_hr, b_hz, b_hn = input, update, and reset biases
+
 .. _GRUComposition_Operation:
 
 **Operation**
