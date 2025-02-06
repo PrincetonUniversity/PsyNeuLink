@@ -9830,10 +9830,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         for node in self._partially_added_nodes:
             for proj in self._get_invalid_aux_components(node):
+                sender = proj.sender.owner
                 receiver = proj.receiver.owner
+                errant_node_msg = None
+                if node is sender:
+                    errant_node_name = receiver.name
+                    errant_node_msg = "send a projection to " + errant_node_name
+                elif node is receiver:
+                    errant_node_name = sender.name
+                    errant_node_msg = "receive a projection from " + errant_node_name
+                if errant_node_msg:
+                    warnings.warn(
+                        f"'{node.name}' has been specified to {errant_node_msg}, "
+                        f"but the latter is not in '{self.name}' or any of its nested Compositions. "
+                        f"This projection will be deactivated until '{errant_node_name}' is added to '{self.name}' "
+                        f"or a composition nested within it.")
                 # LearningProjections not listed in self.projections but executed during EXECUTION_PHASE are OK
                 #     (e.g., EMComposition.storage_node)
-                if not (isinstance(proj, LearningProjection)
+                elif not (isinstance(proj, LearningProjection)
                         and proj.sender.owner.learning_timing is LearningTiming.EXECUTION_PHASE
                         and receiver in self.projections):
                     warnings.warn(
