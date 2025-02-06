@@ -187,10 +187,12 @@ class GRUComposition(AutodiffComposition):
     ---------
 
     input_size : int : default 1
-        specifies the length of the input array to the GRUComposition.
+        specifies the length of the input array to the GRUComposition, and the size of the `input_node
+        <GRUComposition.input_node>`.
 
     hidden_size : int : default 1
-        specifies the length of the hidden layer of the GRUComposition.
+        specifies the length of the internal state of the GRUComposition, and the size of the `hidden_layer_node
+        <GRUComposition.hidden_layer_node>` and all nodes other than the `input_node<GRUComposition.input_node>`.
 
     bias=True : bool : default False
         specifies whether the GRUComposition uses a bias vector in its computations.
