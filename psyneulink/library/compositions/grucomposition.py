@@ -173,33 +173,6 @@ class GRUCompositionError(CompositionError):
         return repr(self.error_value)
 
 
-
-    @property
-    def nodes(self):
-        """Return all Nodes assigned to the field."""
-        return [node for node in
-                [self.input_node,
-                self.hidden_layer_node,
-                self.reset_node,
-                self.update_node,
-                self.new_node]
-                if node is not None]
-    
-    @property
-    def projections(self):
-        """Return all Projections assigned to the field."""
-        return [proj for proj in [self.input_to_hidden_projection,
-                                  self.input_to_reset_projection,
-                                  self.input_to_update_projection,
-                                  self.input_to_new_projection,
-                                  self.reset_gating_projection,
-                                  self.update_gating_projection,
-                                  self.new_projection,
-                                  self.input_projection,
-                                  self.hidden_layer_recurrent_projection]
-                                  if proj is not None]
-
-
 class GRUComposition(AutodiffComposition):
     """
     GRUComposition(                      \
@@ -373,7 +346,9 @@ class GRUComposition(AutodiffComposition):
     def _construct_pathways(self, input_size, hidden_size):
         """Construct Nodes and Projections for GRUComposition"""
         hidden_shape = np.ones(hidden_size)
+
         self.input_node = ProcessingMechanism(name=INPUT_NODE_NAME, input_shapes=input_size)
+
         self.hidden_layer_node = ProcessingMechanism(name=HIDDEN_LAYER_NODE_NAME,
                                                      input_shapes=[hidden_size, hidden_size],
                                                      input_ports=[
@@ -383,72 +358,87 @@ class GRUComposition(AutodiffComposition):
                                                                    function=LinearCombination(scale=hidden_shape))],
                                                      function=LinearCombination(operation=SUM))
 
-        #     gate = GatingMechanism(
-        #         input_shapes = 3,
-        #         monitor_for_gating=input_node,
-        #         function=Linear,
-        #         default_allocation=[0,0,0],
-        #         gating_signals=[GatingSignal(default_allocation=[0,0,0],
-        #                                      gate=mech.input_port)]
         self.new_node = ProcessingMechanism(name=NEW_NODE_NAME,
-                                                    input_shapes=[hidden_size, hidden_size],
-                                                    input_ports=['FROM INPUT',
-                                                                 InputPort(
-                                                                     name="FROM RESET",
-                                                                     function=LinearCombination(scale=hidden_shape))],
-                                                    function=LinearCombination,
-                                                    output_ports=[OutputPort(name='TO HIDDEN LAYER INPUT',
-                                                                             function=Tanh)])
-        hidden_layer = self.hidden_layer_node
+                                            input_shapes=[hidden_size, hidden_size],
+                                            input_ports=['FROM INPUT',
+                                                         InputPort(
+                                                             name="FROM RESET",
+                                                             function=LinearCombination(scale=hidden_shape))],
+                                            function=LinearCombination,
+                                            output_ports=[OutputPort(name='TO HIDDEN LAYER INPUT',
+                                                                     function=Tanh)])
+
         self.update_node = GatingMechanism(name=UPDATE_NODE_NAME,
-                                                input_shapes=hidden_size,
-                                                monitor_for_gating=self.input_node,
-                                                function=Logistic,
-                                                default_allocation=hidden_shape,
-                                                gating_signals=[
-                                                    GatingSignal(default_allocation=hidden_shape,
-                                                                 transfer_function=Linear(scale=-1,offset=1),
-                                                                 gate=hidden_layer.input_ports['NEW INPUT']),
-                                                    GatingSignal(default_allocation=hidden_shape,
-                                                                 gate=hidden_layer.input_ports['RECURRENT'])])
+                                           monitor_for_gating=self.input_node,
+                                           function=Logistic,
+                                           default_allocation=hidden_shape,
+                                           gating_signals=[
+                                               # FIX: BE SURE BOTH GET SAME VARIABLE
+                                               #      ELSE SINGLE GATING SIGNAL WITH TWO PROJECTIONS?
+                                               GatingSignal(name='NEW GATE',
+                                                            default_allocation=hidden_shape,
+                                                            transfer_function=Linear(scale=-1,offset=1),
+                                                            gate=self.hidden_layer_node.input_ports['NEW INPUT']),
+                                               GatingSignal(name='RECURRENT GATE',
+                                                            default_allocation=hidden_shape,
+                                                            gate=self.hidden_layer_node.input_ports['RECURRENT'])])
+        self.wts_iu = self.update_node.input_ports[0].path_afferents[0]
+        self.wts_iu.name = 'UPDATE GATE\nINPUT WEIGHTS'
+        self.wts_iu.learnable = True
+
         self.reset_node = GatingMechanism(name=RESET_NODE_NAME,
-                                               input_shapes=hidden_size,
-                                               monitor_for_gating=[self.input_node, self.hidden_layer_node],
-                                               default_allocation=hidden_shape,
-                                               gating_signals=[
-                                                   GatingSignal(
-                                                       default_allocation=hidden_shape,
-                                                       gate=self.new_node.input_ports['FROM RESET'])])
+                                          monitor_for_gating=[self.input_node, self.hidden_layer_node],
+                                          default_allocation=hidden_shape,
+                                          gating_signals=[
+                                              GatingSignal(
+                                                  name='RESET GATE',
+                                                  default_allocation=hidden_shape,
+                                                  gate=self.new_node.input_ports['FROM RESET'])])
+        self.wts_ir = self.reset_node.input_ports[0].path_afferents[0]
+        self.wts_ir.name = 'RESET GATE\nINPUT WEIGHTS'
+        self.wts_ir.learnable = True
+
         self.output_node = ProcessingMechanism(name=OUTPUT_NODE_NAME,
                                                input_shapes=hidden_size,
                                                function=Linear)
+
         self.add_nodes([self.input_node,
                         self.new_node,
                         self.reset_node,
                         self.update_node,
                         self.output_node,
                         self.hidden_layer_node])
+
         def init_wts(sender_size, receiver_size):
             """Initialize weights for Projections"""
             sqrt_val = np.sqrt(hidden_size)
             return np.random.uniform(-sqrt_val, sqrt_val, (sender_size, receiver_size))
-        self.proj_in = MappingProjection(sender=self.input_node,
-                                         receiver=self.new_node.input_ports['FROM INPUT'],
-                                         learnable=True,
-                                         matrix=init_wts(input_size, hidden_size))
-        self.proj_nh = MappingProjection(sender=self.new_node,
-                                         receiver=self.hidden_layer_node.input_ports['NEW INPUT'],
-                                         learnable=True,
-                                         matrix=init_wts(hidden_size, hidden_size))
-        self.proj_hh = MappingProjection(sender=self.hidden_layer_node,
-                                         receiver=self.hidden_layer_node.input_ports['RECURRENT'],
-                                         learnable=False,
-                                         matrix=IDENTITY_MATRIX)
-        self.proj_ho = MappingProjection(sender=self.hidden_layer_node,
-                                         receiver=self.output_node,
-                                         learnable=False,
-                                         matrix=IDENTITY_MATRIX)
-        self.add_projections([self.proj_in, self.proj_nh, self.proj_hh, self.proj_ho])
+
+        self.wts_in = MappingProjection(name='NEW INPUT WEIGHTS',
+                                        sender=self.input_node,
+                                        receiver=self.new_node.input_ports['FROM INPUT'],
+                                        learnable=True,
+                                        matrix=init_wts(input_size, hidden_size))
+
+        self.wts_nh = MappingProjection(name='HIDDEN INPUT WEIGHTS',
+                                        sender=self.new_node,
+                                        receiver=self.hidden_layer_node.input_ports['NEW INPUT'],
+                                        learnable=True,
+                                        matrix=init_wts(hidden_size, hidden_size))
+
+        self.wts_hh = MappingProjection(name='HIDDEN RECURRENT WEIGHTS',
+                                        sender=self.hidden_layer_node,
+                                        receiver=self.hidden_layer_node.input_ports['RECURRENT'],
+                                        learnable=False,
+                                        matrix=IDENTITY_MATRIX)
+
+        self.wts_ho = MappingProjection(name='HIDDEN OUTPUT WEIGHTS',
+                                        sender=self.hidden_layer_node,
+                                        receiver=self.output_node,
+                                        learnable=False,
+                                        matrix=IDENTITY_MATRIX)
+
+        self.add_projections([self.wts_in, self.wts_iu, self.wts_ir, self.wts_nh, self.wts_hh, self.wts_ho])
     #region
 
 
@@ -490,8 +480,8 @@ class GRUComposition(AutodiffComposition):
                 **kwargs):
         """Set input to weights of Projections to match_nodes and retrieved_nodes if not use_storage_node."""
         results = super().execute(inputs=inputs, context=context, **kwargs)
-        if not self._use_storage_node:
-            self._store_memory(inputs, context)
+        # if not self._use_storage_node:
+        #     self._store_memory(inputs, context)
         return results
 
 

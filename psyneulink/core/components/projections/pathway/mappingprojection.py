@@ -574,9 +574,9 @@ class MappingProjection(PathwayProjection_Base):
             if all(string in self.name for string in {'from', 'to'}):
                 states_string = ''
             else:
-                states_string = "from \'{}\' OuputState of \'{}\' to \'{}\'".format(self.sender.name,
-                                                                                    self.sender.owner.name,
-                                                                                    self.receiver.owner.name)
+                states_string = " from \'{}\' OuputState of \'{}\' to \'{}\'".format(self.sender.name,
+                                                                                     self.sender.owner.name,
+                                                                                     self.receiver.owner.name)
             if not isinstance(matrix_spec, str):
                 # if all(string in self.name for string in {'from', 'to'}):
 
