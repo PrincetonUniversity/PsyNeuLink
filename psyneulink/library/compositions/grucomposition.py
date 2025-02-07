@@ -211,6 +211,7 @@ from psyneulink.core.llvm import ExecutionMode
 
 __all__ = ['GRUComposition', 'GRUCompositionError']
 
+from psyneulink.library.models.Kalanthroff_PCTC_2018 import bias_input
 
 # Node names
 INPUT_NODE_NAME = 'INPUT'
@@ -280,7 +281,7 @@ class GRUComposition(AutodiffComposition):
         determines the size of the `hidden_layer_node` and all other `INTERNAL` `Nodes <Composition_Nodes>`
         of the GRUComposition.
 
-    bias=True : bool
+    bias : bool
         determines whether the GRUComposition uses bias vectors in its computations.
 
     COMMENT:
@@ -372,6 +373,18 @@ class GRUComposition(AutodiffComposition):
         in the Hadamard product with the recurrent input to the `hidden_layer_node <GRUComposition.hidden_layer_node>`,
         which determines how much of the `hidden_layer_node <GRUComposition.hidden_layer_node>`\\'s
         new state is determined by its prior state vs.its external input.
+
+    bias_ir : ProcessingMechanism
+        `BIAS` `Node <Composition_Nodes>` that provides the bias to the `reset_node <GRUComposition.reset_node>`.
+        XXXX
+
+            bias_ir
+            bias_hr
+            bias_iu
+            bias_hu
+            bias_in
+            bias_hn
+
     """
 
     componentCategory = GRU_COMPOSITION
@@ -431,7 +444,7 @@ class GRUComposition(AutodiffComposition):
         super().__init__(name=name,
                          input_size=input_size,
                          hidden_size=hidden_size,
-                         # bias=bias,
+                         bias=bias,
                          # num_layers=num_layers,
                          # batch_first=batch_first,
                          # dropout=dropout,
@@ -591,6 +604,17 @@ class GRUComposition(AutodiffComposition):
                               self.wts_hr,
                               self.wts_hu,
                               self.wts_ho])
+
+        if self.bias:
+            bias_ir
+            bias_hr
+            bias_iu
+            bias_hu
+            bias_in
+            bias_hn
+
+        self._set_learning_attributes()
+
         self._analyze_graph()
     #region
 

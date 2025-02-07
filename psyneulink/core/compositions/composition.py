@@ -332,13 +332,13 @@ The `get_required_roles_by_node` method lists the `NodeRoles <NodeRole>` that ha
 *BIAS Nodes*
 ^^^^^^^^^^^^
 
-`BIAS` `NodeRole` can be used to implement BIAS Nodes, which add a bias (constant value) to the input of another
+The `BIAS` `NodeRole` can be used to implement BIAS Nodes, which add a bias (constant value) to the input of another
 Node, that can also be modified by `learning <Composition_Learning>`. A BIAS Node is implemented by adding a
 `ProcessingMechanism` to the Composition and requiring it to have the `BIAS` `NodeRole`. This can be done using
 any of the methods described `above <Composition_Nodes>` for assigning `NodeRoles <NodeRole>` tp a Node. The
-ProcessingMechanism cannot have any afferent Projections, and should project to the `InputPort` of the Node with
-the values to be biased. If the bias is to be learned, the `learnable <MappingProjection.learnable>` attribute of
-the MappingProjeciton should be set to True. The value of the bias, and how it is applied to the values being biased
+ProcessingMechanism cannot have any afferent Projections, and should project to the `InputPort` of the Node that
+receives the values to be biased. If the bias is to be learned, the `learnable <MappingProjection.learnable>` attribute
+of the MappingProjeciton should be set to True. The value of the bias, and how it is applied to the values being biased
 are specified as described below:
 
     *Single bias value*. To apply a single scalar bias value to all elements of the array being biased, the
