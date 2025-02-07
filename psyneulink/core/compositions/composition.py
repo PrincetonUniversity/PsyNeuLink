@@ -4711,7 +4711,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for input_port in node.input_ports:
                     input_port.parameters.default_input._set(DEFAULT_VARIABLE, context, override=True)
                     input_port.internal_only = True
-                self.exclude_node_roles(node, NodeRole.INPUT, context)
+                self.exclude_node_roles(node,NodeRole.INPUT, context)
+                self.exclude_node_roles(node,NodeRole.OUTPUT, context)
                 self.required_node_roles.append((node, NodeRole.BIAS))
 
             elif role is NodeRole.INPUT:
