@@ -434,14 +434,9 @@ class GRUComposition(AutodiffComposition):
                                                                      function=Tanh)])
 
         self.update_node = GatingMechanism(name=UPDATE_NODE_NAME,
-                                           # monitor_for_gating=self.input_node,
-                                           input_ports=InputPort(name='FROM INPUT',
-                                                                 variable=hidden_shape),
                                            function=Logistic,
                                            default_allocation=hidden_shape,
                                            gating_signals=[
-                                               # FIX: BE SURE BOTH GET SAME VARIABLE
-                                               #      ELSE SINGLE GATING SIGNAL WITH TWO PROJECTIONS?
                                                GatingSignal(name='NEW GATING SIGNAL',
                                                             default_allocation=hidden_shape,
                                                             transfer_function=Linear(scale=-1,offset=1),
@@ -455,8 +450,8 @@ class GRUComposition(AutodiffComposition):
         self.recurrent_gate.name = 'RECURRENT GATE'
 
         self.reset_node = GatingMechanism(name=RESET_NODE_NAME,
-                                          # monitor_for_gating=[self.input_node, self.hidden_layer_node],
                                           default_allocation=hidden_shape,
+                                          function=Logistic,
                                           gating_signals=[
                                               GatingSignal(
                                                   name='RESET GATING SIGNAL',
@@ -487,18 +482,18 @@ class GRUComposition(AutodiffComposition):
                                         learnable=True,
                                         matrix=init_wts(input_size, hidden_size))
 
+        self.wts_iu = MappingProjection(name='UPDATE GATE\nINPUT WEIGHTS',
+                                        sender=self.input_node,
+                                        receiver=self.update_node.input_ports['OUTCOME'],
+                                        learnable=True,
+                                        matrix=init_wts(input_size, hidden_size))
+
         self.wts_ir = MappingProjection(name='RESET INPUT WEIGHTS',
                                         sender=self.input_node,
                                         receiver=self.reset_node.input_ports['OUTCOME'],
                                         learnable=True,
                                         matrix=init_wts(input_size, hidden_size))
 
-
-        self.wts_iu = MappingProjection(name='UPDATE GATE\nINPUT WEIGHTS',
-                                        sender=self.input_node,
-                                        receiver=self.update_node.input_ports['FROM INPUT'],
-                                        learnable=True,
-                                        matrix=init_wts(input_size, hidden_size))
 
         self.wts_nh = MappingProjection(name='HIDDEN INPUT WEIGHTS',
                                         sender=self.new_node,
@@ -536,6 +531,7 @@ class GRUComposition(AutodiffComposition):
                               self.wts_nh,
                               self.wts_hh,
                               self.wts_hn,
+                              self.wts_hr,
                               self.wts_ho])
         self._analyze_graph()
     #region
