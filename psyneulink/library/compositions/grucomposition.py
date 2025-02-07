@@ -46,20 +46,22 @@ COMMENT
 
 **Organization**
 
-FIX: ADD EQUATION AND MAP TO NAMES OF NODES AND PROJECTIONS
+    .. math::
+       reset(t) = Logistic(wts\_ir * input(t) + bias\_ir + wts\_hr * hidden\_layer(t-1) + bias\_hr)
 
-    reset(t) = \sigma(wts\_ir * input(t) + bias\_ir + wts_hr * hidden_layer(t-1) + bias\_hr)
-    update(t) = \sigma(wts\_iu * input(t) + bias\_iu + wts_hu * hidden_layer(t-1) + b_hu)
-    new(t) = tanh(wts\_in * input(t) + bias\_in + reset(t) * (wts\_hn * hidden_layer(t-1) + bias\_hn))
-    hidden_layer(t) = (1 - update(t)) * new(t) + update(t) * hidden_layer(t-1)
+       update(t) = Logitic(wts\_iu * input(t) + bias\_iu + wts\_hu * hidden\_layer(t-1) + b\_hu)
+
+       new(t) = Tanh(wts\_in * input(t) + bias\_in + reset(t) * (wts\_hn * hidden\_layer(t-1) + bias\_hn))
+
+       hidden\_layer(t) = (1 - update(t)) * new(t) + update(t) * hidden\_layer(t-1)
 
 
-    `reset <GRUComposition.reset_gate>`\\(t) = :math:`sigma`(`wts_ir <GRUComposition.wts_ir>` *
+    `reset <GRUComposition.reset_gate>` = `Logistic`\\(`wts_ir <GRUComposition.wts_ir>` *
     `input <GRUComposition.input_node>` + `bias_ir <GRUComposition.bias_ir>` + `bias_ir <GRUComposition.bias_ir>` +
-    `wts_hr <GRUComposition.wts_hr>` * `hidden_layer <GRUComposition.hidden_layer_node>`\\(t-1) +
+    `wts_hr <GRUComposition.wts_hr>` * `hidden_layer <GRUComposition.hidden_layer_node>` +
     `bias_hr <GRUComposition.bias_hr>`
 
-    `update <GRUComposition.update_gate>`\\(t) = :math:`sigma`(`wts_iu <GRUComposition.wts_iu>` *
+    `update <GRUComposition.update_gate>`\\(t) = `Logistic`(`wts_iu <GRUComposition.wts_iu>` *
     `input <GRUComposition.input_node>` + `bias_iu <GRUComposition.bias_iu>` + `wts_hu <GRUComposition.wts_hu>` *
     `hidden_layer <GRUComposition.hidden_layer_node>`\\(t-1) + `bias_hu <GRUComposition.bias_hu>`
 
@@ -110,6 +112,9 @@ Structure
    :alt: GRU Composition
    :width: 400
    :align: center
+
+   **Structure of a GRUComposition** (can be seen in more detail using the Composition's s `show_graph
+   <ShowGraph.show_graph>` method with its **show_node_structure** argument set to ``True`` or ``ALL``).
 
 .. _GRUComposition_Input:
 
