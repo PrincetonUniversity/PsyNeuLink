@@ -545,7 +545,6 @@ class GRUComposition(AutodiffComposition):
         self._analyze_graph()
     #region
 
-
     def _set_learning_attributes(self):
         """Set learning-related attributes for Node and Projections
         """
