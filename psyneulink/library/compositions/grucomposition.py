@@ -183,13 +183,8 @@ Class Reference
 """
 import numpy as np
 import warnings
-from enum import Enum
+# from sympy.stats import Logistic
 
-from sympy.stats import Logistic
-
-import psyneulink.core.scheduling.condition as conditions
-
-from psyneulink._typing import Optional, Union
 from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear, Logistic, Tanh
 from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_state_getter, _seed_setter
@@ -203,15 +198,11 @@ from psyneulink.core.components.ports.modulatorysignals.gatingsignal import Gati
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.context import handle_external_context
-from psyneulink.core.globals.keywords import CONTEXT, GRU_COMPOSITION, PRODUCT, SUM, IDENTITY_MATRIX
-from psyneulink.core.globals.utilities import \
-    ContentAddressableList, convert_all_elements_to_np_array, is_numeric_scalar
+from psyneulink.core.globals.keywords import CONTEXT, GRU_COMPOSITION, OUTCOME, SUM, IDENTITY_MATRIX
 from psyneulink.core.llvm import ExecutionMode
 
 
 __all__ = ['GRUComposition', 'GRUCompositionError']
-
-from psyneulink.library.models.Kalanthroff_PCTC_2018 import bias_input
 
 # Node names
 INPUT_NODE_NAME = 'INPUT'
@@ -231,8 +222,11 @@ class GRUCompositionError(CompositionError):
 
 class GRUComposition(AutodiffComposition):
     """
-    GRUComposition(                      \
-        name="GRU_Composition"           \
+    GRUComposition(             \
+        name="GRU_Composition"  \
+        input_size=1,           \
+        hidden_size=1,          \
+        biase=False             \
         )
 
     Subclass of `AutodiffComposition` that implements a single-layered gated recurrent network.
@@ -375,16 +369,30 @@ class GRUComposition(AutodiffComposition):
         new state is determined by its prior state vs.its external input.
 
     bias_ir : ProcessingMechanism
-        `BIAS` `Node <Composition_Nodes>` that provides the bias to the `reset_node <GRUComposition.reset_node>`.
-        XXXX
+        `BIAS` `Node <Composition_Nodes>` that provides the bias to the weights, `wts_ir <GRUComposition.wts_ir>`,
+        from the `input_node <GRUComposition.input_node>` to the `reset_node <GRUComposition.reset_node>`.
 
-            bias_ir
-            bias_hr
-            bias_iu
-            bias_hu
-            bias_in
-            bias_hn
+    bias_iu : ProcessingMechanism
+        `BIAS` `Node <Composition_Nodes>` that provides the bias to the weights, `wts_iu <GRUComposition.wts_iu>`,
+        from the `input_node <GRUComposition.input_node>` to the `update_node <GRUComposition.update_node>`.
 
+    bias_in : ProcessingMechanism
+        `BIAS` `Node <Composition_Nodes>` that provides the bias to the weights, `wts_in <GRUComposition.wts_in>`,
+        from the `input_node <GRUComposition.input_node>` to the `new_node <GRUComposition.new_node>`.
+
+    bias_hr : ProcessingMechanism
+        `BIAS` `Node <Composition_Nodes>` that provides the bias to the weights, `wts_hr <GRUComposition.wts_hr>`,
+        from the `hidden_layer_node <GRUComposition.hidden_layer_node>` to the `reset_node <GRUComposition.reset_node>`.
+
+    bias_hu : ProcessingMechanism
+        `BIAS` `Node <Composition_Nodes>` that provides the bias to the weights, `wts_hu <GRUComposition.wts_hu>`,
+        from the `hidden_layer_node <GRUComposition.hidden_layer_node>` to the `update_node
+        <GRUComposition.update_node>` (corresponds to the *bz* term in the `PyTorch
+        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ implementation).
+
+    bias_hn : ProcessingMechanism
+        `BIAS` `Node <Composition_Nodes>` that provides the bias to the weights, `wts_hn <GRUComposition.wts_hn>`,
+        from the `hidden_layer_node <GRUComposition.hidden_layer_node>` to the `new_node <GRUComposition.new_node>`.
     """
 
     componentCategory = GRU_COMPOSITION
@@ -398,6 +406,12 @@ class GRUComposition(AutodiffComposition):
         """
             Attributes
             ----------
+
+                bias
+                    see `bias <GRUComposition.bias>`
+
+                    :default value: False
+                    :type: ``bool``
 
                 enable_learning
                     see `enable_learning <GRUComposition.enable_learning>`
@@ -418,8 +432,9 @@ class GRUComposition(AutodiffComposition):
                     :type: ``numpy.random.RandomState``
 
         """
-        learning_rate = Parameter(.001, modulable=True)
+        bias = Parameter(False, structural=True)
         enable_learning = Parameter(True, structural=True)
+        learning_rate = Parameter(.001, modulable=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED(), modulable=True, setter=_seed_setter)
 
@@ -548,13 +563,13 @@ class GRUComposition(AutodiffComposition):
 
         self.wts_iu = MappingProjection(name='UPDATE INPUT WEIGHTS',
                                         sender=self.input_node,
-                                        receiver=self.update_node.input_ports['OUTCOME'],
+                                        receiver=self.update_node.input_ports[OUTCOME],
                                         learnable=True,
                                         matrix=init_wts(input_size, hidden_size))
 
         self.wts_ir = MappingProjection(name='RESET INPUT WEIGHTS',
                                         sender=self.input_node,
-                                        receiver=self.reset_node.input_ports['OUTCOME'],
+                                        receiver=self.reset_node.input_ports[OUTCOME],
                                         learnable=True,
                                         matrix=init_wts(input_size, hidden_size))
 
@@ -579,13 +594,13 @@ class GRUComposition(AutodiffComposition):
 
         self.wts_hr = MappingProjection(name='HIDDEN TO RESET WEIGHTS',
                                         sender=self.hidden_layer_node,
-                                        receiver=self.reset_node.input_ports['OUTCOME'],
+                                        receiver=self.reset_node.input_ports[OUTCOME],
                                         learnable=True,
                                         matrix=init_wts(hidden_size, hidden_size))
 
         self.wts_hu = MappingProjection(name='HIDDEN TO UPDATE WEIGHTS',
                                         sender=self.hidden_layer_node,
-                                        receiver=self.update_node.input_ports['OUTCOME'],
+                                        receiver=self.update_node.input_ports[OUTCOME],
                                         learnable=True,
                                         matrix=init_wts(hidden_size, hidden_size))
 
@@ -606,14 +621,58 @@ class GRUComposition(AutodiffComposition):
                               self.wts_ho])
 
         if self.bias:
-            bias_ir
-            bias_hr
-            bias_iu
-            bias_hu
-            bias_in
-            bias_hn
+            self.bias_in = ProcessingMechanism(name='BIAS IN', default_variable=np.ones(hidden_size))
+            self.bias_in.wts = MappingProjection(sender=self.bias_in,
+                                                 receiver=self.new_node.input_ports['FROM INPUT'],
+                                                 learnable=True,
+                                                 matrix=init_wts(hidden_size, hidden_size))
 
-        self._set_learning_attributes()
+            self.bias_iu = ProcessingMechanism(name='BIAS IU', default_variable=np.ones(hidden_size))
+            self.bias_iu.wts = MappingProjection(sender=self.bias_iu,
+                                                 receiver=self.update_node.input_ports[OUTCOME],
+                                                 learnable=True,
+                                                 matrix=init_wts(hidden_size, hidden_size))
+
+            self.bias_ir = ProcessingMechanism(name='BIAS IR', default_variable=np.ones(hidden_size))
+            self.bias_ir.wts = MappingProjection(sender=self.bias_ir,
+                                                 receiver=self.reset_node.input_ports[OUTCOME],
+                                                 learnable=True,
+                                                 matrix=init_wts(hidden_size, hidden_size))
+
+            self.bias_hn = ProcessingMechanism(name='BIAS HN', default_variable=np.ones(hidden_size))
+            self.bias_hn.wts = MappingProjection(sender=self.bias_hn,
+                                                 receiver=self.new_node.input_ports['FROM HIDDEN'],
+                                                 learnable=True,
+                                                 matrix=init_wts(hidden_size, hidden_size))
+
+            self.bias_hr = ProcessingMechanism(name='BIAS HR', default_variable=np.ones(hidden_size))
+            self.bias_hr.wts = MappingProjection(sender=self.bias_hr,
+                                                 receiver=self.reset_node.input_ports[OUTCOME],
+                                                 learnable=True,
+                                                 matrix=init_wts(hidden_size, hidden_size))
+
+            self.bias_hu = ProcessingMechanism(name='BIAS HU', default_variable=np.ones(hidden_size))
+            self.bias_hu.wts = MappingProjection(sender=self.bias_hu,
+                                                 receiver=self.update_node.input_ports[OUTCOME],
+                                                 learnable=True,
+                                                 matrix=init_wts(hidden_size, hidden_size))
+
+
+            self.add_nodes([(self.bias_ir, NodeRole.BIAS),
+                            (self.bias_iu, NodeRole.BIAS),
+                            (self.bias_in, NodeRole.BIAS),
+                            (self.bias_hr, NodeRole.BIAS),
+                            (self.bias_hu, NodeRole.BIAS),
+                            (self.bias_hn, NodeRole.BIAS)])
+
+            self.add_projections([self.bias_ir.wts,
+                                  self.bias_iu.wts,
+                                  self.bias_in.wts,
+                                  self.bias_hr.wts,
+                                  self.bias_hu.wts,
+                                  self.bias_hn.wts])
+
+        # self._set_learning_attributes()
 
         self._analyze_graph()
     #region
