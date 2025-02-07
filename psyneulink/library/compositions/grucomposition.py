@@ -41,21 +41,23 @@ the flow of information through the RecurrentTransferMechanism.  This correspond
 COMMENT:
 FIX: ADD EXPLANATION OF ITS RELATIONSHIP TO PyTorch GRUCell
 COMMENT
-The GRUComposition implements the following computations, corresponding to those of the `PyTorch
-<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ version:
+The GRUComposition implements the following computations by its `reset <GRUComposition.reset_node>`, `update
+<GRUComposition.update_node>`, `new <GRUComposition.new_node>`, and `hidden <GRUComposition.hidden_layer_node>`
+`Nodes <Composition_Nodes>`, corresponding to the terms of the function in the `PyTorch
+<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module:
 
 .. math::
 
-   &reset = Logistic(wts\_ir \cdot input + bias\_ir + wts\\_hr \cdot hidden\_layer + bias\_hr)
+   &reset = Logistic(wts\_ir \cdot input + bias\_ir + wts\\_hr \cdot hidden + bias\_hr)
 
-   &update = Logistic(wts\_iu \cdot input + bias\_iu + wts\_hu \cdot hidden\_layer + bias\_hu)
+   &update = Logistic(wts\_iu \cdot input + bias\_iu + wts\_hu \cdot hidden + bias\_hu)
 
-   &new = Tanh(wts\_in \cdot input + bias\_in + reset \cdot (wts\_hn \cdot hidden\_layer + bias\_hn))
+   &new = Tanh(wts\_in \cdot input + bias\_in + reset \cdot (wts\_hn \cdot hidden + bias\_hn))
 
-   &hidden\_layer = (1 - update) \odot new + update \odot hidden\_layer
+   &hidden = (1 - update) \odot new + update \odot hidden
 
-where :math:`\cdot` is the dot product, :math:`\odot` is the Hadamard product, and all values are for the current
-execution of the Composition (t) except for the hidden_layer, which uses the value from the prior execution (t-1)
+where :math:`\cdot` is the dot product, :math:`\odot` is the Hadamard product, and all values are for the
+current execution of the Composition *(t)* except for hidden, which uses the value from the prior execution *(t-1)*
 (see `Cycles <Composition_Cycle>` for handling of recurrence and cycles).
 
 .. _GRUComposition_Organization:
