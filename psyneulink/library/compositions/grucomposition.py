@@ -47,13 +47,16 @@ COMMENT
 **Organization**
 
     .. math::
-       reset(t) = Logistic(wts\_ir * input(t) + bias\_ir + wts\_hr * hidden\_layer(t-1) + bias\_hr)
+       reset(t) = Logistic(wts\_ir :math:`\cdot` input + bias\_ir + wts\_hr :math:`\cdot` hidden\_layer + bias\_hr)
 
-       update(t) = Logitic(wts\_iu * input(t) + bias\_iu + wts\_hu * hidden\_layer(t-1) + b\_hu)
+       update(t) = Logitic(wts\_iu * input + bias\_iu + wts\_hu * hidden\_layer + b\_hu)
 
-       new(t) = Tanh(wts\_in * input(t) + bias\_in + reset(t) * (wts\_hn * hidden\_layer(t-1) + bias\_hn))
+       new(t) = Tanh(wts\_in * input + bias\_in + reset(t) * (wts\_hn * hidden\_layer(t-1) + bias\_hn))
 
-       hidden\_layer(t) = (1 - update(t)) * new(t) + update(t) * hidden\_layer(t-1)
+       hidden\_layer(t) = (1 - update) :math:`circ` new + update(t) :math:`circ` hidden\_layer
+
+       Note:  all values are for the current cycle of execution (t) except for the hidden_layer, which uses the value
+              from the prior cycle of execution (t-1) (see XXX for handling of recurrence and cycles).
 
 
     `reset <GRUComposition.reset_gate>` = `Logistic`\\(`wts_ir <GRUComposition.wts_ir>` *
@@ -113,8 +116,8 @@ Structure
    :width: 400
    :align: center
 
-   **Structure of a GRUComposition** (can be seen in more detail using the Composition's s `show_graph
-   <ShowGraph.show_graph>` method with its **show_node_structure** argument set to ``True`` or ``ALL``).
+   **Structure of a GRUComposition** -- can be seen in more detail using the Composition's s `show_graph
+   <ShowGraph.show_graph>` method with its **show_node_structure** argument set to ``True`` or ``ALL``.
 
 .. _GRUComposition_Input:
 
