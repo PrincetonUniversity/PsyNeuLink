@@ -165,9 +165,9 @@ def DriftOnASphereFun(init, value, iterations, noise, **kwargs):
 
     else:
         if "initializer" not in kwargs:
-            return [ 0.23690849,  0.00140115,  0.0020072,  -0.00128063,
-                    -0.00096267, -0.01620475, -0.02644836,  0.46090672,
-                     0.82875571, -0.31584261, -0.00132534]
+            return [ 0.23690849474294814, 0.0014011543771184686, 0.0020071969614023914, -0.0012806262650772564,
+                    -0.0009626666466757963, -0.016204753263919822, -0.026448355473615546, 0.4609067174067295,
+                     0.828755706263852, -0.3158426068946889, -0.0013253357638719173]
 
         else:
             return [-3.72900858e-03, -3.38148799e-04, -6.43154678e-04,  4.36274120e-05,
@@ -226,7 +226,9 @@ def test_execute(func, func_mode, variable, noise, params, benchmark):
     res = benchmark(ex, variable)
 
     expected = func_res(f.initializer, variable, 3, noise, **params)
-    np.testing.assert_allclose(res, expected, rtol=1e-5, atol=1e-8)
+
+    tolerance = {} if pytest.helpers.llvm_current_fp_precision() == 'fp64' else {'rtol':1e-5, 'atol':1e-8}
+    np.testing.assert_allclose(res, expected, **tolerance)
 
 
 def test_integrator_function_no_default_variable_and_params_len_more_than_1():
