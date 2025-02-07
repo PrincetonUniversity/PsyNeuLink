@@ -54,10 +54,9 @@ The GRUComposition implements the following computations, corresponding to those
 
    &hidden\_layer = (1 - update) \odot new + update \odot hidden\_layer
 
-where :math:`\cdot` is the dot product, :math:`\odot` is the Hadamard product, Logistic and Tanh are the
-`Logistic` and `Tanh` functions, respectively, and all values are for the current cycle of execution (t) except
-for the hidden_layer, which uses the value from the prior cycle of execution (t-1) (see XXX for handling of
-recurrence and cycles).
+where :math:`\cdot` is the dot product, :math:`\odot` is the Hadamard product, and all values are for the current
+execution of the Composition (t) except for the hidden_layer, which uses the value from the prior execution (t-1)
+(see `Cycles <Composition_Cycle>` for handling of recurrence and cycles).
 
 .. _GRUComposition_Organization:
 
