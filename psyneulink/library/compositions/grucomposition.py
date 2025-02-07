@@ -412,7 +412,8 @@ class GRUComposition(AutodiffComposition):
         """Construct Nodes and Projections for GRUComposition"""
         hidden_shape = np.ones(hidden_size)
 
-        self.input_node = ProcessingMechanism(name=INPUT_NODE_NAME, input_shapes=input_size)
+        self.input_node = ProcessingMechanism(name=INPUT_NODE_NAME,
+                                              input_shapes=input_size)
 
         self.hidden_layer_node = ProcessingMechanism(name=HIDDEN_LAYER_NODE_NAME,
                                                      input_shapes=[hidden_size, hidden_size],
