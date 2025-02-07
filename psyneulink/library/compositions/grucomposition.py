@@ -273,13 +273,15 @@ class GRUComposition(AutodiffComposition):
     ----------
 
     input_size : int
-        determines the length of the input array to the GRUComposition.
+        determines the length of the input array to the GRUComposition and size of the `input_node
+        <GRUComposition.input_node>`.
 
     hidden_size : int
-        determines the length of the hidden layer of the GRUComposition.
+        determines the size of the `hidden_layer_node` and all other `INTERNAL` `Nodes <Composition_Nodes>`
+        of the GRUComposition.
 
     bias=True : bool
-        determines whether the GRUComposition uses a bias vector in its computations.
+        determines whether the GRUComposition uses bias vectors in its computations.
 
     COMMENT:
     num_layers : int : default 1
@@ -294,40 +296,39 @@ class GRUComposition(AutodiffComposition):
         (see `learning_rate <GRUComposition_Field_Weights_Learning>` for additional details).
 
     enable_learning : bool
-        determines whether learning is enabled for the EMCComposition
+        determines whether learning is enabled for the GRUComposition
         (see `Learning <GRUComposition_Learning>` for additional details).
 
-    .. _GRUComposition_Nodes:
-
-    input_node : list[ProcessingMechanism]
+    input_node : ProcessingMechanism
         `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` that receives the input to the GRUComposition and passes
         it to the `hidden_layer_node <GRUComposition.hidden_layer_node>`; corresponds to input *(i)* of the `PyTorch
-        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ implementation implementation.
+        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ implementation.
 
-    new_node : list[ProcessingMechanism]
-        `ProcessingMechanism` that implements the new node of the GRUComposition that provides the `hidden_layer_node
-        <GRUComposition.hidden_layer_node>` with the input from the `input_node <GRUComposition.input_node>`, gated by
-        the `reset_node <GRUComposition.reset_node>`; corresponds to new gate *(n)* of the `PyTorch
-        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ implementation implementation.
+    new_node : ProcessingMechanism
+        `ProcessingMechanism` that provides the `hidden_layer_node <GRUComposition.hidden_layer_node>` with the input
+        from the `input_node <GRUComposition.input_node>`, gated by the `reset_node <GRUComposition.reset_node>`;
+        corresponds to new gate *(n)* of the `PyTorch <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
+        implementation.
 
-    hidden_layer_node : list[ProcessingMechanism]
-        `ProcessingTransferMechanism` that implements the recurrent layer of the GRUComposition; corresponds to
+    hidden_layer_node : ProcessingMechanism
+        `ProcessingMechanism` that implements the recurrent layer of the GRUComposition; corresponds to
         hidden layer *(h)* of the `PyTorch <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
-        implementation implementation.
+        implementation.
 
-    reset_node : list[ProcessingMechanism]
-        `GatingMechanism` that implements the reset node of the GRUComposition, that gates the input to the
-        `new_node <GRUComposition.new_node>`; corresponds to reset gate *(r)* of the `PyTorch
-        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ implementation implementation.
+    reset_node : GatingMechanism
+        `GatingMechanism` that that gates the input to the `new_node <GRUComposition.new_node>`; corresponds to reset
+        gate *(r)* of the `PyTorch <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ implementation.
 
-    update_node : list[ProcessingMechanism]
-        `GatingMechanism` that implements the update node of the GRUComposition, that gates the inputs to the hidden
-        layer from the `new_node <GRUComposition.new_node>` and the prior state of the `hidden_layer_node
-        <GRUComposition.hidden_layer_node>` itself (i.e., the input it receives from its recurrent Projection);
-        corresponds to update gate *(z)* of the `PyTorch <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
-        implementation implementation.
+    update_node : GatingMechanism
+        `GatingMechanism` that gates the inputs to the hidden layer from the `new_node <GRUComposition.new_node>`
+        and the prior state of the `hidden_layer_node <GRUComposition.hidden_layer_node>` itself (i.e., the input
+        it receives from its recurrent Projection); corresponds to update gate *(z)* of the `PyTorch
+        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ implementation.
 
-    .. _GRUComposition_Projections:
+    output_node : ProcessingMechanism
+        `OUTPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` that receives the output of the `hidden_layer_node
+        <GRUComposition.hidden_layer_node>`; corresponds to result of the `PyTorch
+        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ implementation.
 
     wts_in : MappingProjection
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
