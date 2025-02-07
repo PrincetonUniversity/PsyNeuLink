@@ -48,10 +48,30 @@ COMMENT
 
 FIX: ADD EQUATION AND MAP TO NAMES OF NODES AND PROJECTIONS
 
-r(t) = sigma(W_ir * x(t) + b_ir + W_hr * h(t-1) + b_hr)
-z(t) = sigma(W_iz * x(t) + b_iz + W_hz * h(t-1) + b_hz)
-n(t) = tanh(W_in * x(t) + b_in + r(t) * (W_hn * h(t-1) + b_hn))
-h(t) = (1 - z(t)) * n(t) + z(t) * h(t-1)
+    reset(t) = \sigma(wts\_ir * input(t) + bias\_ir + wts_hr * hidden_layer(t-1) + bias\_hr)
+    update(t) = \sigma(wts\_iu * input(t) + bias\_iu + wts_hu * hidden_layer(t-1) + b_hu)
+    new(t) = tanh(wts\_in * input(t) + bias\_in + reset(t) * (wts\_hn * hidden_layer(t-1) + bias\_hn))
+    hidden_layer(t) = (1 - update(t)) * new(t) + update(t) * hidden_layer(t-1)
+
+
+    `reset <GRUComposition.reset_gate>`\\(t) = :math:`sigma`(`wts_ir <GRUComposition.wts_ir>` *
+    `input <GRUComposition.input_node>` + `bias_ir <GRUComposition.bias_ir>` + `bias_ir <GRUComposition.bias_ir>` +
+    `wts_hr <GRUComposition.wts_hr>` * `hidden_layer <GRUComposition.hidden_layer_node>`\\(t-1) +
+    `bias_hr <GRUComposition.bias_hr>`
+
+    `update <GRUComposition.update_gate>`\\(t) = :math:`sigma`(`wts_iu <GRUComposition.wts_iu>` *
+    `input <GRUComposition.input_node>` + `bias_iu <GRUComposition.bias_iu>` + `wts_hu <GRUComposition.wts_hu>` *
+    `hidden_layer <GRUComposition.hidden_layer_node>`\\(t-1) + `bias_hu <GRUComposition.bias_hu>`
+
+    `new <GRUComposition.new_node>`\\(t) = :math:`tanh`(`wts_in <GRUComposition.wts_in>` *
+    `input <GRUComposition.input_node>` + `bias_in <GRUComposition.bias_in>` +
+    `reset <GRUComposition.reset_gate>`\\(t) * (`wts_hn <GRUComposition.wts_hn>` *
+    `hidden_layer <GRUComposition.hidden_layer_node>`\\(t-1) + `bias_hn <GRUComposition.bias_hn>`)
+
+    `hidden_layer <GRUComposition.hidden_layer_node>`\\(t) = (1 - `update <GRUComposition.update_gate>`\\(t)) *
+    `new <GRUComposition.new_node>`\\(t) + `update <GRUComposition.update_gate>`\\(t) * `hidden_layer
+    <GRUComposition.hidden_layer_node>`\\(t-1)
+
 
 where:
     r(t) = reset gate
@@ -85,6 +105,11 @@ An GRUComposition is created by calling its constructor.  There are four major e
 
 Structure
 ---------
+
+.. figure:: _static/GRUComposition_fig.svg
+   :alt: GRU Composition
+   :width: 400
+   :align: center
 
 .. _GRUComposition_Input:
 
