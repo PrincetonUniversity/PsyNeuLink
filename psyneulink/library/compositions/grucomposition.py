@@ -41,41 +41,47 @@ the flow of information through the RecurrentTransferMechanism.  This correspond
 COMMENT:
 FIX: ADD EXPLANATION OF ITS RELATIONSHIP TO PyTorch GRUCell
 COMMENT
+The GRUComposition implements the following computations, corresponding to those of the `PyTorch
+<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ version:
+
+.. math::
+
+   &reset = Logistic(wts\_ir \cdot input + bias\_ir + wts\\_hr \cdot hidden\_layer + bias\_hr)
+
+   &update = Logistic(wts\_iu \cdot input + bias\_iu + wts\_hu \cdot hidden\_layer + bias\_hu)
+
+   &new = Tanh(wts\_in \cdot input + bias\_in + reset \cdot (wts\_hn \cdot hidden\_layer + bias\_hn))
+
+   &hidden\_layer = (1 - update) \odot new + update \odot hidden\_layer
+
+where :math:`\cdot` is the dot product, :math:`\odot` is the Hadamard product, Logistic and Tanh are the
+`Logistic` and `Tanh` functions, respectively, and all values are for the current cycle of execution (t) except
+for the hidden_layer, which uses the value from the prior cycle of execution (t-1) (see XXX for handling of
+recurrence and cycles).
 
 .. _GRUComposition_Organization:
 
 **Organization**
 
-    .. math::
-       reset(t) = Logistic(wts\_ir :math:`\cdot` input + bias\_ir + wts\_hr :math:`\cdot` hidden\_layer + bias\_hr)
 
-       update(t) = Logitic(wts\_iu * input + bias\_iu + wts\_hu * hidden\_layer + b\_hu)
+COMMENT:
+`reset <GRUComposition.reset_gate>` = `Logistic`\\(`wts_ir <GRUComposition.wts_ir>` *
+`input <GRUComposition.input_node>` + `bias_ir <GRUComposition.bias_ir>` + `bias_ir <GRUComposition.bias_ir>` +
+`wts_hr <GRUComposition.wts_hr>` * `hidden_layer <GRUComposition.hidden_layer_node>` +
+`bias_hr <GRUComposition.bias_hr>`
 
-       new(t) = Tanh(wts\_in * input + bias\_in + reset(t) * (wts\_hn * hidden\_layer(t-1) + bias\_hn))
+`update <GRUComposition.update_gate>`\\(t) = `Logistic`(`wts_iu <GRUComposition.wts_iu>` *
+`input <GRUComposition.input_node>` + `bias_iu <GRUComposition.bias_iu>` + `wts_hu <GRUComposition.wts_hu>` *
+`hidden_layer <GRUComposition.hidden_layer_node>`\\(t-1) + `bias_hu <GRUComposition.bias_hu>`
 
-       hidden\_layer(t) = (1 - update) :math:`circ` new + update(t) :math:`circ` hidden\_layer
+`new <GRUComposition.new_node>`\\(t) = :math:`tanh`(`wts_in <GRUComposition.wts_in>` *
+`input <GRUComposition.input_node>` + `bias_in <GRUComposition.bias_in>` +
+`reset <GRUComposition.reset_gate>`\\(t) * (`wts_hn <GRUComposition.wts_hn>` *
+`hidden_layer <GRUComposition.hidden_layer_node>`\\(t-1) + `bias_hn <GRUComposition.bias_hn>`)
 
-       Note:  all values are for the current cycle of execution (t) except for the hidden_layer, which uses the value
-              from the prior cycle of execution (t-1) (see XXX for handling of recurrence and cycles).
-
-
-    `reset <GRUComposition.reset_gate>` = `Logistic`\\(`wts_ir <GRUComposition.wts_ir>` *
-    `input <GRUComposition.input_node>` + `bias_ir <GRUComposition.bias_ir>` + `bias_ir <GRUComposition.bias_ir>` +
-    `wts_hr <GRUComposition.wts_hr>` * `hidden_layer <GRUComposition.hidden_layer_node>` +
-    `bias_hr <GRUComposition.bias_hr>`
-
-    `update <GRUComposition.update_gate>`\\(t) = `Logistic`(`wts_iu <GRUComposition.wts_iu>` *
-    `input <GRUComposition.input_node>` + `bias_iu <GRUComposition.bias_iu>` + `wts_hu <GRUComposition.wts_hu>` *
-    `hidden_layer <GRUComposition.hidden_layer_node>`\\(t-1) + `bias_hu <GRUComposition.bias_hu>`
-
-    `new <GRUComposition.new_node>`\\(t) = :math:`tanh`(`wts_in <GRUComposition.wts_in>` *
-    `input <GRUComposition.input_node>` + `bias_in <GRUComposition.bias_in>` +
-    `reset <GRUComposition.reset_gate>`\\(t) * (`wts_hn <GRUComposition.wts_hn>` *
-    `hidden_layer <GRUComposition.hidden_layer_node>`\\(t-1) + `bias_hn <GRUComposition.bias_hn>`)
-
-    `hidden_layer <GRUComposition.hidden_layer_node>`\\(t) = (1 - `update <GRUComposition.update_gate>`\\(t)) *
-    `new <GRUComposition.new_node>`\\(t) + `update <GRUComposition.update_gate>`\\(t) * `hidden_layer
-    <GRUComposition.hidden_layer_node>`\\(t-1)
+`hidden_layer <GRUComposition.hidden_layer_node>`\\(t) = (1 - `update <GRUComposition.update_gate>`\\(t)) *
+`new <GRUComposition.new_node>`\\(t) + `update <GRUComposition.update_gate>`\\(t) * `hidden_layer
+<GRUComposition.hidden_layer_node>`\\(t-1)
 
 
 where:
@@ -86,6 +92,7 @@ where:
     x(t) = input
     W_ir, W_iz, W_in, W_hr, W_hz, W_hn = input, update, and reset weights
     b_ir, b_iz, b_in, b_hr, b_hz, b_hn = input, update, and reset biases
+COMMENT
 
 .. _GRUComposition_Operation:
 
