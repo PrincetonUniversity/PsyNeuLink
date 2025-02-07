@@ -186,16 +186,16 @@ GROUP_PREFIX="IntegratorFunction "
 @pytest.mark.parametrize("noise", [RAND2, test_noise_arr, pnl.NormalDist],
                          ids=["SNOISE", "VNOISE", "FNOISE"])
 @pytest.mark.parametrize("func", [
-    (pnl.AdaptiveIntegrator, AdaptiveIntFun),
-    (pnl.SimpleIntegrator, SimpleIntFun),
-    (pnl.DriftDiffusionIntegrator, DriftIntFun),
-    (pnl.LeakyCompetingIntegrator, LeakyFun),
-    (pnl.AccumulatorIntegrator, AccumulatorFun),
-    pytest.param((pnl.DriftOnASphereIntegrator, DriftOnASphereFun), marks=pytest.mark.llvm_not_implemented),
+    (pnl.AdaptiveIntegrator, AdaptiveIntFun, {}),
+    (pnl.SimpleIntegrator, SimpleIntFun, {}),
+    (pnl.DriftDiffusionIntegrator, DriftIntFun, {'time_step_size': 1.0}),
+    (pnl.LeakyCompetingIntegrator, LeakyFun, {}),
+    (pnl.AccumulatorIntegrator, AccumulatorFun, {'increment': RAND0_1}),
+    pytest.param((pnl.DriftOnASphereIntegrator, DriftOnASphereFun, {'dimension': len(test_var) + 1}), marks=pytest.mark.llvm_not_implemented),
     ], ids=lambda x: x[0])
 @pytest.mark.benchmark
 def test_execute(func, func_mode, variable, noise, params, benchmark):
-    func_class, func_res = func
+    func_class, func_res, func_params = func
     benchmark.group = GROUP_PREFIX + func_class.componentName
 
     try:
@@ -207,18 +207,15 @@ def test_execute(func, func_mode, variable, noise, params, benchmark):
         if issubclass(func_class, (pnl.DriftDiffusionIntegrator, pnl.DriftOnASphereIntegrator)):
             pytest.skip("{} doesn't support functional noise".format(func_class.componentName))
 
-    if issubclass(func_class, pnl.DriftOnASphereIntegrator):
-        params = {**params, 'dimension': len(variable) + 1}
+    params = {**params, **func_params}
 
-    elif issubclass(func_class, pnl.AccumulatorIntegrator):
-        params = {**params, 'increment': RAND0_1}
+    if issubclass(func_class, pnl.AccumulatorIntegrator):
         params.pop('offset', None)
 
     elif issubclass(func_class, pnl.DriftDiffusionIntegrator):
         # If we are dealing with a DriftDiffusionIntegrator, noise and
         # time_step_size defaults have changed since this test was created.
         # Hard code their old values.
-        params = {**params, 'time_step_size': 1.0}
         noise = np.sqrt(noise)
 
     f = func_class(default_variable=variable, noise=noise, **params)
