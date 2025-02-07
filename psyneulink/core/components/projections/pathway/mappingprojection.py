@@ -574,45 +574,29 @@ class MappingProjection(PathwayProjection_Base):
             if all(string in self.name for string in {'from', 'to'}):
                 states_string = ''
             else:
-                states_string = " from \'{}\' OuputState of \'{}\' to \'{}\'".format(self.sender.name,
-                                                                                     self.sender.owner.name,
-                                                                                     self.receiver.owner.name)
+                states_string = (f" from '{self.sender.name}' OuputPort of '{self.sender.owner.name}' "
+                                 f"to '{self.receiver.owner.name}'")
+
             if not isinstance(matrix_spec, str):
                 # if all(string in self.name for string in {'from', 'to'}):
 
-                raise ProjectionError("Width ({}) of the {} of \'{}{}\'{} "
-                                      "does not match the length of its \'{}\' InputPort ({})".
-                                      format(mapping_output_len,
-                                             VALUE,
-                                             self.name,
-                                             projection_string,
-                                             states_string,
-                                             self.receiver.name,
-                                             receiver_len))
+                raise ProjectionError(f"Width ({mapping_output_len}) of the {VALUE} of '{self.name}' "
+                                      f"{projection_string}{states_string} does not match the length of its "
+                                      f"'{self.receiver.name}' InputPort ({receiver_len}).")
 
             elif matrix_spec == IDENTITY_MATRIX or matrix_spec == HOLLOW_MATRIX:
                 # Identity matrix is not reshapable
-                raise ProjectionError("Output length ({}) of \'{}{}\' from {} to Mechanism \'{}\'"
-                                      " must equal length of it InputPort ({}) to use {}".
-                                      format(mapping_output_len,
-                                             self.name,
-                                             projection_string,
-                                             self.sender.name,
-                                             self.receiver.owner.name,
-                                             receiver_len,
-                                             matrix_spec))
+                raise ProjectionError(f"Output length ({mapping_output_len}) of '{self.name}' {projection_string} "
+                                      f"from {self.sender.name} to Mechanism '{self.receiver.owner.name}' "
+                                      f"must equal length of it InputPort ({receiver_len}) to use {matrix_spec}.")
             else:
                 # Flag that matrix is being reshaped
                 self.reshapedWeightMatrix = True
                 if self.prefs.verbosePref:
-                    print("Length ({}) of the output of {}{} does not match the length ({}) "
-                          "of the InputPort for the receiver {}; the width of the matrix (number of columns); "
-                          "the width of the matrix (number of columns) will be adjusted to accomodate the receiver".
-                          format(mapping_output_len,
-                                 self.name,
-                                 projection_string,
-                                 receiver_len,
-                                 self.receiver.owner.name))
+                    print(f"Length ({mapping_output_len}) of the output of '{self.name}' {projection_string} "
+                          f"does not match the length ({receiver_len}) of the InputPort for the receiver "
+                          f"'{self.receiver.owner.name}'; the width of the matrix (number of columns) will be "
+                          f"adjusted to accomodate the receiver.")
 
                 self.parameters.matrix._set(
                     get_matrix(matrix_spec, mapping_input_len, receiver_len, context=context),

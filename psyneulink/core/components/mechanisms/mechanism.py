@@ -1856,9 +1856,7 @@ class Mechanism_Base(Mechanism):
         return super()._handle_default_variable(default_variable=default_variable, input_shapes=input_shapes)
 
     def _handle_arg_input_ports(self, input_ports):
-        """
-        Takes user-inputted argument **input_ports** and returns an defaults.variable-like
-        object that it represents
+        """Take user-inputted argument **input_ports** and returns a defaults.variable-like object that it represents
 
         Returns
         -------
