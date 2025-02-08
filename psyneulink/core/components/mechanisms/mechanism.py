@@ -3241,6 +3241,9 @@ class Mechanism_Base(Mechanism):
 
             builder.call(reinit_func, [reinit_params, reinit_state, reinit_in, reinit_out])
 
+        # update output ports after getting the reinitialized value
+        builder = self._gen_llvm_output_ports(ctx, builder, reinit_out, m_base_params, m_state, m_arg_in, m_arg_out)
+
         return builder
 
     def _gen_llvm_function(self, *, extra_args=[], ctx:pnlvm.LLVMBuilderContext, tags:frozenset):

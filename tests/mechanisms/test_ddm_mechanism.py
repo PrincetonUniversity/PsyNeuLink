@@ -617,6 +617,28 @@ def test_WhenFinished_DDM_Analytical():
     c.is_satisfied()
 
 
+@pytest.mark.mechanism
+@pytest.mark.parametrize("initializer_param", [{}, {pnl.INITIALIZER: 5.0}], ids=["default_initializer", "custom_initializer"])
+@pytest.mark.parametrize("non_decision_time_param", [{}, {pnl.NON_DECISION_TIME: 13.0}], ids=["default_non_decision_time", "custom_non_decision_time"])
+def test_DDM_reset(mech_mode, initializer_param, non_decision_time_param):
+    D = pnl.DDM(function=pnl.DriftDiffusionIntegrator(**initializer_param, **non_decision_time_param))
+
+    ex = pytest.helpers.get_mech_execution(D, mech_mode)
+
+    initializer_value = initializer_param.get(pnl.INITIALIZER, 0)
+    non_decision_time_value = non_decision_time_param.get(pnl.NON_DECISION_TIME, 0)
+
+    ex([1])
+    ex([2])
+    result = ex([3])
+    np.testing.assert_array_equal(result, [[100], [102 - initializer_value + non_decision_time_value]])
+
+    reset_ex = pytest.helpers.get_mech_execution(D, mech_mode, tags=frozenset({"reset"}), member="reset")
+
+    reset_result = reset_ex(None if mech_mode == "Python" else [0])
+    np.testing.assert_array_equal(reset_result, [[initializer_value], [non_decision_time_value]])
+
+
 @pytest.mark.composition
 @pytest.mark.ddm_mechanism
 @pytest.mark.mechanism
