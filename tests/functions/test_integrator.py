@@ -191,10 +191,14 @@ GROUP_PREFIX="IntegratorFunction "
     (pnl.DriftDiffusionIntegrator, DriftIntFun, {'time_step_size': 1.0}),
     (pnl.LeakyCompetingIntegrator, LeakyFun, {}),
     (pnl.AccumulatorIntegrator, AccumulatorFun, {'increment': RAND0_1}),
-    pytest.param((pnl.DriftOnASphereIntegrator, DriftOnASphereFun, {'dimension': len(test_var) + 1}), marks=pytest.mark.llvm_not_implemented),
+    pytest.param((pnl.DriftOnASphereIntegrator,
+                  DriftOnASphereFun,
+                  {'dimension': len(test_var) + 1},
+                 ), marks=pytest.mark.llvm_not_implemented),
     ], ids=lambda x: x[0])
+@pytest.mark.parametrize("mode", ["test_execution", "test_reset"])
 @pytest.mark.benchmark
-def test_execute(func, func_mode, variable, noise, params, benchmark):
+def test_execute(func, func_mode, variable, noise, params, mode, benchmark):
     func_class, func_res, func_params = func
     benchmark.group = GROUP_PREFIX + func_class.componentName
 
@@ -221,14 +225,37 @@ def test_execute(func, func_mode, variable, noise, params, benchmark):
     f = func_class(default_variable=variable, noise=noise, **params)
     ex = pytest.helpers.get_func_execution(f, func_mode)
 
+    # Execute few times to update the internal state
     ex(variable)
     ex(variable)
-    res = benchmark(ex, variable)
 
-    expected = func_res(f.initializer, variable, 3, noise, **params)
+    if mode == "test_execution":
+        res = benchmark(ex, variable)
 
-    tolerance = {} if pytest.helpers.llvm_current_fp_precision() == 'fp64' else {'rtol':1e-5, 'atol':1e-8}
-    np.testing.assert_allclose(res, expected, **tolerance)
+        expected = func_res(f.initializer, variable, 3, noise, **params)
+
+        tolerance = {} if pytest.helpers.llvm_current_fp_precision() == 'fp64' else {'rtol':1e-5, 'atol':1e-8}
+        np.testing.assert_allclose(res, expected, **tolerance)
+
+    elif mode == "test_reset":
+        ex_res = pytest.helpers.get_func_execution(f, func_mode, tags=frozenset({'reset'}), member='reset')
+
+        # Compiled mode ignores input variable, but python uses it if it's provided
+        post_reset = ex_res(None if func_mode == "Python" else variable)
+
+        # Python implementations return 2d arrays,
+        # while most compiled variants return 1d
+        if func_mode != "Python":
+            post_reset = np.atleast_2d(post_reset)
+
+        # The order in which the reinitialized values are returned
+        # is hardcoded in kwargs of the reset() methods of the respective
+        # Function classes. The first one is 'initializer' in all cases.
+        # The other ones are reset to 0 in the test cases.
+        reset_expected = np.zeros_like(post_reset)
+        reset_expected[0] = f.parameters.initializer.get()
+
+        np.testing.assert_allclose(post_reset, reset_expected)
 
 
 def test_integrator_function_no_default_variable_and_params_len_more_than_1():
