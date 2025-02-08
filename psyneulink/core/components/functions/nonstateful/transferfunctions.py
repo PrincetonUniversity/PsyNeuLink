@@ -3363,7 +3363,7 @@ class SoftMax(TransferFunction):
         one_hot_out = arg_out
         one_hot_in = builder.alloca(one_hot_f.args[2].type.pointee)
 
-        if output_type in {ARG_MAX, ARG_MAX_INDICATOR}:
+        if output_type in {ARG_MAX, ARG_MAX_INDICATOR, MAX_VAL, MAX_INDICATOR}:
             with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as (b, i):
                 self.__gen_llvm_exp_div(ctx=ctx, vi=arg_in, vo=one_hot_in,
                                         gain=gain, exp_sum=exp_sum, builder=b, index=i)
