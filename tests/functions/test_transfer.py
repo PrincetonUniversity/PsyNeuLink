@@ -122,12 +122,6 @@ test_data = [
 def test_execute(func, variable, params, expected, benchmark, func_mode):
     benchmark.group = "TransferFunction " + func.componentName
 
-    if func_mode != 'Python':
-        if ('output' in params
-                and params['output'] in {kw.MAX_VAL, kw.MAX_ABS_VAL, kw.MAX_INDICATOR, kw.MAX_ABS_INDICATOR,
-                                         kw.MIN_VAL, kw.MIN_ABS_VAL, kw.MIN_INDICATOR, kw.MIN_ABS_INDICATOR}):
-            pytest.skip("{params['mode']} is not supported in {func_mode}")
-
     f = func(default_variable=variable, **params)
     ex = pytest.helpers.get_func_execution(f, func_mode)
 
