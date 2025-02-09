@@ -202,9 +202,7 @@ class TestDefaultInput:
         # port has default_input set, so get variable from input ports.
         # second port has no afferents, so it doesn't have a value
         a.input_ports[0].parameters.default_input.set(pnl.DEFAULT_VARIABLE, override=True)
-        with pytest.raises(
-            pnl.FunctionError, match="may be due to missing afferent projection"
-        ):
+        with pytest.raises(pnl.FunctionError, match="may be due to missing afferent projection"):
             a.execute()
 
         # both ports have default_input set, so use it
@@ -214,9 +212,7 @@ class TestDefaultInput:
         # as second check above. one port has default_input, other does
         # not and has no afferents
         a.input_ports[0].parameters.default_input.set(None, override=True)
-        with pytest.raises(
-            pnl.FunctionError, match="may be due to missing afferent projection"
-        ):
+        with pytest.raises(pnl.FunctionError, match="may be due to missing afferent projection"):
             a.execute()
 
         # as first check above. no port default_input set, use
@@ -267,11 +263,8 @@ class TestDefaultInput:
     def test_default_input_with_projections_two_ports(self):
         a = pnl.ProcessingMechanism(default_variable=[[1]])
         b = pnl.ProcessingMechanism(
-            input_ports=[
-                {pnl.VARIABLE: [2]},
-                {pnl.VARIABLE: [3], pnl.PARAMS: {pnl.DEFAULT_INPUT: pnl.DEFAULT_VARIABLE}},
-            ]
-        )
+            input_ports=[{pnl.VARIABLE: [2]},
+                         {pnl.VARIABLE: [3], pnl.PARAMS: {pnl.DEFAULT_INPUT: pnl.DEFAULT_VARIABLE}}])
         comp = pnl.Composition()
         comp.add_nodes([a, b])
         comp.add_projection(sender=a, receiver=b.input_ports[0])
