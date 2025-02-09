@@ -335,11 +335,11 @@ The `get_required_roles_by_node` method lists the `NodeRoles <NodeRole>` that ha
 The `BIAS` `NodeRole` can be used to implement BIAS Nodes, which add a bias (constant value) to the input of another
 Node, that can also be modified by `learning <Composition_Learning>`. A BIAS Node is implemented by adding a
 `ProcessingMechanism` to the Composition and requiring it to have the `BIAS` `NodeRole`. This can be done using
-any of the methods described `above <Composition_Nodes>` for assigning `NodeRoles <NodeRole>` tp a Node. The
+any of the methods described `above <Composition_Nodes>` for assigning `NodeRoles <NodeRole>` to a Node. The
 ProcessingMechanism cannot have any afferent Projections, and should project to the `InputPort` of the Node that
-receives the values to be biased. If the bias is to be learned, the `learnable <MappingProjection.learnable>` attribute
-of the MappingProjeciton should be set to True. The value of the bias, and how it is applied to the values being biased
-are specified as described below:
+receives the values to be biased, which *must* be in the same Composition. If the bias is to be learned, the `learnable
+<MappingProjection.learnable>` attribute of the MappingProjeciton should be set to True. The value of the bias,
+and how it is applied to the values being biased are specified as described below:
 
     *Single bias value*. To apply a single scalar bias value to all elements of the array being biased, the
     `default_variable <Component_Variable>` of the BIAS Node should be specified as a scalar value, and the `matrix
@@ -362,6 +362,23 @@ are specified as described below:
        a `ControlSignal <ControlSignal_Specification>` for the `slope <Linear.slope>` Parameter of a BIAS Node's
        `Linear` Function.
 
+    .. note::
+       Any Mechanism that has a single InputPort with ``default_input=DEFAULT_VARIABLE`` is treated as a `BIAS`
+       Node when added to a Composition, and is assigned the `BIAS` `NodeRole`.
+
+    .. note::
+       BIAS Nodes are always execluded from being `INPUT`, `OUTPUT` or `PROBE` Nodes of a Composition.
+
+    .. note::
+       A BIAS Node in a nested Composition can project to (i.e., bias) a Node in a nested Composition.
+       However, it *cannot* project to a Node in an outer Composition; doing so will generate an error.
+
+    .. technical_note::
+       BIAS Nodes are prohibited from being `INPUT` Nodes as this would have no effect, since they are prohibited
+       from having any afferent projections.  They are also prohibited from being `OUTPUT` Nodes, as in general
+       this be uninformative, since their value is fixed. However, this precludes BIAS Nodes in a nested Composition
+       from projecting to any Nodes in an outer Composition, as this would require they be assigned the as `OUTPUT`
+       Nodes of the nested Composition; this may be corrected in a future release.
 
 .. _Composition_Nested:
 
@@ -4711,8 +4728,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for input_port in node.input_ports:
                     input_port.parameters.default_input._set(DEFAULT_VARIABLE, context, override=True)
                     input_port.internal_only = True
-                self.exclude_node_roles(node,NodeRole.INPUT, context)
-                self.exclude_node_roles(node,NodeRole.OUTPUT, context)
+                # BIAS Node should *never* be considered as an INPUT Node;  *can* be an OUTPUT Node
+                #   if it is in an inner Composition and projects to an outer one (handed in _determine_node_roles)
+                self.exclude_node_roles(node, NodeRole.INPUT, context)
+
                 self.required_node_roles.append((node, NodeRole.BIAS))
 
             elif role is NodeRole.INPUT:
@@ -5355,10 +5374,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
              - these will all be assigined afferent Projections from Composition.input_CIM
 
         INPUT:
-          - all Nodes that have no incoming edges in this composition,
+          - all Nodes excluding BIAS Nodes that have no incoming edges in this composition,
             or that are in a cycle with no external incoming edges, for
-            which INPUT has not been removed and/or excluded using
-            exclude_node_roles();
+            which INPUT has not been removed and/or excluded using exclude_node_roles();
           - all Nodes for which INPUT has been assigned as a required_node_role by user
             (i.e., in self.required_node_roles[NodeRole.INPUT].
 
@@ -5432,7 +5450,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
               this is currently the case, but is inconsistent with the analog in Control,
               where monitored Mechanisms *are* allowed to be OUTPUT;
               therefore, might be worth allowing TARGET_MECHANISM to be assigned as OUTPUT
-          - all Nodes for which OUTPUT has been assigned as a required_node_role, inclUding by user
+          - all Nodes for which OUTPUT has been assigned as a required_node_role, including by user
             (i.e., in self.required_node_roles[NodeRole.OUTPUT]
 
         TERMINAL:
@@ -5538,8 +5556,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if (isinstance(node, Mechanism)
                     and all(input_port.default_input == DEFAULT_VARIABLE for input_port in node.input_ports)):
                 self._add_node_role(node, NodeRole.BIAS)
-                # BIAS Nodes should not be included in INPUT Nodes
+                # BIAS Nodes should never be included as INPUT Nodes:
                 self._remove_node_role(node, NodeRole.INPUT)
+                # BIAS Nodes should not be included as OUTPUT Nodes
+                self._remove_node_role(node, NodeRole.OUTPUT)
+                # FIX: Can above with below once nested BIAS Node is allowed to project to Node in outer Composition
+                # #   *unless* they are in a nested Composition and project to a Node in an outer one
+                # if not any(isinstance(p.receiver.owner, CompositionInterfaceMechanism) for p in node.efferents):
+                #     self._remove_node_role(node, NodeRole.OUTPUT)
 
         # CYCLE
         for cycle in self.graph_processing.cycle_vertices:
@@ -5576,8 +5600,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Assign OUTPUT if node is TERMINAL...
             if node in output_nodes:
-                # unless it is a ModulatoryMechanism
-                if isinstance(node, ModulatoryMechanism_Base):
+                # unless it is a ModulatoryMechanism or a BIAS Node in nested Composition that projects to an outer one
+                if (isinstance(node, ModulatoryMechanism_Base)
+                        or (NodeRole.BIAS in self.get_roles_by_node(node)
+                            and not any(isinstance(p.receiver.owner, CompositionInterfaceMechanism)
+                                        for p in node.efferents))):
                     continue
                 else:
                     self._add_node_role(node, NodeRole.OUTPUT)
@@ -6343,7 +6370,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Must be assigned Node.Role of INPUT, PROBE, or OUTPUT (depending on receiver vs sender)
                 # This validation does not apply to ParameterPorts. Externally modulated nodes
                 # can be in any position within a Composition. They don't need to be INPUT or OUTPUT nodes.
-                if not isinstance(node_port, ParameterPort) and role not in owning_composition.nodes_to_roles[node]:
+                # BIAS Nodes not allowed as PROBES
+                if (not isinstance(node_port, ParameterPort)
+                        and role not in owning_composition.nodes_to_roles[node]
+                        and NodeRole.BIAS not in owning_composition.nodes_to_roles[node]):
                     try_assigning_as_probe(node, role, owning_composition)
                 # With the current implementation, there should never be multiple nested compositions that contain the
                 # same mechanism -- because all nested compositions are passed the same execution ID
@@ -6363,6 +6393,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         CIM_port_for_nested_node = nc.input_CIM_ports[nested_node_CIM_port_spec[0]][0]
                         CIM = nc.input_CIM
                 elif isinstance(node_port, OutputPort):
+                    if NodeRole.BIAS in owning_composition.nodes_to_roles[node]:
+                        raise CompositionError(f"A {NodeRole.BIAS.name} Node in a nested Composition "
+                                               f"cannot be assigned to bias a Node in an outer Composition "
+                                               f"('{node.name}' in '{nc.name}' -> '{self.name}')")
                     if node_port in nc.output_CIM_ports:
                         CIM_port_for_nested_node = owning_composition.output_CIM_ports[node_port][1]
                         CIM = owning_composition.output_CIM
@@ -6624,10 +6658,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if (isinstance(receiver_input_port, InputPort)
                 and receiver_input_port.default_input == DEFAULT_VARIABLE):
-            if (receiver_mechanism, NodeRole.BIAS) in self.required_node_roles:
-                raise CompositionError(f"'{receiver_mechanism.name}' is configured as a {NodeRole.BIAS.name} node, "
-                                       f"so it cannot receive a MappingProjection from '{sender.name}' "
-                                       f"as currently specified for a pathway in '{self.name}'.")
+                if (receiver_mechanism, NodeRole.BIAS) in self.required_node_roles:
+                    err_msg = (f"'{receiver_mechanism.name}' is configured as a {NodeRole.BIAS.name} Node, ")
+                else:
+                    err_msg = (f"'{receiver_mechanism.name}' has only one InputPort for which "
+                               f"'default_input'=DEFAULT_VARIABLE', and therefore will be configured as a "
+                               f"{NodeRole.BIAS.name} Node, ")
+                err_msg = err_msg + (f"so it cannot receive a MappingProjection from '{sender.name}' "
+                                     f"as specified for a pathway in '{self.name}'.")
+                raise CompositionError(err_msg)
 
         if (isinstance(receiver_mechanism, (CompositionInterfaceMechanism))
                 and receiver_input_port.owner not in self.nodes
@@ -7747,19 +7786,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # Extract Nodes from any tuple specs
                     node = _get_spec_if_tuple(node)
                     if isinstance(node, Composition):
-                        # Replace any nested Compositions with their INPUT Nodes
+                        # Replace any nested Compositions with Nodes having roles specified in include_roles
                         nested_nodes = self.get_nested_nodes_by_roles_at_any_level(node, include_roles, exclude_roles)
                         if not nested_nodes:
                             err_msg = (f"A nested Composition ('{node.name}') included {pathway_arg_str} "
                                        f"does not (yet) have a Node with the NodeRole '{include_roles.name}' "
                                        f"required by its position the specified pathway.")
-                            if NodeRole.INPUT in convert_to_list(include_roles):
-                                nested_nodes = self.get_nested_nodes_by_roles_at_any_level(node, NodeRole.BIAS)
-                                if nested_nodes:
-                                    if node.get_nodes_by_role(NodeRole.ORIGIN) == nested_nodes:
-                                        err_msg += (f" This is probably because its only ORIGIN Node is "
-                                                    f"'{nested_nodes[0].name}' which a BIAS Node and therefore "
-                                                    f"cannot accept any input.")
+                            bias_nodes = self.get_nested_nodes_by_roles_at_any_level(node, NodeRole.BIAS)
+                            if NodeRole.INPUT in convert_to_list(include_roles) and bias_nodes:
+                                if node.get_nodes_by_role(NodeRole.ORIGIN) == bias_nodes:
+                                    err_msg += (f" This is probably because its only ORIGIN Node is "
+                                                f"'{bias_nodes[0].name}' which a BIAS Node and therefore "
+                                                f"cannot accept any input.")
+                            if NodeRole.OUTPUT in convert_to_list(include_roles) and bias_nodes:
+                                if node.get_nodes_by_role(NodeRole.TERMINAL) == bias_nodes:
+                                    err_msg += (f" This is probably because its only TERMINAL Node is "
+                                                f"'{bias_nodes[0].name}' which a BIAS Node which cannot "
+                                                f"project to a Node in an outer Composition.")
+
                             raise CompositionError(err_msg)
                         node = nested_nodes
                     else:

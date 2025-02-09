@@ -615,6 +615,7 @@ EXPONENT_INDEX = 2
 
 DEFER_VARIABLE_SPEC_TO_MECH_MSG = "InputPort variable not yet defined, defer to Mechanism"
 
+
 class InputPortError(PortError):
     pass
 
@@ -867,7 +868,7 @@ class InputPort(Port_Base):
         shadow_inputs = Parameter(None, stateful=False, loggable=False, read_only=True, pnl_internal=True, structural=True)
 
         def _validate_default_input(self, default_input):
-            if default_input not in {None, DEFAULT_VARIABLE}:
+            if default_input is not None and default_input is not DEFAULT_VARIABLE:
                 return f"must be None or the keyword '{DEFAULT_VARIABLE.upper()}'."
 
     #endregion

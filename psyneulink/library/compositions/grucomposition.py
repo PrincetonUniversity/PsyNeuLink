@@ -48,15 +48,15 @@ The GRUComposition implements the following computations by its `reset <GRUCompo
 
 .. math::
 
-   &reset = Logistic(wts\_ir \cdot input + bias\_ir + wts\\_hr \cdot hidden + bias\_hr)
+   &reset = Logistic(wts\\_ir \\cdot input + bias\\_ir + wts\\_hr \\cdot hidden + bias\\_hr)
 
-   &update = Logistic(wts\_iu \cdot input + bias\_iu + wts\_hu \cdot hidden + bias\_hu)
+   &update = Logistic(wts\\_iu \\cdot input + bias\\_iu + wts\\_hu \\cdot hidden + bias\\_hu)
 
-   &new = Tanh(wts\_in \cdot input + bias\_in + reset \cdot (wts\_hn \cdot hidden + bias\_hn))
+   &new = Tanh(wts\\_in \\cdot input + bias\\_in + reset \\cdot (wts\\_hn \\cdot hidden + bias\\_hn))
 
-   &hidden = (1 - update) \odot new + update \odot hidden
+   &hidden = (1 - update) \\odot new + update \\odot hidden
 
-where :math:`\cdot` is the dot product, :math:`\odot` is the Hadamard product, and all values are for the
+where :math:`\\cdot` is the dot product, :math:`\\odot` is the Hadamard product, and all values are for the
 current execution of the Composition *(t)* except for hidden, which uses the value from the prior execution *(t-1)*
 (see `Cycles <Composition_Cycle>` for handling of recurrence and cycles).
 
