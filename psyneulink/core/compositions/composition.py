@@ -4731,7 +4731,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # BIAS Node should *never* be considered as an INPUT Node;  *can* be an OUTPUT Node
                 #   if it is in an inner Composition and projects to an outer one (handed in _determine_node_roles)
                 self.exclude_node_roles(node, NodeRole.INPUT, context)
-
+                self.exclude_node_roles(node, NodeRole.OUTPUT, context)
                 self.required_node_roles.append((node, NodeRole.BIAS))
 
             elif role is NodeRole.INPUT:

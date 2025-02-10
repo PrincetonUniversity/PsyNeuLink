@@ -669,42 +669,41 @@ class GRUComposition(AutodiffComposition):
                               self.wts_ho])
 
         if self.bias:
-            self.bias_in_node = ProcessingMechanism(name='BIAS IN', default_variable=np.ones(hidden_size))
-            self.bias_in = MappingProjection(sender=self.bias_in_node,
+            self.bias_in_node = ProcessingMechanism(name='BIAS NODE IN', default_variable=[1])
+            self.bias_in = MappingProjection(name='BIAS IN',
+                                             sender=self.bias_in_node,
                                              receiver=self.new_node.input_ports['FROM INPUT'],
-                                             learnable=True,
-                                             matrix=init_wts(hidden_size, hidden_size))
+                                             learnable=True)
 
-            self.bias_iu_node = ProcessingMechanism(name='BIAS IU', default_variable=np.ones(hidden_size))
-            self.bias_iu = MappingProjection(sender=self.bias_iu_node,
+            self.bias_iu_node = ProcessingMechanism(name='BIAS NODE IU', default_variable=[1])
+            self.bias_iu = MappingProjection(name='BIAS IU',
+                                             sender=self.bias_iu_node,
                                              receiver=self.update_node.input_ports[OUTCOME],
-                                             learnable=True,
-                                             matrix=init_wts(hidden_size, hidden_size))
+                                             learnable=True)
 
-            self.bias_ir_node = ProcessingMechanism(name='BIAS IR', default_variable=np.ones(hidden_size))
-            self.bias_ir = MappingProjection(sender=self.bias_ir_node,
+            self.bias_ir_node = ProcessingMechanism(name='BIAS NODE IR', default_variable=[1])
+            self.bias_ir = MappingProjection(name='BIAS IR',
+                                             sender=self.bias_ir_node,
                                              receiver=self.reset_node.input_ports[OUTCOME],
-                                             learnable=True,
-                                             matrix=init_wts(hidden_size, hidden_size))
+                                             learnable=True)
 
-            self.bias_hn_node = ProcessingMechanism(name='BIAS HN', default_variable=np.ones(hidden_size))
-            self.bias_hn = MappingProjection(sender=self.bias_hn_node,
+            self.bias_hn_node = ProcessingMechanism(name='BIAS NODE HN', default_variable=[1])
+            self.bias_hn = MappingProjection(name='BIAS HN',
+                                             sender=self.bias_hn_node,
                                              receiver=self.new_node.input_ports['FROM HIDDEN'],
-                                             learnable=True,
-                                             matrix=init_wts(hidden_size, hidden_size))
+                                             learnable=True)
 
-            self.bias_hr_node = ProcessingMechanism(name='BIAS HR', default_variable=np.ones(hidden_size))
-            self.bias_hr = MappingProjection(sender=self.bias_hr_node,
+            self.bias_hr_node = ProcessingMechanism(name='BIAS NODE HR', default_variable=[1])
+            self.bias_hr = MappingProjection(name='BIAS HR',
+                                             sender=self.bias_hr_node,
                                              receiver=self.reset_node.input_ports[OUTCOME],
-                                             learnable=True,
-                                             matrix=init_wts(hidden_size, hidden_size))
+                                             learnable=True)
 
-            self.bias_hu_node = ProcessingMechanism(name='BIAS HU', default_variable=np.ones(hidden_size))
-            self.bias_hu = MappingProjection(sender=self.bias_hu_node,
+            self.bias_hu_node = ProcessingMechanism(name='BIAS NODE HU', default_variable=[1])
+            self.bias_hu = MappingProjection(name='BIAS HU',
+                                             sender=self.bias_hu_node,
                                              receiver=self.update_node.input_ports[OUTCOME],
-                                             learnable=True,
-                                             matrix=init_wts(hidden_size, hidden_size))
-
+                                             learnable=True)
 
             self.add_nodes([(self.bias_ir_node, NodeRole.BIAS),
                             (self.bias_iu_node, NodeRole.BIAS),
@@ -755,39 +754,38 @@ class GRUComposition(AutodiffComposition):
         TORCH = 0
         PNL = 1
         for wts in zip(weights,
-                       [self.wts_in.parameters.matrix,
-                        self.wts_ir.parameters.matrix,
+                       [self.wts_ir.parameters.matrix,
                         self.wts_iu.parameters.matrix,
-                        self.wts_hn.parameters.matrix,
+                        self.wts_in.parameters.matrix,
                         self.wts_hr.parameters.matrix,
-                        self.wts_hu.parameters.matrix]):
+                        self.wts_hu.parameters.matrix,
+                        self.wts_hn.parameters.matrix]):
             if wts[TORCH].shape != wts[PNL].get(context).shape:
                 raise GRUCompositionError(f"Shape of 'wts' ({wts[TORCH].shape}) "
                                           f"does not match required shape ({wts[PNL].shape}).)")
             wts[PNL].set(wts[TORCH], context)
         if biases:
             for b in zip(biases,
-                           [self.bias_in.parameters.matrix,
-                            self.bias_ir.parameters.matrix,
+                           [self.bias_ir.parameters.matrix,
                             self.bias_iu.parameters.matrix,
-                            self.bias_hn.parameters.matrix,
+                            self.bias_in.parameters.matrix,
                             self.bias_hr.parameters.matrix,
-                            self.bias_hu.parameters.matrix]):
-                if b[TORCH].shape != b[PNL].get(context).shape:
+                            self.bias_hu.parameters.matrix,
+                            self.bias_hn.parameters.matrix]):
+                if b[TORCH].shape != b[PNL].get(context)[0].shape:
                     raise GRUCompositionError(f"Shape of 'bias' ({b[TORCH].shape}) "
-                                              f"does not match required shape ({b[PNL].shape}).)")
+                                              f"does not match required shape ({b[PNL].get(context)[0].shape}).)")
                 b[PNL].set(b[TORCH], context)
 
 
-
     def get_weights(self, context=None):
-        wts_in = self.wts_in.parameters.matrix.get(context)
         wts_ir = self.wts_ir.parameters.matrix.get(context)
         wts_iu = self.wts_iu.parameters.matrix.get(context)
-        wts_hn = self.wts_hn.parameters.matrix.get(context)
+        wts_in = self.wts_in.parameters.matrix.get(context)
         wts_hr = self.wts_hr.parameters.matrix.get(context)
         wts_hu = self.wts_hu.parameters.matrix.get(context)
-        return wts_in, wts_ir, wts_iu, wts_hn, wts_hr, wts_hu
+        wts_hn = self.wts_hn.parameters.matrix.get(context)
+        return wts_ir, wts_iu, wts_in, wts_hr, wts_hu, wts_hn
 
     def convert_weights_from_torch(self, torch_gru):
         """Convert weights from a PyTorch GRU module to the format for GRUComposition's Projections."""
@@ -800,7 +798,8 @@ class GRUComposition(AutodiffComposition):
         wts_hr = wts_hh[:5].numpy()
         wts_hu = wts_hh[5:10].numpy()
         wts_hn = wts_hh[10:].numpy()
-        weights = (wts_in, wts_ir, wts_iu, wts_hr, wts_hu, wts_hn)
+        # weights = (wts_in, wts_ir, wts_iu, wts_hr, wts_hu, wts_hn)
+        weights = (wts_ir, wts_iu, wts_in, wts_hr, wts_hu, wts_hn)
         biases = None
         if torch_gru.bias:
             if not self.bias:
@@ -813,7 +812,7 @@ class GRUComposition(AutodiffComposition):
             b_hr = b_hh[:5].numpy()
             b_hu = b_hh[5:10].numpy()
             b_hn = b_hh[10:].numpy()
-            biases = (b_in, b_ir, b_iu, b_hr, b_hu, b_hn)
+            biases = (b_ir, b_iu, b_in, b_hr, b_hu, b_hn)
         return weights, biases
 
     def set_wts_from_torch_gru(self, torch_gru, context=None):
