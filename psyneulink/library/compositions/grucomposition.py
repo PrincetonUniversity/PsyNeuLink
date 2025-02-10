@@ -183,6 +183,7 @@ Class Reference
 """
 import numpy as np
 import warnings
+from typing import Union
 # from sympy.stats import Logistic
 
 from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination
@@ -483,6 +484,7 @@ class GRUComposition(AutodiffComposition):
     # *****************************************************************************************************************
     # ******************************  Nodes and Pathway Construction Methods  *****************************************
     # *****************************************************************************************************************
+    #region
     # Construct Nodes --------------------------------------------------------------------------------
 
     def _construct_composition(self, input_size, hidden_size):
@@ -578,7 +580,7 @@ class GRUComposition(AutodiffComposition):
                                         sender=self.new_node,
                                         receiver=self.hidden_layer_node.input_ports['NEW INPUT'],
                                         learnable=False,
-                                        matrix=init_wts(hidden_size, hidden_size))
+                                        matrix=IDENTITY_MATRIX)
 
         self.wts_hh = MappingProjection(name='HIDDEN RECURRENT WEIGHTS',
                                         sender=self.hidden_layer_node,
@@ -675,7 +677,6 @@ class GRUComposition(AutodiffComposition):
         # self._set_learning_attributes()
 
         self._analyze_graph()
-    #region
 
     def _set_learning_attributes(self):
         """Set learning-related attributes for Node and Projections
@@ -702,6 +703,32 @@ class GRUComposition(AutodiffComposition):
             projection.learnable = True
             if projection.learning_mechanism:
                 projection.learning_mechanism.learning_rate = learning_rate
+
+    def set_weights(self,
+                    wts_in:np.ndarray, wts_ir:np.ndarray, wts_iu:np.ndarray,
+                    wts_hn:np.ndarray, wts_hr:np.array, wts_hu:np.array,
+                    context=None):
+        """Set weights for Projections to input_node and hidden_layer_node."""
+        for wts in zip([wts_in, wts_ir, wts_iu, wts_hn, wts_hr, wts_hu],
+                       [self.wts_in.parameters.matrix,
+                        self.wts_ir.parameters.matrix,
+                        self.wts_iu.parameters.matrix,
+                        self.wts_hn.parameters.matrix,
+                        self.wts_hr.parameters.matrix,
+                        self.wts_hu.parameters.matrix]):
+            if wts[0].shape != wts[1].get(context).shape:
+                raise GRUCompositionError(f"Shape of 'wts_in' ({wts[0].shape}) "
+                                          f"does not match required shape ({wts[1].shape}).)")
+            wts[1].set(wts[0], context)
+
+    def get_weights(self):
+        wts_in = self.wts_in.parameters.matrix.get()
+        wts_ir = self.wts_ir.parameters.matrix.get()
+        wts_iu = self.wts_iu.parameters.matrix.get()
+        wts_hn = self.wts_hn.parameters.matrix.get()
+        wts_hr = self.wts_hr.parameters.matrix.get()
+        wts_hu = self.wts_hu.parameters.matrix.get()
+        return wts_in, wts_ir, wts_iu, wts_hn, wts_hr, wts_hu
 
     #endregion
 
