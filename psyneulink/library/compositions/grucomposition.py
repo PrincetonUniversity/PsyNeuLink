@@ -730,6 +730,31 @@ class GRUComposition(AutodiffComposition):
         wts_hu = self.wts_hu.parameters.matrix.get(context)
         return wts_in, wts_ir, wts_iu, wts_hn, wts_hr, wts_hu
 
+    def convert_weights_from_torch(self, torch_gru):
+        """Convert weights from a PyTorch GRU module to the format for GRUComposition's Projections."""
+        torch_gru_weights = torch_gru.state_dict()
+        wts_ih = torch_gru_weights['weight_ih_l0']
+        wts_ir = wts_ih[:5].numpy().T
+        wts_iu = wts_ih[5:10].numpy().T
+        wts_in = wts_ih[10:].numpy().T
+        wts_hh = torch_gru_weights['weight_hh_l0']
+        wts_hr = wts_hh[:5].numpy()
+        wts_hu = wts_hh[5:10].numpy()
+        wts_hn = wts_hh[10:].numpy()
+        return (wts_in, wts_ir, wts_iu, wts_hr, wts_hu, wts_hn)
+
+    def set_wts_from_torch_gru(self, torch_gru, context=None):
+        """Set weights from a PyTorch GRU module to the GRUComposition's Projections."""
+        if torch_available:
+            import torch
+            if isinstance(torch_gru, torch.nn.GRU):
+                wts = self.convert_weights_from_torch(torch_gru)
+                self.set_weights(*wts, context)
+            else:
+                raise GRUCompositionError(f"Argument 'torch_gru' ({torch_gru}) is not a PyTorch GRU module.")
+        else:
+            raise GRUCompositionError(f"PyTorch is not available.")
+
     #endregion
 
     # *****************************************************************************************************************
