@@ -709,6 +709,8 @@ class GRUComposition(AutodiffComposition):
                     wts_hn:np.ndarray, wts_hr:np.array, wts_hu:np.array,
                     context=None):
         """Set weights for Projections to input_node and hidden_layer_node."""
+        TORCH = 0
+        PNL = 1
         for wts in zip([wts_in, wts_ir, wts_iu, wts_hn, wts_hr, wts_hu],
                        [self.wts_in.parameters.matrix,
                         self.wts_ir.parameters.matrix,
@@ -716,10 +718,10 @@ class GRUComposition(AutodiffComposition):
                         self.wts_hn.parameters.matrix,
                         self.wts_hr.parameters.matrix,
                         self.wts_hu.parameters.matrix]):
-            if wts[0].shape != wts[1].get(context).shape:
-                raise GRUCompositionError(f"Shape of 'wts_in' ({wts[0].shape}) "
-                                          f"does not match required shape ({wts[1].shape}).)")
-            wts[1].set(wts[0], context)
+            if wts[TORCH].shape != wts[PNL].get(context).shape:
+                raise GRUCompositionError(f"Shape of 'wts_in' ({wts[TORCH].shape}) "
+                                          f"does not match required shape ({wts[PNL].shape}).)")
+            wts[PNL].set(wts[TORCH], context)
 
     def get_weights(self, context=None):
         wts_in = self.wts_in.parameters.matrix.get(context)
