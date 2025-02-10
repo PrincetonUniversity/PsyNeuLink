@@ -721,13 +721,13 @@ class GRUComposition(AutodiffComposition):
                                           f"does not match required shape ({wts[1].shape}).)")
             wts[1].set(wts[0], context)
 
-    def get_weights(self):
-        wts_in = self.wts_in.parameters.matrix.get()
-        wts_ir = self.wts_ir.parameters.matrix.get()
-        wts_iu = self.wts_iu.parameters.matrix.get()
-        wts_hn = self.wts_hn.parameters.matrix.get()
-        wts_hr = self.wts_hr.parameters.matrix.get()
-        wts_hu = self.wts_hu.parameters.matrix.get()
+    def get_weights(self, context=None):
+        wts_in = self.wts_in.parameters.matrix.get(context)
+        wts_ir = self.wts_ir.parameters.matrix.get(context)
+        wts_iu = self.wts_iu.parameters.matrix.get(context)
+        wts_hn = self.wts_hn.parameters.matrix.get(context)
+        wts_hr = self.wts_hr.parameters.matrix.get(context)
+        wts_hu = self.wts_hu.parameters.matrix.get(context)
         return wts_in, wts_ir, wts_iu, wts_hn, wts_hr, wts_hu
 
     #endregion
