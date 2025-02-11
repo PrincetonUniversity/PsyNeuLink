@@ -817,9 +817,9 @@ class GRUComposition(AutodiffComposition):
         wts_iu = wts_ih[5:10].numpy().T
         wts_in = wts_ih[10:].numpy().T
         wts_hh = torch_gru_weights['weight_hh_l0']
-        wts_hr = wts_hh[:5].numpy()
-        wts_hu = wts_hh[5:10].numpy()
-        wts_hn = wts_hh[10:].numpy()
+        wts_hr = wts_hh[:5].numpy().T
+        wts_hu = wts_hh[5:10].numpy().T
+        wts_hn = wts_hh[10:].numpy().T
         # weights = (wts_in, wts_ir, wts_iu, wts_hr, wts_hu, wts_hn)
         weights = (wts_ir, wts_iu, wts_in, wts_hr, wts_hu, wts_hn)
         biases = None
@@ -831,9 +831,9 @@ class GRUComposition(AutodiffComposition):
             b_iu = b_ih[5:10].numpy().T
             b_in = b_ih[10:].numpy().T
             b_hh = torch_gru_weights['bias_hh_l0']
-            b_hr = b_hh[:5].numpy()
-            b_hu = b_hh[5:10].numpy()
-            b_hn = b_hh[10:].numpy()
+            b_hr = b_hh[:5].numpy().T
+            b_hu = b_hh[5:10].numpy().T
+            b_hn = b_hh[10:].numpy().T
             biases = (b_ir, b_iu, b_in, b_hr, b_hu, b_hn)
         return weights, biases
 
