@@ -733,15 +733,23 @@ class GRUComposition(AutodiffComposition):
         #                                  self.reset_node,
         #                                  self.update_node
         #                              ))
-        if self.bias:
-            self.scheduler.add_condition(self.reset_node, conditions.AfterNodes(self.bias_hr_node))
-            self.scheduler.add_condition(self.update_node, conditions.AfterNodes(self.reset_node, self.bias_iu_node))
-            self.scheduler.add_condition(self.new_node, conditions.AfterNodes(self.update_node, self.bias_in_node))
-            self.scheduler.add_condition(self.hidden_layer_node, conditions.AfterNodes(self.new_node))
-        else:
-            self.scheduler.add_condition(self.update_node, conditions.AfterNodes(self.reset_node))
-            self.scheduler.add_condition(self.new_node, conditions.AfterNodes(self.update_node))
-            self.scheduler.add_condition(self.hidden_layer_node, conditions.AfterNodes(self.new_node))
+
+        # if self.bias:
+        #     self.scheduler.add_condition(self.reset_node, conditions.AfterNodes(self.bias_hr_node, self.bias_ir_node))
+        #     self.scheduler.add_condition(self.update_node, conditions.AfterNodes(self.reset_node,
+        #                                                                          self.bias_iu_node,
+        #                                                                          self.bias_hu_node))
+        #     self.scheduler.add_condition(self.new_node, conditions.AfterNodes(self.update_node,
+        #                                                                       self.bias_hn_node,
+        #                                                                       self.bias_in_node))
+        #     self.scheduler.add_condition(self.hidden_layer_node, conditions.AfterNodes(self.new_node))
+        # else:
+        #     self.scheduler.add_condition(self.update_node, conditions.AfterNodes(self.reset_node))
+        #     self.scheduler.add_condition(self.new_node, conditions.AfterNodes(self.update_node))
+        #     self.scheduler.add_condition(self.hidden_layer_node, conditions.AfterNodes(self.new_node))
+        self.scheduler.add_condition(self.update_node, conditions.AfterNodes(self.reset_node))
+        self.scheduler.add_condition(self.new_node, conditions.AfterNodes(self.update_node))
+        self.scheduler.add_condition(self.hidden_layer_node, conditions.AfterNodes(self.new_node))
 
         self._analyze_graph()
 
