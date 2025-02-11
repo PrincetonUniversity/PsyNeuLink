@@ -202,6 +202,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.wrapped_nodes = []  # can be PytorchMechanismWrapper or PytorchCompositionWrapper
         self.nodes_map = {}    # maps Node (Mech or nested Comp) -> PytorchMechanismWrapper or PytorchCompositionWrapper
         self._nodes_to_execute_after_gradient_calc = {} # Nodes requiring execution after Pytorch forward/backward pass
+        self._batch_size = 1 # Store the currently used batch size
 
         self.projection_wrappers = [] # PytorchProjectionWrappers
         self.projections_map = {}  # maps Projections -> PytorchProjectionWrappers
@@ -621,6 +622,17 @@ class PytorchCompositionWrapper(torch.nn.Module):
         """Forward method of the model for PyTorch and LLVM modes
         Returns a dictionary {output_node:value} of output values for the model
         """
+
+        # Store the batch_size we are currently using
+        inp = inputs[list(inputs.keys())[0]]
+        if type(inp) is torch.Tensor:
+            self._batch_size = inp.shape[0]
+        elif type(inp) is list:
+            self._batch_size = len(inp)
+        else:
+            raise ValueError("Inputs to PytorchCompositionWrapper.forward must be either torch.Tensors or lists of "
+                             "torch.Tensors")
+
         outputs = {}  # dict for storing values of terminal (output) nodes
         for current_exec_set in self.execution_sets:
             for node in current_exec_set:
@@ -648,6 +660,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                     variable.append(input[i])
                                 elif input_port.default_input == DEFAULT_VARIABLE:
                                     # input_port uses a bias, so get that
+                                    val = input_port.defaults.variable
+
+                                    # We need to add the batch dimension to default values.
+                                    val = val[None, ...].expand(self._batch_size, *val.shape)
+
                                     variable.append(torch.atleast_2d(torch.from_numpy(input_port.defaults.variable)))
 
                             # We now need to stack these so the batch dimension is first
@@ -669,10 +686,15 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                 variable.append(inputs[input_port])
                             elif input_port.default_input == DEFAULT_VARIABLE:
                                 # input_port uses a bias, so get that
-                                variable.append(torch.atleast_2d(torch.from_numpy(input_port.defaults.variable)))
+                                val = torch.from_numpy(input_port.defaults.variable)
+
+                                # We need to add the batch dimension to default values.
+                                val = val[None, ...].expand(self._batch_size, *val.shape)
+
+                                variable.append(val)
                             elif not input_port.internal_only:
                                 # otherwise, use the node's input_port's afferents
-                                variable.append(node.aggregate_afferents(i))
+                                variable.append(node.aggregate_afferents(batch_size=self._batch_size, port=i))
 
                         # We now need to stack these so the batch dimension is first
                         try:
@@ -684,7 +706,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                             variable = [[inp[b] for inp in variable] for b in range(batch_size)]
                 else:
                     # Node is not INPUT to Composition or BIAS, so get all input from its afferents
-                    variable = node.aggregate_afferents()
+                    variable = node.aggregate_afferents(batch_size=self._batch_size)
                 variable = node.execute_input_ports(variable)
 
                 if node.exclude_from_gradient_calc:
@@ -985,7 +1007,7 @@ class PytorchMechanismWrapper():
         assert afferent not in self.afferents
         self.afferents.append(afferent)
 
-    def aggregate_afferents(self, port=None):
+    def aggregate_afferents(self, batch_size, port=None):
         """Return weight-multiplied sum of afferent projections for input_port(s) of the Mechanism
         If there is only one input_port, return the sum of its afferents (for those in Composition)
         If there are multiple input_ports, return an array with the sum for each input_port
@@ -1006,7 +1028,13 @@ class PytorchMechanismWrapper():
                     proj_wrapper._curr_sender_value = val
 
             else:
-                proj_wrapper._curr_sender_value = torch.tensor(proj_wrapper.default_value)
+                val = torch.tensor(proj_wrapper.default_value)
+
+                # We need to add the batch dimension to default values.
+                val = val[None, ...].expand(batch_size, *val.shape)
+
+                proj_wrapper._curr_sender_value = val
+
             proj_wrapper._curr_sender_value = torch.atleast_1d(proj_wrapper._curr_sender_value)
 
         # Specific port is specified
@@ -1113,7 +1141,7 @@ class PytorchMechanismWrapper():
             # TransformFunction can reduce output to single item from
             # multi-item input
             if isinstance(function._pnl_function, TransformFunction):
-                res = res.unsqueeze(0)
+                res = res.unsqueeze(1)
             return res
 
         # If mechanism has an integrator_function and integrator_mode is True,
