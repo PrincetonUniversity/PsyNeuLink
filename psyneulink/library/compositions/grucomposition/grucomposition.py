@@ -557,9 +557,8 @@ class GRUComposition(AutodiffComposition):
         self.new_node = ProcessingMechanism(name=NEW_NODE_NAME,
                                             input_shapes=[hidden_size, hidden_size],
                                             input_ports=['FROM INPUT',
-                                                         InputPort(
-                                                             name='FROM HIDDEN',
-                                                             function=LinearCombination(scale=hidden_shape))],
+                                                         InputPort(name='FROM HIDDEN',
+                                                                   function=LinearCombination(scale=hidden_shape))],
                                             function=LinearCombination,
                                             output_ports=[OutputPort(name='TO HIDDEN LAYER INPUT',
                                                                      function=Tanh)])
@@ -585,10 +584,9 @@ class GRUComposition(AutodiffComposition):
                                           default_allocation=hidden_shape,
                                           function=Logistic,
                                           gating_signals=[
-                                              GatingSignal(
-                                                  name='RESET GATING SIGNAL',
-                                                  default_allocation=hidden_shape,
-                                                  gate=self.new_node.input_ports['FROM HIDDEN'])])
+                                              GatingSignal(name='RESET GATING SIGNAL',
+                                                           default_allocation=hidden_shape,
+                                                           gate=self.new_node.input_ports['FROM HIDDEN'])])
         self.reset_gate = self.reset_node.gating_signals['RESET GATING SIGNAL'].efferents[0]
         self.reset_gate.name = 'RESET GATE'
 
@@ -596,12 +594,8 @@ class GRUComposition(AutodiffComposition):
                                                input_shapes=hidden_size,
                                                function=Linear)
 
-        self.add_nodes([self.input_node,
-                        self.new_node,
-                        self.reset_node,
-                        self.update_node,
-                        self.output_node,
-                        self.hidden_layer_node])
+        self.add_nodes([self.input_node, self.new_node, self.reset_node,
+                        self.update_node, self.output_node, self.hidden_layer_node])
 
         def init_wts(sender_size, receiver_size):
             """Initialize weights for Projections"""
@@ -626,7 +620,6 @@ class GRUComposition(AutodiffComposition):
                                         receiver=self.reset_node.input_ports[OUTCOME],
                                         learnable=True,
                                         matrix=init_wts(input_size, hidden_size))
-
 
         self.wts_nh = MappingProjection(name='NEW TO HIDDEN WEIGHTS',
                                         sender=self.new_node,
@@ -664,15 +657,8 @@ class GRUComposition(AutodiffComposition):
                                         learnable=False,
                                         matrix=IDENTITY_MATRIX)
 
-        self.add_projections([self.wts_in,
-                              self.wts_iu,
-                              self.wts_ir,
-                              self.wts_nh,
-                              self.wts_hh,
-                              self.wts_hn,
-                              self.wts_hr,
-                              self.wts_hu,
-                              self.wts_ho])
+        self.add_projections([self.wts_in, self.wts_iu, self.wts_ir, self.wts_nh,
+                              self.wts_hh, self.wts_hn, self.wts_hr, self.wts_hu, self.wts_ho])
 
         if self.bias:
             self.bias_in_node = ProcessingMechanism(name='BIAS NODE IN', default_variable=[1])
@@ -718,12 +704,8 @@ class GRUComposition(AutodiffComposition):
                             (self.bias_hu_node, NodeRole.BIAS),
                             (self.bias_hn_node, NodeRole.BIAS)])
 
-            self.add_projections([self.bias_ir,
-                                  self.bias_iu,
-                                  self.bias_in,
-                                  self.bias_hr,
-                                  self.bias_hu,
-                                  self.bias_hn])
+            self.add_projections([self.bias_ir, self.bias_iu, self.bias_in,
+                                  self.bias_hr, self.bias_hu, self.bias_hn])
 
         self.scheduler.add_condition(self.update_node, conditions.AfterNodes(self.reset_node))
         self.scheduler.add_condition(self.new_node, conditions.AfterNodes(self.update_node))
