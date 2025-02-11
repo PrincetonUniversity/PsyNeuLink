@@ -541,6 +541,8 @@ class GRUComposition(AutodiffComposition):
         self.input_node = ProcessingMechanism(name=INPUT_NODE_NAME,
                                               input_shapes=input_size)
 
+        # Two input_ports are used to separately gate input its recurrent Projection and from new_node
+        # LinearCombination function of each InputPort is explicitly specified to allow for gating by a vector
         self.hidden_layer_node = ProcessingMechanism(name=HIDDEN_LAYER_NODE_NAME,
                                                      input_shapes=[hidden_size, hidden_size],
                                                      input_ports=[
@@ -550,6 +552,10 @@ class GRUComposition(AutodiffComposition):
                                                                    function=LinearCombination(scale=hidden_shape))],
                                                      function=LinearCombination(operation=SUM))
 
+        # IMPLEMENTATION NOTE:
+        # Two input_ports are used to allow the input from the hidden_layer_node to be gated but not the input_node
+        # The node's LinearCombination function is then used to combine the two inputs
+        # And then Tanh is assigend as the function of the OutputPort to do the nonlinear transform
         self.new_node = ProcessingMechanism(name=NEW_NODE_NAME,
                                             input_shapes=[hidden_size, hidden_size],
                                             input_ports=['FROM INPUT',
@@ -560,17 +566,18 @@ class GRUComposition(AutodiffComposition):
                                             output_ports=[OutputPort(name='TO HIDDEN LAYER INPUT',
                                                                      function=Tanh)])
 
+        # Gates input to hidden_layer_node from its recurrent Projection and from new_node
         self.update_node = GatingMechanism(name=UPDATE_NODE_NAME,
                                            default_allocation=hidden_shape,
                                            function=Logistic,
                                            gating_signals=[
+                                               GatingSignal(name='RECURRENT GATING SIGNAL',
+                                                            default_allocation=hidden_shape,
+                                                            gate=self.hidden_layer_node.input_ports['RECURRENT']),
                                                GatingSignal(name='NEW GATING SIGNAL',
                                                             default_allocation=hidden_shape,
                                                             transfer_function=Linear(scale=-1,offset=1),
-                                                            gate=self.hidden_layer_node.input_ports['NEW INPUT']),
-                                               GatingSignal(name='RECURRENT GATING SIGNAL',
-                                                            default_allocation=hidden_shape,
-                                                            gate=self.hidden_layer_node.input_ports['RECURRENT'])])
+                                                            gate=self.hidden_layer_node.input_ports['NEW INPUT'])])
         self.new_gate = self.update_node.gating_signals['NEW GATING SIGNAL'].efferents[0]
         self.new_gate.name = 'NEW GATE'
         self.recurrent_gate = self.update_node.gating_signals['RECURRENT GATING SIGNAL'].efferents[0]
