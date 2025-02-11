@@ -551,7 +551,6 @@ class GRUComposition(AutodiffComposition):
                                                                    function=LinearCombination(scale=hidden_shape))],
                                                      function=LinearCombination(operation=SUM))
 
-        # IMPLEMENTATION NOTE:
         # Two input_ports are used to allow the input from the hidden_layer_node to be gated but not the input_node
         # The node's LinearCombination function is then used to combine the two inputs
         # And then Tanh is assigend as the function of the OutputPort to do the nonlinear transform
@@ -589,10 +588,7 @@ class GRUComposition(AutodiffComposition):
                                               GatingSignal(
                                                   name='RESET GATING SIGNAL',
                                                   default_allocation=hidden_shape,
-                                                  # gate=self.new_node.input_ports['FROM HIDDEN'])])
-                                                  gate=GatingProjection(
-                                                      # feedback=True,
-                                                      receiver=self.new_node.input_ports['FROM HIDDEN']))])
+                                                  gate=self.new_node.input_ports['FROM HIDDEN'])])
         self.reset_gate = self.reset_node.gating_signals['RESET GATING SIGNAL'].efferents[0]
         self.reset_gate.name = 'RESET GATE'
 
@@ -636,7 +632,6 @@ class GRUComposition(AutodiffComposition):
                                         sender=self.new_node,
                                         receiver=self.hidden_layer_node.input_ports['NEW INPUT'],
                                         learnable=False,
-                                        # feedback=True,
                                         matrix=IDENTITY_MATRIX)
 
         self.wts_hh = MappingProjection(name='HIDDEN RECURRENT WEIGHTS',
@@ -649,7 +644,6 @@ class GRUComposition(AutodiffComposition):
                                         sender=self.hidden_layer_node,
                                         receiver=self.new_node.input_ports['FROM HIDDEN'],
                                         learnable=True,
-                                        # feedback=True,
                                         matrix=init_wts(hidden_size, hidden_size))
 
         self.wts_hr = MappingProjection(name='HIDDEN TO RESET WEIGHTS',
@@ -731,28 +725,6 @@ class GRUComposition(AutodiffComposition):
                                   self.bias_hu,
                                   self.bias_hn])
 
-        # self._set_learning_attributes()
-        # self.scheduler.add_condition(self.hidden_layer_node,
-        #                              # conditions.AllHaveRun(
-        #                              conditions.AfterNodes(
-        #                                  self.new_node,
-        #                                  self.reset_node,
-        #                                  self.update_node
-        #                              ))
-
-        # if self.bias:
-        #     self.scheduler.add_condition(self.reset_node, conditions.AfterNodes(self.bias_hr_node, self.bias_ir_node))
-        #     self.scheduler.add_condition(self.update_node, conditions.AfterNodes(self.reset_node,
-        #                                                                          self.bias_iu_node,
-        #                                                                          self.bias_hu_node))
-        #     self.scheduler.add_condition(self.new_node, conditions.AfterNodes(self.update_node,
-        #                                                                       self.bias_hn_node,
-        #                                                                       self.bias_in_node))
-        #     self.scheduler.add_condition(self.hidden_layer_node, conditions.AfterNodes(self.new_node))
-        # else:
-        #     self.scheduler.add_condition(self.update_node, conditions.AfterNodes(self.reset_node))
-        #     self.scheduler.add_condition(self.new_node, conditions.AfterNodes(self.update_node))
-        #     self.scheduler.add_condition(self.hidden_layer_node, conditions.AfterNodes(self.new_node))
         self.scheduler.add_condition(self.update_node, conditions.AfterNodes(self.reset_node))
         self.scheduler.add_condition(self.new_node, conditions.AfterNodes(self.update_node))
         self.scheduler.add_condition(self.hidden_layer_node, conditions.AfterNodes(self.new_node))
@@ -865,7 +837,8 @@ class GRUComposition(AutodiffComposition):
 
     #endregion
 
-    # *****************************************************************************************************************
+    #
+    # ******aa***********************************************************************************************************
     # *********************************** Execution Methods  **********************************************************
     # *****************************************************************************************************************
     #region
