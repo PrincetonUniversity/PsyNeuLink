@@ -200,7 +200,7 @@ from psyneulink.core.components.ports.modulatorysignals.gatingsignal import Gati
 from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.keywords import FEEDBACK, GRU_COMPOSITION, OUTCOME, SUM, IDENTITY_MATRIX
+from psyneulink.core.globals.keywords import FEEDBACK, GRU_COMPOSITION, OUTCOME, OWNER_VALUE, SUM, IDENTITY_MATRIX
 from psyneulink.core.llvm import ExecutionMode
 
 
