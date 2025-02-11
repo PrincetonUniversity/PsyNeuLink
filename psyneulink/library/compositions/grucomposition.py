@@ -196,10 +196,10 @@ from psyneulink.library.compositions.autodiffcomposition import AutodiffComposit
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.ports.modulatorysignals.gatingsignal import GatingSignal
+from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.context import handle_external_context
-from psyneulink.core.globals.keywords import CONTEXT, GRU_COMPOSITION, OUTCOME, SUM, IDENTITY_MATRIX
+from psyneulink.core.globals.keywords import FEEDBACK, GRU_COMPOSITION, OUTCOME, SUM, IDENTITY_MATRIX
 from psyneulink.core.llvm import ExecutionMode
 
 
@@ -582,7 +582,10 @@ class GRUComposition(AutodiffComposition):
                                               GatingSignal(
                                                   name='RESET GATING SIGNAL',
                                                   default_allocation=hidden_shape,
-                                                  gate=self.new_node.input_ports['FROM HIDDEN'])])
+                                                  # gate=self.new_node.input_ports['FROM HIDDEN'])])
+                                                  gate=GatingProjection(
+                                                      # feedback=True,
+                                                      receiver=self.new_node.input_ports['FROM HIDDEN']))])
         self.reset_gate = self.reset_node.gating_signals['RESET GATING SIGNAL'].efferents[0]
         self.reset_gate.name = 'RESET GATE'
 
@@ -638,6 +641,7 @@ class GRUComposition(AutodiffComposition):
                                         sender=self.hidden_layer_node,
                                         receiver=self.new_node.input_ports['FROM HIDDEN'],
                                         learnable=True,
+                                        feedback=True,
                                         matrix=init_wts(hidden_size, hidden_size))
 
         self.wts_hr = MappingProjection(name='HIDDEN TO RESET WEIGHTS',
@@ -832,24 +836,7 @@ class GRUComposition(AutodiffComposition):
     # *****************************************************************************************************************
     # *********************************** Execution Methods  **********************************************************
     # *****************************************************************************************************************
-    # region
-    def execute(self,
-                inputs=None,
-                context=None,
-                **kwargs):
-        """Set input to weights of Projections to match_nodes and retrieved_nodes if not use_storage_node."""
-        results = super().execute(inputs=inputs, context=context, **kwargs)
-        # if not self._use_storage_node:
-        #     self._store_memory(inputs, context)
-        return results
-
-
-    @handle_external_context()
-    def learn(self, *args, **kwargs)->list:
-        """Override to check for inappropriate use of ARG_MAX or PROBABILISTIC options for retrieval with learning"""
-        enable_learning = self.parameters.enable_learning.get(kwargs[CONTEXT])
-
-        return super().learn(*args, **kwargs)
+    #region
 
     def _get_execution_mode(self, execution_mode):
         """Parse execution_mode argument and return a valid execution mode for the learn() method"""
@@ -878,11 +865,6 @@ class GRUComposition(AutodiffComposition):
                            f"is neither True, False nor a list of bools as it should be.")
         super()._identify_target_nodes(context)
         return target_nodes
-
-    def infer_backpropagation_learning_pathways(self, execution_mode, context=None):
-        if self.concatenate_queries:
-            raise GRUCompositionError(f"GRUComposition does not support learning with 'concatenate_queries'=True.")
-        return super().infer_backpropagation_learning_pathways(execution_mode, context=context)
 
     def do_gradient_optimization(self, retain_in_pnl_options, context, optimization_num=None):
         # 7/10/24 - MAKE THIS CONTEXT DEPENDENT:  CALL super() IF BEING EXECUTED ON ITS OWN?

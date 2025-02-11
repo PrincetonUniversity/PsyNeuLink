@@ -1565,7 +1565,13 @@ class Port_Base(Port):
                                                    connections=receiver)
                     return _get_receiver_port(spec[0].port)
                 elif isinstance(spec, Projection):
-                    return spec.receiver
+                    try:
+                        return spec.receiver
+                    except AttributeError:
+                        return spec._init_args[RECEIVER]
+                    except:
+                        raise PortError(f"Unrecognized specification of receiver for Projection "
+                                        f"from '{self.name}' of '{self.owner.name}'.")
                 # FIX: 11/25/17 -- NEEDS TO CHECK WHETHER PRIMARY SHOULD BE INPUT_PORT OR PARAMETER_PORT
                 elif isinstance(spec, Mechanism):
                     return spec.input_port

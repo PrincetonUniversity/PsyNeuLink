@@ -1830,11 +1830,17 @@ contrast, `ModulatoryProjections <ModulatoryProjection>` *are* designated as fee
 loops containing one or more ModulatoryProjections are broken, with the Mechanism that is `modulated
 <ModulatorySignal_Modulation>` designated as the `FEEDBACK_RECEIVER` and the `ModulatoryMechanism` that projects to
 it designated as the `FEEDBACK_SENDER`. However, either of these default behaviors can be overidden, by specifying the
-feedback status of a Projection explicitly: in a tuple with the Projection specification (e.g. where it is `specified
-in a Pathway <Pathway_Specification>` or in the `monitor_for_control <ControlMechanism_Monitor_for_Control>` argument
-of a `ControlMechanism`); in the Composition's `add_projections <Composition.add_projections>` method; by using the
-**feedback** argument of the Composition's `add_projection <Composition.add_projection>` method; or in the constructor
-of the `Projection` itself using its **feedback** argument. Specifying True or the keyword *FEEDBACK* forces its
+feedback status of a Projection explicitly.  This can be done in any of the following places:
+
+* the constructor for the `Projection`, using its **feedback** argument.
+
+* the Composition's `add_projection <Composition.add_projection>` method, by using its **feedback** argument
+
+* a tuple with the Projection where it is specified  (e.g., in a `Pathway <Pathway_Specification>`, in
+  the `monitor_for_control <ControlMechanism_Monitor_for_Control>` argument of a `ControlMechanism`, or
+  in the Composition's `add_projections <Composition.add_projections>` method);
+
+Specifying keyword *FEEDBACK* in any of these places (or True for the **feedback** argument of a method) forces its
 assignment as a *feedback* Projection, whereas False precludes it from being assigned as a feedback Projection
 (e.g., a `ControlProjection` that otherwise forms a cycle will no longer do so).
 
@@ -3440,14 +3446,14 @@ class NodeRole(enum.Enum):
         A `Node <Composition_Nodes>` with one or more efferent `Projections <Projection>` designated as `feedback
         <Composition_Feedback_Designation>` in the Composition.  This means that the Node executes last in the
         sequence of Nodes that would otherwise form a `cycle <Composition_Cycle_Structure>`. This role cannot be
-        modified directly, but is modified if the feedback status` of the Projection is `explicitly specified
+        modified directly, but is modified if the feedback status of the Projection is `explicitly specified
         <Composition_Feedback_Designation>`.
 
     FEEDBACK_RECEIVER
         A `Node <Composition_Nodes>` with one or more afferent `Projections <Projection>` designated as `feedback
         <Composition_Feedback_Designation>` in the Composition. This means that the Node executes first in the
         sequence of Nodes that would otherwise form a `cycle <Composition_Cycle_Structure>`. This role cannot be
-        modified directly, but is modified if the feedback status` of the Projection is `explicitly specified
+        modified directly, but is modified if the feedback status of the Projection is `explicitly specified
         <Composition_Feedback_Designation>`.
 
     CONTROL_OBJECTIVE
@@ -12360,6 +12366,8 @@ _
             if context.runmode == ContextFlags.SIMULATION_MODE:
                 for i in range(scheduler.get_clock(context).time.time_step):
                     execution_sets.__next__()
+
+            assert 'DEBUGGING BREAK POINT'
 
 
             for next_execution_set in execution_sets:
