@@ -947,10 +947,9 @@ from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     (ADAPTIVE, ALL, ARG_MAX, ARG_MAX_INDICATOR, AUTO, CONTEXT, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, DOT_PRODUCT,
      EM_COMPOSITION, FULL_CONNECTIVITY_MATRIX, GAIN, IDENTITY_MATRIX, INPUT_SHAPES, L0,
-     MULTIPLICATIVE_PARAM, NAME, PARAMS, PROB_INDICATOR, PRODUCT, PROJECTIONS, RANDOM, VALUE, VARIABLE)
+     MULTIPLICATIVE_PARAM, NAME, PARAMS, PROB_INDICATOR, PRODUCT, PROJECTIONS, RANDOM, VARIABLE)
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, convert_all_elements_to_np_array, is_numeric_scalar
-from psyneulink.core.globals.registry import name_without_suffix
 from psyneulink.core.llvm import ExecutionMode
 
 
@@ -1465,7 +1464,7 @@ class EMComposition(AutodiffComposition):
     componentCategory = EM_COMPOSITION
 
     if torch_available:
-        from psyneulink.library.compositions.pytorchEMcompositionwrapper import PytorchEMCompositionWrapper
+        from psyneulink.library.compositions.emcomposition.pytorchEMcompositionwrapper import PytorchEMCompositionWrapper
         pytorch_composition_wrapper_type = PytorchEMCompositionWrapper
 
 

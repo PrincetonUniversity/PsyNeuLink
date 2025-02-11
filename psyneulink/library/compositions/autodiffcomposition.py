@@ -344,9 +344,9 @@ from psyneulink.core.compositions.composition import Composition, NodeRole, Comp
 from psyneulink.core.compositions.report import (ReportOutput, ReportParams, ReportProgress, ReportSimulations,
                                                  ReportDevices, EXECUTE_REPORT, LEARN_REPORT, PROGRESS_REPORT)
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context, CONTEXT
-from psyneulink.core.globals.keywords import (AUTODIFF_COMPOSITION, CPU, CUDA, EXECUTION_MODE,
+from psyneulink.core.globals.keywords import (AUTODIFF_COMPOSITION, EXECUTION_MODE,
                                               LEARNING_SCALE_LITERALS, LEARNING_SCALE_NAMES, LEARNING_SCALE_VALUES,
-                                              Loss, LOSSES, MATRIX_WEIGHTS, MINIBATCH, MPS, NODE_VALUES, NODE_VARIABLES,
+                                              Loss, LOSSES, MATRIX_WEIGHTS, MINIBATCH, NODE_VALUES, NODE_VARIABLES,
                                               OPTIMIZATION_STEP, RESULTS, RUN, SOFT_CLAMP,
                                               TARGETS, TRAINED_OUTPUTS, TRIAL)
 from psyneulink.core.globals.utilities import is_numeric_scalar
@@ -608,7 +608,7 @@ class AutodiffComposition(Composition):
 
     componentCategory = AUTODIFF_COMPOSITION
     if torch_available:
-        from psyneulink.library.compositions.pytorchEMcompositionwrapper import PytorchCompositionWrapper
+        from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper
         pytorch_composition_wrapper_type = PytorchCompositionWrapper
 
     class Parameters(Composition.Parameters):

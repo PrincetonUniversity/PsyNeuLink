@@ -183,7 +183,6 @@ Class Reference
 """
 import numpy as np
 import warnings
-from typing import Union
 # from sympy.stats import Logistic
 
 import psyneulink.core.scheduling.condition as conditions
@@ -200,7 +199,7 @@ from psyneulink.core.components.ports.modulatorysignals.gatingsignal import Gati
 from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.keywords import FEEDBACK, GRU_COMPOSITION, OUTCOME, OWNER_VALUE, SUM, IDENTITY_MATRIX
+from psyneulink.core.globals.keywords import GRU_COMPOSITION, OUTCOME, SUM, IDENTITY_MATRIX
 from psyneulink.core.llvm import ExecutionMode
 
 
@@ -446,7 +445,7 @@ class GRUComposition(AutodiffComposition):
     componentCategory = GRU_COMPOSITION
 
     if torch_available:
-        from psyneulink.library.compositions.pytorchGRUcompositionwrapper import PytorchGRUCompositionWrapper
+        from psyneulink.library.compositions.grucomposition.pytorchGRUcompositionwrapper import PytorchGRUCompositionWrapper
         pytorch_composition_wrapper_type = PytorchGRUCompositionWrapper
 
 
