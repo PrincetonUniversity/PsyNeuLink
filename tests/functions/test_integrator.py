@@ -165,9 +165,9 @@ def DriftOnASphereFun(init, value, iterations, noise, **kwargs):
 
     else:
         if "initializer" not in kwargs:
-            return [ 0.23690849,  0.00140115,  0.0020072,  -0.00128063,
-                    -0.00096267, -0.01620475, -0.02644836,  0.46090672,
-                     0.82875571, -0.31584261, -0.00132534]
+            return [ 0.23690849474294814, 0.0014011543771184686, 0.0020071969614023914, -0.0012806262650772564,
+                    -0.0009626666466757963, -0.016204753263919822, -0.026448355473615546, 0.4609067174067295,
+                     0.828755706263852, -0.3158426068946889, -0.0013253357638719173]
 
         else:
             return [-3.72900858e-03, -3.38148799e-04, -6.43154678e-04,  4.36274120e-05,
@@ -186,16 +186,20 @@ GROUP_PREFIX="IntegratorFunction "
 @pytest.mark.parametrize("noise", [RAND2, test_noise_arr, pnl.NormalDist],
                          ids=["SNOISE", "VNOISE", "FNOISE"])
 @pytest.mark.parametrize("func", [
-    (pnl.AdaptiveIntegrator, AdaptiveIntFun),
-    (pnl.SimpleIntegrator, SimpleIntFun),
-    (pnl.DriftDiffusionIntegrator, DriftIntFun),
-    (pnl.LeakyCompetingIntegrator, LeakyFun),
-    (pnl.AccumulatorIntegrator, AccumulatorFun),
-    pytest.param((pnl.DriftOnASphereIntegrator, DriftOnASphereFun), marks=pytest.mark.llvm_not_implemented),
+    (pnl.AdaptiveIntegrator, AdaptiveIntFun, {}),
+    (pnl.SimpleIntegrator, SimpleIntFun, {}),
+    (pnl.DriftDiffusionIntegrator, DriftIntFun, {'time_step_size': 1.0}),
+    (pnl.LeakyCompetingIntegrator, LeakyFun, {}),
+    (pnl.AccumulatorIntegrator, AccumulatorFun, {'increment': RAND0_1}),
+    pytest.param((pnl.DriftOnASphereIntegrator,
+                  DriftOnASphereFun,
+                  {'dimension': len(test_var) + 1},
+                 ), marks=pytest.mark.llvm_not_implemented),
     ], ids=lambda x: x[0])
+@pytest.mark.parametrize("mode", ["test_execution", "test_reset"])
 @pytest.mark.benchmark
-def test_execute(func, func_mode, variable, noise, params, benchmark):
-    func_class, func_res = func
+def test_execute(func, func_mode, variable, noise, params, mode, benchmark):
+    func_class, func_res, func_params = func
     benchmark.group = GROUP_PREFIX + func_class.componentName
 
     try:
@@ -207,29 +211,51 @@ def test_execute(func, func_mode, variable, noise, params, benchmark):
         if issubclass(func_class, (pnl.DriftDiffusionIntegrator, pnl.DriftOnASphereIntegrator)):
             pytest.skip("{} doesn't support functional noise".format(func_class.componentName))
 
-    if issubclass(func_class, pnl.DriftOnASphereIntegrator):
-        params = {**params, 'dimension': len(variable) + 1}
+    params = {**params, **func_params}
 
-    elif issubclass(func_class, pnl.AccumulatorIntegrator):
-        params = {**params, 'increment': RAND0_1}
+    if issubclass(func_class, pnl.AccumulatorIntegrator):
         params.pop('offset', None)
 
     elif issubclass(func_class, pnl.DriftDiffusionIntegrator):
         # If we are dealing with a DriftDiffusionIntegrator, noise and
         # time_step_size defaults have changed since this test was created.
         # Hard code their old values.
-        params = {**params, 'time_step_size': 1.0}
         noise = np.sqrt(noise)
 
     f = func_class(default_variable=variable, noise=noise, **params)
     ex = pytest.helpers.get_func_execution(f, func_mode)
 
+    # Execute few times to update the internal state
     ex(variable)
     ex(variable)
-    res = benchmark(ex, variable)
 
-    expected = func_res(f.initializer, variable, 3, noise, **params)
-    np.testing.assert_allclose(res, expected, rtol=1e-5, atol=1e-8)
+    if mode == "test_execution":
+        res = benchmark(ex, variable)
+
+        expected = func_res(f.initializer, variable, 3, noise, **params)
+
+        tolerance = {} if pytest.helpers.llvm_current_fp_precision() == 'fp64' else {'rtol':1e-5, 'atol':1e-8}
+        np.testing.assert_allclose(res, expected, **tolerance)
+
+    elif mode == "test_reset":
+        ex_res = pytest.helpers.get_func_execution(f, func_mode, tags=frozenset({'reset'}), member='reset')
+
+        # Compiled mode ignores input variable, but python uses it if it's provided
+        post_reset = ex_res(None if func_mode == "Python" else variable)
+
+        # Python implementations return 2d arrays,
+        # while most compiled variants return 1d
+        if func_mode != "Python":
+            post_reset = np.atleast_2d(post_reset)
+
+        # The order in which the reinitialized values are returned
+        # is hardcoded in kwargs of the reset() methods of the respective
+        # Function classes. The first one is 'initializer' in all cases.
+        # The other ones are reset to 0 in the test cases.
+        reset_expected = np.zeros_like(post_reset)
+        reset_expected[0] = f.parameters.initializer.get()
+
+        np.testing.assert_allclose(post_reset, reset_expected)
 
 
 def test_integrator_function_no_default_variable_and_params_len_more_than_1():

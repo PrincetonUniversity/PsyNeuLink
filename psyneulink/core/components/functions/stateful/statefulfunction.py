@@ -538,10 +538,12 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         value = []
         for attr, v in kwargs.items():
             # FIXME: HACK: Do not reinitialize random_state
-            if attr != "random_state":
-                getattr(self.parameters, attr).set(kwargs[attr],
-                                                   context, override=True)
-                value.append(getattr(self.parameters, attr)._get(context))
+            if attr == "random_state":
+                continue
+
+            param = getattr(self.parameters, attr)
+            param.set(kwargs[attr], context, override=True)
+            value.append(param._get(context))
 
         self.parameters.value.set(value, context, override=True)
         return value
@@ -552,7 +554,17 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             initializer = getattr(self.parameters, a).initializer
             source_ptr = ctx.get_param_or_state_ptr(builder, self, initializer, param_struct_ptr=params)
             dest_ptr = ctx.get_param_or_state_ptr(builder, self, a, state_struct_ptr=state)
-            builder.store(builder.load(source_ptr), dest_ptr)
+            initial_value = builder.load(source_ptr)
+            builder.store(initial_value, dest_ptr)
+
+            # previous_value is the only output of the reset function
+            if a == "previous_value" and len(self.stateful_attributes) == 1:
+                unwrapped_ptr = arg_out
+                if initial_value.type != unwrapped_ptr.type.pointee:
+                    unwrapped_ptr = pnlvm.helpers.unwrap_2d_array(builder, arg_out)
+
+                assert initial_value.type == unwrapped_ptr.type.pointee, "{}: {} vs. {}".format(self.name, initial_value.type, arg_out.type.pointee)
+                builder.store(initial_value, unwrapped_ptr)
 
         return builder
 

@@ -207,29 +207,29 @@ def cuda_param(val):
     return pytest.param(val, marks=[pytest.mark.llvm, pytest.mark.cuda])
 
 @pytest.helpers.register
-def get_func_execution(func, func_mode):
+def get_func_execution(func, func_mode, *, tags:frozenset=frozenset(), member='function'):
     if func_mode == 'LLVM':
-        return pnlvm.execution.FuncExecution(func).execute
+        return pnlvm.execution.FuncExecution(func, tags=tags).execute
 
     elif func_mode == 'PTX':
-        return pnlvm.execution.FuncExecution(func).cuda_execute
+        return pnlvm.execution.FuncExecution(func, tags=tags).cuda_execute
 
     elif func_mode == 'Python':
-        return func.function
+        return getattr(func, member)
     else:
         assert False, "Unknown function mode: {}".format(func_mode)
 
 @pytest.helpers.register
-def get_mech_execution(mech, mech_mode):
+def get_mech_execution(mech, mech_mode, *, tags:frozenset=frozenset(), member='execute'):
     if mech_mode == 'LLVM':
-        return pnlvm.execution.MechExecution(mech).execute
+        return pnlvm.execution.MechExecution(mech, tags=tags).execute
 
     elif mech_mode == 'PTX':
-        return pnlvm.execution.MechExecution(mech).cuda_execute
+        return pnlvm.execution.MechExecution(mech, tags=tags).cuda_execute
 
     elif mech_mode == 'Python':
         def mech_wrapper(x):
-            mech.execute(x)
+            getattr(mech, member)(x)
             return mech.output_values
 
         return mech_wrapper
