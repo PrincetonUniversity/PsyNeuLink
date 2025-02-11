@@ -186,6 +186,7 @@ import warnings
 from typing import Union
 # from sympy.stats import Logistic
 
+import psyneulink.core.scheduling.condition as conditions
 from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear, Logistic, Tanh
 from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_state_getter, _seed_setter
@@ -606,29 +607,30 @@ class GRUComposition(AutodiffComposition):
             return np.random.uniform(-sqrt_val, sqrt_val, (sender_size, receiver_size))
 
         # Learnable: wts_in, wts_iu, wts_ir, wts_hn, wts_hu,, wts_hr
-        self.wts_in = MappingProjection(name='NEW INPUT WEIGHTS',
+        self.wts_in = MappingProjection(name='INPUT TO NEW WEIGHTS',
                                         sender=self.input_node,
                                         receiver=self.new_node.input_ports['FROM INPUT'],
                                         learnable=True,
                                         matrix=init_wts(input_size, hidden_size))
 
-        self.wts_iu = MappingProjection(name='UPDATE INPUT WEIGHTS',
+        self.wts_iu = MappingProjection(name='INPUT TO UPDATE WEIGHTS',
                                         sender=self.input_node,
                                         receiver=self.update_node.input_ports[OUTCOME],
                                         learnable=True,
                                         matrix=init_wts(input_size, hidden_size))
 
-        self.wts_ir = MappingProjection(name='RESET INPUT WEIGHTS',
+        self.wts_ir = MappingProjection(name='INPUT TO RESET WEIGHTS',
                                         sender=self.input_node,
                                         receiver=self.reset_node.input_ports[OUTCOME],
                                         learnable=True,
                                         matrix=init_wts(input_size, hidden_size))
 
 
-        self.wts_nh = MappingProjection(name='HIDDEN INPUT WEIGHTS',
+        self.wts_nh = MappingProjection(name='NEW TO HIDDEN WEIGHTS',
                                         sender=self.new_node,
                                         receiver=self.hidden_layer_node.input_ports['NEW INPUT'],
                                         learnable=False,
+                                        # feedback=True,
                                         matrix=IDENTITY_MATRIX)
 
         self.wts_hh = MappingProjection(name='HIDDEN RECURRENT WEIGHTS',
@@ -641,7 +643,7 @@ class GRUComposition(AutodiffComposition):
                                         sender=self.hidden_layer_node,
                                         receiver=self.new_node.input_ports['FROM HIDDEN'],
                                         learnable=True,
-                                        feedback=True,
+                                        # feedback=True,
                                         matrix=init_wts(hidden_size, hidden_size))
 
         self.wts_hr = MappingProjection(name='HIDDEN TO RESET WEIGHTS',
@@ -656,7 +658,7 @@ class GRUComposition(AutodiffComposition):
                                         learnable=True,
                                         matrix=init_wts(hidden_size, hidden_size))
 
-        self.wts_ho = MappingProjection(name='HIDDEN OUTPUT WEIGHTS',
+        self.wts_ho = MappingProjection(name='HIDDEN TO OUTPUT WEIGHTS',
                                         sender=self.hidden_layer_node,
                                         receiver=self.output_node,
                                         learnable=False,
@@ -724,6 +726,22 @@ class GRUComposition(AutodiffComposition):
                                   self.bias_hn])
 
         # self._set_learning_attributes()
+        # self.scheduler.add_condition(self.hidden_layer_node,
+        #                              # conditions.AllHaveRun(
+        #                              conditions.AfterNodes(
+        #                                  self.new_node,
+        #                                  self.reset_node,
+        #                                  self.update_node
+        #                              ))
+        if self.bias:
+            self.scheduler.add_condition(self.reset_node, conditions.AfterNodes(self.bias_hr_node))
+            self.scheduler.add_condition(self.update_node, conditions.AfterNodes(self.reset_node, self.bias_iu_node))
+            self.scheduler.add_condition(self.new_node, conditions.AfterNodes(self.update_node, self.bias_in_node))
+            self.scheduler.add_condition(self.hidden_layer_node, conditions.AfterNodes(self.new_node))
+        else:
+            self.scheduler.add_condition(self.update_node, conditions.AfterNodes(self.reset_node))
+            self.scheduler.add_condition(self.new_node, conditions.AfterNodes(self.update_node))
+            self.scheduler.add_condition(self.hidden_layer_node, conditions.AfterNodes(self.new_node))
 
         self._analyze_graph()
 
