@@ -2663,10 +2663,6 @@ class Mechanism_Base(Mechanism):
                                   "its number of input_ports ({2})".
                                   format(num_inputs, self.name,  num_input_ports ))
         for input_item, input_port in zip(input, self.input_ports):
-
-            if type(input_item) == np.ndarray and input_item.dtype == np.dtype('O'):
-                input_item = input_item.item()
-
             if input_port.default_input_shape.size == np.array(input_item).size:
                 from psyneulink.core.compositions.composition import RunError
                 # Assign input_item as input_port.variable
