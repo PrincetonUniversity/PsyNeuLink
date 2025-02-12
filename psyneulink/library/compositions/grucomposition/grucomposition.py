@@ -232,7 +232,7 @@ class GRUComposition(AutodiffComposition):
         name="GRU_Composition"  \
         input_size=1,           \
         hidden_size=1,          \
-        biase=False             \
+        bias=False              \
         )
 
     Subclass of `AutodiffComposition` that implements a single-layered gated recurrent network.
