@@ -386,7 +386,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric, is_same_function_spec, object_has_single_value, get_global_seed
+from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric, is_same_function_spec, object_has_single_value
 from psyneulink.core.scheduling.condition import AtTrialStart
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 
