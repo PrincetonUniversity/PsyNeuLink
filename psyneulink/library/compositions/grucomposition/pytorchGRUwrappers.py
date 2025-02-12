@@ -30,20 +30,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
       the value of its afferents as the input to the Pytorch GRU Module.
     """
 
-    def __init__(self,
-                 input_size:int,
-                 hidden_size:int,
-                 h0:Union[list, np.ndarray, torch.Tensor],
-                 bias:bool,
-                 composition,
-                 device,
-                 outer_creator,
-                 **kwargs):
-        super().__init__(composition,device,outer_creator, **kwargs)
-        assert len(h0) == hidden_size, f"PROGRAM ERROR: Length of h0 is not the same as hidden_size."
-        self.hidden_state = torch.tensor(h0, device=device)
-        self.torch_gru = torch.nn.GRU(input_size=input_size, hidden_size=hidden_size, bias=bias)
-
     @handle_external_context()
     def forward(self, inputs, optimization_num, context=None)->dict:
         """Forward method of the model for PyTorch modes

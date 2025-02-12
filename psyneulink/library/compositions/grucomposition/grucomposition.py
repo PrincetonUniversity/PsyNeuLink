@@ -188,7 +188,9 @@ import warnings
 import psyneulink.core.scheduling.condition as conditions
 from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear, Logistic, Tanh
-from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_state_getter, _seed_setter
+from psyneulink.core.components.functions.nonstateful.transformfunctions import MatrixTransform
+from psyneulink.core.components.functions.function import (
+    DEFAULT_SEED, get_matrix, _random_state_getter, _seed_setter)
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.compositions.composition import CompositionError, NodeRole
@@ -202,7 +204,7 @@ from psyneulink.core.components.projections.modulatory.gatingprojection import G
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.keywords import GRU_COMPOSITION, OUTCOME, SUM, IDENTITY_MATRIX
+from psyneulink.core.globals.keywords import FULL_CONNECTIVITY_MATRIX, GRU_COMPOSITION, OUTCOME, SUM, IDENTITY_MATRIX
 from psyneulink.core.llvm import ExecutionMode
 
 
@@ -469,6 +471,12 @@ class GRUComposition(AutodiffComposition):
                     :default value: True
                     :type: ``bool``
 
+                gru_mech
+                    see `gru_mech <GRUComposition.gru_mech>`
+
+                    :default value: None
+                    :type: ``ProcessingMechanism``
+
                 hidden_size
                     see `hidden_size <GRUComposition.hidden_size>`
 
@@ -494,9 +502,11 @@ class GRUComposition(AutodiffComposition):
                     :type: ``numpy.random.RandomState``
 
         """
-        input_size = Parameter(1, structural=True)
-        hidden_size = Parameter(1, structural=True)
-        bias = Parameter(False, structural=True)
+        input_size = Parameter(1, structural=True, stateful=False)
+        hidden_size = Parameter(1, structural=True, stateful=False)
+        bias = Parameter(False, structural=True, stateful=False)
+        gru_mech = Parameter(None, structural=True, stateful=False)
+        hidden_state = Parameter(None, structural=True)
         enable_learning = Parameter(True, structural=True)
         learning_rate = Parameter(.001, modulable=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
@@ -849,38 +859,36 @@ class GRUComposition(AutodiffComposition):
 
     @handle_external_context()
     def _build_pytorch_representation(self, context=None, refresh=False):
-        """Return a Pytorch representation of the GRUComposition
-        Use PytorchMechanismWrapper, so that is used for execution in forward method of the model.
-        This is so that GRUComposition can be treated in as a single Mechanism (mapped to the Pytorch GRU Module)
-        in the pytorch_representation, rather than a nested Composition."""
+        """Override to assign PyTorch GRU module to the GRUComposition's `gru_mech` node"""
+        if torch_available:
+            import torch
+        else:
+            raise GRUCompositionError(f"PyTorch is not available.")
 
         if self.parameters.pytorch_representation._get(context=context) is None or refresh:
-            mechanism = self._compositon.hidden_layer_node # Use this, since it is the critical node in the GRUComposition
-            composition_wrapper = self
-            component_idx = self._compositon.nodes.index(mechanism)
-            device = self.device
+            mechanism = self.gru_mech # Use this, since it is the critical node in the GRUComposition
+            self.parameters.hidden_state.set(torch.tensor(self.hidden_layer_node.value,device=self.device), context)
+            mechanism.function = torch.nn.GRU(input_size=self.input_size,
+                                              hidden_size=self.hidden_size,
+                                              bias=self.bias)
 
-            gru_module = PytorchGRUMechanismWrapper(self, device, context=None)
-            # FIX: POSSIBLY ADJUST AFFERENTS HERE?
+        super()._build_pytorch_representation(context=context, refresh=refresh)
 
-            self.parameters.pytorch_representation._set(gru_module, context, skip_history=True, skip_log=True)
+    def _get_pytorch_backprop_pathways(self)->list:
+        """Return the pathway with one Node as placemarker for GRU module"""
+        if not self.gru_mech:
+            self.gru_mech = ProcessingMechanism(name='GRU MECH',
+                                                input_shapes=self.input_size,
+                                                function=MatrixTransform(
+                                                    default_variable=np.zeros(self.input_size),
+                                                    matrix=get_matrix(FULL_CONNECTIVITY_MATRIX,
+                                                                      self.input_size,
+                                                                      self.hidden_size)))
+        return [[self.gru_mech]]
 
-        return self.parameters.pytorch_representation._get(context)
+    def _identify_target_nodes(self, context)->list:
+        return [self.gru_mech]
 
-    def infer_backpropagation_learning_pathways(self, execution_mode, context=None)->list:
-        """Infer the backpropagation learning pathways for the GRUComposition"""
-        if execution_mode is ExecutionMode.PyTorch:
-            return [self._composition.hidden_layer_node]
-        else:
-            return super().infer_backpropagation_learning_pathways(execution_mode, context)
-
-    def _get_pytorch_backprop_pathway(self, input_node)->list:
-        """Return the PyTorch backpropagation pathway for the GRUComposition"""
-        import torch as torch
-        self.torch_gru = torch.nn.GRU(input_size=self.input_size, hidden_size=self.hidden_size, bias=self.bias)
-        gru_mech = ProcessingMechanism(name='GRU_MECH', function=self.torch_gru)
-        return [gru_mech]
-    #
     # ******aa***********************************************************************************************************
     # *********************************** Execution Methods  **********************************************************
     # *****************************************************************************************************************
@@ -896,23 +904,23 @@ class GRUComposition(AutodiffComposition):
             execution_mode = ExecutionMode.PyTorch
         return execution_mode
 
-    def _identify_target_nodes(self, context)->list:
-        """Identify retrieval_nodes specified by **target_field_weights** as TARGET nodes"""
-        target_fields = self.target_fields
-        if target_fields is False:
-            if self.enable_learning:
-                warnings.warn(f"The 'enable_learning' arg for {self.name} is True "
-                              f"but its 'target_fields' is False, so enable_learning will have no effect.")
-            target_nodes = []
-        elif target_fields is True:
-            target_nodes = [node for node in self.retrieved_nodes]
-        elif isinstance(target_fields, list):
-            target_nodes = [node for node in self.retrieved_nodes if target_fields[self.retrieved_nodes.index(node)]]
-        else:
-            assert False, (f"PROGRAM ERROR: target_fields arg for {self.name}: {target_fields} "
-                           f"is neither True, False nor a list of bools as it should be.")
-        super()._identify_target_nodes(context)
-        return target_nodes
+    # def _identify_target_nodes(self, context)->list:
+    #     """Identify retrieval_nodes specified by **target_field_weights** as TARGET nodes"""
+    #     target_fields = self.target_fields
+    #     if target_fields is False:
+    #         if self.enable_learning:
+    #             warnings.warn(f"The 'enable_learning' arg for {self.name} is True "
+    #                           f"but its 'target_fields' is False, so enable_learning will have no effect.")
+    #         target_nodes = []
+    #     elif target_fields is True:
+    #         target_nodes = [node for node in self.retrieved_nodes]
+    #     elif isinstance(target_fields, list):
+    #         target_nodes = [node for node in self.retrieved_nodes if target_fields[self.retrieved_nodes.index(node)]]
+    #     else:
+    #         assert False, (f"PROGRAM ERROR: target_fields arg for {self.name}: {target_fields} "
+    #                        f"is neither True, False nor a list of bools as it should be.")
+    #     super()._identify_target_nodes(context)
+    #     return target_nodes
 
 
     def do_gradient_optimization(self, retain_in_pnl_options, context, optimization_num=None):
