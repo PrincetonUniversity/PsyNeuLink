@@ -13,7 +13,7 @@ import torch
 import numpy as np
 from typing import Union, Optional
 
-from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper
+from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper
 from psyneulink.core.globals.context import handle_external_context
 
 __all__ = ['PytorchGRUCompositionWrapper']
@@ -49,10 +49,20 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         """Forward method of the model for PyTorch modes
         Returns a dictionary {output_node:value} with the output value for the module in case it is run as a
         standalone Composition; otherwise, those will be ignored and the outputs will be used by the aggregate_afferents
-        method(s) of the other node(s) to which it projects
+        method(s) of the other node(s) that receive Projections from the GRUComposition.
         """
         output, self.hidden_state = self.torch_gru(inputs, self.hidden_state)
         return {self: output}
 
     def execute_node(self, node, variable, optimization_num, context):
         """Override to execute the Pytorch GRU Module directly as a node."""
+
+class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
+    """Wrapper for GRUMechanism as a Pytorch Module"""
+    def __init__(self, composition, device, **kwargs):
+        pass
+        # input_size:int, hidden_size:int, h0:Union[list, np.ndarray, torch.Tensor], bias:bool,
+        # super().__init__(composition, device, outer_creator, **kwargs)
+        # assert len(h0) == hidden_size, f"PROGRAM ERROR: Length of h0 is not the same as hidden_size."
+        # self.hidden_state = torch.tensor(h0, device=device)
+        # self.torch_gru = torch.nn.GRU(input_size=input_size, hidden_size=hidden_size, bias=bias)

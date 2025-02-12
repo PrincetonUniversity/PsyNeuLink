@@ -193,11 +193,14 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.compositions.composition import CompositionError, NodeRole
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, torch_available
+from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import (
+    PytorchGRUCompositionWrapper, PytorchGRUMechanismWrapper)
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.ports.modulatorysignals.gatingsignal import GatingSignal
 from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import GRU_COMPOSITION, OUTCOME, SUM, IDENTITY_MATRIX
 from psyneulink.core.llvm import ExecutionMode
@@ -445,7 +448,7 @@ class GRUComposition(AutodiffComposition):
     componentCategory = GRU_COMPOSITION
 
     if torch_available:
-        from psyneulink.library.compositions.grucomposition.pytorchGRUcompositionwrapper import PytorchGRUCompositionWrapper
+        from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import PytorchGRUCompositionWrapper
         pytorch_composition_wrapper_type = PytorchGRUCompositionWrapper
 
 
@@ -844,21 +847,35 @@ class GRUComposition(AutodiffComposition):
 
     #endregion
 
+    @handle_external_context()
     def _build_pytorch_representation(self, context=None, refresh=False):
-        """Builds a Pytorch representation of the GRUComposition"""
+        """Return a Pytorch representation of the GRUComposition
+        Use PytorchMechanismWrapper, so that is used for execution in forward method of the model.
+        This is so that GRUComposition can be treated in as a single Mechanism (mapped to the Pytorch GRU Module)
+        in the pytorch_representation, rather than a nested Composition."""
+
         if self.parameters.pytorch_representation._get(context=context) is None or refresh:
-            module = self.pytorch_composition_wrapper_type(input_size=self.input_size,
-                                                           hidden_size=self.hidden_size,
-                                                           h0=self.hidden_layer_node.value,
-                                                           bias=self.bias,
-                                                           composition=self,
-                                                           device=self.device,
-                                                           outer_creator=self,
-                                                           context=context)
-            self.parameters.pytorch_representation._set(module, context, skip_history=True, skip_log=True)
+            mechanism = self._compositon.hidden_layer_node # Use this, since it is the critical node in the GRUComposition
+            composition_wrapper = self
+            component_idx = self._compositon.nodes.index(mechanism)
+            device = self.device
+
+            gru_module = PytorchGRUMechanismWrapper(self, device, context=None)
+            # FIX: POSSIBLY ADJUST AFFERENTS HERE?
+
+            self.parameters.pytorch_representation._set(gru_module, context, skip_history=True, skip_log=True)
 
         return self.parameters.pytorch_representation._get(context)
 
+    def infer_backpropagation_learning_pathways(self, execution_mode, context=None)->list:
+        """Infer the backpropagation learning pathways for the GRUComposition"""
+        if execution_mode is ExecutionMode.PyTorch:
+            return [self._compositon.hidden_layer_node]
+        else:
+            return super().infer_backpropagation_learning_pathways(execution_mode, context)
+
+    def _get_pytorch_backprop_pathway(self, input_node)->list:
+        assert True
     #
     # ******aa***********************************************************************************************************
     # *********************************** Execution Methods  **********************************************************
