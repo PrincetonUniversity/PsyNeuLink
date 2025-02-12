@@ -867,9 +867,9 @@ class GRUComposition(AutodiffComposition):
 
         if self.parameters.pytorch_representation._get(context=context) is None or refresh:
             mechanism = self.gru_mech # Use this, since it is the critical node in the GRUComposition
-            self.parameters.hidden_state.set(torch.tensor(self.hidden_layer_node.value,device=self.device), context)
-            mechanism.function = torch.nn.GRU(input_size=self.input_size,
-                                              hidden_size=self.hidden_size,
+            self.parameters.hidden_state._set(torch.tensor(self.hidden_layer_node.value,device=self.device), context)
+            mechanism.function = torch.nn.GRU(input_size=self.parameters.input_size.get(),
+                                              hidden_size=self.parameters.hidden_size.get(),
                                               bias=self.bias)
 
         super()._build_pytorch_representation(context=context, refresh=refresh)
