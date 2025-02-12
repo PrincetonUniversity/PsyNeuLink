@@ -2590,8 +2590,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         val = pnlvm.helpers.fclamp(builder, val, neg_threshold, threshold)
 
         # Store value result
-        data_vo_ptr = builder.gep(vo, [ctx.int32_ty(0),
-                                       ctx.int32_ty(0), index])
+        data_vo_ptr = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0), index])
         builder.store(val, data_vo_ptr)
         builder.store(val, prev_val_ptr)
 
@@ -2603,6 +2602,22 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
 
         time_vo_ptr = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(1), index])
         builder.store(curr_time, time_vo_ptr)
+
+    def _gen_llvm_function_reset(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+        assert "reset" in tags
+
+        builder = super()._gen_llvm_function_reset(ctx, builder, params, state, arg_in, arg_out, tags=tags)
+
+        # Return the reconstructed combination of previous value and previous tim
+        prev_value_ptr = ctx.get_param_or_state_ptr(builder, self, PREVIOUS_VALUE, state_struct_ptr=state)
+        value_out_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        builder.store(builder.load(prev_value_ptr), value_out_ptr)
+
+        prev_time_ptr = ctx.get_param_or_state_ptr(builder, self, "previous_time", state_struct_ptr=state)
+        time_out_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        builder.store(builder.load(prev_time_ptr), time_out_ptr)
+
+        return builder
 
     def reset(self, previous_value=None, previous_time=None, context=None):
         return super().reset(
