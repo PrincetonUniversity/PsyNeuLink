@@ -154,13 +154,13 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
             else:
                 # For retrieve projections:
                 # - get entry to store from memory_to_store (which has inputs to all fields)
-                entry_to_store = memory_to_store_indexed
+                entry_to_store = memory_to_store[0, field_idx, :]
                 # - store in column
                 axis = 1
             # Get matrix containing memories for the field from the Projection
             field_memory_matrix = field_projection.matrix
 
-            field_projection.matrix = self.storage_node.function(entry_to_store[0, ...],
+            field_projection.matrix = self.storage_node.function(entry_to_store,
                                                                  memory_matrix=field_memory_matrix,
                                                                  axis=axis,
                                                                  storage_location=idx_of_weakest_memory,
